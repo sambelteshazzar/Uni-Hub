@@ -152,19 +152,31 @@ class AdminProductsManager {
    * @returns {Object}
    */
   deleteProduct (productId) {
-    const products = this.getAllProducts();
-    const index = products.findIndex(p => p.id === productId);
+    const product = this.getProductById(productId);
 
-    if (index === -1) {
+    if (!product) {
       return {
         success: false,
         error: 'Product not found',
       };
     }
 
-    products.splice(index, 1);
-    // In production, this would call API to delete
-    // For now, just log the action
+    if (typeof api !== 'undefined' && api.products && api.products.delete) {
+      api.products.delete(productId).catch(err => {
+        console.error('Failed to delete product from backend:', err);
+      });
+    }
+
+    const products = productsManager.products;
+    const index = products.findIndex(p => p.id === productId);
+    if (index !== -1) {
+      products.splice(index, 1);
+      if (typeof StorageManager !== 'undefined') {
+        StorageManager.set(productsManager.PRODUCTS_STORAGE_KEY, products);
+      }
+      productsManager.filteredProducts = [...products];
+    }
+
     adminAuthManager.logActivity('Product deleted', { productId });
 
     return {
@@ -189,12 +201,27 @@ class AdminProductsManager {
       };
     }
 
-    // Apply updates
     const updatedProduct = {
       ...product,
       ...updates,
       updatedAt: new Date().toISOString(),
     };
+
+    const products = productsManager.products;
+    const index = products.findIndex(p => p.id === productId);
+    if (index !== -1) {
+      products[index] = updatedProduct;
+      if (typeof StorageManager !== 'undefined') {
+        StorageManager.set(productsManager.PRODUCTS_STORAGE_KEY, products);
+      }
+      productsManager.filteredProducts = [...products];
+    }
+
+    if (typeof api !== 'undefined' && api.products && api.products.update) {
+      api.products.update(productId, updates).catch(err => {
+        console.error('Failed to update product on backend:', err);
+      });
+    }
 
     adminAuthManager.logActivity('Product updated', { productId, updates });
 

@@ -162,9 +162,16 @@ class NotificationManager {
 
   startPeriodicSync () {
     this.syncFromBackend();
-    setInterval(() => {
+    this._syncInterval = setInterval(() => {
       this.syncFromBackend();
     }, 60000);
+  }
+
+  stopPeriodicSync () {
+    if (this._syncInterval) {
+      clearInterval(this._syncInterval);
+      this._syncInterval = null;
+    }
   }
 
   requestBrowserPermission () {
@@ -220,10 +227,13 @@ class NotificationManager {
    * @param {Object} notification - Notification object
    */
   showToast (notification) {
+    const escape = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml)
+      ? v => SecurityUtils.escapeHtml(String(v))
+      : v => String(v);
+
     const toastContainer = document.querySelector('.toast-container');
 
     if (!toastContainer) {
-      // Create toast container if it doesn't exist
       const container = document.createElement('div');
       container.className = 'toast-container';
       document.body.appendChild(container);
@@ -232,10 +242,10 @@ class NotificationManager {
     const toast = document.createElement('div');
     toast.className = `toast toast-${notification.type}`;
     toast.innerHTML = `
-      <div class="toast-icon">${notification.icon}</div>
+      <div class="toast-icon">${escape(notification.icon)}</div>
       <div class="toast-content">
-        <div class="toast-title">${notification.title}</div>
-        <div class="toast-message">${notification.message}</div>
+        <div class="toast-title">${escape(notification.title)}</div>
+        <div class="toast-message">${escape(notification.message)}</div>
       </div>
       <button class="toast-close" onclick="notificationManager.dismissToast(this)">×</button>
     `;
@@ -303,7 +313,7 @@ class NotificationManager {
    * @returns {string}
    */
   generateId () {
-    return `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `notif_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   /**
@@ -592,6 +602,10 @@ class NotificationManager {
    * @returns {string}
    */
   renderDropdown () {
+    const escape = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml)
+      ? v => SecurityUtils.escapeHtml(String(v))
+      : v => String(v);
+
     const notifications = this.getAll().slice(0, 10);
     const unreadCount = this.getUnreadCount();
 
@@ -618,20 +632,20 @@ class NotificationManager {
         </div>
         <div class="notifications-list">
           ${notifications
-    .map(
-      n => `
-            <div class="notification-item ${n.read ? 'read' : 'unread'}" data-id="${n.id}">
-              <div class="notification-icon">${n.icon}</div>
+            .map(
+              n => `
+            <div class="notification-item ${n.read ? 'read' : 'unread'}" data-id="${escape(n.id)}">
+              <div class="notification-icon">${escape(n.icon)}</div>
               <div class="notification-content">
-                <div class="notification-title">${n.title}</div>
-                <div class="notification-message">${n.message}</div>
+                <div class="notification-title">${escape(n.title)}</div>
+                <div class="notification-message">${escape(n.message)}</div>
                 <div class="notification-time">${this.formatTime(n.createdAt)}</div>
               </div>
-              <button class="notification-close" onclick="notificationManager.delete('${n.id}')">×</button>
+              <button class="notification-close" onclick="notificationManager.delete('${escape(n.id)}')">×</button>
             </div>
           `,
-    )
-    .join('')}
+            )
+            .join('')}
         </div>
         <div class="notifications-footer">
           <button class="btn btn-outline btn-sm btn-block" onclick="notificationManager.markAllAsRead()">

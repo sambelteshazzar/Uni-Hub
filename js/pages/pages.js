@@ -3764,7 +3764,7 @@ Copy Link
   try {
   const orders = await checkoutManager.getAllOrders();
   order = orders.find(o => o.id === orderId);
-  } catch (_) {}
+  } catch (err) { console.warn('Failed to fetch order:', err); }
 
   if (!order) {
   const localOrders = StorageManager.get(`${STORAGE_KEY_PREFIX}orders`, true) || [];

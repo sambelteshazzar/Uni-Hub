@@ -34,22 +34,27 @@ function escapeHtml (str) {
     .replace(/'/g, '&#x27;');
 }
 
+const SENSITIVE_FIELDS = new Set(['password', 'currentPassword', 'newPassword', 'confirmPassword', 'passwordConfirm', 'oldPassword']);
+
 function sanitizeXss (req, res, next) {
-  const sanitizeString = (obj) => {
+  const sanitizeString = (obj, skipField) => {
     if (!obj) return obj;
-    if (typeof obj === 'string') return escapeHtml(obj);
-    if (Array.isArray(obj)) return obj.map(item => sanitizeString(item));
+    if (typeof obj === 'string') {
+      if (skipField) return obj;
+      return escapeHtml(obj);
+    }
+    if (Array.isArray(obj)) return obj.map(item => sanitizeString(item, false));
     if (typeof obj === 'object') {
       const sanitized = {};
       for (const key in obj) {
-        sanitized[key] = sanitizeString(obj[key]);
+        sanitized[key] = sanitizeString(obj[key], SENSITIVE_FIELDS.has(key));
       }
       return sanitized;
     }
     return obj;
   };
 
-  if (req.body) { req.body = sanitizeString(req.body); }
+  if (req.body) { req.body = sanitizeString(req.body, false); }
   next();
 }
 

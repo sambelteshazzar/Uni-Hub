@@ -15,8 +15,8 @@ const {
   getVerificationStatus,
 } = require('../controllers/verification.controller');
 
-// Public routes
-router.post('/', submitVerification);
+// Authenticated routes
+router.post('/', protect, submitVerification);
 router.get('/status/:studentId/:university', getVerificationStatus);
 
 // Admin routes

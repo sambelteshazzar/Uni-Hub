@@ -211,7 +211,7 @@ class PaymentManager {
    * Generate payment ID
    */
   generatePaymentId () {
-    return `payment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `payment_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   /**

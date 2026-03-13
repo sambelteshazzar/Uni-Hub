@@ -57,9 +57,11 @@ class StorageManager {
    */
   static clear () {
     try {
-      Object.values(STORAGE_KEYS).forEach(key => {
-        localStorage.removeItem(key);
-      });
+      if (typeof STORAGE_KEYS !== 'undefined') {
+        Object.values(STORAGE_KEYS).forEach(key => {
+          localStorage.removeItem(key);
+        });
+      }
       return true;
     } catch (error) {
       console.error(`Storage error: ${error.message}`);
@@ -97,15 +99,15 @@ class StorageManager {
    */
   static getAuthToken () {
     try {
-      // Get session from authManager's storage key
       const session = this.get('unihub_session', true);
       if (session && session.token) {
         return session.token;
       }
-      // Fallback: try STORAGE_KEYS.SESSION
-      const sessionFromKey = this.get(STORAGE_KEYS.SESSION, true);
-      if (sessionFromKey && sessionFromKey.token) {
-        return sessionFromKey.token;
+      if (typeof STORAGE_KEYS !== 'undefined') {
+        const sessionFromKey = this.get(STORAGE_KEYS.SESSION, true);
+        if (sessionFromKey && sessionFromKey.token) {
+          return sessionFromKey.token;
+        }
       }
       return null;
     } catch (error) {

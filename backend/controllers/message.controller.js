@@ -150,28 +150,42 @@ exports.getConversationMessages = async (req, res) => {
 
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
-    const skip = (pageNum - 1) * limitNum;
+    const offset = (pageNum - 1) * limitNum;
 
-    const allMessageIds = db('messages').find(
-      { conversationId },
-      { sort: { createdAt: -1 } },
-    ).map(m => m.id);
+    const countRow = db('messages').db.prepare(
+      `SELECT COUNT(*) as count FROM messages m
+       LEFT JOIN message_deleted_by mdb ON mdb.messageId = m.id AND mdb.userId = ?
+       WHERE m.conversationId = ? AND mdb.id IS NULL`
+    ).get(req.user.id, conversationId);
 
-    const filteredMessageIds = [];
-    for (const mid of allMessageIds) {
-      const deleted = db('message_deleted_by').findOne({ messageId: mid, userId: req.user.id });
-      if (!deleted) {
-        filteredMessageIds.push(mid);
+    const totalFiltered = countRow.count;
+
+    const rows = db('messages').db.prepare(
+      `SELECT m.* FROM messages m
+       LEFT JOIN message_deleted_by mdb ON mdb.messageId = m.id AND mdb.userId = ?
+       WHERE m.conversationId = ? AND mdb.id IS NULL
+       ORDER BY m.createdAt DESC
+       LIMIT ? OFFSET ?`
+    ).all(req.user.id, conversationId, limitNum, offset);
+
+    const senderIds = [...new Set(rows.map(m => m.sender))];
+    const receiverIds = [...new Set(rows.map(m => m.receiver))];
+    const allUserIds = [...new Set([...senderIds, ...receiverIds])];
+
+    const userMap = {};
+    if (allUserIds.length > 0) {
+      const placeholders = allUserIds.map(() => '?').join(',');
+      const userRows = db('users').db.prepare(
+        `SELECT id, fullName, avatar, university FROM users WHERE id IN (${placeholders})`
+      ).all(...allUserIds);
+      for (const u of userRows) {
+        userMap[u.id] = u;
       }
     }
 
-    const totalFiltered = filteredMessageIds.length;
-    const pagedIds = filteredMessageIds.slice(skip, skip + limitNum);
-
-    const messages = pagedIds.map(mid => {
-      const msg = db('messages').findById(mid);
-      const sender = db('users').findById(msg.sender);
-      const receiver = db('users').findById(msg.receiver);
+    const messages = rows.map(msg => {
+      const sender = userMap[msg.sender];
+      const receiver = userMap[msg.receiver];
       return {
         ...msg,
         isRead: fromBool(msg.isRead),
@@ -453,9 +467,10 @@ exports.searchMessages = async (req, res) => {
     const offset = (pageNum - 1) * limitNum;
 
     let sql = `SELECT m.* FROM messages m
-               LEFT JOIN message_deleted_by mdb ON mdb.messageId = m.id AND mdb.userId = ?
-               WHERE m.content LIKE ? AND mdb.id IS NULL`;
-    const params = [req.user.id, `%${query}%`];
+     LEFT JOIN message_deleted_by mdb ON mdb.messageId = m.id AND mdb.userId = ?
+     WHERE m.content LIKE ? AND mdb.id IS NULL`;
+  const escapedQuery = escapeRegex(query).replace(/%/g, '\\%').replace(/_/g, '\\_');
+  const params = [req.user.id, `%${escapedQuery}%`];
 
     if (conversationId) {
       sql += ' AND m.conversationId = ?';
@@ -469,18 +484,33 @@ exports.searchMessages = async (req, res) => {
     sql += ' ORDER BY m.createdAt DESC LIMIT ? OFFSET ?';
     params.push(limitNum, offset);
 
-    const rows = db('messages').db.prepare(sql).all(...params);
+  const rows = db('messages').db.prepare(sql).all(...params);
 
-    const messages = rows.map(msg => {
-      const sender = db('users').findById(msg.sender);
-      const receiver = db('users').findById(msg.receiver);
-      return {
-        ...msg,
-        isRead: fromBool(msg.isRead),
-        sender: sender ? { id: sender.id, fullName: sender.fullName, avatar: sender.avatar, university: sender.university } : null,
-        receiver: receiver ? { id: receiver.id, fullName: receiver.fullName, avatar: receiver.avatar, university: receiver.university } : null,
-      };
-    });
+  const senderIds = [...new Set(rows.map(m => m.sender))];
+  const receiverIds = [...new Set(rows.map(m => m.receiver))];
+  const allUserIds = [...new Set([...senderIds, ...receiverIds])];
+
+  const userMap = {};
+  if (allUserIds.length > 0) {
+    const placeholders = allUserIds.map(() => '?').join(',');
+    const userRows = db('users').db.prepare(
+      `SELECT id, fullName, avatar, university FROM users WHERE id IN (${placeholders})`
+    ).all(...allUserIds);
+    for (const u of userRows) {
+      userMap[u.id] = u;
+    }
+  }
+
+  const messages = rows.map(msg => {
+    const sender = userMap[msg.sender];
+    const receiver = userMap[msg.receiver];
+    return {
+      ...msg,
+      isRead: fromBool(msg.isRead),
+      sender: sender ? { id: sender.id, fullName: sender.fullName, avatar: sender.avatar, university: sender.university } : null,
+      receiver: receiver ? { id: receiver.id, fullName: receiver.fullName, avatar: receiver.avatar, university: receiver.university } : null,
+    };
+  });
 
     res.json({
       success: true,

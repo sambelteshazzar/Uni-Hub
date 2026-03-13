@@ -15,8 +15,8 @@ const {
 router.get('/', protect, getNotifications);
 router.get('/unread-count', protect, getUnreadCount);
 router.post('/', protect, createNotification);
-router.put('/:id/read', protect, markAsRead);
 router.put('/read-all', protect, markAllAsRead);
+router.put('/:id/read', protect, markAsRead);
 router.delete('/read', protect, deleteReadNotifications);
 router.delete('/all', protect, deleteAllNotifications);
 router.delete('/:id', protect, deleteNotification);

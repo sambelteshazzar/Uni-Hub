@@ -176,9 +176,13 @@ if (!user) {
 throw new ApiError(404, 'User not found');
 }
 
-if (user.role === 'admin') {
-throw new ApiError(403, 'Cannot ban another admin user');
-}
+  if (user.role === 'admin') {
+    throw new ApiError(403, 'Cannot ban another admin user');
+  }
+
+  if (user.id === req.user.id) {
+    throw new ApiError(403, 'Cannot ban your own account');
+  }
 
 let updated;
 if (action === 'ban') {

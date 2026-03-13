@@ -378,6 +378,8 @@ const startServer = async () => {
   }
 };
 
-startServer();
+if (require.main === module) {
+  startServer();
+}
 
-module.exports = { app, getIo: () => io };
+module.exports = { app, getIo: () => io, startServer };

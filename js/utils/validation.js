@@ -4,40 +4,32 @@
 // ============================================
 
 class Validator {
-  /**
-   * Validate email address
-   * @param {string} email
-   * @returns {boolean}
-   */
+  static _getPatterns () {
+    return (typeof VALIDATION_PATTERNS !== 'undefined') ? VALIDATION_PATTERNS : {};
+  }
+
+  static _getMessages () {
+    return (typeof ERROR_MESSAGES !== 'undefined') ? ERROR_MESSAGES : {};
+  }
+
   static isValidEmail (email) {
-    return VALIDATION_PATTERNS.EMAIL.test(email);
+    const patterns = this._getPatterns();
+    return patterns.EMAIL ? patterns.EMAIL.test(email) : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
-  /**
-   * Validate phone number (Ghana format)
-   * @param {string} phone
-   * @returns {boolean}
-   */
   static isValidPhone (phone) {
-    return VALIDATION_PATTERNS.PHONE.test(phone);
+    const patterns = this._getPatterns();
+    return patterns.PHONE ? patterns.PHONE.test(phone) : /^(\+233|0)\d{9}$/.test(phone);
   }
 
-  /**
-   * Validate password strength
-   * @param {string} password
-   * @returns {boolean}
-   */
   static isValidPassword (password) {
-    return VALIDATION_PATTERNS.PASSWORD.test(password);
+    const patterns = this._getPatterns();
+    return patterns.PASSWORD ? patterns.PASSWORD.test(password) : password.length >= 8;
   }
 
-  /**
-   * Validate URL
-   * @param {string} url
-   * @returns {boolean}
-   */
   static isValidUrl (url) {
-    return VALIDATION_PATTERNS.URL.test(url);
+    const patterns = this._getPatterns();
+    return patterns.URL ? patterns.URL.test(url) : /^https?:\/\/.+/.test(url);
   }
 
   /**
@@ -97,27 +89,28 @@ class Validator {
    */
   static validateForm (fields, rules) {
     const errors = {};
+    const msgs = this._getMessages();
 
     for (const [fieldName, rule] of Object.entries(rules)) {
       const value = fields[fieldName];
 
       if (rule.required && this.isEmpty(value)) {
-        errors[fieldName] = ERROR_MESSAGES.FIELD_REQUIRED;
+        errors[fieldName] = msgs.FIELD_REQUIRED || 'This field is required';
         continue;
       }
 
       if (value && rule.type === 'email' && !this.isValidEmail(value)) {
-        errors[fieldName] = ERROR_MESSAGES.INVALID_EMAIL;
+        errors[fieldName] = msgs.INVALID_EMAIL || 'Invalid email address';
       } else if (value && rule.type === 'phone' && !this.isValidPhone(value)) {
-        errors[fieldName] = ERROR_MESSAGES.INVALID_PHONE;
+        errors[fieldName] = msgs.INVALID_PHONE || 'Invalid phone number';
       } else if (value && rule.type === 'password' && !this.isValidPassword(value)) {
-        errors[fieldName] = ERROR_MESSAGES.INVALID_PASSWORD;
+        errors[fieldName] = msgs.INVALID_PASSWORD || 'Invalid password';
       } else if (value && rule.minLength && !this.isMinLength(value, rule.minLength)) {
         errors[fieldName] = `Minimum ${rule.minLength} characters required`;
       } else if (value && rule.maxLength && !this.isMaxLength(value, rule.maxLength)) {
         errors[fieldName] = `Maximum ${rule.maxLength} characters allowed`;
       } else if (rule.match && !this.isMatch(value, fields[rule.match])) {
-        errors[fieldName] = ERROR_MESSAGES.PASSWORD_MISMATCH;
+        errors[fieldName] = msgs.PASSWORD_MISMATCH || 'Values do not match';
       }
     }
 

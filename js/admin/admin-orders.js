@@ -100,13 +100,54 @@ class AdminOrdersManager {
   }
 
   async refundOrder (orderId, reason) {
-  const order = await this.getOrderById(orderId);
+    const order = await this.getOrderById(orderId);
 
-  if (!order) {
-  return {
-  success: false,
-  error: 'Order not found',
-  };
+    if (!order) {
+      return {
+        success: false,
+        error: 'Order not found',
+      };
+    }
+
+    if (order.payment.status !== 'completed') {
+      return {
+        success: false,
+        error: 'Cannot refund an unpaid order',
+      };
+    }
+
+    if (typeof api !== 'undefined' && api.orders) {
+      try {
+        const response = await api.orders.refund(orderId, reason);
+        if (response.success) {
+          this.invalidateCache();
+          adminAuthManager.logActivity('Order refunded', {
+            orderId, reason, amount: order.pricing.grandTotal,
+          });
+          return { success: true, message: 'Refund processed successfully', order: response.data };
+        }
+      } catch (err) {
+        console.error('Failed to process refund on backend:', err);
+      }
+    }
+
+    order.payment.status = 'refunded';
+    order.payment.refundReason = reason;
+    order.payment.refundedAt = new Date().toISOString();
+    order.status = ORDER_STATUS.CANCELLED;
+    order.updatedAt = new Date().toISOString();
+
+    this.invalidateCache();
+
+    adminAuthManager.logActivity('Order refunded', {
+      orderId, reason, amount: order.pricing.grandTotal,
+    });
+
+    return {
+      success: true,
+      message: 'Refund processed successfully',
+      order: order,
+    };
   }
 
   if (order.payment.status !== 'completed') {

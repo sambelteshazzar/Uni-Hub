@@ -106,7 +106,7 @@ class AdminUsersManager {
    * @param {string} newRole - New role
    * @returns {Object}
    */
-  updateRole (userId, newRole) {
+  async updateRole (userId, newRole) {
     const user = this.getUserById(userId);
 
     if (!user) {
@@ -116,10 +116,21 @@ class AdminUsersManager {
       };
     }
 
+    const previousRole = user.role;
     user.role = newRole;
     user.updatedAt = new Date().toISOString();
 
-    adminAuthManager.logActivity('User role updated', { userId, newRole });
+    this._persistUser(user);
+
+    if (typeof api !== 'undefined' && api.users && api.users.updateRole) {
+      try {
+        await api.users.updateRole(userId, newRole);
+      } catch (err) {
+        console.error('Failed to sync role update to backend:', err);
+      }
+    }
+
+    adminAuthManager.logActivity('User role updated', { userId, newRole, previousRole });
 
     return {
       success: true,
@@ -133,7 +144,7 @@ class AdminUsersManager {
    * @param {string} userId - User ID
    * @returns {Object}
    */
-  verifyUser (userId) {
+  async verifyUser (userId) {
     const user = this.getUserById(userId);
 
     if (!user) {
@@ -145,6 +156,16 @@ class AdminUsersManager {
 
     user.isVerified = true;
     user.verifiedAt = new Date().toISOString();
+
+    this._persistUser(user);
+
+    if (typeof api !== 'undefined' && api.users && api.users.verify) {
+      try {
+        await api.users.verify(userId);
+      } catch (err) {
+        console.error('Failed to sync verification to backend:', err);
+      }
+    }
 
     adminAuthManager.logActivity('User verified', { userId });
 
@@ -161,7 +182,7 @@ class AdminUsersManager {
    * @param {string} reason - Suspension reason
    * @returns {Object}
    */
-  suspendUser (userId, reason) {
+  async suspendUser (userId, reason) {
     const user = this.getUserById(userId);
 
     if (!user) {
@@ -174,6 +195,16 @@ class AdminUsersManager {
     user.isSuspended = true;
     user.suspensionReason = reason;
     user.suspendedAt = new Date().toISOString();
+
+    this._persistUser(user);
+
+    if (typeof api !== 'undefined' && api.admin && api.admin.banUser) {
+      try {
+        await api.admin.banUser(userId, reason);
+      } catch (err) {
+        console.error('Failed to sync suspension to backend:', err);
+      }
+    }
 
     adminAuthManager.logActivity('User suspended', { userId, reason });
 
@@ -189,7 +220,7 @@ class AdminUsersManager {
    * @param {string} userId - User ID
    * @returns {Object}
    */
-  unsuspendUser (userId) {
+  async unsuspendUser (userId) {
     const user = this.getUserById(userId);
 
     if (!user) {
@@ -202,6 +233,16 @@ class AdminUsersManager {
     user.isSuspended = false;
     user.suspensionReason = null;
     user.suspendedAt = null;
+
+    this._persistUser(user);
+
+    if (typeof api !== 'undefined' && api.admin && api.admin.unbanUser) {
+      try {
+        await api.admin.unbanUser(userId);
+      } catch (err) {
+        console.error('Failed to sync unsuspension to backend:', err);
+      }
+    }
 
     adminAuthManager.logActivity('User unsuspended', { userId });
 
@@ -217,7 +258,7 @@ class AdminUsersManager {
    * @param {string} userId - User ID
    * @returns {Object}
    */
-  deleteUser (userId) {
+  async deleteUser (userId) {
     const index = this.users.findIndex(u => u.id === userId);
 
     if (index === -1) {
@@ -230,6 +271,16 @@ class AdminUsersManager {
     const user = this.users[index];
     this.users.splice(index, 1);
 
+    this._persistUsersList();
+
+    if (typeof api !== 'undefined' && api.admin && api.admin.deleteUser) {
+      try {
+        await api.admin.deleteUser(userId);
+      } catch (err) {
+        console.error('Failed to sync user deletion to backend:', err);
+      }
+    }
+
     adminAuthManager.logActivity('User deleted', { userId, email: user.email });
 
     return {
@@ -239,10 +290,24 @@ class AdminUsersManager {
     };
   }
 
+  _persistUser (user) {
+    const index = this.users.findIndex(u => u.id === user.id);
+    if (index !== -1) {
+      this.users[index] = user;
+    }
+    this._persistUsersList();
+  }
+
+  _persistUsersList () {
+    if (typeof StorageManager !== 'undefined' && typeof StorageManager.set === 'function') {
+      StorageManager.set(this.USERS_STORAGE_KEY, this.users, true);
+    }
+  }
+
   /**
-   * Get user statistics
-   * @returns {Object}
-   */
+ * Get user statistics
+ * @returns {Object}
+ */
   getStats () {
     const users = this.getAllUsers();
 

@@ -408,9 +408,32 @@ class Db {
   }
 
   _buildOrder (sort) {
+    const allowedSortFields = {
+      users: ['id', 'fullName', 'email', 'university', 'role', 'rating', 'totalReviews', 'createdAt', 'updatedAt', 'lastLogin', 'bannedAt'],
+      products: ['id', 'title', 'price', 'category', 'condition', 'status', 'seller', 'university', 'createdAt', 'updatedAt'],
+      orders: ['id', 'userId', 'status', 'payment_status', 'delivery_status', 'pricing_grandTotal', 'createdAt', 'updatedAt'],
+      reviews: ['id', 'rating', 'createdAt', 'updatedAt', 'reportCount'],
+      payments: ['id', 'orderId', 'userId', 'amount', 'status', 'createdAt', 'updatedAt'],
+      notifications: ['id', 'userId', 'type', 'createdAt'],
+      messages: ['id', 'conversationId', 'createdAt'],
+      deliveries: ['id', 'orderId', 'status', 'createdAt', 'updatedAt'],
+      conversations: ['id', 'createdAt', 'updatedAt'],
+      wishlists: ['id', 'userId', 'createdAt'],
+      search_history: ['id', 'userId', 'createdAt'],
+      activity_logs: ['id', 'action', 'severity', 'user', 'createdAt'],
+      student_verifications: ['id', 'userId', 'status', 'createdAt', 'updatedAt'],
+      order_items: ['id', 'orderId', 'productId', 'price', 'quantity', 'seller'],
+    };
+
+    const allowedFields = allowedSortFields[this.table] || [];
+
     return Object.entries(sort).map(([field, dir]) => {
+      if (!allowedFields.includes(field)) {
+        console.warn(`Invalid sort field rejected: ${field} on table ${this.table}`);
+        return '';
+      }
       return `${field} ${dir === 1 ? 'ASC' : 'DESC'}`;
-    }).join(', ');
+    }).filter(Boolean).join(', ');
   }
 
   _runAggregate (pipeline) {

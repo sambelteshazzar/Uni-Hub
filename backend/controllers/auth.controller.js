@@ -20,6 +20,30 @@ function getPublicProfile(user) {
 exports.register = asyncHandler(async (req, res) => {
   const { fullName, email, phone, password, university, level, hall } = req.body;
 
+  if (!fullName || typeof fullName !== 'string' || fullName.trim().length < 2) {
+    throw new ApiError(400, 'Full name is required (at least 2 characters)');
+  }
+
+  if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new ApiError(400, 'A valid email is required');
+  }
+
+  if (!password || typeof password !== 'string' || password.length < 8) {
+    throw new ApiError(400, 'Password must be at least 8 characters');
+  }
+
+  if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(password)) {
+    throw new ApiError(400, 'Password must contain uppercase, lowercase, number, and special character');
+  }
+
+  if (!university || typeof university !== 'string') {
+    throw new ApiError(400, 'University is required');
+  }
+
+  if (phone && typeof phone === 'string' && !/^[\d\s+\-()]{7,15}$/.test(phone)) {
+    throw new ApiError(400, 'Invalid phone number format');
+  }
+
   const existingUser = await db('users').findOne({ email });
   if (existingUser) {
     throw new ApiError(400, 'Email already registered');
@@ -296,6 +320,14 @@ exports.resetPassword = asyncHandler(async (req, res) => {
 
   if (!user) {
     throw new ApiError(404, 'User not found');
+  }
+
+  if (user.resetToken !== token) {
+    throw new ApiError(401, 'Reset token has already been used or is invalid');
+  }
+
+  if (user.resetTokenExpiry && Date.now() > user.resetTokenExpiry) {
+    throw new ApiError(401, 'Reset token has expired');
   }
 
   const hashedPassword = await bcrypt.hash(newPassword, 12);

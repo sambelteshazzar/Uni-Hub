@@ -200,7 +200,7 @@ class ModuleLoader {
     }
 
     // Reinitialize managers that need DOM ready
-    this.reinitializeManagers();
+    await this.reinitializeManagers();
 
     // Handle initial route
     await this.handleInitialRoute();
@@ -209,7 +209,7 @@ class ModuleLoader {
   /**
    * Reinitialize managers that need DOM/content ready
    */
-  reinitializeManagers() {
+  async reinitializeManagers() {
     const managers = [
       { name: 'authManager', load: m => m.loadUser?.() },
       { name: 'cartManager', load: m => m.load?.() },
@@ -220,16 +220,22 @@ class ModuleLoader {
       { name: 'messageManager', load: m => m.init?.() },
     ];
 
+    const promises = [];
     for (const { name, load } of managers) {
       const manager = window[name];
       if (manager && typeof manager === 'object') {
         try {
-          load(manager);
+          const result = load(manager);
+          if (result && typeof result.then === 'function') {
+            promises.push(result.catch(err => console.warn(`Failed to reinitialize ${name}:`, err)));
+          }
         } catch (error) {
           console.warn(`Failed to reinitialize ${name}:`, error);
         }
       }
     }
+
+    await Promise.all(promises);
   }
 
   /**

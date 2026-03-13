@@ -22,10 +22,31 @@ class MessageManager {
     this.unreadCount = 0;
     this.isConnected = false;
 
-    // Only init if dependencies are available
     if (typeof io !== 'undefined' && typeof StorageManager !== 'undefined') {
       this.init();
     }
+  }
+
+  async _fetchWithCsrf (url, options = {}) {
+    const token = typeof StorageManager !== 'undefined' ? StorageManager.getAuthToken() : null;
+    const isMutating = options.method && !['GET', 'HEAD', 'OPTIONS'].includes(options.method.toUpperCase());
+    let csrfHeaders = {};
+    if (isMutating && typeof api !== 'undefined' && api.fetchCsrfToken) {
+      const csrfToken = await api.fetchCsrfToken();
+      if (csrfToken) {
+        csrfHeaders = { 'X-CSRF-Token': csrfToken };
+      }
+    }
+    return fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...csrfHeaders,
+        ...options.headers,
+      },
+      ...(isMutating ? { credentials: 'include' } : {}),
+    });
   }
 
   /**
@@ -238,12 +259,8 @@ class MessageManager {
    */
   async sendMessageHTTP (data) {
     try {
-      const response = await fetch(`${API_URL}/messages`, {
+      const response = await this._fetchWithCsrf(`${API_URL}/messages`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
-        },
         body: JSON.stringify(data),
       });
 
@@ -326,11 +343,7 @@ class MessageManager {
       const { page = 1, limit = 20, status = 'active' } = options;
       const params = new URLSearchParams({ page, limit, status });
 
-      const response = await fetch(`${API_URL}/messages/conversations?${params}`, {
-        headers: {
-          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
-        },
-      });
+      const response = await this._fetchWithCsrf(`${API_URL}/messages/conversations?${params}`);
 
       const result = await response.json();
 
@@ -344,18 +357,9 @@ class MessageManager {
     }
   }
 
-  /**
-   * Get conversation details
-   * @param {string} conversationId
-   * @returns {Promise}
-   */
   async getConversation (conversationId) {
     try {
-      const response = await fetch(`${API_URL}/messages/conversation/${conversationId}`, {
-        headers: {
-          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
-        },
-      });
+      const response = await this._fetchWithCsrf(`${API_URL}/messages/conversation/${conversationId}`);
 
       const result = await response.json();
 
@@ -380,13 +384,8 @@ class MessageManager {
       const { page = 1, limit = 50 } = options;
       const params = new URLSearchParams({ page, limit });
 
-      const response = await fetch(
+      const response = await this._fetchWithCsrf(
         `${API_URL}/messages/conversation/${conversationId}/messages?${params}`,
-        {
-          headers: {
-            Authorization: `Bearer ${StorageManager.getAuthToken()}`,
-          },
-        },
       );
 
       const result = await response.json();
@@ -407,11 +406,7 @@ class MessageManager {
    */
   async getUnreadCount () {
     try {
-      const response = await fetch(`${API_URL}/messages/unread-count`, {
-        headers: {
-          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
-        },
-      });
+      const response = await this._fetchWithCsrf(`${API_URL}/messages/unread-count`);
 
       const result = await response.json();
 
@@ -433,11 +428,8 @@ class MessageManager {
    */
   async deleteMessage (messageId) {
     try {
-      const response = await fetch(`${API_URL}/messages/${messageId}`, {
+      const response = await this._fetchWithCsrf(`${API_URL}/messages/${messageId}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
-        },
       });
 
       const result = await response.json();
@@ -466,11 +458,7 @@ class MessageManager {
         params.append('conversationId', conversationId);
       }
 
-      const response = await fetch(`${API_URL}/messages/search?${params}`, {
-        headers: {
-          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
-        },
-      });
+      const response = await this._fetchWithCsrf(`${API_URL}/messages/search?${params}`);
 
       const result = await response.json();
 

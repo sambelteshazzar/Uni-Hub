@@ -56,9 +56,15 @@ class SearchManager {
       return;
     }
 
+    const escape = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml)
+      ? v => SecurityUtils.escapeHtml(String(v))
+      : v => String(v);
+
     const highlighted = (text, q) => {
-      const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-      return text.replace(regex, '<strong>$1</strong>');
+      const escaped = escape(text);
+      const safeQ = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`(${safeQ})`, 'gi');
+      return escaped.replace(regex, '<strong>$1</strong>');
     };
 
     let html = '';
@@ -67,17 +73,18 @@ class SearchManager {
         ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
         : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>';
 
-      html += `<div class="autocomplete-item" data-type="${item.type}" data-value="${item.text}" onmousedown="if(typeof searchManager!=='undefined')searchManager.selectSuggestion('${item.text.replace(/'/g, "\\'")}')">`;
+      const safeText = escape(item.text);
+      html += `<div class="autocomplete-item" data-type="${escape(item.type)}" data-value="${safeText}" onmousedown="if(typeof searchManager!=='undefined')searchManager.selectSuggestion(this.getAttribute('data-value'))">`;
       html += `<span class="autocomplete-icon">${icon}</span>`;
       if (item.image) {
-        html += `<img class="autocomplete-thumb" src="${item.image}" alt="" />`;
+        html += `<img class="autocomplete-thumb" src="${escape(item.image)}" alt="" />`;
       }
       html += `<span class="autocomplete-text">${highlighted(item.text, query)}</span>`;
       if (item.price) {
-        html += `<span class="autocomplete-price">GHS ${item.price}</span>`;
+        html += `<span class="autocomplete-price">GHS ${escape(String(item.price))}</span>`;
       }
       if (item.type === 'history') {
-        html += `<button class="autocomplete-remove" onmousedown="event.stopPropagation(); if(typeof searchManager!=='undefined')searchManager.removeSuggestion('${item.text.replace(/'/g, "\\'")}')">&times;</button>`;
+        html += `<button class="autocomplete-remove" onmousedown="event.stopPropagation(); if(typeof searchManager!=='undefined')searchManager.removeSuggestion(this.closest('.autocomplete-item').getAttribute('data-value'))">&times;</button>`;
       }
       html += '</div>';
     });

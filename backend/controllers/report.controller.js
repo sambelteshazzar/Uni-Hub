@@ -56,22 +56,13 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
 });
 
 exports.getSalesReport = asyncHandler(async (req, res) => {
-  const { startDate, endDate, groupBy = 'day' } = req.query;
+  const { startDate, endDate, groupBy } = req.query;
 
-  let groupFormat;
-  switch (groupBy) {
-    case 'week':
-      groupFormat = '%Y-%W';
-      break;
-    case 'month':
-      groupFormat = '%Y-%m';
-      break;
-    default:
-      groupFormat = '%Y-%m-%d';
-  }
+  const allowedGroupBy = { day: '%Y-%m-%d', week: '%Y-%W', month: '%Y-%m' };
+  const groupFormat = allowedGroupBy[groupBy] || allowedGroupBy.day;
 
-  let sql = `SELECT strftime('${groupFormat}', createdAt) as _id, SUM(pricing_grandTotal) as totalSales, COUNT(*) as orderCount FROM orders`;
-  const params = [];
+  let sql = `SELECT strftime(?, createdAt) as _id, SUM(pricing_grandTotal) as totalSales, COUNT(*) as orderCount FROM orders`;
+  const params = [groupFormat];
 
   const conditions = [];
   if (startDate) {

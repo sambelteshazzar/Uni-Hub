@@ -70,6 +70,13 @@ exports.verifyPayment = async (req, res) => {
       });
     }
 
+    if (!transactionId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Transaction ID is required for verification',
+      });
+    }
+
     const payment = db('payments').findById(paymentId);
 
     if (!payment) {
@@ -86,10 +93,24 @@ exports.verifyPayment = async (req, res) => {
       });
     }
 
-    const txnId = transactionId || `txn_${Date.now()}`;
+    if (payment.status === 'completed') {
+      return res.status(400).json({
+        success: false,
+        error: 'Payment has already been verified',
+      });
+    }
+
+    const verified = await verifyTransactionWithProvider(payment, transactionId);
+    if (!verified) {
+      return res.status(400).json({
+        success: false,
+        error: 'Transaction could not be verified with the payment provider',
+      });
+    }
+
     db('payments').updateById(paymentId, {
       status: 'completed',
-      transactionId: txnId,
+      transactionId: transactionId,
       verifiedAt: new Date().toISOString(),
     });
 
@@ -97,16 +118,16 @@ exports.verifyPayment = async (req, res) => {
     if (order) {
       db('orders').updateById(order.id, {
         payment_status: 'completed',
-        payment_transactionId: txnId,
+        payment_transactionId: transactionId,
       });
     }
 
-  const updatedPayment = db('payments').findById(paymentId);
+    const updatedPayment = db('payments').findById(paymentId);
 
-  const io = req.app.get('io');
-  notifyPaymentVerified(io, updatedPayment, order);
+    const io = req.app.get('io');
+    notifyPaymentVerified(io, updatedPayment, order);
 
-  res.json({
+    res.json({
       success: true,
       message: 'Payment verified successfully',
       data: updatedPayment,
@@ -220,4 +241,31 @@ function getPaymentInstructions (paymentMode, order) {
         message: 'Follow the payment instructions',
       };
   }
+}
+
+async function verifyTransactionWithProvider (payment, transactionId) {
+  const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+  if (payment.mode === 'momo' || payment.mode === 'telecel' || payment.mode === 'bank') {
+    if (!PAYSTACK_SECRET_KEY) {
+      console.error('PAYSTACK_SECRET_KEY not configured — payment verification skipped');
+      return false;
+    }
+    try {
+      const response = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(transactionId)}`, {
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
+      return data.status === true && data.data && data.data.status === 'success';
+    } catch (err) {
+      console.error('Paystack verification error:', err);
+      return false;
+    }
+  }
+  if (payment.mode === 'cash') {
+    return false;
+  }
+  return false;
 }

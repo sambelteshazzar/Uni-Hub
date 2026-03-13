@@ -228,7 +228,7 @@ class ModalManager {
    * @returns {string}
    */
   generateId () {
-    return `modal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `modal_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   /**

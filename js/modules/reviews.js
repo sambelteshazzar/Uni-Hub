@@ -10,11 +10,28 @@ class ReviewManager {
     this.currentSellerId = null;
   }
 
-  /**
-   * Submit a review for a seller
-   * @param {Object} data - { sellerId, rating, comment, productId?, orderId?, detailedRatings? }
-   * @returns {Promise}
-   */
+  async _fetchWithCsrf (url, options = {}) {
+    const token = typeof StorageManager !== 'undefined' ? StorageManager.getAuthToken() : null;
+    const isMutating = options.method && !['GET', 'HEAD', 'OPTIONS'].includes(options.method.toUpperCase());
+    let csrfHeaders = {};
+    if (isMutating && typeof api !== 'undefined' && api.fetchCsrfToken) {
+      const csrfToken = await api.fetchCsrfToken();
+      if (csrfToken) {
+        csrfHeaders = { 'X-CSRF-Token': csrfToken };
+      }
+    }
+    return fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...csrfHeaders,
+        ...options.headers,
+      },
+      ...(isMutating ? { credentials: 'include' } : {}),
+    });
+  }
+
   async submitReview (data) {
     try {
       const { sellerId, rating, comment, productId, orderId, detailedRatings } = data;
@@ -23,19 +40,10 @@ class ReviewManager {
         throw new Error('Seller ID and rating are required');
       }
 
-      const response = await fetch(`${window.API_URL || ''}/api/reviews`, {
+      const response = await this._fetchWithCsrf(`${window.API_URL || ''}/api/reviews`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
-        },
         body: JSON.stringify({
-          sellerId,
-          rating,
-          comment,
-          productId,
-          orderId,
-          detailedRatings,
+          sellerId, rating, comment, productId, orderId, detailedRatings,
         }),
       });
 
@@ -66,7 +74,7 @@ class ReviewManager {
       const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = -1 } = options;
       const params = new URLSearchParams({ page, limit, sortBy, sortOrder });
 
-      const response = await fetch(`${API_URL}/reviews/seller/${sellerId}?${params}`);
+      const response = await this._fetchWithCsrf(`${API_URL}/reviews/seller/${sellerId}?${params}`);
       const result = await response.json();
 
       if (!response.ok) {
@@ -86,34 +94,25 @@ class ReviewManager {
    */
   async getRatingSummary (sellerId) {
     try {
-      const response = await fetch(`${API_URL}/reviews/seller/${sellerId}/summary`);
-      const result = await response.json();
+    const response = await this._fetchWithCsrf(`${API_URL}/reviews/seller/${sellerId}/summary`);
+    const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to fetch rating summary');
-      }
-
-      return result.data;
-    } catch (error) {
-      throw error;
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to fetch rating summary');
     }
+
+    return result.data;
+  } catch (error) {
+    throw error;
   }
+}
 
-  /**
-   * Get user's reviews
-   * @param {Object} options
-   * @returns {Promise}
-   */
-  async getMyReviews (options = {}) {
-    try {
-      const { page = 1, limit = 10 } = options;
-      const params = new URLSearchParams({ page, limit });
+async getMyReviews (options = {}) {
+  try {
+    const { page = 1, limit = 10 } = options;
+    const params = new URLSearchParams({ page, limit });
 
-      const response = await fetch(`${API_URL}/reviews/my-reviews?${params}`, {
-        headers: {
-          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
-        },
-      });
+    const response = await this._fetchWithCsrf(`${API_URL}/reviews/my-reviews?${params}`);
 
       const result = await response.json();
 
@@ -135,12 +134,8 @@ class ReviewManager {
    */
   async updateReview (reviewId, data) {
     try {
-      const response = await fetch(`${API_URL}/reviews/${reviewId}`, {
+      const response = await this._fetchWithCsrf(`${API_URL}/reviews/${reviewId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
-        },
         body: JSON.stringify(data),
       });
 
@@ -167,11 +162,8 @@ class ReviewManager {
    */
   async deleteReview (reviewId) {
     try {
-      const response = await fetch(`${API_URL}/reviews/${reviewId}`, {
+      const response = await this._fetchWithCsrf(`${API_URL}/reviews/${reviewId}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
-        },
       });
 
       const result = await response.json();
@@ -197,11 +189,8 @@ class ReviewManager {
    */
   async markHelpful (reviewId) {
     try {
-      const response = await fetch(`${API_URL}/reviews/${reviewId}/helpful`, {
+      const response = await this._fetchWithCsrf(`${API_URL}/reviews/${reviewId}/helpful`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
-        },
       });
 
       const result = await response.json();
@@ -223,11 +212,8 @@ class ReviewManager {
    */
   async reportReview (reviewId) {
     try {
-      const response = await fetch(`${API_URL}/reviews/${reviewId}/report`, {
+      const response = await this._fetchWithCsrf(`${API_URL}/reviews/${reviewId}/report`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
-        },
       });
 
       const result = await response.json();
@@ -254,12 +240,8 @@ class ReviewManager {
    */
   async respondToReview (reviewId, comment) {
     try {
-      const response = await fetch(`${API_URL}/reviews/${reviewId}/respond`, {
+      const response = await this._fetchWithCsrf(`${API_URL}/reviews/${reviewId}/respond`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
-        },
         body: JSON.stringify({ comment }),
       });
 

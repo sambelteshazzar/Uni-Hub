@@ -385,256 +385,268 @@ Pages.handleLoginBB = async function (event) {
         .slice(0, 2);
       const recentOrders = Array.isArray(orders) ? orders.slice(0, 5) : [];
 
-      const mainContent = document.getElementById('main-content');
-      mainContent.innerHTML =
-      '<div class="bb-dashboard">' +
-      '<div class="bb-dashboard-header">' +
-      '<div class="bb-dashboard-header-inner">' +
-      '<h1 class="bb-dashboard-title">My Account</h1>' +
-      '<div class="bb-dashboard-user">' +
-      '<div class="bb-dashboard-info">' +
-      '<div class="bb-dashboard-user-name">' +
-      currentUser.fullName +
-      '</div>' +
-      '<div class="bb-dashboard-user-email">' +
-      currentUser.email +
-      '</div>' +
-      '</div>' +
-      '<div class="bb-dashboard-avatar">' +
-      initials +
-      '</div>' +
-      '</div>' +
-      '</div>' +
-      '</div>' +
-      '<div class="bb-dashboard-layout">' +
-      '<nav class="bb-dashboard-nav">' +
-      '<div class="bb-dashboard-nav-item"><button class="bb-dashboard-nav-link active" data-tab="overview" onclick="Pages.switchDashboardTabBB(\'overview\')"><span class="bb-dashboard-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></span>Overview</button></div>' +
-      '<div class="bb-dashboard-nav-item"><button class="bb-dashboard-nav-link" data-tab="orders" onclick="Pages.switchDashboardTabBB(\'orders\')"><span class="bb-dashboard-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg></span>Orders' +
-      (orders.length > 0
-        ? '<span class="bb-dashboard-nav-badge">' + orders.length + '</span>'
-        : '') +
-      '</button></div>' +
-      '<div class="bb-dashboard-nav-item"><button class="bb-dashboard-nav-link" data-tab="wishlist" onclick="Pages.switchDashboardTabBB(\'wishlist\')"><span class="bb-dashboard-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></span>Wishlist' +
-      (wishlist.length > 0
-        ? '<span class="bb-dashboard-nav-badge">' + wishlist.length + '</span>'
-        : '') +
-      '</button></div>' +
-      '<div class="bb-dashboard-nav-item"><button class="bb-dashboard-nav-link" data-tab="cart" onclick="Pages.switchDashboardTabBB(\'cart\')"><span class="bb-dashboard-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg></span>Cart' +
-      (cartCount > 0 ? '<span class="bb-dashboard-nav-badge">' + cartCount + '</span>' : '') +
-      '</button></div>' +
-      '<div class="bb-dashboard-nav-item"><button class="bb-dashboard-nav-link" data-tab="profile" onclick="Pages.switchDashboardTabBB(\'profile\')"><span class="bb-dashboard-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>Profile</button></div>' +
-      '<div class="bb-dashboard-nav-item"><button class="bb-dashboard-nav-link" data-tab="settings" onclick="Pages.switchDashboardTabBB(\'settings\')"><span class="bb-dashboard-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>Settings</button></div>' +
-      '</nav>' +
-      '<main class="bb-dashboard-main">' +
-      // OVERVIEW PANEL
-      '<div class="bb-panel active" id="bb-panel-overview">' +
-      '<div class="bb-panel-header">' +
-      '<h2 class="bb-panel-title">Welcome back, ' +
-      currentUser.fullName.split(' ')[0] +
-      '!</h2>' +
-      '<p class="bb-panel-subtitle">Here\'s what\'s happening with your account today.</p>' +
-      '</div>' +
-      '<div class="bb-stats-row">' +
-      '<div class="bb-stat-card"><div class="bb-stat-value">' +
-      orders.length +
-      '</div><div class="bb-stat-label">Total Orders</div></div>' +
-      '<div class="bb-stat-card"><div class="bb-stat-value">' +
-      wishlist.length +
-      '</div><div class="bb-stat-label">Wishlist Items</div></div>' +
-      '<div class="bb-stat-card"><div class="bb-stat-value">' +
-      cartCount +
-      '</div><div class="bb-stat-label">Cart Items</div></div>' +
-      '<div class="bb-stat-card"><div class="bb-stat-value" style="font-size:1rem;">' +
-      (currentUser.university ? currentUser.university.toUpperCase() : 'N/A') +
-      '</div><div class="bb-stat-label">University</div></div>' +
-      '</div>' +
-      '<h3 style="font-size:var(--text-lg);font-weight:700;color:#1a1a1a;margin-bottom:var(--space-md);">Recent Orders</h3>' +
-      '<div class="bb-orders-list">' +
-      (recentOrders.length > 0
-        ? recentOrders
-          .map(function (order) {
-            return (
-              '<div class="bb-order-card">' +
-                '<div class="bb-order-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg></div>' +
-                '<div class="bb-order-info"><div class="bb-order-number">Order #' +
-                order.orderNumber +
-                '</div><div class="bb-order-details">' +
-                order.items.length +
-                ' item(s) • ' +
-                Formatter.formatPrice(order.pricing.grandTotal) +
-                '</div></div>' +
-                '<div class="bb-order-amount">' +
-                Formatter.formatTimeAgo(order.createdAt) +
-                '</div>' +
-                '<span class="bb-order-status ' +
-                (order.status ? order.status.toLowerCase() : 'placed') +
-                '">' +
-                (order.status
-                  ? order.status.charAt(0).toUpperCase() + order.status.slice(1)
-                  : 'Placed') +
-                '</span>' +
-                '</div>'
-            );
-          })
-          .join('')
-        : '<div class="bb-empty"><div class="bb-empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg></div><h3 class="bb-empty-title">No orders yet</h3><p class="bb-empty-desc">Start shopping to see your orders here!</p></div>') +
-      '</div>' +
-      '<div class="bb-quick-actions">' +
-      '<a href="#/browse" class="bb-quick-action" onclick="Pages.renderBrowse(); return false;"><span class="bb-quick-action-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><span class="bb-quick-action-label">Browse Items</span></a>' +
-      '<a href="#/sell" class="bb-quick-action" onclick="Pages.renderSell(); return false;"><span class="bb-quick-action-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span><span class="bb-quick-action-label">Start Selling</span></a>' +
-      '<a href="#/cart" class="bb-quick-action" onclick="Pages.renderCart(); return false;"><span class="bb-quick-action-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg></span><span class="bb-quick-action-label">View Cart</span></a>' +
-      '</div>' +
-      '</div>' +
-      // ORDERS PANEL
-      '<div class="bb-panel" id="bb-panel-orders">' +
-      '<div class="bb-panel-header">' +
-      '<h2 class="bb-panel-title">My Orders</h2>' +
-      '<p class="bb-panel-subtitle">Track and manage all your orders.</p>' +
-      '</div>' +
-      '<div class="bb-orders-list">' +
-      (orders.length > 0
-        ? orders
-          .map(function (order) {
-            return (
-              '<div class="bb-order-card">' +
-                '<div class="bb-order-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg></div>' +
-                '<div class="bb-order-info"><div class="bb-order-number">Order #' +
-                order.orderNumber +
-                '</div><div class="bb-order-details">' +
-                order.items.length +
-                ' item(s) • ' +
-                Formatter.formatPrice(order.pricing.grandTotal) +
-                '</div></div>' +
-                '<div class="bb-order-amount">' +
-                Formatter.formatTimeAgo(order.createdAt) +
-                '</div>' +
-                '<span class="bb-order-status ' +
-                (order.status ? order.status.toLowerCase() : 'placed') +
-                '">' +
-                (order.status
-                  ? order.status.charAt(0).toUpperCase() + order.status.slice(1)
-                  : 'Placed') +
-                '</span>' +
-                '</div>'
-            );
-          })
-          .join('')
-        : '<div class="bb-empty"><div class="bb-empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg></div><h3 class="bb-empty-title">No orders yet</h3><p class="bb-empty-desc">Browse products and make your first purchase!</p></div>') +
-      '</div>' +
-      '</div>' +
-      // WISHLIST PANEL
-      '<div class="bb-panel" id="bb-panel-wishlist">' +
-      '<div class="bb-panel-header">' +
-      '<h2 class="bb-panel-title">My Wishlist</h2>' +
-      '<p class="bb-panel-subtitle">Items you\'ve saved for later.</p>' +
-      '</div>' +
-      (wishlist.length > 0
-        ? '<div class="bb-wishlist-grid">' +
-          wishlist
-            .map(function (product) {
-              return (
-                '<div class="bb-wishlist-card" onclick="Pages.renderProductDetail(\'' +
-                product.id +
-                '\')">' +
-                '<img src="' +
-                product.images[0] +
-                '" alt="' +
-                product.title +
-                '" class="bb-wishlist-image" />' +
-                '<div class="bb-wishlist-info">' +
-                '<h4 class="bb-wishlist-title">' +
-                product.title +
-                '</h4>' +
-                '<div class="bb-wishlist-price">' +
-                product.price.toLocaleString() +
-                ' GHS</div>' +
-                '</div>' +
-                '</div>'
-              );
-            })
-            .join('') +
-          '</div>'
-        : '<div class="bb-empty"><div class="bb-empty-icon">' + Icons.heartOutline + '</div><h3 class="bb-empty-title">Your wishlist is empty</h3><p class="bb-empty-desc">Save items you love to find them later!</p></div>') +
-      '</div>' +
-      // CART PANEL
-      '<div class="bb-panel" id="bb-panel-cart">' +
-      '<div class="bb-panel-header">' +
-      '<h2 class="bb-panel-title">Shopping Cart</h2>' +
-      '<p class="bb-panel-subtitle">Review items before checkout.</p>' +
-      '</div>' +
-      (cartCount > 0
-        ? '<div class="bb-orders-list">' +
-          cartManager
-            .getItems()
-            .map(function (item) {
-              return (
-                '<div class="bb-order-card">' +
-                '<div class="bb-order-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg></div>' +
-                '<div class="bb-order-info"><div class="bb-order-number">' +
-                item.product.title +
-                '</div><div class="bb-order-details">Qty: ' +
-                item.quantity +
-                ' × ' +
-                item.product.price.toLocaleString() +
-                ' GHS</div></div>' +
-                '</div>'
-              );
-            })
-            .join('') +
-          '</div>' +
-          '<div style="margin-top:1.5rem;display:flex;gap:var(--space-md);">' +
-          '<button onclick="cartManager.clear(); Pages.renderDashboard();" style="padding:var(--space-md) var(--space-xl);border:1px solid #d4d4d4;border-radius:var(--radius-md);background:#fff;font-size:var(--text-sm);font-weight:600;cursor:pointer;">Clear Cart</button>' +
-          '<button onclick="event.preventDefault(); Pages.handleProceedToCheckout();" style="padding:var(--space-md) var(--space-xl);background:#0046be;color:#fff;border:none;border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:700;cursor:pointer;">Proceed to Checkout →</button>' +
-          '</div>'
-        : '<div class="bb-empty"><div class="bb-empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg></div><h3 class="bb-empty-title">Your cart is empty</h3><p class="bb-empty-desc">Add items to get started!</p></div>') +
-      '</div>' +
-      // PROFILE PANEL
-      '<div class="bb-panel" id="bb-panel-profile">' +
-      '<div class="bb-panel-header">' +
-      '<h2 class="bb-panel-title">Edit Profile</h2>' +
-      '<p class="bb-panel-subtitle">Update your personal information.</p>' +
-      '</div>' +
-      '<div class="bb-profile-form">' +
-      '<form id="profile-form-bb" onsubmit="Pages.handleProfileUpdate(event)">' +
-      '<div class="bb-form-group"><label class="bb-form-label">Full Name</label><input type="text" id="fullName" name="fullName" class="bb-form-input" value="' +
-      currentUser.fullName +
-      '" required /></div>' +
-      '<div class="bb-form-group"><label class="bb-form-label">Email</label><input type="email" id="email" name="email" class="bb-form-input" value="' +
-      currentUser.email +
-      '" required /></div>' +
-      '<div class="bb-form-group"><label class="bb-form-label">Phone</label><input type="tel" id="phone" name="phone" class="bb-form-input" value="' +
-      (currentUser.phone || '') +
-      '" /></div>' +
-      '<div class="bb-form-group"><label class="bb-form-label">University</label><input type="text" class="bb-form-input" value="' +
-      (currentUser.university || 'Not set') +
-      '" disabled /></div>' +
-      '<button type="submit" class="bb-save-btn">Save Changes</button>' +
-      '</form>' +
-      '</div>' +
-      '</div>' +
-      // SETTINGS PANEL
-      '<div class="bb-panel" id="bb-panel-settings">' +
-      '<div class="bb-panel-header">' +
-      '<h2 class="bb-panel-title">Settings</h2>' +
-      '<p class="bb-panel-subtitle">Manage your account preferences.</p>' +
-      '</div>' +
-      '<div class="bb-profile-form">' +
-'<div class="bb-form-group"><label class="bb-form-label">Account Status</label><input type="text" class="bb-form-input" value="' +
-        (currentUser.isVerified ? 'Verified' : 'Pending Verification') +
-      '" disabled /></div>' +
-      '<div class="bb-form-group"><label class="bb-form-label">Role</label><input type="text" class="bb-form-input" value="' +
-      (currentUser.role
-        ? currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)
-        : 'Buyer') +
-      '" disabled /></div>' +
-      '<div style="margin-top:var(--space-xl);">' +
-      '<button onclick="Pages.handleLogout();" style="width:100%;height:48px;padding:0 var(--space-xl);border:1px solid #d4d4d4;border-radius:var(--radius-md);background:#fff;font-size:var(--text-sm);font-weight:600;cursor:pointer;color:#1a1a1a;">' + Icons.logout + ' Log Out</button>' +
-      '</div>' +
-      '</div>' +
-      '</div>' +
-      '</main>' +
-      '</div>' +
-      '</div>';
+  const safeFullName = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ? SecurityUtils.escapeHtml(currentUser.fullName) : currentUser.fullName;
+    const safeEmail = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ? SecurityUtils.escapeHtml(currentUser.email) : currentUser.email;
+    const safePhone = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ? SecurityUtils.escapeHtml(currentUser.phone || '') : (currentUser.phone || '');
+    const safeUniversity = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ? SecurityUtils.escapeHtml(currentUser.university || '') : (currentUser.university || '');
+    const safeFirstName = safeFullName.split(' ')[0];
+
+    const mainContent = document.getElementById('main-content');
+    mainContent.innerHTML =
+    '<div class="bb-dashboard">' +
+    '<div class="bb-dashboard-header">' +
+    '<div class="bb-dashboard-header-inner">' +
+    '<h1 class="bb-dashboard-title">My Account</h1>' +
+    '<div class="bb-dashboard-user">' +
+    '<div class="bb-dashboard-info">' +
+    '<div class="bb-dashboard-user-name">' +
+    safeFullName +
+    '</div>' +
+    '<div class="bb-dashboard-user-email">' +
+    safeEmail +
+    '</div>' +
+    '</div>' +
+    '<div class="bb-dashboard-avatar">' +
+    initials +
+    '</div>' +
+    '</div>' +
+    '</div>' +
+    '</div>' +
+    '<div class="bb-dashboard-layout">' +
+    '<nav class="bb-dashboard-nav">' +
+    '<div class="bb-dashboard-nav-item"><button class="bb-dashboard-nav-link active" data-tab="overview" onclick="Pages.switchDashboardTabBB(\'overview\')"><span class="bb-dashboard-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></span>Overview</button></div>' +
+    '<div class="bb-dashboard-nav-item"><button class="bb-dashboard-nav-link" data-tab="orders" onclick="Pages.switchDashboardTabBB(\'orders\')"><span class="bb-dashboard-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg></span>Orders' +
+    (orders.length > 0
+    ? '<span class="bb-dashboard-nav-badge">' + orders.length + '</span>'
+    : '') +
+    '</button></div>' +
+    '<div class="bb-dashboard-nav-item"><button class="bb-dashboard-nav-link" data-tab="wishlist" onclick="Pages.switchDashboardTabBB(\'wishlist\')"><span class="bb-dashboard-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></span>Wishlist' +
+    (wishlist.length > 0
+    ? '<span class="bb-dashboard-nav-badge">' + wishlist.length + '</span>'
+    : '') +
+    '</button></div>' +
+    '<div class="bb-dashboard-nav-item"><button class="bb-dashboard-nav-link" data-tab="cart" onclick="Pages.switchDashboardTabBB(\'cart\')"><span class="bb-dashboard-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg></span>Cart' +
+    (cartCount > 0 ? '<span class="bb-dashboard-nav-badge">' + cartCount + '</span>' : '') +
+    '</button></div>' +
+    '<div class="bb-dashboard-nav-item"><button class="bb-dashboard-nav-link" data-tab="profile" onclick="Pages.switchDashboardTabBB(\'profile\')"><span class="bb-dashboard-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>Profile</button></div>' +
+    '<div class="bb-dashboard-nav-item"><button class="bb-dashboard-nav-link" data-tab="settings" onclick="Pages.switchDashboardTabBB(\'settings\')"><span class="bb-dashboard-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>Settings</button></div>' +
+    '</nav>' +
+    '<main class="bb-dashboard-main">' +
+    // OVERVIEW PANEL
+    '<div class="bb-panel active" id="bb-panel-overview">' +
+    '<div class="bb-panel-header">' +
+    '<h2 class="bb-panel-title">Welcome back, ' +
+    safeFirstName +
+    '!</h2>' +
+    '<p class="bb-panel-subtitle">Here\'s what\'s happening with your account today.</p>' +
+    '</div>' +
+    '<div class="bb-stats-row">' +
+    '<div class="bb-stat-card"><div class="bb-stat-value">' +
+    orders.length +
+    '</div><div class="bb-stat-label">Total Orders</div></div>' +
+    '<div class="bb-stat-card"><div class="bb-stat-value">' +
+    wishlist.length +
+    '</div><div class="bb-stat-label">Wishlist Items</div></div>' +
+    '<div class="bb-stat-card"><div class="bb-stat-value">' +
+    cartCount +
+    '</div><div class="bb-stat-label">Cart Items</div></div>' +
+    '<div class="bb-stat-card"><div class="bb-stat-value" style="font-size:1rem;">' +
+    (safeUniversity ? safeUniversity.toUpperCase() : 'N/A') +
+    '</div><div class="bb-stat-label">University</div></div>' +
+    '</div>' +
+    '<h3 style="font-size:var(--text-lg);font-weight:700;color:#1a1a1a;margin-bottom:var(--space-md);">Recent Orders</h3>' +
+    '<div class="bb-orders-list">' +
+    (recentOrders.length > 0
+    ? recentOrders
+    .map(function (order) {
+    var safeOrderNumber = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ? SecurityUtils.escapeHtml(order.orderNumber) : order.orderNumber;
+    return (
+    '<div class="bb-order-card">' +
+    '<div class="bb-order-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg></div>' +
+    '<div class="bb-order-info"><div class="bb-order-number">Order #' +
+    safeOrderNumber +
+    '</div><div class="bb-order-details">' +
+    order.items.length +
+    ' item(s) \u2022 ' +
+    Formatter.formatPrice(order.pricing.grandTotal) +
+    '</div></div>' +
+    '<div class="bb-order-amount">' +
+    Formatter.formatTimeAgo(order.createdAt) +
+    '</div>' +
+    '<span class="bb-order-status ' +
+    (order.status ? order.status.toLowerCase() : 'placed') +
+    '">' +
+    (order.status
+    ? order.status.charAt(0).toUpperCase() + order.status.slice(1)
+    : 'Placed') +
+    '</span>' +
+    '</div>'
+    );
+    })
+    .join('')
+    : '<div class="bb-empty"><div class="bb-empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg></div><h3 class="bb-empty-title">No orders yet</h3><p class="bb-empty-desc">Start shopping to see your orders here!</p></div>') +
+    '</div>' +
+    '<div class="bb-quick-actions">' +
+    '<a href="#/browse" class="bb-quick-action" onclick="Pages.renderBrowse(); return false;"><span class="bb-quick-action-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><span class="bb-quick-action-label">Browse Items</span></a>' +
+    '<a href="#/sell" class="bb-quick-action" onclick="Pages.renderSell(); return false;"><span class="bb-quick-action-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span><span class="bb-quick-action-label">Start Selling</span></a>' +
+    '<a href="#/cart" class="bb-quick-action" onclick="Pages.renderCart(); return false;"><span class="bb-quick-action-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg></span><span class="bb-quick-action-label">View Cart</span></a>' +
+    '</div>' +
+    '</div>' +
+    // ORDERS PANEL
+    '<div class="bb-panel" id="bb-panel-orders">' +
+    '<div class="bb-panel-header">' +
+    '<h2 class="bb-panel-title">My Orders</h2>' +
+    '<p class="bb-panel-subtitle">Track and manage all your orders.</p>' +
+    '</div>' +
+    '<div class="bb-orders-list">' +
+    (orders.length > 0
+    ? orders
+    .map(function (order) {
+    var safeOrderNumber = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ? SecurityUtils.escapeHtml(order.orderNumber) : order.orderNumber;
+    return (
+    '<div class="bb-order-card">' +
+    '<div class="bb-order-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg></div>' +
+    '<div class="bb-order-info"><div class="bb-order-number">Order #' +
+    safeOrderNumber +
+    '</div><div class="bb-order-details">' +
+    order.items.length +
+    ' item(s) \u2022 ' +
+    Formatter.formatPrice(order.pricing.grandTotal) +
+    '</div></div>' +
+    '<div class="bb-order-amount">' +
+    Formatter.formatTimeAgo(order.createdAt) +
+    '</div>' +
+    '<span class="bb-order-status ' +
+    (order.status ? order.status.toLowerCase() : 'placed') +
+    '">' +
+    (order.status
+    ? order.status.charAt(0).toUpperCase() + order.status.slice(1)
+    : 'Placed') +
+    '</span>' +
+    '</div>'
+    );
+    })
+    .join('')
+    : '<div class="bb-empty"><div class="bb-empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg></div><h3 class="bb-empty-title">No orders yet</h3><p class="bb-empty-desc">Browse products and make your first purchase!</p></div>') +
+    '</div>' +
+    '</div>' +
+    // WISHLIST PANEL
+    '<div class="bb-panel" id="bb-panel-wishlist">' +
+    '<div class="bb-panel-header">' +
+    '<h2 class="bb-panel-title">My Wishlist</h2>' +
+    '<p class="bb-panel-subtitle">Items you\'ve saved for later.</p>' +
+    '</div>' +
+    (wishlist.length > 0
+    ? '<div class="bb-wishlist-grid">' +
+    wishlist
+    .map(function (product) {
+    var safeId = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ? SecurityUtils.escapeHtml(product.id) : product.id;
+    var safeTitle = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ? SecurityUtils.escapeHtml(product.title) : product.title;
+    var safeImage = product.images && product.images[0] ? ((typeof SecurityUtils !== 'undefined' && SecurityUtils.sanitizeUrl) ? (SecurityUtils.sanitizeUrl(product.images[0]) || '') : product.images[0]) : '';
+    return (
+    '<div class="bb-wishlist-card" onclick="Pages.renderProductDetail(\'' +
+    safeId.replace(/'/g, "\\'") +
+    '\')">' +
+    '<img src="' +
+    safeImage +
+    '" alt="' +
+    safeTitle +
+    '" class="bb-wishlist-image" />' +
+    '<div class="bb-wishlist-info">' +
+    '<h4 class="bb-wishlist-title">' +
+    safeTitle +
+    '</h4>' +
+    '<div class="bb-wishlist-price">' +
+    product.price.toLocaleString() +
+    ' GHS</div>' +
+    '</div>' +
+    '</div>'
+    );
+    })
+    .join('') +
+    '</div>'
+    : '<div class="bb-empty"><div class="bb-empty-icon">' + Icons.heartOutline + '</div><h3 class="bb-empty-title">Your wishlist is empty</h3><p class="bb-empty-desc">Save items you love to find them later!</p></div>') +
+    '</div>' +
+    // CART PANEL
+    '<div class="bb-panel" id="bb-panel-cart">' +
+    '<div class="bb-panel-header">' +
+    '<h2 class="bb-panel-title">Shopping Cart</h2>' +
+    '<p class="bb-panel-subtitle">Review items before checkout.</p>' +
+    '</div>' +
+    (cartCount > 0
+    ? '<div class="bb-orders-list">' +
+    cartManager
+    .getItems()
+    .map(function (item) {
+    var safeItemTitle = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ? SecurityUtils.escapeHtml(item.product.title) : item.product.title;
+    return (
+    '<div class="bb-order-card">' +
+    '<div class="bb-order-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg></div>' +
+    '<div class="bb-order-info"><div class="bb-order-number">' +
+    safeItemTitle +
+    '</div><div class="bb-order-details">Qty: ' +
+    item.quantity +
+    ' \u00d7 ' +
+    item.product.price.toLocaleString() +
+    ' GHS</div></div>' +
+    '</div>'
+    );
+    })
+    .join('') +
+    '</div>' +
+    '<div style="margin-top:1.5rem;display:flex;gap:var(--space-md);">' +
+    '<button onclick="cartManager.clear(); Pages.renderDashboard();" style="padding:var(--space-md) var(--space-xl);border:1px solid #d4d4d4;border-radius:var(--radius-md);background:#fff;font-size:var(--text-sm);font-weight:600;cursor:pointer;">Clear Cart</button>' +
+    '<button onclick="event.preventDefault(); Pages.handleProceedToCheckout();" style="padding:var(--space-md) var(--space-xl);background:#0046be;color:#fff;border:none;border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:700;cursor:pointer;">Proceed to Checkout \u2192</button>' +
+    '</div>'
+    : '<div class="bb-empty"><div class="bb-empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg></div><h3 class="bb-empty-title">Your cart is empty</h3><p class="bb-empty-desc">Add items to get started!</p></div>') +
+    '</div>' +
+    // PROFILE PANEL
+    '<div class="bb-panel" id="bb-panel-profile">' +
+    '<div class="bb-panel-header">' +
+    '<h2 class="bb-panel-title">Edit Profile</h2>' +
+    '<p class="bb-panel-subtitle">Update your personal information.</p>' +
+    '</div>' +
+    '<div class="bb-profile-form">' +
+    '<form id="profile-form-bb" onsubmit="Pages.handleProfileUpdate(event)">' +
+    '<div class="bb-form-group"><label class="bb-form-label">Full Name</label><input type="text" id="fullName" name="fullName" class="bb-form-input" value="' +
+    safeFullName +
+    '" required /></div>' +
+    '<div class="bb-form-group"><label class="bb-form-label">Email</label><input type="email" id="email" name="email" class="bb-form-input" value="' +
+    safeEmail +
+    '" required /></div>' +
+    '<div class="bb-form-group"><label class="bb-form-label">Phone</label><input type="tel" id="phone" name="phone" class="bb-form-input" value="' +
+    safePhone +
+    '" /></div>' +
+    '<div class="bb-form-group"><label class="bb-form-label">University</label><input type="text" class="bb-form-input" value="' +
+    (safeUniversity || 'Not set') +
+    '" disabled /></div>' +
+    '<button type="submit" class="bb-save-btn">Save Changes</button>' +
+    '</form>' +
+    '</div>' +
+    '</div>' +
+    // SETTINGS PANEL
+    '<div class="bb-panel" id="bb-panel-settings">' +
+    '<div class="bb-panel-header">' +
+    '<h2 class="bb-panel-title">Settings</h2>' +
+    '<p class="bb-panel-subtitle">Manage your account preferences.</p>' +
+    '</div>' +
+    '<div class="bb-profile-form">' +
+    '<div class="bb-form-group"><label class="bb-form-label">Account Status</label><input type="text" class="bb-form-input" value="' +
+    (currentUser.isVerified ? 'Verified' : 'Pending Verification') +
+    '" disabled /></div>' +
+    '<div class="bb-form-group"><label class="bb-form-label">Role</label><input type="text" class="bb-form-input" value="' +
+    (currentUser.role
+    ? currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)
+    : 'Buyer') +
+    '" disabled /></div>' +
+    '<div style="margin-top:var(--space-xl);">' +
+    '<button onclick="Pages.handleLogout();" style="width:100%;height:48px;padding:0 var(--space-xl);border:1px solid #d4d4d4;border-radius:var(--radius-md);background:#fff;font-size:var(--text-sm);font-weight:600;cursor:pointer;color:#1a1a1a;">' + Icons.logout + ' Log Out</button>' +
+    '</div>' +
+    '</div>' +
+    '</div>' +
+    '</main>' +
+    '</div>' +
+    '</div>';
 
       window.scrollTo({ top: 0 });
     };

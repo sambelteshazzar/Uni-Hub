@@ -165,19 +165,61 @@ exports.getProduct = async (req, res) => {
  */
 exports.createProduct = async (req, res) => {
   try {
-  const {
-  title,
-  description,
-  price,
-  category,
-  condition,
-  variants,
-  images,
-  deliveryModes,
-  paymentModes,
-  } = req.body;
+    const {
+      title,
+      description,
+      price,
+      category,
+      condition,
+      variants,
+      images,
+      deliveryModes,
+      paymentModes,
+    } = req.body;
 
-  // Create product
+    if (!title || typeof title !== 'string' || title.trim().length < 3) {
+      return res.status(400).json({ success: false, error: 'Title is required (at least 3 characters)' });
+    }
+
+    if (!description || typeof description !== 'string' || description.trim().length < 10) {
+      return res.status(400).json({ success: false, error: 'Description is required (at least 10 characters)' });
+    }
+
+    if (price === undefined || typeof price !== 'number' || price <= 0) {
+      return res.status(400).json({ success: false, error: 'A valid price greater than 0 is required' });
+    }
+
+    if (price > 100000) {
+      return res.status(400).json({ success: false, error: 'Price cannot exceed 100,000 GHS' });
+    }
+
+    const allowedCategories = ['electronics', 'furniture', 'clothing', 'books', 'sports', 'kitchen', 'other'];
+    if (!category || !allowedCategories.includes(category)) {
+      return res.status(400).json({ success: false, error: 'Valid category is required' });
+    }
+
+    const allowedConditions = ['new', 'like-new', 'good', 'fair', 'poor'];
+    if (!condition || !allowedConditions.includes(condition)) {
+      return res.status(400).json({ success: false, error: 'Valid condition is required' });
+    }
+
+    if (images && !Array.isArray(images)) {
+      return res.status(400).json({ success: false, error: 'Images must be an array' });
+    }
+
+    if (images && images.length > 5) {
+      return res.status(400).json({ success: false, error: 'Maximum 5 images allowed' });
+    }
+
+    if (deliveryModes && !Array.isArray(deliveryModes)) {
+      return res.status(400).json({ success: false, error: 'Delivery modes must be an array' });
+    }
+
+    if (paymentModes && !Array.isArray(paymentModes)) {
+      return res.status(400).json({ success: false, error: 'Payment modes must be an array' });
+    }
+
+    // Create product
   const product = db('products').create({
   title,
   description,

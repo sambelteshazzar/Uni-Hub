@@ -152,6 +152,9 @@ exports.getSellerReviews = async (req, res) => {
     const { sellerId } = req.params;
     const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = -1 } = req.query;
 
+    const allowedSortFields = ['createdAt', 'rating', 'updatedAt'];
+    const safeSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
+
     const seller = db('users').findById(sellerId);
     if (!seller) {
       return res.status(404).json({
@@ -165,7 +168,7 @@ exports.getSellerReviews = async (req, res) => {
     const skip = (pageNum - 1) * limitNum;
 
     const sortObj = {};
-    sortObj[sortBy] = parseInt(sortOrder);
+    sortObj[safeSortBy] = parseInt(sortOrder);
 
     const reviews = db('reviews').find({ seller: sellerId }, { sort: sortObj, limit: limitNum, skip });
     const total = db('reviews').countDocuments({ seller: sellerId });

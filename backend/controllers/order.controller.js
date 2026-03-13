@@ -68,73 +68,79 @@ exports.createOrder = async (req, res) => {
       const images = parseJson(dbProduct.images) || [];
       subtotal += dbProduct.price * item.quantity;
       const sellerUser = db('users').findById(dbProduct.seller);
-  verifiedItems.push({
-  productId: item.productId,
-  title: dbProduct.title,
-  price: dbProduct.price,
-  quantity: item.quantity,
-  seller: dbProduct.seller,
-  sellerName: sellerUser ? sellerUser.fullName : '',
-  image: item.image || (images && images[0]) || '',
-  variant: item.variant || null,
-  });
+      verifiedItems.push({
+        productId: item.productId,
+        title: dbProduct.title,
+        price: dbProduct.price,
+        quantity: item.quantity,
+        seller: dbProduct.seller,
+        sellerName: sellerUser ? sellerUser.fullName : '',
+        image: item.image || (images && images[0]) || '',
+        variant: item.variant || null,
+      });
     }
 
     const deliveryFee = delivery.mode === 'inperson' ? 0 : delivery.mode === 'yango' ? 12 : 15;
     const grandTotal = subtotal + deliveryFee;
 
-    const order = db('orders').create({
-      userId: req.user.id,
-      customer_name: req.user.fullName,
-      customer_email: req.user.email,
-      customer_phone: req.user.phone || '',
-      customer_university: req.user.university || '',
-      pricing_subtotal: subtotal,
-      pricing_deliveryFee: deliveryFee,
-      pricing_grandTotal: grandTotal,
-      pricing_currency: 'GHS',
-      delivery_mode: delivery.mode,
-      delivery_address: delivery.address || '',
-      delivery_instructions: delivery.instructions || '',
-      delivery_status: 'pending',
-      payment_mode: payment.mode,
-      payment_status: 'pending',
-      payment_transactionId: '',
-      payment_paidAt: '',
-      status: 'pending',
-      orderNumber: `ORD-${Date.now()}`,
+    const createOrderTransaction = db('orders').db.transaction(() => {
+      const order = db('orders').create({
+        userId: req.user.id,
+        customer_name: req.user.fullName,
+        customer_email: req.user.email,
+        customer_phone: req.user.phone || '',
+        customer_university: req.user.university || '',
+        pricing_subtotal: subtotal,
+        pricing_deliveryFee: deliveryFee,
+        pricing_grandTotal: grandTotal,
+        pricing_currency: 'GHS',
+        delivery_mode: delivery.mode,
+        delivery_address: delivery.address || '',
+        delivery_instructions: delivery.instructions || '',
+        delivery_status: 'pending',
+        payment_mode: payment.mode,
+        payment_status: 'pending',
+        payment_transactionId: '',
+        payment_paidAt: '',
+        status: 'pending',
+        orderNumber: `ORD-${Date.now()}`,
+      });
+
+      for (const vItem of verifiedItems) {
+        db('order_items').create({
+          orderId: order.id,
+          productId: vItem.productId,
+          title: vItem.title,
+          price: vItem.price,
+          quantity: vItem.quantity,
+          seller: vItem.seller,
+          sellerName: vItem.sellerName,
+          image: vItem.image,
+          variant: vItem.variant || null,
+        });
+      }
+
+      for (const pid of productIds) {
+        db('products').updateById(pid, { status: 'sold' });
+      }
+
+      db('users').updateById(req.user.id, {
+        totalOrders: (req.user.totalOrders || 0) + 1,
+      });
+
+      return order;
     });
 
-  for (const vItem of verifiedItems) {
-  db('order_items').create({
-  orderId: order.id,
-  productId: vItem.productId,
-  title: vItem.title,
-  price: vItem.price,
-  quantity: vItem.quantity,
-  seller: vItem.seller,
-  sellerName: vItem.sellerName,
-  image: vItem.image,
-  variant: vItem.variant || null,
-  });
-  }
+    const order = createOrderTransaction();
 
-    for (const pid of productIds) {
-      db('products').updateById(pid, { status: 'sold' });
-    }
+    const createdOrder = db('orders').findById(order.id);
+    const orderItems = db('order_items').find({ orderId: order.id });
+    createdOrder._items = orderItems;
 
-    db('users').updateById(req.user.id, {
-      totalOrders: (req.user.totalOrders || 0) + 1,
-    });
+    const io = req.app.get('io');
+    notifyOrderCreated(io, createdOrder, orderItems, req.user);
 
-  const createdOrder = db('orders').findById(order.id);
-  const orderItems = db('order_items').find({ orderId: order.id });
-  createdOrder._items = orderItems;
-
-  const io = req.app.get('io');
-  notifyOrderCreated(io, createdOrder, orderItems, req.user);
-
-  res.status(201).json({
+    res.status(201).json({
       success: true,
       message: 'Order created successfully',
       data: getPublicOrder(createdOrder),
@@ -230,6 +236,14 @@ exports.updateOrderStatus = async (req, res) => {
       });
     }
 
+    const allowedStatuses = ['pending', 'confirmed', 'in-transit', 'delivered', 'cancelled'];
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid status value',
+      });
+    }
+
     const order = db('orders').findById(req.params.id);
 
     if (!order) {
@@ -239,27 +253,35 @@ exports.updateOrderStatus = async (req, res) => {
       });
     }
 
+    const isSeller = db('order_items').find({ orderId: order.id }).some(item => item.seller === req.user.id);
+    if (order.userId !== req.user.id && req.user.role !== 'admin' && !isSeller) {
+      return res.status(403).json({
+        success: false,
+        error: 'Not authorized to update this order',
+      });
+    }
+
     db('orders').updateById(order.id, {
       status,
     });
 
-  db('order_status_history').create({
-  orderId: order.id,
-  status,
-  note: note || '',
-  updatedBy: req.user.id,
-  });
+    db('order_status_history').create({
+      orderId: order.id,
+      status,
+      note: note || '',
+      updatedBy: req.user.id,
+    });
 
-  const updatedOrder = db('orders').findById(order.id);
-  const items = db('order_items').find({ orderId: order.id });
-  updatedOrder._items = items;
+    const updatedOrder = db('orders').findById(order.id);
+    const items = db('order_items').find({ orderId: order.id });
+    updatedOrder._items = items;
 
-  const io = req.app.get('io');
-  notifyOrderStatusChanged(io, updatedOrder, status, req.user);
+    const io = req.app.get('io');
+    notifyOrderStatusChanged(io, updatedOrder, status, req.user);
 
-  res.json({
-  success: true,
-  message: 'Order status updated',
+    res.json({
+      success: true,
+      message: 'Order status updated',
       data: getPublicOrder(updatedOrder),
     });
   } catch (error) {
@@ -274,6 +296,13 @@ exports.updateOrderStatus = async (req, res) => {
 exports.completePayment = async (req, res) => {
   try {
     const { transactionId } = req.body;
+
+    if (!transactionId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Transaction ID is required to complete payment',
+      });
+    }
 
     const order = db('orders').findById(req.params.id);
 
@@ -291,23 +320,81 @@ exports.completePayment = async (req, res) => {
       });
     }
 
-    const txnId = transactionId || `txn_${Date.now()}`;
+    if (order.payment_status === 'completed') {
+      return res.status(400).json({
+        success: false,
+        error: 'Payment has already been completed',
+      });
+    }
+
+    const payment = db('payments').find({ orderId: order.id })[0];
+    const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+    if (payment && (payment.mode === 'momo' || payment.mode === 'telecel' || payment.mode === 'bank') && PAYSTACK_SECRET_KEY) {
+      try {
+        const response = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(transactionId)}`, {
+          headers: {
+            Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        const data = await response.json();
+        if (!(data.status === true && data.data && data.data.status === 'success')) {
+          return res.status(400).json({
+            success: false,
+            error: 'Transaction could not be verified with the payment provider',
+          });
+        }
+      } catch (err) {
+        console.error('Paystack verification error:', err);
+        return res.status(400).json({
+          success: false,
+          error: 'Payment provider verification failed',
+        });
+      }
+    } else if (payment && payment.mode !== 'cash') {
+      return res.status(400).json({
+        success: false,
+        error: 'Payment verification is required for this payment mode',
+      });
+    }
+
+    if (payment && payment.mode === 'cash') {
+      db('orders').updateById(order.id, {
+        payment_status: 'pending',
+        payment_transactionId: transactionId,
+        payment_paidAt: '',
+      });
+      return res.json({
+        success: true,
+        message: 'Cash payment will be confirmed upon delivery',
+        data: getPublicOrder(db('orders').findById(order.id)),
+      });
+    }
+
     db('orders').updateById(order.id, {
       payment_status: 'completed',
-      payment_transactionId: txnId,
+      payment_transactionId: transactionId,
       payment_paidAt: new Date().toISOString(),
     });
 
-  const updatedOrder = db('orders').findById(order.id);
-  const items = db('order_items').find({ orderId: order.id });
-  updatedOrder._items = items;
+    if (payment) {
+      db('payments').updateById(payment.id, {
+        status: 'completed',
+        transactionId: transactionId,
+        verifiedAt: new Date().toISOString(),
+      });
+    }
 
-  const io = req.app.get('io');
-  notifyPaymentCompleted(io, updatedOrder);
+    const updatedOrder = db('orders').findById(order.id);
+    const items = db('order_items').find({ orderId: order.id });
+    updatedOrder._items = items;
 
-  res.json({
-  success: true,
-  message: 'Payment completed',
+    const io = req.app.get('io');
+    notifyPaymentCompleted(io, updatedOrder);
+
+    res.json({
+      success: true,
+      message: 'Payment completed',
       data: getPublicOrder(updatedOrder),
     });
   } catch (error) {

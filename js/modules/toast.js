@@ -207,7 +207,7 @@ class ToastManager {
    * @returns {string}
    */
   generateId () {
-    return `toast_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `toast_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   /**

@@ -199,126 +199,15 @@ class ProductsManager {
     try {
       if (this.useBackend) {
         try {
-          const response = await api.products.create(productData);
-          if (response.success) {
-            // Add to local list
-            this.products.unshift(response.data);
-            this.filteredProducts = [...this.products];
-            return {
-              success: true,
-              message: 'Product listed successfully!',
-              product: response.data,
-            };
-          }
-          return response;
-        } catch (error) {
-          // Backend not available - saving locally
-        }
-      }
-
-      // Fallback to local storage
-      const newProduct = {
-        id: `prod_${Date.now()}`,
-        ...productData,
-        createdAt: new Date().toISOString(),
-        status: 'active',
-      };
-
-      this.products.unshift(newProduct);
-      this.filteredProducts = [...this.products];
-      StorageManager.set(this.PRODUCTS_STORAGE_KEY, this.products);
-
-      return {
-        success: true,
-        message: 'Product listed successfully!',
-        product: newProduct,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message || 'Failed to add product',
-      };
-    }
-  }
-
-  /**
-   * Get products by seller
-   */
-  getBySeller (sellerId) {
-    return this.products.filter(p => p.seller?.id === sellerId || p.seller === sellerId);
-  }
-
-  /**
-   * Wishlist management
-   */
-  addToWishlist (productId) {
-    const wishlist = StorageManager.get(this.wishlistKey, true) || [];
-    if (!wishlist.includes(productId)) {
-      wishlist.push(productId);
-      StorageManager.set(this.wishlistKey, wishlist);
-    }
-  }
-
-  removeFromWishlist (productId) {
-    let wishlist = StorageManager.get(this.wishlistKey, true) || [];
-    wishlist = wishlist.filter(id => id !== productId);
-    StorageManager.set(this.wishlistKey, wishlist);
-  }
-
-  isInWishlist (productId) {
-    const wishlist = StorageManager.get(this.wishlistKey, true) || [];
-    return wishlist.includes(productId);
-  }
-
-getWishlist () {
-const wishlist = StorageManager.get(this.wishlistKey, true) || [];
-return this.products.filter(p => wishlist.includes(p.id));
-}
-
-/**
-* Recently Viewed management
-*/
-addToRecentlyViewed (productId) {
-const key = STORAGE_KEYS.RECENTLY_VIEWED;
-let viewed = StorageManager.get(key, true) || [];
-viewed = viewed.filter(id => id !== productId);
-viewed.unshift(productId);
-if (viewed.length > 20) viewed = viewed.slice(0, 20);
-StorageManager.set(key, viewed);
-}
-
-getRecentlyViewed (limit = 8) {
-const viewed = StorageManager.get(STORAGE_KEYS.RECENTLY_VIEWED, true) || [];
-const limited = viewed.slice(0, limit);
-return limited.map(id => this.products.find(p => p.id === id)).filter(Boolean);
-}
-
-clearRecentlyViewed () {
-StorageManager.remove(STORAGE_KEYS.RECENTLY_VIEWED);
-}
-
-/**
-* Price tracking for wishlist items
-*/
-trackWishlistPrices () {
-const key = STORAGE_KEYS.PRICE_HISTORY;
-const history = StorageManager.get(key, true) || {};
-const wishlistIds = StorageManager.get(this.wishlistKey, true) || [];
-const priceDrops = [];
-
-wishlistIds.forEach(id => {
-const product = this.products.find(p => p.id === id);
-if (!product) return;
-const currentPrice = product.price;
-const previous = history[id];
-if (previous && previous.price > currentPrice) {
-priceDrops.push({
-id,
-title: product.title,
-oldPrice: previous.price,
-newPrice: currentPrice,
-saved: previous.price - currentPrice,
-});
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 3000);
+          const token = typeof StorageManager !== 'undefined' ? StorageManager.getAuthToken() : null;
+          const headers = {};
+          if (token) { headers.Authorization = `Bearer ${token}`; }
+          const response = await fetch(`${window.API_URL}/products?limit=100`, {
+            signal: controller.signal,
+            headers,
+          });
 }
 history[id] = { price: currentPrice, updatedAt: Date.now() };
 });
