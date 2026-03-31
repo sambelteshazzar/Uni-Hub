@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Uni-Hub - Buy and sell items within your university community" />
+    <meta name="theme-color" content="#6366f1" />
+    <title>Uni-Hub - Student Marketplace</title>
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/variables.css" />
+    <link rel="stylesheet" href="css/reset.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+    
+    <!-- Components -->
+    <link rel="stylesheet" href="css/components/buttons.css" />
+    <link rel="stylesheet" href="css/components/cards.css" />
+    <link rel="stylesheet" href="css/components/navbar.css" />
+    <link rel="stylesheet" href="css/components/footer.css" />
+    <link rel="stylesheet" href="css/components/forms.css" />
+    <link rel="stylesheet" href="css/components/cart.css" />
+    <link rel="stylesheet" href="css/components/modals.css" />
+    <link rel="stylesheet" href="css/components/sidebar.css" />
+    <link rel="stylesheet" href="css/components/badges.css" />
+    <link rel="stylesheet" href="css/components/toast.css" />
+    <link rel="stylesheet" href="css/components/commerce-buttons.css" />
+    
+    <!-- Pages -->
+    <link rel="stylesheet" href="css/pages/home.css" />
+    <link rel="stylesheet" href="css/pages/auth.css" />
+    <link rel="stylesheet" href="css/pages/dashboard.css" />
+    <link rel="stylesheet" href="css/pages/product.css" />
+    <link rel="stylesheet" href="css/pages/cart.css" />
+    <link rel="stylesheet" href="css/pages/checkout.css" />
+    <link rel="stylesheet" href="css/pages/admin.css" />
+    <link rel="stylesheet" href="css/pages/seller.css" />
+  </head>
+
+  <body>
+    <!-- Main App Container -->
+    <div id="app" class="app-container">
+      <!-- Loading State -->
+      <div id="loading-screen" style="display: none">
+        <div class="loading-spinner">
+          <div class="spinner"></div>
+          <p>Loading Uni-Hub...</p>
+        </div>
+      </div>
+
+      <!-- Navigation Bar -->
+      <nav class="navbar" id="navbar-container">
+        <div class="navbar-container">
+          <a href="/" class="navbar-brand" onclick="Pages.renderLanding(); return false;">
+            <div class="navbar-brand-icon">🎓</div>
+            <span>Uni-Hub</span>
+          </a>
+
+          <div class="navbar-actions">
+            <div class="navbar-icons">
+              <button class="navbar-icon-button cart-btn" onclick="Pages.renderCart()" title="View Cart">
+                🛒
+                <span class="cart-badge" id="cart-badge">0</span>
+              </button>
+            </div>
+            <!-- Auth buttons - shown when not logged in -->
+            <div id="navbar-auth-buttons">
+              <button class="btn btn-ghost btn-sm" onclick="Pages.renderLogin(); return false;">Log in</button>
+              <button class="btn btn-primary btn-sm" onclick="Pages.renderRegister(); return false;">Sign up</button>
+            </div>
+            <!-- User menu - shown when logged in -->
+            <div id="navbar-user-menu" style="display: none;">
+              <button class="btn btn-ghost btn-sm" onclick="Pages.renderDashboard(); return false;">Dashboard</button>
+              <button class="btn btn-ghost btn-sm" onclick="Pages.handleLogout(); return false;">Log out</button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Main Content -->
+      <main id="main-content"></main>
+
+      <!-- Footer -->
+      <footer class="footer" id="footer">
+        <div class="container">
+          <div class="footer-content">
+            <div class="footer-section">
+              <h4>About Uni-Hub</h4>
+              <p>Connecting students to buy and sell items within their university community.</p>
+            </div>
+            <div class="footer-section">
+              <h4>Quick Links</h4>
+              <ul>
+                <li><a href="#browse">Browse Products</a></li>
+                <li><a href="#sell">Start Selling</a></li>
+                <li><a href="#faq">FAQ</a></li>
+                <li><a href="#contact">Contact Us</a></li>
+              </ul>
+            </div>
+            <div class="footer-section">
+              <h4>Support</h4>
+              <p>Email: support@uni-hub.local</p>
+              <p>Phone: +233 50 123 4567</p>
+            </div>
+          </div>
+          <div class="footer-bottom">
+            <p>&copy; 2026 Uni-Hub. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <!-- JavaScript Files -->
+    <!-- Utils -->
+    <script src="js/utils/constants.js"></script>
+    <script src="js/utils/storage.js"></script>
+    <script src="js/utils/validation.js"></script>
+    <script src="js/utils/formatters.js"></script>
+    <script src="js/utils/api.js"></script>
+    
+    <!-- Router -->
+    <script src="js/router.js"></script>
+    
+    <!-- Main App -->
+    <script src="js/app.js"></script>
+    
+    <!-- Core Modules -->
+    <script src="js/modules/auth.js"></script>
+    <script src="js/modules/products.js"></script>
+    <script src="js/modules/cart.js"></script>
+    <script src="js/modules/checkout.js"></script>
+    <script src="js/modules/payment.js"></script>
+    <script src="js/modules/delivery.js"></script>
+    <script src="js/modules/region.js"></script>
+    <script src="js/modules/search.js"></script>
+    <script src="js/modules/notifications.js"></script>
+    <script src="js/modules/modals.js"></script>
+    
+    <!-- Admin Modules -->
+    <script src="js/admin/admin-auth.js"></script>
+    <script src="js/admin/admin-products.js"></script>
+    <script src="js/admin/admin-users.js"></script>
+    <script src="js/admin/admin-orders.js"></script>
+    <script src="js/admin/admin-reports.js"></script>
+    
+    <!-- Pages -->
+    <script src="js/pages/pages.js"></script>
+
+    <!-- App Initialization -->
+    <script>
+      // Initialize app on page load
+      document.addEventListener('DOMContentLoaded', async function() {
+        // Initialize the application
+        await app.init();
+
+        // Router will handle initial page rendering based on hash
+        // Default to landing page if no hash is present
+        if (!window.location.hash || window.location.hash === '#/') {
+          Pages.renderLanding();
+        }
+      });
+    </script>
+  </body>
+</html>

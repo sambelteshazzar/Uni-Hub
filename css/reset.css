@@ -1,0 +1,245 @@
+/* ============================================
+   CSS RESET & NORMALIZE
+   Professional E-commerce Reset
+   ============================================ */
+
+/* Box sizing rules */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Remove default margin and padding */
+* {
+  margin: 0;
+  padding: 0;
+}
+
+/* Prevent font size inflation on mobile */
+html {
+  -moz-text-size-adjust: none;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+}
+
+/* Set core root defaults */
+html:focus-within {
+  scroll-behavior: smooth;
+}
+
+/* Set core body defaults */
+body {
+  min-height: 100vh;
+  text-rendering: optimizeSpeed;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Remove list styles on ul, ol elements */
+ul,
+ol {
+  list-style: none;
+}
+
+/* Set shorter line heights on headings and interactive elements */
+h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+}
+
+/* Balance text wrapping on headings */
+h1, h2, h3, h4 {
+  text-wrap: balance;
+}
+
+/* A elements that don't have a class get default styles */
+a:not([class]) {
+  text-decoration-skip-ink: auto;
+}
+
+/* Make images easier to work with */
+img,
+picture,
+video,
+canvas {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Inherit fonts for inputs and buttons */
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+/* Remove button styles */
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Remove underline from links */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Textarea default */
+textarea {
+  resize: vertical;
+}
+
+/* Remove default anchor styles */
+a:hover,
+a:visited {
+  color: inherit;
+}
+
+/* Default list styles */
+ul,
+ol {
+  list-style: none;
+}
+
+/* Media elements */
+audio,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+/* Table reset */
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+}
+
+th,
+td {
+  text-align: left;
+  vertical-align: top;
+}
+
+/* Form elements */
+fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+legend {
+  padding: 0;
+}
+
+/* Remove default styles from hr */
+hr {
+  border: none;
+  border-top: 1px solid currentColor;
+  height: 0;
+}
+
+/* Prevent iframe from extending beyond container */
+iframe {
+  display: block;
+  max-width: 100%;
+}
+
+/* Ensure monospace font is consistent */
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--font-family-mono, monospace);
+  font-size: 1em;
+}
+
+/* Small text */
+small {
+  font-size: 80%;
+}
+
+/* Prevent sub and sup from affecting line-height */
+sub,
+sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+sub {
+  bottom: -0.25em;
+}
+
+sup {
+  top: -0.5em;
+}
+
+/* Remove all animations and transitions for people that prefer not to see them */
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus visible - accessibility */
+:focus-visible {
+  outline: 2px solid var(--primary, #FF9900);
+  outline-offset: 2px;
+}
+
+/* Remove focus outline for mouse users */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Selection color */
+::selection {
+  background-color: var(--primary-light, #fff4e6);
+  color: var(--neutral-900, #0F1111);
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--neutral-100, #F3F3F3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--neutral-400, #B7B9B9);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neutral-500, #888D8F);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--neutral-400, #B7B9B9) var(--neutral-100, #F3F3F3);
+}

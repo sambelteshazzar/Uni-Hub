@@ -1,0 +1,23 @@
+{
+  "name": "uni-hub",
+  "version": "1.0.0",
+  "description": "Student marketplace for buying and selling items within university communities",
+  "main": "index.html",
+  "scripts": {
+    "start": "http-server -p 8000",
+    "dev": "http-server -c-1 -p 8000",
+    "build": "echo 'Build process not configured yet'",
+    "test": "echo 'Tests not configured yet'"
+  },
+  "keywords": [
+    "marketplace",
+    "students",
+    "uni-hub",
+    "e-commerce"
+  ],
+  "author": "Uni-Hub Team",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

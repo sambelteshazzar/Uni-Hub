@@ -1,0 +1,156 @@
+{
+  "universities": [
+    {
+      "id": "ug",
+      "name": "University of Ghana (UG)",
+      "campus": "Accra",
+      "region": "Greater Accra"
+    },
+    {
+      "id": "atu",
+      "name": "Accra Technical University (ATU)",
+      "campus": "Accra",
+      "region": "Greater Accra"
+    },
+    {
+      "id": "knust",
+      "name": "Kwame Nkrumah University of Science & Technology (KNUST)",
+      "campus": "Kumasi",
+      "region": "Ashanti"
+    },
+    {
+      "id": "ucc",
+      "name": "University of Cape Coast (UCC)",
+      "campus": "Cape Coast",
+      "region": "Central"
+    },
+    {
+      "id": "uds",
+      "name": "University for Development Studies (UDS)",
+      "campus": "Tamale",
+      "region": "Northern"
+    },
+    {
+      "id": "uew",
+      "name": "University of Education, Winneba (UEW)",
+      "campus": "Winneba",
+      "region": "Central"
+    },
+    {
+      "id": "aamusted",
+      "name": "Ashesi University",
+      "campus": "Berekuso",
+      "region": "Greater Accra"
+    }
+  ],
+  "categories": [
+    {
+      "id": "appliances",
+      "name": "Appliances",
+      "icon": "🎛️",
+      "description": "Kitchen and electronic appliances"
+    },
+    {
+      "id": "hostel-items",
+      "name": "Hostel Items",
+      "icon": "🛏️",
+      "description": "Furniture and room essentials"
+    },
+    {
+      "id": "accessories",
+      "name": "Accessories",
+      "icon": "👜",
+      "description": "Bags, shoes, and personal items"
+    },
+    {
+      "id": "textbooks",
+      "name": "Textbooks & Books",
+      "icon": "📚",
+      "description": "Course materials and reference books"
+    },
+    {
+      "id": "electronics",
+      "name": "Electronics",
+      "icon": "🖥️",
+      "description": "Phones, laptops, gadgets"
+    },
+    {
+      "id": "fashion",
+      "name": "Fashion",
+      "icon": "👗",
+      "description": "Clothing and wear"
+    },
+    {
+      "id": "thrifts",
+      "name": "Thrifts",
+      "icon": "🎁",
+      "description": "Mixed and miscellaneous items"
+    }
+  ],
+  "conditions": [
+    {
+      "id": "fair",
+      "name": "Fair",
+      "description": "Well-used with visible signs of wear",
+      "color": "var(--condition-fair)"
+    },
+    {
+      "id": "good",
+      "name": "Good",
+      "description": "Minor signs of use, works perfectly",
+      "color": "var(--condition-good)"
+    },
+    {
+      "id": "excellent",
+      "name": "Excellent",
+      "description": "Like new, barely used",
+      "color": "var(--condition-excellent)"
+    }
+  ],
+  "deliveryModes": [
+    {
+      "id": "bolt",
+      "name": "Bolt",
+      "description": "Fast delivery via Bolt",
+      "estimatedTime": "1-2 hours"
+    },
+    {
+      "id": "yango",
+      "name": "Yango",
+      "description": "Affordable delivery via Yango",
+      "estimatedTime": "2-4 hours"
+    },
+    {
+      "id": "inperson",
+      "name": "In-Person",
+      "description": "Meet at location",
+      "estimatedTime": "Immediate"
+    }
+  ],
+  "paymentModes": [
+    {
+      "id": "momo",
+      "name": "Mobile Money (MoMo)",
+      "providers": ["MTN", "Vodafone", "Airtel-Tigo"],
+      "icon": "📱"
+    },
+    {
+      "id": "telecel",
+      "name": "Telecel Cash",
+      "providers": ["Telecel"],
+      "icon": "💳"
+    },
+    {
+      "id": "bank",
+      "name": "Bank Transfer",
+      "providers": ["GCB", "Absa", "Stanbic"],
+      "icon": "🏦"
+    },
+    {
+      "id": "cash",
+      "name": "Cash on Delivery",
+      "providers": ["In-Person"],
+      "icon": "💵"
+    }
+  ]
+}

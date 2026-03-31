@@ -1,0 +1,335 @@
+/* ============================================
+   RESPONSIVE STYLES
+   Clean, Minimalist Breakpoints
+   ============================================ */
+
+/* ============================================
+   MOBILE LANDSCAPE (576px and down)
+   ============================================ */
+
+@media (max-width: 576px) {
+  /* Typography */
+  html {
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  h2 {
+    font-size: 1.75rem;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+  }
+
+  /* Container */
+  .container {
+    padding-left: var(--space-md);
+    padding-right: var(--space-md);
+  }
+
+  /* Navbar */
+  .navbar-container {
+    padding: 0 var(--space-md);
+  }
+
+  .navbar-brand span {
+    display: none;
+  }
+
+  .navbar-search {
+    display: none;
+  }
+
+  /* Hero */
+  .hero-content {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .hero-text {
+    padding: var(--space-2xl) var(--space-md);
+  }
+
+  .hero-image {
+    min-height: 40vh;
+  }
+
+  /* University grid */
+  .universities-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Categories grid */
+  .categories-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Features grid */
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Browse page */
+  .browse-container {
+    grid-template-columns: 1fr;
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
+  }
+
+  /* Product detail */
+  .product-detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .action-buttons,
+  .delivery-payment {
+    grid-template-columns: 1fr;
+  }
+
+  /* Cart */
+  .cart-container {
+    grid-template-columns: 1fr;
+  }
+
+  .cart-item {
+    grid-template-columns: 80px 1fr;
+  }
+
+  /* Checkout */
+  .checkout-container {
+    grid-template-columns: 1fr;
+  }
+
+  .delivery-options,
+  .payment-options {
+    grid-template-columns: 1fr;
+  }
+
+  /* Footer */
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--space-md);
+  }
+
+  /* Auth pages */
+  .auth-card {
+    padding: var(--space-lg);
+  }
+
+  /* Buttons */
+  .btn {
+    width: 100%;
+    margin-bottom: var(--space-sm);
+  }
+
+  .btn-group {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .navigation-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .navigation-buttons .btn {
+    margin-bottom: 0;
+  }
+}
+
+/* ============================================
+   TABLET (768px and down)
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* Typography */
+  html {
+    font-size: 15px;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+  }
+
+  h2 {
+    font-size: 2rem;
+  }
+
+  /* Grid layouts */
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .categories-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Products */
+  .products-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-md);
+  }
+
+  /* Footer */
+  .footer-content {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+  }
+}
+
+/* ============================================
+   SMALL DESKTOP (992px and down)
+   ============================================ */
+
+@media (max-width: 992px) {
+  /* Container */
+  .container {
+    max-width: 960px;
+  }
+
+  /* Browse */
+  .browse-container {
+    grid-template-columns: 1fr;
+  }
+
+  /* Product detail */
+  .product-detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  /* Cart & Checkout */
+  .cart-container,
+  .checkout-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================
+   MEDIUM DESKTOP (1024px and up)
+   ============================================ */
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1024px;
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-md);
+  }
+}
+
+/* ============================================
+   LARGE DESKTOP (1280px and up)
+   ============================================ */
+
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1400px;
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-md);
+  }
+}
+
+/* ============================================
+   EXTRA LARGE DESKTOP (1536px and up)
+   ============================================ */
+
+@media (min-width: 1536px) {
+  .products-grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: var(--space-md);
+  }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+  .navbar,
+  .footer,
+  .sidebar,
+  .btn,
+  button,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white;
+    color: black;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+
+  img {
+    page-break-inside: avoid;
+  }
+
+  .container {
+    max-width: 100%;
+    padding: 0;
+  }
+}
+
+/* ============================================
+   REDUCED MOTION
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================
+   TOUCH DEVICE OPTIMIZATIONS
+   ============================================ */
+
+@media (hover: none) and (pointer: coarse) {
+  /* Increase touch target sizes */
+  button,
+  .btn,
+  a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Remove hover effects on touch devices */
+  .product-card:hover {
+    transform: none;
+  }
+
+  /* Add better spacing */
+  .navbar-menu.active {
+    padding: var(--space-lg);
+  }
+
+  .navbar-link {
+    padding: var(--space-sm) var(--space-md);
+  }
+}

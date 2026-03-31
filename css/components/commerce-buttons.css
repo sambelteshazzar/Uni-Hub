@@ -1,0 +1,219 @@
+/* ============================================
+   COMMERCE ACTION BUTTONS
+   E-commerce Product Action Styles
+   ============================================ */
+
+/* Commerce Button Container */
+.commerce-button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: var(--space-lg);
+}
+
+/* Commerce Button Base */
+.commerce-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  line-height: 1.5;
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  white-space: nowrap;
+  user-select: none;
+  min-height: 44px;
+}
+
+.commerce-btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* Commerce Button Variants */
+
+/* Default - Primary action (Buy Now) */
+.commerce-btn-default {
+  background: var(--primary);
+  border-color: transparent;
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.commerce-btn-default:hover {
+  background: var(--primary-hover);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.commerce-btn-default:active {
+  transform: translateY(0);
+}
+
+/* Outline - Secondary action (Save for Later) */
+.commerce-btn-outline {
+  background: transparent;
+  border-color: var(--neutral-300);
+  color: var(--neutral-700);
+}
+
+.commerce-btn-outline:hover {
+  background: var(--neutral-50);
+  border-color: var(--neutral-400);
+  color: var(--neutral-900);
+}
+
+/* Secondary - Tertiary action (Write Review) */
+.commerce-btn-secondary {
+  background: var(--neutral-100);
+  border-color: var(--neutral-300);
+  color: var(--neutral-700);
+}
+
+.commerce-btn-secondary:hover {
+  background: var(--neutral-200);
+  border-color: var(--neutral-400);
+}
+
+/* Ghost - Minimal action (Share) */
+.commerce-btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--neutral-700);
+}
+
+.commerce-btn-ghost:hover {
+  background: var(--neutral-100);
+  color: var(--neutral-900);
+}
+
+/* Icon-only variant */
+.commerce-btn-icon-only {
+  padding: var(--space-md);
+  aspect-ratio: 1;
+}
+
+/* Button Sizes */
+.commerce-btn-sm {
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--text-xs);
+  min-height: 36px;
+}
+
+.commerce-btn-md {
+  padding: var(--space-sm) var(--space-lg);
+  font-size: var(--text-sm);
+  min-height: 40px;
+}
+
+.commerce-btn-lg {
+  padding: var(--space-md) var(--space-xl);
+  font-size: var(--text-base);
+  min-height: 48px;
+}
+
+/* Full width variant */
+.commerce-btn-block {
+  width: 100%;
+}
+
+/* Loading state */
+.commerce-btn-loading {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+}
+
+.commerce-btn-loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+/* Disabled state */
+.commerce-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Product Action Bar (for product detail pages) */
+.product-action-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  margin-top: var(--space-lg);
+}
+
+.product-action-bar .commerce-button-group {
+  justify-content: stretch;
+}
+
+.product-action-bar .commerce-btn {
+  flex: 1;
+}
+
+/* Quick Actions (for product cards) */
+.product-quick-actions {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  opacity: 0;
+  transform: translateX(10px);
+  transition: all var(--transition-base);
+}
+
+.product-card:hover .product-quick-actions {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.product-quick-actions .commerce-btn {
+  padding: var(--space-sm);
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-md);
+}
+
+/* Mobile responsive */
+@media (max-width: 576px) {
+  .commerce-button-group {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .commerce-btn {
+    width: 100%;
+  }
+
+  .product-action-bar {
+    padding: var(--space-md);
+  }
+
+  .product-quick-actions {
+    position: static;
+    flex-direction: row;
+    opacity: 1;
+    transform: none;
+  }
+}

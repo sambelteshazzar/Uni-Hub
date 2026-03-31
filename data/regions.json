@@ -1,0 +1,94 @@
+{
+  "regions": [
+    {
+      "id": "greater-accra",
+      "name": "Greater Accra",
+      "capital": "Accra",
+      "universities": ["ug", "aamusted"]
+    },
+    {
+      "id": "ashanti",
+      "name": "Ashanti",
+      "capital": "Kumasi",
+      "universities": ["knust"]
+    },
+    {
+      "id": "central",
+      "name": "Central",
+      "capital": "Cape Coast",
+      "universities": ["ucc", "uew"]
+    },
+    {
+      "id": "northern",
+      "name": "Northern",
+      "capital": "Tamale",
+      "universities": ["uds"]
+    },
+    {
+      "id": "western",
+      "name": "Western",
+      "capital": "Sekondi-Takoradi",
+      "universities": []
+    },
+    {
+      "id": "eastern",
+      "name": "Eastern",
+      "capital": "Koforidua",
+      "universities": []
+    },
+    {
+      "id": "volta",
+      "name": "Volta",
+      "capital": "Ho",
+      "universities": []
+    },
+    {
+      "id": "upper-east",
+      "name": "Upper East",
+      "capital": "Bolgatanga",
+      "universities": []
+    },
+    {
+      "id": "upper-west",
+      "name": "Upper West",
+      "capital": "Wa",
+      "universities": []
+    },
+    {
+      "id": "bono",
+      "name": "Bono",
+      "capital": "Sunyani",
+      "universities": []
+    },
+    {
+      "id": "bono-east",
+      "name": "Bono East",
+      "capital": "Techiman",
+      "universities": []
+    },
+    {
+      "id": "ahafo",
+      "name": "Ahafo",
+      "capital": "Goaso",
+      "universities": []
+    },
+    {
+      "id": "savannah",
+      "name": "Savannah",
+      "capital": "Damongo",
+      "universities": []
+    },
+    {
+      "id": "north-east",
+      "name": "North East",
+      "capital": "Nalerigu",
+      "universities": []
+    },
+    {
+      "id": "oti",
+      "name": "Oti",
+      "capital": "Dambai",
+      "universities": []
+    }
+  ]
+}

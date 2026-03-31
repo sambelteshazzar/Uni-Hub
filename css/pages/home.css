@@ -1,0 +1,481 @@
+/* ============================================
+   LANDING PAGE - Clean Minimalist Design
+   Based on modern e-commerce aesthetics
+   ============================================ */
+
+/* ============================================
+   HERO SECTION
+   ============================================ */
+
+.landing-hero {
+  background: #ffffff;
+  padding: 0;
+  overflow: hidden;
+}
+
+.hero-content {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 0;
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0;
+  min-height: 90vh;
+}
+
+.hero-text {
+  padding: var(--space-4xl) var(--space-3xl);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.hero-text h1 {
+  font-size: clamp(3rem, 6vw, 5rem);
+  font-weight: 700;
+  color: #000000;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin-bottom: var(--space-lg);
+}
+
+.hero-text p {
+  font-size: clamp(1.1rem, 2vw, 1.25rem);
+  color: #666666;
+  line-height: 1.6;
+  margin-bottom: var(--space-md);
+  max-width: 500px;
+}
+
+.hero-subtitle {
+  font-size: clamp(1rem, 1.5vw, 1.125rem);
+  color: #888888;
+  font-weight: 400;
+}
+
+.hero-cta {
+  margin-top: var(--space-2xl);
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.hero-cta .btn {
+  padding: var(--space-md) var(--space-2xl);
+  font-size: var(--text-base);
+  font-weight: 600;
+  border-radius: 0;
+  transition: all 0.2s ease;
+  letter-spacing: -0.01em;
+}
+
+.hero-cta .btn-primary {
+  background: #000000;
+  color: #ffffff;
+  border: 2px solid #000000;
+}
+
+.hero-cta .btn-primary:hover {
+  background: #333333;
+  border-color: #333333;
+  transform: translateY(-2px);
+}
+
+.hero-cta .btn-outline {
+  background: transparent;
+  color: #000000;
+  border: 2px solid #000000;
+}
+
+.hero-cta .btn-outline:hover {
+  background: #000000;
+  color: #ffffff;
+}
+
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-xl);
+  margin-top: var(--space-3xl);
+  padding-top: var(--space-xl);
+  border-top: 1px solid #e5e5e5;
+}
+
+.stat-item {
+  text-align: left;
+}
+
+.stat-number {
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  color: #000000;
+  display: block;
+  letter-spacing: -0.02em;
+}
+
+.stat-label {
+  font-size: var(--text-sm);
+  color: #888888;
+  display: block;
+  margin-top: var(--space-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.hero-image {
+  position: relative;
+  height: 100%;
+  min-height: 90vh;
+  background: #f8f8f8;
+  overflow: hidden;
+}
+
+.hero-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* ============================================
+   UNIVERSITY SELECTOR
+   ============================================ */
+
+.university-selector-section {
+  padding: var(--space-4xl) 0;
+  background: #ffffff;
+}
+
+.university-selector-section .container {
+  max-width: 1400px;
+}
+
+.university-selector-section h2 {
+  text-align: left;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: var(--space-sm);
+  letter-spacing: -0.02em;
+}
+
+.section-subtitle {
+  text-align: left;
+  color: #666666;
+  font-size: var(--text-lg);
+  margin-bottom: var(--space-3xl);
+  max-width: 600px;
+}
+
+.universities-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-lg);
+  margin-bottom: var(--space-3xl);
+}
+
+.university-card {
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 0;
+  padding: var(--space-xl);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.university-card:hover {
+  border-color: #000000;
+  background: #fafafa;
+}
+
+.university-card.selected {
+  border-color: #000000;
+  background: #000000;
+}
+
+.university-card.selected .university-icon,
+.university-card.selected h3,
+.university-card.selected .campus-info,
+.university-card.selected .region-info {
+  color: #ffffff;
+}
+
+.university-icon {
+  font-size: 2.5rem;
+  margin-bottom: var(--space-md);
+  display: block;
+}
+
+.university-card h3 {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: #000000;
+  margin-bottom: var(--space-sm);
+  letter-spacing: -0.01em;
+}
+
+.campus-info,
+.region-info {
+  font-size: var(--text-sm);
+  color: #666666;
+  margin: var(--space-xs) 0;
+  font-weight: 400;
+}
+
+.navigation-buttons {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.navigation-buttons .btn {
+  padding: var(--space-md) var(--space-2xl);
+  font-weight: 600;
+  border-radius: 0;
+}
+
+/* ============================================
+   FEATURES SECTION
+   ============================================ */
+
+.features-section {
+  padding: var(--space-4xl) 0;
+  background: #fafafa;
+}
+
+.features-section .container {
+  max-width: 1400px;
+}
+
+.features-section h2 {
+  text-align: left;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: var(--space-3xl);
+  letter-spacing: -0.02em;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-xl);
+}
+
+.feature-card {
+  background: #ffffff;
+  padding: var(--space-2xl);
+  border: 1px solid #e5e5e5;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.feature-card:hover {
+  border-color: #000000;
+  transform: translateY(-4px);
+}
+
+.feature-icon {
+  font-size: 3rem;
+  margin-bottom: var(--space-lg);
+  display: block;
+}
+
+.feature-card h3 {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: #000000;
+  margin-bottom: var(--space-sm);
+  letter-spacing: -0.01em;
+}
+
+.feature-card p {
+  color: #666666;
+  line-height: 1.6;
+  font-size: var(--text-base);
+}
+
+/* ============================================
+   CATEGORIES SECTION
+   ============================================ */
+
+.categories-section {
+  padding: var(--space-4xl) 0;
+  background: #ffffff;
+}
+
+.categories-section .container {
+  max-width: 1400px;
+}
+
+.categories-section h2 {
+  text-align: left;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: var(--space-sm);
+  letter-spacing: -0.02em;
+}
+
+.section-subtitle {
+  text-align: left;
+  color: #666666;
+  font-size: var(--text-lg);
+  margin-bottom: var(--space-3xl);
+}
+
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: var(--space-lg);
+}
+
+.category-card {
+  background: #f8f8f8;
+  padding: var(--space-xl);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.category-card:hover {
+  background: #ffffff;
+  border-color: #e5e5e5;
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.category-icon {
+  font-size: 3rem;
+  margin-bottom: var(--space-md);
+  display: block;
+}
+
+.category-card h4 {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: #000000;
+  margin-bottom: var(--space-sm);
+  letter-spacing: -0.01em;
+}
+
+.category-card p {
+  font-size: var(--text-sm);
+  color: #666666;
+  line-height: 1.5;
+}
+
+/* ============================================
+   CTA SECTION
+   ============================================ */
+
+.cta-section {
+  padding: var(--space-4xl) 0;
+  background: #000000;
+  text-align: left;
+}
+
+.cta-section .container {
+  max-width: 1400px;
+}
+
+.cta-section h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: var(--space-md);
+  letter-spacing: -0.02em;
+}
+
+.cta-section p {
+  font-size: var(--text-lg);
+  color: #cccccc;
+  margin-bottom: var(--space-xl);
+}
+
+.cta-section .btn {
+  padding: var(--space-lg) var(--space-3xl);
+  font-size: var(--text-base);
+  font-weight: 600;
+  border-radius: 0;
+}
+
+.cta-section .btn-primary {
+  background: #ffffff;
+  color: #000000;
+  border: 2px solid #ffffff;
+}
+
+.cta-section .btn-primary:hover {
+  background: #f0f0f0;
+  border-color: #f0f0f0;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 992px) {
+  .hero-content {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .hero-text {
+    padding: var(--space-3xl) var(--space-xl);
+    order: 2;
+  }
+
+  .hero-image {
+    order: 1;
+    min-height: 50vh;
+  }
+
+  .hero-stats {
+    justify-items: start;
+  }
+}
+
+@media (max-width: 768px) {
+  .universities-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .categories-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .hero-stats {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+
+  .navigation-buttons {
+    flex-direction: column;
+  }
+
+  .navigation-buttons .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .categories-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-cta {
+    flex-direction: column;
+  }
+
+  .hero-cta .btn {
+    width: 100%;
+  }
+}

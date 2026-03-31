@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000">
+  <defs>
+    <linearGradient id="heroGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="1000" fill="url(#heroGrad)"/>
+  
+  <!-- Background pattern -->
+  <circle cx="100" cy="100" r="50" fill="white" opacity="0.1"/>
+  <circle cx="700" cy="200" r="80" fill="white" opacity="0.1"/>
+  <circle cx="400" cy="400" r="120" fill="white" opacity="0.05"/>
+  <circle cx="600" cy="700" r="100" fill="white" opacity="0.08"/>
+  
+  <!-- Shopping bag icon -->
+  <path d="M250 350 L550 350 L550 750 L250 750 Z" fill="none" stroke="white" stroke-width="4" opacity="0.3"/>
+  <path d="M300 350 Q300 250 400 250 Q500 250 500 350" fill="none" stroke="white" stroke-width="4" opacity="0.3"/>
+  
+  <!-- University building icon -->
+  <rect x="320" y="450" width="160" height="200" fill="white" opacity="0.2"/>
+  <polygon points="320,450 400,400 480,450" fill="white" opacity="0.2"/>
+  <rect x="370" y="520" width="60" height="130" fill="white" opacity="0.3"/>
+  
+  <!-- Exchange arrows -->
+  <path d="M350 600 L400 550 L450 600" fill="none" stroke="white" stroke-width="4" opacity="0.4"/>
+  <path d="M450 650 L400 700 L350 650" fill="none" stroke="white" stroke-width="4" opacity="0.4"/>
+  
+  <!-- Students illustration -->
+  <circle cx="300" cy="800" r="40" fill="white" opacity="0.25"/>
+  <circle cx="500" cy="800" r="40" fill="white" opacity="0.25"/>
+  <path d="M260 880 Q300 920 340 880" fill="white" opacity="0.25"/>
+  <path d="M460 880 Q500 920 540 880" fill="white" opacity="0.25"/>
+  
+  <!-- Text placeholder area -->
+  <rect x="200" cy="920" width="400" height="30" fill="white" opacity="0.1"/>
+</svg>
