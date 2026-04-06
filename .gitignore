@@ -29,6 +29,10 @@ Thumbs.db
 *~
 .cache/
 
+# AI agent artifacts
+.kilo/
+.playwright-cli/
+
 # Testing
 coverage/
 
