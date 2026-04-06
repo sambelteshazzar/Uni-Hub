@@ -3,7 +3,7 @@
 // ============================================
 
 class RegionManager {
-  constructor() {
+  constructor () {
     this.regions = [];
     this.selectedRegion = null;
   }
@@ -11,7 +11,7 @@ class RegionManager {
   /**
    * Initialize regions from JSON
    */
-  async init() {
+  async init () {
     try {
       const data = await api.loadJSON('data/regions.json');
       this.regions = data.regions || [];
@@ -25,7 +25,7 @@ class RegionManager {
    * Get all regions
    * @returns {Array}
    */
-  getAllRegions() {
+  getAllRegions () {
     return this.regions;
   }
 
@@ -34,7 +34,7 @@ class RegionManager {
    * @param {string} regionId - Region ID
    * @returns {Object|null}
    */
-  getRegionById(regionId) {
+  getRegionById (regionId) {
     return this.regions.find((r) => r.id === regionId) || null;
   }
 
@@ -43,7 +43,7 @@ class RegionManager {
    * @param {string} universityId - University ID
    * @returns {Object|null}
    */
-  getRegionByUniversity(universityId) {
+  getRegionByUniversity (universityId) {
     return this.regions.find((r) => r.universities.includes(universityId)) || null;
   }
 
@@ -52,7 +52,7 @@ class RegionManager {
    * @param {string} regionId - Region ID
    * @returns {Array}
    */
-  getUniversitiesInRegion(regionId) {
+  getUniversitiesInRegion (regionId) {
     const region = this.getRegionById(regionId);
     return region ? region.universities : [];
   }
@@ -61,7 +61,7 @@ class RegionManager {
    * Get regions with universities
    * @returns {Array}
    */
-  getRegionsWithUniversities() {
+  getRegionsWithUniversities () {
     return this.regions.filter((r) => r.universities.length > 0);
   }
 
@@ -69,7 +69,7 @@ class RegionManager {
    * Set selected region
    * @param {string} regionId - Region ID
    */
-  setSelectedRegion(regionId) {
+  setSelectedRegion (regionId) {
     this.selectedRegion = regionId;
     StorageManager.set(`${STORAGE_KEY_PREFIX}selected_region`, regionId);
   }
@@ -78,14 +78,14 @@ class RegionManager {
    * Get selected region
    * @returns {string|null}
    */
-  getSelectedRegion() {
+  getSelectedRegion () {
     return this.selectedRegion || StorageManager.get(`${STORAGE_KEY_PREFIX}selected_region`);
   }
 
   /**
    * Clear selected region
    */
-  clearSelectedRegion() {
+  clearSelectedRegion () {
     this.selectedRegion = null;
     StorageManager.remove(`${STORAGE_KEY_PREFIX}selected_region`);
   }
@@ -95,9 +95,9 @@ class RegionManager {
    * @param {string} regionId - Region ID
    * @returns {Object}
    */
-  getRegionStats(regionId) {
+  getRegionStats (regionId) {
     const region = this.getRegionById(regionId);
-    if (!region) return null;
+    if (!region) {return null;}
 
     const universityCount = region.universities.length;
 
@@ -118,12 +118,12 @@ class RegionManager {
    * @param {string} query - Search query
    * @returns {Array}
    */
-  searchRegions(query) {
+  searchRegions (query) {
     const lowercaseQuery = query.toLowerCase();
     return this.regions.filter(
       (r) =>
         r.name.toLowerCase().includes(lowercaseQuery) ||
-        r.capital.toLowerCase().includes(lowercaseQuery)
+        r.capital.toLowerCase().includes(lowercaseQuery),
     );
   }
 
@@ -132,7 +132,7 @@ class RegionManager {
    * @param {string} pattern - Pattern to match
    * @returns {Array}
    */
-  getRegionsByPattern(pattern) {
+  getRegionsByPattern (pattern) {
     return this.regions.filter((r) => r.name.toLowerCase().includes(pattern.toLowerCase()));
   }
 
@@ -141,7 +141,7 @@ class RegionManager {
    * @param {string} regionId - Region ID
    * @returns {string}
    */
-  formatRegionName(regionId) {
+  formatRegionName (regionId) {
     const region = this.getRegionById(regionId);
     return region ? region.name : regionId;
   }
@@ -150,7 +150,7 @@ class RegionManager {
    * Get all regions formatted for dropdown
    * @returns {Array}
    */
-  getDropdownOptions() {
+  getDropdownOptions () {
     return this.regions.map((r) => ({
       value: r.id,
       label: r.name,
@@ -164,7 +164,7 @@ class RegionManager {
    * @param {string} regionId - Region ID
    * @returns {boolean}
    */
-  hasUniversities(regionId) {
+  hasUniversities (regionId) {
     const region = this.getRegionById(regionId);
     return region && region.universities.length > 0;
   }
@@ -174,7 +174,7 @@ class RegionManager {
    * @param {string} regionId - Region ID
    * @returns {number}
    */
-  getUniversityCount(regionId) {
+  getUniversityCount (regionId) {
     const region = this.getRegionById(regionId);
     return region ? region.universities.length : 0;
   }

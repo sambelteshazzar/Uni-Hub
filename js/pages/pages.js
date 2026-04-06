@@ -1,33 +1,55 @@
+/* eslint-disable no-unused-vars */
+/* global Formatter, ORDER_STATUS, adminAuthManager, adminReportsManager, adminUsersManager, adminProductsManager, adminOrdersManager */
 // ============================================
 // PAGE RENDERERS
 // ============================================
 
 class Pages {
   /**
+   * Navigate to a page using hash-based routing
+   * @param {string} hash - Hash to navigate to (e.g., '/cart', '/product/prod-001')
+   */
+  static navigate (hash) {
+    window.location.hash = hash;
+  }
+
+  /**
    * Hide original navbar and footer for landing page
    */
-  static hideOriginalNavFooter() {
+  static hideOriginalNavFooter () {
     const navbar = document.getElementById('navbar-container');
     const footer = document.getElementById('footer');
-    if (navbar) navbar.style.display = 'none';
-    if (footer) footer.style.display = 'none';
+    if (navbar) {
+      navbar.style.display = 'none';
+      navbar.setAttribute('data-hidden', 'true');
+    }
+    if (footer) {
+      footer.style.display = 'none';
+      footer.setAttribute('data-hidden', 'true');
+    }
   }
 
   /**
    * Show original navbar and footer for other pages
    */
-  static showOriginalNavFooter() {
+  static showOriginalNavFooter () {
     const navbar = document.getElementById('navbar-container');
     const footer = document.getElementById('footer');
-    if (navbar) navbar.style.display = 'block';
-    if (footer) footer.style.display = 'block';
+    if (navbar && navbar.getAttribute('data-hidden') === 'true') {
+      navbar.style.display = 'block';
+      navbar.removeAttribute('data-hidden');
+    }
+    if (footer && footer.getAttribute('data-hidden') === 'true') {
+      footer.style.display = 'block';
+      footer.removeAttribute('data-hidden');
+    }
     this.updateNavbar();
   }
 
   /**
    * Render Landing Page with University Selection - Modern Dark Theme
    */
-  static async renderLanding() {
+  static async renderLanding () {
     // Hide original navbar and footer
     this.hideOriginalNavFooter();
 
@@ -650,6 +672,26 @@ class Pages {
 
     mainContent.innerHTML = modernStyles + `
       <div class="modern-landing">
+        <!-- Top Notification Bar -->
+        <div class="top-notification-bar" style="background: linear-gradient(90deg, rgba(99,102,241,0.2), rgba(79,70,229,0.2)); border-bottom: 1px solid rgba(99,102,241,0.3); padding: 0.75rem 1rem; text-align: center;">
+          <div style="max-width: 80rem; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #a5b4fc;">
+              <path d="M12 2v4"></path>
+              <path d="m16.2 7.8 2.9-2.9"></path>
+              <path d="M18 12h4"></path>
+              <path d="m16.2 16.2 2.9 2.9"></path>
+              <path d="M12 18v4"></path>
+              <path d="m4.9 19.1 2.9-2.9"></path>
+              <path d="M2 12h4"></path>
+              <path d="m4.9 4.9 2.9 2.9"></path>
+            </svg>
+            <span style="color: #e0e7ff; font-size: 0.875rem; font-weight: 500;">
+              🎉 New: <strong>Free delivery</strong> for first-time buyers at University of Ghana! &nbsp;&nbsp;|&nbsp;&nbsp; 
+              <a href="#" onclick="Pages.renderRegister(); return false;" style="color: #6366f1; text-decoration: underline; text-underline-offset: 2px;">Sign up now</a>
+            </span>
+          </div>
+        </div>
+
         <!-- Navigation -->
         <nav class="modern-nav">
           <div class="modern-nav-inner glass-card" style="border-radius: 9999px;">
@@ -663,14 +705,14 @@ class Pages {
               </div>
               <span style="font-weight: 500; font-size: 1.125rem; color: white; letter-spacing: -0.02em;">Uni-Hub</span>
             </div>
-            
+
             <div style="display: none; md: display: flex; align-items: center; gap: 2rem; font-size: 0.875rem; font-weight: 500; color: #a3a3a3;">
               <a href="#browse" style="transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#a3a3a3'">Browse</a>
               <a href="#universities" style="transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#a3a3a3'">Universities</a>
               <a href="#sell" style="transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#a3a3a3'">Sell</a>
               <a href="#faq" style="transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#a3a3a3'">FAQ</a>
             </div>
-            
+
             <div style="display: flex; align-items: center; gap: 1rem;">
               <button onclick="Pages.renderLogin(); return false;" style="font-size: 0.875rem; font-weight: 500; color: #a3a3a3; background: none; border: none; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#a3a3a3'">Log in</button>
               <button onclick="Pages.renderRegister(); return false;" class="bg-indigo" style="padding: 0.625rem 1.25rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; color: black; border: none; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 0.5rem;" onmouseover="this.style.background='white'">
@@ -872,12 +914,21 @@ class Pages {
           </div>
         </section>
 
-        <!-- Categories Section -->
+        <!-- Categories Section with Tabs -->
         <section id="browse" class="categories-section">
           <div style="max-width: 80rem; margin: 0 auto; text-align: center;">
             <span class="section-label">Shop by Category</span>
             <h2 class="section-title" style="color: white; margin-bottom: 1rem;">Find What You Need</h2>
-            <p style="color: #737373; max-width: 32rem; margin: 0 auto; font-weight: 300;">From textbooks to electronics, find everything you need for student life.</p>
+            <p style="color: #737373; max-width: 32rem; margin: 0 auto 2rem; font-weight: 300;">From textbooks to electronics, find everything you need for student life.</p>
+            
+            <!-- Tabbed Category Navigation -->
+            <div class="category-tabs" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin-bottom: 2rem;">
+              <button class="category-tab active" data-category="all" onclick="Pages.filterCategoryTab('all', this)" style="padding: 0.625rem 1.25rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); cursor: pointer; transition: all 0.2s;">All</button>
+              <button class="category-tab" data-category="textbooks" onclick="Pages.filterCategoryTab('textbooks', this)" style="padding: 0.625rem 1.25rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: transparent; color: #a3a3a3; border: 1px solid rgba(63,63,70,1); cursor: pointer; transition: all 0.2s;">📚 Textbooks</button>
+              <button class="category-tab" data-category="electronics" onclick="Pages.filterCategoryTab('electronics', this)" style="padding: 0.625rem 1.25rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: transparent; color: #a3a3a3; border: 1px solid rgba(63,63,70,1); cursor: pointer; transition: all 0.2s;">💻 Electronics</button>
+              <button class="category-tab" data-category="hostel-items" onclick="Pages.filterCategoryTab('hostel-items', this)" style="padding: 0.625rem 1.25rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: transparent; color: #a3a3a3; border: 1px solid rgba(63,63,70,1); cursor: pointer; transition: all 0.2s;">🏠 Hostel</button>
+              <button class="category-tab" data-category="fashion" onclick="Pages.filterCategoryTab('fashion', this)" style="padding: 0.625rem 1.25rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: transparent; color: #a3a3a3; border: 1px solid rgba(63,63,70,1); cursor: pointer; transition: all 0.2s;">👕 Fashion</button>
+            </div>
             
             <div class="categories-grid">
               ${config.categories.slice(0, 4).map((cat) => `
@@ -889,6 +940,52 @@ class Pages {
                   <p class="category-description">${cat.description}</p>
                 </div>
               `).join('')}
+            </div>
+          </div>
+        </section>
+
+        <!-- Discount/Promotional Banner Section -->
+        <section class="discount-banner-section" style="padding: 4rem 2rem; background: #050505;">
+          <div style="max-width: 80rem; margin: 0 auto;">
+            <span class="section-label">Special Offers</span>
+            <h2 class="section-title" style="color: white; margin-bottom: 2rem;">Get Up to 70% Off</h2>
+            
+            <div class="discount-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+              <!-- Discount Card 1 -->
+              <div class="discount-card glass-card" style="position: relative; border-radius: 1.5rem; overflow: hidden; padding: 2rem; background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(79,70,229,0.1)); border: 1px solid rgba(99,102,241,0.2); transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="position: absolute; top: 1rem; right: 1rem; background: rgba(239,68,68,0.2); color: #fca5a5; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">HOT</div>
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🎓</div>
+                <h3 style="color: white; font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">Student Bundle</h3>
+                <p style="color: #a3a3a3; font-size: 0.875rem; margin-bottom: 1rem;">Get textbooks + laptop bundle at discounted prices</p>
+                <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+                  <span style="font-size: 2rem; font-weight: 700; color: #6366f1;">Save GHS 150</span>
+                </div>
+                <button onclick="Pages.renderBrowse()" style="margin-top: 1.5rem; width: 100%; padding: 0.75rem; border-radius: 0.75rem; background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.3)'" onmouseout="this.style.background='rgba(99,102,241,0.2)'">Shop Now</button>
+              </div>
+              
+              <!-- Discount Card 2 -->
+              <div class="discount-card glass-card" style="position: relative; border-radius: 1.5rem; overflow: hidden; padding: 2rem; background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(20,184,166,0.1)); border: 1px solid rgba(16,185,129,0.2); transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="position: absolute; top: 1rem; right: 1rem; background: rgba(34,197,94,0.2); color: #86efac; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">NEW</div>
+                <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
+                <h3 style="color: white; font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">Free Delivery</h3>
+                <p style="color: #a3a3a3; font-size: 0.875rem; margin-bottom: 1rem;">First order delivery free for UG students</p>
+                <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+                  <span style="font-size: 2rem; font-weight: 700; color: #10b981;">Save GHS 25</span>
+                </div>
+                <button onclick="Pages.renderRegister()" style="margin-top: 1.5rem; width: 100%; padding: 0.75rem; border-radius: 0.75rem; background: rgba(16,185,129,0.2); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(16,185,129,0.3)'" onmouseout="this.style.background='rgba(16,185,129,0.2)'">Claim Offer</button>
+              </div>
+              
+              <!-- Discount Card 3 -->
+              <div class="discount-card glass-card" style="position: relative; border-radius: 1.5rem; overflow: hidden; padding: 2rem; background: linear-gradient(135deg, rgba(249,115,22,0.15), rgba(239,68,68,0.1)); border: 1px solid rgba(249,115,22,0.2); transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="position: absolute; top: 1rem; right: 1rem; background: rgba(249,115,22,0.2); color: #fdba74; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">LIMITED</div>
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🏷️</div>
+                <h3 style="color: white; font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">Flash Sale</h3>
+                <p style="color: #a3a3a3; font-size: 0.875rem; margin-bottom: 1rem;">Up to 70% off on selected electronics</p>
+                <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+                  <span style="font-size: 2rem; font-weight: 700; color: #f97316;">70% OFF</span>
+                </div>
+                <button onclick="Pages.renderBrowse({category: 'electronics'})" style="margin-top: 1.5rem; width: 100%; padding: 0.75rem; border-radius: 0.75rem; background: rgba(249,115,22,0.2); color: #fdba74; border: 1px solid rgba(249,115,22,0.3); font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(249,115,22,0.3)'" onmouseout="this.style.background='rgba(249,115,22,0.2)'">View Deals</button>
+              </div>
             </div>
           </div>
         </section>
@@ -1082,7 +1179,7 @@ class Pages {
   /**
    * Setup university selection
    */
-  static setupUniversitySelection() {
+  static setupUniversitySelection () {
     const cards = document.querySelectorAll('.university-card');
     cards.forEach((card) => {
       card.addEventListener('click', () => {
@@ -1095,20 +1192,44 @@ class Pages {
   /**
    * Select University
    */
-  static selectUniversity(universityId) {
+  static selectUniversity (universityId) {
     StorageManager.set(STORAGE_KEYS.SELECTED_UNIVERSITY, universityId);
     // Redirect to student verification
     this.renderStudentVerification();
   }
 
   /**
+   * Filter Category Tab on Landing Page
+   */
+  static filterCategoryTab (category, button) {
+    // Update tab buttons
+    document.querySelectorAll('.category-tab').forEach(tab => {
+      tab.style.background = 'transparent';
+      tab.style.color = '#a3a3a3';
+      tab.style.borderColor = 'rgba(63,63,70,1)';
+    });
+
+    // Update clicked button
+    button.style.background = 'rgba(99,102,241,0.2)';
+    button.style.color = '#a5b4fc';
+    button.style.borderColor = 'rgba(99,102,241,0.3)';
+
+    // Navigate to browse with category filter
+    if (category === 'all') {
+      this.renderBrowse();
+    } else {
+      this.renderBrowse({ category: category });
+    }
+  }
+
+  /**
    * Render Student Verification Page
    */
-  static renderStudentVerification() {
+  static renderStudentVerification () {
     const mainContent = document.getElementById('main-content');
     const selectedUniversity = StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
     const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true);
-    
+
     // Get university name
     let universityName = 'your university';
     api.loadJSON('data/config.json').then(config => {
@@ -1372,11 +1493,11 @@ class Pages {
   /**
    * Switch Verification Tab
    */
-  static switchVerificationTab(tab) {
+  static switchVerificationTab (tab) {
     // Update tab buttons
     document.querySelectorAll('.verification-tab').forEach(t => t.classList.remove('active'));
     document.querySelector(`.verification-tab[data-tab="${tab}"]`).classList.add('active');
-    
+
     // Update forms
     document.querySelectorAll('.verification-form').forEach(f => f.classList.remove('active'));
     document.getElementById(`verification-form-${tab}`).classList.add('active');
@@ -1385,12 +1506,12 @@ class Pages {
   /**
    * Handle File Selection
    */
-  static handleFileSelect(event) {
+  static handleFileSelect (event) {
     const files = event.target.files;
     const fileList = document.getElementById('file-list');
-    
+
     if (files.length > 0) {
-      fileList.innerHTML = '<div class="uploaded-files"><strong>Selected files:</strong><ul>' + 
+      fileList.innerHTML = '<div class="uploaded-files"><strong>Selected files:</strong><ul>' +
         Array.from(files).map(f => `<li>${f.name} (${(f.size / 1024).toFixed(1)} KB)</li>`).join('') +
         '</ul></div>';
     }
@@ -1399,11 +1520,11 @@ class Pages {
   /**
    * Handle Student Verification (Email Method)
    */
-  static async handleStudentVerification(event) {
+  static async handleStudentVerification (event) {
     event.preventDefault();
     const form = document.getElementById('verification-form-email');
     const selectedUniversity = StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
-    
+
     const verificationData = {
       universityId: selectedUniversity,
       verificationMethod: 'email',
@@ -1421,13 +1542,13 @@ class Pages {
     const emailDomain = verificationData.studentEmail.split('@')[1];
     const config = await api.loadJSON('data/config.json').catch(() => ({ universities: [] }));
     const university = config.universities.find(u => u.id === selectedUniversity);
-    
+
     // Store verification data
     StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verificationData);
-    
+
     // Show success message
     alert(`✓ Verification Successful!\n\nWelcome, ${verificationData.fullName}!\nYou are now verified as a student of ${university ? university.name : 'your university'}.\n\nYou can now browse and trade on Uni-Hub.`);
-    
+
     // Redirect to browse page
     this.renderBrowse();
   }
@@ -1435,12 +1556,12 @@ class Pages {
   /**
    * Handle Document Verification
    */
-  static async handleDocumentVerification(event) {
+  static async handleDocumentVerification (event) {
     event.preventDefault();
     const form = document.getElementById('verification-form-document');
     const selectedUniversity = StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
     const files = document.getElementById('doc-files').files;
-    
+
     // Validate files
     if (files.length === 0) {
       alert('Please upload at least one document (admission letter or student ID)');
@@ -1448,13 +1569,13 @@ class Pages {
     }
 
     // Validate file sizes (max 5MB each)
-    for (let file of files) {
+    for (const file of files) {
       if (file.size > 5 * 1024 * 1024) {
         alert(`File "${file.name}" is too large. Maximum size is 5MB.`);
         return;
       }
     }
-    
+
     const verificationData = {
       universityId: selectedUniversity,
       verificationMethod: 'document',
@@ -1471,57 +1592,79 @@ class Pages {
 
     // Store pending verification
     StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verificationData);
-    
+
     // In production, this would upload files to a server
     console.log('Documents to upload:', files);
-    
+
     // Show success message
     alert(`✓ Verification Submitted!\n\nThank you, ${verificationData.fullName}!\n\nYour documents have been submitted for verification.\n\nYou will receive an email at ${verificationData.personalEmail} within 24-48 hours once your student status is confirmed.\n\nYou can browse Uni-Hub while waiting for verification.`);
-    
+
     // Redirect to browse page (allow browsing while pending)
     this.renderBrowse();
   }
 
   /**
-   * Render Login Page - Modern Dark Design
+   * Render Login Modal Overlay
    */
-  static renderLogin() {
-    // Hide navbar and footer for auth pages - cleaner professional look
-    this.hideOriginalNavFooter();
-    
-    // Update hash for routing
-    if (window.location.hash !== '#/login') {
-      window.history.pushState({ path: '/login' }, '', '#/login');
-    }
+  static renderLogin () {
+    // Don't hide navbar/footer - show as overlay on landing page
+    const overlay = document.createElement('div');
+    overlay.id = 'auth-overlay';
+    overlay.className = 'auth-overlay';
+    overlay.onclick = (e) => {
+      if (e.target === overlay) {this.closeAuthOverlay();}
+    };
 
-    const mainContent = document.getElementById('main-content');
-
-    mainContent.innerHTML = `
+    overlay.innerHTML = `
       <style>
-        .auth-page-container {
-          min-height: 100vh;
+        .auth-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.85);
+          backdrop-filter: blur(12px);
           display: flex;
           align-items: center;
           justify-content: center;
+          z-index: 1000;
           padding: 2rem;
-          background: #050505;
-          background-image: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08), transparent 25%),
-                            radial-gradient(circle at 85% 30%, rgba(99, 102, 241, 0.05), transparent 25%);
-          font-family: 'Inter', system-ui, -apple-system, sans-serif;
+          animation: fadeIn 0.25s ease-out;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideUp {
+          from { transform: translateY(30px) scale(0.95); opacity: 0; }
+          to { transform: translateY(0) scale(1); opacity: 1; }
         }
         .auth-card-modern {
           position: relative;
           width: 100%;
-          max-width: 28rem;
-          padding: 1.5rem;
-          background: #0a0a0a;
-          border-radius: 0.75rem;
-          border: 1px solid rgba(39, 39, 42, 1);
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+          max-width: 26rem;
+          padding: 2.5rem;
+          background: linear-gradient(145deg, #0f0f0f, #1a1a1a);
+          border-radius: 1.25rem;
+          border: 1px solid rgba(99, 102, 241, 0.3);
+          box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.8), 0 0 40px rgba(99, 102, 241, 0.1);
+          animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .auth-close-btn {
+          position: absolute;
+          top: 1rem;
+          right: 1rem;
+          background: transparent;
+          border: none;
+          color: #71717a;
+          cursor: pointer;
+          padding: 0.5rem;
+          transition: color 0.2s;
+        }
+        .auth-close-btn:hover {
+          color: #fafafa;
         }
         .auth-card-header {
           text-align: center;
-          space-y: 1rem;
+          margin-bottom: 1.5rem;
         }
         .auth-icon-wrapper {
           display: inline-flex;
@@ -1537,10 +1680,12 @@ class Pages {
           letter-spacing: -0.025em;
           color: #fafafa;
           margin-bottom: 0.25rem;
+          font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
         .auth-subtitle {
           font-size: 0.875rem;
           color: #a1a1aa;
+          font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
         .social-buttons-grid {
           display: grid;
@@ -1600,6 +1745,7 @@ class Pages {
           font-weight: 500;
           color: #fafafa;
           margin-bottom: 0.5rem;
+          font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
         .form-input {
           display: flex;
@@ -1612,6 +1758,7 @@ class Pages {
           font-size: 0.875rem;
           color: #fafafa;
           transition: all 0.2s;
+          font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
         .form-input:focus {
           outline: none;
@@ -1655,6 +1802,7 @@ class Pages {
           color: #fafafa;
           border: 1px solid rgba(39, 39, 42, 1);
           cursor: pointer;
+          font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
         .submit-btn:hover {
           background: #27272a;
@@ -1671,112 +1819,138 @@ class Pages {
         .auth-footer-links {
           text-align: center;
           margin-top: 1.5rem;
+          padding-top: 1.5rem;
+          border-top: 1px solid rgba(39, 39, 42, 1);
         }
         .auth-footer-links p {
           font-size: 0.875rem;
           color: #a1a1aa;
-          margin-bottom: 0.75rem;
+          margin-bottom: 0;
+          font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
         .auth-link {
-          color: #fafafa;
-          text-decoration: underline;
-          text-underline-offset: 4px;
+          color: #6366f1;
+          text-decoration: none;
+          font-weight: 500;
           transition: color 0.2s;
           cursor: pointer;
         }
         .auth-link:hover {
-          color: #d4d4d8;
-        }
-        .error-message-modern {
-          color: #ef4444;
-          font-size: 0.75rem;
-          margin-top: 0.25rem;
-          display: none;
+          color: #818cf8;
         }
       </style>
 
-      <div class="auth-page-container">
-        <div class="auth-card-modern">
-          <div class="auth-card-header">
-            <div class="auth-icon-wrapper">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #a1a1aa;">
-                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
+      <div class="auth-card-modern">
+        <button class="auth-close-btn" onclick="Pages.closeAuthOverlay()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+
+        <div class="auth-card-header">
+          <div class="auth-icon-wrapper">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #a1a1aa;">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <h1 class="auth-title">Welcome back</h1>
+          <p class="auth-subtitle">Enter your credentials to sign in to Uni-Hub</p>
+        </div>
+
+        <div class="social-buttons-grid">
+          <button class="social-btn" title="Sign in with Google">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem;">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"></path>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
+            </svg>
+          </button>
+          <button class="social-btn" title="Sign in with Apple">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; fill: #fafafa;">
+              <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.09997 22C7.78997 22.05 6.79997 20.68 5.95997 19.47C4.24997 17 2.93997 12.45 4.69997 9.39C5.56997 7.87 7.12997 6.91 8.81997 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.09 16.67C20.06 16.74 19.67 18.11 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"></path>
+            </svg>
+          </button>
+          <button class="social-btn" title="Sign in with X">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; fill: #fafafa;">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
+            </svg>
+          </button>
+        </div>
+
+        <div class="divider">
+          <div class="divider-line"><span></span></div>
+          <div class="divider-text"><span>Or continue with</span></div>
+        </div>
+
+        <form id="login-form" onsubmit="Pages.handleLogin(event)">
+          <div class="form-group-modern">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" id="email" name="email" placeholder="name@example.com" class="form-input" required />
+          </div>
+
+          <div class="form-group-modern">
+            <label for="password" class="form-label">Password</label>
+            <div class="password-input-wrapper">
+              <input type="password" id="password" name="password" placeholder="Enter your password" class="form-input" required />
+              <button type="button" class="password-toggle-btn" onclick="Pages.togglePassword('password', this)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon">
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
             </div>
-            <h1 class="auth-title">Welcome back</h1>
-            <p class="auth-subtitle">Enter your credentials to sign in to Uni-Hub</p>
           </div>
 
-          <div class="social-buttons-grid">
-            <button class="social-btn" title="Sign in with Google">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem;">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"></path>
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
-              </svg>
-            </button>
-            <button class="social-btn" title="Sign in with Apple">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; fill: #fafafa;">
-                <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.09997 22C7.78997 22.05 6.79997 20.68 5.95997 19.47C4.24997 17 2.93997 12.45 4.69997 9.39C5.56997 7.87 7.12997 6.91 8.81997 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.09 16.67C20.06 16.74 19.67 18.11 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"></path>
-              </svg>
-            </button>
-            <button class="social-btn" title="Sign in with X">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; fill: #fafafa;">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
-              </svg>
-            </button>
-          </div>
+          <button type="submit" class="submit-btn submit-btn-primary">Sign In</button>
+        </form>
 
-          <div class="divider">
-            <div class="divider-line"><span></span></div>
-            <div class="divider-text"><span>Or continue with</span></div>
-          </div>
-
-          <form id="login-form" onsubmit="Pages.handleLogin(event)" class="space-y-4">
-            <div class="form-group-modern">
-              <label for="email" class="form-label">Email</label>
-              <input type="email" id="email" name="email" placeholder="name@example.com" class="form-input" required />
-              <div class="error-message-modern" id="email-error"></div>
-            </div>
-
-            <div class="form-group-modern">
-              <label for="password" class="form-label">Password</label>
-              <div class="password-input-wrapper">
-                <input type="password" id="password" name="password" placeholder="Enter your password" class="form-input" required />
-                <button type="button" class="password-toggle-btn" onclick="Pages.togglePassword('password', this)">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon">
-                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                  </svg>
-                </button>
-              </div>
-              <div class="error-message-modern" id="password-error"></div>
-            </div>
-
-            <button type="submit" class="submit-btn submit-btn-primary">Sign In</button>
-          </form>
-
-          <div class="auth-footer-links">
-            <p>
-              Don't have an account?
-              <a onclick="Pages.renderRegister(); return false;" class="auth-link">Sign up</a>
-            </p>
-            <a onclick="Pages.renderForgotPassword(); return false;" class="auth-link">Forgot your password?</a>
-          </div>
+        <div class="auth-footer-links">
+          <p>
+            Don't have an account?
+            <a onclick="Pages.switchAuthModal('register')" class="auth-link">Sign up</a>
+          </p>
         </div>
       </div>
     `;
+
+    document.body.appendChild(overlay);
+  }
+
+  /**
+   * Close Auth Overlay
+   */
+  static closeAuthOverlay () {
+    const overlay = document.getElementById('auth-overlay');
+    if (overlay) {
+      overlay.style.animation = 'fadeIn 0.2s ease-out reverse';
+      setTimeout(() => overlay.remove(), 200);
+    }
+  }
+
+  /**
+   * Switch Auth Modal (Login <-> Register)
+   */
+  static switchAuthModal (type) {
+    this.closeAuthOverlay();
+    setTimeout(() => {
+      if (type === 'register') {
+        this.renderRegister();
+      } else {
+        this.renderLogin();
+      }
+    }, 200);
   }
 
   /**
    * Toggle password visibility
    */
-  static togglePassword(inputId, button) {
+  static togglePassword (inputId, button) {
     const input = document.getElementById(inputId);
     const eyeIcon = button.querySelector('.eye-icon');
-    
+
     if (input.type === 'password') {
       input.type = 'text';
       eyeIcon.innerHTML = '<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" x2="22" y1="2" y2="22"></line>';
@@ -1789,7 +1963,7 @@ class Pages {
   /**
    * Handle Login Submission
    */
-  static async handleLogin(event) {
+  static async handleLogin (event) {
     event.preventDefault();
     const form = document.getElementById('login-form');
     const email = form.email.value;
@@ -1808,7 +1982,7 @@ class Pages {
   /**
    * Render Register Page - Modern Dark Design
    */
-  static renderRegister() {
+  static renderRegister () {
     // Hide navbar and footer for auth pages - cleaner professional look
     this.hideOriginalNavFooter();
 
@@ -2054,7 +2228,7 @@ class Pages {
   /**
    * Handle Register Submission
    */
-  static async handleRegister(event) {
+  static async handleRegister (event) {
     event.preventDefault();
     const form = document.getElementById('register-form');
     const selectedUniversity = StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
@@ -2081,7 +2255,7 @@ class Pages {
   /**
    * Render Forgot Password Page
    */
-  static renderForgotPassword() {
+  static renderForgotPassword () {
     const mainContent = document.getElementById('main-content');
 
     mainContent.innerHTML = `
@@ -2110,7 +2284,7 @@ class Pages {
   /**
    * Handle Forgot Password
    */
-  static async handleForgotPassword(event) {
+  static async handleForgotPassword (event) {
     event.preventDefault();
     alert('Password reset link has been sent to your email!');
     this.renderLogin();
@@ -2119,7 +2293,7 @@ class Pages {
   /**
    * Render Browse Products Page
    */
-  static async renderBrowse(filters = {}) {
+  static async renderBrowse (filters = {}) {
     // Show original navbar and footer for non-landing pages
     this.showOriginalNavFooter();
 
@@ -2206,32 +2380,32 @@ class Pages {
 
           <div class="products-grid">
             ${
-              paginatedData.products.length > 0
-                ? paginatedData.products
-                    .map((product) => Pages.renderProductCard(product))
-                    .join('')
-                : '<div class="empty-state">No products found. Try adjusting your filters.</div>'
-            }
+  paginatedData.products.length > 0
+    ? paginatedData.products
+      .map((product) => Pages.renderProductCard(product))
+      .join('')
+    : '<div class="empty-state">No products found. Try adjusting your filters.</div>'
+}
           </div>
 
           ${
-            paginatedData.pages > 1
-              ? `
+  paginatedData.pages > 1
+    ? `
             <div class="pagination">
               ${[...Array(paginatedData.pages).keys()]
-                .map(
-                  (i) => `
+    .map(
+      (i) => `
                 <button class="btn btn-sm ${i + 1 === paginatedData.currentPage ? 'btn-primary' : 'btn-outline'}"
                         onclick="Pages.goToBrowsePage(${i + 1})">
                   ${i + 1}
                 </button>
-              `
-                )
-                .join('')}
+              `,
+    )
+    .join('')}
             </div>
           `
-              : ''
-          }
+    : ''
+}
         </div>
       </div>
     `;
@@ -2240,7 +2414,7 @@ class Pages {
   /**
    * Render Product Card
    */
-  static renderProductCard(product) {
+  static renderProductCard (product) {
     const isInWishlist = productsManager.isInWishlist(product.id);
 
     return `
@@ -2268,7 +2442,7 @@ class Pages {
   /**
    * Toggle Wishlist
    */
-  static toggleWishlist(event, productId) {
+  static toggleWishlist (event, productId) {
     event.stopPropagation();
 
     if (productsManager.isInWishlist(productId)) {
@@ -2284,16 +2458,16 @@ class Pages {
   /**
    * Apply Browse Filters
    */
-  static applyBrowseFilters() {
+  static applyBrowseFilters () {
     const category = document.getElementById('category-filter').value;
     const searchQuery = document.getElementById('search-input').value;
     const priceMax = document.getElementById('price-range').value;
     document.getElementById('price-value').textContent = priceMax;
 
     const conditions = [];
-    if (document.getElementById('fair-check').checked) conditions.push('fair');
-    if (document.getElementById('good-check').checked) conditions.push('good');
-    if (document.getElementById('excellent-check').checked) conditions.push('excellent');
+    if (document.getElementById('fair-check').checked) {conditions.push('fair');}
+    if (document.getElementById('good-check').checked) {conditions.push('good');}
+    if (document.getElementById('excellent-check').checked) {conditions.push('excellent');}
 
     productsManager.filter({
       category: category || null,
@@ -2304,7 +2478,7 @@ class Pages {
     // Re-apply condition filter if needed
     if (conditions.length > 0) {
       productsManager.filteredProducts = productsManager.filteredProducts.filter((p) =>
-        conditions.includes(p.condition)
+        conditions.includes(p.condition),
       );
     }
 
@@ -2314,7 +2488,7 @@ class Pages {
   /**
    * Reset Browse Filters
    */
-  static resetBrowseFilters() {
+  static resetBrowseFilters () {
     productsManager.resetFilters();
     this.renderBrowse();
   }
@@ -2322,7 +2496,7 @@ class Pages {
   /**
    * Apply Sort Order
    */
-  static applySortOrder() {
+  static applySortOrder () {
     const sortBy = document.getElementById('sort-select').value;
     productsManager.currentFilters.sortBy = sortBy;
     productsManager.applyFilters();
@@ -2332,7 +2506,7 @@ class Pages {
   /**
    * Re-render just the products grid (for filtering without page refresh)
    */
-  static renderBrowseProducts() {
+  static renderBrowseProducts () {
     const paginatedData = productsManager.getPaginated(1);
     const productsGrid = document.querySelector('.products-grid');
 
@@ -2347,7 +2521,7 @@ class Pages {
   /**
    * Go to Browse Page (pagination)
    */
-  static goToBrowsePage(page) {
+  static goToBrowsePage (page) {
     const paginatedData = productsManager.getPaginated(page);
     const productsGrid = document.querySelector('.products-grid');
 
@@ -2362,7 +2536,7 @@ class Pages {
   /**
    * Render Product Detail Page
    */
-  static renderProductDetail(productId) {
+  static renderProductDetail (productId) {
     const product = productsManager.getById(productId);
 
     if (!product) {
@@ -2421,15 +2595,15 @@ class Pages {
                 <h3>Delivery Methods</h3>
                 <div class="methods-list">
                   ${product.deliveryModes
-                    .map(
-                      (mode) => `
+    .map(
+      (mode) => `
                     <div class="method-item">
                       <input type="radio" name="delivery" id="delivery-${mode}" value="${mode}" />
                       <label for="delivery-${mode}">${Formatter.capitalize(mode)}</label>
                     </div>
-                  `
-                    )
-                    .join('')}
+                  `,
+    )
+    .join('')}
                 </div>
               </div>
 
@@ -2437,15 +2611,15 @@ class Pages {
                 <h3>Payment Methods</h3>
                 <div class="methods-list">
                   ${product.paymentModes
-                    .map(
-                      (mode) => `
+    .map(
+      (mode) => `
                     <div class="method-item">
                       <input type="radio" name="payment" id="payment-${mode}" value="${mode}" />
                       <label for="payment-${mode}">${Formatter.capitalize(mode)}</label>
                     </div>
-                  `
-                    )
-                    .join('')}
+                  `,
+    )
+    .join('')}
                 </div>
               </div>
             </div>
@@ -2494,7 +2668,7 @@ class Pages {
   /**
    * Toggle Wishlist in Detail View
    */
-  static toggleWishlistDetail(productId) {
+  static toggleWishlistDetail (productId) {
     if (productsManager.isInWishlist(productId)) {
       productsManager.removeFromWishlist(productId);
       notificationManager.info('Removed from Wishlist', 'Product removed from your wishlist');
@@ -2509,17 +2683,17 @@ class Pages {
   /**
    * Write Review for Product
    */
-  static writeReview(productId) {
+  static writeReview (productId) {
     const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
     if (!currentUser) {
       alert('Please login to write a review');
       this.renderLogin();
       return;
     }
-    
+
     const product = productsManager.getById(productId);
     const reviewText = prompt(`Write a review for "${product.title}":`);
-    
+
     if (reviewText && reviewText.trim()) {
       notificationManager.success('Review Submitted', 'Thank you for your review!');
       // In production, this would save the review to the backend
@@ -2529,16 +2703,16 @@ class Pages {
   /**
    * Share Product
    */
-  static shareProduct(productId) {
+  static shareProduct (productId) {
     const product = productsManager.getById(productId);
     const shareUrl = window.location.href.split('#')[0] + `#product/${productId}`;
-    
+
     // Try to use Web Share API if available
     if (navigator.share) {
       navigator.share({
         title: product.title,
         text: `Check out this item on Uni-Hub: ${product.title}`,
-        url: shareUrl
+        url: shareUrl,
       }).catch((error) => {
         console.log('Share cancelled', error);
       });
@@ -2555,7 +2729,7 @@ class Pages {
   /**
    * Render Cart Page
    */
-  static renderCart() {
+  static renderCart () {
     const mainContent = document.getElementById('main-content');
     const cartItems = cartManager.getItems();
     const summary = cartManager.getSummary();
@@ -2585,8 +2759,8 @@ class Pages {
             </div>
             
             ${cartItems
-              .map(
-                (item) => `
+    .map(
+      (item) => `
               <div class="cart-item" data-product-id="${item.product.id}">
                 <div class="cart-item-image">
                   <img src="${item.product.images[0]}" alt="${item.product.title}" />
@@ -2609,9 +2783,9 @@ class Pages {
                   <button class="remove-btn" onclick="Pages.removeFromCart('${item.product.id}')">Remove</button>
                 </div>
               </div>
-            `
-              )
-              .join('')}
+            `,
+    )
+    .join('')}
           </div>
           
           <div class="cart-summary">
@@ -2648,16 +2822,16 @@ class Pages {
   /**
    * Add product to cart from product detail
    */
-  static addToCart(productId) {
+  static addToCart (productId) {
     const product = productsManager.getById(productId);
-    
+
     if (!product) {
       alert('Product not found');
       return;
     }
 
     const result = cartManager.add(product, 1);
-    
+
     if (result.success) {
       this.updateCartBadge();
       alert(result.message);
@@ -2667,7 +2841,7 @@ class Pages {
   /**
    * Remove item from cart
    */
-  static removeFromCart(productId) {
+  static removeFromCart (productId) {
     cartManager.remove(productId);
     this.updateCartBadge();
     this.renderCart();
@@ -2676,7 +2850,7 @@ class Pages {
   /**
    * Increment cart item quantity
    */
-  static incrementCartQuantity(productId) {
+  static incrementCartQuantity (productId) {
     cartManager.increment(productId);
     this.updateCartBadge();
     this.renderCart();
@@ -2685,7 +2859,7 @@ class Pages {
   /**
    * Decrement cart item quantity
    */
-  static decrementCartQuantity(productId) {
+  static decrementCartQuantity (productId) {
     cartManager.decrement(productId);
     this.updateCartBadge();
     this.renderCart();
@@ -2694,7 +2868,7 @@ class Pages {
   /**
    * Render Checkout Page
    */
-  static renderCheckout() {
+  static renderCheckout () {
     const mainContent = document.getElementById('main-content');
     const cartItems = cartManager.getItems();
     const summary = cartManager.getSummary();
@@ -2729,17 +2903,17 @@ class Pages {
                 <h3>🚚 Delivery Method</h3>
                 <div class="delivery-options">
                   ${deliveryOptions
-                    .map(
-                      (option) => `
+    .map(
+      (option) => `
                     <div class="option-card" onclick="Pages.selectDeliveryOption('${option.value}', this)">
                       <input type="radio" name="deliveryMode" value="${option.value}" id="delivery-${option.value}" />
                       <div class="option-icon">${option.icon}</div>
                       <div class="option-label">${option.label}</div>
                       <div class="option-fee">${option.fee === 0 ? 'Free' : `GHS ${option.fee}`}</div>
                     </div>
-                  `
-                    )
-                    .join('')}
+                  `,
+    )
+    .join('')}
                 </div>
               </div>
 
@@ -2780,16 +2954,16 @@ class Pages {
                 <h3>💳 Payment Method</h3>
                 <div class="payment-options">
                   ${paymentOptions
-                    .map(
-                      (option) => `
+    .map(
+      (option) => `
                     <div class="option-card" onclick="Pages.selectPaymentOption('${option.value}', this)">
                       <input type="radio" name="paymentMode" value="${option.value}" id="payment-${option.value}" />
                       <div class="option-icon">${option.icon}</div>
                       <div class="option-label">${option.label}</div>
                     </div>
-                  `
-                    )
-                    .join('')}
+                  `,
+    )
+    .join('')}
                 </div>
               </div>
             </div>
@@ -2800,8 +2974,8 @@ class Pages {
               
               <div class="order-items">
                 ${cartItems
-                  .map(
-                    (item) => `
+    .map(
+      (item) => `
                   <div class="order-item">
                     <div class="order-item-image">
                       <img src="${item.product.images[0]}" alt="${item.product.title}" />
@@ -2812,9 +2986,9 @@ class Pages {
                       <div class="order-item-price">${Formatter.formatPrice(item.product.price * item.quantity)}</div>
                     </div>
                   </div>
-                `
-                  )
-                  .join('')}
+                `,
+    )
+    .join('')}
               </div>
 
               <div class="summary-divider"></div>
@@ -2847,7 +3021,7 @@ class Pages {
   /**
    * Select delivery option
    */
-  static selectDeliveryOption(value, element) {
+  static selectDeliveryOption (value, element) {
     // Update radio button
     document.querySelectorAll('input[name="deliveryMode"]').forEach((radio) => {
       radio.checked = radio.value === value;
@@ -2872,7 +3046,7 @@ class Pages {
   /**
    * Select payment option
    */
-  static selectPaymentOption(value, element) {
+  static selectPaymentOption (value, element) {
     // Update radio button
     document.querySelectorAll('input[name="paymentMode"]').forEach((radio) => {
       radio.checked = radio.value === value;
@@ -2888,12 +3062,12 @@ class Pages {
   /**
    * Handle checkout form submission
    */
-  static async handleCheckout(event) {
+  static async handleCheckout (event) {
     event.preventDefault();
 
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     // Disable submit button during processing
     if (submitButton) {
       submitButton.disabled = true;
@@ -2958,7 +3132,7 @@ class Pages {
         if (paymentResult.success) {
           // Send notification
           notificationManager.success('Order Confirmed', `Your order #${result.order.orderNumber} has been confirmed!`);
-          
+
           // Render confirmation page
           this.renderOrderConfirmation(result.order);
         } else {
@@ -2988,7 +3162,7 @@ class Pages {
   /**
    * Render Order Confirmation Page
    */
-  static renderOrderConfirmation(order) {
+  static renderOrderConfirmation (order) {
     const mainContent = document.getElementById('main-content');
 
     mainContent.innerHTML = `
@@ -3052,7 +3226,7 @@ class Pages {
   /**
    * Render Orders Page
    */
-  static renderOrders() {
+  static renderOrders () {
     const mainContent = document.getElementById('main-content');
     const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
 
@@ -3084,8 +3258,8 @@ class Pages {
         
         <div class="cart-items">
           ${orders
-            .map(
-              (order) => `
+    .map(
+      (order) => `
             <div class="cart-item" style="display: block;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <div>
@@ -3095,16 +3269,16 @@ class Pages {
                   </div>
                 </div>
                 <span class="condition-badge ${order.status}" style="background: ${this.getStatusColor(
-                  order.status
-                )}; color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.875rem;">
+  order.status,
+)}; color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.875rem;">
                   ${Formatter.capitalize(order.status.replace('-', ' '))}
                 </span>
               </div>
               
               <div style="border-top: 1px solid var(--neutral-200); padding-top: 1rem;">
                 ${order.items
-                  .map(
-                    (item) => `
+    .map(
+      (item) => `
                   <div style="display: flex; gap: 1rem; margin-bottom: 0.75rem;">
                     <img src="${item.image}" alt="${item.title}" style="width: 60px; height: 60px; object-fit: cover; border-radius: var(--radius-md);" />
                     <div style="flex: 1;">
@@ -3113,9 +3287,9 @@ class Pages {
                     </div>
                     <div style="font-weight: 600;">${Formatter.formatPrice(item.price * item.quantity)}</div>
                   </div>
-                `
-                  )
-                  .join('')}
+                `,
+    )
+    .join('')}
               </div>
               
               <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--neutral-200);">
@@ -3127,9 +3301,9 @@ class Pages {
                 </button>
               </div>
             </div>
-          `
-            )
-            .join('')}
+          `,
+    )
+    .join('')}
         </div>
       </div>
     `;
@@ -3138,7 +3312,7 @@ class Pages {
   /**
    * Get status color
    */
-  static getStatusColor(status) {
+  static getStatusColor (status) {
     const colors = {
       [ORDER_STATUS.PLACED]: '#6366f1',
       [ORDER_STATUS.CONFIRMED]: '#10b981',
@@ -3152,7 +3326,7 @@ class Pages {
   /**
    * View order details
    */
-  static viewOrderDetails(orderId) {
+  static viewOrderDetails (orderId) {
     const order = checkoutManager.getOrderById(orderId);
     if (order) {
       this.renderOrderConfirmation(order);
@@ -3162,7 +3336,7 @@ class Pages {
   /**
    * Update cart badge in navbar
    */
-  static updateCartBadge() {
+  static updateCartBadge () {
     const badge = document.getElementById('cart-badge');
     if (badge) {
       const count = cartManager.getCount();
@@ -3178,7 +3352,7 @@ class Pages {
   /**
    * Update navbar based on authentication state
    */
-  static updateNavbar() {
+  static updateNavbar () {
     const authButtons = document.getElementById('navbar-auth-buttons');
     const userMenu = document.getElementById('navbar-user-menu');
     const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
@@ -3201,7 +3375,7 @@ class Pages {
   /**
    * Render Wishlist Page
    */
-  static renderWishlist() {
+  static renderWishlist () {
     const mainContent = document.getElementById('main-content');
     const wishlistProducts = productsManager.getWishlist();
 
@@ -3232,7 +3406,7 @@ class Pages {
   /**
    * Render User Dashboard
    */
-  static renderDashboard() {
+  static renderDashboard () {
     const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
     const orders = checkoutManager.getUserOrders(currentUser?.id || '');
 
@@ -3328,7 +3502,7 @@ class Pages {
   /**
    * Render User Profile
    */
-  static renderProfile() {
+  static renderProfile () {
     const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
 
     if (!currentUser) {
@@ -3372,7 +3546,7 @@ class Pages {
   /**
    * Handle Profile Update
    */
-  static handleProfileUpdate(event) {
+  static handleProfileUpdate (event) {
     event.preventDefault();
     const form = event.target;
     const updates = {
@@ -3392,7 +3566,7 @@ class Pages {
   /**
    * Handle Logout
    */
-  static handleLogout() {
+  static handleLogout () {
     authManager.logout();
     notificationManager.info('Logged Out', 'You have been logged out successfully.');
     this.renderLanding();
@@ -3401,7 +3575,7 @@ class Pages {
   /**
    * Render Notifications Page
    */
-  static renderNotifications() {
+  static renderNotifications () {
     const mainContent = document.getElementById('main-content');
     const notifications = notificationManager.getAll();
 
@@ -3438,7 +3612,7 @@ class Pages {
   /**
    * Render Seller Dashboard
    */
-  static renderSellerDashboard() {
+  static renderSellerDashboard () {
     const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
 
     if (!currentUser) {
@@ -3508,7 +3682,7 @@ class Pages {
   /**
    * Render Add Product Page
    */
-  static renderAddProduct() {
+  static renderAddProduct () {
     const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
 
     if (!currentUser) {
@@ -3579,10 +3753,10 @@ class Pages {
   /**
    * Handle Add Product
    */
-  static handleAddProduct(event) {
+  static handleAddProduct (event) {
     event.preventDefault();
     const form = event.target;
-    
+
     const productData = {
       title: form.title.value,
       description: form.description.value,
@@ -3592,9 +3766,9 @@ class Pages {
       deliveryModes: ['bolt', 'yango', 'inperson'],
       paymentModes: ['momo', 'telecel', 'cash'],
     };
-    
+
     const result = productsManager.addProduct(productData);
-    
+
     if (result.success) {
       notificationManager.success('Product Listed', result.message);
       Pages.renderManageProducts();
@@ -3606,7 +3780,7 @@ class Pages {
   /**
    * Render Manage Products Page
    */
-  static renderManageProducts() {
+  static renderManageProducts () {
     const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
     const sellerProducts = productsManager.getBySeller(currentUser?.id || '');
 
@@ -3651,7 +3825,7 @@ class Pages {
   /**
    * Render Seller Orders Page
    */
-  static renderSellerOrders() {
+  static renderSellerOrders () {
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `
       <div class="container" style="padding: 2rem 1rem;">
@@ -3668,7 +3842,7 @@ class Pages {
   /**
    * Render Delivery Options Page
    */
-  static renderDeliveryOptions() {
+  static renderDeliveryOptions () {
     const mainContent = document.getElementById('main-content');
     const deliveryOptions = deliveryManager.getDeliveryOptions();
 
@@ -3693,7 +3867,7 @@ class Pages {
   /**
    * Render Track Order Page
    */
-  static renderTrackOrder(orderId) {
+  static renderTrackOrder (orderId) {
     const delivery = deliveryManager.getDeliveryByOrderId(orderId);
     const mainContent = document.getElementById('main-content');
 
@@ -3737,7 +3911,7 @@ class Pages {
   /**
    * Render Payment Page
    */
-  static renderPayment(orderId) {
+  static renderPayment (orderId) {
     const order = checkoutManager.getOrderById(orderId);
     const mainContent = document.getElementById('main-content');
 
@@ -3784,7 +3958,7 @@ class Pages {
   /**
    * Render Payment Success Page
    */
-  static renderPaymentSuccess() {
+  static renderPaymentSuccess () {
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `
       <div class="container" style="padding: 2rem 1rem; text-align: center;">
@@ -3799,7 +3973,7 @@ class Pages {
   /**
    * Render Admin Dashboard
    */
-  static renderAdminDashboard() {
+  static renderAdminDashboard () {
     const adminUser = adminAuthManager.getCurrentUser();
 
     if (!adminAuthManager.isLoggedIn()) {
@@ -3898,7 +4072,7 @@ class Pages {
   /**
    * Render Admin Login
    */
-  static renderAdminLogin() {
+  static renderAdminLogin () {
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `
       <div class="auth-container">
@@ -3926,7 +4100,7 @@ class Pages {
   /**
    * Handle Admin Login
    */
-  static async handleAdminLogin(event) {
+  static async handleAdminLogin (event) {
     event.preventDefault();
     const form = event.target;
     const result = await adminAuthManager.login(form.email.value, form.password.value);
@@ -3942,7 +4116,7 @@ class Pages {
   /**
    * Render Admin Users Page
    */
-  static renderAdminUsers() {
+  static renderAdminUsers () {
     const users = adminUsersManager.getAllUsers();
     const mainContent = document.getElementById('main-content');
 
@@ -4023,7 +4197,7 @@ class Pages {
   /**
    * Render Admin Products Page
    */
-  static renderAdminProducts() {
+  static renderAdminProducts () {
     const products = adminProductsManager.getAllProducts();
     const mainContent = document.getElementById('main-content');
 
@@ -4099,7 +4273,7 @@ class Pages {
   /**
    * Render Admin Orders Page
    */
-  static renderAdminOrders() {
+  static renderAdminOrders () {
     const orders = adminOrdersManager.getAllOrders();
     const mainContent = document.getElementById('main-content');
 
@@ -4171,7 +4345,7 @@ class Pages {
   /**
    * Render Admin Regions Page
    */
-  static renderAdminRegions() {
+  static renderAdminRegions () {
     const regions = regionManager.getAllRegions();
     const mainContent = document.getElementById('main-content');
 
@@ -4237,7 +4411,7 @@ class Pages {
   /**
    * Render Admin Reports Page
    */
-  static renderAdminReports() {
+  static renderAdminReports () {
     const stats = adminReportsManager.getDashboardOverview();
     const mainContent = document.getElementById('main-content');
 

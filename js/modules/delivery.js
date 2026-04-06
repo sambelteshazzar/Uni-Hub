@@ -3,7 +3,7 @@
 // ============================================
 
 class DeliveryManager {
-  constructor() {
+  constructor () {
     this.DELIVERY_STORAGE_KEY = `${STORAGE_KEY_PREFIX}deliveries`;
   }
 
@@ -11,7 +11,7 @@ class DeliveryManager {
    * Get delivery options
    * @returns {Array} - Delivery options with fees and details
    */
-  getDeliveryOptions() {
+  getDeliveryOptions () {
     return [
       {
         id: DELIVERY_MODES.IN_PERSON,
@@ -49,7 +49,7 @@ class DeliveryManager {
    * @param {number} subtotal - Order subtotal
    * @returns {number} - Delivery fee
    */
-  calculateFee(mode, subtotal = 0) {
+  calculateFee (mode, subtotal = 0) {
     const options = this.getDeliveryOptions();
     const option = options.find((o) => o.id === mode);
     return option ? option.fee : 0;
@@ -60,7 +60,7 @@ class DeliveryManager {
    * @param {string} mode - Delivery mode
    * @returns {string} - Estimated time
    */
-  getEstimatedTime(mode) {
+  getEstimatedTime (mode) {
     const options = this.getDeliveryOptions();
     const option = options.find((o) => o.id === mode);
     return option ? option.estimatedTime : 'N/A';
@@ -73,7 +73,7 @@ class DeliveryManager {
    * @param {Object} details - Delivery details
    * @returns {Object} - Delivery record
    */
-  createDelivery(order, mode, details) {
+  createDelivery (order, mode, details) {
     const delivery = {
       id: this.generateDeliveryId(),
       orderId: order.id,
@@ -98,7 +98,7 @@ class DeliveryManager {
    * @param {string} status - New status
    * @returns {Object} - Updated delivery
    */
-  updateStatus(deliveryId, status) {
+  updateStatus (deliveryId, status) {
     const deliveries = this.getAllDeliveries();
     const index = deliveries.findIndex((d) => d.id === deliveryId);
 
@@ -129,7 +129,7 @@ class DeliveryManager {
    * @param {string} deliveryId - Delivery ID
    * @returns {Object|null}
    */
-  getDeliveryById(deliveryId) {
+  getDeliveryById (deliveryId) {
     const deliveries = this.getAllDeliveries();
     return deliveries.find((d) => d.id === deliveryId) || null;
   }
@@ -139,7 +139,7 @@ class DeliveryManager {
    * @param {string} orderId - Order ID
    * @returns {Object|null}
    */
-  getDeliveryByOrderId(orderId) {
+  getDeliveryByOrderId (orderId) {
     const deliveries = this.getAllDeliveries();
     return deliveries.find((d) => d.orderId === orderId) || null;
   }
@@ -148,7 +148,7 @@ class DeliveryManager {
    * Get all deliveries
    * @returns {Array}
    */
-  getAllDeliveries() {
+  getAllDeliveries () {
     const deliveries = StorageManager.get(this.DELIVERY_STORAGE_KEY, true);
     return deliveries || [];
   }
@@ -157,7 +157,7 @@ class DeliveryManager {
    * Save delivery
    * @param {Object} delivery - Delivery object
    */
-  saveDelivery(delivery) {
+  saveDelivery (delivery) {
     const deliveries = this.getAllDeliveries();
     deliveries.push(delivery);
     StorageManager.set(this.DELIVERY_STORAGE_KEY, deliveries);
@@ -167,7 +167,7 @@ class DeliveryManager {
    * Generate delivery ID
    * @returns {string}
    */
-  generateDeliveryId() {
+  generateDeliveryId () {
     return `delivery_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
@@ -175,7 +175,7 @@ class DeliveryManager {
    * Get delivery status options
    * @returns {Array}
    */
-  getStatusOptions() {
+  getStatusOptions () {
     return [
       { value: 'pending', label: 'Pending', color: '#f59e0b' },
       { value: 'confirmed', label: 'Confirmed', color: '#3b82f6' },
@@ -191,7 +191,7 @@ class DeliveryManager {
    * @param {string} deliveryId - Delivery ID
    * @returns {Object} - Tracking information
    */
-  trackDelivery(deliveryId) {
+  trackDelivery (deliveryId) {
     const delivery = this.getDeliveryById(deliveryId);
 
     if (!delivery) {
@@ -225,7 +225,7 @@ class DeliveryManager {
    * Get delivery modes for display
    * @returns {Array}
    */
-  getDisplayModes() {
+  getDisplayModes () {
     return [
       {
         id: DELIVERY_MODES.IN_PERSON,
@@ -259,7 +259,7 @@ class DeliveryManager {
    * @param {string} address - Address to validate
    * @returns {Object}
    */
-  validateAddress(address) {
+  validateAddress (address) {
     if (!address || address.trim().length < 10) {
       return {
         valid: false,
@@ -279,7 +279,7 @@ class DeliveryManager {
    * @param {string} scheduledTime - Scheduled delivery time
    * @returns {Object}
    */
-  scheduleDelivery(deliveryId, scheduledTime) {
+  scheduleDelivery (deliveryId, scheduledTime) {
     const delivery = this.getDeliveryById(deliveryId);
 
     if (!delivery) {

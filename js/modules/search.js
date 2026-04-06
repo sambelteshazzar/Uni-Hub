@@ -3,7 +3,7 @@
 // ============================================
 
 class SearchManager {
-  constructor() {
+  constructor () {
     this.searchHistory = [];
     this.recentSearches = [];
     this.loadHistory();
@@ -12,7 +12,7 @@ class SearchManager {
   /**
    * Load search history from localStorage
    */
-  loadHistory() {
+  loadHistory () {
     const history = StorageManager.get(STORAGE_KEYS.SEARCH_HISTORY, true);
     this.searchHistory = history || [];
   }
@@ -20,7 +20,7 @@ class SearchManager {
   /**
    * Save search history
    */
-  saveHistory() {
+  saveHistory () {
     StorageManager.set(STORAGE_KEYS.SEARCH_HISTORY, this.searchHistory);
   }
 
@@ -30,7 +30,7 @@ class SearchManager {
    * @param {Object} filters - Additional filters
    * @returns {Array} - Search results
    */
-  search(query, filters = {}) {
+  search (query, filters = {}) {
     if (!query || query.trim() === '') {
       return productsManager.getAll();
     }
@@ -59,7 +59,7 @@ class SearchManager {
    * @param {Object} filters - Filters to apply
    * @returns {Array}
    */
-  applyFilters(results, filters) {
+  applyFilters (results, filters) {
     let filtered = [...results];
 
     // Filter by university
@@ -97,27 +97,27 @@ class SearchManager {
    * @param {string} sortBy - Sort criteria
    * @returns {Array}
    */
-  sortResults(results, sortBy) {
+  sortResults (results, sortBy) {
     const sorted = [...results];
 
     switch (sortBy) {
-      case 'newest':
-        return sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    case 'newest':
+      return sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-      case 'price-low':
-        return sorted.sort((a, b) => a.price - b.price);
+    case 'price-low':
+      return sorted.sort((a, b) => a.price - b.price);
 
-      case 'price-high':
-        return sorted.sort((a, b) => b.price - a.price);
+    case 'price-high':
+      return sorted.sort((a, b) => b.price - a.price);
 
-      case 'rating':
-        return sorted.sort((a, b) => b.seller.rating - a.seller.rating);
+    case 'rating':
+      return sorted.sort((a, b) => b.seller.rating - a.seller.rating);
 
-      case 'popular':
-        return sorted.sort((a, b) => (b.views || 0) - (a.views || 0));
+    case 'popular':
+      return sorted.sort((a, b) => (b.views || 0) - (a.views || 0));
 
-      default:
-        return sorted;
+    default:
+      return sorted;
     }
   }
 
@@ -125,9 +125,9 @@ class SearchManager {
    * Add search to history
    * @param {string} query - Search query
    */
-  addToHistory(query) {
+  addToHistory (query) {
     const normalizedQuery = query.trim();
-    if (!normalizedQuery) return;
+    if (!normalizedQuery) {return;}
 
     // Remove if already exists
     this.searchHistory = this.searchHistory.filter((q) => q !== normalizedQuery);
@@ -147,14 +147,14 @@ class SearchManager {
    * Get search history
    * @returns {Array}
    */
-  getHistory() {
+  getHistory () {
     return this.searchHistory;
   }
 
   /**
    * Clear search history
    */
-  clearHistory() {
+  clearHistory () {
     this.searchHistory = [];
     this.saveHistory();
   }
@@ -163,7 +163,7 @@ class SearchManager {
    * Remove search from history
    * @param {string} query - Search query to remove
    */
-  removeFromHistory(query) {
+  removeFromHistory (query) {
     this.searchHistory = this.searchHistory.filter((q) => q !== query);
     this.saveHistory();
   }
@@ -173,8 +173,8 @@ class SearchManager {
    * @param {string} query - Partial query
    * @returns {Array}
    */
-  getSuggestions(query) {
-    if (!query || query.length < 2) return [];
+  getSuggestions (query) {
+    if (!query || query.length < 2) {return [];}
 
     const normalizedQuery = query.toLowerCase();
     const allProducts = productsManager.getAll();
@@ -203,7 +203,7 @@ class SearchManager {
    * Get trending searches (placeholder)
    * @returns {Array}
    */
-  getTrendingSearches() {
+  getTrendingSearches () {
     // This would be populated from analytics data
     return ['laptop', 'textbooks', 'phone', 'bed', 'blender'];
   }
@@ -213,7 +213,7 @@ class SearchManager {
    * @param {Object} criteria - Search criteria
    * @returns {Object} - Search results with metadata
    */
-  advancedSearch(criteria) {
+  advancedSearch (criteria) {
     const {
       query = '',
       university = null,
@@ -226,7 +226,7 @@ class SearchManager {
     } = criteria;
 
     // Perform search
-    let results = this.search(query, {
+    const results = this.search(query, {
       university,
       category,
       conditions,
@@ -267,7 +267,7 @@ class SearchManager {
    * @param {Object} filters - Filters
    * @returns {number}
    */
-  getResultCount(query, filters = {}) {
+  getResultCount (query, filters = {}) {
     return this.search(query, filters).length;
   }
 
@@ -277,8 +277,8 @@ class SearchManager {
    * @param {string} query - Search query
    * @returns {string}
    */
-  highlightTerms(text, query) {
-    if (!query) return text;
+  highlightTerms (text, query) {
+    if (!query) {return text;}
 
     const terms = query.split(' ').filter((t) => t.trim());
     let highlighted = text;
@@ -287,7 +287,7 @@ class SearchManager {
       const regex = new RegExp(`(${term})`, 'gi');
       highlighted = highlighted.replace(
         regex,
-        '<mark class="search-highlight">$1</mark>'
+        '<mark class="search-highlight">$1</mark>',
       );
     });
 
@@ -300,9 +300,9 @@ class SearchManager {
    * @param {number} wait - Wait time in ms
    * @returns {Function}
    */
-  debounce(func, wait) {
+  debounce (func, wait) {
     let timeout;
-    return function executedFunction(...args) {
+    return function executedFunction (...args) {
       const later = () => {
         clearTimeout(timeout);
         func(...args);

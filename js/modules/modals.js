@@ -3,7 +3,7 @@
 // ============================================
 
 class ModalManager {
-  constructor() {
+  constructor () {
     this.activeModals = [];
     this.modalContainer = null;
   }
@@ -11,7 +11,7 @@ class ModalManager {
   /**
    * Initialize modal container
    */
-  init() {
+  init () {
     if (!this.modalContainer) {
       this.modalContainer = document.createElement('div');
       this.modalContainer.className = 'modal-container-global';
@@ -23,7 +23,7 @@ class ModalManager {
    * Open a modal
    * @param {Object} options - Modal options
    */
-  open(options) {
+  open (options) {
     this.init();
 
     const modal = {
@@ -56,7 +56,7 @@ class ModalManager {
    * @param {Object} modal - Modal config
    * @returns {HTMLElement}
    */
-  createModalElement(modal) {
+  createModalElement (modal) {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.dataset.modalId = modal.id;
@@ -118,10 +118,10 @@ class ModalManager {
    * Close a modal
    * @param {string} modalId - Modal ID
    */
-  close(modalId) {
+  close (modalId) {
     const modalIndex = this.activeModals.findIndex((m) => m.id === modalId);
 
-    if (modalIndex === -1) return;
+    if (modalIndex === -1) {return;}
 
     const modal = this.activeModals[modalIndex];
     const overlay = this.modalContainer.querySelector(`[data-modal-id="${modalId}"]`);
@@ -151,7 +151,7 @@ class ModalManager {
   /**
    * Close all modals
    */
-  closeAll() {
+  closeAll () {
     this.activeModals.forEach((modal) => {
       this.close(modal.id);
     });
@@ -161,7 +161,7 @@ class ModalManager {
    * Generate unique ID
    * @returns {string}
    */
-  generateId() {
+  generateId () {
     return `modal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
@@ -169,7 +169,7 @@ class ModalManager {
    * Show alert modal
    * @param {Object} options - Alert options
    */
-  alert(options) {
+  alert (options) {
     const { title = 'Alert', message, type = 'info', onConfirm } = options;
 
     const icons = {
@@ -194,7 +194,7 @@ class ModalManager {
         </button>
       `,
       onClose: () => {
-        if (onConfirm) onConfirm(false);
+        if (onConfirm) {onConfirm(false);}
       },
     });
   }
@@ -203,7 +203,7 @@ class ModalManager {
    * Show confirm modal
    * @param {Object} options - Confirm options
    */
-  confirm(options) {
+  confirm (options) {
     const { title = 'Confirm', message, confirmText = 'Yes', cancelText = 'No', onConfirm, onCancel } = options;
 
     const modalId = this.open({
@@ -223,7 +223,7 @@ class ModalManager {
         </button>
       `,
       onClose: () => {
-        if (onCancel) onCancel();
+        if (onCancel) {onCancel();}
       },
     });
 
@@ -235,7 +235,7 @@ class ModalManager {
    * @param {string} modalId - Modal ID
    * @param {boolean} confirmed - Whether confirmed
    */
-  closeAndCallback(modalId, confirmed) {
+  closeAndCallback (modalId, confirmed) {
     const modal = this.activeModals.find((m) => m.id === modalId);
     if (modal && modal.onConfirm) {
       modal.onConfirm(confirmed);
@@ -247,7 +247,7 @@ class ModalManager {
    * Show condition selector modal
    * @param {Object} options - Options
    */
-  showConditionSelector(options) {
+  showConditionSelector (options) {
     const { onSelect, currentValue } = options;
 
     const conditions = [
@@ -259,8 +259,8 @@ class ModalManager {
     const content = `
       <div class="condition-selector">
         ${conditions
-          .map(
-            (c) => `
+    .map(
+      (c) => `
           <div class="condition-option ${currentValue === c.id ? 'selected' : ''}" 
                onclick="modalManager.selectCondition('${c.id}', '${modalId}')">
             <input type="radio" name="condition" value="${c.id}" ${currentValue === c.id ? 'checked' : ''} />
@@ -270,9 +270,9 @@ class ModalManager {
               <p>${c.description}</p>
             </div>
           </div>
-        `
-          )
-          .join('')}
+        `,
+    )
+    .join('')}
       </div>
     `;
 
@@ -294,7 +294,7 @@ class ModalManager {
    * @param {string} conditionId - Condition ID
    * @param {string} modalId - Modal ID
    */
-  selectCondition(conditionId, modalId) {
+  selectCondition (conditionId, modalId) {
     this.selectedCondition = conditionId;
 
     // Update visual selection
@@ -310,7 +310,7 @@ class ModalManager {
    * Confirm condition selection
    * @param {string} modalId - Modal ID
    */
-  confirmCondition(modalId) {
+  confirmCondition (modalId) {
     const modal = this.activeModals.find((m) => m.id === modalId);
     if (modal && modal.onSelect) {
       modal.onSelect(this.selectedCondition);
@@ -323,7 +323,7 @@ class ModalManager {
    * @param {string} imageUrl - Image URL
    * @param {string} alt - Alt text
    */
-  showImage(imageUrl, alt = '') {
+  showImage (imageUrl, alt = '') {
     this.open({
       type: 'image',
       size: 'xl',
@@ -344,7 +344,7 @@ class ModalManager {
    * Show quick view modal for product
    * @param {Object} product - Product object
    */
-  showProductQuickView(product) {
+  showProductQuickView (product) {
     const content = `
       <div class="product-quick-view">
         <div class="quick-view-image">
@@ -386,7 +386,7 @@ class ModalManager {
    * Check if modal is open
    * @returns {boolean}
    */
-  isModalOpen() {
+  isModalOpen () {
     return this.activeModals.length > 0;
   }
 
@@ -394,7 +394,7 @@ class ModalManager {
    * Get active modal count
    * @returns {number}
    */
-  getActiveCount() {
+  getActiveCount () {
     return this.activeModals.length;
   }
 }

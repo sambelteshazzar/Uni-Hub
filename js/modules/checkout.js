@@ -10,7 +10,7 @@ const DELIVERY_FEES = {
 };
 
 class CheckoutManager {
-  constructor() {
+  constructor () {
     this.ORDER_STORAGE_KEY = `${STORAGE_KEY_PREFIX}orders`;
   }
 
@@ -19,7 +19,7 @@ class CheckoutManager {
    * @param {Object} checkoutData - Checkout form data
    * @returns {Object} - Order result
    */
-  async createOrder(checkoutData) {
+  async createOrder (checkoutData) {
     // Validate cart first
     const cartValidation = cartManager.validate();
     if (!cartValidation.valid) {
@@ -109,7 +109,7 @@ class CheckoutManager {
    * @param {Object} data - Checkout data
    * @returns {Object} - Validation result
    */
-  validateCheckoutData(data) {
+  validateCheckoutData (data) {
     if (!data.deliveryMode) {
       return { valid: false, message: 'Please select a delivery method' };
     }
@@ -135,7 +135,7 @@ class CheckoutManager {
    * @param {number} subtotal - Order subtotal
    * @returns {number} - Delivery fee
    */
-  calculateDeliveryFee(mode, subtotal) {
+  calculateDeliveryFee (mode, subtotal) {
     return DELIVERY_FEES[mode] ?? DELIVERY_FEES[DELIVERY_MODES.IN_PERSON];
   }
 
@@ -143,7 +143,7 @@ class CheckoutManager {
    * Generate unique order ID
    * @returns {string}
    */
-  generateOrderId() {
+  generateOrderId () {
     return `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
@@ -151,7 +151,7 @@ class CheckoutManager {
    * Generate human-readable order number
    * @returns {string}
    */
-  generateOrderNumber() {
+  generateOrderNumber () {
     const date = new Date();
     const year = date.getFullYear().toString().substr(-2);
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -164,7 +164,7 @@ class CheckoutManager {
    * Save order to storage
    * @param {Object} order - Order object
    */
-  saveOrder(order) {
+  saveOrder (order) {
     const orders = this.getAllOrders();
     orders.unshift(order); // Add to beginning
     StorageManager.set(this.ORDER_STORAGE_KEY, orders);
@@ -174,7 +174,7 @@ class CheckoutManager {
    * Get all orders for current user
    * @returns {Array}
    */
-  getAllOrders() {
+  getAllOrders () {
     const orders = StorageManager.get(this.ORDER_STORAGE_KEY, true);
     return orders || [];
   }
@@ -184,7 +184,7 @@ class CheckoutManager {
    * @param {string} userId - User ID
    * @returns {Array}
    */
-  getUserOrders(userId) {
+  getUserOrders (userId) {
     const orders = this.getAllOrders();
     return orders.filter((order) => order.userId === userId);
   }
@@ -194,7 +194,7 @@ class CheckoutManager {
    * @param {string} orderId - Order ID
    * @returns {Object|null}
    */
-  getOrderById(orderId) {
+  getOrderById (orderId) {
     const orders = this.getAllOrders();
     return orders.find((order) => order.id === orderId) || null;
   }
@@ -205,7 +205,7 @@ class CheckoutManager {
    * @param {string} status - New status
    * @returns {Object} - Result
    */
-  updateOrderStatus(orderId, status) {
+  updateOrderStatus (orderId, status) {
     const orders = this.getAllOrders();
     const orderIndex = orders.findIndex((order) => order.id === orderId);
 
@@ -232,7 +232,7 @@ class CheckoutManager {
    * Get order status options
    * @returns {Array}
    */
-  getStatusOptions() {
+  getStatusOptions () {
     return [
       { value: ORDER_STATUS.PLACED, label: 'Order Placed', color: '#6366f1' },
       { value: ORDER_STATUS.CONFIRMED, label: 'Confirmed', color: '#10b981' },
@@ -246,7 +246,7 @@ class CheckoutManager {
    * Get delivery mode options
    * @returns {Array}
    */
-  getDeliveryModeOptions() {
+  getDeliveryModeOptions () {
     return [
       { value: DELIVERY_MODES.IN_PERSON, label: 'In-Person Pickup', fee: DELIVERY_FEES[DELIVERY_MODES.IN_PERSON], icon: '🏪' },
       { value: DELIVERY_MODES.YANGO, label: 'Yango Delivery', fee: DELIVERY_FEES[DELIVERY_MODES.YANGO], icon: '🚗' },
@@ -258,7 +258,7 @@ class CheckoutManager {
    * Get payment mode options
    * @returns {Array}
    */
-  getPaymentModeOptions() {
+  getPaymentModeOptions () {
     return [
       { value: PAYMENT_MODES.CASH, label: 'Cash on Delivery', icon: '💵' },
       { value: PAYMENT_MODES.MOMO, label: 'MTN Mobile Money', icon: '📱' },
@@ -273,7 +273,7 @@ class CheckoutManager {
    * @param {string} paymentMode - Payment method
    * @returns {Object} - Payment result
    */
-  async processPayment(orderId, paymentMode) {
+  async processPayment (orderId, paymentMode) {
     const order = this.getOrderById(orderId);
 
     if (!order) {
@@ -338,7 +338,7 @@ class CheckoutManager {
    * @param {string} orderId - Order ID
    * @returns {Object} - Result
    */
-  cancelOrder(orderId) {
+  cancelOrder (orderId) {
     const order = this.getOrderById(orderId);
 
     if (!order) {

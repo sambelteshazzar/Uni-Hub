@@ -148,6 +148,64 @@
   .navigation-buttons .btn {
     margin-bottom: 0;
   }
+
+  /* Landing page responsive fixes */
+  .modern-hero-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .hero-visual-col {
+    display: none !important;
+  }
+
+  .hero-text-col {
+    grid-column: span 12 !important;
+  }
+
+  .universities-grid,
+  .features-grid,
+  .categories-grid,
+  .discount-grid,
+  .steps-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .modern-nav {
+    padding: 1rem !important;
+  }
+
+  .modern-nav-inner {
+    padding: 0.75rem 1rem !important;
+  }
+
+  .modern-nav-inner > div:last-child {
+    display: none;
+  }
+
+  .hero-title {
+    font-size: 2rem !important;
+  }
+
+  .hero-description {
+    font-size: 1rem !important;
+  }
+
+  .section-title {
+    font-size: 1.5rem !important;
+  }
+
+  .floating-card {
+    display: none !important;
+  }
+
+  .category-tabs {
+    flex-wrap: wrap !important;
+  }
+
+  .category-tab {
+    font-size: 0.75rem !important;
+    padding: 0.5rem 1rem !important;
+  }
 }
 
 /* ============================================
@@ -188,6 +246,31 @@
     grid-template-columns: repeat(2, 1fr);
     gap: var(--space-lg);
   }
+
+  /* Landing page responsive */
+  .modern-hero-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .hero-visual {
+    display: none !important;
+  }
+
+  .universities-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .discount-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .steps-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .modern-nav-inner > div:nth-child(2) {
+    display: none;
+  }
 }
 
 /* ============================================
@@ -215,6 +298,23 @@
   .checkout-container {
     grid-template-columns: 1fr;
   }
+
+  /* Landing page */
+  .hero-visual {
+    display: none !important;
+  }
+
+  .modern-hero-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .universities-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .discount-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* ============================================
@@ -229,6 +329,14 @@
   .products-grid {
     grid-template-columns: repeat(4, 1fr);
     gap: var(--space-md);
+  }
+
+  .universities-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .discount-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 

@@ -8,7 +8,7 @@ class Validator {
    * @param {string} email
    * @returns {boolean}
    */
-  static isValidEmail(email) {
+  static isValidEmail (email) {
     return VALIDATION_PATTERNS.EMAIL.test(email);
   }
 
@@ -17,7 +17,7 @@ class Validator {
    * @param {string} phone
    * @returns {boolean}
    */
-  static isValidPhone(phone) {
+  static isValidPhone (phone) {
     return VALIDATION_PATTERNS.PHONE.test(phone);
   }
 
@@ -26,7 +26,7 @@ class Validator {
    * @param {string} password
    * @returns {boolean}
    */
-  static isValidPassword(password) {
+  static isValidPassword (password) {
     return VALIDATION_PATTERNS.PASSWORD.test(password);
   }
 
@@ -35,7 +35,7 @@ class Validator {
    * @param {string} url
    * @returns {boolean}
    */
-  static isValidUrl(url) {
+  static isValidUrl (url) {
     return VALIDATION_PATTERNS.URL.test(url);
   }
 
@@ -44,7 +44,7 @@ class Validator {
    * @param {string} value
    * @returns {boolean}
    */
-  static isEmpty(value) {
+  static isEmpty (value) {
     return !value || value.trim().length === 0;
   }
 
@@ -54,7 +54,7 @@ class Validator {
    * @param {number} minLength
    * @returns {boolean}
    */
-  static isMinLength(value, minLength) {
+  static isMinLength (value, minLength) {
     return value && value.length >= minLength;
   }
 
@@ -64,7 +64,7 @@ class Validator {
    * @param {number} maxLength
    * @returns {boolean}
    */
-  static isMaxLength(value, maxLength) {
+  static isMaxLength (value, maxLength) {
     return !value || value.length <= maxLength;
   }
 
@@ -74,7 +74,7 @@ class Validator {
    * @param {any} value2
    * @returns {boolean}
    */
-  static isMatch(value1, value2) {
+  static isMatch (value1, value2) {
     return value1 === value2;
   }
 
@@ -83,7 +83,7 @@ class Validator {
    * @param {number|string} price
    * @returns {boolean}
    */
-  static isValidPrice(price) {
+  static isValidPrice (price) {
     const num = Number(price);
     return !isNaN(num) && num > 0;
   }
@@ -94,7 +94,7 @@ class Validator {
    * @param {Object} rules - Validation rules
    * @returns {Object} - Errors object
    */
-  static validateForm(fields, rules) {
+  static validateForm (fields, rules) {
     const errors = {};
 
     for (const [fieldName, rule] of Object.entries(rules)) {

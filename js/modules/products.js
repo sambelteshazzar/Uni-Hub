@@ -4,7 +4,7 @@
 // ============================================
 
 class ProductsManager {
-  constructor() {
+  constructor () {
     this.products = [];
     this.filteredProducts = [];
     this.currentFilters = {
@@ -25,7 +25,7 @@ class ProductsManager {
   /**
    * Initialize products
    */
-  async init() {
+  async init () {
     try {
       if (this.useBackend) {
         // Try to load from backend
@@ -45,7 +45,7 @@ class ProductsManager {
       const data = await api.loadJSON('data/products.json');
       this.products = data.products || [];
       this.filteredProducts = [...this.products];
-      
+
       // Show user-friendly message if no products available
       if (this.products.length === 0) {
         console.warn('No products available. Please check back later.');
@@ -54,7 +54,7 @@ class ProductsManager {
       console.error('Failed to load products:', error);
       this.products = [];
       this.filteredProducts = [];
-      
+
       // Display user-friendly error message
       if (typeof toastManager !== 'undefined') {
         toastManager.show('Unable to load products. Please refresh the page.', 'error');
@@ -65,21 +65,21 @@ class ProductsManager {
   /**
    * Get all products (local)
    */
-  getAll() {
+  getAll () {
     return this.products;
   }
 
   /**
    * Get product by ID
    */
-  getById(id) {
+  getById (id) {
     return this.products.find(p => p.id === id) || null;
   }
 
   /**
    * Filter products
    */
-  filter(filters) {
+  filter (filters) {
     if (filters.university !== undefined) {
       this.currentFilters.university = filters.university;
     }
@@ -105,7 +105,7 @@ class ProductsManager {
   /**
    * Apply filters to products
    */
-  applyFilters() {
+  applyFilters () {
     let filtered = [...this.products];
 
     // University filter
@@ -137,24 +137,24 @@ class ProductsManager {
       const query = this.currentFilters.searchQuery.toLowerCase();
       filtered = filtered.filter(p =>
         p.title.toLowerCase().includes(query) ||
-        p.description.toLowerCase().includes(query)
+        p.description.toLowerCase().includes(query),
       );
     }
 
     // Sorting
     switch (this.currentFilters.sortBy) {
-      case 'price-low':
-        filtered.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-high':
-        filtered.sort((a, b) => b.price - a.price);
-        break;
-      case 'newest':
-        filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        break;
-      case 'rating':
-        filtered.sort((a, b) => (b.seller?.rating || 0) - (a.seller?.rating || 0));
-        break;
+    case 'price-low':
+      filtered.sort((a, b) => a.price - b.price);
+      break;
+    case 'price-high':
+      filtered.sort((a, b) => b.price - a.price);
+      break;
+    case 'newest':
+      filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      break;
+    case 'rating':
+      filtered.sort((a, b) => (b.seller?.rating || 0) - (a.seller?.rating || 0));
+      break;
     }
 
     this.filteredProducts = filtered;
@@ -164,7 +164,7 @@ class ProductsManager {
   /**
    * Reset filters
    */
-  resetFilters() {
+  resetFilters () {
     this.currentFilters = {
       university: null,
       category: null,
@@ -180,7 +180,7 @@ class ProductsManager {
   /**
    * Get paginated products
    */
-  getPaginated(page = 1) {
+  getPaginated (page = 1) {
     this.currentPage = page;
     const start = (page - 1) * this.pageSize;
     const end = start + this.pageSize;
@@ -197,7 +197,7 @@ class ProductsManager {
   /**
    * Add product (to backend)
    */
-  async addProduct(productData) {
+  async addProduct (productData) {
     try {
       if (this.useBackend) {
         try {
@@ -246,14 +246,14 @@ class ProductsManager {
   /**
    * Get products by seller
    */
-  getBySeller(sellerId) {
+  getBySeller (sellerId) {
     return this.products.filter(p => p.seller?.id === sellerId || p.seller === sellerId);
   }
 
   /**
    * Wishlist management
    */
-  addToWishlist(productId) {
+  addToWishlist (productId) {
     const wishlist = StorageManager.get(this.wishlistKey, true) || [];
     if (!wishlist.includes(productId)) {
       wishlist.push(productId);
@@ -261,18 +261,18 @@ class ProductsManager {
     }
   }
 
-  removeFromWishlist(productId) {
+  removeFromWishlist (productId) {
     let wishlist = StorageManager.get(this.wishlistKey, true) || [];
     wishlist = wishlist.filter(id => id !== productId);
     StorageManager.set(this.wishlistKey, wishlist);
   }
 
-  isInWishlist(productId) {
+  isInWishlist (productId) {
     const wishlist = StorageManager.get(this.wishlistKey, true) || [];
     return wishlist.includes(productId);
   }
 
-  getWishlist() {
+  getWishlist () {
     const wishlist = StorageManager.get(this.wishlistKey, true) || [];
     return this.products.filter(p => wishlist.includes(p.id));
   }
@@ -283,40 +283,40 @@ const productsManager = new ProductsManager();
 
 // Hostel-specific functionality extension
 class HostelProductsManager {
-  constructor() {
+  constructor () {
     this.baseManager = productsManager;
   }
 
   /**
    * Get hostel-specific products
    */
-  getHostelProducts() {
+  getHostelProducts () {
     return this.baseManager.getAll().filter(p => p.category === CATEGORIES.HOSTEL_ITEMS);
   }
 
   /**
    * Add hostel product with validation
    */
-  async addHostelProduct(productData) {
+  async addHostelProduct (productData) {
     // Validate hostel-specific fields
     if (!productData.university) {
       return {
         success: false,
-        error: 'University is required for hostel items'
+        error: 'University is required for hostel items',
       };
     }
 
     if (!productData.condition) {
       return {
         success: false,
-        error: 'Condition is required for hostel items'
+        error: 'Condition is required for hostel items',
       };
     }
 
     // Ensure it's marked as hostel category
     const hostelProductData = {
       ...productData,
-      category: CATEGORIES.HOSTEL_ITEMS
+      category: CATEGORIES.HOSTEL_ITEMS,
     };
 
     return this.baseManager.addProduct(hostelProductData);
@@ -325,14 +325,14 @@ class HostelProductsManager {
   /**
    * Get hostel products by university
    */
-  getHostelProductsByUniversity(universityId) {
+  getHostelProductsByUniversity (universityId) {
     return this.getHostelProducts().filter(p => p.university === universityId);
   }
 
   /**
    * Get featured hostel items
    */
-  getFeaturedHostelItems() {
+  getFeaturedHostelItems () {
     return this.getHostelProducts()
       .filter(p => p.condition === PRODUCT_CONDITIONS.EXCELLENT)
       .sort((a, b) => b.price - a.price)

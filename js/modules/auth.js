@@ -4,7 +4,7 @@
 // ============================================
 
 class AuthManager {
-  constructor() {
+  constructor () {
     this.currentUser = null;
     this.isAuthenticated = false;
     this.useBackend = false; // Set to false to use local storage only
@@ -14,7 +14,7 @@ class AuthManager {
   /**
    * Load user from storage on init
    */
-  loadUser() {
+  loadUser () {
     try {
       const user = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
       if (user) {
@@ -30,7 +30,7 @@ class AuthManager {
    * Register new user
    * @param {Object} userData - User registration data
    */
-  async register(userData) {
+  async register (userData) {
     try {
       // Validate input
       const errors = Validator.validateForm(userData, {
@@ -50,7 +50,7 @@ class AuthManager {
       // Check if user already exists
       const users = StorageManager.get(STORAGE_KEYS.USERS, true) || [];
       const existingUser = users.find(u => u.email === userData.email);
-      
+
       if (existingUser) {
         return {
           success: false,
@@ -77,7 +77,7 @@ class AuthManager {
       // Save user
       users.push(newUser);
       StorageManager.set(STORAGE_KEYS.USERS, users);
-      
+
       // Auto login
       this.currentUser = newUser;
       this.isAuthenticated = true;
@@ -101,7 +101,7 @@ class AuthManager {
    * @param {string} email - User email
    * @param {string} password - User password
    */
-  async login(email, password) {
+  async login (email, password) {
     try {
       if (!email || !password) {
         return {
@@ -114,7 +114,7 @@ class AuthManager {
       if (this.useBackend) {
         try {
           const response = await api.auth.login(email, password);
-          
+
           if (response.success) {
             this.currentUser = response.data.user;
             this.currentUser.token = response.data.token;
@@ -160,7 +160,7 @@ class AuthManager {
           isVerified: true,
           rating: 5.0,
         };
-        
+
         this.currentUser = adminUser;
         this.isAuthenticated = true;
         StorageManager.set(STORAGE_KEYS.CURRENT_USER, adminUser);
@@ -187,7 +187,7 @@ class AuthManager {
   /**
    * Logout user
    */
-  logout() {
+  logout () {
     this.currentUser = null;
     this.isAuthenticated = false;
     StorageManager.remove(STORAGE_KEYS.CURRENT_USER);
@@ -196,14 +196,14 @@ class AuthManager {
   /**
    * Get current user
    */
-  getCurrentUser() {
+  getCurrentUser () {
     return this.currentUser;
   }
 
   /**
    * Check if user is authenticated
    */
-  isLoggedIn() {
+  isLoggedIn () {
     return this.isAuthenticated && this.currentUser !== null;
   }
 
@@ -211,7 +211,7 @@ class AuthManager {
    * Update user profile
    * @param {Object} updates - Profile updates
    */
-  async updateProfile(updates) {
+  async updateProfile (updates) {
     try {
       if (!this.isLoggedIn()) {
         return {
@@ -250,7 +250,7 @@ class AuthManager {
    * @param {string} currentPassword
    * @param {string} newPassword
    */
-  async changePassword(currentPassword, newPassword) {
+  async changePassword (currentPassword, newPassword) {
     try {
       if (!this.isLoggedIn()) {
         return {

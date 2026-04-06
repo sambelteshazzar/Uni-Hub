@@ -11,8 +11,8 @@ class Sanitizer {
    * @param {string} str - String to sanitize
    * @returns {string} - Sanitized string
    */
-  static sanitize(str) {
-    if (!str) return '';
+  static sanitize (str) {
+    if (!str) {return '';}
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
@@ -23,18 +23,18 @@ class Sanitizer {
    * @param {string} html - HTML to sanitize
    * @returns {string} - Sanitized HTML
    */
-  static sanitizeHTML(html) {
+  static sanitizeHTML (html) {
     const allowedTags = ['b', 'i', 'em', 'strong', 'a', 'br', 'p', 'ul', 'li'];
     const temp = document.createElement('div');
     temp.innerHTML = html;
-    
+
     const elements = temp.querySelectorAll('*');
     elements.forEach(el => {
       if (!allowedTags.includes(el.tagName.toLowerCase())) {
         el.replaceWith(...el.childNodes);
       }
     });
-    
+
     return temp.innerHTML;
   }
 
@@ -43,13 +43,13 @@ class Sanitizer {
    * @param {string} str - String to escape
    * @returns {string} - Escaped string
    */
-  static escape(str) {
+  static escape (str) {
     const map = {
       '&': '&amp;',
       '<': '&lt;',
       '>': '&gt;',
       '"': '&quot;',
-      "'": '&#039;'
+      '\'': '&#039;',
     };
     return str.replace(/[&<>"']/g, m => map[m]);
   }
@@ -64,9 +64,9 @@ class ErrorHandler {
    * @param {number} retries - Number of retries
    * @returns {any} - Result
    */
-  static async withRetry(operation, retries = 3) {
+  static async withRetry (operation, retries = 3) {
     let lastError;
-    
+
     for (let i = 0; i < retries; i++) {
       try {
         return await operation();
@@ -78,7 +78,7 @@ class ErrorHandler {
         }
       }
     }
-    
+
     throw lastError;
   }
 
@@ -88,7 +88,7 @@ class ErrorHandler {
    * @param {Function} onLoading - Loading state handler
    * @returns {any} - Result
    */
-  static async withLoading(operation, onLoading) {
+  static async withLoading (operation, onLoading) {
     onLoading(true);
     try {
       return await operation();
@@ -105,12 +105,12 @@ class ErrorHandler {
    * @param {Error} error - Error object
    * @returns {string} - User-friendly message
    */
-  static getUserMessage(error) {
+  static getUserMessage (error) {
     const errorMessages = {
       'NetworkError': 'Unable to connect. Please check your internet connection.',
       'TimeoutError': 'Request timed out. Please try again.',
       'ValidationError': 'Please check your input and try again.',
-      'AuthError': 'Authentication failed. Please login again.'
+      'AuthError': 'Authentication failed. Please login again.',
     };
 
     for (const [key, message] of Object.entries(errorMessages)) {
@@ -131,12 +131,12 @@ class FormValidator {
    * @param {string} fieldId - Field ID
    * @param {string} message - Error message
    */
-  static showError(fieldId, message) {
+  static showError (fieldId, message) {
     const field = document.getElementById(fieldId);
-    if (!field) return;
+    if (!field) {return;}
 
     const formGroup = field.closest('.form-group');
-    if (!formGroup) return;
+    if (!formGroup) {return;}
 
     let errorDiv = formGroup.querySelector('.error-message');
     if (!errorDiv) {
@@ -158,12 +158,12 @@ class FormValidator {
    * Clear error for form field
    * @param {string} fieldId - Field ID
    */
-  static clearError(fieldId) {
+  static clearError (fieldId) {
     const field = document.getElementById(fieldId);
-    if (!field) return;
+    if (!field) {return;}
 
     const formGroup = field.closest('.form-group');
-    if (!formGroup) return;
+    if (!formGroup) {return;}
 
     const errorDiv = formGroup.querySelector('.error-message');
     if (errorDiv) {
@@ -180,7 +180,7 @@ class FormValidator {
    * Clear all errors in form
    * @param {HTMLFormElement} form - Form element
    */
-  static clearAllErrors(form) {
+  static clearAllErrors (form) {
     const errorDivs = form.querySelectorAll('.error-message');
     errorDivs.forEach(div => {
       div.style.display = 'none';
@@ -196,7 +196,7 @@ class FormValidator {
    * @param {HTMLInputElement} field - Field element
    * @returns {boolean} - Is valid
    */
-  static validateRequired(field) {
+  static validateRequired (field) {
     if (!field.value || field.value.trim() === '') {
       this.showError(field.id, 'This field is required');
       return false;
@@ -210,7 +210,7 @@ class FormValidator {
    * @param {HTMLInputElement} field - Field element
    * @returns {boolean} - Is valid
    */
-  static validateEmail(field) {
+  static validateEmail (field) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(field.value)) {
       this.showError(field.id, 'Please enter a valid email address');
@@ -225,7 +225,7 @@ class FormValidator {
    * @param {HTMLInputElement} field - Field element
    * @returns {boolean} - Is valid
    */
-  static validatePhone(field) {
+  static validatePhone (field) {
     const phoneRegex = /^(\+233|0)[0-9]{9}$/;
     if (!phoneRegex.test(field.value)) {
       this.showError(field.id, 'Please enter a valid Ghana phone number');
@@ -240,7 +240,7 @@ class FormValidator {
    * @param {HTMLInputElement} field - Field element
    * @returns {boolean} - Is valid
    */
-  static validatePassword(field) {
+  static validatePassword (field) {
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(field.value)) {
       this.showError(field.id, 'Password must be 8+ chars with uppercase, lowercase, number, and special character');
@@ -254,7 +254,7 @@ class FormValidator {
 // 4. LOADING STATE MANAGER
 // Show/hide loading indicators
 class LoadingManager {
-  constructor() {
+  constructor () {
     this.loadingCount = 0;
   }
 
@@ -262,9 +262,9 @@ class LoadingManager {
    * Show loading indicator
    * @param {string} targetId - Target element ID (optional)
    */
-  show(targetId = null) {
+  show (targetId = null) {
     this.loadingCount++;
-    
+
     if (targetId) {
       const target = document.getElementById(targetId);
       if (target) {
@@ -302,12 +302,12 @@ class LoadingManager {
    * Hide loading indicator
    * @param {string} targetId - Target element ID (optional)
    */
-  hide(targetId = null) {
+  hide (targetId = null) {
     this.loadingCount--;
-    
+
     if (this.loadingCount <= 0) {
       this.loadingCount = 0;
-      
+
       if (targetId) {
         const target = document.getElementById(targetId);
         if (target) {
@@ -329,7 +329,7 @@ class LoadingManager {
    * @param {string} targetId - Target element ID (optional)
    * @returns {any} - Result
    */
-  async wrap(operation, targetId = null) {
+  async wrap (operation, targetId = null) {
     this.show(targetId);
     try {
       return await operation();
@@ -348,7 +348,7 @@ class CartBackup {
   /**
    * Backup cart before checkout
    */
-  static backup() {
+  static backup () {
     const cartItems = cartManager.getItems();
     StorageManager.set('checkout_cart_backup', cartItems);
     StorageManager.set('checkout_backup_time', Date.now());
@@ -358,10 +358,10 @@ class CartBackup {
    * Restore cart from backup
    * @returns {boolean} - Success
    */
-  static restore() {
+  static restore () {
     const backup = StorageManager.get('checkout_cart_backup', true);
     const backupTime = StorageManager.get('checkout_backup_time');
-    
+
     // Only restore if backup is less than 1 hour old
     if (!backup || !backupTime || Date.now() - backupTime > 3600000) {
       return false;
@@ -378,7 +378,7 @@ class CartBackup {
   /**
    * Clear backup
    */
-  static clear() {
+  static clear () {
     StorageManager.remove('checkout_cart_backup');
     StorageManager.remove('checkout_backup_time');
   }
@@ -387,7 +387,7 @@ class CartBackup {
    * Check if backup exists
    * @returns {boolean}
    */
-  static hasBackup() {
+  static hasBackup () {
     return StorageManager.has('checkout_cart_backup');
   }
 }
@@ -400,6 +400,6 @@ if (typeof module !== 'undefined' && module.exports) {
     FormValidator,
     LoadingManager,
     CartBackup,
-    loadingManager
+    loadingManager,
   };
 }

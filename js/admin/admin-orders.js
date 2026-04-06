@@ -3,7 +3,7 @@
 // ============================================
 
 class AdminOrdersManager {
-  constructor() {
+  constructor () {
     this.ORDERS_STORAGE_KEY = `${STORAGE_KEY_PREFIX}orders`;
   }
 
@@ -11,7 +11,7 @@ class AdminOrdersManager {
    * Get all orders
    * @returns {Array}
    */
-  getAllOrders() {
+  getAllOrders () {
     return checkoutManager.getAllOrders();
   }
 
@@ -20,7 +20,7 @@ class AdminOrdersManager {
    * @param {string} orderId - Order ID
    * @returns {Object|null}
    */
-  getOrderById(orderId) {
+  getOrderById (orderId) {
     return checkoutManager.getOrderById(orderId);
   }
 
@@ -29,7 +29,7 @@ class AdminOrdersManager {
    * @param {string} status - Order status
    * @returns {Array}
    */
-  getOrdersByStatus(status) {
+  getOrdersByStatus (status) {
     return this.getAllOrders().filter((o) => o.status === status);
   }
 
@@ -38,7 +38,7 @@ class AdminOrdersManager {
    * @param {string} userId - User ID
    * @returns {Array}
    */
-  getOrdersByUser(userId) {
+  getOrdersByUser (userId) {
     return this.getAllOrders().filter((o) => o.userId === userId);
   }
 
@@ -48,9 +48,9 @@ class AdminOrdersManager {
    * @param {string} endDate - End date
    * @returns {Array}
    */
-  getOrdersByDateRange(startDate, endDate) {
+  getOrdersByDateRange (startDate, endDate) {
     return this.getAllOrders().filter(
-      (o) => new Date(o.createdAt) >= new Date(startDate) && new Date(o.createdAt) <= new Date(endDate)
+      (o) => new Date(o.createdAt) >= new Date(startDate) && new Date(o.createdAt) <= new Date(endDate),
     );
   }
 
@@ -60,7 +60,7 @@ class AdminOrdersManager {
    * @param {string} status - New status
    * @returns {Object}
    */
-  updateOrderStatus(orderId, status) {
+  updateOrderStatus (orderId, status) {
     const result = checkoutManager.updateOrderStatus(orderId, status);
 
     if (result.success) {
@@ -76,7 +76,7 @@ class AdminOrdersManager {
    * @param {string} reason - Cancellation reason
    * @returns {Object}
    */
-  cancelOrder(orderId, reason) {
+  cancelOrder (orderId, reason) {
     const order = this.getOrderById(orderId);
 
     if (!order) {
@@ -117,7 +117,7 @@ class AdminOrdersManager {
    * @param {string} reason - Refund reason
    * @returns {Object}
    */
-  refundOrder(orderId, reason) {
+  refundOrder (orderId, reason) {
     const order = this.getOrderById(orderId);
 
     if (!order) {
@@ -159,7 +159,7 @@ class AdminOrdersManager {
    * Get order statistics
    * @returns {Object}
    */
-  getStats() {
+  getStats () {
     const orders = this.getAllOrders();
 
     const statusCount = {};
@@ -199,7 +199,7 @@ class AdminOrdersManager {
    * @param {number} limit - Number of orders
    * @returns {Array}
    */
-  getRecentOrders(limit = 10) {
+  getRecentOrders (limit = 10) {
     return this.getAllOrders()
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, limit);
@@ -210,13 +210,13 @@ class AdminOrdersManager {
    * @param {string} query - Search query
    * @returns {Array}
    */
-  searchOrders(query) {
+  searchOrders (query) {
     const normalizedQuery = query.toLowerCase();
     return this.getAllOrders().filter(
       (o) =>
         o.orderNumber.toLowerCase().includes(normalizedQuery) ||
         o.customer.name.toLowerCase().includes(normalizedQuery) ||
-        o.customer.email.toLowerCase().includes(normalizedQuery)
+        o.customer.email.toLowerCase().includes(normalizedQuery),
     );
   }
 
@@ -224,12 +224,12 @@ class AdminOrdersManager {
    * Get orders requiring attention
    * @returns {Array}
    */
-  getOrdersRequiringAttention() {
+  getOrdersRequiringAttention () {
     return this.getAllOrders().filter(
       (o) =>
         o.status === ORDER_STATUS.PLACED ||
         o.status === ORDER_STATUS.CANCELLED ||
-        o.payment.status === 'failed'
+        o.payment.status === 'failed',
     );
   }
 
@@ -237,7 +237,7 @@ class AdminOrdersManager {
    * Export orders to CSV (placeholder)
    * @returns {string}
    */
-  exportToCSV() {
+  exportToCSV () {
     const orders = this.getAllOrders();
     const headers = [
       'Order Number',
@@ -268,7 +268,7 @@ class AdminOrdersManager {
    * @param {number} days - Number of days
    * @returns {Array}
    */
-  getDailyOrderCount(days = 7) {
+  getDailyOrderCount (days = 7) {
     const orders = this.getAllOrders();
     const today = new Date();
     const dailyCounts = [];
@@ -279,7 +279,7 @@ class AdminOrdersManager {
       const dateStr = date.toISOString().split('T')[0];
 
       const count = orders.filter(
-        (o) => new Date(o.createdAt).toISOString().split('T')[0] === dateStr
+        (o) => new Date(o.createdAt).toISOString().split('T')[0] === dateStr,
       ).length;
 
       dailyCounts.push({
@@ -297,7 +297,7 @@ class AdminOrdersManager {
    * @param {string} endDate - End date
    * @returns {Object}
    */
-  getRevenueByDateRange(startDate, endDate) {
+  getRevenueByDateRange (startDate, endDate) {
     const orders = this.getOrdersByDateRange(startDate, endDate);
     const revenue = orders
       .filter((o) => o.payment.status === 'completed')

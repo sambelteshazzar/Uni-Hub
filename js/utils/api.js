@@ -3,10 +3,10 @@
 // ============================================
 
 class API {
-  constructor(baseURL = null) {
+  constructor (baseURL = null) {
     // Use provided URL, window config, or default to local backend
     // Note: process.env doesn't work in browser context
-    this.baseURL = baseURL || 
+    this.baseURL = baseURL ||
                    (typeof window !== 'undefined' && window.API_URL) ||
                    'http://localhost:5000/api';
     this.timeout = 30000; // 30 seconds
@@ -15,7 +15,7 @@ class API {
   /**
    * Get auth token from storage
    */
-  getToken() {
+  getToken () {
     try {
       const user = localStorage.getItem('unihub_current_user');
       if (user) {
@@ -34,13 +34,13 @@ class API {
    * @param {Object} options - Fetch options
    * @returns {Promise}
    */
-  async request(url, options = {}) {
+  async request (url, options = {}) {
     try {
       const fullUrl = url.startsWith('http') ? url : this.baseURL + url;
-      
+
       // Get auth token
       const token = this.getToken();
-      
+
       const response = await Promise.race([
         fetch(fullUrl, {
           headers: {
@@ -51,7 +51,7 @@ class API {
           ...options,
         }),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), this.timeout)
+          setTimeout(() => reject(new Error('Request timeout')), this.timeout),
         ),
       ]);
 
@@ -67,7 +67,7 @@ class API {
       return data;
     } catch (error) {
       console.error('API Error:', error);
-      
+
       // Handle 401 (unauthorized) - clear user data
       if (error.status === 401) {
         localStorage.removeItem('unihub_current_user');
@@ -76,7 +76,7 @@ class API {
           console.log('Session expired, redirecting to login...');
         }
       }
-      
+
       throw error;
     }
   }
@@ -86,7 +86,7 @@ class API {
    * @param {string} url - Endpoint
    * @param {Object} params - Query parameters
    */
-  async get(url, params = {}) {
+  async get (url, params = {}) {
     const queryString = new URLSearchParams(params).toString();
     const fullUrl = queryString ? `${url}?${queryString}` : url;
     return this.request(fullUrl, { method: 'GET' });
@@ -97,7 +97,7 @@ class API {
    * @param {string} url - Endpoint
    * @param {Object} data - Request body
    */
-  async post(url, data = {}) {
+  async post (url, data = {}) {
     return this.request(url, {
       method: 'POST',
       body: JSON.stringify(data),
@@ -107,7 +107,7 @@ class API {
   /**
    * PUT request
    */
-  async put(url, data = {}) {
+  async put (url, data = {}) {
     return this.request(url, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -117,7 +117,7 @@ class API {
   /**
    * DELETE request
    */
-  async delete(url) {
+  async delete (url) {
     return this.request(url, { method: 'DELETE' });
   }
 
@@ -125,10 +125,10 @@ class API {
    * Load JSON file from local storage (fallback for mock data)
    * @param {string} filePath
    */
-  async loadJSON(filePath) {
+  async loadJSON (filePath) {
     try {
       const response = await fetch(filePath);
-      if (!response.ok) throw new Error(`Failed to load ${filePath}`);
+      if (!response.ok) {throw new Error(`Failed to load ${filePath}`);}
       return await response.json();
     } catch (error) {
       console.error('Error loading JSON:', error);
@@ -148,7 +148,7 @@ class API {
     login: (email, password) => this.post('/auth/login', { email, password }),
     getMe: () => this.get('/auth/me'),
     updateProfile: (data) => this.put('/auth/profile', data),
-    changePassword: (currentPassword, newPassword) => 
+    changePassword: (currentPassword, newPassword) =>
       this.put('/auth/change-password', { currentPassword, newPassword }),
   };
 
@@ -180,7 +180,7 @@ class API {
    */
   verification = {
     submit: (data) => this.post('/verification', data),
-    getStatus: (studentId, university) => 
+    getStatus: (studentId, university) =>
       this.get(`/verification/status/${studentId}/${university}`),
   };
 

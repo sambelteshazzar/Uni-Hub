@@ -1,0 +1,61 @@
+{
+  "env": {
+    "browser": true,
+    "es2022": true,
+    "node": true
+  },
+  "extends": [
+    "eslint:recommended"
+  ],
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "rules": {
+    "indent": ["error", 2],
+    "linebreak-style": ["error", "unix"],
+    "quotes": ["error", "single"],
+    "semi": ["error", "always"],
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "no-console": ["warn", { "allow": ["warn", "error", "info"] }],
+    "eqeqeq": ["error", "always"],
+    "curly": ["error", "all"],
+    "no-var": "error",
+    "prefer-const": "error",
+    "no-multiple-empty-lines": ["error", { "max": 1 }],
+    "comma-dangle": ["error", "always-multiline"],
+    "object-curly-spacing": ["error", "always"],
+    "array-bracket-spacing": ["error", "never"],
+    "space-before-function-paren": ["error", "always"],
+    "keyword-spacing": ["error", { "before": true, "after": true }],
+    "key-spacing": ["error", { "beforeColon": false, "afterColon": true }],
+    "no-trailing-spaces": "error",
+    "eol-last": "error"
+  },
+  "globals": {
+    "StorageManager": "readonly",
+    "Validator": "readonly",
+    "api": "readonly",
+    "router": "readonly",
+    "app": "readonly",
+    "authManager": "readonly",
+    "productsManager": "readonly",
+    "cartManager": "readonly",
+    "checkoutManager": "readonly",
+    "paymentManager": "readonly",
+    "deliveryManager": "readonly",
+    "regionManager": "readonly",
+    "searchManager": "readonly",
+    "notificationManager": "readonly",
+    "modalManager": "readonly",
+    "toastManager": "readonly",
+    "Pages": "readonly",
+    "STORAGE_KEYS": "readonly",
+    "CATEGORIES": "readonly",
+    "PAGINATION": "readonly",
+    "PRODUCT_CONDITIONS": "readonly",
+    "DELIVERY_MODES": "readonly",
+    "PAYMENT_METHODS": "readonly"
+  },
+  "ignorePatterns": ["node_modules/", "dist/", "backend/node_modules/"]
+}

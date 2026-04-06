@@ -3,7 +3,7 @@
 // ============================================
 
 class NotificationManager {
-  constructor() {
+  constructor () {
     this.NOTIFICATION_STORAGE_KEY = `${STORAGE_KEY_PREFIX}notifications`;
     this.notifications = [];
     this.listeners = [];
@@ -13,7 +13,7 @@ class NotificationManager {
   /**
    * Load notifications from localStorage
    */
-  load() {
+  load () {
     const notifications = StorageManager.get(this.NOTIFICATION_STORAGE_KEY, true);
     this.notifications = notifications || [];
   }
@@ -21,7 +21,7 @@ class NotificationManager {
   /**
    * Save notifications to localStorage
    */
-  save() {
+  save () {
     StorageManager.set(this.NOTIFICATION_STORAGE_KEY, this.notifications);
   }
 
@@ -30,7 +30,7 @@ class NotificationManager {
    * @param {Object} notification - Notification object
    * @returns {Object} - Created notification
    */
-  create(notification) {
+  create (notification) {
     const newNotification = {
       id: this.generateId(),
       type: notification.type || 'info',
@@ -56,7 +56,7 @@ class NotificationManager {
    * Show toast notification
    * @param {Object} notification - Notification object
    */
-  showToast(notification) {
+  showToast (notification) {
     const toastContainer = document.querySelector('.toast-container');
 
     if (!toastContainer) {
@@ -89,7 +89,7 @@ class NotificationManager {
    * Dismiss toast
    * @param {HTMLElement} toast - Toast element
    */
-  dismissToast(toast) {
+  dismissToast (toast) {
     if (toast && toast.parentNode) {
       toast.style.animation = 'slideOut 0.3s ease-in';
       setTimeout(() => {
@@ -103,7 +103,7 @@ class NotificationManager {
    * @param {string} type - Notification type
    * @returns {string}
    */
-  getDefaultIcon(type) {
+  getDefaultIcon (type) {
     const icons = {
       success: '✅',
       error: '❌',
@@ -122,7 +122,7 @@ class NotificationManager {
    * Generate unique ID
    * @returns {string}
    */
-  generateId() {
+  generateId () {
     return `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
@@ -131,7 +131,7 @@ class NotificationManager {
    * @param {Object} options - Filter options
    * @returns {Array}
    */
-  getAll(options = {}) {
+  getAll (options = {}) {
     let notifications = [...this.notifications];
 
     // Filter by type
@@ -147,13 +147,13 @@ class NotificationManager {
     // Filter by date range
     if (options.startDate) {
       notifications = notifications.filter(
-        (n) => new Date(n.createdAt) >= new Date(options.startDate)
+        (n) => new Date(n.createdAt) >= new Date(options.startDate),
       );
     }
 
     if (options.endDate) {
       notifications = notifications.filter(
-        (n) => new Date(n.createdAt) <= new Date(options.endDate)
+        (n) => new Date(n.createdAt) <= new Date(options.endDate),
       );
     }
 
@@ -168,7 +168,7 @@ class NotificationManager {
    * Get unread notification count
    * @returns {number}
    */
-  getUnreadCount() {
+  getUnreadCount () {
     return this.notifications.filter((n) => !n.read).length;
   }
 
@@ -177,7 +177,7 @@ class NotificationManager {
    * @param {string} notificationId - Notification ID
    * @returns {Object}
    */
-  markAsRead(notificationId) {
+  markAsRead (notificationId) {
     const index = this.notifications.findIndex((n) => n.id === notificationId);
 
     if (index === -1) {
@@ -201,7 +201,7 @@ class NotificationManager {
    * Mark all notifications as read
    * @returns {Object}
    */
-  markAllAsRead() {
+  markAllAsRead () {
     this.notifications.forEach((n) => {
       n.read = true;
     });
@@ -219,7 +219,7 @@ class NotificationManager {
    * @param {string} notificationId - Notification ID
    * @returns {Object}
    */
-  delete(notificationId) {
+  delete (notificationId) {
     const index = this.notifications.findIndex((n) => n.id === notificationId);
 
     if (index === -1) {
@@ -243,7 +243,7 @@ class NotificationManager {
    * Delete all notifications
    * @returns {Object}
    */
-  deleteAll() {
+  deleteAll () {
     this.notifications = [];
     this.save();
     this.notifyListeners();
@@ -258,7 +258,7 @@ class NotificationManager {
    * Delete read notifications
    * @returns {Object}
    */
-  deleteRead() {
+  deleteRead () {
     this.notifications = this.notifications.filter((n) => !n.read);
     this.save();
     this.notifyListeners();
@@ -273,7 +273,7 @@ class NotificationManager {
    * Create order notification
    * @param {Object} order - Order object
    */
-  orderCreated(order) {
+  orderCreated (order) {
     this.create({
       type: 'order',
       title: 'Order Placed',
@@ -285,7 +285,7 @@ class NotificationManager {
    * Create payment notification
    * @param {Object} payment - Payment object
    */
-  paymentReceived(payment) {
+  paymentReceived (payment) {
     this.create({
       type: 'payment',
       title: 'Payment Received',
@@ -297,7 +297,7 @@ class NotificationManager {
    * Create delivery notification
    * @param {Object} delivery - Delivery object
    */
-  deliveryUpdate(delivery) {
+  deliveryUpdate (delivery) {
     this.create({
       type: 'delivery',
       title: 'Delivery Update',
@@ -310,7 +310,7 @@ class NotificationManager {
    * @param {string} title - Notification title
    * @param {string} message - Notification message
    */
-  system(title, message) {
+  system (title, message) {
     this.create({
       type: 'system',
       title: title,
@@ -323,7 +323,7 @@ class NotificationManager {
    * @param {string} title - Notification title
    * @param {string} message - Notification message
    */
-  success(title, message) {
+  success (title, message) {
     this.create({
       type: 'success',
       title: title,
@@ -336,7 +336,7 @@ class NotificationManager {
    * @param {string} title - Notification title
    * @param {string} message - Notification message
    */
-  error(title, message) {
+  error (title, message) {
     this.create({
       type: 'error',
       title: title,
@@ -349,7 +349,7 @@ class NotificationManager {
    * @param {string} title - Notification title
    * @param {string} message - Notification message
    */
-  warning(title, message) {
+  warning (title, message) {
     this.create({
       type: 'warning',
       title: title,
@@ -362,7 +362,7 @@ class NotificationManager {
    * @param {string} title - Notification title
    * @param {string} message - Notification message
    */
-  info(title, message) {
+  info (title, message) {
     this.create({
       type: 'info',
       title: title,
@@ -374,7 +374,7 @@ class NotificationManager {
    * Register listener for notification changes
    * @param {Function} listener - Listener function
    */
-  addListener(listener) {
+  addListener (listener) {
     this.listeners.push(listener);
   }
 
@@ -382,14 +382,14 @@ class NotificationManager {
    * Remove listener
    * @param {Function} listener - Listener function
    */
-  removeListener(listener) {
+  removeListener (listener) {
     this.listeners = this.listeners.filter((l) => l !== listener);
   }
 
   /**
    * Notify all listeners
    */
-  notifyListeners() {
+  notifyListeners () {
     this.listeners.forEach((listener) => {
       try {
         listener(this.notifications);
@@ -403,7 +403,7 @@ class NotificationManager {
    * Render notifications dropdown
    * @returns {string}
    */
-  renderDropdown() {
+  renderDropdown () {
     const notifications = this.getAll().slice(0, 10);
     const unreadCount = this.getUnreadCount();
 
@@ -430,8 +430,8 @@ class NotificationManager {
         </div>
         <div class="notifications-list">
           ${notifications
-            .map(
-              (n) => `
+    .map(
+      (n) => `
             <div class="notification-item ${n.read ? 'read' : 'unread'}" data-id="${n.id}">
               <div class="notification-icon">${n.icon}</div>
               <div class="notification-content">
@@ -441,9 +441,9 @@ class NotificationManager {
               </div>
               <button class="notification-close" onclick="notificationManager.delete('${n.id}')">×</button>
             </div>
-          `
-            )
-            .join('')}
+          `,
+    )
+    .join('')}
         </div>
         <div class="notifications-footer">
           <button class="btn btn-outline btn-sm btn-block" onclick="notificationManager.markAllAsRead()">
@@ -459,7 +459,7 @@ class NotificationManager {
    * @param {string} dateString - ISO date string
    * @returns {string}
    */
-  formatTime(dateString) {
+  formatTime (dateString) {
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now - date;

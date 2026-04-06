@@ -15,9 +15,12 @@ class Router {
    * Initialize router - listen to hash changes and restore state
    */
   init() {
-    // Listen to hash changes
+    // Listen to hash changes (for back/forward buttons)
     window.addEventListener('hashchange', () => this.handleHashChange());
-    
+
+    // Listen to popstate (for back/forward buttons)
+    window.addEventListener('popstate', () => this.handleHashChange());
+
     // Handle initial load
     this.handleHashChange();
   }
@@ -29,7 +32,7 @@ class Router {
     const hash = window.location.hash.slice(1) || '/';
     const [path, queryString] = hash.split('?');
     const params = this.parseQueryString(queryString || '');
-    
+
     this.navigate(path, params, false);
   }
 
@@ -39,7 +42,7 @@ class Router {
   parseQueryString(queryString) {
     const params = {};
     if (!queryString) return params;
-    
+
     const pairs = queryString.split('&');
     for (const pair of pairs) {
       const [key, value] = pair.split('=');
@@ -92,7 +95,7 @@ class Router {
       // Execute route handler
       await handler({ ...params, ...parsedParams });
 
-      // Update URL hash if needed
+      // Update URL hash if needed (only for forward navigation)
       if (updateHash) {
         this.updateHash(path, params);
       }
@@ -106,17 +109,16 @@ class Router {
   }
 
   /**
-   * Update browser URL hash
+   * Update URL hash using location.hash (triggers hashchange event)
    */
   updateHash(path, params = {}) {
-    const queryString = Object.keys(params).length 
+    const queryString = Object.keys(params).length
       ? '?' + new URLSearchParams(params).toString()
       : '';
     const hash = path + queryString;
-    
-    if (window.location.hash !== '#' + hash) {
-      window.history.pushState({ path: hash }, '', '#' + hash);
-    }
+
+    // Use location.hash instead of pushState to trigger hashchange
+    window.location.hash = hash;
   }
 
   /**
@@ -162,6 +164,14 @@ class Router {
   }
 
   /**
+   * Navigate to a specific hash directly
+   * @param {string} hash - Hash to navigate to
+   */
+  goToHash(hash) {
+    window.location.hash = hash;
+  }
+
+  /**
    * Show 404 page
    */
   async show404() {
@@ -176,7 +186,7 @@ class Router {
           </p>
           <div style="display: flex; gap: 1rem;">
             <button class="btn btn-outline" onclick="router.back()">Go Back</button>
-            <button class="btn btn-primary" onclick="router.navigate('/')">Go Home</button>
+            <button class="btn btn-primary" onclick="router.goToHash('/')">Go Home</button>
           </div>
         </div>
       `;
@@ -193,7 +203,7 @@ class Router {
         <div class="container" style="padding: 3rem 1rem; text-align: center;">
           <h1>Error</h1>
           <p>${message}</p>
-          <button class="btn btn-primary" onclick="router.navigate('/')">Go Home</button>
+          <button class="btn btn-primary" onclick="router.goToHash('/')">Go Home</button>
         </div>
       `;
     }

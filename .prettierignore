@@ -1,0 +1,6 @@
+node_modules
+dist
+backend/node_modules
+coverage
+*.min.js
+*.min.css
