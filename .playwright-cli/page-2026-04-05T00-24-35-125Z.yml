@@ -1,0 +1,44 @@
+- main [ref=e3]:
+  - generic [ref=e338]:
+    - generic [ref=e339]:
+      - img [ref=e341]
+      - heading "Create an account" [level=1] [ref=e344]
+      - paragraph [ref=e345]: Enter your details to get started with Uni-Hub
+    - generic [ref=e346]:
+      - generic [ref=e347]:
+        - generic [ref=e348]: Full Name
+        - textbox "Full Name" [ref=e349]:
+          - /placeholder: John Doe
+      - generic [ref=e350]:
+        - generic [ref=e351]: Email
+        - textbox "Email" [ref=e352]:
+          - /placeholder: name@example.com
+      - generic [ref=e353]:
+        - generic [ref=e354]: Phone Number
+        - textbox "Phone Number" [ref=e355]:
+          - /placeholder: +233 50 123 4567
+      - generic [ref=e356]:
+        - generic [ref=e357]: Password
+        - generic [ref=e358]:
+          - textbox "Password" [ref=e359]:
+            - /placeholder: Enter your password
+          - button [ref=e360] [cursor=pointer]:
+            - img [ref=e361]
+      - generic [ref=e364]:
+        - generic [ref=e365]: Confirm Password
+        - generic [ref=e366]:
+          - textbox "Confirm Password" [ref=e367]:
+            - /placeholder: Confirm your password
+          - button [ref=e368] [cursor=pointer]:
+            - img [ref=e369]
+      - generic [ref=e372]:
+        - checkbox "I agree to the Terms of Service and Privacy Policy" [ref=e373]
+        - generic [ref=e374] [cursor=pointer]:
+          - text: I agree to the
+          - link "Terms of Service" [ref=e375]:
+            - /url: "#"
+          - text: and
+          - link "Privacy Policy" [ref=e376]:
+            - /url: "#"
+      - button "Create Account" [ref=e377] [cursor=pointer]
+    - paragraph [ref=e379]: Already have an account? Sign in

@@ -7,7 +7,7 @@ export class AuthPage extends BasePage {
   /**
    * Render login page
    */
-  renderLogin() {
+  renderLogin () {
     this.showOriginalNavFooter();
 
     const mainContent = this.getMainContent();
@@ -17,7 +17,7 @@ export class AuthPage extends BasePage {
   /**
    * Render registration page
    */
-  renderRegister() {
+  renderRegister () {
     this.showOriginalNavFooter();
 
     const mainContent = this.getMainContent();
@@ -27,8 +27,8 @@ export class AuthPage extends BasePage {
   /**
    * Get login template
    */
-  private getLoginTemplate(): string {
-    const Pages = (window as any).Pages;
+  getLoginTemplate () {
+    const Pages = window.Pages;
 
     return `
       <style>
@@ -223,8 +223,8 @@ export class AuthPage extends BasePage {
   /**
    * Get registration template
    */
-  private getRegisterTemplate(): string {
-    const Pages = (window as any).Pages;
+  getRegisterTemplate () {
+    const Pages = window.Pages;
 
     return `
       <style>
@@ -438,8 +438,8 @@ export class AuthPage extends BasePage {
    * @param {string} inputId - Password input ID
    * @param {HTMLElement} button - Toggle button
    */
-  togglePassword(inputId: string, button: HTMLElement): void {
-    const input = document.getElementById(inputId) as HTMLInputElement;
+  static togglePassword (inputId, button) {
+    const input = document.getElementById(inputId);
     const eyeIcon = button.querySelector('span');
 
     if (input && eyeIcon) {

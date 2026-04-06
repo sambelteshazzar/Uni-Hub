@@ -41,6 +41,11 @@ class App {
    * Initialize core modules
    */
   async initCoreModules() {
+    // Initialize toast manager
+    if (typeof toastManager !== 'undefined') {
+      toastManager.init();
+    }
+
     // Initialize products manager
     if (typeof productsManager !== 'undefined') {
       await productsManager.init();

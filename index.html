@@ -1,9 +1,12 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Uni-Hub - Buy and sell items within your university community" />
+    <meta
+      name="description"
+      content="Uni-Hub - Buy and sell items within your university community"
+    />
     <meta name="theme-color" content="#6366f1" />
     <title>Uni-Hub - Student Marketplace</title>
 
@@ -26,6 +29,7 @@
     <link rel="stylesheet" href="css/components/badges.css" />
     <link rel="stylesheet" href="css/components/toast.css" />
     <link rel="stylesheet" href="css/components/commerce-buttons.css" />
+    <link rel="stylesheet" href="css/components/sustainable-showcase.css" />
 
     <!-- Pages -->
     <link rel="stylesheet" href="css/pages/home.css" />
@@ -52,27 +56,70 @@
       <!-- Navigation Bar -->
       <nav class="navbar" id="navbar-container">
         <div class="navbar-container">
-          <a href="/" class="navbar-brand" onclick="Pages.renderLanding(); return false;">
+          <a
+            href="/"
+            class="navbar-brand"
+            onclick="
+              Pages.renderLanding();
+              return false;
+            "
+          >
             <div class="navbar-brand-icon">🎓</div>
             <span>Uni-Hub</span>
           </a>
 
           <div class="navbar-actions">
             <div class="navbar-icons">
-              <button class="navbar-icon-button cart-btn" onclick="Pages.renderCart()" title="View Cart">
+              <button
+                class="navbar-icon-button cart-btn"
+                onclick="Pages.renderCart()"
+                title="View Cart"
+              >
                 🛒
                 <span class="cart-badge" id="cart-badge">0</span>
               </button>
             </div>
             <!-- Auth buttons - shown when not logged in -->
             <div id="navbar-auth-buttons">
-              <button class="btn btn-ghost btn-sm" onclick="Pages.renderLogin(); return false;">Log in</button>
-              <button class="btn btn-primary btn-sm" onclick="Pages.renderRegister(); return false;">Sign up</button>
+              <button
+                class="btn btn-ghost btn-sm"
+                onclick="
+                  Pages.renderLogin();
+                  return false;
+                "
+              >
+                Log in
+              </button>
+              <button
+                class="btn btn-primary btn-sm"
+                onclick="
+                  Pages.renderRegister();
+                  return false;
+                "
+              >
+                Sign up
+              </button>
             </div>
             <!-- User menu - shown when logged in -->
-            <div id="navbar-user-menu" style="display: none;">
-              <button class="btn btn-ghost btn-sm" onclick="Pages.renderDashboard(); return false;">Dashboard</button>
-              <button class="btn btn-ghost btn-sm" onclick="Pages.handleLogout(); return false;">Log out</button>
+            <div id="navbar-user-menu" style="display: none">
+              <button
+                class="btn btn-ghost btn-sm"
+                onclick="
+                  Pages.renderDashboard();
+                  return false;
+                "
+              >
+                Dashboard
+              </button>
+              <button
+                class="btn btn-ghost btn-sm"
+                onclick="
+                  Pages.handleLogout();
+                  return false;
+                "
+              >
+                Log out
+              </button>
             </div>
           </div>
         </div>
@@ -117,14 +164,15 @@
     <script src="js/utils/storage.js"></script>
     <script src="js/utils/validation.js"></script>
     <script src="js/utils/formatters.js"></script>
+    <script src="js/utils/crypto.js"></script>
     <script src="js/utils/api.js"></script>
-    
+
     <!-- Router -->
     <script src="js/router.js"></script>
-    
+
     <!-- Main App -->
     <script src="js/app.js"></script>
-    
+
     <!-- Core Modules -->
     <script src="js/modules/auth.js"></script>
     <script src="js/modules/products.js"></script>
@@ -137,21 +185,24 @@
     <script src="js/modules/toast.js"></script>
     <script src="js/modules/notifications.js"></script>
     <script src="js/modules/modals.js"></script>
-    
+
     <!-- Admin Modules -->
     <script src="js/admin/admin-auth.js"></script>
     <script src="js/admin/admin-products.js"></script>
     <script src="js/admin/admin-users.js"></script>
     <script src="js/admin/admin-orders.js"></script>
     <script src="js/admin/admin-reports.js"></script>
-    
+
     <!-- Pages -->
     <script src="js/pages/pages.js?v=2"></script>
+
+    <!-- Global Setup - Expose all modules and constants -->
+    <script src="js/setup/globals.js"></script>
 
     <!-- App Initialization -->
     <script>
       // Initialize app on page load
-      document.addEventListener('DOMContentLoaded', async function() {
+      document.addEventListener('DOMContentLoaded', async function () {
         // Initialize the application
         await app.init();
 

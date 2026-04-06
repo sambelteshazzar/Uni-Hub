@@ -123,9 +123,10 @@ const SORT_OPTIONS = [
 // Validation patterns
 const VALIDATION_PATTERNS = {
   EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-  PHONE: /^(\+233|0)[0-9]{9}$/,
+  // Accept Ghana phone formats: +233XXXXXXXXX, +233 XXX XXXX XXX, 0XXXXXXXXX, 0 XXX XXXX XXX
+  PHONE: /^(\+233|0)[\s-]?[0-9]{7,9}[\s-]?[0-9]{0,3}$/,
   PASSWORD: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-  URL: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/,
+  URL: /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w -]*)*\/?$/,
 };
 
 // Error messages

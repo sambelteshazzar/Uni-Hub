@@ -1,0 +1,281 @@
+- main [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e6]:
+      - img [ref=e7]
+      - generic [ref=e12]:
+        - text: "🎉 New:"
+        - strong [ref=e13]: Free delivery
+        - text: for first-time buyers at University of Ghana! |
+        - link "Sign up now" [ref=e14] [cursor=pointer]:
+          - /url: "#"
+    - navigation [ref=e15]:
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - img [ref=e19]
+          - generic [ref=e22]: Uni-Hub
+        - generic [ref=e23]:
+          - button "Log in" [ref=e24] [cursor=pointer]
+          - button "Sign Up" [ref=e25] [cursor=pointer]:
+            - text: Sign Up
+            - img [ref=e26]
+    - generic [ref=e29]:
+      - generic [ref=e30]:
+        - generic [ref=e33]: Active Across 7 Universities
+        - heading "Buy & Sell with Students Like You." [level=1] [ref=e34]:
+          - text: Buy & Sell with
+          - text: Students Like You.
+        - paragraph [ref=e35]: Uni-Hub connects students to trade pre-owned items within their university community. Textbooks, electronics, hostel items, and more — all from verified students near you.
+        - generic [ref=e36]:
+          - button "Browse Items" [ref=e37] [cursor=pointer]:
+            - img [ref=e38]
+            - text: Browse Items
+          - button "Start Selling" [ref=e42] [cursor=pointer]:
+            - img [ref=e43]
+            - text: Start Selling
+        - generic [ref=e45]:
+          - generic [ref=e46]:
+            - img "Student" [ref=e47]
+            - img "Student" [ref=e48]
+            - img "Student" [ref=e49]
+            - generic [ref=e50]: +2k
+          - generic [ref=e51]:
+            - generic [ref=e52]:
+              - img [ref=e53]
+              - img [ref=e55]
+              - img [ref=e57]
+              - img [ref=e59]
+              - img [ref=e61]
+            - paragraph [ref=e63]: Trusted by students across Ghana
+      - generic [ref=e64]:
+        - generic [ref=e65]:
+          - generic [ref=e66] [cursor=pointer]:
+            - img "Students studying" [ref=e67]
+            - generic [ref=e69]:
+              - paragraph [ref=e70]: Electronics
+              - heading "Laptops & Phones" [level=3] [ref=e71]
+          - generic [ref=e72] [cursor=pointer]:
+            - img "Textbooks" [ref=e73]
+            - generic [ref=e77]: Popular
+          - img "Hostel furniture" [ref=e79] [cursor=pointer]
+          - generic [ref=e82]:
+            - img [ref=e83]:
+              - generic [ref=e85]: • Buy & Sell • Verified Students • Safe Trading
+            - button [ref=e86] [cursor=pointer]:
+              - img [ref=e87]
+        - generic [ref=e90]:
+          - generic [ref=e91]:
+            - generic [ref=e92]: Recent Sale
+            - img [ref=e93]
+          - generic [ref=e97]:
+            - img [ref=e99]
+            - generic [ref=e101]:
+              - paragraph [ref=e102]: HP ProBook 450
+              - paragraph [ref=e103]: UG Student • 2 hours ago
+          - generic [ref=e104]:
+            - generic [ref=e105]: Sold For
+            - generic [ref=e106]: GHS 2,100
+          - generic [ref=e107]:
+            - img [ref=e108]
+            - text: Verified Student
+    - generic [ref=e112]:
+      - generic [ref=e113]:
+        - generic [ref=e114]:
+          - generic [ref=e115]: Select Your Campus
+          - heading "Browse by University" [level=2] [ref=e116]
+        - link "View all items" [ref=e117] [cursor=pointer]:
+          - /url: "#"
+          - text: View all items
+          - img [ref=e118]
+      - generic [ref=e120]:
+        - generic [ref=e121] [cursor=pointer]:
+          - img "University of Ghana (UG)" [ref=e122]
+          - generic [ref=e124]:
+            - heading "University of Ghana (UG)" [level=3] [ref=e125]
+            - paragraph [ref=e126]: 📍 Accra • 100+ items
+        - generic [ref=e127] [cursor=pointer]:
+          - img "Accra Technical University (ATU)" [ref=e128]
+          - generic [ref=e130]:
+            - heading "Accra Technical University (ATU)" [level=3] [ref=e131]
+            - paragraph [ref=e132]: 📍 Accra • 150+ items
+        - generic [ref=e133] [cursor=pointer]:
+          - img "Kwame Nkrumah University of Science & Technology (KNUST)" [ref=e134]
+          - generic [ref=e136]:
+            - heading "Kwame Nkrumah University of Science & Technology (KNUST)" [level=3] [ref=e137]
+            - paragraph [ref=e138]: 📍 Kumasi • 200+ items
+        - generic [ref=e139] [cursor=pointer]:
+          - img "University of Cape Coast (UCC)" [ref=e140]
+          - generic [ref=e142]:
+            - heading "University of Cape Coast (UCC)" [level=3] [ref=e143]
+            - paragraph [ref=e144]: 📍 Cape Coast • 250+ items
+        - generic [ref=e145] [cursor=pointer]:
+          - img "University for Development Studies (UDS)" [ref=e146]
+          - generic [ref=e148]:
+            - heading "University for Development Studies (UDS)" [level=3] [ref=e149]
+            - paragraph [ref=e150]: 📍 Tamale • 300+ items
+        - generic [ref=e151] [cursor=pointer]:
+          - img [ref=e153]
+          - heading "View All Universities" [level=3] [ref=e157]
+          - paragraph [ref=e158]: Browse items from all 7 universities
+    - generic [ref=e160]:
+      - generic [ref=e161]: Shop by Category
+      - heading "Find What You Need" [level=2] [ref=e162]
+      - paragraph [ref=e163]: From textbooks to electronics, find everything you need for student life.
+      - generic [ref=e164]:
+        - button "All" [ref=e165] [cursor=pointer]
+        - button "📚 Textbooks" [ref=e166] [cursor=pointer]
+        - button "💻 Electronics" [ref=e167] [cursor=pointer]
+        - button "🏠 Hostel" [ref=e168] [cursor=pointer]
+        - button "👕 Fashion" [ref=e169] [cursor=pointer]
+      - generic [ref=e170]:
+        - generic [ref=e171] [cursor=pointer]:
+          - generic [ref=e172]: 🎛️
+          - heading "Appliances" [level=3] [ref=e173]
+          - paragraph [ref=e174]: Kitchen and electronic appliances
+        - generic [ref=e175] [cursor=pointer]:
+          - generic [ref=e176]: 🛏️
+          - heading "Hostel Items" [level=3] [ref=e177]
+          - paragraph [ref=e178]: Furniture and room essentials
+        - generic [ref=e179] [cursor=pointer]:
+          - generic [ref=e180]: 👜
+          - heading "Accessories" [level=3] [ref=e181]
+          - paragraph [ref=e182]: Bags, shoes, and personal items
+        - generic [ref=e183] [cursor=pointer]:
+          - generic [ref=e184]: 📚
+          - heading "Textbooks & Books" [level=3] [ref=e185]
+          - paragraph [ref=e186]: Course materials and reference books
+    - generic [ref=e188]:
+      - generic [ref=e189]: Special Offers
+      - heading "Get Up to 70% Off" [level=2] [ref=e190]
+      - generic [ref=e191]:
+        - generic [ref=e192]:
+          - generic [ref=e193]: HOT
+          - generic [ref=e194]: 🎓
+          - heading "Student Bundle" [level=3] [ref=e195]
+          - paragraph [ref=e196]: Get textbooks + laptop bundle at discounted prices
+          - generic [ref=e198]: Save GHS 150
+          - button "Shop Now" [ref=e199] [cursor=pointer]
+        - generic [ref=e200]:
+          - generic [ref=e201]: NEW
+          - generic [ref=e202]: 📦
+          - heading "Free Delivery" [level=3] [ref=e203]
+          - paragraph [ref=e204]: First order delivery free for UG students
+          - generic [ref=e206]: Save GHS 25
+          - button "Claim Offer" [ref=e207] [cursor=pointer]
+        - generic [ref=e208]:
+          - generic [ref=e209]: LIMITED
+          - generic [ref=e210]: 🏷️
+          - heading "Flash Sale" [level=3] [ref=e211]
+          - paragraph [ref=e212]: Up to 70% off on selected electronics
+          - generic [ref=e214]: 70% OFF
+          - button "View Deals" [ref=e215] [cursor=pointer]
+    - generic [ref=e217]:
+      - generic [ref=e218]:
+        - heading "Why Choose Uni-Hub?" [level=2] [ref=e219]
+        - paragraph [ref=e220]: Built by students, for students. Safe, convenient, and campus-focused.
+      - generic [ref=e221]:
+        - generic [ref=e222]:
+          - img [ref=e224]
+          - heading "Verified Students Only" [level=3] [ref=e227]
+          - paragraph [ref=e228]: Every user is verified with their university email or student ID. Trade safely within your campus community.
+        - generic [ref=e229]:
+          - img [ref=e231]
+          - heading "Fast Campus Delivery" [level=3] [ref=e236]
+          - paragraph [ref=e237]: Choose from Bolt, Yango, or meet in person. Get your items delivered within hours, not days.
+        - generic [ref=e238]:
+          - img [ref=e240]
+          - heading "Flexible Payment" [level=3] [ref=e244]
+          - paragraph [ref=e245]: Pay with MoMo, Telecel Cash, bank transfer, or cash on delivery. Choose what works for you.
+    - generic [ref=e247]:
+      - generic [ref=e248]: Simple Process
+      - heading "How Uni-Hub Works" [level=2] [ref=e249]
+      - generic [ref=e250]:
+        - generic [ref=e251]:
+          - generic [ref=e252]: "1"
+          - heading "Select University" [level=3] [ref=e253]
+          - paragraph [ref=e254]: Choose your campus to browse items from students in your university
+        - generic [ref=e255]:
+          - generic [ref=e256]: "2"
+          - heading "Browse Items" [level=3] [ref=e257]
+          - paragraph [ref=e258]: Find textbooks, electronics, furniture, and more from verified students
+        - generic [ref=e259]:
+          - generic [ref=e260]: "3"
+          - heading "Connect & Buy" [level=3] [ref=e261]
+          - paragraph [ref=e262]: Chat with sellers, arrange delivery, and pay securely
+        - generic [ref=e263]:
+          - generic [ref=e264]: "4"
+          - heading "Get Delivery" [level=3] [ref=e265]
+          - paragraph [ref=e266]: Receive your items via Bolt, Yango, or meet in person on campus
+    - generic [ref=e268]:
+      - heading "Ready to Get Started?" [level=2] [ref=e269]
+      - paragraph [ref=e270]: Join hundreds of students already buying and selling on Uni-Hub. Select your university to begin.
+      - generic [ref=e271]:
+        - button "Select University" [ref=e272] [cursor=pointer]:
+          - img [ref=e273]
+          - text: Select University
+        - button "Create Account" [ref=e276] [cursor=pointer]:
+          - img [ref=e277]
+          - text: Create Account
+    - generic [ref=e280]:
+      - generic [ref=e281]:
+        - generic [ref=e282]:
+          - generic [ref=e283]:
+            - img [ref=e285]
+            - generic [ref=e288]: Uni-Hub
+          - paragraph [ref=e289]: Connecting students across Ghana to buy and sell items within their university community. Safe, verified, and convenient.
+          - generic [ref=e290]:
+            - link [ref=e291] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e292]
+            - link [ref=e294] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e295]
+            - link [ref=e298] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e299]
+        - generic [ref=e301]:
+          - heading "Quick Links" [level=4] [ref=e302]
+          - list [ref=e303]:
+            - listitem [ref=e304]:
+              - link "Browse Items" [ref=e305] [cursor=pointer]:
+                - /url: "#browse"
+            - listitem [ref=e306]:
+              - link "Universities" [ref=e307] [cursor=pointer]:
+                - /url: "#universities"
+            - listitem [ref=e308]:
+              - link "Start Selling" [ref=e309] [cursor=pointer]:
+                - /url: "#sell"
+            - listitem [ref=e310]:
+              - link "FAQ" [ref=e311] [cursor=pointer]:
+                - /url: "#faq"
+        - generic [ref=e312]:
+          - heading "Support" [level=4] [ref=e313]
+          - list [ref=e314]:
+            - listitem [ref=e315]:
+              - link "Contact Us" [ref=e316] [cursor=pointer]:
+                - /url: mailto:support@uni-hub.local
+            - listitem [ref=e317]:
+              - link "Help Center" [ref=e318] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e319]:
+              - link "Safety Tips" [ref=e320] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e321]:
+              - link "Student Verification" [ref=e322] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=e323]:
+          - heading "Legal" [level=4] [ref=e324]
+          - list [ref=e325]:
+            - listitem [ref=e326]:
+              - link "Privacy Policy" [ref=e327] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e328]:
+              - link "Terms of Service" [ref=e329] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e330]:
+              - link "Community Guidelines" [ref=e331] [cursor=pointer]:
+                - /url: "#"
+      - generic [ref=e332]:
+        - paragraph [ref=e333]: © 2026 Uni-Hub. All rights reserved.
+        - generic [ref=e334]:
+          - text: Platform Operational
+          - generic [ref=e336]: Accra, Ghana

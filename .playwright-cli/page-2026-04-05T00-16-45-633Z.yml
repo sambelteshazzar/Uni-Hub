@@ -1,0 +1,8 @@
+- main [ref=e3]:
+  - generic [ref=e344]:
+    - generic [ref=e345]: "404"
+    - heading "Page Not Found" [level=1] [ref=e346]
+    - paragraph [ref=e347]: The page you're looking for doesn't exist or has been moved.
+    - generic [ref=e348]:
+      - button "Go Back" [ref=e349] [cursor=pointer]
+      - button "Go Home" [ref=e350] [cursor=pointer]

@@ -7,7 +7,9 @@ class AuthManager {
   constructor () {
     this.currentUser = null;
     this.isAuthenticated = false;
-    this.useBackend = false; // Set to false to use local storage only
+    // NOTE: Set to true when backend API is ready and running
+    // For now, using local storage fallback for development
+    this.useBackend = false; // Set to true when backend is implemented
     this.loadUser();
   }
 
@@ -58,12 +60,25 @@ class AuthManager {
         };
       }
 
-      // Create new user
+      // Hash password before storage (using Web Crypto API)
+      let hashedPassword;
+      try {
+        hashedPassword = await CryptoUtil.hashPassword(userData.password);
+      } catch (hashError) {
+        console.error('Password hashing failed:', hashError);
+        return {
+          success: false,
+          error: 'Registration failed - unable to secure password',
+        };
+      }
+
+      // Create new user with hashed password
       const newUser = {
         id: `user_${Date.now()}`,
         fullName: userData.fullName,
         email: userData.email,
         phone: userData.phone,
+        passwordHash: hashedPassword, // Store hash, never plaintext
         university: userData.university,
         level: userData.level || '',
         hall: userData.hall || '',
@@ -78,15 +93,17 @@ class AuthManager {
       users.push(newUser);
       StorageManager.set(STORAGE_KEYS.USERS, users);
 
-      // Auto login
-      this.currentUser = newUser;
+      // Auto login (don't include hash in session)
+      const sessionUser = { ...newUser };
+      delete sessionUser.passwordHash;
+      this.currentUser = sessionUser;
       this.isAuthenticated = true;
-      StorageManager.set(STORAGE_KEYS.CURRENT_USER, newUser);
+      StorageManager.set(STORAGE_KEYS.CURRENT_USER, sessionUser);
 
       return {
         success: true,
         message: 'Account created successfully!',
-        user: newUser,
+        user: sessionUser,
       };
     } catch (error) {
       return {
@@ -132,20 +149,27 @@ class AuthManager {
         }
       }
 
-      // Fallback to local storage
+      // Fallback to local storage with password verification
       const users = StorageManager.get(STORAGE_KEYS.USERS, true) || [];
-      const user = users.find(u => u.email === email && u.password === password);
+      const user = users.find(u => u.email === email);
 
       if (user) {
-        this.currentUser = user;
-        this.isAuthenticated = true;
-        StorageManager.set(STORAGE_KEYS.CURRENT_USER, user);
+        // Verify hashed password
+        const passwordMatch = await CryptoUtil.verifyPassword(password, user.passwordHash);
 
-        return {
-          success: true,
-          message: 'Login successful!',
-          user: user,
-        };
+        if (passwordMatch) {
+          const sessionUser = { ...user };
+          delete sessionUser.passwordHash; // Never include hash in session
+          this.currentUser = sessionUser;
+          this.isAuthenticated = true;
+          StorageManager.set(STORAGE_KEYS.CURRENT_USER, sessionUser);
+
+          return {
+            success: true,
+            message: 'Login successful!',
+            user: sessionUser,
+          };
+        }
       }
 
       // Check for demo admin account

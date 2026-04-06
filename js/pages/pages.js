@@ -1,5 +1,4 @@
 /* eslint-disable no-unused-vars */
-/* global Formatter, ORDER_STATUS, adminAuthManager, adminReportsManager, adminUsersManager, adminProductsManager, adminOrdersManager */
 // ============================================
 // PAGE RENDERERS
 // ============================================

@@ -8,21 +8,21 @@ export class LandingPage extends BasePage {
   /**
    * Render the landing page
    */
-  async render() {
+  async render () {
     this.hideOriginalNavFooter();
 
     const mainContent = this.getMainContent();
     let config = { universities: [], categories: [] };
 
     try {
-      const api = (window as any).api;
+      const api = window.api;
       config = await api.loadJSON('data/config.json');
     } catch (error) {
       console.error('Error loading config:', error);
     }
 
-    const selectedUniversity = (window as any).StorageManager.get(
-      (window as any).STORAGE_KEYS.SELECTED_UNIVERSITY
+    const selectedUniversity = window.StorageManager.get(
+      window.STORAGE_KEYS.SELECTED_UNIVERSITY,
     );
 
     mainContent.innerHTML = this.getStyles() + this.getTemplate(config, selectedUniversity);
@@ -32,7 +32,7 @@ export class LandingPage extends BasePage {
   /**
    * Get inline styles for the landing page
    */
-  private getStyles(): string {
+  getStyles () {
     return `
       <style>
         .modern-landing {
@@ -457,8 +457,8 @@ export class LandingPage extends BasePage {
   /**
    * Get the HTML template
    */
-  private getTemplate(config: any, selectedUniversity: string | null): string {
-    const Pages = (window as any).Pages;
+  getTemplate (config, selectedUniversity) {
+    const Pages = window.Pages;
 
     return `
       <div class="modern-landing">
@@ -561,7 +561,7 @@ export class LandingPage extends BasePage {
             </div>
 
             <div class="universities-grid">
-              ${config.universities.slice(0, 5).map((uni: any, i: number) => `
+              ${config.universities.slice(0, 5).map((uni, i) => `
                 <div onclick="${Pages ? `Pages.selectUniversity('${uni.id}')` : ''}; return false;" class="university-card-modern">
                   <img src="https://images.unsplash.com/photo-${['1541339907198-e08756dedf3f', '1592280771952', '1523050854058', '1562774053', '1509062522246'][i]}?w=800&auto=format&fit=crop" alt="${uni.name}">
                   <div class="university-card-overlay"></div>
@@ -582,7 +582,7 @@ export class LandingPage extends BasePage {
             <h2 class="section-title" style="color: white; margin-bottom: 1rem;">Find What You Need</h2>
 
             <div class="categories-grid">
-              ${config.categories.slice(0, 4).map((cat: any) => `
+              ${config.categories.slice(0, 4).map((cat) => `
                 <div onclick="${Pages ? `Pages.renderBrowse({category: '${cat.id}'})` : ''}" class="category-card-modern glass-card glass-card-hover">
                   <div class="category-icon-wrapper" style="background: linear-gradient(135deg, rgba(99,102,241,0.4), rgba(59,130,246,0.4));">
                     ${cat.icon}
@@ -723,7 +723,7 @@ export class LandingPage extends BasePage {
   /**
    * Attach event listeners
    */
-  private attachEventListeners(): void {
+  attachEventListeners () {
     // Event listeners are mostly inline in the template
     // Additional listeners can be added here
   }
@@ -732,12 +732,12 @@ export class LandingPage extends BasePage {
    * Select university and navigate to browse
    * @param {string} universityId
    */
-  selectUniversity(universityId: string): void {
-    const StorageManager = (window as any).StorageManager;
-    const STORAGE_KEYS = (window as any).STORAGE_KEYS;
+  selectUniversity (universityId) {
+    const StorageManager = window.StorageManager;
+    const STORAGE_KEYS = window.STORAGE_KEYS;
 
     StorageManager.set(STORAGE_KEYS.SELECTED_UNIVERSITY, universityId);
-    const Pages = (window as any).Pages;
+    const Pages = window.Pages;
     if (Pages) {
       Pages.renderBrowse();
     }
@@ -748,7 +748,7 @@ export class LandingPage extends BasePage {
    * @param {string} category
    * @param {HTMLElement} button
    */
-  filterCategoryTab(category: string, button: HTMLElement): void {
+  filterCategoryTab (category, button) {
     // Update active state
     document.querySelectorAll('.category-tab').forEach((tab) => {
       tab.classList.remove('active');
@@ -763,7 +763,7 @@ export class LandingPage extends BasePage {
     button.style.borderColor = 'rgba(99,102,241,0.3)';
 
     // Navigate to browse with filter
-    const Pages = (window as any).Pages;
+    const Pages = window.Pages;
     if (Pages && category !== 'all') {
       Pages.renderBrowse({ category });
     } else if (Pages) {
