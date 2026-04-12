@@ -8,7 +8,7 @@
 /* global messageManager, StorageManager, toastManager, Formatter */
 
 class MessagesPage {
-  constructor() {
+  constructor () {
     this.currentConversation = null;
     this.conversations = [];
     this.isLoading = false;
@@ -21,7 +21,7 @@ class MessagesPage {
    * Render the complete messaging interface
    * @param {Object} options - { conversationId?, userId?, productId? }
    */
-  async render(options = {}) {
+  async render (options = {}) {
     const mainContent = document.getElementById('main-content');
     if (!mainContent) {
       return;
@@ -71,7 +71,7 @@ class MessagesPage {
   /**
    * Get loading HTML
    */
-  getLoadingHTML() {
+  getLoadingHTML () {
     return `
       <div class="messaging-container" style="justify-content: center; align-items: center;">
         <div class="message-loading">
@@ -85,7 +85,7 @@ class MessagesPage {
   /**
    * Get error HTML
    */
-  getErrorHTML() {
+  getErrorHTML () {
     return `
       <div class="messaging-container" style="justify-content: center; align-items: center;">
         <div style="text-align: center; padding: 48px;">
@@ -101,7 +101,7 @@ class MessagesPage {
   /**
    * Get main messaging interface HTML
    */
-  getMessagingHTML() {
+  getMessagingHTML () {
     return `
       <div class="messaging-container">
         <!-- Sidebar: Conversation List -->
@@ -134,7 +134,7 @@ class MessagesPage {
   /**
    * Get conversations list HTML
    */
-  getConversationsListHTML() {
+  getConversationsListHTML () {
     if (!this.conversations.conversations || this.conversations.conversations.length === 0) {
       return `
         <div class="empty-conversations">
@@ -168,15 +168,15 @@ class MessagesPage {
               ${conv.lastMessage?.content || 'Start a conversation...'}
             </p>
             ${
-              conv.product
-                ? `
+  conv.product
+    ? `
               <div class="conversation-product">
                 <img src="${conv.product.images?.[0] || ''}" alt="" />
                 <span>${conv.product.title}</span>
               </div>
             `
-                : ''
-            }
+    : ''
+}
           </div>
           ${unread > 0 ? `<span class="unread-badge">${unread}</span>` : ''}
         </div>
@@ -188,7 +188,7 @@ class MessagesPage {
   /**
    * Get chat area HTML
    */
-  getChatAreaHTML() {
+  getChatAreaHTML () {
     if (!this.currentConversation) {
       return '';
     }
@@ -244,7 +244,7 @@ class MessagesPage {
   /**
    * Get empty chat HTML
    */
-  getEmptyChatHTML() {
+  getEmptyChatHTML () {
     return `
       <div class="empty-chat">
         <div class="empty-chat-icon">💬</div>
@@ -257,7 +257,7 @@ class MessagesPage {
   /**
    * Setup all event listeners
    */
-  setupEventListeners() {
+  setupEventListeners () {
     // Message input
     this.messageInput = document.getElementById('message-input');
     this.messagesContainer = document.getElementById('messages-container');
@@ -308,7 +308,7 @@ class MessagesPage {
   /**
    * Load a specific conversation
    */
-  async loadConversation(conversationId) {
+  async loadConversation (conversationId) {
     try {
       // Leave previous conversation
       if (this.currentConversation) {
@@ -349,7 +349,7 @@ class MessagesPage {
   /**
    * Start a new conversation
    */
-  async startConversation(userId, productId = null) {
+  async startConversation (userId, productId = null) {
     try {
       // Find or create conversation
       const response = await messageManager.sendMessage({
@@ -373,7 +373,7 @@ class MessagesPage {
   /**
    * Load messages for a conversation
    */
-  async loadMessages(conversationId) {
+  async loadMessages (conversationId) {
     try {
       const container = document.getElementById('messages-container');
       if (!container) {
@@ -405,7 +405,7 @@ class MessagesPage {
   /**
    * Get message bubble HTML
    */
-  getMessageHTML(msg) {
+  getMessageHTML (msg) {
     const isSent = msg.sender._id === this.getCurrentUserId();
     const time = new Date(msg.createdAt).toLocaleTimeString([], {
       hour: '2-digit',
@@ -428,7 +428,7 @@ class MessagesPage {
   /**
    * Send a message
    */
-  async sendMessage() {
+  async sendMessage () {
     if (!this.messageInput || !this.currentConversation) {
       return;
     }
@@ -482,7 +482,7 @@ class MessagesPage {
   /**
    * Handle typing indicator
    */
-  handleTyping() {
+  handleTyping () {
     if (!this.currentConversation) {
       return;
     }
@@ -498,7 +498,7 @@ class MessagesPage {
   /**
    * Handle typing indicator display
    */
-  handleTypingIndicator(data) {
+  handleTypingIndicator (data) {
     if (!this.currentConversation || data.userId === this.getCurrentUserId()) {
       return;
     }
@@ -524,7 +524,7 @@ class MessagesPage {
           <div class="typing-dot"></div>
           <div class="typing-dot"></div>
         </div>
-      `
+      `,
       );
       container.scrollTop = container.scrollHeight;
     }
@@ -533,7 +533,7 @@ class MessagesPage {
   /**
    * Handle new message
    */
-  handleNewMessage(data) {
+  handleNewMessage (data) {
     if (!this.currentConversation || data.conversationId !== this.currentConversation._id) {
       // Update conversation list
       this.refreshConversations();
@@ -554,7 +554,7 @@ class MessagesPage {
   /**
    * Filter conversations
    */
-  filterConversations(query) {
+  filterConversations (query) {
     const items = document.querySelectorAll('.conversation-item');
     const lowerQuery = query.toLowerCase();
 
@@ -573,7 +573,7 @@ class MessagesPage {
   /**
    * Update sidebar active state
    */
-  updateSidebarActive(conversationId) {
+  updateSidebarActive (conversationId) {
     document.querySelectorAll('.conversation-item').forEach(item => {
       item.classList.remove('active');
       if (item.dataset.conversationId === conversationId) {
@@ -585,7 +585,7 @@ class MessagesPage {
   /**
    * Refresh conversations list
    */
-  async refreshConversations() {
+  async refreshConversations () {
     try {
       this.conversations = await messageManager.getConversations({ limit: 100 });
       const list = document.getElementById('conversation-list');
@@ -601,7 +601,7 @@ class MessagesPage {
   /**
    * Update unread count badge
    */
-  updateUnreadCount() {
+  updateUnreadCount () {
     if (messageManager.unreadCount > 0) {
       const badge = document.getElementById('message-badge');
       if (badge) {
@@ -614,7 +614,7 @@ class MessagesPage {
   /**
    * Go back to conversation list (mobile)
    */
-  goBack() {
+  goBack () {
     document.getElementById('messaging-sidebar').classList.add('active');
     document.getElementById('messaging-chat').classList.remove('active');
   }
@@ -622,7 +622,7 @@ class MessagesPage {
   /**
    * View product (from chat header)
    */
-  viewProduct() {
+  viewProduct () {
     if (this.currentConversation?.product?._id) {
       window.location.hash = `#/product/${this.currentConversation.product._id}`;
     }
@@ -631,7 +631,7 @@ class MessagesPage {
   /**
    * Helper: Get other user in conversation
    */
-  getOtherUser(conv) {
+  getOtherUser (conv) {
     if (!conv.participants) {
       return null;
     }
@@ -641,7 +641,7 @@ class MessagesPage {
   /**
    * Helper: Get current user ID
    */
-  getCurrentUserId() {
+  getCurrentUserId () {
     const token = StorageManager.get(StorageManager.keys?.authToken || 'authToken');
     if (!token) {
       return null;
@@ -657,7 +657,7 @@ class MessagesPage {
   /**
    * Helper: Format time
    */
-  formatTime(date) {
+  formatTime (date) {
     if (!date) {
       return '';
     }

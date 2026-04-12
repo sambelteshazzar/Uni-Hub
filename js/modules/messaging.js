@@ -8,7 +8,7 @@
 /* global API, API_URL, StorageManager, toastManager */
 
 class MessageManager {
-  constructor() {
+  constructor () {
     this.socket = null;
     this.currentConversation = null;
     this.listeners = {
@@ -29,7 +29,7 @@ class MessageManager {
   /**
    * Initialize the messaging system
    */
-  async init() {
+  async init () {
     try {
       // Load Socket.IO client
       if (typeof io === 'undefined') {
@@ -53,7 +53,7 @@ class MessageManager {
   /**
    * Load Socket.IO client library dynamically
    */
-  loadSocketIO() {
+  loadSocketIO () {
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
       script.src = `${API_URL.replace('/api', '')}/socket.io/socket.io.js`;
@@ -66,7 +66,7 @@ class MessageManager {
   /**
    * Connect to Socket.IO server
    */
-  connect() {
+  connect () {
     const token = StorageManager.get(StorageManager.keys?.authToken || 'authToken');
 
     if (!token) {
@@ -105,7 +105,7 @@ class MessageManager {
   /**
    * Setup Socket.IO event listeners
    */
-  setupListeners() {
+  setupListeners () {
     if (!this.socket) {
       return;
     }
@@ -151,7 +151,7 @@ class MessageManager {
    * Join a conversation room
    * @param {string} conversationId
    */
-  joinConversation(conversationId) {
+  joinConversation (conversationId) {
     if (!this.socket || !this.isConnected) {
       return;
     }
@@ -164,7 +164,7 @@ class MessageManager {
    * Leave a conversation room
    * @param {string} conversationId
    */
-  leaveConversation(conversationId) {
+  leaveConversation (conversationId) {
     if (!this.socket || !this.isConnected) {
       return;
     }
@@ -181,7 +181,7 @@ class MessageManager {
    * @param {Object} data - Message data
    * @returns {Promise}
    */
-  sendMessageViaSocket(data) {
+  sendMessageViaSocket (data) {
     return new Promise((resolve, reject) => {
       if (!this.socket || !this.isConnected) {
         // Fallback to HTTP
@@ -204,7 +204,7 @@ class MessageManager {
    * @param {Object} data
    * @returns {Promise}
    */
-  async sendMessageHTTP(data) {
+  async sendMessageHTTP (data) {
     try {
       const response = await fetch(`${API_URL}/messages`, {
         method: 'POST',
@@ -232,7 +232,7 @@ class MessageManager {
    * @param {Object} data - { conversationId?, receiverId, content, type?, imageUrl?, productId? }
    * @returns {Promise}
    */
-  async sendMessage(data) {
+  async sendMessage (data) {
     try {
       // Try Socket.IO first
       if (this.socket && this.isConnected) {
@@ -252,7 +252,7 @@ class MessageManager {
    * Indicate user is typing
    * @param {string} conversationId
    */
-  startTyping(conversationId) {
+  startTyping (conversationId) {
     if (!this.socket || !this.isConnected) {
       return;
     }
@@ -264,7 +264,7 @@ class MessageManager {
    * Indicate user stopped typing
    * @param {string} conversationId
    */
-  stopTyping(conversationId) {
+  stopTyping (conversationId) {
     if (!this.socket || !this.isConnected) {
       return;
     }
@@ -276,7 +276,7 @@ class MessageManager {
    * Mark message as read
    * @param {string} messageId
    */
-  markAsRead(messageId) {
+  markAsRead (messageId) {
     if (!this.socket || !this.isConnected) {
       return;
     }
@@ -289,7 +289,7 @@ class MessageManager {
    * @param {Object} options - { page?, limit?, status? }
    * @returns {Promise}
    */
-  async getConversations(options = {}) {
+  async getConversations (options = {}) {
     try {
       const { page = 1, limit = 20, status = 'active' } = options;
       const params = new URLSearchParams({ page, limit, status });
@@ -317,7 +317,7 @@ class MessageManager {
    * @param {string} conversationId
    * @returns {Promise}
    */
-  async getConversation(conversationId) {
+  async getConversation (conversationId) {
     try {
       const response = await fetch(`${API_URL}/messages/conversation/${conversationId}`, {
         headers: {
@@ -343,7 +343,7 @@ class MessageManager {
    * @param {Object} options - { page?, limit? }
    * @returns {Promise}
    */
-  async getMessages(conversationId, options = {}) {
+  async getMessages (conversationId, options = {}) {
     try {
       const { page = 1, limit = 50 } = options;
       const params = new URLSearchParams({ page, limit });
@@ -354,7 +354,7 @@ class MessageManager {
           headers: {
             Authorization: `Bearer ${StorageManager.get(StorageManager.keys?.authToken || 'authToken')}`,
           },
-        }
+        },
       );
 
       const result = await response.json();
@@ -373,7 +373,7 @@ class MessageManager {
    * Get unread message count
    * @returns {Promise}
    */
-  async getUnreadCount() {
+  async getUnreadCount () {
     try {
       const response = await fetch(`${API_URL}/messages/unread-count`, {
         headers: {
@@ -399,7 +399,7 @@ class MessageManager {
    * @param {string} messageId
    * @returns {Promise}
    */
-  async deleteMessage(messageId) {
+  async deleteMessage (messageId) {
     try {
       const response = await fetch(`${API_URL}/messages/${messageId}`, {
         method: 'DELETE',
@@ -426,7 +426,7 @@ class MessageManager {
    * @param {Object} options
    * @returns {Promise}
    */
-  async searchMessages(query, options = {}) {
+  async searchMessages (query, options = {}) {
     try {
       const { conversationId, page = 1, limit = 20 } = options;
       const params = new URLSearchParams({ query, page, limit });
@@ -457,7 +457,7 @@ class MessageManager {
    * @param {string} event
    * @param {Function} callback
    */
-  on(event, callback) {
+  on (event, callback) {
     if (this.listeners[event]) {
       this.listeners[event].push(callback);
     }
@@ -468,7 +468,7 @@ class MessageManager {
    * @param {string} event
    * @param {Function} callback
    */
-  off(event, callback) {
+  off (event, callback) {
     if (this.listeners[event]) {
       this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
     }
@@ -479,7 +479,7 @@ class MessageManager {
    * @param {string} event
    * @param {*} data
    */
-  notifyListeners(event, data) {
+  notifyListeners (event, data) {
     if (this.listeners[event]) {
       this.listeners[event].forEach(callback => callback(data));
     }
@@ -488,7 +488,7 @@ class MessageManager {
   /**
    * Update message badge in UI
    */
-  updateMessageBadge() {
+  updateMessageBadge () {
     const badge = document.getElementById('message-badge');
     if (badge) {
       if (this.unreadCount > 0) {
@@ -503,7 +503,7 @@ class MessageManager {
   /**
    * Disconnect from Socket.IO server
    */
-  disconnect() {
+  disconnect () {
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;

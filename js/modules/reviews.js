@@ -8,7 +8,7 @@
 /* global API_URL, StorageManager, toastManager */
 
 class ReviewManager {
-  constructor() {
+  constructor () {
     this.currentSellerId = null;
   }
 
@@ -17,7 +17,7 @@ class ReviewManager {
    * @param {Object} data - { sellerId, rating, comment, productId?, orderId?, detailedRatings? }
    * @returns {Promise}
    */
-  async submitReview(data) {
+  async submitReview (data) {
     try {
       const { sellerId, rating, comment, productId, orderId, detailedRatings } = data;
 
@@ -63,7 +63,7 @@ class ReviewManager {
    * @param {Object} options - { page?, limit?, sortBy?, sortOrder? }
    * @returns {Promise}
    */
-  async getSellerReviews(sellerId, options = {}) {
+  async getSellerReviews (sellerId, options = {}) {
     try {
       const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = -1 } = options;
       const params = new URLSearchParams({ page, limit, sortBy, sortOrder });
@@ -86,7 +86,7 @@ class ReviewManager {
    * @param {string} sellerId
    * @returns {Promise}
    */
-  async getRatingSummary(sellerId) {
+  async getRatingSummary (sellerId) {
     try {
       const response = await fetch(`${API_URL}/reviews/seller/${sellerId}/summary`);
       const result = await response.json();
@@ -106,7 +106,7 @@ class ReviewManager {
    * @param {Object} options
    * @returns {Promise}
    */
-  async getMyReviews(options = {}) {
+  async getMyReviews (options = {}) {
     try {
       const { page = 1, limit = 10 } = options;
       const params = new URLSearchParams({ page, limit });
@@ -135,7 +135,7 @@ class ReviewManager {
    * @param {Object} data
    * @returns {Promise}
    */
-  async updateReview(reviewId, data) {
+  async updateReview (reviewId, data) {
     try {
       const response = await fetch(`${API_URL}/reviews/${reviewId}`, {
         method: 'PUT',
@@ -167,7 +167,7 @@ class ReviewManager {
    * @param {string} reviewId
    * @returns {Promise}
    */
-  async deleteReview(reviewId) {
+  async deleteReview (reviewId) {
     try {
       const response = await fetch(`${API_URL}/reviews/${reviewId}`, {
         method: 'DELETE',
@@ -197,7 +197,7 @@ class ReviewManager {
    * @param {string} reviewId
    * @returns {Promise}
    */
-  async markHelpful(reviewId) {
+  async markHelpful (reviewId) {
     try {
       const response = await fetch(`${API_URL}/reviews/${reviewId}/helpful`, {
         method: 'POST',
@@ -223,7 +223,7 @@ class ReviewManager {
    * @param {string} reviewId
    * @returns {Promise}
    */
-  async reportReview(reviewId) {
+  async reportReview (reviewId) {
     try {
       const response = await fetch(`${API_URL}/reviews/${reviewId}/report`, {
         method: 'POST',
@@ -254,7 +254,7 @@ class ReviewManager {
    * @param {string} comment
    * @returns {Promise}
    */
-  async respondToReview(reviewId, comment) {
+  async respondToReview (reviewId, comment) {
     try {
       const response = await fetch(`${API_URL}/reviews/${reviewId}/respond`, {
         method: 'POST',
@@ -287,7 +287,7 @@ class ReviewManager {
    * @param {number} size - Font size in px
    * @returns {string}
    */
-  generateStars(rating, size = 16) {
+  generateStars (rating, size = 16) {
     const fullStars = Math.floor(rating);
     const hasHalf = rating % 1 >= 0.5;
     const emptyStars = 5 - fullStars - (hasHalf ? 1 : 0);
@@ -317,7 +317,7 @@ class ReviewManager {
    * @param {Function} onChange
    * @returns {string}
    */
-  generateStarInput(currentRating = 0, onChange) {
+  generateStarInput (currentRating = 0, onChange) {
     const containerId = `star-input-${Date.now()}`;
 
     setTimeout(() => {
