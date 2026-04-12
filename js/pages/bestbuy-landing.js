@@ -90,25 +90,31 @@
       '<!-- Hero Promotional Banner Section -->' +
       '<section class="bb-hero">' +
       '<div class="bb-hero-container">' +
-      '<!-- Main Large Promotional Banner -->' +
-      '<div class="bb-hero-main-banner">' +
-      '<div class="bb-hero-banner-bg"></div>' +
-      '<div class="bb-hero-banner-content">' +
+      '<!-- About Uni-Hub Section -->' +
+      '<div class="bb-hero-main-banner" style="background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(79,70,229,0.05)); border: 1px solid rgba(99,102,241,0.15); border-radius: 1rem; padding: 3rem; text-align: center;">' +
+      '<div class="bb-hero-banner-content" style="max-width: 48rem; margin: 0 auto;">' +
       '<div class="bb-hero-banner-tag">' +
-      '<span class="bb-tag-deal">🔥 DEAL OF THE WEEK</span>' +
+      '<span class="bb-tag-deal">🎓 CAMPUS MARKETPLACE</span>' +
       '</div>' +
-      '<h1 class="bb-hero-banner-title">' +
-      'Save Up to <span class="bb-highlight">70%</span> on<br>Textbooks &amp; Electronics' +
+      '<h1 class="bb-hero-banner-title" style="font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 1.5rem; line-height: 1.2;">' +
+      'Welcome to <span class="bb-highlight">Uni-Hub</span>' +
       '</h1>' +
-      '<p class="bb-hero-banner-desc">Verified students at your university are selling everything you need for the semester — at a fraction of retail prices.</p>' +
-      '<div class="bb-hero-banner-actions">' +
-      '<button onclick="Pages.renderBrowse(); return false;" class="bb-btn bb-btn-primary">🛒 Shop Deals Now</button>' +
-      '<button onclick="Pages.renderSell(); return false;" class="bb-btn bb-btn-outline">💰 Start Selling</button>' +
+      '<p class="bb-hero-banner-desc" style="font-size: 1.125rem; line-height: 1.8; margin-bottom: 1rem;">' +
+      'Uni-Hub is a global university marketplace app that connects students to easily buy and sell essential academic items. Textbooks, electronics, accommodation listings, and other campus essentials — all within your university community and beyond.' +
+      '</p>' +
+      '<p class="bb-hero-banner-desc" style="padding: 1.25rem; background: rgba(99,102,241,0.08); border-left: 3px solid #6366f1; border-radius: 0 0.5rem 0.5rem 0; text-align: left; font-size: 1rem; line-height: 1.7; margin-top: 1.5rem;">' +
+      '<strong style="color: white;">Our Mission:</strong> At Uni-Hub, our mission is to make student essentials affordable and accessible, ensuring that every student can get what they need without financial stress.' +
+      '</p>' +
+      '<div class="bb-hero-banner-stats" style="margin-top: 2rem; justify-content: center; gap: 2.5rem;">' +
+      '<div class="bb-banner-stat"><span class="bb-banner-stat-value">7+</span><span class="bb-banner-stat-label">Universities</span></div>' +
+      '<div class="bb-banner-stat"><span class="bb-banner-stat-value">2,000+</span><span class="bb-banner-stat-label">Students</span></div>' +
+      '<div class="bb-banner-stat"><span class="bb-banner-stat-value">5,000+</span><span class="bb-banner-stat-label">Items</span></div>' +
+      '<div class="bb-banner-stat"><span class="bb-banner-stat-value">GH₵500K+</span><span class="bb-banner-stat-label">In Sales</span></div>' +
       '</div>' +
-      '<div class="bb-hero-banner-stats">' +
-      '<div class="bb-banner-stat"><span class="bb-banner-stat-value">2,500+</span><span class="bb-banner-stat-label">Active Listings</span></div>' +
-      '<div class="bb-banner-stat"><span class="bb-banner-stat-value">7</span><span class="bb-banner-stat-label">Universities</span></div>' +
-      '<div class="bb-banner-stat"><span class="bb-banner-stat-value">GH₵45</span><span class="bb-banner-stat-label">Avg. Savings</span></div>' +
+      '<div class="bb-hero-banner-actions" style="margin-top: 2rem;">' +
+      '<button onclick="Pages.renderBrowse(); return false;" class="bb-btn bb-btn-primary">🔍 Browse Items</button>' +
+      '<button onclick="Pages.renderRegister(); return false;" class="bb-btn bb-btn-outline">📝 Start Selling</button>' +
+      '</div>' +
       '</div>' +
       '</div>' +
       '</div>' +
