@@ -88,48 +88,48 @@
     mainContent.innerHTML =
       '<div class="bb-landing">' +
       '<!-- Hero Section -->' +
-      '<section class="bb-hero" style="min-height: 85vh; display: flex; align-items: center; padding: 6rem 2rem 4rem; position: relative; overflow: hidden; background: #050505;">' +
-      '<div style="position: absolute; inset: 0; background: radial-gradient(ellipse at 20% 50%, rgba(99,102,241,0.1), transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(99,102,241,0.06), transparent 40%); pointer-events: none;"></div>' +
+      '<section class="bb-hero" style="min-height: 85vh; display: flex; align-items: center; padding: 6rem 2rem 4rem; position: relative; overflow: hidden; background: linear-gradient(135deg, #0046be 0%, #003399 100%);">' +
+      '<div style="position: absolute; top: -50%; right: -10%; width: 600px; height: 600px; background: rgba(255, 206, 0, 0.1); border-radius: 50%; filter: blur(100px); pointer-events: none;"></div>' +
       '<div class="bb-hero-container" style="max-width: 80rem; margin: 0 auto; width: 100%; position: relative; z-index: 10;">' +
       '<div style="display: grid; grid-template-columns: 1fr; gap: 3rem; align-items: center;">' +
       '<!-- Left Content -->' +
       '<div>' +
-      '<div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.875rem; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2); border-radius: 9999px; margin-bottom: 1.5rem;">' +
+      '<div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.875rem; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); border-radius: 9999px; margin-bottom: 1.5rem;">' +
       '<span style="position: relative; display: flex; width: 8px; height: 8px;">' +
-      '<span style="position: absolute; inset: 0; border-radius: 50%; background: #6366f1; animation: ping 2s cubic-bezier(0,0,0.2,1) infinite;"></span>' +
-      '<span style="position: relative; display: block; width: 8px; height: 8px; border-radius: 50%; background: #6366f1;"></span>' +
+      '<span style="position: absolute; inset: 0; border-radius: 50%; background: #ffce00; animation: ping 2s cubic-bezier(0,0,0.2,1) infinite;"></span>' +
+      '<span style="position: relative; display: block; width: 8px; height: 8px; border-radius: 50%; background: #ffce00;"></span>' +
       '</span>' +
-      '<span style="font-size: 0.875rem; font-weight: 500; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.05em;">Global University Marketplace</span>' +
+      '<span style="font-size: 0.875rem; font-weight: 600; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em;">Global University Marketplace</span>' +
       '</div>' +
-      '<h1 style="font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 600; color: white; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 1.5rem;">' +
-      'Buy & sell with <span style="background: linear-gradient(135deg, #ffffff 0%, #6366f1 50%, #a5a6a6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">students like you.</span>' +
+      '<h1 style="font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; color: #ffffff; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 1.5rem;">' +
+      'Buy & sell with <span style="color: #ffce00;">students like you.</span>' +
       '</h1>' +
-      '<p style="font-size: 1.125rem; line-height: 1.8; color: #a3a3a3; max-width: 42rem; margin-bottom: 2rem;">' +
+      '<p style="font-size: 1.125rem; line-height: 1.8; color: rgba(255,255,255,0.9); max-width: 42rem; margin-bottom: 2rem;">' +
       'Uni-Hub is a global university marketplace app that connects students to easily buy and sell essential academic items. Textbooks, electronics, accommodation listings, and other campus essentials — all within your university community and beyond.' +
       '</p>' +
       '<div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 3rem;">' +
-      '<button onclick="Pages.renderBrowse(); return false;" style="display: inline-flex; align-items: center; gap: 0.5rem; height: 3.5rem; padding: 0 2rem; border-radius: 1rem; font-weight: 500; font-size: 1rem; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; cursor: pointer; transition: all 0.3s; box-shadow: 0 0 25px rgba(99,102,241,0.35);" onmouseover="this.style.transform=\'translateY(-2px)\'; this.style.boxShadow=\'0 0 35px rgba(99,102,241,0.5)\'" onmouseout="this.style.transform=\'translateY(0)\'; this.style.boxShadow=\'0 0 25px rgba(99,102,241,0.35)\'">🔍 Browse Items</button>' +
-      '<button onclick="Pages.renderRegister(); return false;" style="display: inline-flex; align-items: center; gap: 0.5rem; height: 3.5rem; padding: 0 2rem; border-radius: 1rem; font-weight: 500; font-size: 1rem; background: transparent; color: white; border: 1px solid #404040; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.borderColor=\'#6366f1\'; this.style.background=\'rgba(30,30,30,0.8)\'" onmouseout="this.style.borderColor=\'#404040\'; this.style.background=\'transparent\'">📝 Start Selling</button>' +
+      '<button onclick="Pages.renderBrowse(); return false;" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem 2rem; font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: #ffce00; color: #1a1a1a; border: none; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background=\'#e6b800\'; this.style.transform=\'translateY(-2px)\'; this.style.boxShadow=\'0 8px 20px rgba(255, 206, 0, 0.3)\'" onmouseout="this.style.background=\'#ffce00\'; this.style.transform=\'translateY(0)\'; this.style.boxShadow=\'none\'">🔍 Browse Items</button>' +
+      '<button onclick="Pages.renderRegister(); return false;" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem 2rem; font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: transparent; color: #ffffff; border: 2px solid rgba(255,255,255,0.3); border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor=\'#ffffff\'; this.style.background=\'rgba(255,255,255,0.1)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,0.3)\'; this.style.background=\'transparent\'">📝 Start Selling</button>' +
       '</div>' +
-      '<div style="display: flex; flex-wrap: wrap; gap: 2.5rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.05);">' +
-      '<div style="text-align: left;"><div style="font-size: 1.75rem; font-weight: 700; color: #6366f1; margin-bottom: 0.25rem;">7+</div><div style="color: #737373; font-size: 0.875rem;">Universities</div></div>' +
-      '<div style="text-align: left;"><div style="font-size: 1.75rem; font-weight: 700; color: #6366f1; margin-bottom: 0.25rem;">2,000+</div><div style="color: #737373; font-size: 0.875rem;">Verified Students</div></div>' +
-      '<div style="text-align: left;"><div style="font-size: 1.75rem; font-weight: 700; color: #6366f1; margin-bottom: 0.25rem;">5,000+</div><div style="color: #737373; font-size: 0.875rem;">Items Listed</div></div>' +
-      '<div style="text-align: left;"><div style="font-size: 1.75rem; font-weight: 700; color: #6366f1; margin-bottom: 0.25rem;">GH₵500K+</div><div style="color: #737373; font-size: 0.875rem;">In Sales</div></div>' +
+      '<div style="display: flex; flex-wrap: wrap; gap: 2.5rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.15);">' +
+      '<div style="text-align: left;"><div style="font-size: 1.75rem; font-weight: 800; color: #ffce00; margin-bottom: 0.25rem;">7+</div><div style="color: rgba(255,255,255,0.7); font-size: 0.875rem;">Universities</div></div>' +
+      '<div style="text-align: left;"><div style="font-size: 1.75rem; font-weight: 800; color: #ffce00; margin-bottom: 0.25rem;">2,000+</div><div style="color: rgba(255,255,255,0.7); font-size: 0.875rem;">Verified Students</div></div>' +
+      '<div style="text-align: left;"><div style="font-size: 1.75rem; font-weight: 800; color: #ffce00; margin-bottom: 0.25rem;">5,000+</div><div style="color: rgba(255,255,255,0.7); font-size: 0.875rem;">Items Listed</div></div>' +
+      '<div style="text-align: left;"><div style="font-size: 1.75rem; font-weight: 800; color: #ffce00; margin-bottom: 0.25rem;">GH₵500K+</div><div style="color: rgba(255,255,255,0.7); font-size: 0.875rem;">In Sales</div></div>' +
       '</div>' +
       '</div>' +
       '</div>' +
       '</div>' +
       '</section>' +
       '<!-- Mission Statement Section -->' +
-      '<section style="padding: 5rem 2rem; background: #080808; border-top: 1px solid rgba(255,255,255,0.05);">' +
+      '<section style="padding: 5rem 2rem; background: #f8f9fa; border-top: 1px solid #e5e7eb;">' +
       '<div style="max-width: 56rem; margin: 0 auto;">' +
       '<div style="text-align: center; margin-bottom: 2rem;">' +
-      '<h2 style="font-size: 1.875rem; font-weight: 600; color: white; margin-bottom: 0.5rem;">Our Mission</h2>' +
-      '<p style="color: #737373; font-size: 1rem;">Making student essentials affordable and accessible</p>' +
+      '<h2 style="font-size: 1.875rem; font-weight: 800; color: #1a1a1a; margin-bottom: 0.5rem;">Our Mission</h2>' +
+      '<p style="color: #6b7280; font-size: 1rem;">Making student essentials affordable and accessible</p>' +
       '</div>' +
-      '<div style="padding: 2rem; background: rgba(99,102,241,0.04); border: 1px solid rgba(99,102,241,0.1); border-radius: 1rem; border-left: 4px solid #6366f1;">' +
-      '<p style="color: #d4d4d8; font-size: 1.125rem; line-height: 1.8;">' +
+      '<div style="padding: 2rem; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 0.75rem; border-left: 4px solid #0046be;">' +
+      '<p style="color: #374151; font-size: 1.125rem; line-height: 1.8;">' +
       'At Uni-Hub, our mission is to make student essentials affordable and accessible, ensuring that every student can get what they need without financial stress.' +
       '</p>' +
       '</div>' +
