@@ -701,238 +701,6 @@ class Pages {
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
-        /* New Hero Styles */
-        .hero-section {
-          min-height: 100vh;
-          position: relative;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          padding: 8rem 2rem 4rem;
-          overflow: hidden;
-        }
-        .hero-section::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background-image: radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.12), transparent 40%),
-                            radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.08), transparent 40%);
-          pointer-events: none;
-        }
-        .hero-container {
-          max-width: 80rem;
-          margin: 0 auto;
-          width: 100%;
-          position: relative;
-          z-index: 10;
-        }
-        .hero-content {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 3rem;
-          align-items: center;
-        }
-        @media (min-width: 1024px) {
-          .hero-content {
-            grid-template-columns: 1.2fr 1fr;
-            gap: 4rem;
-          }
-        }
-        .hero-left {
-          color: white;
-        }
-        .hero-metric-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.75rem;
-          padding: 0.5rem 1rem;
-          background: rgba(99, 102, 241, 0.1);
-          border: 1px solid rgba(99, 102, 241, 0.2);
-          border-radius: 9999px;
-          margin-bottom: 1.5rem;
-        }
-        .hero-pulse {
-          position: relative;
-          width: 12px;
-          height: 12px;
-        }
-        .hero-pulse::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          border-radius: 50%;
-          background: #6366f1;
-          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        .hero-pulse::after {
-          content: '';
-          position: absolute;
-          inset: 2px;
-          border-radius: 50%;
-          background: #6366f1;
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(1.5); }
-        }
-        .hero-metric-text {
-          font-size: 0.875rem;
-          font-weight: 500;
-          color: #a5b4fc;
-        }
-        .hero-headline {
-          font-size: clamp(2.5rem, 5vw, 4rem);
-          font-weight: 600;
-          line-height: 1.1;
-          letter-spacing: -0.02em;
-          margin-bottom: 1.5rem;
-        }
-        .hero-headline-gradient {
-          background: linear-gradient(135deg, #ffffff 0%, #6366f1 50%, #a5a6a6 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
-        .hero-subheading {
-          font-size: 1.125rem;
-          line-height: 1.7;
-          color: #a3a3a3;
-          max-width: 36rem;
-          margin-bottom: 2rem;
-        }
-        .hero-subheading-highlight {
-          color: #e5e7eb;
-          font-weight: 400;
-        }
-        .hero-cta-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.75rem;
-          padding: 1rem 2rem;
-          background: white;
-          color: #050505;
-          border: none;
-          border-radius: 9999px;
-          font-size: 1rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s;
-          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-        }
-        .hero-cta-btn:hover {
-          background: #f3f4f6;
-          transform: translateY(-2px);
-          box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.4);
-        }
-        .hero-right {
-          position: relative;
-        }
-        .hero-glass-card {
-          background: rgba(20, 20, 20, 0.6);
-          backdrop-filter: blur(16px);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 12px;
-          padding: 1.5rem;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-          position: relative;
-          overflow: hidden;
-        }
-        .hero-glass-card::before {
-          content: '';
-          position: absolute;
-          top: -50%;
-          left: -50%;
-          width: 200%;
-          height: 200%;
-          background: radial-gradient(circle at center, rgba(99, 102, 241, 0.05), transparent 60%);
-          pointer-events: none;
-        }
-        .hero-card-avatars {
-          display: flex;
-          align-items: center;
-          gap: 2.5rem;
-          margin-bottom: 1.5rem;
-        }
-        .hero-avatar-stack {
-          display: flex;
-          margin-right: -0.75rem;
-        }
-        .hero-avatar-stack img {
-          width: 2.5rem;
-          height: 2.5rem;
-          border-radius: 50%;
-          border: 2px solid #050505;
-          object-fit: cover;
-          margin-left: -0.75rem;
-        }
-        .hero-avatar-stack img:first-child {
-          margin-left: 0;
-        }
-        .hero-trust-text {
-          font-size: 0.875rem;
-          font-weight: 500;
-          color: white;
-        }
-        .hero-testimonial {
-          padding: 1rem;
-          background: rgba(255, 255, 255, 0.05);
-          border-radius: 8px;
-        }
-        .hero-testimonial-quote {
-          font-size: 0.875rem;
-          line-height: 1.6;
-          color: #e5e7eb;
-          font-style: italic;
-          margin-bottom: 0.5rem;
-        }
-        .hero-testimonial-author {
-          font-size: 0.875rem;
-          font-weight: 600;
-          color: white;
-        }
-        .hero-partners {
-          margin-top: 4rem;
-          padding-top: 2rem;
-          border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        .hero-partners-inner {
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          justify-content: space-between;
-          gap: 2rem;
-        }
-        .hero-partners-rating {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          color: #a3a3a3;
-          font-size: 0.875rem;
-        }
-        .hero-partners-stars {
-          display: flex;
-          gap: 2px;
-        }
-        .hero-partners-stars svg {
-          width: 1rem;
-          height: 1rem;
-          fill: #eab308;
-        }
-        .hero-partners-logos {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 2rem;
-          align-items: center;
-        }
-        .hero-partner-logo {
-          font-size: 0.875rem;
-          font-weight: 600;
-          color: #737373;
-          transition: color 0.2s;
-        }
-        .hero-partner-logo:hover {
-          color: #a5b4fc;
-        }
       </style>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     `;
@@ -996,82 +764,139 @@ class Pages {
         </nav>
 
         <!-- Hero Section -->
-        <section class="hero-section">
-          <div class="hero-container">
-            <div class="hero-content">
-              <!-- Left Content -->
-              <div class="hero-left">
-                <!-- Metric Badge -->
-                <div class="hero-metric-badge">
-                  <span class="hero-pulse"></span>
-                  <span class="hero-metric-text">GHS 500K+ in direct student sales</span>
-                </div>
-
-                <!-- Main Headline -->
-                <h1 class="hero-headline">
-                  Buy & sell with <span class="hero-headline-gradient">students like you.</span>
-                </h1>
-
-                <!-- Subheading -->
-                <p class="hero-subheading">
-                  Uni-Hub connects your campus community to trade textbooks, electronics, and hostel essentials. 
-                  <span class="hero-subheading-highlight">Verified students. Safe trades. Real savings.</span>
-                </p>
-
-                <!-- CTA Button -->
-                <button onclick="document.querySelector('#universities').scrollIntoView({behavior: 'smooth'}); return false;" class="hero-cta-btn">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M5 12h14"></path>
-                    <path d="m12 5 7 7-7 7"></path>
+        <section class="modern-hero">
+          <div class="modern-hero-grid">
+            <div class="hero-text-col">
+              <div class="hero-badge glass-card" style="border: 1px solid rgba(255,255,255,0.1);">
+                <span class="relative flex h-2 w-2">
+                  <span class="spinner-ring" style="position: absolute; width: 100%; height: 100%; border-radius: 50%; opacity: 0.75;"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo"></span>
+                </span>
+                <span class="text-indigo">Active Across 7 Universities</span>
+              </div>
+              
+              <h1 class="hero-title" style="color: white; margin-top: 1.5rem;">
+                Buy & Sell with<br>
+                <span class="hero-title-gradient">Students Like You.</span>
+              </h1>
+              
+              <p class="hero-description">
+                Uni-Hub connects students to trade pre-owned items within their university community. Textbooks, electronics, hostel items, and more — all from verified students near you.
+              </p>
+              
+              <div class="hero-buttons">
+                <button onclick="document.querySelector('#universities').scrollIntoView({behavior: 'smooth'}); return false;" class="btn-modern-primary">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path>
+                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                    <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"></path>
+                    <path d="M2 7h20"></path>
                   </svg>
-                  Start exploring
+                  Browse Items
+                </button>
+                <button onclick="Pages.renderRegister(); return false;" class="btn-modern-secondary">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"></path>
+                    <path d="M7 7h.01"></path>
+                  </svg>
+                  Start Selling
                 </button>
               </div>
-
-              <!-- Right Content - Testimonial Card -->
-              <div class="hero-right">
-                <div class="hero-glass-card">
-                  <!-- Avatar Stack -->
-                  <div class="hero-card-avatars">
-                    <div class="hero-avatar-stack">
-                      <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=64&h=64" alt="Student">
-                      <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=64&h=64" alt="Student">
-                      <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=64&h=64" alt="Student">
-                    </div>
-                    <span class="hero-trust-text">Trusted by 2,000+ students</span>
+              
+              <div class="hero-social-proof">
+                <div class="hero-avatars">
+                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=64&h=64" alt="Student" class="hero-avatar">
+                  <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=64&h=64" alt="Student" class="hero-avatar" style="margin-left: -0.75rem;">
+                  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=64&h=64" alt="Student" class="hero-avatar" style="margin-left: -0.75rem;">
+                  <div class="hero-avatar-count" style="margin-left: -0.75rem;">+2k</div>
+                </div>
+                <div>
+                  <div style="display: flex; align-items: center; gap: 0.25rem; color: #6366f1;">
+                    <svg style="width: 1rem; height: 1rem; fill: currentColor;" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
+                    <svg style="width: 1rem; height: 1rem; fill: currentColor;" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
+                    <svg style="width: 1rem; height: 1rem; fill: currentColor;" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
+                    <svg style="width: 1rem; height: 1rem; fill: currentColor;" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
+                    <svg style="width: 1rem; height: 1rem; fill: currentColor;" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
                   </div>
-
-                  <div class="hero-testimonial">
-                    <blockquote class="hero-testimonial-quote">
-                      "I sold my old laptop in 2 days and bought a cheaper one from another student. Saved over GHS 800 — way better than selling to a shop!"
-                    </blockquote>
-                    <cite class="hero-testimonial-author">Ama Mensah, UG Student</cite>
-                  </div>
+                  <p style="font-size: 0.875rem; color: #737373; margin-top: 0.125rem;">Trusted by students across Ghana</p>
                 </div>
               </div>
             </div>
-
-            <!-- Partner Logos / Social Proof -->
-            <div class="hero-partners">
-              <div class="hero-partners-inner">
-                <div class="hero-partners-rating">
-                  <span>5.0</span>
-                  <span>rating from students</span>
-                  <div class="hero-partners-stars">
-                    <svg viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
-                    <svg viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
-                    <svg viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
-                    <svg viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
-                    <svg viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
+            
+            <div class="hero-visual-col hero-visual">
+              <div class="visual-grid">
+                <div class="visual-card visual-card-main">
+                  <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&auto=format&fit=crop" alt="Students studying">
+                  <div class="visual-overlay"></div>
+                  <div class="visual-label">
+                    <p class="visual-label-category text-indigo">Electronics</p>
+                    <h3 class="visual-label-title">Laptops & Phones</h3>
                   </div>
                 </div>
-
-                <div class="hero-partners-logos">
-                  <span class="hero-partner-logo">Univ. of Ghana</span>
-                  <span class="hero-partner-logo">KNUST</span>
-                  <span class="hero-partner-logo">UEW</span>
-                  <span class="hero-partner-logo">UCC</span>
-                  <span class="hero-partner-logo">UDS</span>
+                
+                <div class="visual-card visual-card-wide">
+                  <img src="https://images.unsplash.com/photo-1544816155-12df9643f363?w=800&auto=format&fit=crop" alt="Textbooks">
+                  <div class="visual-overlay"></div>
+                  <div style="position: absolute; top: 1rem; right: 1rem; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); padding: 0.375rem 0.75rem; border-radius: 9999px; display: flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.1);">
+                    <span style="width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #818cf8;"></span>
+                    <span style="font-size: 0.75rem; font-weight: 500; color: white;">Popular</span>
+                  </div>
+                </div>
+                
+                <div class="visual-card visual-card-small">
+                  <img src="https://images.unsplash.com/photo-1555041761-63a74ad3efde?w=600&auto=format&fit=crop" alt="Hostel furniture">
+                  <div class="visual-overlay"></div>
+                </div>
+                
+                <div class="visual-card-interactive">
+                  <div style="position: relative; width: 8rem; height: 8rem;">
+                    <svg style="width: 100%; height: 100%; position: absolute; color: #404040; animation: spin 10s linear infinite;" viewBox="0 0 100 100">
+                      <path id="curve" d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0" fill="transparent"></path>
+                      <text style="font-size: 10px; font-weight: 700; letter-spacing: 0.1em; fill: currentColor;">
+                        <textPath xlink:href="#curve">• Buy & Sell • Verified Students • Safe Trading</textPath>
+                      </text>
+                    </svg>
+                    <button onclick="document.querySelector('#universities').scrollIntoView({behavior: 'smooth'}); return false;" class="bg-indigo" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 4rem; height: 4rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px -5px rgba(99,102,241,0.4); transition: transform 0.3s;" onmouseover="this.style.transform='translate(-50%, -50%) scale(1.1)'" onmouseout="this.style.transform='translate(-50%, -50%)'">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: black;">
+                        <path d="M7 7h10v10"></path>
+                        <path d="M7 17 17 7"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Floating Card -->
+              <div class="floating-card glass-card">
+                <div class="floating-card-header">
+                  <span style="font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: #a3a3a3;">Recent Sale</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #525252;">
+                    <circle cx="12" cy="12" r="1"></circle>
+                    <circle cx="19" cy="12" r="1"></circle>
+                    <circle cx="5" cy="12" r="1"></circle>
+                  </svg>
+                </div>
+                <div class="floating-card-item">
+                  <div style="width: 2.5rem; height: 2.5rem; border-radius: 0.75rem; background: rgba(99,102,241,0.1); display: flex; align-items: center; justify-content: center; color: #6366f1;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.61a1 1 0 0 1-.9-1.45L4 16"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <p style="font-size: 0.875rem; font-weight: 500; color: white;">HP ProBook 450</p>
+                    <p style="font-size: 0.75rem; color: #a3a3a3;">UG Student • 2 hours ago</p>
+                  </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.05);">
+                  <span style="font-size: 0.75rem; color: #a3a3a3;">Sold For</span>
+                  <span style="font-size: 0.875rem; font-weight: 600; color: #6366f1;">GHS 2,100</span>
+                </div>
+                <div style="margin-top: 0.75rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 500; padding: 0.25rem 0.5rem; border-radius: 0.25rem; background: rgba(99,102,241,0.1); color: #a5b4fc; width: fit-content;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="m9 12 2 2 4-4"></path>
+                  </svg>
+                  Verified Student
                 </div>
               </div>
             </div>
