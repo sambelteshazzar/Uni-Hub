@@ -1,4 +1,5 @@
 /* eslint-disable no-unused-vars */
+/* global Formatter, ORDER_STATUS, adminAuthManager, adminReportsManager, adminUsersManager, adminProductsManager, adminOrdersManager */
 // ============================================
 // PAGE RENDERERS
 // ============================================
@@ -46,45 +47,9 @@ class Pages {
   }
 
   /**
-   * Render Landing Page — Component-based version
-   * Loads HTML component files and assembles them
+   * Render Landing Page with University Selection - Modern Dark Theme
    */
   static async renderLanding () {
-    // Hide original navbar and footer
-    this.hideOriginalNavFooter();
-
-    const mainContent = document.getElementById('main-content');
-
-    // Check if the loader is available
-    if (typeof LandingPageLoader !== 'undefined') {
-      const html = await LandingPageLoader.loadAll();
-      mainContent.innerHTML = html;
-      LandingPageLoader.attachBehaviors();
-    } else {
-      // Fallback: render a simple message
-      mainContent.innerHTML = `
-        <div class="container" style="padding: 4rem 1rem; text-align: center;">
-          <h1>Welcome to Uni-Hub</h1>
-          <p style="color: var(--neutral-600); margin-bottom: 2rem;">
-            Buy and sell items within your university community.
-          </p>
-          <div style="display: flex; gap: 1rem; justify-content: center;">
-            <button class="btn btn-primary" onclick="Pages.renderBrowse()">Browse listings</button>
-            <button class="btn btn-outline" onclick="Pages.renderRegister()">Sign up</button>
-          </div>
-        </div>
-      `;
-    }
-  }
-
-  // NOTE: The original renderLanding() method was ~2200 lines of inline HTML.
-  // It has been replaced by the component-based version above (line 52).
-  // The old code referenced classes like .university-card, .modern-landing, etc.
-  // which are no longer used. If you need the old code, run: git checkout HEAD -- js/pages/pages.js
-
-  /**
-   * Render Login Modal Overlay
-   */
     // Hide original navbar and footer
     this.hideOriginalNavFooter();
 
@@ -2315,8 +2280,6 @@ class Pages {
       </div>
     `;
   }
-    } // end if(false)
-  } // end _renderLanding_DEPRECATED
 
   /**
    * Handle Forgot Password
