@@ -54,10 +54,24 @@ class MessageManager {
    */
   loadSocketIO () {
     return new Promise((resolve, reject) => {
+      // Try CDN first as fallback
       const script = document.createElement('script');
-      script.src = `${API_URL.replace('/api', '')}/socket.io/socket.io.js`;
-      script.onload = resolve;
-      script.onerror = reject;
+      script.src = 'https://cdn.socket.io/4.7.2/socket.io.min.js';
+      script.onload = () => {
+        console.log('✓ Socket.IO loaded from CDN');
+        resolve();
+      };
+      script.onerror = () => {
+        // If CDN fails, try loading from backend
+        const backendScript = document.createElement('script');
+        backendScript.src = `${window.API_URL?.replace('/api', '') || 'http://localhost:5000'}/socket.io/socket.io.js`;
+        backendScript.onload = resolve;
+        backendScript.onerror = () => {
+          console.log('⚠ Socket.IO not available - messaging will use polling mode');
+          resolve(); // Don't reject, just continue
+        };
+        document.head.appendChild(backendScript);
+      };
       document.head.appendChild(script);
     });
   }
