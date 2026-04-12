@@ -1,4 +1,10 @@
-class AuthManager {
+import StorageManager from '../utils/storage.js';
+import Validator from '../utils/validation.js';
+import CryptoUtil from '../utils/crypto.js';
+import api from '../utils/api.js';
+import { STORAGE_KEYS } from '../utils/constants.js';
+
+export class AuthManager {
   constructor () {
     this.currentUser = null;
     this.isAuthenticated = false;
@@ -330,4 +336,4 @@ class AuthManager {
 }
 
 // Create singleton instance
-const authManager = new AuthManager();
+export default new AuthManager();

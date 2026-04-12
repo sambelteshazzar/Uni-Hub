@@ -125,3 +125,5 @@ export class Validator {
     return errors;
   }
 }
+
+export default new Validator();

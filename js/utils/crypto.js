@@ -1,11 +1,10 @@
-/* exported CryptoUtil */
 // ============================================
 // CRYPTO UTILITIES - Password hashing
 // ============================================
 // Uses Web Crypto API (native to modern browsers)
 // For production, implement on backend with bcryptjs
 
-class CryptoUtil {
+export class CryptoUtil {
   /**
    * Hash a password using SHA-256
    * Note: SHA-256 is not ideal for passwords (use bcrypt on backend)
@@ -56,3 +55,5 @@ class CryptoUtil {
     return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
   }
 }
+
+export default new CryptoUtil();

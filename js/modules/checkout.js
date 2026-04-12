@@ -3,6 +3,12 @@
 // CHECKOUT MODULE - Order Processing
 // ============================================
 
+import StorageManager from '../utils/storage.js';
+import Validator from '../utils/validation.js';
+import api from '../utils/api.js';
+import { STORAGE_KEYS, DELIVERY_MODES, ORDER_STATUS, PAYMENT_MODES, STORAGE_KEY_PREFIX } from '../utils/constants.js';
+import cartManager from './cart.js';
+
 // Delivery fees configuration
 const DELIVERY_FEES = {
   [DELIVERY_MODES.BOLT]: 15,
@@ -10,7 +16,7 @@ const DELIVERY_FEES = {
   [DELIVERY_MODES.IN_PERSON]: 0,
 };
 
-class CheckoutManager {
+export class CheckoutManager {
   constructor () {
     this.ORDER_STORAGE_KEY = `${STORAGE_KEY_PREFIX}orders`;
     this.useBackend = true; // Backend API enabled
@@ -420,4 +426,4 @@ class CheckoutManager {
 }
 
 // Create singleton instance
-const checkoutManager = new CheckoutManager();
+export default new CheckoutManager();

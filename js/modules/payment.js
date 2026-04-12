@@ -3,7 +3,10 @@
 // PAYMENT MODULE - Payment Processing
 // ============================================
 
-class PaymentManager {
+import StorageManager from '../utils/storage.js';
+import { STORAGE_KEY_PREFIX, PAYMENT_MODES } from '../utils/constants.js';
+
+export class PaymentManager {
   constructor () {
     this.PAYMENT_STORAGE_KEY = `${STORAGE_KEY_PREFIX}payments`;
     // Use environment variable or window config for Paystack key
@@ -297,4 +300,4 @@ class PaymentManager {
 }
 
 // Create singleton instance
-const paymentManager = new PaymentManager();
+export default new PaymentManager();

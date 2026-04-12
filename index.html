@@ -190,61 +190,17 @@
       </footer>
     </div>
 
-    <!-- JavaScript Files -->
-    <!-- API Configuration -->
+    <!-- JavaScript Files - ES6 Module Entry Point -->
     <script>
       // Backend API URL - change this for production
       window.API_URL = 'http://localhost:5000/api';
     </script>
 
-    <!-- Utils -->
-    <script src="js/utils/constants.js?v=2"></script>
-    <script src="js/utils/storage.js?v=2"></script>
-    <script src="js/utils/validation.js?v=2"></script>
-    <script src="js/utils/formatters.js?v=2"></script>
-    <script src="js/utils/crypto.js?v=2"></script>
-    <script src="js/utils/api.js?v=2"></script>
+    <!-- ES6 Module Entry Point -->
+    <script type="module" src="js/main.js"></script>
 
-    <!-- Router -->
-    <script src="js/router.js?v=2"></script>
-
-    <!-- Main App -->
-    <script src="js/app.js?v=2"></script>
-
-    <!-- Core Modules -->
-    <script src="js/modules/auth.js?v=2"></script>
-    <script src="js/modules/products.js?v=2"></script>
-    <script src="js/modules/cart.js?v=2"></script>
-    <script src="js/modules/checkout.js?v=2"></script>
-    <script src="js/modules/payment.js?v=2"></script>
-    <script src="js/modules/delivery.js?v=2"></script>
-    <script src="js/modules/messaging.js?v=2"></script>
-    <script src="js/modules/reviews.js?v=2"></script>
-    <script src="js/modules/region.js?v=2"></script>
-    <script src="js/modules/search.js?v=2"></script>
-    <script src="js/modules/toast.js?v=2"></script>
-    <script src="js/modules/notifications.js?v=2"></script>
-    <script src="js/modules/modals.js?v=2"></script>
-
-    <!-- Admin Modules -->
-    <script src="js/admin/admin-auth.js?v=2"></script>
-    <script src="js/admin/admin-products.js?v=2"></script>
-    <script src="js/admin/admin-users.js?v=2"></script>
-    <script src="js/admin/admin-orders.js?v=2"></script>
-    <script src="js/admin/admin-reports.js?v=2"></script>
-
-    <!-- Pages -->
-    <script src="js/pages/pages.js?v=2"></script>
-    <script src="js/pages/bestbuy-landing.js?v=2"></script>
-    <script src="js/pages/bestbuy-auth-dashboard.js?v=2"></script>
-    <script src="js/pages/messages.js?v=2"></script>
-    <script src="js/pages/landing-page-loader.js?v=2"></script>
-
-    <!-- Global Setup - Expose all modules and constants -->
-    <script src="js/setup/globals.js?v=2"></script>
-
-    <!-- App Initialization -->
-    <script>
+    <!-- Legacy Script Tags - Comment out once all modules are converted -->
+    <!--
       // Initialize app on page load
       document.addEventListener('DOMContentLoaded', async function () {
         // Show loading state immediately
@@ -295,5 +251,6 @@
         }
       });
     </script>
+    -->
   </body>
 </html>

@@ -3,7 +3,7 @@
 // API CLIENT FOR BACKEND COMMUNICATION
 // ============================================
 
-class API {
+export class API {
   constructor (baseURL = null) {
     // Use provided URL, window config, or default to local backend
     // Note: process.env doesn't work in browser context
@@ -207,4 +207,4 @@ class API {
 }
 
 // Create singleton instance
-const api = new API();
+export default new API();
