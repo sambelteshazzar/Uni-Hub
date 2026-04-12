@@ -5,8 +5,6 @@
  * ============================================
  */
 
-/* global API, API_URL, StorageManager, toastManager */
-
 class MessageManager {
   constructor () {
     this.socket = null;
