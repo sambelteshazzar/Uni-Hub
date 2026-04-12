@@ -16,6 +16,7 @@ class Pages {
    * Register all page routes with the router
    */
   static registerRoutes () {
+    console.log('✓ Pages.registerRoutes() called');
     // Home/Landing
     router.register('/', () => this.renderLanding());
     router.register('/home', () => this.renderLanding());
@@ -23,6 +24,7 @@ class Pages {
     // Auth
     router.register('/login', () => this.renderLogin());
     router.register('/register', () => this.renderRegister());
+    console.log('✓ Auth routes registered');
     
     // Main pages
     router.register('/browse', () => this.renderBrowseProducts());
@@ -32,6 +34,7 @@ class Pages {
     router.register('/dashboard', () => this.renderDashboard());
     router.register('/profile', () => this.renderProfile());
     router.register('/orders', () => this.renderOrders());
+    console.log('✓ Main routes registered');
     
     // Product detail
     router.register('/product/:id', (params) => this.renderProductDetail(params.id));
@@ -42,6 +45,7 @@ class Pages {
     router.register('/admin/users', () => this.renderAdminUsers());
     router.register('/admin/orders', () => this.renderAdminOrders());
     router.register('/admin/reports', () => this.renderAdminReports());
+    console.log('✓ All routes registered successfully');
   }
 
   /**

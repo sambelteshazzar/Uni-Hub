@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test</title></head>
+<body>
+<h1>Test Page</h1>
+<button onclick="alert('Pages exists: ' + (typeof Pages));">Test 1: Check Pages</button>
+<button onclick="alert('renderRegister exists: ' + (typeof Pages.renderRegister));">Test 2: Check renderRegister</button>
+<button onclick="Pages.renderRegister();">Test 3: Call renderRegister</button>
+
+<script src="js/utils/constants.js?v=2"></script>
+<script src="js/utils/storage.js?v=2"></script>
+<script src="js/pages/pages.js?v=2"></script>
+<script src="js/setup/globals.js?v=2"></script>
+</body>
+</html>

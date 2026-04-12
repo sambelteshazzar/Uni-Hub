@@ -2,7 +2,7 @@
 // FORMAT & DISPLAY UTILITIES
 // ============================================
 
-export class Formatter {
+class Formatter {
   /**
    * Format price with currency
    * @param {number} price - Price in base units

@@ -207,6 +207,9 @@ if (typeof adminReportsManager !== 'undefined') {
 // eslint-disable-next-line no-undef
 if (typeof Pages !== 'undefined') {
   window.Pages = Pages;
+  console.log('✓ Pages class exposed to window');
+} else {
+  console.error('✗ Pages class NOT found!');
 }
 // eslint-disable-next-line no-undef
 if (typeof BasePage !== 'undefined') {

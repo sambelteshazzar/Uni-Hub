@@ -1,10 +1,9 @@
-import { VALIDATION_PATTERNS, ERROR_MESSAGES } from './constants.js';
 
 // ============================================
 // FORM VALIDATION UTILITIES
 // ============================================
 
-export class Validator {
+class Validator {
   /**
    * Validate email address
    * @param {string} email

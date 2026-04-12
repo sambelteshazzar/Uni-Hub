@@ -245,8 +245,10 @@
 
     <!-- App Initialization -->
     <script>
+      console.log('App initialization script loaded');
       // Initialize app on page load
       document.addEventListener('DOMContentLoaded', async function () {
+        console.log('DOMContentLoaded event fired');
         // Show loading state immediately
         var mainContent = document.getElementById('main-content');
         if (mainContent) {
@@ -260,14 +262,19 @@
         }
 
         try {
+          console.log('About to call app.init()');
           // Initialize the application
           await app.init();
+          console.log('✓ app.init() completed');
 
           // Register all routes with the router
+          console.log('About to call Pages.registerRoutes()');
           Pages.registerRoutes();
+          console.log('✓ Pages.registerRoutes() completed');
 
           // Now start the router to handle initial page rendering based on hash
           router.start();
+          console.log('✓ router.start() called');
 
           // Default to landing page if no hash is present
           if (
@@ -275,19 +282,22 @@
             window.location.hash === '#/' ||
             window.location.hash === '#'
           ) {
+            console.log('Rendering landing page');
             await Pages.renderLanding();
+            console.log('✓ Landing page rendered');
           }
         } catch (error) {
-          console.error('App init failed:', error);
+          console.error('✗ App init failed:', error);
           // Fallback: show landing page even if init fails
           if (typeof Pages !== 'undefined') {
             try {
               await Pages.renderLanding();
             } catch (e) {
+              console.error('✗ Fallback also failed:', e);
               if (mainContent) {
                 mainContent.innerHTML =
                   '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#050505;color:#fff;text-align:center;padding:2rem;">' +
-                  '<div><h2>⚠️ Something went wrong</h2><p>Please refresh the page.</p>' +
+                  '<div><h2>⚠️ Something went wrong</h2><p>Please check console for errors.</p>' +
                   '<button onclick="location.reload()" style="margin-top:1rem;padding:0.75rem 1.5rem;background:#6366f1;color:#fff;border:none;border-radius:0.5rem;cursor:pointer;font-weight:600;">Refresh</button></div></div>';
               }
             }
