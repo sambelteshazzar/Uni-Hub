@@ -110,6 +110,18 @@ if (typeof api !== 'undefined') {
 }
 
 // ====================
+// CORE - router and app
+// ====================
+// eslint-disable-next-line no-undef
+if (typeof router !== 'undefined') {
+  window.router = router;
+}
+// eslint-disable-next-line no-undef
+if (typeof app !== 'undefined') {
+  window.app = app;
+}
+
+// ====================
 // CORE MANAGERS - from modules/*.js
 // ====================
 // eslint-disable-next-line no-undef
@@ -192,6 +204,10 @@ if (typeof adminReportsManager !== 'undefined') {
 // ====================
 // PAGE CLASSES - from pages/*.js
 // ====================
+// eslint-disable-next-line no-undef
+if (typeof Pages !== 'undefined') {
+  window.Pages = Pages;
+}
 // eslint-disable-next-line no-undef
 if (typeof BasePage !== 'undefined') {
   window.BasePage = BasePage;
