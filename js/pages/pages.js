@@ -25,30 +25,23 @@ class Pages {
     router.register('/register', () => this.renderRegister());
     
     // Main pages
-    router.register('/browse', () => this.renderBrowse());
+    router.register('/browse', () => this.renderBrowseProducts());
     router.register('/cart', () => this.renderCart());
     router.register('/checkout', () => this.renderCheckout());
-    router.register('/sell', () => this.renderSell());
+    router.register('/sell', () => this.renderSellerDashboard());
     router.register('/dashboard', () => this.renderDashboard());
     router.register('/profile', () => this.renderProfile());
     router.register('/orders', () => this.renderOrders());
-    router.register('/faq', () => this.renderFAQ());
     
     // Product detail
     router.register('/product/:id', (params) => this.renderProductDetail(params.id));
     
     // Admin
-    router.register('/admin', () => this.renderAdmin());
+    router.register('/admin', () => this.renderAdminDashboard());
     router.register('/admin/products', () => this.renderAdminProducts());
     router.register('/admin/users', () => this.renderAdminUsers());
     router.register('/admin/orders', () => this.renderAdminOrders());
     router.register('/admin/reports', () => this.renderAdminReports());
-    
-    // Messages
-    router.register('/messages', () => this.renderMessages());
-    
-    // 404
-    router.register('/404', () => this.renderNotFound());
   }
 
   /**
