@@ -28,9 +28,12 @@ class StorageManager {
   static get (key, parse = true) {
     try {
       const data = localStorage.getItem(key);
-      return parse && data ? JSON.parse(data) : data;
+      if (!data) {return null;}
+      return parse ? JSON.parse(data) : data;
     } catch (error) {
-      console.error(`Storage error: ${error.message}`);
+      // Corrupted data - clear it and return null
+      console.warn(`Storage: Corrupted data for key "${key}", clearing...`);
+      localStorage.removeItem(key);
       return null;
     }
   }
