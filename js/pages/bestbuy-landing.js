@@ -87,80 +87,52 @@
 
     mainContent.innerHTML =
       '<div class="bb-landing">' +
-      '<!-- Hero Promotional Banner Section -->' +
-      '<section class="bb-hero">' +
-      '<div class="bb-hero-container">' +
-      '<!-- About Uni-Hub Section -->' +
-      '<div class="bb-hero-main-banner" style="background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(79,70,229,0.05)); border: 1px solid rgba(99,102,241,0.15); border-radius: 1rem; padding: 3rem; text-align: center;">' +
-      '<div class="bb-hero-banner-content" style="max-width: 48rem; margin: 0 auto;">' +
-      '<div class="bb-hero-banner-tag">' +
-      '<span class="bb-tag-deal">🎓 CAMPUS MARKETPLACE</span>' +
+      '<!-- Hero Section -->' +
+      '<section class="bb-hero" style="min-height: 85vh; display: flex; align-items: center; padding: 6rem 2rem 4rem; position: relative; overflow: hidden; background: #050505;">' +
+      '<div style="position: absolute; inset: 0; background: radial-gradient(ellipse at 20% 50%, rgba(99,102,241,0.1), transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(99,102,241,0.06), transparent 40%); pointer-events: none;"></div>' +
+      '<div class="bb-hero-container" style="max-width: 80rem; margin: 0 auto; width: 100%; position: relative; z-index: 10;">' +
+      '<div style="display: grid; grid-template-columns: 1fr; gap: 3rem; align-items: center;">' +
+      '<!-- Left Content -->' +
+      '<div>' +
+      '<div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.875rem; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2); border-radius: 9999px; margin-bottom: 1.5rem;">' +
+      '<span style="position: relative; display: flex; width: 8px; height: 8px;">' +
+      '<span style="position: absolute; inset: 0; border-radius: 50%; background: #6366f1; animation: ping 2s cubic-bezier(0,0,0.2,1) infinite;"></span>' +
+      '<span style="position: relative; display: block; width: 8px; height: 8px; border-radius: 50%; background: #6366f1;"></span>' +
+      '</span>' +
+      '<span style="font-size: 0.875rem; font-weight: 500; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.05em;">Global University Marketplace</span>' +
       '</div>' +
-      '<h1 class="bb-hero-banner-title" style="font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 1.5rem; line-height: 1.2;">' +
-      'Welcome to <span class="bb-highlight">Uni-Hub</span>' +
+      '<h1 style="font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 600; color: white; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 1.5rem;">' +
+      'Buy & sell with <span style="background: linear-gradient(135deg, #ffffff 0%, #6366f1 50%, #a5a6a6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">students like you.</span>' +
       '</h1>' +
-      '<p class="bb-hero-banner-desc" style="font-size: 1.125rem; line-height: 1.8; margin-bottom: 1rem;">' +
+      '<p style="font-size: 1.125rem; line-height: 1.8; color: #a3a3a3; max-width: 42rem; margin-bottom: 2rem;">' +
       'Uni-Hub is a global university marketplace app that connects students to easily buy and sell essential academic items. Textbooks, electronics, accommodation listings, and other campus essentials — all within your university community and beyond.' +
       '</p>' +
-      '<p class="bb-hero-banner-desc" style="padding: 1.25rem; background: rgba(99,102,241,0.08); border-left: 3px solid #6366f1; border-radius: 0 0.5rem 0.5rem 0; text-align: left; font-size: 1rem; line-height: 1.7; margin-top: 1.5rem;">' +
-      '<strong style="color: white;">Our Mission:</strong> At Uni-Hub, our mission is to make student essentials affordable and accessible, ensuring that every student can get what they need without financial stress.' +
-      '</p>' +
-      '<div class="bb-hero-banner-stats" style="margin-top: 2rem; justify-content: center; gap: 2.5rem;">' +
-      '<div class="bb-banner-stat"><span class="bb-banner-stat-value">7+</span><span class="bb-banner-stat-label">Universities</span></div>' +
-      '<div class="bb-banner-stat"><span class="bb-banner-stat-value">2,000+</span><span class="bb-banner-stat-label">Students</span></div>' +
-      '<div class="bb-banner-stat"><span class="bb-banner-stat-value">5,000+</span><span class="bb-banner-stat-label">Items</span></div>' +
-      '<div class="bb-banner-stat"><span class="bb-banner-stat-value">GH₵500K+</span><span class="bb-banner-stat-label">In Sales</span></div>' +
+      '<div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 3rem;">' +
+      '<button onclick="Pages.renderBrowse(); return false;" style="display: inline-flex; align-items: center; gap: 0.5rem; height: 3.5rem; padding: 0 2rem; border-radius: 1rem; font-weight: 500; font-size: 1rem; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; cursor: pointer; transition: all 0.3s; box-shadow: 0 0 25px rgba(99,102,241,0.35);" onmouseover="this.style.transform=\'translateY(-2px)\'; this.style.boxShadow=\'0 0 35px rgba(99,102,241,0.5)\'" onmouseout="this.style.transform=\'translateY(0)\'; this.style.boxShadow=\'0 0 25px rgba(99,102,241,0.35)\'">🔍 Browse Items</button>' +
+      '<button onclick="Pages.renderRegister(); return false;" style="display: inline-flex; align-items: center; gap: 0.5rem; height: 3.5rem; padding: 0 2rem; border-radius: 1rem; font-weight: 500; font-size: 1rem; background: transparent; color: white; border: 1px solid #404040; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.borderColor=\'#6366f1\'; this.style.background=\'rgba(30,30,30,0.8)\'" onmouseout="this.style.borderColor=\'#404040\'; this.style.background=\'transparent\'">📝 Start Selling</button>' +
       '</div>' +
-      '<div class="bb-hero-banner-actions" style="margin-top: 2rem;">' +
-      '<button onclick="Pages.renderBrowse(); return false;" class="bb-btn bb-btn-primary">🔍 Browse Items</button>' +
-      '<button onclick="Pages.renderRegister(); return false;" class="bb-btn bb-btn-outline">📝 Start Selling</button>' +
+      '<div style="display: flex; flex-wrap: wrap; gap: 2.5rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.05);">' +
+      '<div style="text-align: left;"><div style="font-size: 1.75rem; font-weight: 700; color: #6366f1; margin-bottom: 0.25rem;">7+</div><div style="color: #737373; font-size: 0.875rem;">Universities</div></div>' +
+      '<div style="text-align: left;"><div style="font-size: 1.75rem; font-weight: 700; color: #6366f1; margin-bottom: 0.25rem;">2,000+</div><div style="color: #737373; font-size: 0.875rem;">Verified Students</div></div>' +
+      '<div style="text-align: left;"><div style="font-size: 1.75rem; font-weight: 700; color: #6366f1; margin-bottom: 0.25rem;">5,000+</div><div style="color: #737373; font-size: 0.875rem;">Items Listed</div></div>' +
+      '<div style="text-align: left;"><div style="font-size: 1.75rem; font-weight: 700; color: #6366f1; margin-bottom: 0.25rem;">GH₵500K+</div><div style="color: #737373; font-size: 0.875rem;">In Sales</div></div>' +
       '</div>' +
-      '</div>' +
-      '</div>' +
-      '</div>' +
-      '<!-- Side Promotional Cards -->' +
-      '<div class="bb-hero-side-cards">' +
-      '<div class="bb-hero-side-card bb-side-card-electronics" onclick="Pages.renderBrowse(); return false;">' +
-      '<div class="bb-side-card-badge">TRENDING</div>' +
-      '<div class="bb-side-card-content">' +
-      '<h3 class="bb-side-card-title">Laptops &amp; Electronics</h3>' +
-      '<p class="bb-side-card-price">From <strong>GH₵29</strong></p>' +
-      '<p class="bb-side-card-savings">Save up to 65% off retail</p>' +
-      '</div>' +
-      '<div class="bb-side-card-arrow">→</div>' +
-      '</div>' +
-      '<div class="bb-hero-side-card bb-side-card-textbooks" onclick="Pages.renderBrowse(); return false;">' +
-      '<div class="bb-side-card-badge bb-side-card-badge-blue">NEW ARRIVALS</div>' +
-      '<div class="bb-side-card-content">' +
-      '<h3 class="bb-side-card-title">Spring Semester Textbooks</h3>' +
-      '<p class="bb-side-card-price">From <strong>GH₵15</strong></p>' +
-      '<p class="bb-side-card-savings">85+ titles available</p>' +
-      '</div>' +
-      '<div class="bb-side-card-arrow">→</div>' +
-      '</div>' +
-      '<div class="bb-hero-side-card bb-side-card-dorm" onclick="Pages.renderBrowse(); return false;">' +
-      '<div class="bb-side-card-badge bb-side-card-badge-green">CLEARANCE</div>' +
-      '<div class="bb-side-card-content">' +
-      '<h3 class="bb-side-card-title">Dorm &amp; Room Essentials</h3>' +
-      '<p class="bb-side-card-price">From <strong>GH₵5</strong></p>' +
-      '<p class="bb-side-card-savings">Furniture, decor &amp; more</p>' +
-      '</div>' +
-      '<div class="bb-side-card-arrow">→</div>' +
       '</div>' +
       '</div>' +
       '</div>' +
       '</section>' +
-      '<!-- Deal of the Day Bar -->' +
-      '<section class="bb-deal-bar">' +
-      '<div class="bb-deal-bar-container">' +
-      '<div class="bb-deal-bar-text">' +
-      '<span class="bb-deal-bar-icon">⚡</span>' +
-      '<div>' +
-      '<p class="bb-deal-bar-title">Deal of the Day</p>' +
-      '<p class="bb-deal-bar-subtitle">Save big on textbooks, laptops &amp; more — today only!</p>' +
+      '<!-- Mission Statement Section -->' +
+      '<section style="padding: 5rem 2rem; background: #080808; border-top: 1px solid rgba(255,255,255,0.05);">' +
+      '<div style="max-width: 56rem; margin: 0 auto;">' +
+      '<div style="text-align: center; margin-bottom: 2rem;">' +
+      '<h2 style="font-size: 1.875rem; font-weight: 600; color: white; margin-bottom: 0.5rem;">Our Mission</h2>' +
+      '<p style="color: #737373; font-size: 1rem;">Making student essentials affordable and accessible</p>' +
       '</div>' +
+      '<div style="padding: 2rem; background: rgba(99,102,241,0.04); border: 1px solid rgba(99,102,241,0.1); border-radius: 1rem; border-left: 4px solid #6366f1;">' +
+      '<p style="color: #d4d4d8; font-size: 1.125rem; line-height: 1.8;">' +
+      'At Uni-Hub, our mission is to make student essentials affordable and accessible, ensuring that every student can get what they need without financial stress.' +
+      '</p>' +
       '</div>' +
-      '<button onclick="Pages.renderBrowse(); return false;" class="bb-deal-bar-btn">Shop All Deals</button>' +
       '</div>' +
       '</section>' +
       '<!-- Shop by Category -->' +
