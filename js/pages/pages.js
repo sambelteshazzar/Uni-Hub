@@ -991,47 +991,41 @@ class Pages {
           </div>
         </section>
 
-        <!-- Discount/Promotional Banner Section -->
-        <section class="discount-banner-section" style="padding: 4rem 2rem; background: #050505;">
+        <!-- About Uni-Hub Section -->
+        <section class="about-section" style="padding: 6rem 2rem; background: #080808; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);">
           <div style="max-width: 80rem; margin: 0 auto;">
-            <span class="section-label">Special Offers</span>
-            <h2 class="section-title" style="color: white; margin-bottom: 2rem;">Get Up to 70% Off</h2>
-            
-            <div class="discount-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
-              <!-- Discount Card 1 -->
-              <div class="discount-card glass-card" style="position: relative; border-radius: 1.5rem; overflow: hidden; padding: 2rem; background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(79,70,229,0.1)); border: 1px solid rgba(99,102,241,0.2); transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
-                <div style="position: absolute; top: 1rem; right: 1rem; background: rgba(239,68,68,0.2); color: #fca5a5; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">HOT</div>
-                <div style="font-size: 3rem; margin-bottom: 1rem;">🎓</div>
-                <h3 style="color: white; font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">Student Bundle</h3>
-                <p style="color: #a3a3a3; font-size: 0.875rem; margin-bottom: 1rem;">Get textbooks + laptop bundle at discounted prices</p>
-                <div style="display: flex; align-items: baseline; gap: 0.5rem;">
-                  <span style="font-size: 2rem; font-weight: 700; color: #6366f1;">Save GHS 150</span>
-                </div>
-                <button onclick="Pages.renderBrowse()" style="margin-top: 1.5rem; width: 100%; padding: 0.75rem; border-radius: 0.75rem; background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.3)'" onmouseout="this.style.background='rgba(99,102,241,0.2)'">Shop Now</button>
+            <div style="text-align: center; margin-bottom: 3rem;">
+              <span class="section-label">About Uni-Hub</span>
+              <h2 class="section-title" style="color: white;">Your Campus Marketplace</h2>
+            </div>
+
+            <div style="max-width: 56rem; margin: 0 auto;">
+              <p style="color: #a3a3a3; font-size: 1.125rem; line-height: 1.8; margin-bottom: 1.5rem;">
+                <span style="color: #6366f1; font-weight: 600;">Uni-Hub</span> is a global university marketplace app that connects students to easily buy and sell essential academic items. It provides a convenient platform where students can access school-related needs such as textbooks, electronics, accommodation listings, and other campus essentials, all within their university community and beyond.
+              </p>
+
+              <p style="color: #a3a3a3; font-size: 1.125rem; line-height: 1.8; padding: 1.5rem; background: rgba(99,102,241,0.05); border-left: 3px solid #6366f1; border-radius: 0 0.5rem 0.5rem 0;">
+                <span style="color: white; font-weight: 600;">Our Mission:</span> At Uni-Hub, our mission is to make student essentials affordable and accessible, ensuring that every student can get what they need without financial stress.
+              </p>
+            </div>
+
+            <!-- Key Stats -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-top: 4rem; padding-top: 3rem; border-top: 1px solid rgba(255,255,255,0.05);">
+              <div style="text-align: center;">
+                <div style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 0.5rem;">7+</div>
+                <div style="color: #737373; font-size: 0.875rem;">Universities Connected</div>
               </div>
-              
-              <!-- Discount Card 2 -->
-              <div class="discount-card glass-card" style="position: relative; border-radius: 1.5rem; overflow: hidden; padding: 2rem; background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(20,184,166,0.1)); border: 1px solid rgba(16,185,129,0.2); transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
-                <div style="position: absolute; top: 1rem; right: 1rem; background: rgba(34,197,94,0.2); color: #86efac; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">NEW</div>
-                <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
-                <h3 style="color: white; font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">Free Delivery</h3>
-                <p style="color: #a3a3a3; font-size: 0.875rem; margin-bottom: 1rem;">First order delivery free for UG students</p>
-                <div style="display: flex; align-items: baseline; gap: 0.5rem;">
-                  <span style="font-size: 2rem; font-weight: 700; color: #10b981;">Save GHS 25</span>
-                </div>
-                <button onclick="Pages.renderRegister()" style="margin-top: 1.5rem; width: 100%; padding: 0.75rem; border-radius: 0.75rem; background: rgba(16,185,129,0.2); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(16,185,129,0.3)'" onmouseout="this.style.background='rgba(16,185,129,0.2)'">Claim Offer</button>
+              <div style="text-align: center;">
+                <div style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 0.5rem;">2,000+</div>
+                <div style="color: #737373; font-size: 0.875rem;">Verified Students</div>
               </div>
-              
-              <!-- Discount Card 3 -->
-              <div class="discount-card glass-card" style="position: relative; border-radius: 1.5rem; overflow: hidden; padding: 2rem; background: linear-gradient(135deg, rgba(249,115,22,0.15), rgba(239,68,68,0.1)); border: 1px solid rgba(249,115,22,0.2); transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
-                <div style="position: absolute; top: 1rem; right: 1rem; background: rgba(249,115,22,0.2); color: #fdba74; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">LIMITED</div>
-                <div style="font-size: 3rem; margin-bottom: 1rem;">🏷️</div>
-                <h3 style="color: white; font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">Flash Sale</h3>
-                <p style="color: #a3a3a3; font-size: 0.875rem; margin-bottom: 1rem;">Up to 70% off on selected electronics</p>
-                <div style="display: flex; align-items: baseline; gap: 0.5rem;">
-                  <span style="font-size: 2rem; font-weight: 700; color: #f97316;">70% OFF</span>
-                </div>
-                <button onclick="Pages.renderBrowse({category: 'electronics'})" style="margin-top: 1.5rem; width: 100%; padding: 0.75rem; border-radius: 0.75rem; background: rgba(249,115,22,0.2); color: #fdba74; border: 1px solid rgba(249,115,22,0.3); font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(249,115,22,0.3)'" onmouseout="this.style.background='rgba(249,115,22,0.2)'">View Deals</button>
+              <div style="text-align: center;">
+                <div style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 0.5rem;">5,000+</div>
+                <div style="color: #737373; font-size: 0.875rem;">Items Listed</div>
+              </div>
+              <div style="text-align: center;">
+                <div style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 0.5rem;">GHS 500K+</div>
+                <div style="color: #737373; font-size: 0.875rem;">In Student Sales</div>
               </div>
             </div>
           </div>
