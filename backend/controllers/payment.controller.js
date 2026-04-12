@@ -198,33 +198,33 @@ exports.getPayment = async (req, res) => {
 /**
  * Helper: Get payment instructions based on mode
  */
-function getPaymentInstructions(paymentMode, order) {
+function getPaymentInstructions (paymentMode, order) {
   switch (paymentMode) {
-    case 'momo':
-      return {
-        message: 'Enter your MoMo number to complete payment',
-        provider: 'MTN Mobile Money',
-      };
-    case 'telecel':
-      return {
-        message: 'Enter your Telecel number to complete payment',
-        provider: 'Telecel Cash',
-      };
-    case 'bank':
-      return {
-        message: 'Transfer to the following account',
-        bankName: 'GCB Bank',
-        accountName: 'Uni-Hub Ghana',
-        accountNumber: '1234567890',
-        reference: order.orderNumber,
-      };
-    case 'cash':
-      return {
-        message: 'Pay when you receive your items',
-      };
-    default:
-      return {
-        message: 'Follow the payment instructions',
-      };
+  case 'momo':
+    return {
+      message: 'Enter your MoMo number to complete payment',
+      provider: 'MTN Mobile Money',
+    };
+  case 'telecel':
+    return {
+      message: 'Enter your Telecel number to complete payment',
+      provider: 'Telecel Cash',
+    };
+  case 'bank':
+    return {
+      message: 'Transfer to the following account',
+      bankName: 'GCB Bank',
+      accountName: 'Uni-Hub Ghana',
+      accountNumber: '1234567890',
+      reference: order.orderNumber,
+    };
+  case 'cash':
+    return {
+      message: 'Pay when you receive your items',
+    };
+  default:
+    return {
+      message: 'Follow the payment instructions',
+    };
   }
 }

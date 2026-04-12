@@ -289,7 +289,7 @@
   background: var(--primary-light);
 }
 
-.option-card input[type="radio"] {
+.option-card input[type='radio'] {
   position: absolute;
   top: var(--space-sm);
   right: var(--space-sm);

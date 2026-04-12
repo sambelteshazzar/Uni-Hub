@@ -1,6 +1,7 @@
 // ============================================
 // ADMIN PRODUCTS MODULE - Product Moderation
 // ============================================
+/* exported adminProductsManager */
 
 class AdminProductsManager {
   constructor () {
@@ -75,8 +76,8 @@ class AdminProductsManager {
    * @returns {Array}
    */
   getFlaggedProducts () {
-    const flags = this.getFlags().filter((f) => f.status === 'pending');
-    return flags.map((flag) => ({
+    const flags = this.getFlags().filter(f => f.status === 'pending');
+    return flags.map(flag => ({
       flag: flag,
       product: this.getProductById(flag.productId),
     }));
@@ -89,7 +90,7 @@ class AdminProductsManager {
    */
   approveFlag (flagId) {
     const flags = this.getFlags();
-    const index = flags.findIndex((f) => f.id === flagId);
+    const index = flags.findIndex(f => f.id === flagId);
 
     if (index === -1) {
       return {
@@ -117,7 +118,7 @@ class AdminProductsManager {
    */
   rejectFlag (flagId) {
     const flags = this.getFlags();
-    const index = flags.findIndex((f) => f.id === flagId);
+    const index = flags.findIndex(f => f.id === flagId);
 
     if (index === -1) {
       return {
@@ -134,7 +135,10 @@ class AdminProductsManager {
     // Remove the product
     this.deleteProduct(flag.productId);
 
-    adminAuthManager.logActivity('Flag rejected - product removed', { flagId, productId: flag.productId });
+    adminAuthManager.logActivity('Flag rejected - product removed', {
+      flagId,
+      productId: flag.productId,
+    });
 
     return {
       success: true,
@@ -149,7 +153,7 @@ class AdminProductsManager {
    */
   deleteProduct (productId) {
     const products = this.getAllProducts();
-    const index = products.findIndex((p) => p.id === productId);
+    const index = products.findIndex(p => p.id === productId);
 
     if (index === -1) {
       return {
@@ -207,7 +211,7 @@ class AdminProductsManager {
    * @returns {Array}
    */
   getProductsBySeller (sellerId) {
-    return this.getAllProducts().filter((p) => p.seller.id === sellerId);
+    return this.getAllProducts().filter(p => p.seller.id === sellerId);
   }
 
   /**
@@ -216,7 +220,7 @@ class AdminProductsManager {
    * @returns {Array}
    */
   getProductsByCategory (category) {
-    return this.getAllProducts().filter((p) => p.category === category);
+    return this.getAllProducts().filter(p => p.category === category);
   }
 
   /**
@@ -225,7 +229,7 @@ class AdminProductsManager {
    * @returns {Array}
    */
   getProductsByUniversity (university) {
-    return this.getAllProducts().filter((p) => p.university === university);
+    return this.getAllProducts().filter(p => p.university === university);
   }
 
   /**
@@ -236,7 +240,7 @@ class AdminProductsManager {
   searchProducts (query) {
     const normalizedQuery = query.toLowerCase();
     return this.getAllProducts().filter(
-      (p) =>
+      p =>
         p.title.toLowerCase().includes(normalizedQuery) ||
         p.description.toLowerCase().includes(normalizedQuery),
     );
@@ -254,7 +258,7 @@ class AdminProductsManager {
     const conditionCount = {};
     const universityCount = {};
 
-    products.forEach((p) => {
+    products.forEach(p => {
       categoryCount[p.category] = (categoryCount[p.category] || 0) + 1;
       conditionCount[p.condition] = (conditionCount[p.condition] || 0) + 1;
       universityCount[p.university] = (universityCount[p.university] || 0) + 1;
@@ -263,7 +267,7 @@ class AdminProductsManager {
     return {
       totalProducts: products.length,
       totalFlags: flags.length,
-      pendingFlags: flags.filter((f) => f.status === 'pending').length,
+      pendingFlags: flags.filter(f => f.status === 'pending').length,
       categoryCount: categoryCount,
       conditionCount: conditionCount,
       universityCount: universityCount,
@@ -290,7 +294,7 @@ class AdminProductsManager {
     let deleted = 0;
     let failed = 0;
 
-    productIds.forEach((id) => {
+    productIds.forEach(id => {
       const result = this.deleteProduct(id);
       if (result.success) {
         deleted++;
@@ -299,7 +303,11 @@ class AdminProductsManager {
       }
     });
 
-    adminAuthManager.logActivity('Bulk delete products', { count: productIds.length, deleted, failed });
+    adminAuthManager.logActivity('Bulk delete products', {
+      count: productIds.length,
+      deleted,
+      failed,
+    });
 
     return {
       success: true,
@@ -315,8 +323,17 @@ class AdminProductsManager {
    */
   exportToCSV () {
     const products = this.getAllProducts();
-    const headers = ['ID', 'Title', 'Price', 'Category', 'Condition', 'Seller', 'University', 'Created'];
-    const rows = products.map((p) => [
+    const headers = [
+      'ID',
+      'Title',
+      'Price',
+      'Category',
+      'Condition',
+      'Seller',
+      'University',
+      'Created',
+    ];
+    const rows = products.map(p => [
       p.id,
       p.title,
       p.price,
@@ -327,7 +344,7 @@ class AdminProductsManager {
       p.createdAt,
     ]);
 
-    return [headers, ...rows].map((row) => row.join(',')).join('\n');
+    return [headers, ...rows].map(row => row.join(',')).join('\n');
   }
 }
 

@@ -29,13 +29,13 @@ exports.getProducts = async (req, res) => {
     // Build query
     const query = { status: 'active' };
 
-    if (category) query.category = category;
-    if (condition) query.condition = condition;
-    if (university) query.university = university;
+    if (category) {query.category = category;}
+    if (condition) {query.condition = condition;}
+    if (university) {query.university = university;}
     if (minPrice || maxPrice) {
       query.price = {};
-      if (minPrice) query.price.$gte = Number(minPrice);
-      if (maxPrice) query.price.$lte = Number(maxPrice);
+      if (minPrice) {query.price.$gte = Number(minPrice);}
+      if (maxPrice) {query.price.$lte = Number(maxPrice);}
     }
 
     // Text search
@@ -46,17 +46,17 @@ exports.getProducts = async (req, res) => {
     // Sorting
     let sortOptions = {};
     switch (sortBy) {
-      case 'price-low':
-        sortOptions = { price: 1 };
-        break;
-      case 'price-high':
-        sortOptions = { price: -1 };
-        break;
-      case 'newest':
-        sortOptions = { createdAt: -1 };
-        break;
-      default:
-        sortOptions = { createdAt: -1 };
+    case 'price-low':
+      sortOptions = { price: 1 };
+      break;
+    case 'price-high':
+      sortOptions = { price: -1 };
+      break;
+    case 'newest':
+      sortOptions = { createdAt: -1 };
+      break;
+    default:
+      sortOptions = { createdAt: -1 };
     }
 
     // Pagination

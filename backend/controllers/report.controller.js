@@ -90,21 +90,21 @@ exports.getSalesReport = async (req, res) => {
     const dateQuery = {};
     if (startDate || endDate) {
       dateQuery.createdAt = {};
-      if (startDate) dateQuery.createdAt.$gte = new Date(startDate);
-      if (endDate) dateQuery.createdAt.$lte = new Date(endDate);
+      if (startDate) {dateQuery.createdAt.$gte = new Date(startDate);}
+      if (endDate) {dateQuery.createdAt.$lte = new Date(endDate);}
     }
 
     // Group by format
     let groupFormat;
     switch (groupBy) {
-      case 'week':
-        groupFormat = '%Y-%U';
-        break;
-      case 'month':
-        groupFormat = '%Y-%m';
-        break;
-      default:
-        groupFormat = '%Y-%m-%d';
+    case 'week':
+      groupFormat = '%Y-%U';
+      break;
+    case 'month':
+      groupFormat = '%Y-%m';
+      break;
+    default:
+      groupFormat = '%Y-%m-%d';
     }
 
     const salesData = await Order.aggregate([
@@ -145,9 +145,9 @@ exports.getProductReport = async (req, res) => {
     const { category, university, status } = req.query;
 
     const query = {};
-    if (category) query.category = category;
-    if (university) query.university = university;
-    if (status) query.status = status;
+    if (category) {query.category = category;}
+    if (university) {query.university = university;}
+    if (status) {query.status = status;}
 
     const products = await Product.find(query)
       .populate('seller', 'fullName email rating')
@@ -188,9 +188,9 @@ exports.getUserReport = async (req, res) => {
     const { role, university, isVerified } = req.query;
 
     const query = {};
-    if (role) query.role = role;
-    if (university) query.university = university;
-    if (isVerified !== undefined) query.isVerified = isVerified === 'true';
+    if (role) {query.role = role;}
+    if (university) {query.university = university;}
+    if (isVerified !== undefined) {query.isVerified = isVerified === 'true';}
 
     const users = await User.find(query)
       .select('-password')

@@ -53,11 +53,11 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Password is required'],
     minlength: [8, 'Password must be at least 8 characters'],
     validate: {
-      validator: function(v) {
+      validator: function (v) {
         // Require uppercase, lowercase, number, and special character
         return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(v);
       },
-      message: 'Password must contain uppercase, lowercase, number, and special character'
+      message: 'Password must contain uppercase, lowercase, number, and special character',
     },
     select: false, // Don't return password in queries by default
   },
@@ -101,6 +101,10 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  totalReviews: {
+    type: Number,
+    default: 0,
+  },
 
   // Role
   role: {
@@ -128,12 +132,11 @@ const userSchema = new mongoose.Schema({
 });
 
 // Index for faster queries
-userSchema.index({ email: 1 });
 userSchema.index({ university: 1 });
 userSchema.index({ role: 1 });
 
 // Hash password before saving
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   // Only hash if password is modified
   if (!this.isModified('password')) {
     return next();
@@ -149,12 +152,12 @@ userSchema.pre('save', async function(next) {
 });
 
 // Method to compare passwords
-userSchema.methods.comparePassword = async function(candidatePassword) {
+userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
 // Method to get public profile (without sensitive data)
-userSchema.methods.getPublicProfile = function() {
+userSchema.methods.getPublicProfile = function () {
   const user = this.toObject();
   delete user.password;
   delete user.__v;

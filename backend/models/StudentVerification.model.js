@@ -30,7 +30,7 @@ const verificationSchema = new mongoose.Schema({
     required: [true, 'Phone number is required'],
     trim: true,
   },
-  
+
   // University Information
   university: {
     type: String,
@@ -46,21 +46,21 @@ const verificationSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-  
+
   // Verification Method
   verificationMethod: {
     type: String,
     enum: ['email', 'document'],
     required: true,
   },
-  
+
   // For email verification
   universityEmail: {
     type: String,
     lowercase: true,
     trim: true,
   },
-  
+
   // For document verification
   documents: [{
     fileName: String,
@@ -71,14 +71,14 @@ const verificationSchema = new mongoose.Schema({
       default: Date.now,
     },
   }],
-  
+
   // Verification Status
   status: {
     type: String,
     enum: ['pending', 'approved', 'rejected'],
     default: 'pending',
   },
-  
+
   // Admin Review
   reviewedBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -89,7 +89,7 @@ const verificationSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-  
+
   // Timestamps
 }, {
   timestamps: true,
@@ -102,17 +102,17 @@ verificationSchema.index({ status: 1, createdAt: -1 });
 verificationSchema.index({ university: 1, status: 1 });
 
 // Static method to get pending verifications
-verificationSchema.statics.getPending = function() {
+verificationSchema.statics.getPending = function () {
   return this.find({ status: 'pending' }).sort({ createdAt: -1 });
 };
 
 // Static method to get verification by student ID and university
-verificationSchema.statics.getByStudent = function(studentId, university) {
+verificationSchema.statics.getByStudent = function (studentId, university) {
   return this.findOne({ studentId, university });
 };
 
 // Method to approve verification
-verificationSchema.methods.approve = function(adminId, notes = '') {
+verificationSchema.methods.approve = function (adminId, notes = '') {
   this.status = 'approved';
   this.reviewedBy = adminId;
   this.reviewedAt = new Date();
@@ -121,7 +121,7 @@ verificationSchema.methods.approve = function(adminId, notes = '') {
 };
 
 // Method to reject verification
-verificationSchema.methods.reject = function(adminId, notes = '') {
+verificationSchema.methods.reject = function (adminId, notes = '') {
   this.status = 'rejected';
   this.reviewedBy = adminId;
   this.reviewedAt = new Date();

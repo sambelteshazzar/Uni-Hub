@@ -19,8 +19,8 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
     const { university, role, page = 1, limit = 20 } = req.query;
 
     const query = {};
-    if (university) query.university = university;
-    if (role) query.role = role;
+    if (university) {query.university = university;}
+    if (role) {query.role = role;}
 
     const users = await User.find(query)
       .sort({ createdAt: -1 })
@@ -93,9 +93,9 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
       });
     }
 
-    if (isSuspended !== undefined) user.isSuspended = isSuspended;
-    if (role !== undefined) user.role = role;
-    if (isVerified !== undefined) user.isVerified = isVerified;
+    if (isSuspended !== undefined) {user.isSuspended = isSuspended;}
+    if (role !== undefined) {user.role = role;}
+    if (isVerified !== undefined) {user.isVerified = isVerified;}
 
     await user.save();
 

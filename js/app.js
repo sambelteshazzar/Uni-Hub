@@ -2,11 +2,18 @@
 // APP INITIALIZATION - MAIN APPLICATION ENTRY POINT
 // ============================================
 
+import toastManager from './modules/toast.js';
+import productsManager from './modules/products.js';
+import regionManager from './modules/region.js';
+import modalManager from './modules/modals.js';
+import cartManager from './modules/cart.js';
+import Pages from './pages/pages.js';
+
 /**
  * Initialize the Uni-Hub application
  * Sets up global event listeners and initializes core modules
  */
-class App {
+export class App {
   constructor() {
     this.initialized = false;
     this.version = '1.0.0';
@@ -23,13 +30,13 @@ class App {
     try {
       // Initialize core modules
       await this.initCoreModules();
-      
+
       // Set up global event listeners
       this.setupEventListeners();
-      
+
       // Initialize UI components
       this.initUIComponents();
-      
+
       this.initialized = true;
       console.log(`Uni-Hub v${this.version} initialized successfully`);
     } catch (error) {
@@ -74,7 +81,7 @@ class App {
     window.addEventListener('beforeunload', () => this.saveAppState());
 
     // Handle keyboard shortcuts
-    document.addEventListener('keydown', (e) => this.handleKeyboardShortcuts(e));
+    document.addEventListener('keydown', e => this.handleKeyboardShortcuts(e));
   }
 
   /**
@@ -94,7 +101,7 @@ class App {
    */
   handleOnlineStatus(isOnline) {
     if (isOnline) {
-      console.log('Uni-Hub is online');
+      // App online status logged
       // Sync any pending data
       this.syncPendingData();
     } else {
@@ -158,5 +165,4 @@ class App {
   }
 }
 
-// Create singleton instance
-const app = new App();
+export default new App();

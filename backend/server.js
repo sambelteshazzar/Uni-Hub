@@ -6,8 +6,9 @@
  */
 
 require('dotenv').config();
+const http = require('http');
+const { Server } = require('socket.io');
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
@@ -24,9 +25,14 @@ const adminRoutes = require('./routes/admin.routes');
 const paymentRoutes = require('./routes/payment.routes');
 const deliveryRoutes = require('./routes/delivery.routes');
 const reportRoutes = require('./routes/report.routes');
+const messageRoutes = require('./routes/message.routes');
+const reviewRoutes = require('./routes/review.routes');
 
 // Import database configuration
 const { connectDatabase } = require('./config/database');
+
+// Import Socket.io configuration
+const { initializeSocket } = require('./config/socket');
 
 // Initialize Express app
 const app = express();
@@ -121,12 +127,18 @@ app.use('/api/delivery', deliveryRoutes);
 // Report routes
 app.use('/api/reports', reportRoutes);
 
+// Message routes (in-app messaging)
+app.use('/api/messages', messageRoutes);
+
+// Review routes (seller ratings)
+app.use('/api/reviews', reviewRoutes);
+
 // ============================================
 // Error Handling
 // ============================================
 
 // 404 handler
-app.use((req, res, next) => {
+app.use((_req, res) => {
   res.status(404).json({
     success: false,
     error: 'Route not found',
@@ -134,7 +146,7 @@ app.use((req, res, next) => {
 });
 
 // Global error handler
-app.use((err, req, res, next) => {
+app.use((err, _req, res, _next) => {
   console.error('Error:', err);
 
   // Mongoose validation error
@@ -179,7 +191,7 @@ app.use((err, req, res, next) => {
 });
 
 // ============================================
-// Server Startup
+// Server Startup with Socket.io
 // ============================================
 
 const PORT = process.env.PORT || 5000;
@@ -189,8 +201,23 @@ const startServer = async () => {
     // Connect to database
     await connectDatabase();
 
+    // Create HTTP server
+    const server = http.createServer(app);
+
+    // Initialize Socket.io
+    const io = new Server(server, {
+      cors: {
+        origin: process.env.FRONTEND_URL || 'http://localhost:8000',
+        credentials: true,
+        methods: ['GET', 'POST'],
+      },
+    });
+
+    // Initialize Socket.io handlers
+    initializeSocket(io);
+
     // Start server
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
@@ -200,6 +227,7 @@ const startServer = async () => {
 ║   Environment: ${process.env.NODE_ENV || 'development'}                            ║
 ║   API: http://localhost:${PORT}/api                       ║
 ║   Health: http://localhost:${PORT}/api/health             ║
+║   WebSocket: ws://localhost:${PORT}                       ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
       `);

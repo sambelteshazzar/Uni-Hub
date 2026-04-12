@@ -186,8 +186,8 @@ exports.getAllDeliveries = async (req, res) => {
     const { status, mode, page = 1, limit = 20 } = req.query;
 
     const query = {};
-    if (status) query.status = status;
-    if (mode) query.mode = mode;
+    if (status) { query.status = status; }
+    if (mode) { query.mode = mode; }
 
     const deliveries = await Delivery.find(query)
       .populate('orderId', 'orderNumber customer')

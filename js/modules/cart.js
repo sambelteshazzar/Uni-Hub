@@ -1,3 +1,4 @@
+/* exported cartManager */
 // ============================================
 // CART MODULE - Shopping Cart Management
 // ============================================
@@ -52,7 +53,7 @@ class CartManager {
    */
   add (product, quantity = 1) {
     // Check if product already in cart
-    const existingIndex = this.items.findIndex((item) => item.product.id === product.id);
+    const existingIndex = this.items.findIndex(item => item.product.id === product.id);
 
     if (existingIndex !== -1) {
       // Update quantity
@@ -85,7 +86,7 @@ class CartManager {
    * @returns {Object} - Result with success status
    */
   remove (productId) {
-    const index = this.items.findIndex((item) => item.product.id === productId);
+    const index = this.items.findIndex(item => item.product.id === productId);
 
     if (index !== -1) {
       this.items.splice(index, 1);
@@ -109,7 +110,7 @@ class CartManager {
    * @returns {Object} - Result with success status
    */
   updateQuantity (productId, quantity) {
-    const item = this.items.find((item) => item.product.id === productId);
+    const item = this.items.find(item => item.product.id === productId);
 
     if (!item) {
       return {
@@ -137,7 +138,7 @@ class CartManager {
    * @returns {Object} - Result with success status
    */
   increment (productId) {
-    const item = this.items.find((item) => item.product.id === productId);
+    const item = this.items.find(item => item.product.id === productId);
 
     if (item) {
       item.quantity += 1;
@@ -154,7 +155,7 @@ class CartManager {
    * @returns {Object} - Result with success status
    */
   decrement (productId) {
-    const item = this.items.find((item) => item.product.id === productId);
+    const item = this.items.find(item => item.product.id === productId);
 
     if (item) {
       if (item.quantity > 1) {
@@ -175,7 +176,7 @@ class CartManager {
    * @returns {boolean}
    */
   isInCart (productId) {
-    return this.items.some((item) => item.product.id === productId);
+    return this.items.some(item => item.product.id === productId);
   }
 
   /**
@@ -184,7 +185,7 @@ class CartManager {
    * @returns {number}
    */
   getQuantity (productId) {
-    const item = this.items.find((item) => item.product.id === productId);
+    const item = this.items.find(item => item.product.id === productId);
     return item ? item.quantity : 0;
   }
 

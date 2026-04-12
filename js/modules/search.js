@@ -1,3 +1,4 @@
+/* exported searchManager */
 // ============================================
 // SEARCH MODULE - Advanced Search & Filtering
 // ============================================
@@ -41,7 +42,7 @@ class SearchManager {
     this.addToHistory(query);
 
     // Search through products
-    const results = productsManager.getAll().filter((product) => {
+    const results = productsManager.getAll().filter(product => {
       const titleMatch = product.title.toLowerCase().includes(normalizedQuery);
       const descriptionMatch = product.description.toLowerCase().includes(normalizedQuery);
       const categoryMatch = product.category.toLowerCase().includes(normalizedQuery);
@@ -64,23 +65,23 @@ class SearchManager {
 
     // Filter by university
     if (filters.university) {
-      filtered = filtered.filter((p) => p.university === filters.university);
+      filtered = filtered.filter(p => p.university === filters.university);
     }
 
     // Filter by category
     if (filters.category) {
-      filtered = filtered.filter((p) => p.category === filters.category);
+      filtered = filtered.filter(p => p.category === filters.category);
     }
 
     // Filter by condition
     if (filters.conditions && filters.conditions.length > 0) {
-      filtered = filtered.filter((p) => filters.conditions.includes(p.condition));
+      filtered = filtered.filter(p => filters.conditions.includes(p.condition));
     }
 
     // Filter by price range
     if (filters.priceRange) {
       const { min = 0, max = Infinity } = filters.priceRange;
-      filtered = filtered.filter((p) => p.price >= min && p.price <= max);
+      filtered = filtered.filter(p => p.price >= min && p.price <= max);
     }
 
     // Sort results
@@ -127,10 +128,12 @@ class SearchManager {
    */
   addToHistory (query) {
     const normalizedQuery = query.trim();
-    if (!normalizedQuery) {return;}
+    if (!normalizedQuery) {
+      return;
+    }
 
     // Remove if already exists
-    this.searchHistory = this.searchHistory.filter((q) => q !== normalizedQuery);
+    this.searchHistory = this.searchHistory.filter(q => q !== normalizedQuery);
 
     // Add to beginning
     this.searchHistory.unshift(normalizedQuery);
@@ -164,7 +167,7 @@ class SearchManager {
    * @param {string} query - Search query to remove
    */
   removeFromHistory (query) {
-    this.searchHistory = this.searchHistory.filter((q) => q !== query);
+    this.searchHistory = this.searchHistory.filter(q => q !== query);
     this.saveHistory();
   }
 
@@ -174,7 +177,9 @@ class SearchManager {
    * @returns {Array}
    */
   getSuggestions (query) {
-    if (!query || query.length < 2) {return [];}
+    if (!query || query.length < 2) {
+      return [];
+    }
 
     const normalizedQuery = query.toLowerCase();
     const allProducts = productsManager.getAll();
@@ -182,9 +187,9 @@ class SearchManager {
     // Get unique suggestions from product titles
     const suggestions = new Set();
 
-    allProducts.forEach((product) => {
+    allProducts.forEach(product => {
       const titleWords = product.title.toLowerCase().split(' ');
-      titleWords.forEach((word) => {
+      titleWords.forEach(word => {
         if (word.startsWith(normalizedQuery) && word.length > 2) {
           suggestions.add(word);
         }
@@ -278,17 +283,16 @@ class SearchManager {
    * @returns {string}
    */
   highlightTerms (text, query) {
-    if (!query) {return text;}
+    if (!query) {
+      return text;
+    }
 
-    const terms = query.split(' ').filter((t) => t.trim());
+    const terms = query.split(' ').filter(t => t.trim());
     let highlighted = text;
 
-    terms.forEach((term) => {
+    terms.forEach(term => {
       const regex = new RegExp(`(${term})`, 'gi');
-      highlighted = highlighted.replace(
-        regex,
-        '<mark class="search-highlight">$1</mark>',
-      );
+      highlighted = highlighted.replace(regex, '<mark class="search-highlight">$1</mark>');
     });
 
     return highlighted;

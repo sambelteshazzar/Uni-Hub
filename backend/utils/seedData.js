@@ -145,7 +145,7 @@ const seedData = async () => {
       },
       {
         title: 'Introductory Economics Textbook',
-        description: "Samuelson's Economics textbook (10th edition). Lightly used, all pages intact. Perfect for ECON 101.",
+        description: 'Samuelson\'s Economics textbook (10th edition). Lightly used, all pages intact. Perfect for ECON 101.',
         price: 85,
         category: 'textbooks',
         condition: 'good',

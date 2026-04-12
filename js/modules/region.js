@@ -1,3 +1,4 @@
+/* exported regionManager */
 // ============================================
 // REGION MODULE - Regional Management
 // ============================================
@@ -35,7 +36,7 @@ class RegionManager {
    * @returns {Object|null}
    */
   getRegionById (regionId) {
-    return this.regions.find((r) => r.id === regionId) || null;
+    return this.regions.find(r => r.id === regionId) || null;
   }
 
   /**
@@ -44,7 +45,7 @@ class RegionManager {
    * @returns {Object|null}
    */
   getRegionByUniversity (universityId) {
-    return this.regions.find((r) => r.universities.includes(universityId)) || null;
+    return this.regions.find(r => r.universities.includes(universityId)) || null;
   }
 
   /**
@@ -62,7 +63,7 @@ class RegionManager {
    * @returns {Array}
    */
   getRegionsWithUniversities () {
-    return this.regions.filter((r) => r.universities.length > 0);
+    return this.regions.filter(r => r.universities.length > 0);
   }
 
   /**
@@ -97,7 +98,9 @@ class RegionManager {
    */
   getRegionStats (regionId) {
     const region = this.getRegionById(regionId);
-    if (!region) {return null;}
+    if (!region) {
+      return null;
+    }
 
     const universityCount = region.universities.length;
 
@@ -121,7 +124,7 @@ class RegionManager {
   searchRegions (query) {
     const lowercaseQuery = query.toLowerCase();
     return this.regions.filter(
-      (r) =>
+      r =>
         r.name.toLowerCase().includes(lowercaseQuery) ||
         r.capital.toLowerCase().includes(lowercaseQuery),
     );
@@ -133,7 +136,7 @@ class RegionManager {
    * @returns {Array}
    */
   getRegionsByPattern (pattern) {
-    return this.regions.filter((r) => r.name.toLowerCase().includes(pattern.toLowerCase()));
+    return this.regions.filter(r => r.name.toLowerCase().includes(pattern.toLowerCase()));
   }
 
   /**
@@ -151,7 +154,7 @@ class RegionManager {
    * @returns {Array}
    */
   getDropdownOptions () {
-    return this.regions.map((r) => ({
+    return this.regions.map(r => ({
       value: r.id,
       label: r.name,
       capital: r.capital,

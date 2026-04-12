@@ -117,7 +117,6 @@
   opacity: 0.72;
 }
 
-
 /* ============================================
    HERO SECTION
    ============================================ */
@@ -125,6 +124,7 @@
   padding: var(--space-4xl) 0;
   background-color: var(--bg-secondary);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  scroll-margin-top: var(--header-height);
 }
 
 @media (max-width: 768px) {
@@ -196,14 +196,14 @@
   background: linear-gradient(135deg, var(--neutral-50), var(--primary-light));
   padding: var(--space-xl);
   min-height: 300px;
-  max-height: 28rem;
+  max-height: 32rem;
 }
 
 @media (max-width: 1024px) {
   .lp-hero-grid {
     grid-template-columns: repeat(2, 1fr);
     min-height: 240px;
-    max-height: 24rem;
+    max-height: 28rem;
   }
 }
 
@@ -227,12 +227,19 @@
   }
 }
 
+/* Staggered layout with proper margins instead of transforms */
 .lp-translate-up {
-  transform: translateY(-27%);
+  margin-top: 0;
 }
 
 .lp-translate-down {
-  transform: translateY(-23%);
+  margin-top: var(--space-xl);
+}
+
+@media (max-width: 1024px) {
+  .lp-translate-down {
+    margin-top: var(--space-md);
+  }
 }
 
 /* Product Card (small, in hero grid) */
@@ -271,7 +278,6 @@
   border-radius: var(--radius-xl);
 }
 
-
 /* ============================================
    FEATURES SECTION
    ============================================ */
@@ -279,6 +285,7 @@
   padding: var(--space-4xl) 0;
   background-color: var(--bg-primary);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  scroll-margin-top: var(--header-height);
 }
 
 @media (max-width: 768px) {
@@ -341,7 +348,6 @@
   }
 }
 
-
 /* ============================================
    CATEGORY GRID
    ============================================ */
@@ -349,6 +355,7 @@
   padding: var(--space-4xl) 0;
   background-color: var(--secondary);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  scroll-margin-top: var(--header-height);
 }
 
 @media (max-width: 768px) {
@@ -379,7 +386,9 @@
   border-radius: var(--radius-xl);
   padding: var(--space-sm) var(--space-lg) var(--space-sm) var(--space-sm);
   text-decoration: none;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+  transition:
+    all 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
   max-width: 100%;
   overflow: hidden;
 }
@@ -465,7 +474,6 @@
   }
 }
 
-
 /* ============================================
    PRODUCT CAROUSEL
    ============================================ */
@@ -474,6 +482,7 @@
   background-color: var(--bg-secondary);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   overflow: hidden;
+  scroll-margin-top: var(--header-height);
 }
 
 @media (max-width: 768px) {
@@ -620,92 +629,13 @@
   margin: 0;
 }
 
-
-/* ============================================
-   SCROLLING MARQUEE
-   ============================================ */
-.lp-marquee-wrapper {
-  background-color: var(--bg-secondary);
-  padding: var(--space-xl) 0;
-  overflow: hidden;
-}
-
-.lp-marquee {
-  overflow: hidden;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  padding: var(--space-xl) 0;
-}
-
-@media (max-width: 768px) {
-  .lp-marquee {
-    padding: var(--space-lg) 0;
-  }
-}
-
-.lp-marquee-track {
-  display: flex;
-  width: 200%;
-  margin-left: var(--space-lg);
-}
-
-.lp-marquee-content {
-  display: flex;
-  justify-content: space-between;
-  width: 200%;
-  white-space: nowrap;
-  transform: translateX(-71.924%);
-  will-change: transform;
-  transform-style: preserve-3d;
-}
-
-.lp-marquee-text {
-  font-size: var(--text-2xl);
-  font-weight: 400;
-  line-height: var(--line-tight);
-  letter-spacing: -0.02em;
-  color: var(--neutral-900);
-  margin: 0;
-}
-
-@media (max-width: 768px) {
-  .lp-marquee-text {
-    font-size: var(--text-xl);
-  }
-}
-
-.lp-marquee-dot {
-  display: inline-block;
-  width: 0.3em;
-  height: 0.3em;
-  background-color: var(--primary);
-  border-radius: 50%;
-  vertical-align: middle;
-}
-
-.lp-marquee-content:nth-child(1) {
-  animation: lp-marquee-scroll 30s linear infinite;
-}
-
-.lp-marquee-content:nth-child(2) {
-  animation: lp-marquee-scroll 30s linear infinite;
-}
-
-@keyframes lp-marquee-scroll {
-  0% {
-    transform: translateX(-71.924%);
-  }
-  100% {
-    transform: translateX(-71.924%);
-  }
-}
-
-
 /* ============================================
    HOW IT WORKS
    ============================================ */
 .lp-how-it-works {
   padding: var(--space-4xl) 0;
   background-color: var(--bg-secondary);
+  scroll-margin-top: var(--header-height);
 }
 
 @media (max-width: 768px) {
@@ -792,13 +722,13 @@
   border-radius: var(--radius-xl);
 }
 
-
 /* ============================================
    FAQ SECTION
    ============================================ */
 .lp-faq {
   padding: var(--space-4xl) 0;
   background-color: var(--bg-secondary);
+  scroll-margin-top: var(--header-height);
 }
 
 @media (max-width: 768px) {
@@ -920,13 +850,13 @@
   border-radius: 2px;
 }
 
-
 /* ============================================
    NEWSLETTER / CTA
    ============================================ */
 .lp-newsletter {
   padding: var(--space-4xl) 0;
   background-color: var(--bg-secondary);
+  scroll-margin-top: var(--header-height);
 }
 
 @media (max-width: 768px) {
@@ -1065,13 +995,13 @@
   object-fit: cover;
 }
 
-
 /* ============================================
    TESTIMONIALS SECTION
    ============================================ */
 .lp-testimonials {
   padding: var(--space-4xl) 0;
   background-color: var(--bg-secondary);
+  scroll-margin-top: var(--header-height);
 }
 
 @media (max-width: 768px) {
@@ -1282,7 +1212,9 @@
   background-color: var(--neutral-300);
   cursor: pointer;
   padding: 0;
-  transition: background-color var(--transition-base), transform var(--transition-base);
+  transition:
+    background-color var(--transition-base),
+    transform var(--transition-base);
 }
 
 .lp-testimonial-dot:hover {
@@ -1299,7 +1231,6 @@
   outline-offset: 2px;
 }
 
-
 /* ============================================
    ARTICLES / BLOG CAROUSEL
    ============================================ */
@@ -1307,6 +1238,7 @@
   padding: var(--space-4xl) 0;
   background-color: var(--bg-secondary);
   overflow: hidden;
+  scroll-margin-top: var(--header-height);
 }
 
 @media (max-width: 768px) {

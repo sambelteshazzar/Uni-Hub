@@ -14,7 +14,7 @@ const orderSchema = new mongoose.Schema({
     required: true,
     index: true, // Single index definition
   },
-  
+
   // Customer Information
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -39,7 +39,7 @@ const orderSchema = new mongoose.Schema({
       required: true,
     },
   },
-  
+
   // Order Items
   items: [{
     productId: {
@@ -68,7 +68,7 @@ const orderSchema = new mongoose.Schema({
     sellerName: String,
     image: String,
   }],
-  
+
   // Pricing
   pricing: {
     subtotal: {
@@ -88,7 +88,7 @@ const orderSchema = new mongoose.Schema({
       default: 'GHS',
     },
   },
-  
+
   // Delivery Information
   delivery: {
     mode: {
@@ -110,7 +110,7 @@ const orderSchema = new mongoose.Schema({
       default: 'pending',
     },
   },
-  
+
   // Payment Information
   payment: {
     mode: {
@@ -126,14 +126,14 @@ const orderSchema = new mongoose.Schema({
     transactionId: String,
     paidAt: Date,
   },
-  
+
   // Order Status
   status: {
     type: String,
     enum: ['placed', 'confirmed', 'in-transit', 'delivered', 'cancelled'],
     default: 'placed',
   },
-  
+
   // Status History (for tracking changes)
   statusHistory: [{
     status: String,
@@ -143,7 +143,7 @@ const orderSchema = new mongoose.Schema({
     },
     note: String,
   }],
-  
+
   // Timestamps
 }, {
   timestamps: true,
@@ -151,12 +151,11 @@ const orderSchema = new mongoose.Schema({
 
 // Indexes for faster queries
 orderSchema.index({ userId: 1, createdAt: -1 });
-orderSchema.index({ orderNumber: 1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ 'payment.status': 1 });
 
 // Generate order number before saving
-orderSchema.pre('save', async function(next) {
+orderSchema.pre('save', async function (next) {
   if (this.isNew) {
     const date = new Date();
     const year = date.getFullYear().toString().substr(-2);
@@ -164,7 +163,7 @@ orderSchema.pre('save', async function(next) {
     const day = date.getDate().toString().padStart(2, '0');
     const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
     this.orderNumber = `UH-${year}${month}${day}-${random}`;
-    
+
     // Add initial status to history
     this.statusHistory.push({
       status: this.status,
@@ -175,17 +174,17 @@ orderSchema.pre('save', async function(next) {
 });
 
 // Static method to get orders by user
-orderSchema.statics.getByUser = function(userId) {
+orderSchema.statics.getByUser = function (userId) {
   return this.find({ userId }).sort({ createdAt: -1 });
 };
 
 // Static method to get orders by status
-orderSchema.statics.getByStatus = function(status) {
+orderSchema.statics.getByStatus = function (status) {
   return this.find({ status }).sort({ createdAt: -1 });
 };
 
 // Method to update order status
-orderSchema.methods.updateStatus = function(newStatus, note = '') {
+orderSchema.methods.updateStatus = function (newStatus, note = '') {
   this.status = newStatus;
   this.statusHistory.push({
     status: newStatus,
@@ -196,11 +195,11 @@ orderSchema.methods.updateStatus = function(newStatus, note = '') {
 };
 
 // Method to mark payment as completed
-orderSchema.methods.completePayment = function(transactionId) {
+orderSchema.methods.completePayment = function (transactionId) {
   this.payment.status = 'completed';
   this.payment.transactionId = transactionId;
   this.payment.paidAt = new Date();
-  
+
   if (this.status === 'placed') {
     this.status = 'confirmed';
     this.statusHistory.push({
@@ -208,12 +207,12 @@ orderSchema.methods.completePayment = function(transactionId) {
       note: 'Payment confirmed',
     });
   }
-  
+
   return this.save();
 };
 
 // Method to get public order data
-orderSchema.methods.getPublicOrder = function() {
+orderSchema.methods.getPublicOrder = function () {
   const order = this.toObject();
   delete order.__v;
   return order;

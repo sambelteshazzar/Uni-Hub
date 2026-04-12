@@ -1,3 +1,4 @@
+/* exported checkoutManager */
 // ============================================
 // CHECKOUT MODULE - Order Processing
 // ============================================
@@ -12,6 +13,7 @@ const DELIVERY_FEES = {
 class CheckoutManager {
   constructor () {
     this.ORDER_STORAGE_KEY = `${STORAGE_KEY_PREFIX}orders`;
+    this.useBackend = true; // Backend API enabled
   }
 
   /**
@@ -47,12 +49,43 @@ class CheckoutManager {
       };
     }
 
-    // Calculate totals
+    // Try backend first
+    if (this.useBackend) {
+      try {
+        // Map frontend payment/delivery modes to backend format
+        const orderData = {
+          items: cartManager.getItems().map(item => ({
+            productId: item.product.id,
+            quantity: item.quantity,
+          })),
+          deliveryMode: checkoutData.deliveryMode,
+          deliveryAddress: checkoutData.deliveryAddress,
+          deliveryInstructions: checkoutData.deliveryInstructions,
+          paymentMode: checkoutData.paymentMode,
+          phone: checkoutData.phone || currentUser.phone,
+        };
+
+        const response = await api.orders.create(orderData);
+
+        if (response.success) {
+          // Clear cart after successful order
+          cartManager.clear();
+          return {
+            success: true,
+            message: 'Order placed successfully!',
+            order: response.data,
+          };
+        }
+      } catch (error) {
+        // Backend unavailable - use local fallback
+      }
+    }
+
+    // Local fallback
     const cartSummary = cartManager.getSummary();
     const deliveryFee = this.calculateDeliveryFee(checkoutData.deliveryMode, cartSummary.subtotal);
     const grandTotal = cartSummary.subtotal + deliveryFee;
 
-    // Create order object
     const order = {
       id: this.generateOrderId(),
       orderNumber: this.generateOrderNumber(),
@@ -63,7 +96,7 @@ class CheckoutManager {
         phone: checkoutData.phone || currentUser.phone,
         university: currentUser.university,
       },
-      items: cartManager.getItems().map((item) => ({
+      items: cartManager.getItems().map(item => ({
         productId: item.product.id,
         title: item.product.title,
         price: item.product.price,
@@ -84,17 +117,14 @@ class CheckoutManager {
       },
       payment: {
         mode: checkoutData.paymentMode,
-        status: 'pending', // pending, completed, failed
+        status: 'pending',
       },
       status: ORDER_STATUS.PLACED,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
-    // Save order
     this.saveOrder(order);
-
-    // Clear cart after successful order
     cartManager.clear();
 
     return {
@@ -135,7 +165,7 @@ class CheckoutManager {
    * @param {number} subtotal - Order subtotal
    * @returns {number} - Delivery fee
    */
-  calculateDeliveryFee (mode, subtotal) {
+  calculateDeliveryFee (mode, _subtotal) {
     return DELIVERY_FEES[mode] ?? DELIVERY_FEES[DELIVERY_MODES.IN_PERSON];
   }
 
@@ -156,7 +186,9 @@ class CheckoutManager {
     const year = date.getFullYear().toString().substr(-2);
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
-    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    const random = Math.floor(Math.random() * 10000)
+      .toString()
+      .padStart(4, '0');
     return `UH-${year}${month}${day}-${random}`;
   }
 
@@ -174,7 +206,20 @@ class CheckoutManager {
    * Get all orders for current user
    * @returns {Array}
    */
-  getAllOrders () {
+  async getAllOrders () {
+    // Try backend first
+    if (this.useBackend) {
+      try {
+        const response = await api.orders.getMyOrders();
+        if (response.success) {
+          return response.data.orders || response.data || [];
+        }
+      } catch (error) {
+        // Backend unavailable - use local fallback
+      }
+    }
+
+    // Local fallback
     const orders = StorageManager.get(this.ORDER_STORAGE_KEY, true);
     return orders || [];
   }
@@ -182,32 +227,32 @@ class CheckoutManager {
   /**
    * Get orders by user ID
    * @param {string} userId - User ID
-   * @returns {Array}
+   * @returns {Promise<Array>}
    */
-  getUserOrders (userId) {
-    const orders = this.getAllOrders();
-    return orders.filter((order) => order.userId === userId);
+  async getUserOrders (userId) {
+    const orders = await this.getAllOrders();
+    return orders.filter(order => order.userId === userId);
   }
 
   /**
    * Get order by ID
    * @param {string} orderId - Order ID
-   * @returns {Object|null}
+   * @returns {Promise<Object|null>}
    */
-  getOrderById (orderId) {
-    const orders = this.getAllOrders();
-    return orders.find((order) => order.id === orderId) || null;
+  async getOrderById (orderId) {
+    const orders = await this.getAllOrders();
+    return orders.find(order => order.id === orderId) || null;
   }
 
   /**
    * Update order status
    * @param {string} orderId - Order ID
    * @param {string} status - New status
-   * @returns {Object} - Result
+   * @returns {Promise<Object>} - Result
    */
-  updateOrderStatus (orderId, status) {
-    const orders = this.getAllOrders();
-    const orderIndex = orders.findIndex((order) => order.id === orderId);
+  async updateOrderStatus (orderId, status) {
+    const orders = await this.getAllOrders();
+    const orderIndex = orders.findIndex(order => order.id === orderId);
 
     if (orderIndex === -1) {
       return {
@@ -248,9 +293,24 @@ class CheckoutManager {
    */
   getDeliveryModeOptions () {
     return [
-      { value: DELIVERY_MODES.IN_PERSON, label: 'In-Person Pickup', fee: DELIVERY_FEES[DELIVERY_MODES.IN_PERSON], icon: '🏪' },
-      { value: DELIVERY_MODES.YANGO, label: 'Yango Delivery', fee: DELIVERY_FEES[DELIVERY_MODES.YANGO], icon: '🚗' },
-      { value: DELIVERY_MODES.BOLT, label: 'Bolt Delivery', fee: DELIVERY_FEES[DELIVERY_MODES.BOLT], icon: '🚙' },
+      {
+        value: DELIVERY_MODES.IN_PERSON,
+        label: 'In-Person Pickup',
+        fee: DELIVERY_FEES[DELIVERY_MODES.IN_PERSON],
+        icon: '🏪',
+      },
+      {
+        value: DELIVERY_MODES.YANGO,
+        label: 'Yango Delivery',
+        fee: DELIVERY_FEES[DELIVERY_MODES.YANGO],
+        icon: '🚗',
+      },
+      {
+        value: DELIVERY_MODES.BOLT,
+        label: 'Bolt Delivery',
+        fee: DELIVERY_FEES[DELIVERY_MODES.BOLT],
+        icon: '🚙',
+      },
     ];
   }
 
@@ -271,10 +331,10 @@ class CheckoutManager {
    * Process payment (placeholder for real integration)
    * @param {string} orderId - Order ID
    * @param {string} paymentMode - Payment method
-   * @returns {Object} - Payment result
+   * @returns {Promise<Object>} - Payment result
    */
   async processPayment (orderId, paymentMode) {
-    const order = this.getOrderById(orderId);
+    const order = await this.getOrderById(orderId);
 
     if (!order) {
       return {
@@ -303,7 +363,7 @@ class CheckoutManager {
     }
 
     // Simulate mobile money/bank transfer processing
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       setTimeout(() => {
         const paymentSuccess = Math.random() > 0.1; // 90% success rate simulation
 
@@ -336,10 +396,10 @@ class CheckoutManager {
   /**
    * Cancel order
    * @param {string} orderId - Order ID
-   * @returns {Object} - Result
+   * @returns {Promise<Object>} - Result
    */
-  cancelOrder (orderId) {
-    const order = this.getOrderById(orderId);
+  async cancelOrder (orderId) {
+    const order = await this.getOrderById(orderId);
 
     if (!order) {
       return {

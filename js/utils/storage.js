@@ -54,7 +54,7 @@ class StorageManager {
    */
   static clear () {
     try {
-      Object.values(STORAGE_KEYS).forEach((key) => {
+      Object.values(STORAGE_KEYS).forEach(key => {
         localStorage.removeItem(key);
       });
       return true;

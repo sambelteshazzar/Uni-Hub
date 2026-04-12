@@ -1,0 +1,364 @@
+/* ============================================
+   BEST BUY-STYLE AUTH PAGES
+   Clean, white, retail-inspired login/signup
+   ============================================ */
+
+/* Auth Page Container */
+.bb-auth-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #ffffff;
+}
+
+/* Left Side - Branding/Hero */
+.bb-auth-branding {
+  background: linear-gradient(135deg, #0046be 0%, #003399 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3xl);
+  color: #ffffff;
+  position: relative;
+  overflow: hidden;
+}
+
+.bb-auth-branding::before {
+  content: '';
+  position: absolute;
+  top: -20%;
+  right: -20%;
+  width: 500px;
+  height: 500px;
+  background: rgba(255, 206, 0, 0.1);
+  border-radius: 50%;
+  filter: blur(80px);
+}
+
+.bb-auth-brand-content {
+  position: relative;
+  z-index: 1;
+  max-width: 400px;
+  text-align: center;
+}
+
+.bb-auth-brand-logo {
+  margin-bottom: var(--space-2xl);
+}
+
+.bb-auth-brand-logo svg {
+  width: 180px;
+  height: auto;
+  color: #ffffff;
+}
+
+.bb-auth-brand-title {
+  font-size: var(--text-3xl);
+  font-weight: 800;
+  margin-bottom: var(--space-md);
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+
+.bb-auth-brand-desc {
+  font-size: var(--text-base);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Right Side - Form */
+.bb-auth-form-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3xl);
+}
+
+.bb-auth-form-container {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* Uni-Hub Logo at top of form */
+.bb-auth-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-2xl);
+}
+
+.bb-auth-logo svg {
+  width: 160px;
+  height: auto;
+  color: #0046be;
+}
+
+/* Auth Form Header */
+.bb-auth-form-header {
+  text-align: center;
+  margin-bottom: var(--space-2xl);
+}
+
+.bb-auth-form-title {
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  color: #1a1a1a;
+  margin-bottom: var(--space-sm);
+  letter-spacing: -0.01em;
+}
+
+.bb-auth-form-subtitle {
+  font-size: var(--text-sm);
+  color: #525252;
+  margin: 0;
+}
+
+/* Social Login Buttons */
+.bb-social-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xl);
+}
+
+.bb-social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  width: 100%;
+  height: 44px;
+  border: 1px solid #e5e5e5;
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.bb-social-btn:hover {
+  border-color: #0046be;
+  background: #f8f9fa;
+}
+
+/* Divider */
+.bb-auth-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin: var(--space-xl) 0;
+  color: #666666;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.bb-auth-divider::before,
+.bb-auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e5e5e5;
+}
+
+/* Best Buy Form Styles */
+.bb-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.bb-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.bb-form-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.bb-form-label .required-star {
+  color: #cc0000;
+  margin-left: 2px;
+}
+
+.bb-form-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 var(--space-md);
+  border: 1px solid #d4d4d4;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: #1a1a1a;
+  background: #ffffff;
+  transition: all 0.15s ease;
+}
+
+.bb-form-input:focus {
+  outline: none;
+  border-color: #0046be;
+  box-shadow: 0 0 0 3px rgba(0, 70, 190, 0.1);
+}
+
+.bb-form-input::placeholder {
+  color: #666666;
+}
+
+/* Password Input */
+.bb-password-wrapper {
+  position: relative;
+}
+
+.bb-password-wrapper .bb-form-input {
+  padding-right: 44px;
+}
+
+.bb-password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666666;
+  padding: 4px;
+  transition: color 0.15s ease;
+}
+
+.bb-password-toggle:hover {
+  color: #1a1a1a;
+}
+
+/* Remember Me */
+.bb-remember-me {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: var(--space-sm) 0;
+}
+
+.bb-remember-me input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #0046be;
+}
+
+.bb-remember-me label {
+  font-size: var(--text-sm);
+  color: #525252;
+}
+
+/* Submit Button */
+.bb-submit-btn {
+  width: 100%;
+  height: 48px;
+  background: #0046be;
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.bb-submit-btn:hover {
+  background: #003399;
+}
+
+/* Auth Footer Links */
+.bb-auth-footer {
+  text-align: center;
+  margin-top: var(--space-xl);
+  padding-top: var(--space-xl);
+  border-top: 1px solid #e5e5e5;
+}
+
+.bb-auth-footer p {
+  font-size: var(--text-sm);
+  color: #525252;
+  margin: 0;
+}
+
+.bb-auth-footer a {
+  color: #0046be;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.bb-auth-footer a:hover {
+  text-decoration: underline;
+}
+
+/* Forgot Password Link */
+.bb-forgot-password {
+  text-align: right;
+  margin-top: var(--space-xs);
+}
+
+.bb-forgot-password a {
+  font-size: var(--text-xs);
+  color: #0046be;
+  text-decoration: none;
+}
+
+.bb-forgot-password a:hover {
+  text-decoration: underline;
+}
+
+/* Name Row (First + Last) */
+.bb-name-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+/* University Select */
+.bb-university-select {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.bb-university-select select {
+  width: 100%;
+  height: 44px;
+  padding: 0 var(--space-md);
+  border: 1px solid #d4d4d4;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: #1a1a1a;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.bb-university-select select:focus {
+  outline: none;
+  border-color: #0046be;
+  box-shadow: 0 0 0 3px rgba(0, 70, 190, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .bb-auth-page {
+    grid-template-columns: 1fr;
+  }
+
+  .bb-auth-branding {
+    display: none;
+  }
+
+  .bb-auth-form-section {
+    padding: var(--space-xl);
+  }
+}

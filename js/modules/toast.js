@@ -1,3 +1,4 @@
+/* exported toastManager */
 // ============================================
 // TOAST NOTIFICATION MODULE
 // ============================================
@@ -66,8 +67,10 @@ class ToastManager {
    * @param {string} toastId - Toast ID
    */
   dismiss (toastId) {
-    const toastIndex = this.toasts.findIndex((t) => t.id === toastId);
-    if (toastIndex === -1) {return;}
+    const toastIndex = this.toasts.findIndex(t => t.id === toastId);
+    if (toastIndex === -1) {
+      return;
+    }
 
     const toast = this.toasts[toastIndex];
     toast.element.style.animation = 'slideOut 0.3s ease-out forwards';
@@ -193,7 +196,7 @@ class ToastManager {
    * Clear all toasts
    */
   clearAll () {
-    this.toasts.forEach((toast) => {
+    this.toasts.forEach(toast => {
       toast.element.remove();
     });
     this.toasts = [];

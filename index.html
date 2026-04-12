@@ -7,40 +7,45 @@
       name="description"
       content="Uni-Hub - Buy and sell items within your university community"
     />
-    <meta name="theme-color" content="#6366f1" />
+    <meta name="theme-color" content="#0046be" />
     <title>Uni-Hub - Student Marketplace</title>
 
     <!-- Stylesheets -->
-    <link rel="stylesheet" href="css/variables.css" />
-    <link rel="stylesheet" href="css/reset.css" />
-    <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="css/responsive.css" />
-    <link rel="stylesheet" href="css/fixes.css" />
+    <link rel="stylesheet" href="css/variables.css?v=2" />
+    <link rel="stylesheet" href="css/reset.css?v=2" />
+    <link rel="stylesheet" href="css/style.css?v=2" />
+    <link rel="stylesheet" href="css/responsive.css?v=2" />
+    <link rel="stylesheet" href="css/fixes.css?v=2" />
 
     <!-- Components -->
-    <link rel="stylesheet" href="css/components/buttons.css" />
-    <link rel="stylesheet" href="css/components/cards.css" />
-    <link rel="stylesheet" href="css/components/navbar.css" />
-    <link rel="stylesheet" href="css/components/footer.css" />
-    <link rel="stylesheet" href="css/components/forms.css" />
-    <link rel="stylesheet" href="css/components/cart.css" />
-    <link rel="stylesheet" href="css/components/modals.css" />
-    <link rel="stylesheet" href="css/components/sidebar.css" />
-    <link rel="stylesheet" href="css/components/badges.css" />
-    <link rel="stylesheet" href="css/components/toast.css" />
-    <link rel="stylesheet" href="css/components/commerce-buttons.css" />
-    <link rel="stylesheet" href="css/components/sustainable-showcase.css" />
-    <link rel="stylesheet" href="css/components/landing-page.css" />
+    <link rel="stylesheet" href="css/components/buttons.css?v=2" />
+    <link rel="stylesheet" href="css/components/cards.css?v=2" />
+    <link rel="stylesheet" href="css/components/navbar.css?v=2" />
+    <link rel="stylesheet" href="css/components/footer.css?v=2" />
+    <link rel="stylesheet" href="css/components/forms.css?v=2" />
+    <link rel="stylesheet" href="css/components/cart.css?v=2" />
+    <link rel="stylesheet" href="css/components/modals.css?v=2" />
+    <link rel="stylesheet" href="css/components/sidebar.css?v=2" />
+    <link rel="stylesheet" href="css/components/badges.css?v=2" />
+    <link rel="stylesheet" href="css/components/toast.css?v=2" />
+    <link rel="stylesheet" href="css/components/commerce-buttons.css?v=2" />
+    <link rel="stylesheet" href="css/components/bestbuy-landing.css?v=2" />
+    <link rel="stylesheet" href="css/components/messaging.css?v=2" />
+    <link rel="stylesheet" href="css/components/reviews.css?v=2" />
 
     <!-- Pages -->
-    <link rel="stylesheet" href="css/pages/home.css" />
-    <link rel="stylesheet" href="css/pages/auth.css" />
-    <link rel="stylesheet" href="css/pages/dashboard.css" />
-    <link rel="stylesheet" href="css/pages/product.css" />
-    <link rel="stylesheet" href="css/pages/cart.css" />
-    <link rel="stylesheet" href="css/pages/checkout.css" />
-    <link rel="stylesheet" href="css/pages/admin.css" />
-    <link rel="stylesheet" href="css/pages/seller.css" />
+    <link rel="stylesheet" href="css/pages/home.css?v=2" />
+    <link rel="stylesheet" href="css/pages/auth.css?v=2" />
+    <link rel="stylesheet" href="css/pages/dashboard.css?v=2" />
+    <link rel="stylesheet" href="css/pages/dashboard-v2.css?v=2" />
+    <link rel="stylesheet" href="css/pages/product.css?v=2" />
+    <link rel="stylesheet" href="css/pages/browse.css?v=2" />
+    <link rel="stylesheet" href="css/pages/cart.css?v=2" />
+    <link rel="stylesheet" href="css/pages/checkout.css?v=2" />
+    <link rel="stylesheet" href="css/pages/admin.css?v=2" />
+    <link rel="stylesheet" href="css/pages/seller.css?v=2" />
+    <link rel="stylesheet" href="css/pages/bestbuy-auth.css?v=2" />
+    <link rel="stylesheet" href="css/pages/bestbuy-dashboard.css?v=2" />
   </head>
 
   <body>
@@ -54,77 +59,103 @@
         </div>
       </div>
 
-      <!-- Navigation Bar -->
-      <nav class="navbar" id="navbar-container">
+      <!-- Navigation Bar - Clean Modern Header -->
+      <nav class="navbar" id="navbar">
         <div class="navbar-container">
-          <a
-            href="/"
-            class="navbar-brand"
-            onclick="
-              Pages.renderLanding();
-              return false;
-            "
-          >
+          <!-- Brand -->
+          <a href="/" class="navbar-brand" onclick="Pages.renderLanding(); return false;">
             <div class="navbar-brand-icon">🎓</div>
             <span>Uni-Hub</span>
           </a>
 
+          <!-- Center Navigation Links -->
+          <nav class="navbar-menu">
+            <a href="#/" class="navbar-link" onclick="Pages.renderLanding(); return false;">Home</a>
+            <a href="#/browse" class="navbar-link" onclick="Pages.renderBrowse(); return false;">Browse</a>
+            <a href="#/sell" class="navbar-link" onclick="Pages.renderSell(); return false;">Sell</a>
+            <a href="#/faq" class="navbar-link">FAQ</a>
+          </nav>
+
+          <!-- Right Side Actions -->
           <div class="navbar-actions">
-            <div class="navbar-icons">
-              <button
-                class="navbar-icon-button cart-btn"
-                onclick="Pages.renderCart()"
-                title="View Cart"
-              >
-                🛒
-                <span class="cart-badge" id="cart-badge">0</span>
-              </button>
-            </div>
-            <!-- Auth buttons - shown when not logged in -->
+            <!-- Search Button (desktop) -->
+            <button class="navbar-search-btn" onclick="Pages.toggleSearch(); return false;" title="Search">🔍</button>
+
+            <!-- Cart -->
+            <button class="navbar-cart-btn" onclick="Pages.renderCart()" title="View Cart">
+              🛒
+              <span class="cart-badge" id="cart-badge">0</span>
+            </button>
+
+            <!-- Auth buttons -->
             <div id="navbar-auth-buttons">
-              <button
-                class="btn btn-ghost btn-sm"
-                onclick="
-                  Pages.renderLogin();
-                  return false;
-                "
-              >
-                Log in
-              </button>
-              <button
-                class="btn btn-primary btn-sm"
-                onclick="
-                  Pages.renderRegister();
-                  return false;
-                "
-              >
-                Sign up
-              </button>
+              <button class="btn btn-ghost" onclick="Pages.renderLogin(); return false;">Log in</button>
+              <button class="btn btn-primary" onclick="Pages.renderRegister(); return false;">Sign up</button>
             </div>
-            <!-- User menu - shown when logged in -->
+
+            <!-- User menu (when logged in) -->
             <div id="navbar-user-menu" style="display: none">
-              <button
-                class="btn btn-ghost btn-sm"
-                onclick="
-                  Pages.renderDashboard();
-                  return false;
-                "
-              >
-                Dashboard
-              </button>
-              <button
-                class="btn btn-ghost btn-sm"
-                onclick="
-                  Pages.handleLogout();
-                  return false;
-                "
-              >
-                Log out
-              </button>
+              <button class="btn btn-ghost" onclick="Pages.renderDashboard(); return false;">Dashboard</button>
+              <button class="btn btn-ghost" onclick="Pages.handleLogout(); return false;">Log out</button>
             </div>
+
+            <!-- Mobile Hamburger -->
+            <button class="navbar-mobile-toggle" onclick="Pages.toggleMobileMenu()" aria-label="Toggle menu">☰</button>
+          </div>
+        </div>
+
+        <!-- Expandable Search Bar -->
+        <div class="navbar-search" id="navbar-search">
+          <div class="navbar-search-inner">
+            <input type="text" class="navbar-search-input" placeholder="Search for textbooks, electronics, dorm items..." id="navbar-search-input" />
+            <button class="navbar-search-btn-submit" onclick="Pages.handleSearch()">Search</button>
           </div>
         </div>
       </nav>
+
+      <!-- Category Navigation Bar -->
+      <div class="navbar-categories" id="navbar-categories">
+        <div class="navbar-categories-container">
+          <a href="#/browse?category=textbooks" class="navbar-category-link">📚 Textbooks</a>
+          <a href="#/browse?category=electronics" class="navbar-category-link">💻 Electronics</a>
+          <a href="#/browse?category=dorm" class="navbar-category-link">🏠 Dorm & Room</a>
+          <a href="#/browse?category=clothing" class="navbar-category-link">👕 Clothing</a>
+          <a href="#/browse?category=sports" class="navbar-category-link">⚽ Sports & Outdoors</a>
+          <a href="#/browse?category=furniture" class="navbar-category-link">🪑 Furniture</a>
+          <a href="#/browse?category=other" class="navbar-category-link">📦 Other</a>
+          <a href="#/browse" class="navbar-category-link">All Items</a>
+        </div>
+      </div>
+
+      <!-- Mobile Overlay -->
+      <div class="navbar-overlay" id="navbar-overlay" onclick="Pages.closeMobileMenu()"></div>
+
+      <!-- Mobile Drawer -->
+      <div class="navbar-drawer" id="navbar-drawer">
+        <div class="navbar-drawer-header">
+          <a href="/" class="navbar-drawer-brand" onclick="Pages.renderLanding(); Pages.closeMobileMenu(); return false;">
+            <div class="navbar-drawer-brand-icon">🎓</div>
+            <span>Uni-Hub</span>
+          </a>
+          <button class="navbar-drawer-close" onclick="Pages.closeMobileMenu()" aria-label="Close menu">✕</button>
+        </div>
+        <nav class="navbar-drawer-nav">
+          <a href="#/" class="navbar-drawer-link" onclick="Pages.renderLanding(); Pages.closeMobileMenu(); return false;">Home</a>
+          <a href="#/browse" class="navbar-drawer-link" onclick="Pages.renderBrowse(); Pages.closeMobileMenu(); return false;">Browse</a>
+          <a href="#/sell" class="navbar-drawer-link" onclick="Pages.renderSell(); Pages.closeMobileMenu(); return false;">Sell</a>
+          <a href="#/cart" class="navbar-drawer-link" onclick="Pages.renderCart(); Pages.closeMobileMenu(); return false;">Cart</a>
+          <a href="#/faq" class="navbar-drawer-link" onclick="Pages.closeMobileMenu(); return false;">FAQ</a>
+        </nav>
+        <div class="navbar-drawer-footer" id="navbar-drawer-footer">
+          <div id="navbar-drawer-auth">
+            <button class="btn btn-ghost" onclick="Pages.renderLogin(); Pages.closeMobileMenu(); return false;" style="margin-bottom: var(--space-sm); border: 1px solid #e5e5e5;">Log in</button>
+            <button class="btn btn-primary" onclick="Pages.renderRegister(); Pages.closeMobileMenu(); return false;">Sign up</button>
+          </div>
+          <div id="navbar-drawer-user" style="display: none">
+            <button class="btn btn-primary" onclick="Pages.renderDashboard(); Pages.closeMobileMenu(); return false;">Dashboard</button>
+          </div>
+        </div>
+      </div>
 
       <!-- Main Content -->
       <main id="main-content"></main>
@@ -160,58 +191,107 @@
     </div>
 
     <!-- JavaScript Files -->
+    <!-- API Configuration -->
+    <script>
+      // Backend API URL - change this for production
+      window.API_URL = 'http://localhost:5000/api';
+    </script>
+
     <!-- Utils -->
-    <script src="js/utils/constants.js"></script>
-    <script src="js/utils/storage.js"></script>
-    <script src="js/utils/validation.js"></script>
-    <script src="js/utils/formatters.js"></script>
-    <script src="js/utils/crypto.js"></script>
-    <script src="js/utils/api.js"></script>
+    <script src="js/utils/constants.js?v=2"></script>
+    <script src="js/utils/storage.js?v=2"></script>
+    <script src="js/utils/validation.js?v=2"></script>
+    <script src="js/utils/formatters.js?v=2"></script>
+    <script src="js/utils/crypto.js?v=2"></script>
+    <script src="js/utils/api.js?v=2"></script>
 
     <!-- Router -->
-    <script src="js/router.js"></script>
+    <script src="js/router.js?v=2"></script>
 
     <!-- Main App -->
-    <script src="js/app.js"></script>
+    <script src="js/app.js?v=2"></script>
 
     <!-- Core Modules -->
-    <script src="js/modules/auth.js"></script>
-    <script src="js/modules/products.js"></script>
-    <script src="js/modules/cart.js"></script>
-    <script src="js/modules/checkout.js"></script>
-    <script src="js/modules/payment.js"></script>
-    <script src="js/modules/delivery.js"></script>
-    <script src="js/modules/region.js"></script>
-    <script src="js/modules/search.js"></script>
-    <script src="js/modules/toast.js"></script>
-    <script src="js/modules/notifications.js"></script>
-    <script src="js/modules/modals.js"></script>
+    <script src="js/modules/auth.js?v=2"></script>
+    <script src="js/modules/products.js?v=2"></script>
+    <script src="js/modules/cart.js?v=2"></script>
+    <script src="js/modules/checkout.js?v=2"></script>
+    <script src="js/modules/payment.js?v=2"></script>
+    <script src="js/modules/delivery.js?v=2"></script>
+    <script src="js/modules/messaging.js?v=2"></script>
+    <script src="js/modules/reviews.js?v=2"></script>
+    <script src="js/modules/region.js?v=2"></script>
+    <script src="js/modules/search.js?v=2"></script>
+    <script src="js/modules/toast.js?v=2"></script>
+    <script src="js/modules/notifications.js?v=2"></script>
+    <script src="js/modules/modals.js?v=2"></script>
 
     <!-- Admin Modules -->
-    <script src="js/admin/admin-auth.js"></script>
-    <script src="js/admin/admin-products.js"></script>
-    <script src="js/admin/admin-users.js"></script>
-    <script src="js/admin/admin-orders.js"></script>
-    <script src="js/admin/admin-reports.js"></script>
+    <script src="js/admin/admin-auth.js?v=2"></script>
+    <script src="js/admin/admin-products.js?v=2"></script>
+    <script src="js/admin/admin-users.js?v=2"></script>
+    <script src="js/admin/admin-orders.js?v=2"></script>
+    <script src="js/admin/admin-reports.js?v=2"></script>
 
     <!-- Pages -->
     <script src="js/pages/pages.js?v=2"></script>
-    <script src="js/pages/landing-page-loader.js"></script>
+    <script src="js/pages/bestbuy-landing.js?v=2"></script>
+    <script src="js/pages/bestbuy-auth-dashboard.js?v=2"></script>
+    <script src="js/pages/messages.js?v=2"></script>
+    <script src="js/pages/landing-page-loader.js?v=2"></script>
 
     <!-- Global Setup - Expose all modules and constants -->
-    <script src="js/setup/globals.js"></script>
+    <script src="js/setup/globals.js?v=2"></script>
 
     <!-- App Initialization -->
     <script>
       // Initialize app on page load
       document.addEventListener('DOMContentLoaded', async function () {
-        // Initialize the application
-        await app.init();
+        // Show loading state immediately
+        var mainContent = document.getElementById('main-content');
+        if (mainContent) {
+          mainContent.innerHTML =
+            '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#050505;">' +
+            '<div style="text-align:center;">' +
+            '<div style="width:48px;height:48px;border:3px solid rgba(99,102,241,0.2);border-top-color:#6366f1;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 1rem;"></div>' +
+            '<p style="color:#a1a1aa;font-family:system-ui,sans-serif;">Loading Uni-Hub...</p>' +
+            '</div></div>' +
+            '<style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
+        }
 
-        // Router will handle initial page rendering based on hash
-        // Default to landing page if no hash is present
-        if (!window.location.hash || window.location.hash === '#/') {
-          Pages.renderLanding();
+        try {
+          // Initialize the application
+          await app.init();
+
+          // Register all routes with the router
+          Pages.registerRoutes();
+
+          // Now start the router to handle initial page rendering based on hash
+          router.start();
+
+          // Default to landing page if no hash is present
+          if (
+            !window.location.hash ||
+            window.location.hash === '#/' ||
+            window.location.hash === '#'
+          ) {
+            await Pages.renderLanding();
+          }
+        } catch (error) {
+          console.error('App init failed:', error);
+          // Fallback: show landing page even if init fails
+          if (typeof Pages !== 'undefined') {
+            try {
+              await Pages.renderLanding();
+            } catch (e) {
+              if (mainContent) {
+                mainContent.innerHTML =
+                  '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#050505;color:#fff;text-align:center;padding:2rem;">' +
+                  '<div><h2>⚠️ Something went wrong</h2><p>Please refresh the page.</p>' +
+                  '<button onclick="location.reload()" style="margin-top:1rem;padding:0.75rem 1.5rem;background:#6366f1;color:#fff;border:none;border-radius:0.5rem;cursor:pointer;font-weight:600;">Refresh</button></div></div>';
+              }
+            }
+          }
         }
       });
     </script>

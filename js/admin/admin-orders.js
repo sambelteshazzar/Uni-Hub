@@ -1,6 +1,7 @@
 // ============================================
 // ADMIN ORDERS MODULE - Order Management
 // ============================================
+/* exported adminOrdersManager */
 
 class AdminOrdersManager {
   constructor () {
@@ -30,7 +31,7 @@ class AdminOrdersManager {
    * @returns {Array}
    */
   getOrdersByStatus (status) {
-    return this.getAllOrders().filter((o) => o.status === status);
+    return this.getAllOrders().filter(o => o.status === status);
   }
 
   /**
@@ -39,7 +40,7 @@ class AdminOrdersManager {
    * @returns {Array}
    */
   getOrdersByUser (userId) {
-    return this.getAllOrders().filter((o) => o.userId === userId);
+    return this.getAllOrders().filter(o => o.userId === userId);
   }
 
   /**
@@ -50,7 +51,8 @@ class AdminOrdersManager {
    */
   getOrdersByDateRange (startDate, endDate) {
     return this.getAllOrders().filter(
-      (o) => new Date(o.createdAt) >= new Date(startDate) && new Date(o.createdAt) <= new Date(endDate),
+      o =>
+        new Date(o.createdAt) >= new Date(startDate) && new Date(o.createdAt) <= new Date(endDate),
     );
   }
 
@@ -98,7 +100,7 @@ class AdminOrdersManager {
     if (result.success) {
       // Store cancellation reason
       const orders = this.getAllOrders();
-      const index = orders.findIndex((o) => o.id === orderId);
+      const index = orders.findIndex(o => o.id === orderId);
       if (index !== -1) {
         orders[index].cancellationReason = reason;
         orders[index].cancelledAt = new Date().toISOString();
@@ -142,11 +144,15 @@ class AdminOrdersManager {
     order.updatedAt = new Date().toISOString();
 
     const orders = this.getAllOrders();
-    const index = orders.findIndex((o) => o.id === orderId);
+    const index = orders.findIndex(o => o.id === orderId);
     orders[index] = order;
     StorageManager.set(this.ORDERS_STORAGE_KEY, orders);
 
-    adminAuthManager.logActivity('Order refunded', { orderId, reason, amount: order.pricing.grandTotal });
+    adminAuthManager.logActivity('Order refunded', {
+      orderId,
+      reason,
+      amount: order.pricing.grandTotal,
+    });
 
     return {
       success: true,
@@ -168,7 +174,7 @@ class AdminOrdersManager {
     let totalRevenue = 0;
     let totalRefunds = 0;
 
-    orders.forEach((o) => {
+    orders.forEach(o => {
       statusCount[o.status] = (statusCount[o.status] || 0) + 1;
       paymentModeCount[o.payment.mode] = (paymentModeCount[o.payment.mode] || 0) + 1;
       deliveryModeCount[o.delivery.mode] = (deliveryModeCount[o.delivery.mode] || 0) + 1;
@@ -213,7 +219,7 @@ class AdminOrdersManager {
   searchOrders (query) {
     const normalizedQuery = query.toLowerCase();
     return this.getAllOrders().filter(
-      (o) =>
+      o =>
         o.orderNumber.toLowerCase().includes(normalizedQuery) ||
         o.customer.name.toLowerCase().includes(normalizedQuery) ||
         o.customer.email.toLowerCase().includes(normalizedQuery),
@@ -226,7 +232,7 @@ class AdminOrdersManager {
    */
   getOrdersRequiringAttention () {
     return this.getAllOrders().filter(
-      (o) =>
+      o =>
         o.status === ORDER_STATUS.PLACED ||
         o.status === ORDER_STATUS.CANCELLED ||
         o.payment.status === 'failed',
@@ -249,7 +255,7 @@ class AdminOrdersManager {
       'Delivery',
       'Date',
     ];
-    const rows = orders.map((o) => [
+    const rows = orders.map(o => [
       o.orderNumber,
       o.customer.name,
       o.customer.email,
@@ -260,7 +266,7 @@ class AdminOrdersManager {
       o.createdAt,
     ]);
 
-    return [headers, ...rows].map((row) => row.join(',')).join('\n');
+    return [headers, ...rows].map(row => row.join(',')).join('\n');
   }
 
   /**
@@ -279,7 +285,7 @@ class AdminOrdersManager {
       const dateStr = date.toISOString().split('T')[0];
 
       const count = orders.filter(
-        (o) => new Date(o.createdAt).toISOString().split('T')[0] === dateStr,
+        o => new Date(o.createdAt).toISOString().split('T')[0] === dateStr,
       ).length;
 
       dailyCounts.push({
@@ -300,7 +306,7 @@ class AdminOrdersManager {
   getRevenueByDateRange (startDate, endDate) {
     const orders = this.getOrdersByDateRange(startDate, endDate);
     const revenue = orders
-      .filter((o) => o.payment.status === 'completed')
+      .filter(o => o.payment.status === 'completed')
       .reduce((sum, o) => sum + o.pricing.grandTotal, 0);
 
     return {

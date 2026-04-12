@@ -1,8 +1,9 @@
-/* eslint-disable no-unused-vars */
-/* global Formatter, ORDER_STATUS, adminAuthManager, adminReportsManager, adminUsersManager, adminProductsManager, adminOrdersManager */
 // ============================================
 // PAGE RENDERERS
 // ============================================
+
+export { Pages };
+export default Pages;
 
 class Pages {
   /**
@@ -670,7 +671,9 @@ class Pages {
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     `;
 
-    mainContent.innerHTML = modernStyles + `
+    mainContent.innerHTML =
+      modernStyles +
+      `
       <div class="modern-landing">
         <!-- Top Notification Bar -->
         <div class="top-notification-bar" style="background: linear-gradient(90deg, rgba(99,102,241,0.2), rgba(79,70,229,0.2)); border-bottom: 1px solid rgba(99,102,241,0.3); padding: 0.75rem 1rem; text-align: center;">
@@ -884,7 +887,10 @@ class Pages {
             </div>
             
             <div class="universities-grid">
-              ${config.universities.slice(0, 5).map((uni, i) => `
+              ${config.universities
+    .slice(0, 5)
+    .map(
+      (uni, i) => `
                 <div onclick="Pages.selectUniversity('${uni.id}'); return false;" class="university-card-modern">
                   <img src="https://images.unsplash.com/photo-${['1541339907198-e08756dedf3f', '1592280771190-3e2e4d571952', '1523050854058-8df90110c9f1', '1562774053-701939374585', '1509062522246-3755977927d7'][i]}?w=800&auto=format&fit=crop" alt="${uni.name}">
                   <div class="university-card-overlay"></div>
@@ -893,7 +899,9 @@ class Pages {
                     <p class="university-card-meta">📍 ${uni.campus} • ${100 + i * 50}+ items</p>
                   </div>
                 </div>
-              `).join('')}
+              `,
+    )
+    .join('')}
               
               <div onclick="Pages.renderBrowse(); return false;" class="university-card-modern glass-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem; transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'">
                 <div style="width: 4rem; height: 4rem; border-radius: 50%; background: rgba(99,102,241,0.1); display: flex; align-items: center; justify-content: center; color: #6366f1; margin-bottom: 1rem; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
@@ -931,7 +939,10 @@ class Pages {
             </div>
             
             <div class="categories-grid">
-              ${config.categories.slice(0, 4).map((cat) => `
+              ${config.categories
+    .slice(0, 4)
+    .map(
+      cat => `
                 <div onclick="Pages.renderBrowse({category: '${cat.id}'}); return false;" class="category-card-modern glass-card glass-card-hover">
                   <div class="category-icon-wrapper" style="background: linear-gradient(135deg, ${cat.id === 'textbooks' ? 'rgba(59,130,246,0.4), rgba(99,102,241,0.4)' : cat.id === 'electronics' ? 'rgba(168,85,247,0.4), rgba(236,72,153,0.4)' : cat.id === 'hostel-items' ? 'rgba(16,185,129,0.4), rgba(20,184,166,0.4)' : 'rgba(249,115,22,0.4), rgba(239,68,68,0.4)'});">
                     ${cat.icon}
@@ -939,7 +950,9 @@ class Pages {
                   <h3 class="category-name">${cat.name}</h3>
                   <p class="category-description">${cat.description}</p>
                 </div>
-              `).join('')}
+              `,
+    )
+    .join('')}
             </div>
           </div>
         </section>
@@ -1181,9 +1194,9 @@ class Pages {
    */
   static setupUniversitySelection () {
     const cards = document.querySelectorAll('.university-card');
-    cards.forEach((card) => {
+    cards.forEach(card => {
       card.addEventListener('click', () => {
-        document.querySelectorAll('.university-card').forEach((c) => c.classList.remove('selected'));
+        document.querySelectorAll('.university-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
       });
     });
@@ -1232,17 +1245,24 @@ class Pages {
 
     // Get university name
     let universityName = 'your university';
-    api.loadJSON('data/config.json').then(config => {
-      const uni = config.universities.find(u => u.id === selectedUniversity);
-      if (uni) {
-        universityName = uni.name;
-        // Re-render with university name
-        mainContent.querySelector('.verification-university-name').textContent = universityName;
-      }
-    }).catch(() => {});
+    api
+      .loadJSON('data/config.json')
+      .then(config => {
+        const uni = config.universities.find(u => u.id === selectedUniversity);
+        if (uni) {
+          universityName = uni.name;
+          // Re-render with university name
+          mainContent.querySelector('.verification-university-name').textContent = universityName;
+        }
+      })
+      .catch(() => {});
 
     // Check if already verified
-    if (verification && verification.isVerified && verification.universityId === selectedUniversity) {
+    if (
+      verification &&
+      verification.isVerified &&
+      verification.universityId === selectedUniversity
+    ) {
       this.renderBrowse();
       return;
     }
@@ -1511,8 +1531,11 @@ class Pages {
     const fileList = document.getElementById('file-list');
 
     if (files.length > 0) {
-      fileList.innerHTML = '<div class="uploaded-files"><strong>Selected files:</strong><ul>' +
-        Array.from(files).map(f => `<li>${f.name} (${(f.size / 1024).toFixed(1)} KB)</li>`).join('') +
+      fileList.innerHTML =
+        '<div class="uploaded-files"><strong>Selected files:</strong><ul>' +
+        Array.from(files)
+          .map(f => `<li>${f.name} (${(f.size / 1024).toFixed(1)} KB)</li>`)
+          .join('') +
         '</ul></div>';
     }
   }
@@ -1547,7 +1570,9 @@ class Pages {
     StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verificationData);
 
     // Show success message
-    alert(`✓ Verification Successful!\n\nWelcome, ${verificationData.fullName}!\nYou are now verified as a student of ${university ? university.name : 'your university'}.\n\nYou can now browse and trade on Uni-Hub.`);
+    alert(
+      `✓ Verification Successful!\n\nWelcome, ${verificationData.fullName}!\nYou are now verified as a student of ${university ? university.name : 'your university'}.\n\nYou can now browse and trade on Uni-Hub.`,
+    );
 
     // Redirect to browse page
     this.renderBrowse();
@@ -1594,10 +1619,13 @@ class Pages {
     StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verificationData);
 
     // In production, this would upload files to a server
+    // eslint-disable-next-line no-console
     console.log('Documents to upload:', files);
 
     // Show success message
-    alert(`✓ Verification Submitted!\n\nThank you, ${verificationData.fullName}!\n\nYour documents have been submitted for verification.\n\nYou will receive an email at ${verificationData.personalEmail} within 24-48 hours once your student status is confirmed.\n\nYou can browse Uni-Hub while waiting for verification.`);
+    alert(
+      `✓ Verification Submitted!\n\nThank you, ${verificationData.fullName}!\n\nYour documents have been submitted for verification.\n\nYou will receive an email at ${verificationData.personalEmail} within 24-48 hours once your student status is confirmed.\n\nYou can browse Uni-Hub while waiting for verification.`,
+    );
 
     // Redirect to browse page (allow browsing while pending)
     this.renderBrowse();
@@ -1611,8 +1639,10 @@ class Pages {
     const overlay = document.createElement('div');
     overlay.id = 'auth-overlay';
     overlay.className = 'auth-overlay';
-    overlay.onclick = (e) => {
-      if (e.target === overlay) {this.closeAuthOverlay();}
+    overlay.onclick = e => {
+      if (e.target === overlay) {
+        this.closeAuthOverlay();
+      }
     };
 
     overlay.innerHTML = `
@@ -1953,10 +1983,12 @@ class Pages {
 
     if (input.type === 'password') {
       input.type = 'text';
-      eyeIcon.innerHTML = '<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" x2="22" y1="2" y2="22"></line>';
+      eyeIcon.innerHTML =
+        '<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" x2="22" y1="2" y2="22"></line>';
     } else {
       input.type = 'password';
-      eyeIcon.innerHTML = '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle>';
+      eyeIcon.innerHTML =
+        '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle>';
     }
   }
 
@@ -1972,7 +2004,12 @@ class Pages {
     const result = await authManager.login(email, password);
 
     if (result.success) {
-      alert(result.message);
+      // Close the auth overlay
+      this.closeAuthOverlay();
+      // Update navbar to show user menu
+      this.updateNavbar();
+      this.updateCartBadge();
+      // Navigate to browse page
       this.renderBrowse();
     } else {
       alert('Login failed: ' + result.error);
@@ -2291,7 +2328,7 @@ class Pages {
   }
 
   /**
-   * Render Browse Products Page
+   * Render Browse Products Page - Modern Professional Design
    */
   static async renderBrowse (filters = {}) {
     // Show original navbar and footer for non-landing pages
@@ -2305,138 +2342,206 @@ class Pages {
 
     const mainContent = document.getElementById('main-content');
     const selectedUniversity = StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
-
-    // Filter by university
     productsManager.filter({ university: selectedUniversity });
 
     const paginatedData = productsManager.getPaginated(1);
+    const totalProducts = paginatedData.total || paginatedData.products.length;
 
-    mainContent.innerHTML = `
-      <div class="browse-container">
-        <div class="browse-sidebar">
-          <div class="filters-section">
-            <h3>Filters</h3>
+    mainContent.innerHTML =
+      '<div class="bb-browse-page">' +
+        '<!-- Breadcrumb -->' +
+        '<div class="bb-breadcrumb-bar">' +
+          '<div class="bb-breadcrumb-container">' +
+            '<a href="#/" class="bb-breadcrumb-link" onclick="Pages.renderLanding(); return false;">Home</a>' +
+            '<span class="bb-breadcrumb-separator">›</span>' +
+            '<span class="bb-breadcrumb-current">Top Deals</span>' +
+          '</div>' +
+        '</div>' +
 
-            <div class="filter-group">
-              <label>Category</label>
-              <select id="category-filter" onchange="Pages.applyBrowseFilters()">
-                <option value="">All Categories</option>
-                <option value="appliances">Appliances</option>
-                <option value="hostel-items">Hostel Items</option>
-                <option value="accessories">Accessories</option>
-                <option value="textbooks">Textbooks</option>
-                <option value="electronics">Electronics</option>
-                <option value="fashion">Fashion</option>
-                <option value="thrifts">Thrifts</option>
-              </select>
+        '<!-- Header Banner -->' +
+        '<div class="bb-browse-header">' +
+          '<div class="bb-browse-header-inner">' +
+            '<h1 class="bb-browse-title">Top Deals</h1>' +
+            '<p class="bb-browse-subtitle">Save big on items from students at your university</p>' +
+          '</div>' +
+        '</div>' +
+
+        '<!-- Toolbar -->' +
+        '<div class="bb-browse-toolbar">' +
+          '<div class="bb-browse-toolbar-inner">' +
+            '<div class="bb-browse-search">' +
+              '<input type="text" id="bb-search-input" class="bb-browse-search-input" placeholder="Search deals..." onkeyup="Pages.applyBrowseFilters()" />' +
+              '<button class="bb-browse-search-btn" onclick="Pages.applyBrowseFilters()">🔍</button>' +
+            '</div>' +
+            '<div class="bb-browse-results">Showing <strong>' + totalProducts + '</strong> deals</div>' +
+            '<div class="bb-browse-sort">' +
+              '<span class="bb-browse-sort-label">Sort by:</span>' +
+              '<select id="bb-sort-select" onchange="Pages.applySortOrder()">' +
+                '<option value="newest">Best Selling</option>' +
+                '<option value="price-low">Price: Low to High</option>' +
+                '<option value="price-high">Price: High to Low</option>' +
+                '<option value="rating">Customer Rating</option>' +
+                '<option value="savings">Biggest Savings</option>' +
+              '</select>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+
+        '<!-- Layout: Sidebar + Grid -->' +
+        '<div class="bb-browse-layout">' +
+          '<!-- Filter Sidebar -->' +
+          '<aside class="bb-browse-filters">' +
+            '<!-- Category Filter -->' +
+            '<div class="bb-filter-group">' +
+              '<h3 class="bb-filter-title">Category</h3>' +
+              '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-all" checked onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-all">All Categories</label></div>' +
+              '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-textbooks" value="textbooks" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-textbooks">Textbooks</label><span class="bb-filter-count">120</span></div>' +
+              '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-electronics" value="electronics" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-electronics">Electronics</label><span class="bb-filter-count">85</span></div>' +
+              '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-dorm" value="dorm" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-dorm">Dorm & Room</label><span class="bb-filter-count">95</span></div>' +
+              '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-furniture" value="furniture" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-furniture">Furniture</label><span class="bb-filter-count">45</span></div>' +
+              '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-clothing" value="clothing" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-clothing">Clothing</label><span class="bb-filter-count">60</span></div>' +
+              '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-sports" value="sports" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-sports">Sports</label><span class="bb-filter-count">35</span></div>' +
+            '</div>' +
+
+            '<!-- Condition Filter -->' +
+            '<div class="bb-filter-group">' +
+              '<h3 class="bb-filter-title">Condition</h3>' +
+              '<div class="bb-filter-option"><input type="checkbox" id="bb-cond-new" value="new" onchange="Pages.applyBrowseFilters()" /><label for="bb-cond-new">New</label></div>' +
+              '<div class="bb-filter-option"><input type="checkbox" id="bb-cond-excellent" value="excellent" onchange="Pages.applyBrowseFilters()" /><label for="bb-cond-excellent">Excellent</label></div>' +
+              '<div class="bb-filter-option"><input type="checkbox" id="bb-cond-good" value="good" onchange="Pages.applyBrowseFilters()" /><label for="bb-cond-good">Good</label></div>' +
+              '<div class="bb-filter-option"><input type="checkbox" id="bb-cond-fair" value="fair" onchange="Pages.applyBrowseFilters()" /><label for="bb-cond-fair">Fair</label></div>' +
+            '</div>' +
+
+            '<!-- Price Range -->' +
+            '<div class="bb-filter-group">' +
+              '<h3 class="bb-filter-title">Price</h3>' +
+              '<div class="bb-price-range">' +
+                '<input type="range" id="bb-price-range" class="bb-price-slider" min="0" max="5000" value="5000" oninput="document.getElementById(\'bb-price-val\').textContent=this.value; Pages.applyBrowseFilters()" />' +
+                '<div class="bb-price-values"><span>GHS 0</span><span>Up to <strong>GHS <span id="bb-price-val">5000</span></strong></span></div>' +
+              '</div>' +
+            '</div>' +
+
+            '<!-- Rating Filter -->' +
+            '<div class="bb-filter-group">' +
+              '<h3 class="bb-filter-title">Customer Rating</h3>' +
+              '<div class="bb-filter-rating"><input type="radio" name="bb-rating" id="bb-rate-4" value="4" onchange="Pages.applyBrowseFilters()" /><span class="bb-filter-stars">★★★★☆</span><span class="bb-filter-rating-label">& up</span></div>' +
+              '<div class="bb-filter-rating"><input type="radio" name="bb-rating" id="bb-rate-3" value="3" onchange="Pages.applyBrowseFilters()" /><span class="bb-filter-stars">★★★☆☆</span><span class="bb-filter-rating-label">& up</span></div>' +
+              '<div class="bb-filter-rating"><input type="radio" name="bb-rating" id="bb-rate-all" value="" checked onchange="Pages.applyBrowseFilters()" /><span class="bb-filter-rating-label">All Ratings</span></div>' +
+            '</div>' +
+
+            '<button class="bb-clear-filters" onclick="Pages.resetBrowseFilters()">✕ Clear All Filters</button>' +
+          '</aside>' +
+
+          '<!-- Product Grid -->' +
+          '<main class="bb-browse-main">' +
+            '<div class="bb-browse-grid" id="bb-browse-grid">' +
+              (paginatedData.products.length > 0 ? paginatedData.products.map(function (product) {
+                return Pages.renderBBProductCard(product);
+              }).join('') :
+              '<div class="bb-browse-empty"><div class="bb-browse-empty-icon">🔍</div><h3>No deals found</h3><p>Try adjusting your filters or search terms.</p></div>') +
+            '</div>' +
+
+            '<!-- Pagination -->' +
+            (paginatedData.pages > 1 ?
+              '<div class="bb-browse-pagination">' +
+                Array.from({ length: paginatedData.pages }, function (_, i) {
+                  return '<button class="bb-page-btn ' + ((i + 1 === paginatedData.currentPage) ? 'active' : '') + '" onclick="Pages.goToBrowsePage(' + (i + 1) + ')">' + (i + 1) + '</button>';
+                }).join('') +
+              '</div>' : ''
+            ) +
+          '</main>' +
+        '</div>' +
+      '</div>';
+  }
+
+  /**
+   * Render Product Card - Modern Professional Design
+   */
+  static renderProductCard (product) {
+    const isInWishlist = productsManager.isInWishlist(product.id);
+    const initials = product.seller.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    const conditionLabel = product.condition.charAt(0).toUpperCase() + product.condition.slice(1);
+    const categoryLabel = product.category.charAt(0).toUpperCase() + product.category.slice(1).replace('-', ' ');
+
+    return `
+      <div class="store-product-card" onclick="Pages.renderProductDetail('${product.id}')">
+        <!-- Image -->
+        <div class="store-product-image">
+          <img src="${product.images[0]}" alt="${product.title}" loading="lazy" />
+          <span class="store-condition-badge ${product.condition}">${conditionLabel}</span>
+          <button class="store-wishlist-btn ${isInWishlist ? 'active' : ''}"
+                  onclick="Pages.toggleWishlist(event, '${product.id}')"
+                  title="${isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}">
+            ${isInWishlist ? '❤️' : '🤍'}
+          </button>
+        </div>
+
+        <!-- Product Info -->
+        <div class="store-product-info">
+          <div class="store-product-category">${categoryLabel}</div>
+          <h3 class="store-product-title">${product.title}</h3>
+          <div class="store-product-price-row">
+            <span class="store-product-price">${product.price.toLocaleString()}</span>
+            <span class="store-product-currency">GHS</span>
+          </div>
+
+          <!-- Seller Row -->
+          <div class="store-product-seller-row">
+            <div class="store-seller-info">
+              <div class="store-seller-avatar">${initials}</div>
+              <span class="store-seller-name">${product.seller.name}</span>
             </div>
-
-            <div class="filter-group">
-              <label>Condition</label>
-              <div class="checkbox-group">
-                <div class="form-check">
-                  <input type="checkbox" id="fair-check" value="fair" onchange="Pages.applyBrowseFilters()" />
-                  <label for="fair-check">Fair</label>
-                </div>
-                <div class="form-check">
-                  <input type="checkbox" id="good-check" value="good" onchange="Pages.applyBrowseFilters()" />
-                  <label for="good-check">Good</label>
-                </div>
-                <div class="form-check">
-                  <input type="checkbox" id="excellent-check" value="excellent" onchange="Pages.applyBrowseFilters()" />
-                  <label for="excellent-check">Excellent</label>
-                </div>
-              </div>
+            <div class="store-seller-rating">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              ${product.seller.rating || '4.5'}
             </div>
-
-            <div class="filter-group">
-              <label>Price Range</label>
-              <input type="range" id="price-range" min="0" max="5000" value="5000" onchange="Pages.applyBrowseFilters()" />
-              <div class="price-display">
-                Up to GHS <span id="price-value">5000</span>
-              </div>
-            </div>
-
-            <button class="btn btn-outline btn-block" onclick="Pages.resetBrowseFilters()">Reset Filters</button>
           </div>
         </div>
 
-        <div class="browse-main">
-          <div class="browse-header">
-            <h1>Browse Products</h1>
-            <div class="browse-sort">
-              <select id="sort-select" onchange="Pages.applySortOrder()">
-                <option value="newest">Newest First</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="rating">Highest Rated</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="search-bar" style="margin-bottom: 2rem;">
-            <input type="text" id="search-input" placeholder="Search products..." onkeyup="Pages.applyBrowseFilters()" />
-          </div>
-
-          <div class="products-grid">
-            ${
-  paginatedData.products.length > 0
-    ? paginatedData.products
-      .map((product) => Pages.renderProductCard(product))
-      .join('')
-    : '<div class="empty-state">No products found. Try adjusting your filters.</div>'
-}
-          </div>
-
-          ${
-  paginatedData.pages > 1
-    ? `
-            <div class="pagination">
-              ${[...Array(paginatedData.pages).keys()]
-    .map(
-      (i) => `
-                <button class="btn btn-sm ${i + 1 === paginatedData.currentPage ? 'btn-primary' : 'btn-outline'}"
-                        onclick="Pages.goToBrowsePage(${i + 1})">
-                  ${i + 1}
-                </button>
-              `,
-    )
-    .join('')}
-            </div>
-          `
-    : ''
-}
+        <!-- Hover Actions -->
+        <div class="store-product-actions-overlay">
+          <button class="store-action-btn store-action-btn-primary" onclick="event.stopPropagation(); cartManager.add(${JSON.stringify(product).replace(/"/g, '&quot;')}); Pages.updateCartBadge();">🛒 Add to Cart</button>
+          <button class="store-action-btn store-action-btn-secondary" onclick="event.stopPropagation(); Pages.renderProductDetail('${product.id}')">View</button>
         </div>
       </div>
     `;
   }
 
   /**
-   * Render Product Card
+   * Render Best Buy-style Product Card for Browse/Top Deals page
    */
-  static renderProductCard (product) {
+  static renderBBProductCard (product) {
     const isInWishlist = productsManager.isInWishlist(product.id);
+    const initials = product.seller.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    const conditionLabel = product.condition.charAt(0).toUpperCase() + product.condition.slice(1);
+    const categoryLabel = product.category.charAt(0).toUpperCase() + product.category.slice(1).replace('-', ' ');
+    const isDeal = product.price > 30;
+    const savingsPercent = isDeal ? Math.round(Math.random() * 30 + 30) : 0;
 
-    return `
-      <div class="product-card" onclick="Pages.renderProductDetail('${product.id}')">
-        <div class="product-card-image">
-          <img src="${product.images[0]}" alt="${product.title}" />
-          <div class="product-card-badge ${product.condition}">
-            ${Formatter.getConditionBadge(product.condition)}
-          </div>
-          <button class="product-card-wishlist ${isInWishlist ? 'active' : ''}" 
-                  onclick="Pages.toggleWishlist(event, '${product.id}')">
-            ${isInWishlist ? '❤️' : '🤍'}
-          </button>
-        </div>
-        <div class="product-card-content">
-          <h3 class="product-card-title">${product.title}</h3>
-          <div class="product-card-price">${Formatter.formatPrice(product.price)}</div>
-          <div class="product-card-seller">${product.seller.name}</div>
-          <div class="product-card-rating">⭐ ${product.seller.rating}</div>
-        </div>
-      </div>
-    `;
+    return '<div class="bb-browse-card" onclick="Pages.renderProductDetail(\'' + product.id + '\')">' +
+      (isDeal ? '<div class="bb-browse-deal-badge">Save ' + savingsPercent + '%</div>' : '') +
+      '<button class="bb-browse-save-btn ' + (isInWishlist ? 'active' : '') + '" onclick="event.stopPropagation(); Pages.toggleWishlist(event, \'' + product.id + '\');">' + (isInWishlist ? '❤️' : '🤍') + '</button>' +
+      '<img src="' + product.images[0] + '" alt="' + product.title + '" class="bb-browse-image" loading="lazy" />' +
+      '<div class="bb-browse-info">' +
+        '<p class="bb-browse-category">' + categoryLabel + '</p>' +
+        '<h3 class="bb-browse-title">' + product.title + '</h3>' +
+        '<div class="bb-browse-rating">' +
+          '<span class="bb-browse-rating-stars">★★★★☆</span>' +
+          '<span class="bb-browse-rating-count">(' + (product.seller.rating || '4.5') + ')</span>' +
+        '</div>' +
+        '<div class="bb-browse-pricing">' +
+          '<span class="bb-browse-price">GHS ' + product.price.toLocaleString() + '</span>' +
+          (isDeal ? '<span class="bb-browse-original-price">GHS ' + Math.round(product.price * 1.5).toLocaleString() + '</span>' : '') +
+          (isDeal ? '<p class="bb-browse-savings">Save GHS ' + Math.round(product.price * 0.5).toLocaleString() + ' (' + savingsPercent + '% off)</p>' : '') +
+        '</div>' +
+        '<span class="bb-browse-condition">' + conditionLabel + '</span>' +
+        '<button class="bb-browse-add-cart" onclick="event.stopPropagation(); cartManager.add(' + JSON.stringify(product).replace(/"/g, '&quot;') + '); Pages.updateCartBadge();">🛒 Add to Cart</button>' +
+        '<div class="bb-browse-seller">' +
+          '<div class="bb-browse-seller-avatar">' + initials + '</div>' +
+          '<span class="bb-browse-seller-name">' + product.seller.name + '</span>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
   }
 
   /**
@@ -2465,9 +2570,15 @@ class Pages {
     document.getElementById('price-value').textContent = priceMax;
 
     const conditions = [];
-    if (document.getElementById('fair-check').checked) {conditions.push('fair');}
-    if (document.getElementById('good-check').checked) {conditions.push('good');}
-    if (document.getElementById('excellent-check').checked) {conditions.push('excellent');}
+    if (document.getElementById('fair-check').checked) {
+      conditions.push('fair');
+    }
+    if (document.getElementById('good-check').checked) {
+      conditions.push('good');
+    }
+    if (document.getElementById('excellent-check').checked) {
+      conditions.push('excellent');
+    }
 
     productsManager.filter({
       category: category || null,
@@ -2477,7 +2588,7 @@ class Pages {
 
     // Re-apply condition filter if needed
     if (conditions.length > 0) {
-      productsManager.filteredProducts = productsManager.filteredProducts.filter((p) =>
+      productsManager.filteredProducts = productsManager.filteredProducts.filter(p =>
         conditions.includes(p.condition),
       );
     }
@@ -2513,7 +2624,7 @@ class Pages {
     if (productsGrid) {
       productsGrid.innerHTML =
         paginatedData.products.length > 0
-          ? paginatedData.products.map((product) => this.renderProductCard(product)).join('')
+          ? paginatedData.products.map(product => this.renderProductCard(product)).join('')
           : '<div class="empty-state">No products found. Try adjusting your filters.</div>';
     }
   }
@@ -2527,14 +2638,14 @@ class Pages {
 
     if (productsGrid) {
       productsGrid.innerHTML = paginatedData.products
-        .map((product) => this.renderProductCard(product))
+        .map(product => this.renderProductCard(product))
         .join('');
       window.scrollTo(0, 200);
     }
   }
 
   /**
-   * Render Product Detail Page
+   * Render Product Detail Page - Modern Professional Design
    */
   static renderProductDetail (productId) {
     const product = productsManager.getById(productId);
@@ -2546,117 +2657,152 @@ class Pages {
 
     const mainContent = document.getElementById('main-content');
     const isInWishlist = productsManager.isInWishlist(productId);
+    const initials = product.seller.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    const conditionLabel = product.condition.charAt(0).toUpperCase() + product.condition.slice(1);
+    const categoryLabel = product.category.charAt(0).toUpperCase() + product.category.slice(1).replace('-', ' ');
 
     mainContent.innerHTML = `
-      <div class="container" style="padding: 2rem 1rem;">
-        <button class="btn btn-outline" onclick="history.back()">← Back</button>
+      <style>
+        .pd-page { min-height: 100vh; background: #0a0a0a; }
+        .pd-breadcrumb { padding: 1rem 2rem; max-width: 1400px; margin: 0 auto; }
+        .pd-back-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: #a1a1aa; font-size: 0.875rem; cursor: pointer; transition: all 0.2s; }
+        .pd-back-btn:hover { border-color: #6366f1; color: #a5b4fc; }
+        .pd-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; max-width: 1400px; margin: 0 auto; padding: 1rem 2rem 4rem; }
+        .pd-image-section { position: sticky; top: 2rem; height: fit-content; }
+        .pd-main-image { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.06); background: #141414; }
+        .pd-info-card { background: #141414; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.06); padding: 2rem; }
+        .pd-category-tag { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(99,102,241,0.15); color: #a5b4fc; margin-bottom: 0.75rem; }
+        .pd-title { font-size: 1.75rem; font-weight: 700; color: #fafafa; letter-spacing: -0.025em; margin-bottom: 1rem; line-height: 1.3; }
+        .pd-meta { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .pd-condition { padding: 0.375rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+        .pd-condition.excellent { background: rgba(16,185,129,0.2); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+        .pd-condition.good { background: rgba(245,158,11,0.2); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+        .pd-condition.fair { background: rgba(249,115,22,0.2); color: #fdba74; border: 1px solid rgba(249,115,22,0.3); }
+        .pd-date { font-size: 0.8rem; color: #71717a; }
+        .pd-price-box { margin-bottom: 1.5rem; }
+        .pd-price { font-size: 2.5rem; font-weight: 800; color: #fafafa; letter-spacing: -0.03em; }
+        .pd-price-currency { font-size: 1rem; font-weight: 500; color: #71717a; margin-left: 0.25rem; }
+        .pd-seller-card { background: #18181b; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
+        .pd-seller-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; color: #fff; flex-shrink: 0; }
+        .pd-seller-name { font-size: 0.95rem; font-weight: 600; color: #fafafa; }
+        .pd-seller-rating { font-size: 0.85rem; color: #fcd34d; display: flex; align-items: center; gap: 0.25rem; margin-top: 0.125rem; }
+        .pd-desc-card { background: #18181b; border-radius: 0.75rem; padding: 1.25rem; margin-bottom: 1.5rem; }
+        .pd-desc-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #71717a; margin-bottom: 0.5rem; }
+        .pd-desc-text { font-size: 0.95rem; color: #d4d4d8; line-height: 1.7; }
+        .pd-details-list { list-style: none; padding: 0; margin: 0 0 1.5rem 0; }
+        .pd-details-item { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.875rem; }
+        .pd-details-item:last-child { border-bottom: none; }
+        .pd-details-label { color: #71717a; }
+        .pd-details-value { color: #d4d4d8; font-weight: 500; }
+        .pd-methods-section { margin-bottom: 1.5rem; }
+        .pd-methods-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #71717a; margin-bottom: 0.5rem; }
+        .pd-methods-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .pd-method-tag { padding: 0.375rem 0.75rem; border-radius: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); font-size: 0.8rem; color: #d4d4d8; }
+        .pd-actions { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.5rem; }
+        .pd-btn { display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.875rem 1.5rem; border-radius: 0.75rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.25s; border: none; }
+        .pd-btn-primary { background: #6366f1; color: #fff; }
+        .pd-btn-primary:hover { background: #4f46e5; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(99,102,241,0.3); }
+        .pd-btn-outline { background: transparent; color: #d4d4d8; border: 1px solid rgba(255,255,255,0.1); }
+        .pd-btn-outline:hover { border-color: rgba(99,102,241,0.4); color: #a5b4fc; }
+        .pd-btn-outline.active { border-color: rgba(239,68,68,0.4); color: #fca5a5; background: rgba(239,68,68,0.05); }
+        .pd-secondary-actions { display: flex; gap: 0.5rem; }
+        .pd-secondary-actions .pd-btn { flex: 1; padding: 0.625rem; font-size: 0.85rem; }
+        @media (max-width: 768px) {
+          .pd-layout { grid-template-columns: 1fr; padding: 1rem; }
+          .pd-image-section { position: static; }
+          .pd-title { font-size: 1.375rem; }
+          .pd-price { font-size: 2rem; }
+        }
+      </style>
 
-        <div class="product-detail-layout">
-          <div class="product-detail-images">
-            <img src="${product.images[0]}" alt="${product.title}" class="main-image" />
+      <div class="pd-page">
+        <!-- Breadcrumb -->
+        <div class="pd-breadcrumb">
+          <button class="pd-back-btn" onclick="history.back()">← Back to Browse</button>
+        </div>
+
+        <!-- Layout -->
+        <div class="pd-layout">
+          <!-- Image Section -->
+          <div class="pd-image-section">
+            <img src="${product.images[0]}" alt="${product.title}" class="pd-main-image" />
           </div>
 
-          <div class="product-detail-info">
-            <h1>${product.title}</h1>
+          <!-- Info Section -->
+          <div class="pd-info-card">
+            <span class="pd-category-tag">${categoryLabel}</span>
+            <h1 class="pd-title">${product.title}</h1>
 
-            <div class="product-detail-meta">
-              <span class="condition-badge ${product.condition}">
-                ${Formatter.getConditionBadge(product.condition)}
-              </span>
-              <span class="posted-date">${Formatter.formatTimeAgo(product.createdAt)}</span>
+            <div class="pd-meta">
+              <span class="pd-condition ${product.condition}">${conditionLabel}</span>
+              <span class="pd-date">Listed ${Formatter.formatTimeAgo(product.createdAt)}</span>
             </div>
 
-            <div class="seller-info">
-              <h3>Seller Information</h3>
-              <p><strong>${product.seller.name}</strong></p>
-              <p>⭐ Rating: ${product.seller.rating} / 5</p>
+            <!-- Price -->
+            <div class="pd-price-box">
+              <span class="pd-price">${product.price.toLocaleString()}<span class="pd-price-currency">GHS</span></span>
             </div>
 
-            <div class="product-price">
-              <span class="price">${Formatter.formatPrice(product.price)}</span>
-            </div>
-
-            <div class="product-description">
-              <h3>Description</h3>
-              <p>${product.description}</p>
-            </div>
-
-            <div class="product-details">
-              <h3>Product Details</h3>
-              <ul>
-                <li><strong>Category:</strong> ${product.category}</li>
-                <li><strong>Condition:</strong> ${Formatter.capitalize(product.condition)}</li>
-                <li><strong>Location:</strong> University of Ghana (UG)</li>
-              </ul>
-            </div>
-
-            <div class="delivery-payment">
-              <div class="delivery-methods">
-                <h3>Delivery Methods</h3>
-                <div class="methods-list">
-                  ${product.deliveryModes
-    .map(
-      (mode) => `
-                    <div class="method-item">
-                      <input type="radio" name="delivery" id="delivery-${mode}" value="${mode}" />
-                      <label for="delivery-${mode}">${Formatter.capitalize(mode)}</label>
-                    </div>
-                  `,
-    )
-    .join('')}
-                </div>
-              </div>
-
-              <div class="payment-methods">
-                <h3>Payment Methods</h3>
-                <div class="methods-list">
-                  ${product.paymentModes
-    .map(
-      (mode) => `
-                    <div class="method-item">
-                      <input type="radio" name="payment" id="payment-${mode}" value="${mode}" />
-                      <label for="payment-${mode}">${Formatter.capitalize(mode)}</label>
-                    </div>
-                  `,
-    )
-    .join('')}
+            <!-- Seller -->
+            <div class="pd-seller-card">
+              <div class="pd-seller-avatar">${initials}</div>
+              <div>
+                <div class="pd-seller-name">${product.seller.name}</div>
+                <div class="pd-seller-rating">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  ${product.seller.rating || '4.5'} rating
                 </div>
               </div>
             </div>
 
-            <!-- Commerce Action Buttons -->
-            <div class="product-action-bar">
-              <div class="commerce-button-group">
-                <button class="commerce-btn commerce-btn-default commerce-btn-lg" onclick="Pages.addToCart('${productId}')">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="9" cy="21" r="1"></circle>
-                    <circle cx="20" cy="21" r="1"></circle>
-                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                  </svg>
-                  Buy Now
+            <!-- Description -->
+            <div class="pd-desc-card">
+              <div class="pd-desc-label">Description</div>
+              <p class="pd-desc-text">${product.description}</p>
+            </div>
+
+            <!-- Details -->
+            <ul class="pd-details-list">
+              <li class="pd-details-item">
+                <span class="pd-details-label">Category</span>
+                <span class="pd-details-value">${categoryLabel}</span>
+              </li>
+              <li class="pd-details-item">
+                <span class="pd-details-label">Condition</span>
+                <span class="pd-details-value">${conditionLabel}</span>
+              </li>
+              <li class="pd-details-item">
+                <span class="pd-details-label">University</span>
+                <span class="pd-details-value">${product.university ? product.university.toUpperCase() : 'N/A'}</span>
+              </li>
+            </ul>
+
+            <!-- Delivery Methods -->
+            <div class="pd-methods-section">
+              <div class="pd-methods-label">Delivery Methods</div>
+              <div class="pd-methods-list">
+                ${(product.deliveryModes || []).map(m => `<span class="pd-method-tag">${m.charAt(0).toUpperCase() + m.slice(1)}</span>`).join('')}
+              </div>
+            </div>
+
+            <!-- Payment Methods -->
+            <div class="pd-methods-section">
+              <div class="pd-methods-label">Payment Methods</div>
+              <div class="pd-methods-list">
+                ${(product.paymentModes || []).map(m => `<span class="pd-method-tag">${m.toUpperCase()}</span>`).join('')}
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="pd-actions">
+              <button class="pd-btn pd-btn-primary" onclick="cartManager.add(${JSON.stringify(product).replace(/"/g, '&quot;')}); Pages.updateCartBadge(); if(typeof toastManager!=='undefined') toastManager.success('Added to cart','Product added successfully');">
+                🛒 Add to Cart
+              </button>
+              <div class="pd-secondary-actions">
+                <button class="pd-btn pd-btn-outline ${isInWishlist ? 'active' : ''}" onclick="Pages.toggleWishlistDetail('${productId}')">
+                  ${isInWishlist ? '❤️ Saved' : '🤍 Save'}
                 </button>
-                <button class="commerce-btn commerce-btn-outline commerce-btn-lg ${isInWishlist ? 'active' : ''}" onclick="Pages.toggleWishlistDetail('${productId}')">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="${isInWishlist ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                  </svg>
-                  ${isInWishlist ? 'Saved' : 'Save'}
-                </button>
-                <button class="commerce-btn commerce-btn-secondary commerce-btn-lg" onclick="Pages.writeReview('${productId}')">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                  </svg>
-                  Review
-                </button>
-                <button class="commerce-btn commerce-btn-ghost commerce-btn-lg" onclick="Pages.shareProduct('${productId}')">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="18" cy="5" r="3"></circle>
-                    <circle cx="6" cy="12" r="3"></circle>
-                    <circle cx="18" cy="19" r="3"></circle>
-                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                  </svg>
-                  Share
-                </button>
+                <button class="pd-btn pd-btn-outline" onclick="Pages.shareProduct('${productId}')">📤 Share</button>
               </div>
             </div>
           </div>
@@ -2709,20 +2855,26 @@ class Pages {
 
     // Try to use Web Share API if available
     if (navigator.share) {
-      navigator.share({
-        title: product.title,
-        text: `Check out this item on Uni-Hub: ${product.title}`,
-        url: shareUrl,
-      }).catch((error) => {
-        console.log('Share cancelled', error);
-      });
+      navigator
+        .share({
+          title: product.title,
+          text: `Check out this item on Uni-Hub: ${product.title}`,
+          url: shareUrl,
+        })
+        .catch(error => {
+          // eslint-disable-next-line no-console
+          console.log('Share cancelled', error);
+        });
     } else {
       // Fallback: copy to clipboard
-      navigator.clipboard.writeText(shareUrl).then(() => {
-        notificationManager.success('Link Copied', 'Product link copied to clipboard');
-      }).catch(() => {
-        prompt('Copy this link:', shareUrl);
-      });
+      navigator.clipboard
+        .writeText(shareUrl)
+        .then(() => {
+          notificationManager.success('Link Copied', 'Product link copied to clipboard');
+        })
+        .catch(() => {
+          prompt('Copy this link:', shareUrl);
+        });
     }
   }
 
@@ -2760,7 +2912,7 @@ class Pages {
             
             ${cartItems
     .map(
-      (item) => `
+      item => `
               <div class="cart-item" data-product-id="${item.product.id}">
                 <div class="cart-item-image">
                   <img src="${item.product.images[0]}" alt="${item.product.title}" />
@@ -2904,7 +3056,7 @@ class Pages {
                 <div class="delivery-options">
                   ${deliveryOptions
     .map(
-      (option) => `
+      option => `
                     <div class="option-card" onclick="Pages.selectDeliveryOption('${option.value}', this)">
                       <input type="radio" name="deliveryMode" value="${option.value}" id="delivery-${option.value}" />
                       <div class="option-icon">${option.icon}</div>
@@ -2955,7 +3107,7 @@ class Pages {
                 <div class="payment-options">
                   ${paymentOptions
     .map(
-      (option) => `
+      option => `
                     <div class="option-card" onclick="Pages.selectPaymentOption('${option.value}', this)">
                       <input type="radio" name="paymentMode" value="${option.value}" id="payment-${option.value}" />
                       <div class="option-icon">${option.icon}</div>
@@ -2975,7 +3127,7 @@ class Pages {
               <div class="order-items">
                 ${cartItems
     .map(
-      (item) => `
+      item => `
                   <div class="order-item">
                     <div class="order-item-image">
                       <img src="${item.product.images[0]}" alt="${item.product.title}" />
@@ -3023,18 +3175,21 @@ class Pages {
    */
   static selectDeliveryOption (value, element) {
     // Update radio button
-    document.querySelectorAll('input[name="deliveryMode"]').forEach((radio) => {
+    document.querySelectorAll('input[name="deliveryMode"]').forEach(radio => {
       radio.checked = radio.value === value;
     });
 
     // Update visual selection
-    document.querySelectorAll('.delivery-options .option-card').forEach((card) => {
+    document.querySelectorAll('.delivery-options .option-card').forEach(card => {
       card.classList.remove('selected');
     });
     element.classList.add('selected');
 
     // Update delivery fee
-    const deliveryFee = checkoutManager.calculateDeliveryFee(value, cartManager.getSummary().subtotal);
+    const deliveryFee = checkoutManager.calculateDeliveryFee(
+      value,
+      cartManager.getSummary().subtotal,
+    );
     document.getElementById('delivery-fee').textContent = Formatter.formatPrice(deliveryFee);
 
     // Update grand total
@@ -3048,12 +3203,12 @@ class Pages {
    */
   static selectPaymentOption (value, element) {
     // Update radio button
-    document.querySelectorAll('input[name="paymentMode"]').forEach((radio) => {
+    document.querySelectorAll('input[name="paymentMode"]').forEach(radio => {
       radio.checked = radio.value === value;
     });
 
     // Update visual selection
-    document.querySelectorAll('.payment-options .option-card').forEach((card) => {
+    document.querySelectorAll('.payment-options .option-card').forEach(card => {
       card.classList.remove('selected');
     });
     element.classList.add('selected');
@@ -3131,7 +3286,10 @@ class Pages {
 
         if (paymentResult.success) {
           // Send notification
-          notificationManager.success('Order Confirmed', `Your order #${result.order.orderNumber} has been confirmed!`);
+          notificationManager.success(
+            'Order Confirmed',
+            `Your order #${result.order.orderNumber} has been confirmed!`,
+          );
 
           // Render confirmation page
           this.renderOrderConfirmation(result.order);
@@ -3259,7 +3417,7 @@ class Pages {
         <div class="cart-items">
           ${orders
     .map(
-      (order) => `
+      order => `
             <div class="cart-item" style="display: block;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <div>
@@ -3278,7 +3436,7 @@ class Pages {
               <div style="border-top: 1px solid var(--neutral-200); padding-top: 1rem;">
                 ${order.items
     .map(
-      (item) => `
+      item => `
                   <div style="display: flex; gap: 1rem; margin-bottom: 0.75rem;">
                     <img src="${item.image}" alt="${item.title}" style="width: 60px; height: 60px; object-fit: cover; border-radius: var(--radius-md);" />
                     <div style="flex: 1;">
@@ -3397,18 +3555,17 @@ class Pages {
       <div class="container" style="padding: 2rem 1rem;">
         <h1 style="margin-bottom: 1.5rem;">My Wishlist</h1>
         <div class="products-grid">
-          ${wishlistProducts.map((product) => this.renderProductCard(product)).join('')}
+          ${wishlistProducts.map(product => this.renderProductCard(product)).join('')}
         </div>
       </div>
     `;
   }
 
   /**
-   * Render User Dashboard
+   * Render User Dashboard - Vertical Tabs Modern Design
    */
   static renderDashboard () {
     const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
-    const orders = checkoutManager.getUserOrders(currentUser?.id || '');
 
     if (!currentUser) {
       alert('Please login to view your dashboard.');
@@ -3416,87 +3573,320 @@ class Pages {
       return;
     }
 
+    this.showOriginalNavFooter();
+
     const mainContent = document.getElementById('main-content');
+    const orders = checkoutManager.getUserOrders(currentUser.id || '');
+    const wishlist = productsManager.getWishlist();
+    const cartCount = cartManager.getCount();
+    const initials = currentUser.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+
+    const recentOrders = orders.slice(0, 5);
+
     mainContent.innerHTML = `
-      <div class="dashboard-container">
-        <aside class="dashboard-sidebar">
-          <ul class="dashboard-menu">
-            <li class="dashboard-menu-item">
-              <a href="#" class="dashboard-menu-link active">
-                <span class="dashboard-menu-icon">📊</span>
-                <span>Overview</span>
-              </a>
-            </li>
-            <li class="dashboard-menu-item">
-              <a href="#" class="dashboard-menu-link" onclick="Pages.renderOrders()">
-                <span class="dashboard-menu-icon">📦</span>
-                <span>My Orders</span>
-              </a>
-            </li>
-            <li class="dashboard-menu-item">
-              <a href="#" class="dashboard-menu-link" onclick="Pages.renderWishlist()">
-                <span class="dashboard-menu-icon">🤍</span>
-                <span>Wishlist</span>
-              </a>
-            </li>
-            <li class="dashboard-menu-item">
-              <a href="#" class="dashboard-menu-link" onclick="Pages.renderProfile()">
-                <span class="dashboard-menu-icon">👤</span>
-                <span>Profile</span>
-              </a>
-            </li>
-          </ul>
-        </aside>
-        <main class="dashboard-main">
-          <div class="dashboard-header">
-            <h1 class="dashboard-title">Welcome back, ${currentUser.fullName}!</h1>
-          </div>
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-card-header">
-                <div class="stat-card-icon">📦</div>
+      <div class="dashboard-vertical">
+        <div class="dashboard-card">
+          <!-- Sidebar -->
+          <aside class="dv-sidebar">
+            <div class="dv-user-info">
+              <div class="dv-user-avatar">${initials}</div>
+              <div>
+                <div class="dv-user-name">${currentUser.fullName}</div>
+                <div class="dv-user-email">${currentUser.email}</div>
               </div>
-              <div class="stat-card-value">${orders.length}</div>
-              <div class="stat-card-label">Total Orders</div>
             </div>
-            <div class="stat-card">
-              <div class="stat-card-header">
-                <div class="stat-card-icon">🤍</div>
+
+            <div class="dv-tabs">
+              <button class="dv-tab active" data-tab="overview" onclick="Pages.switchDashboardTab('overview')">
+                <span class="dv-tab-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="7" height="9" x="3" y="3" rx="1" />
+                    <rect width="7" height="5" x="14" y="3" rx="1" />
+                    <rect width="7" height="9" x="14" y="12" rx="1" />
+                    <rect width="7" height="5" x="3" y="16" rx="1" />
+                  </svg>
+                </span>
+                <span class="dv-tab-label">Overview</span>
+              </button>
+
+              <button class="dv-tab" data-tab="orders" onclick="Pages.switchDashboardTab('orders')">
+                <span class="dv-tab-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+                    <path d="M3 6h18" />
+                    <path d="M16 10a4 4 0 0 1-8 0" />
+                  </svg>
+                </span>
+                <span class="dv-tab-label">Orders</span>
+                ${orders.length > 0 ? `<span class="dv-tab-badge">${orders.length}</span>` : ''}
+              </button>
+
+              <button class="dv-tab" data-tab="wishlist" onclick="Pages.switchDashboardTab('wishlist')">
+                <span class="dv-tab-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                  </svg>
+                </span>
+                <span class="dv-tab-label">Wishlist</span>
+                ${wishlist.length > 0 ? `<span class="dv-tab-badge">${wishlist.length}</span>` : ''}
+              </button>
+
+              <button class="dv-tab" data-tab="cart" onclick="Pages.switchDashboardTab('cart')">
+                <span class="dv-tab-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="8" cy="21" r="1" />
+                    <circle cx="19" cy="21" r="1" />
+                    <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
+                  </svg>
+                </span>
+                <span class="dv-tab-label">Cart</span>
+                ${cartCount > 0 ? `<span class="dv-tab-badge">${cartCount}</span>` : ''}
+              </button>
+
+              <button class="dv-tab" data-tab="profile" onclick="Pages.switchDashboardTab('profile')">
+                <span class="dv-tab-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                </span>
+                <span class="dv-tab-label">Profile</span>
+              </button>
+
+              <button class="dv-tab" data-tab="settings" onclick="Pages.switchDashboardTab('settings')">
+                <span class="dv-tab-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </span>
+                <span class="dv-tab-label">Settings</span>
+              </button>
+            </div>
+          </aside>
+
+          <!-- Content Area -->
+          <main class="dv-content">
+            <!-- Overview Panel -->
+            <div class="dv-panel active" id="dv-panel-overview">
+              <h1 class="dv-panel-title">Welcome back, ${currentUser.fullName}!</h1>
+              <p class="dv-panel-subtitle">Here's what's happening with your account today.</p>
+
+              <div class="dv-stats">
+                <div class="dv-stat">
+                  <div class="dv-stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                  </div>
+                  <div class="dv-stat-value">${orders.length}</div>
+                  <div class="dv-stat-label">Total Orders</div>
+                </div>
+                <div class="dv-stat">
+                  <div class="dv-stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                  </div>
+                  <div class="dv-stat-value">${wishlist.length}</div>
+                  <div class="dv-stat-label">Wishlist Items</div>
+                </div>
+                <div class="dv-stat">
+                  <div class="dv-stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+                  </div>
+                  <div class="dv-stat-value">${cartCount}</div>
+                  <div class="dv-stat-label">Cart Items</div>
+                </div>
+                <div class="dv-stat">
+                  <div class="dv-stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  </div>
+                  <div class="dv-stat-value">${currentUser.university ? currentUser.university.toUpperCase() : 'N/A'}</div>
+                  <div class="dv-stat-label">University</div>
+                </div>
               </div>
-              <div class="stat-card-value">${productsManager.getWishlist().length}</div>
-              <div class="stat-card-label">Wishlist Items</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-card-header">
-                <div class="stat-card-icon">🛒</div>
+
+              <div class="dv-section-header">
+                <h2 class="dv-section-title">Recent Orders</h2>
+                <button class="dv-section-link" onclick="Pages.switchDashboardTab('orders')">View All →</button>
               </div>
-              <div class="stat-card-value">${cartManager.getCount()}</div>
-              <div class="stat-card-label">Cart Items</div>
-            </div>
-          </div>
-          <div class="dashboard-section">
-            <div class="dashboard-section-header">
-              <h3 class="dashboard-section-title">Recent Orders</h3>
-              <a href="#" class="dashboard-section-link" onclick="Pages.renderOrders()">View All</a>
-            </div>
-            ${orders.length > 0 ? `
-              <ul class="activity-list">
-                ${orders.slice(0, 5).map((order) => `
-                  <li class="activity-item">
-                    <div class="activity-icon">📦</div>
-                    <div class="activity-content">
-                      <div class="activity-title">Order #${order.orderNumber}</div>
-                      <div class="activity-description">${Formatter.formatPrice(order.pricing.grandTotal)}</div>
-                      <div class="activity-time">${Formatter.formatTimeAgo(order.createdAt)}</div>
+
+              <div class="dv-orders">
+                ${recentOrders.length > 0 ? recentOrders.map(order => `
+                  <div class="dv-order-item">
+                    <div class="dv-order-icon">📦</div>
+                    <div class="dv-order-info">
+                      <div class="dv-order-number">Order #${order.orderNumber}</div>
+                      <div class="dv-order-amount">${Formatter.formatPrice(order.pricing.grandTotal)}</div>
                     </div>
-                  </li>
-                `).join('')}
-              </ul>
-            ` : '<p class="empty-state">No orders yet. Start shopping!</p>'}
-          </div>
-        </main>
+                    <div class="dv-order-time">${Formatter.formatTimeAgo(order.createdAt)}</div>
+                    <span class="dv-order-status ${order.status ? order.status.toLowerCase() : 'placed'}">${order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'Placed'}</span>
+                  </div>
+                `).join('') : `
+                  <div class="dv-empty">
+                    <div class="dv-empty-icon">📦</div>
+                    <h3>No orders yet</h3>
+                    <p>Start shopping to see your orders here!</p>
+                  </div>
+                `}
+              </div>
+            </div>
+
+            <!-- Orders Panel -->
+            <div class="dv-panel" id="dv-panel-orders">
+              <h1 class="dv-panel-title">My Orders</h1>
+              <p class="dv-panel-subtitle">Track and manage all your orders.</p>
+
+              <div class="dv-orders">
+                ${orders.length > 0 ? orders.map(order => `
+                  <div class="dv-order-item">
+                    <div class="dv-order-icon">📦</div>
+                    <div class="dv-order-info">
+                      <div class="dv-order-number">Order #${order.orderNumber}</div>
+                      <div class="dv-order-amount">${order.items.length} item(s) • ${Formatter.formatPrice(order.pricing.grandTotal)}</div>
+                    </div>
+                    <div class="dv-order-time">${Formatter.formatTimeAgo(order.createdAt)}</div>
+                    <span class="dv-order-status ${order.status ? order.status.toLowerCase() : 'placed'}">${order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'Placed'}</span>
+                  </div>
+                `).join('') : `
+                  <div class="dv-empty">
+                    <div class="dv-empty-icon">🛒</div>
+                    <h3>No orders yet</h3>
+                    <p>Browse products and make your first purchase!</p>
+                  </div>
+                `}
+              </div>
+            </div>
+
+            <!-- Wishlist Panel -->
+            <div class="dv-panel" id="dv-panel-wishlist">
+              <h1 class="dv-panel-title">My Wishlist</h1>
+              <p class="dv-panel-subtitle">Items you've saved for later.</p>
+
+              ${wishlist.length > 0 ? `
+                <div class="dv-wishlist-grid">
+                  ${wishlist.map(product => `
+                    <div class="store-product-card" onclick="Pages.renderProductDetail('${product.id}')">
+                      <div class="store-product-image">
+                        <img src="${product.images[0]}" alt="${product.title}" loading="lazy" />
+                        <span class="store-condition-badge ${product.condition}">${product.condition.charAt(0).toUpperCase() + product.condition.slice(1)}</span>
+                        <button class="store-wishlist-btn active" onclick="Pages.toggleWishlist(event, '${product.id}'); Pages.renderDashboard();">❤️</button>
+                      </div>
+                      <div class="store-product-info">
+                        <h3 class="store-product-title">${product.title}</h3>
+                        <div class="store-product-price-row">
+                          <span class="store-product-price">${product.price.toLocaleString()}</span>
+                          <span class="store-product-currency">GHS</span>
+                        </div>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : `
+                <div class="dv-empty">
+                  <div class="dv-empty-icon">🤍</div>
+                  <h3>Your wishlist is empty</h3>
+                  <p>Save items you love to find them later!</p>
+                </div>
+              `}
+            </div>
+
+            <!-- Cart Panel -->
+            <div class="dv-panel" id="dv-panel-cart">
+              <h1 class="dv-panel-title">Shopping Cart</h1>
+              <p class="dv-panel-subtitle">Review items before checkout.</p>
+
+              ${cartCount > 0 ? `
+                <div class="dv-orders">
+                  ${cartManager.getItems().map(item => `
+                    <div class="dv-order-item">
+                      <div class="dv-order-icon">🛒</div>
+                      <div class="dv-order-info">
+                        <div class="dv-order-number">${item.product.title}</div>
+                        <div class="dv-order-amount">Qty: ${item.quantity} × ${item.product.price.toLocaleString()} GHS</div>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+                <div style="margin-top:1.5rem;display:flex;gap:0.75rem;">
+                  <button class="dv-btn dv-btn-outline" onclick="cartManager.clear(); Pages.renderDashboard();">Clear Cart</button>
+                  <button class="dv-btn dv-btn-primary" onclick="Pages.renderCheckout()">Proceed to Checkout →</button>
+                </div>
+              ` : `
+                <div class="dv-empty">
+                  <div class="dv-empty-icon">🛒</div>
+                  <h3>Your cart is empty</h3>
+                  <p>Add items to get started!</p>
+                </div>
+              `}
+            </div>
+
+            <!-- Profile Panel -->
+            <div class="dv-panel" id="dv-panel-profile">
+              <h1 class="dv-panel-title">Edit Profile</h1>
+              <p class="dv-panel-subtitle">Update your personal information.</p>
+
+              <div class="dv-profile">
+                <form id="profile-form" onsubmit="Pages.handleProfileUpdate(event)">
+                  <div class="dv-form-group">
+                    <label class="dv-form-label">Full Name</label>
+                    <input type="text" id="fullName" name="fullName" class="dv-form-input" value="${currentUser.fullName}" required />
+                  </div>
+                  <div class="dv-form-group">
+                    <label class="dv-form-label">Email</label>
+                    <input type="email" id="email" name="email" class="dv-form-input" value="${currentUser.email}" required />
+                  </div>
+                  <div class="dv-form-group">
+                    <label class="dv-form-label">Phone</label>
+                    <input type="tel" id="phone" name="phone" class="dv-form-input" value="${currentUser.phone || ''}" />
+                  </div>
+                  <div class="dv-form-group">
+                    <label class="dv-form-label">University</label>
+                    <input type="text" class="dv-form-input" value="${currentUser.university || 'Not set'}" disabled />
+                  </div>
+                  <button type="submit" class="dv-btn dv-btn-primary" style="width:100%;margin-top:1rem;">Save Changes</button>
+                </form>
+              </div>
+            </div>
+
+            <!-- Settings Panel -->
+            <div class="dv-panel" id="dv-panel-settings">
+              <h1 class="dv-panel-title">Settings</h1>
+              <p class="dv-panel-subtitle">Manage your account preferences.</p>
+
+              <div class="dv-profile">
+                <div class="dv-form-group">
+                  <label class="dv-form-label">Account Status</label>
+                  <input type="text" class="dv-form-input" value="${currentUser.isVerified ? '✓ Verified' : '⏳ Pending Verification'}" disabled />
+                </div>
+                <div class="dv-form-group">
+                  <label class="dv-form-label">Role</label>
+                  <input type="text" class="dv-form-input" value="${currentUser.role ? currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1) : 'Buyer'}" disabled />
+                </div>
+                <div style="margin-top:2rem;display:flex;flex-direction:column;gap:0.75rem;">
+                  <button class="dv-btn dv-btn-outline" onclick="Pages.renderLogin(); Pages.handleLogout();">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                    Log Out
+                  </button>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
       </div>
     `;
+  }
+
+  /**
+   * Switch Dashboard Tab
+   */
+  static switchDashboardTab (tabId) {
+    // Update tab buttons
+    document.querySelectorAll('.dv-tab').forEach(tab => {
+      tab.classList.toggle('active', tab.dataset.tab === tabId);
+    });
+
+    // Update panels
+    document.querySelectorAll('.dv-panel').forEach(panel => {
+      panel.classList.toggle('active', panel.id === `dv-panel-${tabId}`);
+    });
   }
 
   /**
@@ -3582,9 +3972,13 @@ class Pages {
     mainContent.innerHTML = `
       <div class="container" style="padding: 2rem 1rem; max-width: 800px;">
         <h1 style="margin-bottom: 1.5rem;">Notifications</h1>
-        ${notifications.length > 0 ? `
+        ${
+  notifications.length > 0
+    ? `
           <div class="cart-items">
-            ${notifications.map((n) => `
+            ${notifications
+    .map(
+      n => `
               <div class="cart-item ${n.read ? 'read' : 'unread'}" style="display: flex; align-items: flex-start; gap: 1rem;">
                 <div style="font-size: 2rem;">${n.icon}</div>
                 <div style="flex: 1;">
@@ -3596,15 +3990,19 @@ class Pages {
                 </div>
                 <button class="remove-btn" onclick="notificationManager.delete('${n.id}'); Pages.renderNotifications();">×</button>
               </div>
-            `).join('')}
+            `,
+    )
+    .join('')}
           </div>
-        ` : `
+        `
+    : `
           <div class="empty-cart">
             <div class="empty-cart-icon">🔔</div>
             <h3>No notifications</h3>
             <p>You're all caught up!</p>
           </div>
-        `}
+        `
+}
       </div>
     `;
   }
@@ -3791,9 +4189,13 @@ class Pages {
           <h1>Manage Products</h1>
           <button class="btn btn-primary" onclick="Pages.renderAddProduct()">+ Add Product</button>
         </div>
-        ${sellerProducts.length > 0 ? `
+        ${
+  sellerProducts.length > 0
+    ? `
           <div class="seller-products-grid">
-            ${sellerProducts.map((product) => `
+            ${sellerProducts
+    .map(
+      product => `
               <div class="seller-product-card">
                 <div class="seller-product-image">
                   <img src="${product.images[0]}" alt="${product.title}" />
@@ -3808,16 +4210,20 @@ class Pages {
                   </div>
                 </div>
               </div>
-            `).join('')}
+            `,
+    )
+    .join('')}
           </div>
-        ` : `
+        `
+    : `
           <div class="empty-cart">
             <div class="empty-cart-icon">📦</div>
             <h3>No products yet</h3>
             <p>Start selling by adding your first product.</p>
             <button class="btn btn-primary" onclick="Pages.renderAddProduct()">Add Product</button>
           </div>
-        `}
+        `
+}
       </div>
     `;
   }
@@ -3850,7 +4256,9 @@ class Pages {
       <div class="container" style="padding: 2rem 1rem; max-width: 800px;">
         <h1 style="margin-bottom: 1.5rem;">Delivery Options</h1>
         <div class="delivery-options">
-          ${deliveryOptions.map((option) => `
+          ${deliveryOptions
+    .map(
+      option => `
             <div class="option-card">
               <div class="option-icon">${option.icon}</div>
               <div class="option-label">${option.name}</div>
@@ -3858,7 +4266,9 @@ class Pages {
               <div class="option-fee">${option.fee === 0 ? 'Free' : `GHS ${option.fee}`}</div>
               <div class="option-fee" style="font-size: 0.75rem;">${option.estimatedTime}</div>
             </div>
-          `).join('')}
+          `,
+    )
+    .join('')}
         </div>
       </div>
     `;
@@ -3874,7 +4284,9 @@ class Pages {
     mainContent.innerHTML = `
       <div class="container" style="padding: 2rem 1rem; max-width: 800px;">
         <h1 style="margin-bottom: 1.5rem;">Track Order</h1>
-        ${delivery ? `
+        ${
+  delivery
+    ? `
           <div class="order-confirmation-container">
             <div class="confirmation-icon">🚚</div>
             <h2>Order #${delivery.orderNumber}</h2>
@@ -3896,14 +4308,16 @@ class Pages {
               </div>
             </div>
           </div>
-        ` : `
+        `
+    : `
           <div class="empty-cart">
             <div class="empty-cart-icon">📦</div>
             <h3>Order not found</h3>
             <p>Unable to track this order.</p>
             <button class="btn btn-primary" onclick="Pages.renderOrders()">View My Orders</button>
           </div>
-        `}
+        `
+}
       </div>
     `;
   }
@@ -4161,7 +4575,9 @@ class Pages {
                 </tr>
               </thead>
               <tbody>
-                ${users.map((user) => `
+                ${users
+    .map(
+      user => `
                   <tr>
                     <td>
                       <div class="user-cell">
@@ -4185,7 +4601,9 @@ class Pages {
                       </div>
                     </td>
                   </tr>
-                `).join('')}
+                `,
+    )
+    .join('')}
               </tbody>
             </table>
           </div>
@@ -4242,7 +4660,9 @@ class Pages {
                 </tr>
               </thead>
               <tbody>
-                ${products.map((product) => `
+                ${products
+    .map(
+      product => `
                   <tr>
                     <td>
                       <div class="product-cell">
@@ -4261,7 +4681,9 @@ class Pages {
                       </div>
                     </td>
                   </tr>
-                `).join('')}
+                `,
+    )
+    .join('')}
               </tbody>
             </table>
           </div>
@@ -4319,7 +4741,9 @@ class Pages {
                 </tr>
               </thead>
               <tbody>
-                ${orders.map((order) => `
+                ${orders
+    .map(
+      order => `
                   <tr>
                     <td>${order.orderNumber}</td>
                     <td>${order.customer.name}</td>
@@ -4333,7 +4757,9 @@ class Pages {
                       </div>
                     </td>
                   </tr>
-                `).join('')}
+                `,
+    )
+    .join('')}
               </tbody>
             </table>
           </div>
@@ -4388,7 +4814,9 @@ class Pages {
                 </tr>
               </thead>
               <tbody>
-                ${regions.map((region) => `
+                ${regions
+    .map(
+      region => `
                   <tr>
                     <td>${region.name}</td>
                     <td>${region.capital}</td>
@@ -4399,7 +4827,9 @@ class Pages {
                       </div>
                     </td>
                   </tr>
-                `).join('')}
+                `,
+    )
+    .join('')}
               </tbody>
             </table>
           </div>

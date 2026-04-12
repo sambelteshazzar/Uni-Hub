@@ -73,10 +73,9 @@ const paymentSchema = new mongoose.Schema({
 paymentSchema.index({ orderId: 1 });
 paymentSchema.index({ userId: 1, createdAt: -1 });
 paymentSchema.index({ status: 1 });
-paymentSchema.index({ transactionId: 1 });
 
 // Generate payment number before saving
-paymentSchema.pre('save', async function(next) {
+paymentSchema.pre('save', async function (next) {
   if (this.isNew && !this.paymentNumber) {
     const date = new Date();
     const year = date.getFullYear().toString().substr(-2);
@@ -89,17 +88,17 @@ paymentSchema.pre('save', async function(next) {
 });
 
 // Static method to get payments by user
-paymentSchema.statics.getByUser = function(userId) {
+paymentSchema.statics.getByUser = function (userId) {
   return this.find({ userId }).populate('orderId').sort({ createdAt: -1 });
 };
 
 // Static method to get payments by order
-paymentSchema.statics.getByOrder = function(orderId) {
+paymentSchema.statics.getByOrder = function (orderId) {
   return this.find({ orderId }).sort({ createdAt: -1 });
 };
 
 // Method to mark payment as completed
-paymentSchema.methods.complete = function(transactionId) {
+paymentSchema.methods.complete = function (transactionId) {
   this.status = 'completed';
   this.transactionId = transactionId;
   this.paidAt = new Date();
@@ -107,13 +106,13 @@ paymentSchema.methods.complete = function(transactionId) {
 };
 
 // Method to mark payment as failed
-paymentSchema.methods.fail = function() {
+paymentSchema.methods.fail = function () {
   this.status = 'failed';
   return this.save();
 };
 
 // Method to mark payment as refunded
-paymentSchema.methods.refund = function(reason) {
+paymentSchema.methods.refund = function (reason) {
   this.status = 'refunded';
   this.refundReason = reason;
   this.refundedAt = new Date();

@@ -1,6 +1,7 @@
 // ============================================
 // ADMIN REPORTS MODULE - Analytics & Reports
 // ============================================
+/* exported adminReportsManager */
 
 class AdminReportsManager {
   constructor () {
@@ -21,25 +22,25 @@ class AdminReportsManager {
     const thisMonth = this.getDateRange(30);
 
     // Today's stats
-    const todayOrders = orders.filter((o) => new Date(o.createdAt).toDateString() === today);
+    const todayOrders = orders.filter(o => new Date(o.createdAt).toDateString() === today);
     const todayRevenue = todayOrders
-      .filter((o) => o.payment.status === 'completed')
+      .filter(o => o.payment.status === 'completed')
       .reduce((sum, o) => sum + o.pricing.grandTotal, 0);
 
     // This week's stats
     const weekOrders = orders.filter(
-      (o) => new Date(o.createdAt) >= thisWeek.start && new Date(o.createdAt) <= thisWeek.end,
+      o => new Date(o.createdAt) >= thisWeek.start && new Date(o.createdAt) <= thisWeek.end,
     );
     const weekRevenue = weekOrders
-      .filter((o) => o.payment.status === 'completed')
+      .filter(o => o.payment.status === 'completed')
       .reduce((sum, o) => sum + o.pricing.grandTotal, 0);
 
     // This month's stats
     const monthOrders = orders.filter(
-      (o) => new Date(o.createdAt) >= thisMonth.start && new Date(o.createdAt) <= thisMonth.end,
+      o => new Date(o.createdAt) >= thisMonth.start && new Date(o.createdAt) <= thisMonth.end,
     );
     const monthRevenue = monthOrders
-      .filter((o) => o.payment.status === 'completed')
+      .filter(o => o.payment.status === 'completed')
       .reduce((sum, o) => sum + o.pricing.grandTotal, 0);
 
     return {
@@ -52,7 +53,7 @@ class AdminReportsManager {
       today: {
         orders: todayOrders.length,
         revenue: todayRevenue,
-        newUsers: users.filter((u) => new Date(u.joinedDate).toDateString() === today).length,
+        newUsers: users.filter(u => new Date(u.joinedDate).toDateString() === today).length,
       },
       thisWeek: {
         orders: weekOrders.length,
@@ -74,7 +75,7 @@ class AdminReportsManager {
   getTotalRevenue () {
     const orders = checkoutManager.getAllOrders();
     return orders
-      .filter((o) => o.payment.status === 'completed')
+      .filter(o => o.payment.status === 'completed')
       .reduce((sum, o) => sum + o.pricing.grandTotal, 0);
   }
 
@@ -101,7 +102,9 @@ class AdminReportsManager {
    * @returns {number}
    */
   calculateGrowth (current, all) {
-    if (all.length === 0) {return 0;}
+    if (all.length === 0) {
+      return 0;
+    }
     return ((current.length / all.length) * 100).toFixed(2);
   }
 
@@ -116,11 +119,11 @@ class AdminReportsManager {
 
     return {
       period: period,
-      data: groupedData.map((group) => ({
+      data: groupedData.map(group => ({
         period: group.period,
         orders: group.items.length,
         revenue: group.items
-          .filter((o) => o.payment.status === 'completed')
+          .filter(o => o.payment.status === 'completed')
           .reduce((sum, o) => sum + o.pricing.grandTotal, 0),
         averageOrderValue:
           group.items.length > 0
@@ -139,7 +142,7 @@ class AdminReportsManager {
   groupByPeriod (data, period) {
     const groups = {};
 
-    data.forEach((item) => {
+    data.forEach(item => {
       const date = new Date(item.createdAt);
       let key;
 
@@ -194,11 +197,10 @@ class AdminReportsManager {
       totalUsers: users.length,
       byRole: this.groupByField(users, 'role'),
       byUniversity: this.groupByField(users, 'university'),
-      verified: users.filter((u) => u.isVerified).length,
-      suspended: users.filter((u) => u.isSuspended).length,
-      newThisMonth: users.filter(
-        (u) => new Date(u.joinedDate).getMonth() === new Date().getMonth(),
-      ).length,
+      verified: users.filter(u => u.isVerified).length,
+      suspended: users.filter(u => u.isSuspended).length,
+      newThisMonth: users.filter(u => new Date(u.joinedDate).getMonth() === new Date().getMonth())
+        .length,
     };
   }
 
@@ -234,7 +236,9 @@ class AdminReportsManager {
         value = item;
         for (const part of parts) {
           value = value?.[part];
-          if (value === undefined) {break;}
+          if (value === undefined) {
+            break;
+          }
         }
       } else {
         value = item[field];
@@ -280,8 +284,8 @@ class AdminReportsManager {
     const orders = checkoutManager.getAllOrders();
     const productSales = {};
 
-    orders.forEach((order) => {
-      order.items.forEach((item) => {
+    orders.forEach(order => {
+      order.items.forEach(item => {
         if (!productSales[item.productId]) {
           productSales[item.productId] = {
             productId: item.productId,
@@ -318,11 +322,11 @@ class AdminReportsManager {
     const users = adminUsersManager.getAllUsers();
     const regions = regionManager.getAllRegions();
 
-    return regions.map((region) => ({
+    return regions.map(region => ({
       region: region.name,
       universities: region.universities.length,
-      products: products.filter((p) => region.universities.includes(p.university)).length,
-      users: users.filter((u) => region.universities.includes(u.university)).length,
+      products: products.filter(p => region.universities.includes(p.university)).length,
+      users: users.filter(u => region.universities.includes(u.university)).length,
     }));
   }
 
@@ -331,7 +335,7 @@ class AdminReportsManager {
    * @param {string} type - Report type
    * @param {Object} options - Report options
    */
-  generatePDFReport (type, options = {}) {
+  generatePDFReport (type, _options = {}) {
     // In production, this would use a library like jsPDF
     // Removed console.log for production
 
@@ -382,13 +386,17 @@ class AdminReportsManager {
    * @returns {string}
    */
   convertToCSV (data) {
-    if (!data || typeof data !== 'object') {return '';}
+    if (!data || typeof data !== 'object') {
+      return '';
+    }
 
     const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) {return '';}
+    if (items.length === 0) {
+      return '';
+    }
 
     const headers = Object.keys(items[0]);
-    const rows = items.map((item) => headers.map((h) => item[h]).join(','));
+    const rows = items.map(item => headers.map(h => item[h]).join(','));
 
     return [headers.join(','), ...rows].join('\n');
   }

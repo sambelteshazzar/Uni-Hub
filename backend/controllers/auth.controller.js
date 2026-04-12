@@ -177,11 +177,11 @@ exports.updateProfile = async (req, res) => {
     }
 
     // Update fields
-    if (fullName) user.fullName = fullName;
-    if (phone) user.phone = phone;
-    if (bio) user.bio = bio;
-    if (hall) user.hall = hall;
-    if (level) user.level = level;
+    if (fullName) { user.fullName = fullName; }
+    if (phone) { user.phone = phone; }
+    if (bio) { user.bio = bio; }
+    if (hall) { user.hall = hall; }
+    if (level) { user.level = level; }
 
     await user.save();
 

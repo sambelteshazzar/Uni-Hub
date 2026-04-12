@@ -37,7 +37,7 @@
 .btn-primary:hover:not(:disabled) {
   background: #333333;
   border-color: #333333;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transform: translateY(-2px);
 }
 
@@ -160,12 +160,159 @@
   aspect-ratio: 1;
 }
 
+/* ============================================
+   PLAYFUL 3D BUTTON - Uiverse.io inspired
+   Chunky offset shadow with dot pattern animation
+   ============================================ */
+.btn-playful {
+  --btn-bg: #facc15; /* Yellow */
+  --btn-shadow: #292524; /* Dark stone */
+  --btn-surface: #fafaf9; /* Light surface */
+
+  font-size: 1rem;
+  cursor: pointer;
+  position: relative;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 700;
+  line-height: 1;
+  padding: 1px;
+  transform: translate(-4px, -4px);
+  outline: 2px solid transparent;
+  outline-offset: 5px;
+  border-radius: 9999px;
+  background-color: var(--btn-shadow);
+  color: var(--btn-shadow);
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease;
+  text-align: center;
+  box-shadow:
+    0.5px 0.5px 0 0 var(--btn-shadow),
+    1px 1px 0 0 var(--btn-shadow),
+    1.5px 1.5px 0 0 var(--btn-shadow),
+    2px 2px 0 0 var(--btn-shadow),
+    2.5px 2.5px 0 0 var(--btn-shadow),
+    3px 3px 0 0 var(--btn-shadow),
+    0 0 0 2px var(--btn-surface),
+    0.5px 0.5px 0 2px var(--btn-surface),
+    1px 1px 0 2px var(--btn-surface),
+    1.5px 1.5px 0 2px var(--btn-surface),
+    2px 2px 0 2px var(--btn-surface),
+    2.5px 2.5px 0 2px var(--btn-surface),
+    3px 3px 0 2px var(--btn-surface),
+    3.5px 3.5px 0 2px var(--btn-surface),
+    4px 4px 0 2px var(--btn-surface);
+  border: none;
+  display: inline-block;
+}
+
+.btn-playful:hover {
+  transform: translate(0, 0);
+  box-shadow: 0 0 0 2px var(--btn-surface);
+}
+
+.btn-playful:active > .btn-playful-inner > span,
+.btn-playful:focus-visible > .btn-playful-inner > span {
+  transform: translateY(2px);
+}
+
+.btn-playful:focus-visible {
+  outline-color: #facc15;
+  outline-style: dashed;
+}
+
+.btn-playful-inner {
+  position: relative;
+  pointer-events: none;
+  background-color: var(--btn-bg);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 9999px;
+}
+
+.btn-playful-inner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  opacity: 0.5;
+  background-image:
+    radial-gradient(rgb(255 255 255 / 80%) 20%, transparent 20%),
+    radial-gradient(rgb(255 255 255 / 100%) 20%, transparent 20%);
+  background-position:
+    0 0,
+    4px 4px;
+  background-size: 8px 8px;
+  mix-blend-mode: hard-light;
+  animation: btn-playful-dots 0.5s infinite linear;
+}
+
+.btn-playful-inner > span {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.25rem;
+  gap: 0.25rem;
+  filter: drop-shadow(0 -1px 0 rgba(255, 255, 255, 0.25));
+  transition: transform 100ms ease;
+}
+
+@keyframes btn-playful-dots {
+  0% {
+    background-position:
+      0 0,
+      4px 4px;
+  }
+  100% {
+    background-position:
+      8px 0,
+      12px 4px;
+  }
+}
+
+/* Playful Button - Blue variant (matches Uni-Hub brand) */
+.btn-playful-blue {
+  --btn-bg: #0046be;
+  --btn-shadow: #002a73;
+  --btn-surface: #ffffff;
+}
+
+/* Playful Button - Small variant */
+.btn-playful-sm {
+  font-size: 0.875rem;
+  padding: 1px;
+  transform: translate(-3px, -3px);
+  box-shadow:
+    0.5px 0.5px 0 0 var(--btn-shadow),
+    1px 1px 0 0 var(--btn-shadow),
+    1.5px 1.5px 0 0 var(--btn-shadow),
+    2px 2px 0 0 var(--btn-shadow),
+    2.5px 2.5px 0 0 var(--btn-shadow),
+    3px 3px 0 0 var(--btn-shadow),
+    0 0 0 2px var(--btn-surface),
+    0.5px 0.5px 0 2px var(--btn-surface),
+    1px 1px 0 2px var(--btn-surface),
+    1.5px 1.5px 0 2px var(--btn-surface),
+    2px 2px 0 2px var(--btn-surface),
+    2.5px 2.5px 0 2px var(--btn-surface),
+    3px 3px 0 2px var(--btn-surface),
+    3.5px 3.5px 0 2px var(--btn-surface);
+}
+
+.btn-playful-sm:hover {
+  box-shadow: 0 0 0 2px var(--btn-surface);
+}
+
+.btn-playful-sm .btn-playful-inner > span {
+  padding: 0.5rem 1rem;
+}
+
 /* Responsive */
 @media (max-width: 576px) {
   .btn {
     padding: var(--space-sm) var(--space-lg);
   }
-  
+
   .btn-lg {
     padding: var(--space-md) var(--space-xl);
   }

@@ -1,15 +1,8 @@
-// ============================================
-// AUTHENTICATION MODULE
-// Works with backend API with local fallback
-// ============================================
-
 class AuthManager {
   constructor () {
     this.currentUser = null;
     this.isAuthenticated = false;
-    // NOTE: Set to true when backend API is ready and running
-    // For now, using local storage fallback for development
-    this.useBackend = false; // Set to true when backend is implemented
+    this.useBackend = true; // Backend API enabled
     this.loadUser();
   }
 
@@ -145,7 +138,7 @@ class AuthManager {
             };
           }
         } catch (error) {
-          console.log('Backend login failed, trying local storage...');
+          // Backend unavailable - fall through to local storage
         }
       }
 
@@ -283,23 +276,45 @@ class AuthManager {
         };
       }
 
-      if (this.currentUser.password !== currentPassword) {
+      // Use backend if enabled
+      if (this.useBackend) {
+        try {
+          const response = await api.auth.changePassword(currentPassword, newPassword);
+          return {
+            success: true,
+            message: response.message || 'Password changed successfully',
+          };
+        } catch (error) {
+          return {
+            success: false,
+            error: error.data?.error || error.message || 'Password change failed',
+          };
+        }
+      }
+
+      // Fallback: verify current password hash
+      const users = StorageManager.get(STORAGE_KEYS.USERS, true) || [];
+      const user = users.find(u => u.id === this.currentUser.id);
+
+      if (!user || !user.passwordHash) {
+        return {
+          success: false,
+          error: 'User data not found',
+        };
+      }
+
+      const passwordMatch = await CryptoUtil.verifyPassword(currentPassword, user.passwordHash);
+      if (!passwordMatch) {
         return {
           success: false,
           error: 'Current password is incorrect',
         };
       }
 
-      this.currentUser.password = newPassword;
-      StorageManager.set(STORAGE_KEYS.CURRENT_USER, this.currentUser);
-
-      // Update in users array
-      const users = StorageManager.get(STORAGE_KEYS.USERS, true) || [];
-      const index = users.findIndex(u => u.id === this.currentUser.id);
-      if (index !== -1) {
-        users[index] = this.currentUser;
-        StorageManager.set(STORAGE_KEYS.USERS, users);
-      }
+      // Hash and store new password
+      const hashedPassword = await CryptoUtil.hashPassword(newPassword);
+      user.passwordHash = hashedPassword;
+      StorageManager.set(STORAGE_KEYS.USERS, users);
 
       return {
         success: true,

@@ -2,58 +2,149 @@
 
 A web-based student marketplace for buying and selling used items on university campuses in Ghana.
 
-## Project Overview
+## Quick Start
 
-Uni-Hub connects students to buy and sell items in their university community. The platform includes categorized products, multiple delivery modes, and various payment options tailored for Ghanaian students.
+### Prerequisites
+- Node.js v18+
+- MongoDB (local or Docker)
 
-## Features
+### Start the Application
 
-### MVP (Phase 1)
-- ✅ Landing page with university selection
-- ✅ User registration & login
-- ✅ Product browsing & listing
-- ✅ Basic search & filtering by category
-- ✅ Product detail view with condition display
+```bash
+# Make the startup script executable
+chmod +x start-uni-hub.sh
 
-### Upcoming Phases
-- Phase 2: Cart, checkout, and payment integration
-- Phase 3: Admin dashboard and seller ratings
-- Phase 4: Mobile app (React Native)
+# Start both frontend and backend
+./start-uni-hub.sh
+```
+
+Then open: **http://localhost:8000**
+
+### Test Credentials
+```
+Email: admin@unihub.local
+Password: Admin123!
+```
 
 ## Project Structure
 
 ```
-uni-hub/
-├── index.html              ← Landing page
-├── pages/                  ← All app pages
-├── css/                    ← Styling (Tailwind-ready)
-├── js/                     ← Application logic
-├── assets/                 ← Images, fonts, icons
-├── data/                   ← Mock data
-└── docs/                   ← Documentation
+Uni-Hub/
+├── backend/                 # Express.js API Server
+│   ├── server.js           # Main entry point (port 5000)
+│   ├── config/             # Database configuration
+│   ├── controllers/        # Business logic
+│   ├── models/             # MongoDB schemas
+│   ├── routes/             # API endpoints
+│   ├── middleware/         # Authentication middleware
+│   └── utils/              # Utilities and seed data
+├── js/                     # Frontend JavaScript
+│   ├── app.js              # Main app initializer
+│   ├── router.js           # Hash-based SPA router
+│   ├── modules/            # Feature modules (auth, cart, products, etc.)
+│   ├── admin/              # Admin dashboard modules
+│   ├── pages/              # Page renderers
+│   ├── utils/              # Utilities (validation, storage, API, etc.)
+│   └── setup/              # Global setup and configuration
+├── css/                    # Styling
+│   ├── components/         # Component styles
+│   └── pages/              # Page-specific styles
+├── components/             # HTML components (landing page sections)
+├── data/                   # JSON data files
+├── assets/                 # Images, fonts, videos
+├── docs/                   # Documentation
+├── index.html              # Main entry point
+└── start-uni-hub.sh        # Startup script
 ```
 
-## Getting Started
+## Features
 
-1. Open `index.html` in a browser
-2. Select your university
-3. Create an account or login
-4. Browse products or list an item
+### Implemented
+- ✅ User registration and authentication (JWT)
+- ✅ Student verification system
+- ✅ Product marketplace (browse, search, filter)
+- ✅ Shopping cart and checkout
+- ✅ Order tracking and management
+- ✅ Payment processing (MoMo, Telecel, Bank, Cash)
+- ✅ Delivery tracking (Bolt, Yango, In-person)
+- ✅ Admin dashboard
+- ✅ Reporting system
+- ✅ Ghana-specific payment methods and universities
 
-## Tech Stack
+### Tech Stack
+- **Frontend**: HTML5, CSS3, Vanilla JavaScript (SPA with hash-based routing)
+- **Backend**: Node.js, Express.js, Mongoose (MongoDB)
+- **Security**: JWT authentication, bcrypt password hashing, Helmet, CORS, rate limiting
+- **Build**: Vite (optional), http-server for production
 
-- **Frontend**: HTML5, CSS3, Vanilla JavaScript
-- **Styling**: Custom CSS with Tailwind-ready structure
-- **Data**: JSON mock data (will migrate to backend)
-- **Future**: Node.js + Express, MongoDB, React
+## Architecture
 
-## Development Phases
+```
+┌─────────────────┐
+│  User's Browser │  (Port 8000)
+│   Frontend SPA  │
+└────────┬────────┘
+         │ HTTP API (CORS)
+┌────────▼────────┐
+│  Backend API    │  (Port 5000)
+│  Express Server │
+└────────┬────────┘
+         │ MongoDB Queries
+┌────────▼────────┐
+│   MongoDB       │  (Port 27017)
+│   Database      │
+└─────────────────┘
+```
 
-- Phase 1 (MVP): 4-6 weeks - Core browsing functionality
-- Phase 2 (Commerce): 4-6 weeks - Cart, checkout, payments
-- Phase 3 (Trust): 3-4 weeks - Admin, reviews, messaging
-- Phase 4 (Mobile): 6-8 weeks - React Native app
+## API Endpoints
 
-## Contributing
+The backend provides 58+ API endpoints including:
+- Authentication (register, login, profile)
+- Products (CRUD, search, filter)
+- Orders (create, track, manage)
+- Payments (initialize, verify)
+- Delivery (create, track, update status)
+- Verification (submit, approve, reject)
+- Admin (dashboard, users, products, reports)
 
-This is an active development project. Follow the git workflow for contributions.
+See `API_ENDPOINTS.md` for complete documentation.
+
+## Development
+
+### Frontend
+```bash
+npm install          # Install dependencies
+npm run dev          # Start Vite dev server (port 3000)
+npm start            # Serve with http-server (port 8000)
+npm run lint         # Lint and fix JS files
+npm run format       # Format code with Prettier
+```
+
+### Backend
+```bash
+cd backend
+npm install          # Install dependencies
+npm run dev          # Start with nodemon (auto-reload)
+npm start            # Start production server
+npm run seed         # Seed database with sample data
+npm run lint         # Lint backend files
+```
+
+## Deployment
+
+For production deployment:
+1. Change `JWT_SECRET` in `backend/.env` to a strong random key
+2. Change `ADMIN_PASSWORD` to a strong password
+3. Set `NODE_ENV=production`
+4. Use MongoDB Atlas instead of local MongoDB
+5. Configure proper CORS origins
+6. Set up SSL certificates
+
+## License
+
+MIT
+
+## Support
+
+- Email: support@uni-hub.local
+- Phone: +233 50 123 4567

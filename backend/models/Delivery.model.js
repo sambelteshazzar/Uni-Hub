@@ -92,7 +92,7 @@ deliverySchema.index({ status: 1 });
 deliverySchema.index({ agentId: 1 });
 
 // Generate delivery number before saving
-deliverySchema.pre('save', async function(next) {
+deliverySchema.pre('save', async function (next) {
   if (this.isNew && !this.deliveryNumber) {
     const date = new Date();
     const year = date.getFullYear().toString().substr(-2);
@@ -105,22 +105,22 @@ deliverySchema.pre('save', async function(next) {
 });
 
 // Static method to get deliveries by user
-deliverySchema.statics.getByUser = function(userId) {
+deliverySchema.statics.getByUser = function (userId) {
   return this.find({ userId }).populate('orderId').sort({ createdAt: -1 });
 };
 
 // Static method to get deliveries by order
-deliverySchema.statics.getByOrder = function(orderId) {
+deliverySchema.statics.getByOrder = function (orderId) {
   return this.find({ orderId }).sort({ createdAt: -1 });
 };
 
 // Static method to get deliveries by status
-deliverySchema.statics.getByStatus = function(status) {
+deliverySchema.statics.getByStatus = function (status) {
   return this.find({ status }).sort({ createdAt: -1 });
 };
 
 // Method to update delivery status
-deliverySchema.methods.updateStatus = function(newStatus, note = '') {
+deliverySchema.methods.updateStatus = function (newStatus, note = '') {
   this.status = newStatus;
   this.statusHistory.push({
     status: newStatus,
@@ -140,7 +140,7 @@ deliverySchema.methods.updateStatus = function(newStatus, note = '') {
 };
 
 // Method to update location
-deliverySchema.methods.updateLocation = function(latitude, longitude) {
+deliverySchema.methods.updateLocation = function (latitude, longitude) {
   this.location = {
     latitude,
     longitude,

@@ -64,14 +64,14 @@ exports.submitVerification = async (req, res) => {
         {
           isVerified: true,
           verificationMethod: 'email',
-        }
+        },
       );
     }
 
     res.status(201).json({
       success: true,
-      message: verificationMethod === 'email' 
-        ? 'Email verified successfully' 
+      message: verificationMethod === 'email'
+        ? 'Email verified successfully'
         : 'Verification submitted for review',
       data: verification,
     });
@@ -136,7 +136,7 @@ exports.approveVerification = async (req, res) => {
       {
         isVerified: true,
         verificationMethod: 'document',
-      }
+      },
     );
 
     res.json({

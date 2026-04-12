@@ -25,7 +25,7 @@ router.get('/stats', async (req, res) => {
     const totalUsers = await User.countDocuments();
     const totalProducts = await Product.countDocuments();
     const totalOrders = await Order.countDocuments();
-    
+
     const pendingVerifications = await require('../models/StudentVerification.model')
       .countDocuments({ status: 'pending' });
 
@@ -72,8 +72,8 @@ router.get('/products', async (req, res) => {
     const { status, university, page = 1, limit = 20 } = req.query;
 
     const query = {};
-    if (status) query.status = status;
-    if (university) query.university = university;
+    if (status) {query.status = status;}
+    if (university) {query.university = university;}
 
     const products = await Product.find(query)
       .sort({ createdAt: -1 })
@@ -109,7 +109,7 @@ router.get('/orders', async (req, res) => {
     const { status, page = 1, limit = 20 } = req.query;
 
     const query = {};
-    if (status) query.status = status;
+    if (status) {query.status = status;}
 
     const orders = await Order.find(query)
       .sort({ createdAt: -1 })

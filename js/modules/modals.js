@@ -1,3 +1,4 @@
+/* exported modalManager */
 // ============================================
 // MODALS MODULE - Modal/Dialog Management
 // ============================================
@@ -93,7 +94,7 @@ class ModalManager {
 
     // Close on overlay click
     if (modal.closable) {
-      overlay.addEventListener('click', (e) => {
+      overlay.addEventListener('click', e => {
         if (e.target === overlay) {
           this.close(modal.id);
         }
@@ -102,7 +103,7 @@ class ModalManager {
 
     // Close on ESC key
     if (modal.closable) {
-      const escHandler = (e) => {
+      const escHandler = e => {
         if (e.key === 'Escape') {
           this.close(modal.id);
           document.removeEventListener('keydown', escHandler);
@@ -119,9 +120,11 @@ class ModalManager {
    * @param {string} modalId - Modal ID
    */
   close (modalId) {
-    const modalIndex = this.activeModals.findIndex((m) => m.id === modalId);
+    const modalIndex = this.activeModals.findIndex(m => m.id === modalId);
 
-    if (modalIndex === -1) {return;}
+    if (modalIndex === -1) {
+      return;
+    }
 
     const modal = this.activeModals[modalIndex];
     const overlay = this.modalContainer.querySelector(`[data-modal-id="${modalId}"]`);
@@ -152,7 +155,7 @@ class ModalManager {
    * Close all modals
    */
   closeAll () {
-    this.activeModals.forEach((modal) => {
+    this.activeModals.forEach(modal => {
       this.close(modal.id);
     });
   }
@@ -194,7 +197,9 @@ class ModalManager {
         </button>
       `,
       onClose: () => {
-        if (onConfirm) {onConfirm(false);}
+        if (onConfirm) {
+          onConfirm(false);
+        }
       },
     });
   }
@@ -204,7 +209,14 @@ class ModalManager {
    * @param {Object} options - Confirm options
    */
   confirm (options) {
-    const { title = 'Confirm', message, confirmText = 'Yes', cancelText = 'No', onConfirm, onCancel } = options;
+    const {
+      title = 'Confirm',
+      message,
+      confirmText = 'Yes',
+      cancelText = 'No',
+      onConfirm,
+      onCancel,
+    } = options;
 
     const modalId = this.open({
       type: 'confirm',
@@ -223,7 +235,9 @@ class ModalManager {
         </button>
       `,
       onClose: () => {
-        if (onCancel) {onCancel();}
+        if (onCancel) {
+          onCancel();
+        }
       },
     });
 
@@ -236,7 +250,7 @@ class ModalManager {
    * @param {boolean} confirmed - Whether confirmed
    */
   closeAndCallback (modalId, confirmed) {
-    const modal = this.activeModals.find((m) => m.id === modalId);
+    const modal = this.activeModals.find(m => m.id === modalId);
     if (modal && modal.onConfirm) {
       modal.onConfirm(confirmed);
     }
@@ -260,7 +274,7 @@ class ModalManager {
       <div class="condition-selector">
         ${conditions
     .map(
-      (c) => `
+      c => `
           <div class="condition-option ${currentValue === c.id ? 'selected' : ''}" 
                onclick="modalManager.selectCondition('${c.id}', '${modalId}')">
             <input type="radio" name="condition" value="${c.id}" ${currentValue === c.id ? 'checked' : ''} />
@@ -299,10 +313,12 @@ class ModalManager {
 
     // Update visual selection
     const modal = this.modalContainer.querySelector(`[data-modal-id="${modalId}"]`);
-    modal.querySelectorAll('.condition-option').forEach((option) => {
+    modal.querySelectorAll('.condition-option').forEach(option => {
       option.classList.remove('selected');
     });
-    const selectedOption = modal.querySelector(`input[value="${conditionId}"]`).closest('.condition-option');
+    const selectedOption = modal
+      .querySelector(`input[value="${conditionId}"]`)
+      .closest('.condition-option');
     selectedOption.classList.add('selected');
   }
 
@@ -311,7 +327,7 @@ class ModalManager {
    * @param {string} modalId - Modal ID
    */
   confirmCondition (modalId) {
-    const modal = this.activeModals.find((m) => m.id === modalId);
+    const modal = this.activeModals.find(m => m.id === modalId);
     if (modal && modal.onSelect) {
       modal.onSelect(this.selectedCondition);
     }

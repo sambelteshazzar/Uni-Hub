@@ -21,9 +21,9 @@ html {
   -moz-text-size-adjust: none;
   -webkit-text-size-adjust: none;
   text-size-adjust: none;
+  scroll-padding-top: var(--header-height);
 }
 
-/* Set core root defaults */
 html:focus-within {
   scroll-behavior: smooth;
 }
@@ -44,12 +44,20 @@ ol {
 }
 
 /* Set shorter line heights on headings and interactive elements */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   overflow-wrap: break-word;
 }
 
 /* Balance text wrapping on headings */
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+h4 {
   text-wrap: balance;
 }
 
@@ -204,7 +212,7 @@ sup {
 
 /* Focus visible - accessibility */
 :focus-visible {
-  outline: 2px solid var(--primary, #FF9900);
+  outline: 2px solid var(--primary, #ff9900);
   outline-offset: 2px;
 }
 
@@ -216,7 +224,7 @@ sup {
 /* Selection color */
 ::selection {
   background-color: var(--primary-light, #fff4e6);
-  color: var(--neutral-900, #0F1111);
+  color: var(--neutral-900, #0f1111);
 }
 
 /* Scrollbar styles */
@@ -226,20 +234,20 @@ sup {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--neutral-100, #F3F3F3);
+  background: var(--neutral-100, #f3f3f3);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--neutral-400, #B7B9B9);
+  background: var(--neutral-400, #b7b9b9);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--neutral-500, #888D8F);
+  background: var(--neutral-500, #888d8f);
 }
 
 /* Firefox scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--neutral-400, #B7B9B9) var(--neutral-100, #F3F3F3);
+  scrollbar-color: var(--neutral-400, #b7b9b9) var(--neutral-100, #f3f3f3);
 }

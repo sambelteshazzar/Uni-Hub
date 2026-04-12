@@ -1,3 +1,4 @@
+/* exported paymentManager */
 // ============================================
 // PAYMENT MODULE - Payment Processing
 // ============================================
@@ -7,8 +8,9 @@ class PaymentManager {
     this.PAYMENT_STORAGE_KEY = `${STORAGE_KEY_PREFIX}payments`;
     // Use environment variable or window config for Paystack key
     // Set window.PAYSTACK_PUBLIC_KEY in your HTML or use a build-time replacement
-    this.PAYSTACK_PUBLIC_KEY = (typeof window !== 'undefined' && window.PAYSTACK_PUBLIC_KEY) ||
-                                'pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'; // Replace with actual key
+    this.PAYSTACK_PUBLIC_KEY =
+      (typeof window !== 'undefined' && window.PAYSTACK_PUBLIC_KEY) ||
+      'pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'; // Replace with actual key
   }
 
   /**
@@ -56,7 +58,7 @@ class PaymentManager {
   async initiateMoMoPayment (payment) {
     // Placeholder for Paystack integration
     // In production, this would call Paystack API
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       setTimeout(() => {
         resolve({
           success: true,
@@ -73,7 +75,7 @@ class PaymentManager {
    * Initiate Telecel Cash payment
    */
   async initiateTelecelCashPayment (payment) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       setTimeout(() => {
         resolve({
           success: true,
@@ -122,7 +124,7 @@ class PaymentManager {
    */
   async verifyPayment (paymentId) {
     const payments = this.getAllPayments();
-    const payment = payments.find((p) => p.id === paymentId);
+    const payment = payments.find(p => p.id === paymentId);
 
     if (!payment) {
       return {
@@ -132,7 +134,7 @@ class PaymentManager {
     }
 
     // Simulate payment verification
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       setTimeout(() => {
         const isSuccessful = Math.random() > 0.1; // 90% success rate
 
@@ -164,7 +166,7 @@ class PaymentManager {
    */
   getPaymentById (paymentId) {
     const payments = this.getAllPayments();
-    return payments.find((p) => p.id === paymentId) || null;
+    return payments.find(p => p.id === paymentId) || null;
   }
 
   /**
@@ -172,7 +174,7 @@ class PaymentManager {
    */
   getPaymentsByOrderId (orderId) {
     const payments = this.getAllPayments();
-    return payments.filter((p) => p.orderId === orderId);
+    return payments.filter(p => p.orderId === orderId);
   }
 
   /**
@@ -197,7 +199,7 @@ class PaymentManager {
    */
   updatePayment (payment) {
     const payments = this.getAllPayments();
-    const index = payments.findIndex((p) => p.id === payment.id);
+    const index = payments.findIndex(p => p.id === payment.id);
 
     if (index !== -1) {
       payments[index] = payment;

@@ -1,3 +1,4 @@
+/* exported notificationManager */
 // ============================================
 // NOTIFICATIONS MODULE - Notification System
 // ============================================
@@ -136,30 +137,28 @@ class NotificationManager {
 
     // Filter by type
     if (options.type) {
-      notifications = notifications.filter((n) => n.type === options.type);
+      notifications = notifications.filter(n => n.type === options.type);
     }
 
     // Filter by read status
     if (options.read !== undefined) {
-      notifications = notifications.filter((n) => n.read === options.read);
+      notifications = notifications.filter(n => n.read === options.read);
     }
 
     // Filter by date range
     if (options.startDate) {
       notifications = notifications.filter(
-        (n) => new Date(n.createdAt) >= new Date(options.startDate),
+        n => new Date(n.createdAt) >= new Date(options.startDate),
       );
     }
 
     if (options.endDate) {
-      notifications = notifications.filter(
-        (n) => new Date(n.createdAt) <= new Date(options.endDate),
-      );
+      notifications = notifications.filter(n => new Date(n.createdAt) <= new Date(options.endDate));
     }
 
     // Remove expired notifications
     const now = new Date();
-    notifications = notifications.filter((n) => !n.expiresAt || new Date(n.expiresAt) > now);
+    notifications = notifications.filter(n => !n.expiresAt || new Date(n.expiresAt) > now);
 
     return notifications;
   }
@@ -169,7 +168,7 @@ class NotificationManager {
    * @returns {number}
    */
   getUnreadCount () {
-    return this.notifications.filter((n) => !n.read).length;
+    return this.notifications.filter(n => !n.read).length;
   }
 
   /**
@@ -178,7 +177,7 @@ class NotificationManager {
    * @returns {Object}
    */
   markAsRead (notificationId) {
-    const index = this.notifications.findIndex((n) => n.id === notificationId);
+    const index = this.notifications.findIndex(n => n.id === notificationId);
 
     if (index === -1) {
       return {
@@ -202,7 +201,7 @@ class NotificationManager {
    * @returns {Object}
    */
   markAllAsRead () {
-    this.notifications.forEach((n) => {
+    this.notifications.forEach(n => {
       n.read = true;
     });
     this.save();
@@ -220,7 +219,7 @@ class NotificationManager {
    * @returns {Object}
    */
   delete (notificationId) {
-    const index = this.notifications.findIndex((n) => n.id === notificationId);
+    const index = this.notifications.findIndex(n => n.id === notificationId);
 
     if (index === -1) {
       return {
@@ -259,7 +258,7 @@ class NotificationManager {
    * @returns {Object}
    */
   deleteRead () {
-    this.notifications = this.notifications.filter((n) => !n.read);
+    this.notifications = this.notifications.filter(n => !n.read);
     this.save();
     this.notifyListeners();
 
@@ -383,14 +382,14 @@ class NotificationManager {
    * @param {Function} listener - Listener function
    */
   removeListener (listener) {
-    this.listeners = this.listeners.filter((l) => l !== listener);
+    this.listeners = this.listeners.filter(l => l !== listener);
   }
 
   /**
    * Notify all listeners
    */
   notifyListeners () {
-    this.listeners.forEach((listener) => {
+    this.listeners.forEach(listener => {
       try {
         listener(this.notifications);
       } catch (error) {
@@ -431,7 +430,7 @@ class NotificationManager {
         <div class="notifications-list">
           ${notifications
     .map(
-      (n) => `
+      n => `
             <div class="notification-item ${n.read ? 'read' : 'unread'}" data-id="${n.id}">
               <div class="notification-icon">${n.icon}</div>
               <div class="notification-content">

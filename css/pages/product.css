@@ -76,7 +76,7 @@
   gap: var(--space-sm);
 }
 
-.checkbox-group input[type="checkbox"] {
+.checkbox-group input[type='checkbox'] {
   width: auto;
 }
 
@@ -379,7 +379,7 @@
   gap: var(--space-sm);
 }
 
-.method-item input[type="radio"] {
+.method-item input[type='radio'] {
   width: auto;
 }
 

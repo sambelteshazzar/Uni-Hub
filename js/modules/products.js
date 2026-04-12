@@ -1,3 +1,4 @@
+/* exported productsManager */
 // ============================================
 // PRODUCTS MODULE - Product Management
 // Works with backend API with local fallback
@@ -19,7 +20,7 @@ class ProductsManager {
     this.pageSize = PAGINATION.DEFAULT_PAGE_SIZE;
     this.PRODUCTS_STORAGE_KEY = `${STORAGE_KEY_PREFIX}products`;
     this.wishlistKey = `${STORAGE_KEY_PREFIX}wishlist`;
-    this.useBackend = false; // Set to false to use only local JSON
+    this.useBackend = true; // Backend API enabled
   }
 
   /**
@@ -28,16 +29,22 @@ class ProductsManager {
   async init () {
     try {
       if (this.useBackend) {
-        // Try to load from backend
+        // Try to load from backend with short timeout
         try {
-          const response = await api.products.getAll({ limit: 100 });
-          if (response.success && response.data.products) {
-            this.products = response.data.products;
-            this.filteredProducts = [...this.products];
-            return;
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 3000); // 3s timeout
+          const response = await fetch(`${window.API_URL}/products?limit=100`, { signal: controller.signal });
+          clearTimeout(timeout);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.data.products) {
+              this.products = data.data.products;
+              this.filteredProducts = [...this.products];
+              return;
+            }
           }
-        } catch (error) {
-          console.log('Backend not available, using local data');
+        } catch (_error) {
+          // Backend unavailable or slow - use local fallback
         }
       }
 
@@ -45,20 +52,10 @@ class ProductsManager {
       const data = await api.loadJSON('data/products.json');
       this.products = data.products || [];
       this.filteredProducts = [...this.products];
-
-      // Show user-friendly message if no products available
-      if (this.products.length === 0) {
-        console.warn('No products available. Please check back later.');
-      }
-    } catch (error) {
-      console.error('Failed to load products:', error);
+    } catch (_error) {
+      // Silent fail - products will be empty
       this.products = [];
       this.filteredProducts = [];
-
-      // Display user-friendly error message
-      if (typeof toastManager !== 'undefined') {
-        toastManager.show('Unable to load products. Please refresh the page.', 'error');
-      }
     }
   }
 
@@ -135,9 +132,8 @@ class ProductsManager {
     // Search filter
     if (this.currentFilters.searchQuery) {
       const query = this.currentFilters.searchQuery.toLowerCase();
-      filtered = filtered.filter(p =>
-        p.title.toLowerCase().includes(query) ||
-        p.description.toLowerCase().includes(query),
+      filtered = filtered.filter(
+        p => p.title.toLowerCase().includes(query) || p.description.toLowerCase().includes(query),
       );
     }
 
@@ -214,7 +210,7 @@ class ProductsManager {
           }
           return response;
         } catch (error) {
-          console.log('Backend not available, saving locally');
+          // Backend not available - saving locally
         }
       }
 
@@ -340,5 +336,6 @@ class HostelProductsManager {
   }
 }
 
+/* exported hostelProductsManager */
 // Create hostel products manager instance
 const hostelProductsManager = new HostelProductsManager();

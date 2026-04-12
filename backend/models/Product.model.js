@@ -22,7 +22,7 @@ const productSchema = new mongoose.Schema({
     minlength: [10, 'Description must be at least 10 characters'],
     maxlength: [2000, 'Description cannot exceed 2000 characters'],
   },
-  
+
   // Pricing
   price: {
     type: Number,
@@ -33,7 +33,7 @@ const productSchema = new mongoose.Schema({
     type: String,
     default: 'GHS',
   },
-  
+
   // Categorization
   category: {
     type: String,
@@ -53,13 +53,13 @@ const productSchema = new mongoose.Schema({
     required: [true, 'Condition is required'],
     enum: ['fair', 'good', 'excellent'],
   },
-  
+
   // Images
   images: [{
     type: String,
     required: true,
   }],
-  
+
   // Seller Information
   seller: {
     type: mongoose.Schema.Types.ObjectId,
@@ -76,14 +76,14 @@ const productSchema = new mongoose.Schema({
     min: 0,
     max: 5,
   },
-  
+
   // University
   university: {
     type: String,
     required: [true, 'University is required'],
     trim: true,
   },
-  
+
   // Delivery & Payment Options
   deliveryModes: [{
     type: String,
@@ -93,14 +93,14 @@ const productSchema = new mongoose.Schema({
     type: String,
     enum: ['momo', 'telecel', 'bank', 'cash'],
   }],
-  
+
   // Status
   status: {
     type: String,
     enum: ['active', 'sold', 'inactive', 'reserved'],
     default: 'active',
   },
-  
+
   // Engagement
   views: {
     type: Number,
@@ -110,7 +110,7 @@ const productSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  
+
   // Timestamps
 }, {
   timestamps: true,
@@ -124,23 +124,23 @@ productSchema.index({ title: 'text', description: 'text' }); // For text search
 productSchema.index({ createdAt: -1 }); // For sorting by newest
 
 // Static method to get products by university
-productSchema.statics.getByUniversity = function(universityId, status = 'active') {
+productSchema.statics.getByUniversity = function (universityId, status = 'active') {
   return this.find({ university: universityId, status });
 };
 
 // Static method to get products by seller
-productSchema.statics.getBySeller = function(sellerId, status = 'active') {
+productSchema.statics.getBySeller = function (sellerId, status = 'active') {
   return this.find({ seller: sellerId, status });
 };
 
 // Method to increment view count
-productSchema.methods.incrementViews = function() {
+productSchema.methods.incrementViews = function () {
   this.views += 1;
   return this.save();
 };
 
 // Method to get public product data
-productSchema.methods.getPublicProduct = function() {
+productSchema.methods.getPublicProduct = function () {
   const product = this.toObject();
   delete product.__v;
   return product;

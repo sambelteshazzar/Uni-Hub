@@ -1,6 +1,7 @@
 // ============================================
 // ADMIN AUTH MODULE - Admin Authentication
 // ============================================
+/* exported adminAuthManager */
 
 class AdminAuthManager {
   constructor () {
@@ -86,7 +87,9 @@ class AdminAuthManager {
    * @returns {boolean}
    */
   hasPermission (permission) {
-    if (!this.adminUser) {return false;}
+    if (!this.adminUser) {
+      return false;
+    }
     return this.adminUser.permissions.includes(permission);
   }
 
@@ -152,21 +155,21 @@ class AdminAuthManager {
 
     // Filter by admin ID
     if (options.adminId) {
-      activities = activities.filter((a) => a.adminId === options.adminId);
+      activities = activities.filter(a => a.adminId === options.adminId);
     }
 
     // Filter by action
     if (options.action) {
-      activities = activities.filter((a) => a.action.includes(options.action));
+      activities = activities.filter(a => a.action.includes(options.action));
     }
 
     // Filter by date range
     if (options.startDate) {
-      activities = activities.filter((a) => new Date(a.timestamp) >= new Date(options.startDate));
+      activities = activities.filter(a => new Date(a.timestamp) >= new Date(options.startDate));
     }
 
     if (options.endDate) {
-      activities = activities.filter((a) => new Date(a.timestamp) <= new Date(options.endDate));
+      activities = activities.filter(a => new Date(a.timestamp) <= new Date(options.endDate));
     }
 
     return activities;
@@ -187,9 +190,7 @@ class AdminAuthManager {
     const activities = this.getActivityLog();
     const today = new Date().toDateString();
 
-    const todayActivities = activities.filter(
-      (a) => new Date(a.timestamp).toDateString() === today,
-    );
+    const todayActivities = activities.filter(a => new Date(a.timestamp).toDateString() === today);
 
     return {
       totalActivities: activities.length,
@@ -235,7 +236,7 @@ class AdminAuthManager {
    * @param {string} newPassword - New password
    * @returns {Object}
    */
-  changePassword (currentPassword, newPassword) {
+  changePassword (currentPassword, _newPassword) {
     // SECURITY WARNING: In production, this should:
     // 1. Verify current password hash on the server
     // 2. Validate new password strength
@@ -259,7 +260,9 @@ class AdminAuthManager {
    * @returns {Object}
    */
   getProfile () {
-    if (!this.adminUser) {return null;}
+    if (!this.adminUser) {
+      return null;
+    }
 
     return {
       id: this.adminUser.id,

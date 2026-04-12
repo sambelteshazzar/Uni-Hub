@@ -4,8 +4,19 @@
    ============================================ */
 
 /* ============================================
-   HERO SECTION
-   ============================================ */
+    HERO SECTION
+    ============================================ */
+
+/* Add top padding to account for fixed modern-nav bar */
+.modern-hero {
+  padding-top: 8rem !important;
+}
+
+@media (max-width: 768px) {
+  .modern-hero {
+    padding-top: 7rem !important;
+  }
+}
 
 .landing-hero {
   background: #ffffff;
@@ -345,7 +356,7 @@
   background: #ffffff;
   border-color: #e5e5e5;
   transform: translateY(-4px);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
 .category-icon {

@@ -32,7 +32,6 @@ class LandingPageLoader {
       'components/landing-page/hero.html',
       'components/landing-page/features.html',
       'components/landing-page/product-carousel.html',
-      'components/landing-page/marquee.html',
       'components/landing-page/testimonials.html',
       'components/landing-page/category-grid.html',
       'components/landing-page/how-it-works.html',
@@ -64,13 +63,17 @@ class LandingPageLoader {
           if (otherBtn !== button) {
             const otherAnswer = document.getElementById(otherBtn.getAttribute('aria-controls'));
             otherBtn.setAttribute('aria-expanded', 'false');
-            if (otherAnswer) otherAnswer.hidden = true;
+            if (otherAnswer) {
+              otherAnswer.hidden = true;
+            }
           }
         });
 
         // Toggle current
         button.setAttribute('aria-expanded', !isExpanded);
-        if (answer) answer.hidden = isExpanded;
+        if (answer) {
+          answer.hidden = isExpanded;
+        }
       });
     });
 
@@ -80,7 +83,7 @@ class LandingPageLoader {
     // Newsletter form
     const form = document.getElementById('newsletter-form');
     if (form) {
-      form.addEventListener('submit', (e) => {
+      form.addEventListener('submit', e => {
         e.preventDefault();
         const input = form.querySelector('.lp-newsletter-input');
         const email = input?.value?.trim();
@@ -91,7 +94,7 @@ class LandingPageLoader {
         }
 
         // In production, this would POST to your mailing list API
-        console.log('Newsletter signup:', email);
+        // Newsletter signup logged
         input.value = '';
         alert('Thanks for signing up! 🎉');
       });
@@ -103,10 +106,14 @@ class LandingPageLoader {
    */
   static initTestimonialCarousel () {
     const track = document.querySelector('.lp-testimonials-track');
-    if (!track) return;
+    if (!track) {
+      return;
+    }
 
     const testimonials = track.querySelectorAll('.lp-testimonial');
-    if (testimonials.length === 0) return;
+    if (testimonials.length === 0) {
+      return;
+    }
 
     const prevBtn = document.querySelector('.lp-testimonial-nav--prev');
     const nextBtn = document.querySelector('.lp-testimonial-nav--next');
@@ -114,8 +121,10 @@ class LandingPageLoader {
 
     let currentIndex = 0;
 
-    const showTestimonial = (index) => {
-      if (index < 0 || index >= testimonials.length) return;
+    const showTestimonial = index => {
+      if (index < 0 || index >= testimonials.length) {
+        return;
+      }
       currentIndex = index;
 
       testimonials.forEach((t, i) => {

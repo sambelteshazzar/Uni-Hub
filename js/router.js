@@ -2,17 +2,18 @@
 // ROUTER - SPA PAGE NAVIGATION HANDLER
 // ============================================
 
-class Router {
+export class Router {
   constructor() {
     this.currentRoute = null;
     this.currentParams = {};
     this.routes = new Map();
     this.history = [];
-    this.init();
+    this._started = false;
   }
 
   /**
-   * Initialize router - listen to hash changes and restore state
+   * Initialize router - listen to hash changes
+   * Does NOT handle initial load - call start() after routes are registered
    */
   init() {
     // Listen to hash changes (for back/forward buttons)
@@ -20,8 +21,14 @@ class Router {
 
     // Listen to popstate (for back/forward buttons)
     window.addEventListener('popstate', () => this.handleHashChange());
+  }
 
-    // Handle initial load
+  /**
+   * Start the router - handle initial navigation after routes are registered
+   */
+  start() {
+    if (this._started) return;
+    this._started = true;
     this.handleHashChange();
   }
 
@@ -224,5 +231,4 @@ class Router {
   }
 }
 
-// Create singleton instance
-const router = new Router();
+export default new Router();

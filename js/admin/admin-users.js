@@ -1,3 +1,4 @@
+/* exported adminUsersManager */
 // ============================================
 // ADMIN USERS MODULE - User Management
 // ============================================
@@ -51,7 +52,7 @@ class AdminUsersManager {
    * @returns {Object|null}
    */
   getUserById (userId) {
-    return this.users.find((u) => u.id === userId) || null;
+    return this.users.find(u => u.id === userId) || null;
   }
 
   /**
@@ -60,7 +61,7 @@ class AdminUsersManager {
    * @returns {Object|null}
    */
   getUserByEmail (email) {
-    return this.users.find((u) => u.email === email) || null;
+    return this.users.find(u => u.email === email) || null;
   }
 
   /**
@@ -71,7 +72,7 @@ class AdminUsersManager {
   searchUsers (query) {
     const normalizedQuery = query.toLowerCase();
     return this.users.filter(
-      (u) =>
+      u =>
         u.fullName.toLowerCase().includes(normalizedQuery) ||
         u.email.toLowerCase().includes(normalizedQuery),
     );
@@ -83,7 +84,7 @@ class AdminUsersManager {
    * @returns {Array}
    */
   getUsersByUniversity (university) {
-    return this.users.filter((u) => u.university === university);
+    return this.users.filter(u => u.university === university);
   }
 
   /**
@@ -92,7 +93,7 @@ class AdminUsersManager {
    * @returns {Array}
    */
   getUsersByRole (role) {
-    return this.users.filter((u) => u.role === role);
+    return this.users.filter(u => u.role === role);
   }
 
   /**
@@ -213,7 +214,7 @@ class AdminUsersManager {
    * @returns {Object}
    */
   deleteUser (userId) {
-    const index = this.users.findIndex((u) => u.id === userId);
+    const index = this.users.findIndex(u => u.id === userId);
 
     if (index === -1) {
       return {
@@ -246,11 +247,15 @@ class AdminUsersManager {
     let verifiedCount = 0;
     let suspendedCount = 0;
 
-    users.forEach((u) => {
+    users.forEach(u => {
       roleCount[u.role] = (roleCount[u.role] || 0) + 1;
       universityCount[u.university] = (universityCount[u.university] || 0) + 1;
-      if (u.isVerified) {verifiedCount++;}
-      if (u.isSuspended) {suspendedCount++;}
+      if (u.isVerified) {
+        verifiedCount++;
+      }
+      if (u.isSuspended) {
+        suspendedCount++;
+      }
     });
 
     return {
@@ -302,7 +307,7 @@ class AdminUsersManager {
   exportToCSV () {
     const users = this.getAllUsers();
     const headers = ['ID', 'Name', 'Email', 'Phone', 'University', 'Role', 'Verified', 'Joined'];
-    const rows = users.map((u) => [
+    const rows = users.map(u => [
       u.id,
       u.fullName,
       u.email,
@@ -313,7 +318,7 @@ class AdminUsersManager {
       u.createdAt || u.joinedDate,
     ]);
 
-    return [headers, ...rows].map((row) => row.join(',')).join('\n');
+    return [headers, ...rows].map(row => row.join(',')).join('\n');
   }
 
   /**
@@ -325,7 +330,7 @@ class AdminUsersManager {
     let verified = 0;
     let failed = 0;
 
-    userIds.forEach((id) => {
+    userIds.forEach(id => {
       const result = this.verifyUser(id);
       if (result.success) {
         verified++;

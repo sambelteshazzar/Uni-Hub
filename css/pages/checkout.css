@@ -64,8 +64,8 @@
   background: var(--color-primary-light);
 }
 
-.option-card input[type="radio"],
-.option-card input[type="checkbox"] {
+.option-card input[type='radio'],
+.option-card input[type='checkbox'] {
   position: absolute;
   opacity: 0;
   cursor: pointer;

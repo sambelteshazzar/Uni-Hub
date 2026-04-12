@@ -1,0 +1,301 @@
+<!-- ============================================
+     BEST BUY-STYLE LANDING PAGE
+     Clean, retail-inspired layout with deals, categories, products
+     ============================================ -->
+
+<!-- Hero Section - Best Buy Style -->
+<section class="bb-hero">
+  <div class="bb-hero-container">
+    <div class="bb-hero-content">
+      <div class="bb-hero-badge">
+        <span>🎓</span>
+        <span>Verified Students Only</span>
+      </div>
+      <h1 class="bb-hero-title">
+        The Best Deals on<br>
+        <span>Campus Essentials</span>
+      </h1>
+      <p class="bb-hero-subtitle">
+        Buy and sell textbooks, electronics, dorm items and more from students at your university. Save up to 70% on everything you need.
+      </p>
+      <div class="bb-hero-buttons">
+        <button onclick="Pages.renderBrowse(); return false;" class="bb-btn bb-btn-primary">
+          🛒 Shop Deals
+        </button>
+        <button onclick="Pages.renderSell(); return false;" class="bb-btn bb-btn-outline">
+          💰 Start Selling
+        </button>
+      </div>
+    </div>
+    <div class="bb-hero-images">
+      <div class="bb-hero-image-card">
+        <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop" alt="Electronics">
+        <div class="bb-hero-image-label">
+          <p>Electronics from $29</p>
+        </div>
+      </div>
+      <div class="bb-hero-image-card">
+        <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400&h=400&fit=crop" alt="Textbooks">
+        <div class="bb-hero-image-label">
+          <p>Textbooks up to 60% off</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Deal of the Day Bar -->
+<section class="bb-deal-bar">
+  <div class="bb-deal-bar-container">
+    <div class="bb-deal-bar-text">
+      <span class="bb-deal-bar-icon">⚡</span>
+      <div>
+        <p class="bb-deal-bar-title">Deal of the Day</p>
+        <p class="bb-deal-bar-subtitle">Save big on textbooks, laptops & more — today only!</p>
+      </div>
+    </div>
+    <button onclick="Pages.renderBrowse(); return false;" class="bb-deal-bar-btn">Shop All Deals</button>
+  </div>
+</section>
+
+<!-- Shop by Category -->
+<section class="bb-categories" id="browse">
+  <div class="bb-container">
+    <div class="bb-section-header">
+      <h2 class="bb-section-title">Shop by Category</h2>
+      <p class="bb-section-subtitle">Find exactly what you need for campus life</p>
+    </div>
+    <div class="bb-categories-grid">
+      <a href="#/browse?category=textbooks" class="bb-category-card">
+        <div class="bb-category-icon">📚</div>
+        <p class="bb-category-name">Textbooks</p>
+        <p class="bb-category-count">120+ items</p>
+      </a>
+      <a href="#/browse?category=electronics" class="bb-category-card">
+        <div class="bb-category-icon">💻</div>
+        <p class="bb-category-name">Electronics</p>
+        <p class="bb-category-count">85+ items</p>
+      </a>
+      <a href="#/browse?category=dorm" class="bb-category-card">
+        <div class="bb-category-icon">🏠</div>
+        <p class="bb-category-name">Dorm & Room</p>
+        <p class="bb-category-count">95+ items</p>
+      </a>
+      <a href="#/browse?category=furniture" class="bb-category-card">
+        <div class="bb-category-icon">🪑</div>
+        <p class="bb-category-name">Furniture</p>
+        <p class="bb-category-count">45+ items</p>
+      </a>
+      <a href="#/browse?category=clothing" class="bb-category-card">
+        <div class="bb-category-icon">👕</div>
+        <p class="bb-category-name">Clothing</p>
+        <p class="bb-category-count">60+ items</p>
+      </a>
+      <a href="#/browse?category=sports" class="bb-category-card">
+        <div class="bb-category-icon">⚽</div>
+        <p class="bb-category-name">Sports</p>
+        <p class="bb-category-count">35+ items</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Featured Products -->
+<section class="bb-featured">
+  <div class="bb-container">
+    <div class="bb-section-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <h2 class="bb-section-title">Top Deals Right Now</h2>
+        <p class="bb-section-subtitle">Hand-picked deals from students near you</p>
+      </div>
+      <a href="#/browse" onclick="Pages.renderBrowse(); return false;" style="font-size: var(--text-sm); font-weight: 600; color: #0046be; text-decoration: none;">
+        View All →
+      </a>
+    </div>
+    <div class="bb-carousel" id="bb-featured-products">
+      <!-- Products will be injected here by JS -->
+      <div class="product-card" style="min-height: 350px;">
+        <div class="product-card-image">
+          <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop" alt="Watch">
+          <div class="product-card-badges">
+            <span class="product-card-badge">Deal</span>
+          </div>
+        </div>
+        <div class="product-card-body">
+          <p class="product-card-category">Electronics</p>
+          <h3 class="product-card-title">Smart Watch - Excellent Condition</h3>
+          <div class="product-card-rating">
+            <span class="product-card-rating-stars">★★★★☆</span>
+            <span class="product-card-rating-count">(24)</span>
+          </div>
+          <p class="product-card-price">
+            $49.99
+            <span class="product-card-price-original">$129.99</span>
+          </p>
+          <p class="product-card-savings">Save $80 (62% off)</p>
+        </div>
+      </div>
+
+      <div class="product-card" style="min-height: 350px;">
+        <div class="product-card-image">
+          <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400&h=400&fit=crop" alt="Books">
+        </div>
+        <div class="product-card-body">
+          <p class="product-card-category">Textbooks</p>
+          <h3 class="product-card-title">Calculus Textbook 8th Edition</h3>
+          <div class="product-card-rating">
+            <span class="product-card-rating-stars">★★★★★</span>
+            <span class="product-card-rating-count">(12)</span>
+          </div>
+          <p class="product-card-price">
+            $35.00
+            <span class="product-card-price-original">$89.99</span>
+          </p>
+          <p class="product-card-savings">Save $55 (61% off)</p>
+        </div>
+      </div>
+
+      <div class="product-card" style="min-height: 350px;">
+        <div class="product-card-image">
+          <img src="https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=400&h=400&fit=crop" alt="Desk Lamp">
+          <div class="product-card-badges">
+            <span class="product-card-badge">Deal</span>
+          </div>
+        </div>
+        <div class="product-card-body">
+          <p class="product-card-category">Dorm & Room</p>
+          <h3 class="product-card-title">LED Desk Lamp with USB Port</h3>
+          <div class="product-card-rating">
+            <span class="product-card-rating-stars">★★★★☆</span>
+            <span class="product-card-rating-count">(8)</span>
+          </div>
+          <p class="product-card-price">$15.00</p>
+        </div>
+      </div>
+
+      <div class="product-card" style="min-height: 350px;">
+        <div class="product-card-image">
+          <img src="https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=400&h=400&fit=crop" alt="Chair">
+        </div>
+        <div class="product-card-body">
+          <p class="product-card-category">Furniture</p>
+          <h3 class="product-card-title">Gaming Chair - Barely Used</h3>
+          <div class="product-card-rating">
+            <span class="product-card-rating-stars">★★★★★</span>
+            <span class="product-card-rating-count">(31)</span>
+          </div>
+          <p class="product-card-price">
+            $75.00
+            <span class="product-card-price-original">$199.99</span>
+          </p>
+          <p class="product-card-savings">Save $125 (63% off)</p>
+        </div>
+      </div>
+
+      <div class="product-card" style="min-height: 350px;">
+        <div class="product-card-image">
+          <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop" alt="Headphones">
+          <div class="product-card-badges">
+            <span class="product-card-badge">Deal</span>
+          </div>
+        </div>
+        <div class="product-card-body">
+          <p class="product-card-category">Electronics</p>
+          <h3 class="product-card-title">Wireless Headphones - Noise Cancelling</h3>
+          <div class="product-card-rating">
+            <span class="product-card-rating-stars">★★★★☆</span>
+            <span class="product-card-rating-count">(45)</span>
+          </div>
+          <p class="product-card-price">
+            $29.99
+            <span class="product-card-price-original">$79.99</span>
+          </p>
+          <p class="product-card-savings">Save $50 (63% off)</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- University Selection -->
+<section class="bb-categories" id="universities">
+  <div class="bb-container">
+    <div class="bb-section-header">
+      <h2 class="bb-section-title">Choose Your University</h2>
+      <p class="bb-section-subtitle">Browse items from verified students at your campus</p>
+    </div>
+    <div class="bb-categories-grid" id="bb-universities-grid">
+      <!-- Universities will be injected by JS -->
+      <div class="bb-category-card" onclick="Pages.renderBrowse(); return false;">
+        <div class="bb-category-icon">🎓</div>
+        <p class="bb-category-name">University of Ghana</p>
+        <p class="bb-category-count">350+ items</p>
+      </div>
+      <div class="bb-category-card" onclick="Pages.renderBrowse(); return false;">
+        <div class="bb-category-icon">🏛️</div>
+        <p class="bb-category-name">KNUST</p>
+        <p class="bb-category-count">220+ items</p>
+      </div>
+      <div class="bb-category-card" onclick="Pages.renderBrowse(); return false;">
+        <div class="bb-category-icon">📖</div>
+        <p class="bb-category-name">University of Cape Coast</p>
+        <p class="bb-category-count">180+ items</p>
+      </div>
+      <div class="bb-category-card" onclick="Pages.renderBrowse(); return false;">
+        <div class="bb-category-icon">🏫</div>
+        <p class="bb-category-name">Ashesi University</p>
+        <p class="bb-category-count">95+ items</p>
+      </div>
+      <div class="bb-category-card" onclick="Pages.renderBrowse(); return false;" style="border: 2px dashed #0046be;">
+        <div class="bb-category-icon" style="font-size: var(--text-2xl);">+</div>
+        <p class="bb-category-name" style="color: #0046be;">View All Universities</p>
+        <p class="bb-category-count">7 total</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section class="bb-how-it-works">
+  <div class="bb-container">
+    <div class="bb-section-header" style="text-align: center;">
+      <h2 class="bb-section-title">How Uni-Hub Works</h2>
+      <p class="bb-section-subtitle">Buy and sell in 3 simple steps</p>
+    </div>
+    <div class="bb-steps-grid">
+      <div class="bb-step">
+        <div class="bb-step-number">1</div>
+        <h3 class="bb-step-title">Sign Up & Verify</h3>
+        <p class="bb-step-desc">Create your account with your university email and get verified as a student. Only verified students can buy and sell.</p>
+      </div>
+      <div class="bb-step">
+        <div class="bb-step-number">2</div>
+        <h3 class="bb-step-title">Browse or List Items</h3>
+        <p class="bb-step-desc">Search through hundreds of items from students at your university, or list your own items for sale in minutes.</p>
+      </div>
+      <div class="bb-step">
+        <div class="bb-step-number">3</div>
+        <h3 class="bb-step-title">Connect & Complete</h3>
+        <p class="bb-step-desc">Message the seller or buyer directly through our secure messaging system. Meet on campus to exchange items safely.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="bb-cta">
+  <div class="bb-container">
+    <div class="bb-cta-content">
+      <h2 class="bb-cta-title">Ready to Start Saving?</h2>
+      <p class="bb-cta-desc">Join thousands of students already buying and selling on Uni-Hub. It's free to sign up.</p>
+      <div class="bb-hero-buttons" style="justify-content: center;">
+        <button onclick="Pages.renderRegister(); return false;" class="bb-btn bb-btn-primary" style="background: #ffce00; color: #1a1a1a;">
+          🎓 Create Free Account
+        </button>
+        <button onclick="Pages.renderBrowse(); return false;" class="bb-btn bb-btn-outline">
+          🛒 Browse Items
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

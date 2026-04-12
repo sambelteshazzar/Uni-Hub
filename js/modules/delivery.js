@@ -1,3 +1,4 @@
+/* exported deliveryManager */
 // ============================================
 // DELIVERY MODULE - Delivery Management
 // ============================================
@@ -49,9 +50,9 @@ class DeliveryManager {
    * @param {number} subtotal - Order subtotal
    * @returns {number} - Delivery fee
    */
-  calculateFee (mode, subtotal = 0) {
+  calculateFee (mode, _subtotal = 0) {
     const options = this.getDeliveryOptions();
-    const option = options.find((o) => o.id === mode);
+    const option = options.find(o => o.id === mode);
     return option ? option.fee : 0;
   }
 
@@ -62,7 +63,7 @@ class DeliveryManager {
    */
   getEstimatedTime (mode) {
     const options = this.getDeliveryOptions();
-    const option = options.find((o) => o.id === mode);
+    const option = options.find(o => o.id === mode);
     return option ? option.estimatedTime : 'N/A';
   }
 
@@ -100,7 +101,7 @@ class DeliveryManager {
    */
   updateStatus (deliveryId, status) {
     const deliveries = this.getAllDeliveries();
-    const index = deliveries.findIndex((d) => d.id === deliveryId);
+    const index = deliveries.findIndex(d => d.id === deliveryId);
 
     if (index === -1) {
       return {
@@ -131,7 +132,7 @@ class DeliveryManager {
    */
   getDeliveryById (deliveryId) {
     const deliveries = this.getAllDeliveries();
-    return deliveries.find((d) => d.id === deliveryId) || null;
+    return deliveries.find(d => d.id === deliveryId) || null;
   }
 
   /**
@@ -141,7 +142,7 @@ class DeliveryManager {
    */
   getDeliveryByOrderId (orderId) {
     const deliveries = this.getAllDeliveries();
-    return deliveries.find((d) => d.orderId === orderId) || null;
+    return deliveries.find(d => d.orderId === orderId) || null;
   }
 
   /**
@@ -203,9 +204,21 @@ class DeliveryManager {
 
     const statusSteps = [
       { status: 'pending', label: 'Order Placed', completed: true },
-      { status: 'confirmed', label: 'Delivery Confirmed', completed: ['confirmed', 'picked-up', 'in-transit', 'delivered'].includes(delivery.status) },
-      { status: 'picked-up', label: 'Picked Up', completed: ['picked-up', 'in-transit', 'delivered'].includes(delivery.status) },
-      { status: 'in-transit', label: 'On the Way', completed: ['in-transit', 'delivered'].includes(delivery.status) },
+      {
+        status: 'confirmed',
+        label: 'Delivery Confirmed',
+        completed: ['confirmed', 'picked-up', 'in-transit', 'delivered'].includes(delivery.status),
+      },
+      {
+        status: 'picked-up',
+        label: 'Picked Up',
+        completed: ['picked-up', 'in-transit', 'delivered'].includes(delivery.status),
+      },
+      {
+        status: 'in-transit',
+        label: 'On the Way',
+        completed: ['in-transit', 'delivered'].includes(delivery.status),
+      },
       { status: 'delivered', label: 'Delivered', completed: delivery.status === 'delivered' },
     ];
 
@@ -293,7 +306,7 @@ class DeliveryManager {
     delivery.updatedAt = new Date().toISOString();
 
     const deliveries = this.getAllDeliveries();
-    const index = deliveries.findIndex((d) => d.id === deliveryId);
+    const index = deliveries.findIndex(d => d.id === deliveryId);
     deliveries[index] = delivery;
     StorageManager.set(this.DELIVERY_STORAGE_KEY, deliveries);
 

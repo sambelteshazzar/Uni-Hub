@@ -1,10 +1,10 @@
 /* ============================================
-   FOOTER - Clean, Minimalist Design
+   FOOTER - Best Buy-Inspired Multi-Column Design
    ============================================ */
 
 .footer {
-  background: #000000;
-  color: #ffffff;
+  background: #f4f4f4;
+  color: #1a1a1a;
   padding: var(--space-4xl) 0 var(--space-xl);
   border-top: 1px solid #e5e5e5;
 }
@@ -13,25 +13,30 @@
   max-width: var(--max-content-width);
 }
 
+/* Main Footer Content - Multi-Column */
 .footer-content {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: var(--space-2xl);
+  grid-template-columns: 2fr repeat(3, 1fr);
+  gap: var(--space-3xl);
   margin-bottom: var(--space-3xl);
+  padding-bottom: var(--space-3xl);
+  border-bottom: 1px solid #d4d4d4;
 }
 
 .footer-section h4 {
-  font-size: var(--text-lg);
+  font-size: var(--text-sm);
   font-weight: 700;
-  color: #ffffff;
+  color: #1a1a1a;
   margin-bottom: var(--space-lg);
-  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .footer-section p {
-  color: #cccccc;
+  color: #666666;
   line-height: 1.6;
   margin-bottom: var(--space-md);
+  font-size: var(--text-sm);
 }
 
 .footer-section ul {
@@ -45,58 +50,173 @@
 }
 
 .footer-section ul li a {
-  color: #cccccc;
-  transition: color 0.2s ease;
+  color: #666666;
+  transition: color 0.15s ease;
+  font-size: var(--text-sm);
+  text-decoration: none;
 }
 
 .footer-section ul li a:hover {
-  color: #ffffff;
-  text-decoration: underline;
+  color: #0046be;
+  text-decoration: none;
 }
 
+/* Brand Section */
+.footer-brand {
+  margin-bottom: var(--space-lg);
+}
+
+.footer-brand-name {
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  color: #0046be;
+  margin-bottom: var(--space-md);
+  letter-spacing: -0.02em;
+}
+
+.footer-brand-desc {
+  color: #666666;
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  max-width: 300px;
+}
+
+/* Newsletter/Email Signup */
+.footer-newsletter {
+  margin-top: var(--space-lg);
+}
+
+.footer-newsletter p {
+  margin-bottom: var(--space-sm);
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.footer-newsletter-form {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.footer-newsletter-input {
+  flex: 1;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid #d4d4d4;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+.footer-newsletter-input:focus {
+  outline: none;
+  border-color: #0046be;
+  box-shadow: 0 0 0 2px rgba(0, 70, 190, 0.1);
+}
+
+.footer-newsletter-btn {
+  padding: var(--space-sm) var(--space-lg);
+  background: #0046be;
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.footer-newsletter-btn:hover {
+  background: #003399;
+}
+
+/* Footer Bottom Bar */
 .footer-bottom {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding-top: var(--space-xl);
-  border-top: 1px solid #333333;
 }
 
 .footer-bottom p {
-  color: #999999;
-  font-size: var(--text-sm);
+  color: #666666;
+  font-size: var(--text-xs);
   margin: 0;
 }
 
+.footer-bottom-links {
+  display: flex;
+  gap: var(--space-lg);
+}
+
+.footer-bottom-links a {
+  color: #666666;
+  font-size: var(--text-xs);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.footer-bottom-links a:hover {
+  color: #0046be;
+  text-decoration: none;
+}
+
+/* Social Links */
 .footer-social {
   display: flex;
   gap: var(--space-md);
 }
 
 .footer-social a {
-  color: #cccccc;
-  font-size: var(--text-lg);
-  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #e5e5e5;
+  border-radius: var(--radius-full);
+  color: #666666;
+  font-size: var(--text-base);
+  text-decoration: none;
+  transition: all 0.15s ease;
 }
 
 .footer-social a:hover {
+  background: #0046be;
   color: #ffffff;
 }
 
 /* Responsive */
+@media (max-width: 992px) {
+  .footer-content {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-2xl);
+  }
+
+  .footer-brand {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 768px) {
   .footer {
     padding: var(--space-2xl) 0 var(--space-lg);
   }
-  
+
   .footer-content {
     grid-template-columns: 1fr;
     gap: var(--space-xl);
   }
-  
+
   .footer-bottom {
     flex-direction: column;
     gap: var(--space-md);
     text-align: center;
+  }
+
+  .footer-bottom-links {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .footer-newsletter-form {
+    flex-direction: column;
   }
 }
