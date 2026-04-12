@@ -3,11 +3,8 @@
 // MODALS MODULE - Modal/Dialog Management
 // ============================================
 
-import StorageManager from '../utils/storage.js';
-import Validator from '../utils/validation.js';
-import { STORAGE_KEY_PREFIX } from '../utils/constants.js';
 
-export class ModalManager {
+class ModalManager {
   constructor () {
     this.activeModals = [];
     this.modalContainer = null;
@@ -420,4 +417,3 @@ export class ModalManager {
 }
 
 // Create singleton instance
-export default new ModalManager();

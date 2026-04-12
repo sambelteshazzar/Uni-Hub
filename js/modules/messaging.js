@@ -5,11 +5,8 @@
  * ============================================
  */
 
-import { io } from 'socket.io-client';
-import StorageManager from '../utils/storage.js';
-import toastManager from './toast.js';
 
-export class MessageManager {
+class MessageManager {
   constructor () {
     this.socket = null;
     this.currentConversation = null;
@@ -515,4 +512,3 @@ export class MessageManager {
 }
 
 // Initialize and export
-export default new MessageManager();

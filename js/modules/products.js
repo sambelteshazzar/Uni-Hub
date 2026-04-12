@@ -4,7 +4,7 @@
 // Works with backend API with local fallback
 // ============================================
 
-export class ProductsManager {
+class ProductsManager {
   constructor () {
     this.products = [];
     this.filteredProducts = [];
@@ -280,7 +280,7 @@ export class ProductsManager {
 const productsManager = new ProductsManager();
 
 // Hostel-specific functionality extension
-export class HostelProductsManager {
+class HostelProductsManager {
   constructor () {
     this.baseManager = productsManager;
   }
@@ -340,4 +340,3 @@ export class HostelProductsManager {
 
 /* exported hostelProductsManager */
 // Create hostel products manager instance
-export default new HostelProductsManager();

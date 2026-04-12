@@ -3,10 +3,8 @@
 // CART MODULE - Shopping Cart Management
 // ============================================
 
-import StorageManager from '../utils/storage.js';
-import { STORAGE_KEYS } from '../utils/constants.js';
 
-export class CartManager {
+class CartManager {
   constructor () {
     this.items = [];
     this.load();
@@ -248,4 +246,3 @@ export class CartManager {
 }
 
 // Create singleton instance
-export default new CartManager();

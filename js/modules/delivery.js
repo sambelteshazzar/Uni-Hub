@@ -3,10 +3,8 @@
 // DELIVERY MODULE - Delivery Management
 // ============================================
 
-import StorageManager from '../utils/storage.js';
-import { DELIVERY_MODES, STORAGE_KEY_PREFIX } from '../utils/constants.js';
 
-export class DeliveryManager {
+class DeliveryManager {
   constructor () {
     this.DELIVERY_STORAGE_KEY = `${STORAGE_KEY_PREFIX}deliveries`;
   }
@@ -322,4 +320,3 @@ export class DeliveryManager {
 }
 
 // Create singleton instance
-export default new DeliveryManager();

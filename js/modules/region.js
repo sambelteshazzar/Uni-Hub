@@ -3,7 +3,7 @@
 // REGION MODULE - Regional Management
 // ============================================
 
-export class RegionManager {
+class RegionManager {
   constructor () {
     this.regions = [];
     this.selectedRegion = null;
@@ -184,4 +184,3 @@ export class RegionManager {
 }
 
 // Create singleton instance
-export default new RegionManager();

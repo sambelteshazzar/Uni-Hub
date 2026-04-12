@@ -3,7 +3,7 @@
 // TOAST NOTIFICATION MODULE
 // ============================================
 
-export class ToastManager {
+class ToastManager {
   constructor () {
     this.container = null;
     this.toasts = [];
@@ -212,4 +212,3 @@ export class ToastManager {
 }
 
 // Create singleton instance
-export default new ToastManager();

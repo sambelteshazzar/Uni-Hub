@@ -2,7 +2,7 @@
 // ROUTER - SPA PAGE NAVIGATION HANDLER
 // ============================================
 
-export class Router {
+class Router {
   constructor () {
     this.currentRoute = null;
     this.currentParams = {};
@@ -231,4 +231,3 @@ export class Router {
   }
 }
 
-export default new Router();

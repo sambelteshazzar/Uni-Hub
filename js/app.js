@@ -2,18 +2,12 @@
 // APP INITIALIZATION - MAIN APPLICATION ENTRY POINT
 // ============================================
 
-import toastManager from './modules/toast.js';
-import productsManager from './modules/products.js';
-import regionManager from './modules/region.js';
-import modalManager from './modules/modals.js';
-import cartManager from './modules/cart.js';
-import Pages from './pages/pages.js';
 
 /**
  * Initialize the Uni-Hub application
  * Sets up global event listeners and initializes core modules
  */
-export class App {
+class App {
   constructor () {
     this.initialized = false;
     this.version = '1.0.0';
@@ -165,4 +159,3 @@ export class App {
   }
 }
 
-export default new App();

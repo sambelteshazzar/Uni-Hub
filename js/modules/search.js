@@ -3,7 +3,7 @@
 // SEARCH MODULE - Advanced Search & Filtering
 // ============================================
 
-export class SearchManager {
+class SearchManager {
   constructor () {
     this.searchHistory = [];
     this.recentSearches = [];
@@ -318,4 +318,3 @@ export class SearchManager {
 }
 
 // Create singleton instance
-export default new SearchManager();

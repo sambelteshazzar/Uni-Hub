@@ -3,10 +3,8 @@
 // NOTIFICATIONS MODULE - Notification System
 // ============================================
 
-import StorageManager from '../utils/storage.js';
-import { STORAGE_KEY_PREFIX } from '../utils/constants.js';
 
-export class NotificationManager {
+class NotificationManager {
   constructor () {
     this.NOTIFICATION_STORAGE_KEY = `${STORAGE_KEY_PREFIX}notifications`;
     this.notifications = [];
@@ -484,4 +482,3 @@ export class NotificationManager {
 }
 
 // Create singleton instance
-export default new NotificationManager();

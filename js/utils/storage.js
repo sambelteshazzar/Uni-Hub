@@ -89,4 +89,3 @@ export class StorageManager {
 }
 
 // Export singleton instance
-export default new StorageManager();

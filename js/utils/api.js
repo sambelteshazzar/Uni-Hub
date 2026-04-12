@@ -207,4 +207,3 @@ export class API {
 }
 
 // Create singleton instance
-export default new API();

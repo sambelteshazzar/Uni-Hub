@@ -56,4 +56,3 @@ export class CryptoUtil {
   }
 }
 
-export default new CryptoUtil();

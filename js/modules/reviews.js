@@ -7,7 +7,7 @@
 
 /* global API_URL, StorageManager, toastManager */
 
-export class ReviewManager {
+class ReviewManager {
   constructor () {
     this.currentSellerId = null;
   }
@@ -366,4 +366,3 @@ export class ReviewManager {
 }
 
 // Initialize and export
-export default new ReviewManager();

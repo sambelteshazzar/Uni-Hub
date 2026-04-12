@@ -2,9 +2,9 @@
 // APPLICATION CONSTANTS
 // ============================================
 
-export const APP_NAME = 'Uni-Hub';
-export const APP_VERSION = '1.0.0';
-export const STORAGE_KEY_PREFIX = 'unihub_';
+const APP_NAME = 'Uni-Hub';
+const APP_VERSION = '1.0.0';
+const STORAGE_KEY_PREFIX = 'unihub_';
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -164,21 +164,3 @@ const TIME = {
   ANIMATION_DURATION: 200,
 };
 
-// Export all constants
-export {
-  STORAGE_KEYS,
-  API_ENDPOINTS,
-  PRODUCT_CONDITIONS,
-  CATEGORIES,
-  DELIVERY_MODES,
-  PAYMENT_MODES,
-  USER_ROLES,
-  ORDER_STATUS,
-  ROUTES,
-  SORT_OPTIONS,
-  VALIDATION_PATTERNS,
-  ERROR_MESSAGES,
-  SUCCESS_MESSAGES,
-  PAGINATION,
-  TIME,
-};

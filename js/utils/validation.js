@@ -126,4 +126,3 @@ export class Validator {
   }
 }
 
-export default new Validator();
