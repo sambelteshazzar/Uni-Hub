@@ -320,3 +320,4 @@ class DeliveryManager {
 }
 
 // Create singleton instance
+const deliveryManager = new DeliveryManager();

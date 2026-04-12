@@ -212,3 +212,4 @@ class ToastManager {
 }
 
 // Create singleton instance
+const toastManager = new ToastManager();

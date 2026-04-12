@@ -482,3 +482,4 @@ class NotificationManager {
 }
 
 // Create singleton instance
+const notificationManager = new NotificationManager();

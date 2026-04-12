@@ -159,3 +159,5 @@ class App {
   }
 }
 
+// Create singleton instance
+const app = new App();

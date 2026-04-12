@@ -331,3 +331,4 @@ class AuthManager {
 }
 
 // Create singleton instance
+const authManager = new AuthManager();

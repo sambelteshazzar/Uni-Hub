@@ -207,3 +207,5 @@ class API {
 }
 
 // Create singleton instance
+// Create singleton instance
+const api = new API();

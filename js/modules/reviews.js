@@ -366,3 +366,4 @@ class ReviewManager {
 }
 
 // Initialize and export
+const reviewManager = new ReviewManager();

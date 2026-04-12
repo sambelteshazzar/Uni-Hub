@@ -512,3 +512,4 @@ class MessageManager {
 }
 
 // Initialize and export
+const messageManager = new MessageManager();

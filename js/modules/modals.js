@@ -417,3 +417,4 @@ class ModalManager {
 }
 
 // Create singleton instance
+const modalManager = new ModalManager();

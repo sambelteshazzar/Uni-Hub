@@ -246,3 +246,4 @@ class CartManager {
 }
 
 // Create singleton instance
+const cartManager = new CartManager();

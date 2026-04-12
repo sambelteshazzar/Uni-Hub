@@ -231,3 +231,5 @@ class Router {
   }
 }
 
+// Create singleton instance
+const router = new Router();
