@@ -76,11 +76,14 @@
             <a href="#/faq" class="navbar-link">FAQ</a>
           </nav>
 
+          <!-- Search Bar (always visible) -->
+          <div class="navbar-search-always">
+            <input type="text" class="navbar-search-input" placeholder="Search for textbooks, electronics, dorm items..." id="navbar-search-input" onkeypress="if(event.key==='Enter')Pages.handleSearch()" />
+            <button class="navbar-search-btn-submit" onclick="Pages.handleSearch()">Search</button>
+          </div>
+
           <!-- Right Side Actions -->
           <div class="navbar-actions">
-            <!-- Search Button (desktop) -->
-            <button class="navbar-search-btn" onclick="Pages.toggleSearch(); return false;" title="Search">🔍</button>
-
             <!-- Cart -->
             <button class="navbar-cart-btn" onclick="Pages.renderCart()" title="View Cart">
               🛒
@@ -101,14 +104,6 @@
 
             <!-- Mobile Hamburger -->
             <button class="navbar-mobile-toggle" onclick="Pages.toggleMobileMenu()" aria-label="Toggle menu">☰</button>
-          </div>
-        </div>
-
-        <!-- Expandable Search Bar -->
-        <div class="navbar-search" id="navbar-search">
-          <div class="navbar-search-inner">
-            <input type="text" class="navbar-search-input" placeholder="Search for textbooks, electronics, dorm items..." id="navbar-search-input" />
-            <button class="navbar-search-btn-submit" onclick="Pages.handleSearch()">Search</button>
           </div>
         </div>
       </nav>
