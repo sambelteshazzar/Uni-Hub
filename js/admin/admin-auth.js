@@ -4,7 +4,7 @@
 /* exported adminAuthManager */
 
 class AdminAuthManager {
-  constructor () {
+  constructor() {
     this.ADMIN_STORAGE_KEY = `${STORAGE_KEY_PREFIX}admin_session`;
     this.adminUser = null;
     this.load();
@@ -13,7 +13,7 @@ class AdminAuthManager {
   /**
    * Load admin session
    */
-  load () {
+  load() {
     const session = StorageManager.get(this.ADMIN_STORAGE_KEY, true);
     this.adminUser = session || null;
   }
@@ -24,7 +24,7 @@ class AdminAuthManager {
    * @param {string} password - Admin password
    * @returns {Object} - Login result
    */
-  async login (email, password) {
+  async login(email, password) {
     // In production, this should call backend API with proper authentication
     // Credentials should be verified server-side with hashed passwords
     try {
@@ -59,7 +59,7 @@ class AdminAuthManager {
   /**
    * Admin logout
    */
-  logout () {
+  logout() {
     this.logActivity('Admin logout', { email: this.adminUser?.email });
     this.adminUser = null;
     StorageManager.remove(this.ADMIN_STORAGE_KEY);
@@ -69,7 +69,7 @@ class AdminAuthManager {
    * Check if admin is logged in
    * @returns {boolean}
    */
-  isLoggedIn () {
+  isLoggedIn() {
     return this.adminUser !== null;
   }
 
@@ -77,7 +77,7 @@ class AdminAuthManager {
    * Get current admin user
    * @returns {Object|null}
    */
-  getCurrentUser () {
+  getCurrentUser() {
     return this.adminUser;
   }
 
@@ -86,7 +86,7 @@ class AdminAuthManager {
    * @param {string} permission - Permission to check
    * @returns {boolean}
    */
-  hasPermission (permission) {
+  hasPermission(permission) {
     if (!this.adminUser) {
       return false;
     }
@@ -97,7 +97,7 @@ class AdminAuthManager {
    * Get all permissions
    * @returns {Array}
    */
-  getAllPermissions () {
+  getAllPermissions() {
     return [
       'view_dashboard',
       'manage_users',
@@ -117,7 +117,7 @@ class AdminAuthManager {
    * @param {string} action - Action performed
    * @param {Object} details - Action details
    */
-  logActivity (action, details = {}) {
+  logActivity(action, details = {}) {
     const activities = this.getActivityLog();
 
     activities.unshift({
@@ -140,7 +140,7 @@ class AdminAuthManager {
    * Get activity log
    * @returns {Array}
    */
-  getActivityLog () {
+  getActivityLog() {
     const activities = StorageManager.get(`${STORAGE_KEY_PREFIX}admin_activities`, true);
     return activities || [];
   }
@@ -150,7 +150,7 @@ class AdminAuthManager {
    * @param {Object} options - Filter options
    * @returns {Array}
    */
-  getActivityLogFiltered (options = {}) {
+  getActivityLogFiltered(options = {}) {
     let activities = this.getActivityLog();
 
     // Filter by admin ID
@@ -178,7 +178,7 @@ class AdminAuthManager {
   /**
    * Clear activity log
    */
-  clearActivityLog () {
+  clearActivityLog() {
     StorageManager.remove(`${STORAGE_KEY_PREFIX}admin_activities`);
   }
 
@@ -186,7 +186,7 @@ class AdminAuthManager {
    * Get admin stats
    * @returns {Object}
    */
-  getStats () {
+  getStats() {
     const activities = this.getActivityLog();
     const today = new Date().toDateString();
 
@@ -203,7 +203,7 @@ class AdminAuthManager {
    * Verify admin session
    * @returns {Object}
    */
-  verifySession () {
+  verifySession() {
     if (!this.isLoggedIn()) {
       return {
         valid: false,
@@ -236,7 +236,7 @@ class AdminAuthManager {
    * @param {string} newPassword - New password
    * @returns {Object}
    */
-  changePassword (currentPassword, _newPassword) {
+  changePassword(currentPassword, _newPassword) {
     // SECURITY WARNING: In production, this should:
     // 1. Verify current password hash on the server
     // 2. Validate new password strength
@@ -259,7 +259,7 @@ class AdminAuthManager {
    * Get admin profile
    * @returns {Object}
    */
-  getProfile () {
+  getProfile() {
     if (!this.adminUser) {
       return null;
     }

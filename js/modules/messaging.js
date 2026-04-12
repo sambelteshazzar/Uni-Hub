@@ -91,7 +91,7 @@ class MessageManager {
         this.notifyListeners('userOffline', { userId: this.socket.id });
       });
 
-      this.socket.on('connect_error', (error) => {
+      this.socket.on('connect_error', error => {
         // eslint-disable-next-line no-console
         console.error('Socket.IO connection error:', error);
         this.isConnected = false;
@@ -111,7 +111,7 @@ class MessageManager {
     }
 
     // New message received
-    this.socket.on('new_message', (data) => {
+    this.socket.on('new_message', data => {
       this.notifyListeners('newMessage', data);
 
       // Show notification if not in current conversation
@@ -127,22 +127,22 @@ class MessageManager {
     });
 
     // Message read
-    this.socket.on('message_read', (data) => {
+    this.socket.on('message_read', data => {
       this.notifyListeners('messageRead', data);
     });
 
     // User typing
-    this.socket.on('user_typing', (data) => {
+    this.socket.on('user_typing', data => {
       this.notifyListeners('typing', data);
     });
 
     // User online/offline
-    this.socket.on('user_offline', (data) => {
+    this.socket.on('user_offline', data => {
       this.notifyListeners('userOffline', data);
     });
 
     // Error
-    this.socket.on('error', (data) => {
+    this.socket.on('error', data => {
       this.notifyListeners('error', data);
     });
   }
@@ -189,7 +189,7 @@ class MessageManager {
         return;
       }
 
-      this.socket.emit('send_message', data, (response) => {
+      this.socket.emit('send_message', data, response => {
         if (response?.error) {
           reject(new Error(response.error));
         } else {
@@ -348,11 +348,14 @@ class MessageManager {
       const { page = 1, limit = 50 } = options;
       const params = new URLSearchParams({ page, limit });
 
-      const response = await fetch(`${API_URL}/messages/conversation/${conversationId}/messages?${params}`, {
-        headers: {
-          Authorization: `Bearer ${StorageManager.get(StorageManager.keys?.authToken || 'authToken')}`,
-        },
-      });
+      const response = await fetch(
+        `${API_URL}/messages/conversation/${conversationId}/messages?${params}`,
+        {
+          headers: {
+            Authorization: `Bearer ${StorageManager.get(StorageManager.keys?.authToken || 'authToken')}`,
+          },
+        }
+      );
 
       const result = await response.json();
 

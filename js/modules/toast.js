@@ -4,7 +4,7 @@
 // ============================================
 
 class ToastManager {
-  constructor () {
+  constructor() {
     this.container = null;
     this.toasts = [];
     this.defaultDuration = 3000;
@@ -13,7 +13,7 @@ class ToastManager {
   /**
    * Initialize toast container
    */
-  init () {
+  init() {
     if (!this.container) {
       this.container = document.createElement('div');
       this.container.className = 'toast-container';
@@ -28,7 +28,7 @@ class ToastManager {
    * @param {string} title - Optional title
    * @param {number} duration - Duration in milliseconds
    */
-  show (message, type = 'info', title = null, duration = null) {
+  show(message, type = 'info', title = null, duration = null) {
     this.init();
 
     const toastId = this.generateId();
@@ -66,7 +66,7 @@ class ToastManager {
    * Dismiss a toast
    * @param {string} toastId - Toast ID
    */
-  dismiss (toastId) {
+  dismiss(toastId) {
     const toastIndex = this.toasts.findIndex(t => t.id === toastId);
     if (toastIndex === -1) {
       return;
@@ -87,7 +87,7 @@ class ToastManager {
    * @param {string} title - Optional title
    * @param {number} duration - Duration
    */
-  success (message, title = 'Success', duration = null) {
+  success(message, title = 'Success', duration = null) {
     return this.show(message, 'success', title, duration);
   }
 
@@ -97,7 +97,7 @@ class ToastManager {
    * @param {string} title - Optional title
    * @param {number} duration - Duration
    */
-  error (message, title = 'Error', duration = null) {
+  error(message, title = 'Error', duration = null) {
     return this.show(message, 'error', title, duration);
   }
 
@@ -107,7 +107,7 @@ class ToastManager {
    * @param {string} title - Optional title
    * @param {number} duration - Duration
    */
-  warning (message, title = 'Warning', duration = null) {
+  warning(message, title = 'Warning', duration = null) {
     return this.show(message, 'warning', title, duration);
   }
 
@@ -117,7 +117,7 @@ class ToastManager {
    * @param {string} title - Optional title
    * @param {number} duration - Duration
    */
-  info (message, title = 'Info', duration = null) {
+  info(message, title = 'Info', duration = null) {
     return this.show(message, 'info', title, duration);
   }
 
@@ -126,7 +126,7 @@ class ToastManager {
    * @param {string} message - Message
    * @param {string} title - Optional title
    */
-  order (message, title = 'Order Update') {
+  order(message, title = 'Order Update') {
     return this.show(message, 'toast-order', title, 5000);
   }
 
@@ -135,7 +135,7 @@ class ToastManager {
    * @param {string} message - Message
    * @param {string} title - Optional title
    */
-  payment (message, title = 'Payment Update') {
+  payment(message, title = 'Payment Update') {
     return this.show(message, 'toast-payment', title, 5000);
   }
 
@@ -144,7 +144,7 @@ class ToastManager {
    * @param {string} message - Message
    * @param {string} title - Optional title
    */
-  delivery (message, title = 'Delivery Update') {
+  delivery(message, title = 'Delivery Update') {
     return this.show(message, 'toast-delivery', title, 5000);
   }
 
@@ -153,7 +153,7 @@ class ToastManager {
    * @param {string} type - Toast type
    * @returns {string} - Icon emoji
    */
-  getIconForType (type) {
+  getIconForType(type) {
     const icons = {
       success: '✓',
       error: '✕',
@@ -171,7 +171,7 @@ class ToastManager {
    * @param {string} type - Toast type
    * @returns {string} - Default title
    */
-  getDefaultTitle (type) {
+  getDefaultTitle(type) {
     const titles = {
       success: 'Success',
       error: 'Error',
@@ -188,14 +188,14 @@ class ToastManager {
    * Generate unique ID
    * @returns {string}
    */
-  generateId () {
+  generateId() {
     return `toast_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
   /**
    * Clear all toasts
    */
-  clearAll () {
+  clearAll() {
     this.toasts.forEach(toast => {
       toast.element.remove();
     });
@@ -206,7 +206,7 @@ class ToastManager {
    * Get active toast count
    * @returns {number}
    */
-  getCount () {
+  getCount() {
     return this.toasts.length;
   }
 }

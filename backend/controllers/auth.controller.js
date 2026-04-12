@@ -7,57 +7,47 @@
 
 const User = require('../models/User.model');
 const { generateToken } = require('../utils/token.util');
+const { ApiError, asyncHandler } = require('../utils/errorHandler');
 
 /**
  * @desc    Register new user
  * @route   POST /api/auth/register
  * @access  Public
  */
-exports.register = async (req, res) => {
-  try {
-    const { fullName, email, phone, password, university, level, hall } = req.body;
+exports.register = asyncHandler(async (req, res) => {
+  const { fullName, email, phone, password, university, level, hall } = req.body;
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        error: 'Email already registered',
-      });
-    }
-
-    // Create user
-    const user = await User.create({
-      fullName,
-      email,
-      phone,
-      password,
-      university,
-      level,
-      hall,
-      role: 'buyer',
-      isVerified: false,
-    });
-
-    // Generate token
-    const token = generateToken(user._id);
-
-    res.status(201).json({
-      success: true,
-      message: 'Account created successfully',
-      data: {
-        user: user.getPublicProfile(),
-        token,
-      },
-    });
-  } catch (error) {
-    console.error('Register error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Registration failed',
-    });
+  // Check if user already exists
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    throw new ApiError(400, 'Email already registered');
   }
-};
+
+  // Create user
+  const user = await User.create({
+    fullName,
+    email,
+    phone,
+    password,
+    university,
+    level,
+    hall,
+    role: 'buyer',
+    isVerified: false,
+  });
+
+  // Generate token
+  const token = generateToken(user._id);
+
+  res.status(201).json({
+    success: true,
+    message: 'Account created successfully',
+    data: {
+      user: user.getPublicProfile(),
+      token,
+    },
+  });
+});
 
 /**
  * @desc    Login user

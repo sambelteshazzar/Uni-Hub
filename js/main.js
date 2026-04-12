@@ -6,12 +6,7 @@
  */
 
 // Import constants
-import {
-  APP_NAME,
-  APP_VERSION,
-  STORAGE_KEYS,
-  ROUTES,
-} from './utils/constants.js';
+import { APP_NAME, APP_VERSION, STORAGE_KEYS, ROUTES } from './utils/constants.js';
 
 // Import utils
 import StorageManager from './utils/storage.js';

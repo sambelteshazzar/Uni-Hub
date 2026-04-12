@@ -34,6 +34,9 @@ const { connectDatabase } = require('./config/database');
 // Import Socket.io configuration
 const { initializeSocket } = require('./config/socket');
 
+// Import error handlers
+const { errorHandler, notFoundHandler } = require('./utils/errorHandler');
+
 // Initialize Express app
 const app = express();
 

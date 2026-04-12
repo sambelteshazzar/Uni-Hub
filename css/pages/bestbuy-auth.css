@@ -245,7 +245,7 @@
   margin: var(--space-sm) 0;
 }
 
-.bb-remember-me input[type="checkbox"] {
+.bb-remember-me input[type='checkbox'] {
   width: 18px;
   height: 18px;
   accent-color: #0046be;

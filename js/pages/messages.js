@@ -5,10 +5,7 @@
  * ============================================
  */
 
-import { STORAGE_KEYS } from '../utils/constants.js';
-
-export { MessagesPage, messagesPage };
-export default messagesPage;
+/* global messageManager, StorageManager, toastManager, Formatter */
 
 class MessagesPage {
   constructor() {
@@ -148,17 +145,18 @@ class MessagesPage {
       `;
     }
 
-    return this.conversations.conversations.map(conv => {
-      const otherUser = this.getOtherUser(conv);
-      const unread = conv.unreadCount?.get?.(this.getCurrentUserId()) || 0;
-      const isActive = this.currentConversation && this.currentConversation._id === conv._id;
+    return this.conversations.conversations
+      .map(conv => {
+        const otherUser = this.getOtherUser(conv);
+        const unread = conv.unreadCount?.get?.(this.getCurrentUserId()) || 0;
+        const isActive = this.currentConversation && this.currentConversation._id === conv._id;
 
-      return `
+        return `
         <div class="conversation-item ${isActive ? 'active' : ''} ${unread > 0 ? 'unread' : ''}" 
              data-conversation-id="${conv._id}"
              onclick="messagesPage.loadConversation('${conv._id}')">
           <div class="conversation-avatar">
-            ${otherUser?.avatar ? `<img src="${otherUser.avatar}" alt="${otherUser.fullName}" />` : (otherUser?.fullName?.charAt(0) || '?')}
+            ${otherUser?.avatar ? `<img src="${otherUser.avatar}" alt="${otherUser.fullName}" />` : otherUser?.fullName?.charAt(0) || '?'}
             <div class="online-indicator" style="display: none;"></div>
           </div>
           <div class="conversation-info">
@@ -169,17 +167,22 @@ class MessagesPage {
             <p class="conversation-preview">
               ${conv.lastMessage?.content || 'Start a conversation...'}
             </p>
-            ${conv.product ? `
+            ${
+              conv.product
+                ? `
               <div class="conversation-product">
                 <img src="${conv.product.images?.[0] || ''}" alt="" />
                 <span>${conv.product.title}</span>
               </div>
-            ` : ''}
+            `
+                : ''
+            }
           </div>
           ${unread > 0 ? `<span class="unread-badge">${unread}</span>` : ''}
         </div>
       `;
-    }).join('');
+      })
+      .join('');
   }
 
   /**
@@ -198,7 +201,7 @@ class MessagesPage {
         <button class="chat-header-back" onclick="messagesPage.goBack()">←</button>
         <div class="chat-header-user">
           <div class="chat-header-avatar">
-            ${otherUser?.avatar ? `<img src="${otherUser.avatar}" alt="${otherUser.fullName}" />` : (otherUser?.fullName?.charAt(0) || '?')}
+            ${otherUser?.avatar ? `<img src="${otherUser.avatar}" alt="${otherUser.fullName}" />` : otherUser?.fullName?.charAt(0) || '?'}
           </div>
           <div class="chat-header-info">
             <h3>${otherUser?.fullName || 'Unknown User'}</h3>
@@ -270,7 +273,7 @@ class MessagesPage {
       });
 
       // Send on Enter (Shift+Enter for new line)
-      this.messageInput.addEventListener('keydown', (e) => {
+      this.messageInput.addEventListener('keydown', e => {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
           this.sendMessage();
@@ -287,17 +290,17 @@ class MessagesPage {
     // Search conversations
     const searchInput = document.getElementById('conversation-search');
     if (searchInput) {
-      searchInput.addEventListener('input', (e) => {
+      searchInput.addEventListener('input', e => {
         this.filterConversations(e.target.value);
       });
     }
 
     // Socket.io event listeners
-    messageManager.on('newMessage', (data) => {
+    messageManager.on('newMessage', data => {
       this.handleNewMessage(data);
     });
 
-    messageManager.on('typing', (data) => {
+    messageManager.on('typing', data => {
       this.handleTypingIndicator(data);
     });
   }
@@ -404,7 +407,10 @@ class MessagesPage {
    */
   getMessageHTML(msg) {
     const isSent = msg.sender._id === this.getCurrentUserId();
-    const time = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const time = new Date(msg.createdAt).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
 
     return `
       <div class="message-group ${isSent ? 'sent' : 'received'}">
@@ -510,13 +516,16 @@ class MessagesPage {
 
     // Add typing indicator
     if (data.isTyping) {
-      container.insertAdjacentHTML('beforeend', `
+      container.insertAdjacentHTML(
+        'beforeend',
+        `
         <div class="typing-indicator" id="typing-indicator">
           <div class="typing-dot"></div>
           <div class="typing-dot"></div>
           <div class="typing-dot"></div>
         </div>
-      `);
+      `
+      );
       container.scrollTop = container.scrollHeight;
     }
   }

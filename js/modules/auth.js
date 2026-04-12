@@ -1,5 +1,5 @@
 class AuthManager {
-  constructor () {
+  constructor() {
     this.currentUser = null;
     this.isAuthenticated = false;
     this.useBackend = true; // Backend API enabled
@@ -9,7 +9,7 @@ class AuthManager {
   /**
    * Load user from storage on init
    */
-  loadUser () {
+  loadUser() {
     try {
       const user = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
       if (user) {
@@ -25,7 +25,7 @@ class AuthManager {
    * Register new user
    * @param {Object} userData - User registration data
    */
-  async register (userData) {
+  async register(userData) {
     try {
       // Validate input
       const errors = Validator.validateForm(userData, {
@@ -111,7 +111,7 @@ class AuthManager {
    * @param {string} email - User email
    * @param {string} password - User password
    */
-  async login (email, password) {
+  async login(email, password) {
     try {
       if (!email || !password) {
         return {
@@ -204,7 +204,7 @@ class AuthManager {
   /**
    * Logout user
    */
-  logout () {
+  logout() {
     this.currentUser = null;
     this.isAuthenticated = false;
     StorageManager.remove(STORAGE_KEYS.CURRENT_USER);
@@ -213,14 +213,14 @@ class AuthManager {
   /**
    * Get current user
    */
-  getCurrentUser () {
+  getCurrentUser() {
     return this.currentUser;
   }
 
   /**
    * Check if user is authenticated
    */
-  isLoggedIn () {
+  isLoggedIn() {
     return this.isAuthenticated && this.currentUser !== null;
   }
 
@@ -228,7 +228,7 @@ class AuthManager {
    * Update user profile
    * @param {Object} updates - Profile updates
    */
-  async updateProfile (updates) {
+  async updateProfile(updates) {
     try {
       if (!this.isLoggedIn()) {
         return {
@@ -267,7 +267,7 @@ class AuthManager {
    * @param {string} currentPassword
    * @param {string} newPassword
    */
-  async changePassword (currentPassword, newPassword) {
+  async changePassword(currentPassword, newPassword) {
     try {
       if (!this.isLoggedIn()) {
         return {

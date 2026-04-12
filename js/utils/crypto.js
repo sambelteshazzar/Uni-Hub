@@ -13,7 +13,7 @@ class CryptoUtil {
    * @param {string} password - Password to hash
    * @returns {Promise<string>} - Hex-encoded hash
    */
-  static async hashPassword (password) {
+  static async hashPassword(password) {
     if (!password || typeof password !== 'string') {
       throw new Error('Password must be a non-empty string');
     }
@@ -32,7 +32,7 @@ class CryptoUtil {
    * @param {string} hash - Hash to compare against
    * @returns {Promise<boolean>} - True if password matches hash
    */
-  static async verifyPassword (password, hash) {
+  static async verifyPassword(password, hash) {
     if (!password || typeof password !== 'string') {
       return false;
     }
@@ -50,7 +50,7 @@ class CryptoUtil {
    * Generate a simple salt (not cryptographically secure, use bcrypt on backend)
    * @returns {string} - Random salt
    */
-  static generateSalt () {
+  static generateSalt() {
     const array = new Uint8Array(16);
     crypto.getRandomValues(array);
     return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');

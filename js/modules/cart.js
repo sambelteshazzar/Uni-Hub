@@ -4,7 +4,7 @@
 // ============================================
 
 class CartManager {
-  constructor () {
+  constructor() {
     this.items = [];
     this.load();
   }
@@ -12,7 +12,7 @@ class CartManager {
   /**
    * Load cart from localStorage
    */
-  load () {
+  load() {
     const cartData = StorageManager.get(STORAGE_KEYS.CART, true);
     this.items = cartData || [];
   }
@@ -20,28 +20,28 @@ class CartManager {
   /**
    * Save cart to localStorage
    */
-  save () {
+  save() {
     StorageManager.set(STORAGE_KEYS.CART, this.items);
   }
 
   /**
    * Get all cart items
    */
-  getItems () {
+  getItems() {
     return this.items;
   }
 
   /**
    * Get cart item count
    */
-  getCount () {
+  getCount() {
     return this.items.reduce((total, item) => total + item.quantity, 0);
   }
 
   /**
    * Get cart total price
    */
-  getTotal () {
+  getTotal() {
     return this.items.reduce((total, item) => total + item.product.price * item.quantity, 0);
   }
 
@@ -51,7 +51,7 @@ class CartManager {
    * @param {number} quantity - Quantity to add (default: 1)
    * @returns {Object} - Result with success status
    */
-  add (product, quantity = 1) {
+  add(product, quantity = 1) {
     // Check if product already in cart
     const existingIndex = this.items.findIndex(item => item.product.id === product.id);
 
@@ -85,7 +85,7 @@ class CartManager {
    * @param {string} productId - Product ID to remove
    * @returns {Object} - Result with success status
    */
-  remove (productId) {
+  remove(productId) {
     const index = this.items.findIndex(item => item.product.id === productId);
 
     if (index !== -1) {
@@ -109,7 +109,7 @@ class CartManager {
    * @param {number} quantity - New quantity
    * @returns {Object} - Result with success status
    */
-  updateQuantity (productId, quantity) {
+  updateQuantity(productId, quantity) {
     const item = this.items.find(item => item.product.id === productId);
 
     if (!item) {
@@ -137,7 +137,7 @@ class CartManager {
    * @param {string} productId - Product ID
    * @returns {Object} - Result with success status
    */
-  increment (productId) {
+  increment(productId) {
     const item = this.items.find(item => item.product.id === productId);
 
     if (item) {
@@ -154,7 +154,7 @@ class CartManager {
    * @param {string} productId - Product ID
    * @returns {Object} - Result with success status
    */
-  decrement (productId) {
+  decrement(productId) {
     const item = this.items.find(item => item.product.id === productId);
 
     if (item) {
@@ -175,7 +175,7 @@ class CartManager {
    * @param {string} productId - Product ID
    * @returns {boolean}
    */
-  isInCart (productId) {
+  isInCart(productId) {
     return this.items.some(item => item.product.id === productId);
   }
 
@@ -184,7 +184,7 @@ class CartManager {
    * @param {string} productId - Product ID
    * @returns {number}
    */
-  getQuantity (productId) {
+  getQuantity(productId) {
     const item = this.items.find(item => item.product.id === productId);
     return item ? item.quantity : 0;
   }
@@ -192,7 +192,7 @@ class CartManager {
   /**
    * Clear entire cart
    */
-  clear () {
+  clear() {
     this.items = [];
     this.save();
   }
@@ -200,7 +200,7 @@ class CartManager {
   /**
    * Get cart summary
    */
-  getSummary () {
+  getSummary() {
     const itemCount = this.getCount();
     const total = this.getTotal();
     const subtotal = total;
@@ -219,7 +219,7 @@ class CartManager {
    * Validate cart before checkout
    * @returns {Object} - Validation result
    */
-  validate () {
+  validate() {
     if (this.items.length === 0) {
       return {
         valid: false,

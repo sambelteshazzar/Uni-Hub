@@ -9,7 +9,7 @@ class Formatter {
    * @param {string} currency - Currency code (default: GHS)
    * @returns {string}
    */
-  static formatPrice (price, currency = 'GHS') {
+  static formatPrice(price, currency = 'GHS') {
     return new Intl.NumberFormat('en-GH', {
       style: 'currency',
       currency: currency,
@@ -24,7 +24,7 @@ class Formatter {
    * @param {string} format - 'short' or 'long'
    * @returns {string}
    */
-  static formatDate (date, format = 'short') {
+  static formatDate(date, format = 'short') {
     const dateObj = date instanceof Date ? date : new Date(date);
 
     if (format === 'long') {
@@ -47,7 +47,7 @@ class Formatter {
    * @param {string|Date} date
    * @returns {string}
    */
-  static formatTimeAgo (date) {
+  static formatTimeAgo(date) {
     const dateObj = date instanceof Date ? date : new Date(date);
     const now = new Date();
     const seconds = Math.floor((now - dateObj) / 1000);
@@ -87,7 +87,7 @@ class Formatter {
    * @param {string} suffix - Default: '...'
    * @returns {string}
    */
-  static truncate (text, length, suffix = '...') {
+  static truncate(text, length, suffix = '...') {
     return text.length > length ? text.substring(0, length) + suffix : text;
   }
 
@@ -96,7 +96,7 @@ class Formatter {
    * @param {string} text
    * @returns {string}
    */
-  static capitalize (text) {
+  static capitalize(text) {
     return text.charAt(0).toUpperCase() + text.slice(1);
   }
 
@@ -105,7 +105,7 @@ class Formatter {
    * @param {string} text
    * @returns {string}
    */
-  static toTitleCase (text) {
+  static toTitleCase(text) {
     return text
       .toLowerCase()
       .split(' ')
@@ -118,7 +118,7 @@ class Formatter {
    * @param {string} phone
    * @returns {string}
    */
-  static formatPhone (phone) {
+  static formatPhone(phone) {
     const cleaned = phone.replace(/\D/g, '');
     const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
     if (match) {
@@ -132,7 +132,7 @@ class Formatter {
    * @param {number} rating
    * @returns {string}
    */
-  static formatRating (rating) {
+  static formatRating(rating) {
     const stars = Math.round(rating);
     const fullStar = '★';
     const emptyStar = '☆';
@@ -144,7 +144,7 @@ class Formatter {
    * @param {number} num
    * @returns {string}
    */
-  static formatNumber (num) {
+  static formatNumber(num) {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   }
 
@@ -153,7 +153,7 @@ class Formatter {
    * @param {string} condition - fair, good, excellent
    * @returns {string}
    */
-  static getConditionBadge (condition) {
+  static getConditionBadge(condition) {
     const badges = {
       fair: '🟡 Fair',
       good: '🟢 Good',
@@ -168,7 +168,7 @@ class Formatter {
    * @param {string} fallback
    * @returns {string}
    */
-  static getImageUrl (url, fallback = 'assets/images/products/no-image.svg') {
+  static getImageUrl(url, fallback = 'assets/images/products/no-image.svg') {
     return url || fallback;
   }
 }

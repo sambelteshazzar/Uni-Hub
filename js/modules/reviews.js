@@ -292,7 +292,8 @@ class ReviewManager {
     const hasHalf = rating % 1 >= 0.5;
     const emptyStars = 5 - fullStars - (hasHalf ? 1 : 0);
 
-    let html = '<div class="star-rating" style="font-size: ${size}px; display: inline-flex; gap: 2px;">';
+    let html =
+      '<div class="star-rating" style="font-size: ${size}px; display: inline-flex; gap: 2px;">';
 
     for (let i = 0; i < fullStars; i++) {
       html += '<span class="star full">★</span>';
