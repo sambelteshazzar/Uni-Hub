@@ -9,7 +9,7 @@ class LandingPageLoader {
    * @param {string} path - Relative path from project root
    * @returns {Promise<string>}
    */
-  static async fetchComponent(path) {
+  static async fetchComponent (path) {
     try {
       const response = await fetch(path);
       if (!response.ok) {
@@ -27,7 +27,7 @@ class LandingPageLoader {
    * Load all landing page components and assemble them
    * @returns {Promise<string>} Combined HTML string
    */
-  static async loadAll() {
+  static async loadAll () {
     const components = [
       'components/landing-page/hero.html',
       'components/landing-page/features.html',
@@ -50,7 +50,7 @@ class LandingPageLoader {
    * - Testimonial carousel
    * - Newsletter form handler
    */
-  static attachBehaviors() {
+  static attachBehaviors () {
     // FAQ accordion
     const faqButtons = document.querySelectorAll('.lp-faq-question');
     faqButtons.forEach(button => {
@@ -104,7 +104,7 @@ class LandingPageLoader {
   /**
    * Initialize the testimonial carousel with nav and dots
    */
-  static initTestimonialCarousel() {
+  static initTestimonialCarousel () {
     const track = document.querySelector('.lp-testimonials-track');
     if (!track) {
       return;
@@ -162,7 +162,7 @@ class LandingPageLoader {
   /**
    * Simple email validation
    */
-  static isValidEmail(email) {
+  static isValidEmail (email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 }

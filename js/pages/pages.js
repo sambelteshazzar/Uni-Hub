@@ -8,14 +8,14 @@ class Pages {
    * Navigate to a page using hash-based routing
    * @param {string} hash - Hash to navigate to (e.g., '/cart', '/product/prod-001')
    */
-  static navigate(hash) {
+  static navigate (hash) {
     window.location.hash = hash;
   }
 
   /**
    * Hide original navbar and footer for landing page
    */
-  static hideOriginalNavFooter() {
+  static hideOriginalNavFooter () {
     const navbar = document.getElementById('navbar-container');
     const footer = document.getElementById('footer');
     if (navbar) {
@@ -31,7 +31,7 @@ class Pages {
   /**
    * Show original navbar and footer for other pages
    */
-  static showOriginalNavFooter() {
+  static showOriginalNavFooter () {
     const navbar = document.getElementById('navbar-container');
     const footer = document.getElementById('footer');
     if (navbar && navbar.getAttribute('data-hidden') === 'true') {
@@ -48,7 +48,7 @@ class Pages {
   /**
    * Render Landing Page with University Selection - Modern Dark Theme
    */
-  static async renderLanding() {
+  static async renderLanding () {
     // Hide original navbar and footer
     this.hideOriginalNavFooter();
 
@@ -886,9 +886,9 @@ class Pages {
             
             <div class="universities-grid">
               ${config.universities
-                .slice(0, 5)
-                .map(
-                  (uni, i) => `
+    .slice(0, 5)
+    .map(
+      (uni, i) => `
                 <div onclick="Pages.selectUniversity('${uni.id}'); return false;" class="university-card-modern">
                   <img src="https://images.unsplash.com/photo-${['1541339907198-e08756dedf3f', '1592280771190-3e2e4d571952', '1523050854058-8df90110c9f1', '1562774053-701939374585', '1509062522246-3755977927d7'][i]}?w=800&auto=format&fit=crop" alt="${uni.name}">
                   <div class="university-card-overlay"></div>
@@ -897,9 +897,9 @@ class Pages {
                     <p class="university-card-meta">📍 ${uni.campus} • ${100 + i * 50}+ items</p>
                   </div>
                 </div>
-              `
-                )
-                .join('')}
+              `,
+    )
+    .join('')}
               
               <div onclick="Pages.renderBrowse(); return false;" class="university-card-modern glass-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem; transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'">
                 <div style="width: 4rem; height: 4rem; border-radius: 50%; background: rgba(99,102,241,0.1); display: flex; align-items: center; justify-content: center; color: #6366f1; margin-bottom: 1rem; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
@@ -938,9 +938,9 @@ class Pages {
             
             <div class="categories-grid">
               ${config.categories
-                .slice(0, 4)
-                .map(
-                  cat => `
+    .slice(0, 4)
+    .map(
+      cat => `
                 <div onclick="Pages.renderBrowse({category: '${cat.id}'}); return false;" class="category-card-modern glass-card glass-card-hover">
                   <div class="category-icon-wrapper" style="background: linear-gradient(135deg, ${cat.id === 'textbooks' ? 'rgba(59,130,246,0.4), rgba(99,102,241,0.4)' : cat.id === 'electronics' ? 'rgba(168,85,247,0.4), rgba(236,72,153,0.4)' : cat.id === 'hostel-items' ? 'rgba(16,185,129,0.4), rgba(20,184,166,0.4)' : 'rgba(249,115,22,0.4), rgba(239,68,68,0.4)'});">
                     ${cat.icon}
@@ -948,9 +948,9 @@ class Pages {
                   <h3 class="category-name">${cat.name}</h3>
                   <p class="category-description">${cat.description}</p>
                 </div>
-              `
-                )
-                .join('')}
+              `,
+    )
+    .join('')}
             </div>
           </div>
         </section>
@@ -1190,7 +1190,7 @@ class Pages {
   /**
    * Setup university selection
    */
-  static setupUniversitySelection() {
+  static setupUniversitySelection () {
     const cards = document.querySelectorAll('.university-card');
     cards.forEach(card => {
       card.addEventListener('click', () => {
@@ -1203,7 +1203,7 @@ class Pages {
   /**
    * Select University
    */
-  static selectUniversity(universityId) {
+  static selectUniversity (universityId) {
     StorageManager.set(STORAGE_KEYS.SELECTED_UNIVERSITY, universityId);
     // Redirect to student verification
     this.renderStudentVerification();
@@ -1212,7 +1212,7 @@ class Pages {
   /**
    * Filter Category Tab on Landing Page
    */
-  static filterCategoryTab(category, button) {
+  static filterCategoryTab (category, button) {
     // Update tab buttons
     document.querySelectorAll('.category-tab').forEach(tab => {
       tab.style.background = 'transparent';
@@ -1236,7 +1236,7 @@ class Pages {
   /**
    * Render Student Verification Page
    */
-  static renderStudentVerification() {
+  static renderStudentVerification () {
     const mainContent = document.getElementById('main-content');
     const selectedUniversity = StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
     const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true);
@@ -1511,7 +1511,7 @@ class Pages {
   /**
    * Switch Verification Tab
    */
-  static switchVerificationTab(tab) {
+  static switchVerificationTab (tab) {
     // Update tab buttons
     document.querySelectorAll('.verification-tab').forEach(t => t.classList.remove('active'));
     document.querySelector(`.verification-tab[data-tab="${tab}"]`).classList.add('active');
@@ -1524,7 +1524,7 @@ class Pages {
   /**
    * Handle File Selection
    */
-  static handleFileSelect(event) {
+  static handleFileSelect (event) {
     const files = event.target.files;
     const fileList = document.getElementById('file-list');
 
@@ -1541,7 +1541,7 @@ class Pages {
   /**
    * Handle Student Verification (Email Method)
    */
-  static async handleStudentVerification(event) {
+  static async handleStudentVerification (event) {
     event.preventDefault();
     const form = document.getElementById('verification-form-email');
     const selectedUniversity = StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
@@ -1569,7 +1569,7 @@ class Pages {
 
     // Show success message
     alert(
-      `✓ Verification Successful!\n\nWelcome, ${verificationData.fullName}!\nYou are now verified as a student of ${university ? university.name : 'your university'}.\n\nYou can now browse and trade on Uni-Hub.`
+      `✓ Verification Successful!\n\nWelcome, ${verificationData.fullName}!\nYou are now verified as a student of ${university ? university.name : 'your university'}.\n\nYou can now browse and trade on Uni-Hub.`,
     );
 
     // Redirect to browse page
@@ -1579,7 +1579,7 @@ class Pages {
   /**
    * Handle Document Verification
    */
-  static async handleDocumentVerification(event) {
+  static async handleDocumentVerification (event) {
     event.preventDefault();
     const form = document.getElementById('verification-form-document');
     const selectedUniversity = StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
@@ -1622,7 +1622,7 @@ class Pages {
 
     // Show success message
     alert(
-      `✓ Verification Submitted!\n\nThank you, ${verificationData.fullName}!\n\nYour documents have been submitted for verification.\n\nYou will receive an email at ${verificationData.personalEmail} within 24-48 hours once your student status is confirmed.\n\nYou can browse Uni-Hub while waiting for verification.`
+      `✓ Verification Submitted!\n\nThank you, ${verificationData.fullName}!\n\nYour documents have been submitted for verification.\n\nYou will receive an email at ${verificationData.personalEmail} within 24-48 hours once your student status is confirmed.\n\nYou can browse Uni-Hub while waiting for verification.`,
     );
 
     // Redirect to browse page (allow browsing while pending)
@@ -1632,7 +1632,7 @@ class Pages {
   /**
    * Render Login Modal Overlay
    */
-  static renderLogin() {
+  static renderLogin () {
     // Don't hide navbar/footer - show as overlay on landing page
     const overlay = document.createElement('div');
     overlay.id = 'auth-overlay';
@@ -1950,7 +1950,7 @@ class Pages {
   /**
    * Close Auth Overlay
    */
-  static closeAuthOverlay() {
+  static closeAuthOverlay () {
     const overlay = document.getElementById('auth-overlay');
     if (overlay) {
       overlay.style.animation = 'fadeIn 0.2s ease-out reverse';
@@ -1961,7 +1961,7 @@ class Pages {
   /**
    * Switch Auth Modal (Login <-> Register)
    */
-  static switchAuthModal(type) {
+  static switchAuthModal (type) {
     this.closeAuthOverlay();
     setTimeout(() => {
       if (type === 'register') {
@@ -1975,7 +1975,7 @@ class Pages {
   /**
    * Toggle password visibility
    */
-  static togglePassword(inputId, button) {
+  static togglePassword (inputId, button) {
     const input = document.getElementById(inputId);
     const eyeIcon = button.querySelector('.eye-icon');
 
@@ -1993,7 +1993,7 @@ class Pages {
   /**
    * Handle Login Submission
    */
-  static async handleLogin(event) {
+  static async handleLogin (event) {
     event.preventDefault();
     const form = document.getElementById('login-form');
     const email = form.email.value;
@@ -2017,7 +2017,7 @@ class Pages {
   /**
    * Render Register Page - Modern Dark Design
    */
-  static renderRegister() {
+  static renderRegister () {
     // Hide navbar and footer for auth pages - cleaner professional look
     this.hideOriginalNavFooter();
 
@@ -2263,7 +2263,7 @@ class Pages {
   /**
    * Handle Register Submission
    */
-  static async handleRegister(event) {
+  static async handleRegister (event) {
     event.preventDefault();
     const form = document.getElementById('register-form');
     const selectedUniversity = StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
@@ -2290,7 +2290,7 @@ class Pages {
   /**
    * Render Forgot Password Page
    */
-  static renderForgotPassword() {
+  static renderForgotPassword () {
     const mainContent = document.getElementById('main-content');
 
     mainContent.innerHTML = `
@@ -2319,7 +2319,7 @@ class Pages {
   /**
    * Handle Forgot Password
    */
-  static async handleForgotPassword(event) {
+  static async handleForgotPassword (event) {
     event.preventDefault();
     alert('Password reset link has been sent to your email!');
     this.renderLogin();
@@ -2328,7 +2328,7 @@ class Pages {
   /**
    * Render Browse Products Page - Modern Professional Design
    */
-  static async renderBrowse(filters = {}) {
+  static async renderBrowse (filters = {}) {
     // Show original navbar and footer for non-landing pages
     this.showOriginalNavFooter();
 
@@ -2429,10 +2429,10 @@ class Pages {
       '<div class="bb-browse-grid" id="bb-browse-grid">' +
       (paginatedData.products.length > 0
         ? paginatedData.products
-            .map(function (product) {
-              return Pages.renderBBProductCard(product);
-            })
-            .join('')
+          .map(function (product) {
+            return Pages.renderBBProductCard(product);
+          })
+          .join('')
         : '<div class="bb-browse-empty"><div class="bb-browse-empty-icon">🔍</div><h3>No deals found</h3><p>Try adjusting your filters or search terms.</p></div>') +
       '</div>' +
       '<!-- Pagination -->' +
@@ -2459,7 +2459,7 @@ class Pages {
   /**
    * Render Product Card - Modern Professional Design
    */
-  static renderProductCard(product) {
+  static renderProductCard (product) {
     const isInWishlist = productsManager.isInWishlist(product.id);
     const initials = product.seller.name
       .split(' ')
@@ -2518,7 +2518,7 @@ class Pages {
   /**
    * Render Best Buy-style Product Card for Browse/Top Deals page
    */
-  static renderBBProductCard(product) {
+  static renderBBProductCard (product) {
     const isInWishlist = productsManager.isInWishlist(product.id);
     const initials = product.seller.name
       .split(' ')
@@ -2601,7 +2601,7 @@ class Pages {
   /**
    * Toggle Wishlist
    */
-  static toggleWishlist(event, productId) {
+  static toggleWishlist (event, productId) {
     event.stopPropagation();
 
     if (productsManager.isInWishlist(productId)) {
@@ -2617,7 +2617,7 @@ class Pages {
   /**
    * Apply Browse Filters
    */
-  static applyBrowseFilters() {
+  static applyBrowseFilters () {
     const category = document.getElementById('category-filter').value;
     const searchQuery = document.getElementById('search-input').value;
     const priceMax = document.getElementById('price-range').value;
@@ -2643,7 +2643,7 @@ class Pages {
     // Re-apply condition filter if needed
     if (conditions.length > 0) {
       productsManager.filteredProducts = productsManager.filteredProducts.filter(p =>
-        conditions.includes(p.condition)
+        conditions.includes(p.condition),
       );
     }
 
@@ -2653,7 +2653,7 @@ class Pages {
   /**
    * Reset Browse Filters
    */
-  static resetBrowseFilters() {
+  static resetBrowseFilters () {
     productsManager.resetFilters();
     this.renderBrowse();
   }
@@ -2661,7 +2661,7 @@ class Pages {
   /**
    * Apply Sort Order
    */
-  static applySortOrder() {
+  static applySortOrder () {
     const sortBy = document.getElementById('sort-select').value;
     productsManager.currentFilters.sortBy = sortBy;
     productsManager.applyFilters();
@@ -2671,7 +2671,7 @@ class Pages {
   /**
    * Re-render just the products grid (for filtering without page refresh)
    */
-  static renderBrowseProducts() {
+  static renderBrowseProducts () {
     const paginatedData = productsManager.getPaginated(1);
     const productsGrid = document.querySelector('.products-grid');
 
@@ -2686,7 +2686,7 @@ class Pages {
   /**
    * Go to Browse Page (pagination)
    */
-  static goToBrowsePage(page) {
+  static goToBrowsePage (page) {
     const paginatedData = productsManager.getPaginated(page);
     const productsGrid = document.querySelector('.products-grid');
 
@@ -2701,7 +2701,7 @@ class Pages {
   /**
    * Render Product Detail Page - Modern Professional Design
    */
-  static renderProductDetail(productId) {
+  static renderProductDetail (productId) {
     const product = productsManager.getById(productId);
 
     if (!product) {
@@ -2874,7 +2874,7 @@ class Pages {
   /**
    * Toggle Wishlist in Detail View
    */
-  static toggleWishlistDetail(productId) {
+  static toggleWishlistDetail (productId) {
     if (productsManager.isInWishlist(productId)) {
       productsManager.removeFromWishlist(productId);
       notificationManager.info('Removed from Wishlist', 'Product removed from your wishlist');
@@ -2889,7 +2889,7 @@ class Pages {
   /**
    * Write Review for Product
    */
-  static writeReview(productId) {
+  static writeReview (productId) {
     const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
     if (!currentUser) {
       alert('Please login to write a review');
@@ -2909,7 +2909,7 @@ class Pages {
   /**
    * Share Product
    */
-  static shareProduct(productId) {
+  static shareProduct (productId) {
     const product = productsManager.getById(productId);
     const shareUrl = window.location.href.split('#')[0] + `#product/${productId}`;
 
@@ -2941,7 +2941,7 @@ class Pages {
   /**
    * Render Cart Page
    */
-  static renderCart() {
+  static renderCart () {
     const mainContent = document.getElementById('main-content');
     const cartItems = cartManager.getItems();
     const summary = cartManager.getSummary();
@@ -2971,8 +2971,8 @@ class Pages {
             </div>
             
             ${cartItems
-              .map(
-                item => `
+    .map(
+      item => `
               <div class="cart-item" data-product-id="${item.product.id}">
                 <div class="cart-item-image">
                   <img src="${item.product.images[0]}" alt="${item.product.title}" />
@@ -2995,9 +2995,9 @@ class Pages {
                   <button class="remove-btn" onclick="Pages.removeFromCart('${item.product.id}')">Remove</button>
                 </div>
               </div>
-            `
-              )
-              .join('')}
+            `,
+    )
+    .join('')}
           </div>
           
           <div class="cart-summary">
@@ -3034,7 +3034,7 @@ class Pages {
   /**
    * Add product to cart from product detail
    */
-  static addToCart(productId) {
+  static addToCart (productId) {
     const product = productsManager.getById(productId);
 
     if (!product) {
@@ -3053,7 +3053,7 @@ class Pages {
   /**
    * Remove item from cart
    */
-  static removeFromCart(productId) {
+  static removeFromCart (productId) {
     cartManager.remove(productId);
     this.updateCartBadge();
     this.renderCart();
@@ -3062,7 +3062,7 @@ class Pages {
   /**
    * Increment cart item quantity
    */
-  static incrementCartQuantity(productId) {
+  static incrementCartQuantity (productId) {
     cartManager.increment(productId);
     this.updateCartBadge();
     this.renderCart();
@@ -3071,7 +3071,7 @@ class Pages {
   /**
    * Decrement cart item quantity
    */
-  static decrementCartQuantity(productId) {
+  static decrementCartQuantity (productId) {
     cartManager.decrement(productId);
     this.updateCartBadge();
     this.renderCart();
@@ -3080,7 +3080,7 @@ class Pages {
   /**
    * Render Checkout Page
    */
-  static renderCheckout() {
+  static renderCheckout () {
     const mainContent = document.getElementById('main-content');
     const cartItems = cartManager.getItems();
     const summary = cartManager.getSummary();
@@ -3115,17 +3115,17 @@ class Pages {
                 <h3>🚚 Delivery Method</h3>
                 <div class="delivery-options">
                   ${deliveryOptions
-                    .map(
-                      option => `
+    .map(
+      option => `
                     <div class="option-card" onclick="Pages.selectDeliveryOption('${option.value}', this)">
                       <input type="radio" name="deliveryMode" value="${option.value}" id="delivery-${option.value}" />
                       <div class="option-icon">${option.icon}</div>
                       <div class="option-label">${option.label}</div>
                       <div class="option-fee">${option.fee === 0 ? 'Free' : `GHS ${option.fee}`}</div>
                     </div>
-                  `
-                    )
-                    .join('')}
+                  `,
+    )
+    .join('')}
                 </div>
               </div>
 
@@ -3166,16 +3166,16 @@ class Pages {
                 <h3>💳 Payment Method</h3>
                 <div class="payment-options">
                   ${paymentOptions
-                    .map(
-                      option => `
+    .map(
+      option => `
                     <div class="option-card" onclick="Pages.selectPaymentOption('${option.value}', this)">
                       <input type="radio" name="paymentMode" value="${option.value}" id="payment-${option.value}" />
                       <div class="option-icon">${option.icon}</div>
                       <div class="option-label">${option.label}</div>
                     </div>
-                  `
-                    )
-                    .join('')}
+                  `,
+    )
+    .join('')}
                 </div>
               </div>
             </div>
@@ -3186,8 +3186,8 @@ class Pages {
               
               <div class="order-items">
                 ${cartItems
-                  .map(
-                    item => `
+    .map(
+      item => `
                   <div class="order-item">
                     <div class="order-item-image">
                       <img src="${item.product.images[0]}" alt="${item.product.title}" />
@@ -3198,9 +3198,9 @@ class Pages {
                       <div class="order-item-price">${Formatter.formatPrice(item.product.price * item.quantity)}</div>
                     </div>
                   </div>
-                `
-                  )
-                  .join('')}
+                `,
+    )
+    .join('')}
               </div>
 
               <div class="summary-divider"></div>
@@ -3233,7 +3233,7 @@ class Pages {
   /**
    * Select delivery option
    */
-  static selectDeliveryOption(value, element) {
+  static selectDeliveryOption (value, element) {
     // Update radio button
     document.querySelectorAll('input[name="deliveryMode"]').forEach(radio => {
       radio.checked = radio.value === value;
@@ -3248,7 +3248,7 @@ class Pages {
     // Update delivery fee
     const deliveryFee = checkoutManager.calculateDeliveryFee(
       value,
-      cartManager.getSummary().subtotal
+      cartManager.getSummary().subtotal,
     );
     document.getElementById('delivery-fee').textContent = Formatter.formatPrice(deliveryFee);
 
@@ -3261,7 +3261,7 @@ class Pages {
   /**
    * Select payment option
    */
-  static selectPaymentOption(value, element) {
+  static selectPaymentOption (value, element) {
     // Update radio button
     document.querySelectorAll('input[name="paymentMode"]').forEach(radio => {
       radio.checked = radio.value === value;
@@ -3277,7 +3277,7 @@ class Pages {
   /**
    * Handle checkout form submission
    */
-  static async handleCheckout(event) {
+  static async handleCheckout (event) {
     event.preventDefault();
 
     const form = event.target;
@@ -3348,7 +3348,7 @@ class Pages {
           // Send notification
           notificationManager.success(
             'Order Confirmed',
-            `Your order #${result.order.orderNumber} has been confirmed!`
+            `Your order #${result.order.orderNumber} has been confirmed!`,
           );
 
           // Render confirmation page
@@ -3380,7 +3380,7 @@ class Pages {
   /**
    * Render Order Confirmation Page
    */
-  static renderOrderConfirmation(order) {
+  static renderOrderConfirmation (order) {
     const mainContent = document.getElementById('main-content');
 
     mainContent.innerHTML = `
@@ -3444,7 +3444,7 @@ class Pages {
   /**
    * Render Orders Page
    */
-  static renderOrders() {
+  static renderOrders () {
     const mainContent = document.getElementById('main-content');
     const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
 
@@ -3476,8 +3476,8 @@ class Pages {
         
         <div class="cart-items">
           ${orders
-            .map(
-              order => `
+    .map(
+      order => `
             <div class="cart-item" style="display: block;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <div>
@@ -3487,16 +3487,16 @@ class Pages {
                   </div>
                 </div>
                 <span class="condition-badge ${order.status}" style="background: ${this.getStatusColor(
-                  order.status
-                )}; color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.875rem;">
+  order.status,
+)}; color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.875rem;">
                   ${Formatter.capitalize(order.status.replace('-', ' '))}
                 </span>
               </div>
               
               <div style="border-top: 1px solid var(--neutral-200); padding-top: 1rem;">
                 ${order.items
-                  .map(
-                    item => `
+    .map(
+      item => `
                   <div style="display: flex; gap: 1rem; margin-bottom: 0.75rem;">
                     <img src="${item.image}" alt="${item.title}" style="width: 60px; height: 60px; object-fit: cover; border-radius: var(--radius-md);" />
                     <div style="flex: 1;">
@@ -3505,9 +3505,9 @@ class Pages {
                     </div>
                     <div style="font-weight: 600;">${Formatter.formatPrice(item.price * item.quantity)}</div>
                   </div>
-                `
-                  )
-                  .join('')}
+                `,
+    )
+    .join('')}
               </div>
               
               <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--neutral-200);">
@@ -3519,9 +3519,9 @@ class Pages {
                 </button>
               </div>
             </div>
-          `
-            )
-            .join('')}
+          `,
+    )
+    .join('')}
         </div>
       </div>
     `;
@@ -3530,7 +3530,7 @@ class Pages {
   /**
    * Get status color
    */
-  static getStatusColor(status) {
+  static getStatusColor (status) {
     const colors = {
       [ORDER_STATUS.PLACED]: '#6366f1',
       [ORDER_STATUS.CONFIRMED]: '#10b981',
@@ -3544,7 +3544,7 @@ class Pages {
   /**
    * View order details
    */
-  static viewOrderDetails(orderId) {
+  static viewOrderDetails (orderId) {
     const order = checkoutManager.getOrderById(orderId);
     if (order) {
       this.renderOrderConfirmation(order);
@@ -3554,7 +3554,7 @@ class Pages {
   /**
    * Update cart badge in navbar
    */
-  static updateCartBadge() {
+  static updateCartBadge () {
     const badge = document.getElementById('cart-badge');
     if (badge) {
       const count = cartManager.getCount();
@@ -3570,7 +3570,7 @@ class Pages {
   /**
    * Update navbar based on authentication state
    */
-  static updateNavbar() {
+  static updateNavbar () {
     const authButtons = document.getElementById('navbar-auth-buttons');
     const userMenu = document.getElementById('navbar-user-menu');
     const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
@@ -3593,7 +3593,7 @@ class Pages {
   /**
    * Render Wishlist Page
    */
-  static renderWishlist() {
+  static renderWishlist () {
     const mainContent = document.getElementById('main-content');
     const wishlistProducts = productsManager.getWishlist();
 
@@ -3624,7 +3624,7 @@ class Pages {
   /**
    * Render User Dashboard - Vertical Tabs Modern Design
    */
-  static renderDashboard() {
+  static renderDashboard () {
     const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
 
     if (!currentUser) {
@@ -3775,10 +3775,10 @@ class Pages {
 
               <div class="dv-orders">
                 ${
-                  recentOrders.length > 0
-                    ? recentOrders
-                        .map(
-                          order => `
+  recentOrders.length > 0
+    ? recentOrders
+      .map(
+        order => `
                   <div class="dv-order-item">
                     <div class="dv-order-icon">📦</div>
                     <div class="dv-order-info">
@@ -3788,17 +3788,17 @@ class Pages {
                     <div class="dv-order-time">${Formatter.formatTimeAgo(order.createdAt)}</div>
                     <span class="dv-order-status ${order.status ? order.status.toLowerCase() : 'placed'}">${order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'Placed'}</span>
                   </div>
-                `
-                        )
-                        .join('')
-                    : `
+                `,
+      )
+      .join('')
+    : `
                   <div class="dv-empty">
                     <div class="dv-empty-icon">📦</div>
                     <h3>No orders yet</h3>
                     <p>Start shopping to see your orders here!</p>
                   </div>
                 `
-                }
+}
               </div>
             </div>
 
@@ -3809,10 +3809,10 @@ class Pages {
 
               <div class="dv-orders">
                 ${
-                  orders.length > 0
-                    ? orders
-                        .map(
-                          order => `
+  orders.length > 0
+    ? orders
+      .map(
+        order => `
                   <div class="dv-order-item">
                     <div class="dv-order-icon">📦</div>
                     <div class="dv-order-info">
@@ -3822,17 +3822,17 @@ class Pages {
                     <div class="dv-order-time">${Formatter.formatTimeAgo(order.createdAt)}</div>
                     <span class="dv-order-status ${order.status ? order.status.toLowerCase() : 'placed'}">${order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'Placed'}</span>
                   </div>
-                `
-                        )
-                        .join('')
-                    : `
+                `,
+      )
+      .join('')
+    : `
                   <div class="dv-empty">
                     <div class="dv-empty-icon">🛒</div>
                     <h3>No orders yet</h3>
                     <p>Browse products and make your first purchase!</p>
                   </div>
                 `
-                }
+}
               </div>
             </div>
 
@@ -3842,12 +3842,12 @@ class Pages {
               <p class="dv-panel-subtitle">Items you've saved for later.</p>
 
               ${
-                wishlist.length > 0
-                  ? `
+  wishlist.length > 0
+    ? `
                 <div class="dv-wishlist-grid">
                   ${wishlist
-                    .map(
-                      product => `
+    .map(
+      product => `
                     <div class="store-product-card" onclick="Pages.renderProductDetail('${product.id}')">
                       <div class="store-product-image">
                         <img src="${product.images[0]}" alt="${product.title}" loading="lazy" />
@@ -3862,19 +3862,19 @@ class Pages {
                         </div>
                       </div>
                     </div>
-                  `
-                    )
-                    .join('')}
+                  `,
+    )
+    .join('')}
                 </div>
               `
-                  : `
+    : `
                 <div class="dv-empty">
                   <div class="dv-empty-icon">🤍</div>
                   <h3>Your wishlist is empty</h3>
                   <p>Save items you love to find them later!</p>
                 </div>
               `
-              }
+}
             </div>
 
             <!-- Cart Panel -->
@@ -3883,13 +3883,13 @@ class Pages {
               <p class="dv-panel-subtitle">Review items before checkout.</p>
 
               ${
-                cartCount > 0
-                  ? `
+  cartCount > 0
+    ? `
                 <div class="dv-orders">
                   ${cartManager
-                    .getItems()
-                    .map(
-                      item => `
+    .getItems()
+    .map(
+      item => `
                     <div class="dv-order-item">
                       <div class="dv-order-icon">🛒</div>
                       <div class="dv-order-info">
@@ -3897,23 +3897,23 @@ class Pages {
                         <div class="dv-order-amount">Qty: ${item.quantity} × ${item.product.price.toLocaleString()} GHS</div>
                       </div>
                     </div>
-                  `
-                    )
-                    .join('')}
+                  `,
+    )
+    .join('')}
                 </div>
                 <div style="margin-top:1.5rem;display:flex;gap:0.75rem;">
                   <button class="dv-btn dv-btn-outline" onclick="cartManager.clear(); Pages.renderDashboard();">Clear Cart</button>
                   <button class="dv-btn dv-btn-primary" onclick="Pages.renderCheckout()">Proceed to Checkout →</button>
                 </div>
               `
-                  : `
+    : `
                 <div class="dv-empty">
                   <div class="dv-empty-icon">🛒</div>
                   <h3>Your cart is empty</h3>
                   <p>Add items to get started!</p>
                 </div>
               `
-              }
+}
             </div>
 
             <!-- Profile Panel -->
@@ -3975,7 +3975,7 @@ class Pages {
   /**
    * Switch Dashboard Tab
    */
-  static switchDashboardTab(tabId) {
+  static switchDashboardTab (tabId) {
     // Update tab buttons
     document.querySelectorAll('.dv-tab').forEach(tab => {
       tab.classList.toggle('active', tab.dataset.tab === tabId);
@@ -3990,7 +3990,7 @@ class Pages {
   /**
    * Render User Profile
    */
-  static renderProfile() {
+  static renderProfile () {
     const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
 
     if (!currentUser) {
@@ -4034,7 +4034,7 @@ class Pages {
   /**
    * Handle Profile Update
    */
-  static handleProfileUpdate(event) {
+  static handleProfileUpdate (event) {
     event.preventDefault();
     const form = event.target;
     const updates = {
@@ -4054,7 +4054,7 @@ class Pages {
   /**
    * Handle Logout
    */
-  static handleLogout() {
+  static handleLogout () {
     authManager.logout();
     notificationManager.info('Logged Out', 'You have been logged out successfully.');
     this.renderLanding();
@@ -4063,7 +4063,7 @@ class Pages {
   /**
    * Render Notifications Page
    */
-  static renderNotifications() {
+  static renderNotifications () {
     const mainContent = document.getElementById('main-content');
     const notifications = notificationManager.getAll();
 
@@ -4071,12 +4071,12 @@ class Pages {
       <div class="container" style="padding: 2rem 1rem; max-width: 800px;">
         <h1 style="margin-bottom: 1.5rem;">Notifications</h1>
         ${
-          notifications.length > 0
-            ? `
+  notifications.length > 0
+    ? `
           <div class="cart-items">
             ${notifications
-              .map(
-                n => `
+    .map(
+      n => `
               <div class="cart-item ${n.read ? 'read' : 'unread'}" style="display: flex; align-items: flex-start; gap: 1rem;">
                 <div style="font-size: 2rem;">${n.icon}</div>
                 <div style="flex: 1;">
@@ -4088,19 +4088,19 @@ class Pages {
                 </div>
                 <button class="remove-btn" onclick="notificationManager.delete('${n.id}'); Pages.renderNotifications();">×</button>
               </div>
-            `
-              )
-              .join('')}
+            `,
+    )
+    .join('')}
           </div>
         `
-            : `
+    : `
           <div class="empty-cart">
             <div class="empty-cart-icon">🔔</div>
             <h3>No notifications</h3>
             <p>You're all caught up!</p>
           </div>
         `
-        }
+}
       </div>
     `;
   }
@@ -4108,7 +4108,7 @@ class Pages {
   /**
    * Render Seller Dashboard
    */
-  static renderSellerDashboard() {
+  static renderSellerDashboard () {
     const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
 
     if (!currentUser) {
@@ -4178,7 +4178,7 @@ class Pages {
   /**
    * Render Add Product Page
    */
-  static renderAddProduct() {
+  static renderAddProduct () {
     const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
 
     if (!currentUser) {
@@ -4249,7 +4249,7 @@ class Pages {
   /**
    * Handle Add Product
    */
-  static handleAddProduct(event) {
+  static handleAddProduct (event) {
     event.preventDefault();
     const form = event.target;
 
@@ -4276,7 +4276,7 @@ class Pages {
   /**
    * Render Manage Products Page
    */
-  static renderManageProducts() {
+  static renderManageProducts () {
     const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
     const sellerProducts = productsManager.getBySeller(currentUser?.id || '');
 
@@ -4288,12 +4288,12 @@ class Pages {
           <button class="btn btn-primary" onclick="Pages.renderAddProduct()">+ Add Product</button>
         </div>
         ${
-          sellerProducts.length > 0
-            ? `
+  sellerProducts.length > 0
+    ? `
           <div class="seller-products-grid">
             ${sellerProducts
-              .map(
-                product => `
+    .map(
+      product => `
               <div class="seller-product-card">
                 <div class="seller-product-image">
                   <img src="${product.images[0]}" alt="${product.title}" />
@@ -4308,12 +4308,12 @@ class Pages {
                   </div>
                 </div>
               </div>
-            `
-              )
-              .join('')}
+            `,
+    )
+    .join('')}
           </div>
         `
-            : `
+    : `
           <div class="empty-cart">
             <div class="empty-cart-icon">📦</div>
             <h3>No products yet</h3>
@@ -4321,7 +4321,7 @@ class Pages {
             <button class="btn btn-primary" onclick="Pages.renderAddProduct()">Add Product</button>
           </div>
         `
-        }
+}
       </div>
     `;
   }
@@ -4329,7 +4329,7 @@ class Pages {
   /**
    * Render Seller Orders Page
    */
-  static renderSellerOrders() {
+  static renderSellerOrders () {
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `
       <div class="container" style="padding: 2rem 1rem;">
@@ -4346,7 +4346,7 @@ class Pages {
   /**
    * Render Delivery Options Page
    */
-  static renderDeliveryOptions() {
+  static renderDeliveryOptions () {
     const mainContent = document.getElementById('main-content');
     const deliveryOptions = deliveryManager.getDeliveryOptions();
 
@@ -4355,8 +4355,8 @@ class Pages {
         <h1 style="margin-bottom: 1.5rem;">Delivery Options</h1>
         <div class="delivery-options">
           ${deliveryOptions
-            .map(
-              option => `
+    .map(
+      option => `
             <div class="option-card">
               <div class="option-icon">${option.icon}</div>
               <div class="option-label">${option.name}</div>
@@ -4364,9 +4364,9 @@ class Pages {
               <div class="option-fee">${option.fee === 0 ? 'Free' : `GHS ${option.fee}`}</div>
               <div class="option-fee" style="font-size: 0.75rem;">${option.estimatedTime}</div>
             </div>
-          `
-            )
-            .join('')}
+          `,
+    )
+    .join('')}
         </div>
       </div>
     `;
@@ -4375,7 +4375,7 @@ class Pages {
   /**
    * Render Track Order Page
    */
-  static renderTrackOrder(orderId) {
+  static renderTrackOrder (orderId) {
     const delivery = deliveryManager.getDeliveryByOrderId(orderId);
     const mainContent = document.getElementById('main-content');
 
@@ -4383,8 +4383,8 @@ class Pages {
       <div class="container" style="padding: 2rem 1rem; max-width: 800px;">
         <h1 style="margin-bottom: 1.5rem;">Track Order</h1>
         ${
-          delivery
-            ? `
+  delivery
+    ? `
           <div class="order-confirmation-container">
             <div class="confirmation-icon">🚚</div>
             <h2>Order #${delivery.orderNumber}</h2>
@@ -4407,7 +4407,7 @@ class Pages {
             </div>
           </div>
         `
-            : `
+    : `
           <div class="empty-cart">
             <div class="empty-cart-icon">📦</div>
             <h3>Order not found</h3>
@@ -4415,7 +4415,7 @@ class Pages {
             <button class="btn btn-primary" onclick="Pages.renderOrders()">View My Orders</button>
           </div>
         `
-        }
+}
       </div>
     `;
   }
@@ -4423,7 +4423,7 @@ class Pages {
   /**
    * Render Payment Page
    */
-  static renderPayment(orderId) {
+  static renderPayment (orderId) {
     const order = checkoutManager.getOrderById(orderId);
     const mainContent = document.getElementById('main-content');
 
@@ -4470,7 +4470,7 @@ class Pages {
   /**
    * Render Payment Success Page
    */
-  static renderPaymentSuccess() {
+  static renderPaymentSuccess () {
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `
       <div class="container" style="padding: 2rem 1rem; text-align: center;">
@@ -4485,7 +4485,7 @@ class Pages {
   /**
    * Render Admin Dashboard
    */
-  static renderAdminDashboard() {
+  static renderAdminDashboard () {
     const adminUser = adminAuthManager.getCurrentUser();
 
     if (!adminAuthManager.isLoggedIn()) {
@@ -4584,7 +4584,7 @@ class Pages {
   /**
    * Render Admin Login
    */
-  static renderAdminLogin() {
+  static renderAdminLogin () {
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `
       <div class="auth-container">
@@ -4612,7 +4612,7 @@ class Pages {
   /**
    * Handle Admin Login
    */
-  static async handleAdminLogin(event) {
+  static async handleAdminLogin (event) {
     event.preventDefault();
     const form = event.target;
     const result = await adminAuthManager.login(form.email.value, form.password.value);
@@ -4628,7 +4628,7 @@ class Pages {
   /**
    * Render Admin Users Page
    */
-  static renderAdminUsers() {
+  static renderAdminUsers () {
     const users = adminUsersManager.getAllUsers();
     const mainContent = document.getElementById('main-content');
 
@@ -4674,8 +4674,8 @@ class Pages {
               </thead>
               <tbody>
                 ${users
-                  .map(
-                    user => `
+    .map(
+      user => `
                   <tr>
                     <td>
                       <div class="user-cell">
@@ -4699,9 +4699,9 @@ class Pages {
                       </div>
                     </td>
                   </tr>
-                `
-                  )
-                  .join('')}
+                `,
+    )
+    .join('')}
               </tbody>
             </table>
           </div>
@@ -4713,7 +4713,7 @@ class Pages {
   /**
    * Render Admin Products Page
    */
-  static renderAdminProducts() {
+  static renderAdminProducts () {
     const products = adminProductsManager.getAllProducts();
     const mainContent = document.getElementById('main-content');
 
@@ -4759,8 +4759,8 @@ class Pages {
               </thead>
               <tbody>
                 ${products
-                  .map(
-                    product => `
+    .map(
+      product => `
                   <tr>
                     <td>
                       <div class="product-cell">
@@ -4779,9 +4779,9 @@ class Pages {
                       </div>
                     </td>
                   </tr>
-                `
-                  )
-                  .join('')}
+                `,
+    )
+    .join('')}
               </tbody>
             </table>
           </div>
@@ -4793,7 +4793,7 @@ class Pages {
   /**
    * Render Admin Orders Page
    */
-  static renderAdminOrders() {
+  static renderAdminOrders () {
     const orders = adminOrdersManager.getAllOrders();
     const mainContent = document.getElementById('main-content');
 
@@ -4840,8 +4840,8 @@ class Pages {
               </thead>
               <tbody>
                 ${orders
-                  .map(
-                    order => `
+    .map(
+      order => `
                   <tr>
                     <td>${order.orderNumber}</td>
                     <td>${order.customer.name}</td>
@@ -4855,9 +4855,9 @@ class Pages {
                       </div>
                     </td>
                   </tr>
-                `
-                  )
-                  .join('')}
+                `,
+    )
+    .join('')}
               </tbody>
             </table>
           </div>
@@ -4869,7 +4869,7 @@ class Pages {
   /**
    * Render Admin Regions Page
    */
-  static renderAdminRegions() {
+  static renderAdminRegions () {
     const regions = regionManager.getAllRegions();
     const mainContent = document.getElementById('main-content');
 
@@ -4913,8 +4913,8 @@ class Pages {
               </thead>
               <tbody>
                 ${regions
-                  .map(
-                    region => `
+    .map(
+      region => `
                   <tr>
                     <td>${region.name}</td>
                     <td>${region.capital}</td>
@@ -4925,9 +4925,9 @@ class Pages {
                       </div>
                     </td>
                   </tr>
-                `
-                  )
-                  .join('')}
+                `,
+    )
+    .join('')}
               </tbody>
             </table>
           </div>
@@ -4939,7 +4939,7 @@ class Pages {
   /**
    * Render Admin Reports Page
    */
-  static renderAdminReports() {
+  static renderAdminReports () {
     const stats = adminReportsManager.getDashboardOverview();
     const mainContent = document.getElementById('main-content');
 

@@ -95,7 +95,7 @@
     window.scrollTo({ top: 0 });
 
     // Typewriter animation for Sign In page
-    (function initTypewriter() {
+    (function initTypewriter () {
       const phrases = [
         'Welcome Back',
         'Your Campus Marketplace',
@@ -115,7 +115,7 @@
         return;
       }
 
-      function type() {
+      function type () {
         const currentPhrase = phrases[phraseIndex];
 
         if (isPaused) {
@@ -283,7 +283,7 @@
     window.scrollTo({ top: 0 });
 
     // Typewriter animation - mimics the React framer-motion version
-    (function initTypewriter() {
+    (function initTypewriter () {
       const phrases = [
         'Join Uni-Hub Today',
         'Buy & Sell on Campus',
@@ -303,7 +303,7 @@
         return;
       }
 
-      function type() {
+      function type () {
         const currentPhrase = phrases[phraseIndex];
 
         if (isPaused) {
@@ -453,9 +453,9 @@
       '<div class="bb-orders-list">' +
       (recentOrders.length > 0
         ? recentOrders
-            .map(function (order) {
-              return (
-                '<div class="bb-order-card">' +
+          .map(function (order) {
+            return (
+              '<div class="bb-order-card">' +
                 '<div class="bb-order-icon">📦</div>' +
                 '<div class="bb-order-info"><div class="bb-order-number">Order #' +
                 order.orderNumber +
@@ -475,9 +475,9 @@
                   : 'Placed') +
                 '</span>' +
                 '</div>'
-              );
-            })
-            .join('')
+            );
+          })
+          .join('')
         : '<div class="bb-empty"><div class="bb-empty-icon">📦</div><h3 class="bb-empty-title">No orders yet</h3><p class="bb-empty-desc">Start shopping to see your orders here!</p></div>') +
       '</div>' +
       '<div class="bb-quick-actions">' +
@@ -495,9 +495,9 @@
       '<div class="bb-orders-list">' +
       (orders.length > 0
         ? orders
-            .map(function (order) {
-              return (
-                '<div class="bb-order-card">' +
+          .map(function (order) {
+            return (
+              '<div class="bb-order-card">' +
                 '<div class="bb-order-icon">📦</div>' +
                 '<div class="bb-order-info"><div class="bb-order-number">Order #' +
                 order.orderNumber +
@@ -517,9 +517,9 @@
                   : 'Placed') +
                 '</span>' +
                 '</div>'
-              );
-            })
-            .join('')
+            );
+          })
+          .join('')
         : '<div class="bb-empty"><div class="bb-empty-icon">🛒</div><h3 class="bb-empty-title">No orders yet</h3><p class="bb-empty-desc">Browse products and make your first purchase!</p></div>') +
       '</div>' +
       '</div>' +

@@ -14,7 +14,7 @@ import Pages from './pages/pages.js';
  * Sets up global event listeners and initializes core modules
  */
 export class App {
-  constructor() {
+  constructor () {
     this.initialized = false;
     this.version = '1.0.0';
   }
@@ -22,7 +22,7 @@ export class App {
   /**
    * Initialize the application
    */
-  async init() {
+  async init () {
     if (this.initialized) {
       return;
     }
@@ -47,7 +47,7 @@ export class App {
   /**
    * Initialize core modules
    */
-  async initCoreModules() {
+  async initCoreModules () {
     // Initialize toast manager
     if (typeof toastManager !== 'undefined') {
       toastManager.init();
@@ -72,7 +72,7 @@ export class App {
   /**
    * Set up global event listeners
    */
-  setupEventListeners() {
+  setupEventListeners () {
     // Handle online/offline status
     window.addEventListener('online', () => this.handleOnlineStatus(true));
     window.addEventListener('offline', () => this.handleOnlineStatus(false));
@@ -87,7 +87,7 @@ export class App {
   /**
    * Initialize UI components
    */
-  initUIComponents() {
+  initUIComponents () {
     // Update cart badge
     if (typeof Pages !== 'undefined') {
       Pages.updateCartBadge();
@@ -99,7 +99,7 @@ export class App {
    * Handle online/offline status
    * @param {boolean} isOnline
    */
-  handleOnlineStatus(isOnline) {
+  handleOnlineStatus (isOnline) {
     if (isOnline) {
       // App online status logged
       // Sync any pending data
@@ -113,7 +113,7 @@ export class App {
    * Handle keyboard shortcuts
    * @param {KeyboardEvent} e
    */
-  handleKeyboardShortcuts(e) {
+  handleKeyboardShortcuts (e) {
     // Ctrl/Cmd + K - Search (future feature)
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
       e.preventDefault();
@@ -132,7 +132,7 @@ export class App {
   /**
    * Save application state before unload
    */
-  saveAppState() {
+  saveAppState () {
     // Save current state to sessionStorage
     const state = {
       timestamp: Date.now(),
@@ -144,7 +144,7 @@ export class App {
   /**
    * Sync pending data when coming back online
    */
-  async syncPendingData() {
+  async syncPendingData () {
     // Future: Sync any pending orders, cart updates, etc.
   }
 
@@ -152,7 +152,7 @@ export class App {
    * Get app version
    * @returns {string}
    */
-  getVersion() {
+  getVersion () {
     return this.version;
   }
 
@@ -160,7 +160,7 @@ export class App {
    * Check if app is initialized
    * @returns {boolean}
    */
-  isInitialized() {
+  isInitialized () {
     return this.initialized;
   }
 }

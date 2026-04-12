@@ -4,7 +4,7 @@
 // ============================================
 
 class AdminUsersManager {
-  constructor() {
+  constructor () {
     this.USERS_STORAGE_KEY = `${STORAGE_KEY_PREFIX}users`;
     this.users = [];
     this.loadUsers();
@@ -13,7 +13,7 @@ class AdminUsersManager {
   /**
    * Load users from JSON and storage
    */
-  async loadUsers() {
+  async loadUsers () {
     try {
       // Load base users from JSON
       const data = await api.loadJSON('data/users.json');
@@ -37,7 +37,7 @@ class AdminUsersManager {
    * Get all users
    * @returns {Array}
    */
-  getAllUsers() {
+  getAllUsers () {
     // Also include currently logged in users from sessions
     const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
     if (currentUser && !this.users.find(u => u.id === currentUser.id)) {
@@ -51,7 +51,7 @@ class AdminUsersManager {
    * @param {string} userId - User ID
    * @returns {Object|null}
    */
-  getUserById(userId) {
+  getUserById (userId) {
     return this.users.find(u => u.id === userId) || null;
   }
 
@@ -60,7 +60,7 @@ class AdminUsersManager {
    * @param {string} email - User email
    * @returns {Object|null}
    */
-  getUserByEmail(email) {
+  getUserByEmail (email) {
     return this.users.find(u => u.email === email) || null;
   }
 
@@ -69,12 +69,12 @@ class AdminUsersManager {
    * @param {string} query - Search query
    * @returns {Array}
    */
-  searchUsers(query) {
+  searchUsers (query) {
     const normalizedQuery = query.toLowerCase();
     return this.users.filter(
       u =>
         u.fullName.toLowerCase().includes(normalizedQuery) ||
-        u.email.toLowerCase().includes(normalizedQuery)
+        u.email.toLowerCase().includes(normalizedQuery),
     );
   }
 
@@ -83,7 +83,7 @@ class AdminUsersManager {
    * @param {string} university - University ID
    * @returns {Array}
    */
-  getUsersByUniversity(university) {
+  getUsersByUniversity (university) {
     return this.users.filter(u => u.university === university);
   }
 
@@ -92,7 +92,7 @@ class AdminUsersManager {
    * @param {string} role - User role
    * @returns {Array}
    */
-  getUsersByRole(role) {
+  getUsersByRole (role) {
     return this.users.filter(u => u.role === role);
   }
 
@@ -102,7 +102,7 @@ class AdminUsersManager {
    * @param {string} newRole - New role
    * @returns {Object}
    */
-  updateRole(userId, newRole) {
+  updateRole (userId, newRole) {
     const user = this.getUserById(userId);
 
     if (!user) {
@@ -129,7 +129,7 @@ class AdminUsersManager {
    * @param {string} userId - User ID
    * @returns {Object}
    */
-  verifyUser(userId) {
+  verifyUser (userId) {
     const user = this.getUserById(userId);
 
     if (!user) {
@@ -157,7 +157,7 @@ class AdminUsersManager {
    * @param {string} reason - Suspension reason
    * @returns {Object}
    */
-  suspendUser(userId, reason) {
+  suspendUser (userId, reason) {
     const user = this.getUserById(userId);
 
     if (!user) {
@@ -185,7 +185,7 @@ class AdminUsersManager {
    * @param {string} userId - User ID
    * @returns {Object}
    */
-  unsuspendUser(userId) {
+  unsuspendUser (userId) {
     const user = this.getUserById(userId);
 
     if (!user) {
@@ -213,7 +213,7 @@ class AdminUsersManager {
    * @param {string} userId - User ID
    * @returns {Object}
    */
-  deleteUser(userId) {
+  deleteUser (userId) {
     const index = this.users.findIndex(u => u.id === userId);
 
     if (index === -1) {
@@ -239,7 +239,7 @@ class AdminUsersManager {
    * Get user statistics
    * @returns {Object}
    */
-  getStats() {
+  getStats () {
     const users = this.getAllUsers();
 
     const roleCount = {};
@@ -272,7 +272,7 @@ class AdminUsersManager {
    * @param {number} limit - Number of users
    * @returns {Array}
    */
-  getRecentUsers(limit = 10) {
+  getRecentUsers (limit = 10) {
     return this.getAllUsers()
       .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
       .slice(0, limit);
@@ -283,7 +283,7 @@ class AdminUsersManager {
    * @param {number} limit - Number of sellers
    * @returns {Array}
    */
-  getTopSellers(limit = 10) {
+  getTopSellers (limit = 10) {
     return this.getUsersByRole('seller')
       .sort((a, b) => (b.totalSales || 0) - (a.totalSales || 0))
       .slice(0, limit);
@@ -294,7 +294,7 @@ class AdminUsersManager {
    * @param {number} limit - Number of buyers
    * @returns {Array}
    */
-  getTopBuyers(limit = 10) {
+  getTopBuyers (limit = 10) {
     return this.getUsersByRole('buyer')
       .sort((a, b) => (b.totalOrders || 0) - (a.totalOrders || 0))
       .slice(0, limit);
@@ -304,7 +304,7 @@ class AdminUsersManager {
    * Export users to CSV (placeholder)
    * @returns {string}
    */
-  exportToCSV() {
+  exportToCSV () {
     const users = this.getAllUsers();
     const headers = ['ID', 'Name', 'Email', 'Phone', 'University', 'Role', 'Verified', 'Joined'];
     const rows = users.map(u => [
@@ -326,7 +326,7 @@ class AdminUsersManager {
    * @param {Array} userIds - User IDs to verify
    * @returns {Object}
    */
-  bulkVerify(userIds) {
+  bulkVerify (userIds) {
     let verified = 0;
     let failed = 0;
 

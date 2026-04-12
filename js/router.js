@@ -3,7 +3,7 @@
 // ============================================
 
 export class Router {
-  constructor() {
+  constructor () {
     this.currentRoute = null;
     this.currentParams = {};
     this.routes = new Map();
@@ -15,7 +15,7 @@ export class Router {
    * Initialize router - listen to hash changes
    * Does NOT handle initial load - call start() after routes are registered
    */
-  init() {
+  init () {
     // Listen to hash changes (for back/forward buttons)
     window.addEventListener('hashchange', () => this.handleHashChange());
 
@@ -26,8 +26,8 @@ export class Router {
   /**
    * Start the router - handle initial navigation after routes are registered
    */
-  start() {
-    if (this._started) return;
+  start () {
+    if (this._started) {return;}
     this._started = true;
     this.handleHashChange();
   }
@@ -35,7 +35,7 @@ export class Router {
   /**
    * Handle hash change event
    */
-  handleHashChange() {
+  handleHashChange () {
     const hash = window.location.hash.slice(1) || '/';
     const [path, queryString] = hash.split('?');
     const params = this.parseQueryString(queryString || '');
@@ -46,9 +46,9 @@ export class Router {
   /**
    * Parse query string to object
    */
-  parseQueryString(queryString) {
+  parseQueryString (queryString) {
     const params = {};
-    if (!queryString) return params;
+    if (!queryString) {return params;}
 
     const pairs = queryString.split('&');
     for (const pair of pairs) {
@@ -65,7 +65,7 @@ export class Router {
    * @param {string} path - Route path
    * @param {Function} handler - Route handler function
    */
-  register(path, handler) {
+  register (path, handler) {
     this.routes.set(path, handler);
   }
 
@@ -75,7 +75,7 @@ export class Router {
    * @param {Object} params - Route parameters
    * @param {boolean} updateHash - Whether to update the hash (default: true)
    */
-  async navigate(path, params = {}, updateHash = true) {
+  async navigate (path, params = {}, updateHash = true) {
     try {
       this.currentRoute = path;
       this.currentParams = params;
@@ -118,7 +118,7 @@ export class Router {
   /**
    * Update URL hash using location.hash (triggers hashchange event)
    */
-  updateHash(path, params = {}) {
+  updateHash (path, params = {}) {
     const queryString = Object.keys(params).length
       ? '?' + new URLSearchParams(params).toString()
       : '';
@@ -133,13 +133,13 @@ export class Router {
    * @param {string} path - Route path
    * @returns {Object|null}
    */
-  findRouteMatch(path) {
+  findRouteMatch (path) {
     const pathParts = path.split('/').filter(Boolean);
 
     for (const [routePath, handler] of this.routes.entries()) {
       const routeParts = routePath.split('/').filter(Boolean);
 
-      if (routeParts.length !== pathParts.length) continue;
+      if (routeParts.length !== pathParts.length) {continue;}
 
       const params = {};
       let matches = true;
@@ -166,7 +166,7 @@ export class Router {
   /**
    * Navigate back
    */
-  back() {
+  back () {
     window.history.back();
   }
 
@@ -174,14 +174,14 @@ export class Router {
    * Navigate to a specific hash directly
    * @param {string} hash - Hash to navigate to
    */
-  goToHash(hash) {
+  goToHash (hash) {
     window.location.hash = hash;
   }
 
   /**
    * Show 404 page
    */
-  async show404() {
+  async show404 () {
     const mainContent = document.getElementById('main-content');
     if (mainContent) {
       mainContent.innerHTML = `
@@ -203,7 +203,7 @@ export class Router {
   /**
    * Show error message
    */
-  showError(message) {
+  showError (message) {
     const mainContent = document.getElementById('main-content');
     if (mainContent) {
       mainContent.innerHTML = `
@@ -219,14 +219,14 @@ export class Router {
   /**
    * Get current route
    */
-  getCurrentRoute() {
+  getCurrentRoute () {
     return this.currentRoute;
   }
 
   /**
    * Get route parameters
    */
-  getParams() {
+  getParams () {
     return this.currentParams;
   }
 }

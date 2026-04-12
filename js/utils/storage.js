@@ -8,7 +8,7 @@ export class StorageManager {
    * @param {string} key - Storage key
    * @param {any} value - Value to store
    */
-  static set(key, value) {
+  static set (key, value) {
     try {
       const data = typeof value === 'string' ? value : JSON.stringify(value);
       localStorage.setItem(key, data);
@@ -25,7 +25,7 @@ export class StorageManager {
    * @param {boolean} parse - Whether to parse JSON
    * @returns {any} - Retrieved value
    */
-  static get(key, parse = true) {
+  static get (key, parse = true) {
     try {
       const data = localStorage.getItem(key);
       return parse && data ? JSON.parse(data) : data;
@@ -39,7 +39,7 @@ export class StorageManager {
    * Remove item from localStorage
    * @param {string} key - Storage key
    */
-  static remove(key) {
+  static remove (key) {
     try {
       localStorage.removeItem(key);
       return true;
@@ -52,7 +52,7 @@ export class StorageManager {
   /**
    * Clear all app data from localStorage
    */
-  static clear() {
+  static clear () {
     try {
       Object.values(STORAGE_KEYS).forEach(key => {
         localStorage.removeItem(key);
@@ -68,7 +68,7 @@ export class StorageManager {
    * Check if key exists
    * @param {string} key - Storage key
    */
-  static has(key) {
+  static has (key) {
     return localStorage.getItem(key) !== null;
   }
 
@@ -76,7 +76,7 @@ export class StorageManager {
    * Get all keys that match a prefix
    * @param {string} prefix - Key prefix
    */
-  static getByPrefix(prefix) {
+  static getByPrefix (prefix) {
     const items = {};
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);

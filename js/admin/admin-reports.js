@@ -4,7 +4,7 @@
 /* exported adminReportsManager */
 
 class AdminReportsManager {
-  constructor() {
+  constructor () {
     this.REPORTS_STORAGE_KEY = `${STORAGE_KEY_PREFIX}reports`;
   }
 
@@ -12,7 +12,7 @@ class AdminReportsManager {
    * Get dashboard overview
    * @returns {Object}
    */
-  getDashboardOverview() {
+  getDashboardOverview () {
     const orders = checkoutManager.getAllOrders();
     const users = adminUsersManager.getAllUsers();
     const products = productsManager.getAll();
@@ -29,7 +29,7 @@ class AdminReportsManager {
 
     // This week's stats
     const weekOrders = orders.filter(
-      o => new Date(o.createdAt) >= thisWeek.start && new Date(o.createdAt) <= thisWeek.end
+      o => new Date(o.createdAt) >= thisWeek.start && new Date(o.createdAt) <= thisWeek.end,
     );
     const weekRevenue = weekOrders
       .filter(o => o.payment.status === 'completed')
@@ -37,7 +37,7 @@ class AdminReportsManager {
 
     // This month's stats
     const monthOrders = orders.filter(
-      o => new Date(o.createdAt) >= thisMonth.start && new Date(o.createdAt) <= thisMonth.end
+      o => new Date(o.createdAt) >= thisMonth.start && new Date(o.createdAt) <= thisMonth.end,
     );
     const monthRevenue = monthOrders
       .filter(o => o.payment.status === 'completed')
@@ -72,7 +72,7 @@ class AdminReportsManager {
    * Get total revenue
    * @returns {number}
    */
-  getTotalRevenue() {
+  getTotalRevenue () {
     const orders = checkoutManager.getAllOrders();
     return orders
       .filter(o => o.payment.status === 'completed')
@@ -84,7 +84,7 @@ class AdminReportsManager {
    * @param {number} days - Number of days
    * @returns {Object}
    */
-  getDateRange(days) {
+  getDateRange (days) {
     const end = new Date();
     const start = new Date();
     start.setDate(start.getDate() - days);
@@ -101,7 +101,7 @@ class AdminReportsManager {
    * @param {Array} all - All data
    * @returns {number}
    */
-  calculateGrowth(current, all) {
+  calculateGrowth (current, all) {
     if (all.length === 0) {
       return 0;
     }
@@ -113,7 +113,7 @@ class AdminReportsManager {
    * @param {string} period - Time period (daily, weekly, monthly, yearly)
    * @returns {Object}
    */
-  getSalesReport(period = 'monthly') {
+  getSalesReport (period = 'monthly') {
     const orders = checkoutManager.getAllOrders();
     const groupedData = this.groupByPeriod(orders, period);
 
@@ -139,7 +139,7 @@ class AdminReportsManager {
    * @param {string} period - Period type
    * @returns {Array}
    */
-  groupByPeriod(data, period) {
+  groupByPeriod (data, period) {
     const groups = {};
 
     data.forEach(item => {
@@ -147,20 +147,20 @@ class AdminReportsManager {
       let key;
 
       switch (period) {
-        case 'daily':
-          key = date.toISOString().split('T')[0];
-          break;
-        case 'weekly':
-          key = this.getWeekNumber(date);
-          break;
-        case 'monthly':
-          key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-          break;
-        case 'yearly':
-          key = date.getFullYear();
-          break;
-        default:
-          key = date.toISOString().split('T')[0];
+      case 'daily':
+        key = date.toISOString().split('T')[0];
+        break;
+      case 'weekly':
+        key = this.getWeekNumber(date);
+        break;
+      case 'monthly':
+        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        break;
+      case 'yearly':
+        key = date.getFullYear();
+        break;
+      default:
+        key = date.toISOString().split('T')[0];
       }
 
       if (!groups[key]) {
@@ -177,7 +177,7 @@ class AdminReportsManager {
    * @param {Date} date - Date
    * @returns {string}
    */
-  getWeekNumber(date) {
+  getWeekNumber (date) {
     const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
     const dayNum = d.getUTCDay() || 7;
     d.setUTCDate(d.getUTCDate() + 4 - dayNum);
@@ -190,7 +190,7 @@ class AdminReportsManager {
    * Get user report
    * @returns {Object}
    */
-  getUserReport() {
+  getUserReport () {
     const users = adminUsersManager.getAllUsers();
 
     return {
@@ -208,7 +208,7 @@ class AdminReportsManager {
    * Get product report
    * @returns {Object}
    */
-  getProductReport() {
+  getProductReport () {
     const products = productsManager.getAll();
 
     return {
@@ -227,7 +227,7 @@ class AdminReportsManager {
    * @param {string} field - Field to group by (supports dot notation for nested properties)
    * @returns {Object}
    */
-  groupByField(data, field) {
+  groupByField (data, field) {
     return data.reduce((acc, item) => {
       // Support dot notation for nested properties (e.g., 'payment.mode')
       let value;
@@ -252,7 +252,7 @@ class AdminReportsManager {
    * Get order status distribution
    * @returns {Object}
    */
-  getOrderStatusDistribution() {
+  getOrderStatusDistribution () {
     const orders = checkoutManager.getAllOrders();
     return this.groupByField(orders, 'status');
   }
@@ -261,7 +261,7 @@ class AdminReportsManager {
    * Get payment method distribution
    * @returns {Object}
    */
-  getPaymentMethodDistribution() {
+  getPaymentMethodDistribution () {
     const orders = checkoutManager.getAllOrders();
     return this.groupByField(orders, 'payment.mode');
   }
@@ -270,7 +270,7 @@ class AdminReportsManager {
    * Get delivery method distribution
    * @returns {Object}
    */
-  getDeliveryMethodDistribution() {
+  getDeliveryMethodDistribution () {
     const orders = checkoutManager.getAllOrders();
     return this.groupByField(orders, 'delivery.mode');
   }
@@ -280,7 +280,7 @@ class AdminReportsManager {
    * @param {number} limit - Number of products
    * @returns {Array}
    */
-  getTopProducts(limit = 10) {
+  getTopProducts (limit = 10) {
     const orders = checkoutManager.getAllOrders();
     const productSales = {};
 
@@ -309,7 +309,7 @@ class AdminReportsManager {
    * @param {number} limit - Number of sellers
    * @returns {Array}
    */
-  getTopSellers(limit = 10) {
+  getTopSellers (limit = 10) {
     return adminUsersManager.getTopSellers(limit);
   }
 
@@ -317,7 +317,7 @@ class AdminReportsManager {
    * Get regional statistics
    * @returns {Object}
    */
-  getRegionalStats() {
+  getRegionalStats () {
     const products = productsManager.getAll();
     const users = adminUsersManager.getAllUsers();
     const regions = regionManager.getAllRegions();
@@ -335,7 +335,7 @@ class AdminReportsManager {
    * @param {string} type - Report type
    * @param {Object} options - Report options
    */
-  generatePDFReport(type, _options = {}) {
+  generatePDFReport (type, _options = {}) {
     // In production, this would use a library like jsPDF
     // Removed console.log for production
 
@@ -352,24 +352,24 @@ class AdminReportsManager {
    * @param {string} format - Export format (csv, json)
    * @returns {string}
    */
-  exportReport(type, format = 'csv') {
+  exportReport (type, format = 'csv') {
     let data;
 
     switch (type) {
-      case 'sales':
-        data = this.getSalesReport();
-        break;
-      case 'users':
-        data = this.getUserReport();
-        break;
-      case 'products':
-        data = this.getProductReport();
-        break;
-      case 'orders':
-        data = checkoutManager.getAllOrders();
-        break;
-      default:
-        data = {};
+    case 'sales':
+      data = this.getSalesReport();
+      break;
+    case 'users':
+      data = this.getUserReport();
+      break;
+    case 'products':
+      data = this.getProductReport();
+      break;
+    case 'orders':
+      data = checkoutManager.getAllOrders();
+      break;
+    default:
+      data = {};
     }
 
     if (format === 'json') {
@@ -385,7 +385,7 @@ class AdminReportsManager {
    * @param {Object|Array} data - Data to convert
    * @returns {string}
    */
-  convertToCSV(data) {
+  convertToCSV (data) {
     if (!data || typeof data !== 'object') {
       return '';
     }
