@@ -79,7 +79,7 @@
 
           <!-- Search Bar (always visible) -->
           <div class="navbar-search-always">
-            <input type="text" class="navbar-search-input" placeholder="Search for textbooks, electronics, dorm items..." id="navbar-search-input" onkeypress="if(event.key==='Enter')Pages.handleSearch()" />
+            <input type="text" class="navbar-search-input" placeholder="Search for textbooks, electronics, dorm items..." id="navbar-search-input" name="search" onkeypress="if(event.key==='Enter')Pages.handleSearch()" />
             <button class="navbar-search-btn-submit" onclick="Pages.handleSearch()">Search</button>
           </div>
 
@@ -160,7 +160,7 @@
                   <svg style="width: 1.5rem; height: 1.5rem; color: #9ca3af; position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%);" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                   </svg>
-                  <input type="email" placeholder="Enter your email" style="width: 100%; padding: 0.625rem 1rem 0.625rem 3rem; color: #6b7280; background: #ffffff; outline: none; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 0.875rem;" />
+                  <input type="email" name="newsletter-email" placeholder="Enter your email" style="width: 100%; padding: 0.625rem 1rem 0.625rem 3rem; color: #6b7280; background: #ffffff; outline: none; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 0.875rem;" />
                 </div>
                 <button type="submit" style="padding: 0.625rem 1.25rem; font-weight: 600; font-size: 0.875rem; color: #ffffff; background: #0046be; border: none; border-radius: 0.5rem; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#003399'" onmouseout="this.style.background='#0046be'">Subscribe</button>
               </form>

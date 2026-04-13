@@ -66,7 +66,7 @@
       '</div>' +
       '</div>' +
       '<div class="bb-remember-me">' +
-      '<input type="checkbox" id="remember-me" />' +
+      '<input type="checkbox" id="remember-me" name="rememberMe" />' +
       '<label for="remember-me">Remember me</label>' +
       '</div>' +
       '<button type="submit" class="bb-submit-btn">Sign In</button>' +

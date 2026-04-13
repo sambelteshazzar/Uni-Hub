@@ -2394,7 +2394,7 @@ class Pages {
       '<div class="bb-browse-toolbar">' +
       '<div class="bb-browse-toolbar-inner">' +
       '<div class="bb-browse-search">' +
-      '<input type="text" id="bb-search-input" class="bb-browse-search-input" placeholder="Search deals..." onkeyup="Pages.applyBrowseFilters()" />' +
+      '<input type="text" id="bb-search-input" name="search" class="bb-browse-search-input" placeholder="Search deals..." onkeyup="Pages.applyBrowseFilters()" />' +
       '<button class="bb-browse-search-btn" onclick="Pages.applyBrowseFilters()">🔍</button>' +
       '</div>' +
       '<div class="bb-browse-results">Showing <strong>' +
@@ -2419,27 +2419,27 @@ class Pages {
       '<!-- Category Filter -->' +
       '<div class="bb-filter-group">' +
       '<h3 class="bb-filter-title">Category</h3>' +
-      '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-all" checked onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-all">All Categories</label></div>' +
-      '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-textbooks" value="textbooks" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-textbooks">Textbooks</label><span class="bb-filter-count">120</span></div>' +
-      '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-electronics" value="electronics" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-electronics">Electronics</label><span class="bb-filter-count">85</span></div>' +
-      '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-dorm" value="dorm" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-dorm">Dorm & Room</label><span class="bb-filter-count">95</span></div>' +
-      '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-furniture" value="furniture" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-furniture">Furniture</label><span class="bb-filter-count">45</span></div>' +
-      '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-clothing" value="clothing" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-clothing">Clothing</label><span class="bb-filter-count">60</span></div>' +
-      '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-sports" value="sports" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-sports">Sports</label><span class="bb-filter-count">35</span></div>' +
+      '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-all" name="category" value="all" checked onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-all">All Categories</label></div>' +
+      '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-textbooks" name="category" value="textbooks" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-textbooks">Textbooks</label><span class="bb-filter-count">120</span></div>' +
+      '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-electronics" name="category" value="electronics" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-electronics">Electronics</label><span class="bb-filter-count">85</span></div>' +
+      '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-dorm" name="category" value="dorm" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-dorm">Dorm & Room</label><span class="bb-filter-count">95</span></div>' +
+      '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-furniture" name="category" value="furniture" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-furniture">Furniture</label><span class="bb-filter-count">45</span></div>' +
+      '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-clothing" name="category" value="clothing" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-clothing">Clothing</label><span class="bb-filter-count">60</span></div>' +
+      '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-sports" name="category" value="sports" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-sports">Sports</label><span class="bb-filter-count">35</span></div>' +
       '</div>' +
       '<!-- Condition Filter -->' +
       '<div class="bb-filter-group">' +
       '<h3 class="bb-filter-title">Condition</h3>' +
-      '<div class="bb-filter-option"><input type="checkbox" id="bb-cond-new" value="new" onchange="Pages.applyBrowseFilters()" /><label for="bb-cond-new">New</label></div>' +
-      '<div class="bb-filter-option"><input type="checkbox" id="bb-cond-excellent" value="excellent" onchange="Pages.applyBrowseFilters()" /><label for="bb-cond-excellent">Excellent</label></div>' +
-      '<div class="bb-filter-option"><input type="checkbox" id="bb-cond-good" value="good" onchange="Pages.applyBrowseFilters()" /><label for="bb-cond-good">Good</label></div>' +
-      '<div class="bb-filter-option"><input type="checkbox" id="bb-cond-fair" value="fair" onchange="Pages.applyBrowseFilters()" /><label for="bb-cond-fair">Fair</label></div>' +
+      '<div class="bb-filter-option"><input type="checkbox" id="bb-cond-new" name="condition" value="new" onchange="Pages.applyBrowseFilters()" /><label for="bb-cond-new">New</label></div>' +
+      '<div class="bb-filter-option"><input type="checkbox" id="bb-cond-excellent" name="condition" value="excellent" onchange="Pages.applyBrowseFilters()" /><label for="bb-cond-excellent">Excellent</label></div>' +
+      '<div class="bb-filter-option"><input type="checkbox" id="bb-cond-good" name="condition" value="good" onchange="Pages.applyBrowseFilters()" /><label for="bb-cond-good">Good</label></div>' +
+      '<div class="bb-filter-option"><input type="checkbox" id="bb-cond-fair" name="condition" value="fair" onchange="Pages.applyBrowseFilters()" /><label for="bb-cond-fair">Fair</label></div>' +
       '</div>' +
       '<!-- Price Range -->' +
       '<div class="bb-filter-group">' +
       '<h3 class="bb-filter-title">Price</h3>' +
       '<div class="bb-price-range">' +
-      '<input type="range" id="bb-price-range" class="bb-price-slider" min="0" max="5000" value="5000" oninput="document.getElementById(\'bb-price-val\').textContent=this.value; Pages.applyBrowseFilters()" />' +
+      '<input type="range" id="bb-price-range" name="priceRange" class="bb-price-slider" min="0" max="5000" value="5000" oninput="document.getElementById(\'bb-price-val\').textContent=this.value; Pages.applyBrowseFilters()" />' +
       '<div class="bb-price-values"><span>GHS 0</span><span>Up to <strong>GHS <span id="bb-price-val">5000</span></strong></span></div>' +
       '</div>' +
       '</div>' +
