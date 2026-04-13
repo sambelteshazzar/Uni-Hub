@@ -1726,11 +1726,14 @@ class Pages {
         }
         .auth-icon-wrapper {
           display: inline-flex;
-          padding: 0.5rem;
-          background: rgba(24, 24, 27, 1);
-          border-radius: 0.5rem;
-          border: 1px solid rgba(39, 39, 42, 1);
+          align-items: center;
+          justify-content: center;
           margin-bottom: 0.75rem;
+        }
+        .auth-icon-wrapper img {
+          width: 2.5rem;
+          height: 2.5rem;
+          border-radius: 0.5rem;
         }
         .auth-title {
           font-size: 1.5rem;
@@ -1908,10 +1911,7 @@ class Pages {
 
         <div class="auth-card-header">
           <div class="auth-icon-wrapper">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #a1a1aa;">
-              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
+            <img src="/favicon.png" alt="Uni-Hub" />
           </div>
           <h1 class="auth-title">Welcome back</h1>
           <p class="auth-subtitle">Enter your credentials to sign in to Uni-Hub</p>
@@ -2083,11 +2083,14 @@ class Pages {
         }
         .auth-icon-wrapper {
           display: inline-flex;
-          padding: 0.5rem;
-          background: rgba(24, 24, 27, 1);
-          border-radius: 0.5rem;
-          border: 1px solid rgba(39, 39, 42, 1);
+          align-items: center;
+          justify-content: center;
           margin-bottom: 0.75rem;
+        }
+        .auth-icon-wrapper img {
+          width: 2.5rem;
+          height: 2.5rem;
+          border-radius: 0.5rem;
         }
         .auth-title {
           font-size: 1.5rem;
@@ -2218,12 +2221,7 @@ class Pages {
         <div class="auth-card-modern">
           <div class="auth-card-header">
             <div class="auth-icon-wrapper">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #a1a1aa;">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <line x1="19" x2="19" y1="8" y2="14"></line>
-                <line x1="22" x2="16" y1="11" y2="11"></line>
-              </svg>
+              <img src="/favicon.png" alt="Uni-Hub" />
             </div>
             <h1 class="auth-title">Create an account</h1>
             <p class="auth-subtitle">Enter your details to get started with Uni-Hub</p>
