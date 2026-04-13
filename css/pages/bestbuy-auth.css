@@ -45,12 +45,14 @@
 
 .bb-auth-brand-logo {
   margin-bottom: var(--space-2xl);
+  display: flex;
+  justify-content: center;
 }
 
-.bb-auth-brand-logo svg {
-  width: 180px;
-  height: auto;
-  color: #ffffff;
+.bb-auth-brand-logo img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
 }
 
 .bb-auth-brand-title {
@@ -89,10 +91,10 @@
   margin-bottom: var(--space-2xl);
 }
 
-.bb-auth-logo svg {
-  width: 160px;
-  height: auto;
-  color: #0046be;
+.bb-auth-logo img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
 }
 
 /* Auth Form Header */
