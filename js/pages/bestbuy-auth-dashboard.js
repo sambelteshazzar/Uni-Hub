@@ -36,14 +36,7 @@
       '</style>' +
       '<div class="bb-auth-brand-content">' +
       '<div class="bb-auth-brand-logo">' +
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50" width="180" height="45">' +
-      '<rect x="2" y="8" width="36" height="28" rx="6" fill="rgba(255,255,255,0.2)"/>' +
-      '<path d="M20 12 L6 20 L20 28 L34 20 Z" fill="#ffce00"/>' +
-      '<circle cx="20" cy="12" r="3" fill="#ffce00"/>' +
-      '<line x1="34" y1="20" x2="34" y2="30" stroke="#ffce00" stroke-width="2" stroke-linecap="round"/>' +
-      '<circle cx="34" cy="31" r="1.5" fill="#ffce00"/>' +
-      '<text x="46" y="33" font-family="system-ui,sans-serif" font-weight="800" font-size="22" fill="#ffffff" letter-spacing="-0.5">UNI<tspan fill="#ffce00">-</tspan>HUB</text>' +
-      '</svg>' +
+      '<img src="/favicon.png" alt="Uni-Hub" width="40" height="40" style="border-radius: 8px;" />' +
       '</div>' +
       '<h2 class="bb-auth-brand-title"><span id="bb-typewriter-text"></span><span class="bb-typewriter-cursor" id="bb-typewriter-cursor"></span></h2>' +
       '<p class="bb-auth-brand-desc">Sign in to your account to access your university marketplace. Buy, sell, and connect with fellow students.</p>' +
@@ -52,14 +45,7 @@
       '<div class="bb-auth-form-section">' +
       '<div class="bb-auth-form-container">' +
       '<div class="bb-auth-logo">' +
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50" width="160" height="40">' +
-      '<rect x="2" y="8" width="36" height="28" rx="6" fill="#0046be"/>' +
-      '<path d="M20 12 L6 20 L20 28 L34 20 Z" fill="#ffce00"/>' +
-      '<circle cx="20" cy="12" r="3" fill="#ffce00"/>' +
-      '<line x1="34" y1="20" x2="34" y2="30" stroke="#ffce00" stroke-width="2" stroke-linecap="round"/>' +
-      '<circle cx="34" cy="31" r="1.5" fill="#ffce00"/>' +
-      '<text x="46" y="33" font-family="system-ui,sans-serif" font-weight="800" font-size="22" fill="currentColor" letter-spacing="-0.5">UNI<tspan fill="#0046be">-</tspan>HUB</text>' +
-      '</svg>' +
+      '<img src="/favicon.png" alt="Uni-Hub" width="36" height="36" style="border-radius: 6px;" />' +
       '</div>' +
       '<div class="bb-auth-form-header">' +
       '<h1 class="bb-auth-form-title">Sign In</h1>' +
@@ -207,14 +193,7 @@
       '</style>' +
       '<div class="bb-auth-brand-content">' +
       '<div class="bb-auth-brand-logo">' +
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50" width="180" height="45">' +
-      '<rect x="2" y="8" width="36" height="28" rx="6" fill="rgba(255,255,255,0.2)"/>' +
-      '<path d="M20 12 L6 20 L20 28 L34 20 Z" fill="#ffce00"/>' +
-      '<circle cx="20" cy="12" r="3" fill="#ffce00"/>' +
-      '<line x1="34" y1="20" x2="34" y2="30" stroke="#ffce00" stroke-width="2" stroke-linecap="round"/>' +
-      '<circle cx="34" cy="31" r="1.5" fill="#ffce00"/>' +
-      '<text x="46" y="33" font-family="system-ui,sans-serif" font-weight="800" font-size="22" fill="#ffffff" letter-spacing="-0.5">UNI<tspan fill="#ffce00">-</tspan>HUB</text>' +
-      '</svg>' +
+      '<img src="/favicon.png" alt="Uni-Hub" width="40" height="40" style="border-radius: 8px;" />' +
       '</div>' +
       '<h2 class="bb-auth-brand-title"><span id="bb-typewriter-text"></span><span class="bb-typewriter-cursor" id="bb-typewriter-cursor"></span></h2>' +
       '<p class="bb-auth-brand-desc">Create your free account and start buying and selling with verified students at your university.</p>' +
@@ -223,14 +202,7 @@
       '<div class="bb-auth-form-section">' +
       '<div class="bb-auth-form-container">' +
       '<div class="bb-auth-logo">' +
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50" width="160" height="40">' +
-      '<rect x="2" y="8" width="36" height="28" rx="6" fill="#0046be"/>' +
-      '<path d="M20 12 L6 20 L20 28 L34 20 Z" fill="#ffce00"/>' +
-      '<circle cx="20" cy="12" r="3" fill="#ffce00"/>' +
-      '<line x1="34" y1="20" x2="34" y2="30" stroke="#ffce00" stroke-width="2" stroke-linecap="round"/>' +
-      '<circle cx="34" cy="31" r="1.5" fill="#ffce00"/>' +
-      '<text x="46" y="33" font-family="system-ui,sans-serif" font-weight="800" font-size="22" fill="currentColor" letter-spacing="-0.5">UNI<tspan fill="#0046be">-</tspan>HUB</text>' +
-      '</svg>' +
+      '<img src="/favicon.png" alt="Uni-Hub" width="36" height="36" style="border-radius: 6px;" />' +
       '</div>' +
       '<div class="bb-auth-form-header">' +
       '<h1 class="bb-auth-form-title">Create Account</h1>' +
