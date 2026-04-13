@@ -47,12 +47,8 @@
 .navbar-brand-icon {
   width: 36px;
   height: 36px;
-  background: #0046be;
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--text-base);
+  object-fit: contain;
+  border-radius: var(--radius-md);
 }
 
 /* Navigation Links - Center */
@@ -351,12 +347,8 @@
 .navbar-drawer-brand-icon {
   width: 32px;
   height: 32px;
-  background: #0046be;
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--text-sm);
+  object-fit: contain;
+  border-radius: var(--radius-md);
 }
 
 .navbar-drawer-close {
