@@ -3402,7 +3402,7 @@ class Pages {
             <div class="checkout-main">
               <!-- Delivery Method -->
               <div class="checkout-section">
-                <h3>🚚 Delivery Method</h3>
+                <h3><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;"><path d="M5 17H4a2 2 0 01-2-2V5a2 2 0 012-2h16a2 2 0 012 2v10a2 2 0 01-2 2h-1"/><path d="M12 17V5"/><path d="M5 17a2 2 0 104 0"/><path d="M15 17a2 2 0 104 0"/></svg>Delivery Method</h3>
                 <div class="delivery-options">
                   ${deliveryOptions
     .map(
@@ -3421,7 +3421,7 @@ class Pages {
 
               <!-- Delivery Address -->
               <div class="checkout-section">
-                <h3>📍 Delivery Address</h3>
+                <h3><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Delivery Address</h3>
                 <div class="form-group">
                   <label for="deliveryAddress" class="required">Delivery Address</label>
                   <textarea 
@@ -3453,7 +3453,7 @@ class Pages {
 
               <!-- Payment Method -->
               <div class="checkout-section">
-                <h3>💳 Payment Method</h3>
+                <h3><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><line x1="6" y1="12" x2="6.01" y2="12"/><line x1="18" y1="12" x2="18.01" y2="12"/></svg>Payment Method</h3>
                 <div class="payment-options">
                   ${paymentOptions
     .map(

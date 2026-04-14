@@ -298,19 +298,19 @@ class CheckoutManager {
         value: DELIVERY_MODES.IN_PERSON,
         label: 'In-Person Pickup',
         fee: DELIVERY_FEES[DELIVERY_MODES.IN_PERSON],
-        icon: '🏪',
+        icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8a2 2 0 012-2h14a2 2 0 012 2v13"/><path d="M9 21V12h6v9"/><path d="M1 21h22"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>',
       },
       {
         value: DELIVERY_MODES.YANGO,
         label: 'Yango Delivery',
         fee: DELIVERY_FEES[DELIVERY_MODES.YANGO],
-        icon: '🚗',
+        icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 002 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>',
       },
       {
         value: DELIVERY_MODES.BOLT,
         label: 'Bolt Delivery',
         fee: DELIVERY_FEES[DELIVERY_MODES.BOLT],
-        icon: '🚙',
+        icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H4a2 2 0 01-2-2V5a2 2 0 012-2h16a2 2 0 012 2v10a2 2 0 01-2 2h-1"/><path d="M12 17V5"/><path d="M5 17a2 2 0 104 0"/><path d="M15 17a2 2 0 104 0"/></svg>',
       },
     ];
   }
@@ -321,10 +321,10 @@ class CheckoutManager {
    */
   getPaymentModeOptions () {
     return [
-      { value: PAYMENT_MODES.CASH, label: 'Cash on Delivery', icon: '💵' },
-      { value: PAYMENT_MODES.MOMO, label: 'MTN Mobile Money', icon: '📱' },
-      { value: PAYMENT_MODES.TELECEL, label: 'Telecel Cash', icon: '📲' },
-      { value: PAYMENT_MODES.BANK, label: 'Bank Transfer', icon: '🏦' },
+      { value: PAYMENT_MODES.CASH, label: 'Cash on Delivery', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><line x1="6" y1="12" x2="6.01" y2="12"/><line x1="18" y1="12" x2="18.01" y2="12"/></svg>' },
+      { value: PAYMENT_MODES.MOMO, label: 'MTN Mobile Money', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>' },
+      { value: PAYMENT_MODES.TELECEL, label: 'Telecel Cash', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 6h.01"/><path d="M8 10h8"/><path d="M8 14h8"/><path d="M8 18h4"/></svg>' },
+      { value: PAYMENT_MODES.BANK, label: 'Bank Transfer', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M12 3l9 7H3l9-7z"/><path d="M5 10v11"/><path d="M10 10v11"/><path d="M14 10v11"/><path d="M19 10v11"/></svg>' },
     ];
   }
 
