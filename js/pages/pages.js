@@ -2366,8 +2366,116 @@ class Pages {
    */
   static async handleForgotPassword (event) {
     event.preventDefault();
-    alert('Password reset link has been sent to your email!');
-    this.renderLogin();
+    const form = document.getElementById('forgot-form');
+    const email = form.email.value;
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+
+    try {
+      const response = await fetch(`${window.API_URL}/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toastManager?.show(result.message, 'success');
+
+        // Show reset token input for development (remove in production)
+        if (result.resetToken) {
+          this.renderResetPassword(result.resetToken);
+        } else {
+          this.renderLogin();
+        }
+      } else {
+        toastManager?.show(result.error || 'Failed to send reset link', 'error');
+      }
+    } catch (error) {
+      toastManager?.show('Network error. Please try again.', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send Reset Link';
+    }
+  }
+
+  /**
+   * Render Reset Password Page
+   */
+  static renderResetPassword (token = '') {
+    const mainContent = document.getElementById('main-content');
+
+    mainContent.innerHTML = `
+      <div class="auth-container">
+        <div class="auth-card">
+          <h2>Set New Password</h2>
+          <form id="reset-form" onsubmit="Pages.handleResetPassword(event, '${token}')">
+            <p>Enter your new password below.</p>
+
+            <div class="form-group">
+              <label for="newPassword" class="required">New Password</label>
+              <input type="password" id="newPassword" name="newPassword" class="form-control" minlength="6" required />
+              <small class="form-hint">Must be at least 6 characters</small>
+            </div>
+
+            <div class="form-group">
+              <label for="confirmPassword" class="required">Confirm Password</label>
+              <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" minlength="6" required />
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Reset Password</button>
+          </form>
+
+          <div class="auth-links">
+            <p><a href="#" onclick="Pages.renderLogin()">Back to Login</a></p>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Handle Reset Password
+   */
+  static async handleResetPassword (event, token) {
+    event.preventDefault();
+    const form = document.getElementById('reset-form');
+    const newPassword = form.newPassword.value;
+    const confirmPassword = form.confirmPassword.value;
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    if (newPassword !== confirmPassword) {
+      toastManager?.show('Passwords do not match', 'error');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Resetting...';
+
+    try {
+      const response = await fetch(`${window.API_URL}/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, newPassword }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toastManager?.show(result.message, 'success');
+        setTimeout(() => this.renderLogin(), 1500);
+      } else {
+        toastManager?.show(result.error || 'Failed to reset password', 'error');
+      }
+    } catch (error) {
+      toastManager?.show('Network error. Please try again.', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Reset Password';
+    }
   }
 
   /**

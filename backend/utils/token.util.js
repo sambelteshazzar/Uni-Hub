@@ -30,4 +30,15 @@ const decodeToken = (token) => {
   }
 };
 
-module.exports = { generateToken, decodeToken };
+/**
+ * Generate password reset token (valid for 1 hour)
+ * @param {string} id - User ID
+ * @returns {string} - Reset token
+ */
+const generateResetToken = (id) => {
+  return jwt.sign({ id, type: 'reset' }, process.env.JWT_SECRET, {
+    expiresIn: '1h',
+  });
+};
+
+module.exports = { generateToken, decodeToken, generateResetToken };

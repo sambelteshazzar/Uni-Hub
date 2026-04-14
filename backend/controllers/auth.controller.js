@@ -1,3 +1,4 @@
+const jwt = require("jsonwebtoken");
 /**
  * ============================================
  * Authentication Controller
@@ -233,3 +234,83 @@ exports.changePassword = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Request password reset (sends email with reset link)
+ * @route   POST /api/auth/forgot-password
+ * @access  Public
+ */
+exports.forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    throw new ApiError(400, 'Email is required');
+  }
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    // Don't reveal if user exists for security
+    return res.json({
+      success: true,
+      message: 'If an account with that email exists, a password reset link has been sent.',
+    });
+  }
+
+  // Generate reset token
+  const resetToken = generateResetToken(user._id);
+
+  // In production, send email with reset link
+  // For now, return the token so frontend can use it
+  // NOTE: In production, use nodemailer to send email instead
+  res.json({
+    success: true,
+    message: 'Password reset token generated. In production, this would be emailed to the user.',
+    resetToken, // Remove this in production - only for development/testing
+  });
+});
+
+/**
+ * @desc    Reset password using token
+ * @route   POST /api/auth/reset-password
+ * @access  Public
+ */
+exports.resetPassword = asyncHandler(async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  if (!token || !newPassword) {
+    throw new ApiError(400, 'Token and new password are required');
+  }
+
+  if (newPassword.length < 6) {
+    throw new ApiError(400, 'Password must be at least 6 characters');
+  }
+
+  // Verify reset token
+  let decoded;
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (error) {
+    throw new ApiError(401, 'Invalid or expired reset token');
+  }
+
+  // Check token type
+  if (decoded.type !== 'reset') {
+    throw new ApiError(401, 'Invalid token type');
+  }
+
+  // Find user and update password
+  const user = await User.findById(decoded.id);
+
+  if (!user) {
+    throw new ApiError(404, 'User not found');
+  }
+
+  user.password = newPassword;
+  await user.save();
+
+  res.json({
+    success: true,
+    message: 'Password reset successfully. You can now log in with your new password.',
+  });
+});
