@@ -335,7 +335,7 @@
   // ============================================
   // DASHBOARD - Best Buy Style
   // ============================================
-  Pages.renderDashboard = function () {
+  Pages.renderDashboard = async function () {
     const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
     if (!currentUser) {
       alert('Please login to view your dashboard.');
@@ -345,7 +345,7 @@
 
     this.showOriginalNavFooter();
 
-    const orders = checkoutManager.getUserOrders(currentUser.id || '');
+    const orders = await checkoutManager.getUserOrders(currentUser.id || '');
     const wishlist = productsManager.getWishlist();
     const cartCount = cartManager.getCount();
     const initials = currentUser.fullName
@@ -356,7 +356,7 @@
       .join('')
       .toUpperCase()
       .slice(0, 2);
-    const recentOrders = orders.slice(0, 5);
+    const recentOrders = Array.isArray(orders) ? orders.slice(0, 5) : [];
 
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML =
