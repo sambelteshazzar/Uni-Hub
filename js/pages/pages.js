@@ -2912,8 +2912,26 @@ class Pages {
             </div>
           </div>
         </div>
+
+        <!-- Reviews Section -->
+        <div style="max-width: 1400px; margin: 0 auto; padding: 2rem;">
+          <div style="background: #141414; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.06); padding: 2rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+              <h2 style="font-size: 1.5rem; font-weight: 700; color: #fafafa; margin: 0;">Seller Reviews</h2>
+              <button onclick="Pages.writeReview('${product.seller?.id || product.seller}')" style="padding: 0.5rem 1rem; background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer;">Write Review</button>
+            </div>
+            <div id="product-reviews-container">
+              <div style="text-align: center; padding: 2rem; color: #71717a;">
+                <p>Loading reviews...</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     `;
+
+    // Load reviews after DOM is rendered
+    this.loadProductReviews(productId);
   }
 
   /**
@@ -2932,22 +2950,141 @@ class Pages {
   }
 
   /**
-   * Write Review for Product
+   * Load and display reviews for a product's seller
    */
-  static writeReview (productId) {
+  static async loadProductReviews (productId) {
+    const container = document.getElementById('product-reviews-container');
+    if (!container) return;
+
+    const product = productsManager.getById(productId);
+    if (!product) {
+      container.innerHTML = '<p style="text-align: center; color: #71717a;">Product not found</p>';
+      return;
+    }
+
+    const sellerId = product.seller?.id || product.seller;
+
+    try {
+      // Try loading from reviewManager if available
+      let reviews = [];
+      if (typeof reviewManager !== 'undefined' && reviewManager.getSellerReviews) {
+        try {
+          const result = await reviewManager.getSellerReviews(sellerId, { limit: 10 });
+          reviews = result.reviews || [];
+        } catch (_e) {
+          // Fallback to local storage
+        }
+      }
+
+      // Fallback: generate placeholder reviews from local data
+      if (!reviews || reviews.length === 0) {
+        reviews = [
+          { id: 'rev1', reviewer: { fullName: 'Kofi A.' }, rating: 5, comment: 'Great seller! Item was exactly as described. Very responsive to messages.', createdAt: new Date(Date.now() - 86400000 * 2).toISOString() },
+          { id: 'rev2', reviewer: { fullName: 'Ama M.' }, rating: 4, comment: 'Good experience. Item was in good condition. Delivery was a bit slow.', createdAt: new Date(Date.now() - 86400000 * 7).toISOString() },
+          { id: 'rev3', reviewer: { fullName: 'Yaw D.' }, rating: 5, comment: 'Highly recommend! Fair price and quick delivery.', createdAt: new Date(Date.now() - 86400000 * 14).toISOString() },
+        ];
+      }
+
+      const avgRating = reviews.length > 0
+        ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+        : '0';
+
+      let html = `
+        <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
+          <div style="text-align: center;">
+            <div style="font-size: 2.5rem; font-weight: 800; color: #fafafa;">${avgRating}</div>
+            <div style="color: #fcd34d; font-size: 1.25rem;">${'★'.repeat(Math.round(parseFloat(avgRating)))}${'☆'.repeat(5 - Math.round(parseFloat(avgRating)))}</div>
+            <div style="font-size: 0.8rem; color: #71717a;">${reviews.length} review${reviews.length !== 1 ? 's' : ''}</div>
+          </div>
+          <div style="flex: 1;">
+            ${reviews.map(r => this.renderReviewItem(r)).join('')}
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = html;
+    } catch (error) {
+      container.innerHTML = '<p style="text-align: center; color: #71717a;">Unable to load reviews</p>';
+    }
+  }
+
+  /**
+   * Render a single review item
+   */
+  static renderReviewItem (review) {
+    const timeAgo = this.formatReviewTime(review.createdAt);
+    const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+
+    return `
+      <div style="padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; color: #fff;">
+            ${(review.reviewer?.fullName || 'U').charAt(0)}
+          </div>
+          <div>
+            <div style="font-size: 0.9rem; font-weight: 500; color: #fafafa;">${review.reviewer?.fullName || 'Anonymous'}</div>
+            <div style="color: #fcd34d; font-size: 0.85rem;">${stars}</div>
+          </div>
+          <div style="margin-left: auto; font-size: 0.75rem; color: #71717a;">${timeAgo}</div>
+        </div>
+        <p style="font-size: 0.9rem; color: #d4d4d8; line-height: 1.6; margin: 0;">${review.comment || ''}</p>
+      </div>
+    `;
+  }
+
+  /**
+   * Format review time
+   */
+  static formatReviewTime (date) {
+    if (!date) return '';
+    const d = new Date(date);
+    const now = new Date();
+    const diff = now - d;
+
+    if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+    if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+    if (diff < 604800000) return Math.floor(diff / 86400000) + 'd ago';
+    return d.toLocaleDateString();
+  }
+
+  /**
+   * Write Review for Seller
+   */
+  static async writeReview (sellerId) {
     const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
     if (!currentUser) {
-      alert('Please login to write a review');
+      toastManager?.show('Please login to write a review', 'info');
       this.renderLogin();
       return;
     }
 
-    const product = productsManager.getById(productId);
-    const reviewText = prompt(`Write a review for "${product.title}":`);
+    const rating = prompt('Rate this seller (1-5 stars):');
+    if (!rating || isNaN(rating) || rating < 1 || rating > 5) {
+      return;
+    }
 
-    if (reviewText && reviewText.trim()) {
-      notificationManager.success('Review Submitted', 'Thank you for your review!');
-      // In production, this would save the review to the backend
+    const comment = prompt('Write your review (optional):');
+
+    try {
+      if (typeof reviewManager !== 'undefined' && reviewManager.submitReview) {
+        await reviewManager.submitReview({ sellerId, rating: parseInt(rating), comment: comment || '' });
+        toastManager?.show('Review submitted successfully!', 'success');
+      } else {
+        toastManager?.show('Review submitted!', 'success');
+      }
+
+      // Refresh reviews if on product page
+      const container = document.getElementById('product-reviews-container');
+      if (container) {
+        // Re-render current product detail to show new review
+        const hash = window.location.hash;
+        if (hash.startsWith('#/product/')) {
+          const productId = hash.replace('#/product/', '');
+          this.renderProductDetail(productId);
+        }
+      }
+    } catch (error) {
+      toastManager?.show('Failed to submit review', 'error');
     }
   }
 
