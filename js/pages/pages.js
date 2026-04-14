@@ -38,14 +38,31 @@ class Pages {
     
     // Product detail
     router.register('/product/:id', (params) => this.renderProductDetail(params.id));
-    
+
+    // Messaging
+    router.register('/messages', (params) => messagesPage.render(params));
+
     // Admin
     router.register('/admin', () => this.renderAdminDashboard());
     router.register('/admin/products', () => this.renderAdminProducts());
     router.register('/admin/users', () => this.renderAdminUsers());
     router.register('/admin/orders', () => this.renderAdminOrders());
     router.register('/admin/reports', () => this.renderAdminReports());
+
     console.log('✓ All routes registered successfully');
+  }
+
+  /**
+   * Navigate to Messages (with auth check)
+   */
+  static navigateToMessages () {
+    const token = StorageManager.get(StorageManager.keys?.authToken || 'authToken');
+    if (!token && typeof authManager !== 'undefined' && !authManager.isLoggedIn()) {
+      toastManager?.show('Please log in to access messages', 'info');
+      this.renderLogin();
+      return;
+    }
+    this.navigate('/messages');
   }
 
   /**
