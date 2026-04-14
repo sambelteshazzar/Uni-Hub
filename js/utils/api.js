@@ -66,6 +66,18 @@ class API {
 
       return data;
     } catch (error) {
+      // Network errors (backend not running) - return empty data gracefully
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        console.warn('Backend unavailable - using local fallback');
+        return { success: false, data: null, isOffline: true };
+      }
+
+      // Timeout errors
+      if (error.message === 'Request timeout') {
+        console.warn('Request timed out - using local fallback');
+        return { success: false, data: null, isOffline: true };
+      }
+
       console.error('API Error:', error);
 
       // Handle 401 (unauthorized) - clear user data
