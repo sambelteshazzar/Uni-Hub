@@ -292,3 +292,55 @@ exports.getMyProducts = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Upload product images to Cloudinary
+ * @route   POST /api/products/:id/images
+ * @access  Private (Seller only)
+ */
+exports.uploadProductImages = asyncHandler(async (req, res) => {
+  const product = await Product.findById(req.params.id);
+
+  if (!product) {
+    throw new ApiError(404, 'Product not found');
+  }
+
+  // Check ownership
+  if (product.seller.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, 'Not authorized to update this product');
+  }
+
+  if (!req.files || req.files.length === 0) {
+    throw new ApiError(400, 'No images uploaded');
+  }
+
+  // Upload each image to Cloudinary
+  const { uploadImage } = require('../utils/cloudinary.util');
+  const uploadedUrls = [];
+
+  for (const file of req.files) {
+    try {
+      const result = await uploadImage(file.path);
+      uploadedUrls.push(result.secure_url);
+    } catch (error) {
+      console.error(`Failed to upload ${file.originalname}:`, error.message);
+    }
+  }
+
+  if (uploadedUrls.length === 0) {
+    throw new ApiError(500, 'Failed to upload any images');
+  }
+
+  // Add to product images array
+  product.images = [...(product.images || []), ...uploadedUrls];
+  await product.save();
+
+  res.json({
+    success: true,
+    message: `${uploadedUrls.length} image(s) uploaded successfully`,
+    data: {
+      images: uploadedUrls,
+      totalImages: product.images.length,
+    },
+  });
+});
