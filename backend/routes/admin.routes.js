@@ -193,4 +193,91 @@ router.put('/products/:id/reject', asyncHandler(async (req, res) => {
   });
 }));
 
+
+/**
+ * @desc    Ban/suspend a user
+ * @route   PUT /api/admin/users/:id/ban
+ * @access  Admin only
+ */
+router.put('/users/:id/ban', asyncHandler(async (req, res) => {
+  const { reason, action } = req.body;
+
+  if (!action || !['ban', 'unban'].includes(action)) {
+    throw new ApiError(400, 'Action must be "ban" or "unban"');
+  }
+
+  if (action === 'ban' && (!reason || reason.trim().length < 5)) {
+    throw new ApiError(400, 'Ban reason must be at least 5 characters');
+  }
+
+  const user = await User.findById(req.params.id);
+
+  if (!user) {
+    throw new ApiError(404, 'User not found');
+  }
+
+  // Prevent admins from banning themselves or other admins
+  if (user.role === 'admin') {
+    throw new ApiError(403, 'Cannot ban another admin user');
+  }
+
+  if (action === 'ban') {
+    user.isSuspended = true;
+    user.isActive = false;
+    user.banReason = reason;
+    user.bannedAt = new Date();
+    user.bannedBy = req.user._id;
+  } else {
+    user.isSuspended = false;
+    user.isActive = true;
+    user.banReason = undefined;
+    user.bannedAt = undefined;
+    user.bannedBy = undefined;
+  }
+
+  await user.save();
+
+  res.json({
+    success: true,
+    message: action === 'ban' ? 'User has been banned successfully' : 'User has been unbanned successfully',
+    data: {
+      userId: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      isSuspended: user.isSuspended,
+      isActive: user.isActive,
+      banReason: user.banReason,
+      bannedAt: user.bannedAt,
+    },
+  });
+}));
+
+/**
+ * @desc    Get all banned/suspended users
+ * @route   GET /api/admin/users/banned
+ * @access  Admin only
+ */
+router.get('/users/banned', asyncHandler(async (req, res) => {
+  const { page = 1, limit = 20 } = req.query;
+
+  const bannedUsers = await User.find({ isSuspended: true })
+    .select('fullName email university role banReason bannedAt bannedBy rating createdAt')
+    .populate('bannedBy', 'fullName')
+    .sort({ bannedAt: -1 })
+    .limit(Number(limit))
+    .skip((page - 1) * limit);
+
+  const total = await User.countDocuments({ isSuspended: true });
+
+  res.json({
+    success: true,
+    data: {
+      users: bannedUsers,
+      total,
+      page: Number(page),
+      pages: Math.ceil(total / limit),
+    },
+  });
+}));
+
 module.exports = router;

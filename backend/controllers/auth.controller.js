@@ -85,11 +85,14 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Check if user is suspended
+    // Check if user is suspended/banned
     if (user.isSuspended) {
-      return res.status(401).json({
+      return res.status(403).json({
         success: false,
-        error: 'Account is suspended',
+        error: user.banReason
+          ? `Account suspended: ${user.banReason}`
+          : 'Your account has been suspended. Contact support for more information.',
+        isSuspended: true,
       });
     }
 
