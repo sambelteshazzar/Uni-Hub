@@ -97,8 +97,19 @@ const productSchema = new mongoose.Schema({
   // Status
   status: {
     type: String,
-    enum: ['active', 'sold', 'inactive', 'reserved'],
-    default: 'active',
+    enum: ['active', 'pending', 'sold', 'inactive', 'reserved', 'rejected'],
+    default: 'pending',
+  },
+
+  // Moderation (admin approval tracking)
+  approvedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+  moderationNote: {
+    type: String,
+    trim: true,
+    maxlength: 500,
   },
 
   // Engagement

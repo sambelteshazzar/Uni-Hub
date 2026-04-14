@@ -8,6 +8,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth.middleware');
+const { asyncHandler, ApiError } = require('../utils/errorHandler');
 const User = require('../models/User.model');
 const Product = require('../models/Product.model');
 const Order = require('../models/Order.model');
@@ -135,5 +136,61 @@ router.get('/orders', async (req, res) => {
     });
   }
 });
+
+/**
+ * @desc    Approve a product listing
+ * @route   PUT /api/admin/products/:id/approve
+ */
+router.put('/products/:id/approve', asyncHandler(async (req, res) => {
+  const product = await Product.findById(req.params.id);
+
+  if (!product) {
+    throw new ApiError(404, 'Product not found');
+  }
+
+  // Update product status to active and record admin approval
+  product.status = 'active';
+  product.approvedBy = req.user._id;
+  product.moderationNote = req.body.note || product.moderationNote || 'Approved by admin';
+
+  await product.save();
+
+  res.json({
+    success: true,
+    message: 'Product approved successfully',
+    data: product,
+  });
+}));
+
+/**
+ * @desc    Reject a product listing
+ * @route   PUT /api/admin/products/:id/reject
+ */
+router.put('/products/:id/reject', asyncHandler(async (req, res) => {
+  const product = await Product.findById(req.params.id);
+
+  if (!product) {
+    throw new ApiError(404, 'Product not found');
+  }
+
+  // Reject requires a reason
+  const reason = req.body.reason;
+  if (!reason || reason.trim().length < 5) {
+    throw new ApiError(400, 'Rejection reason must be at least 5 characters');
+  }
+
+  // Update product status to rejected and record reason
+  product.status = 'rejected';
+  product.approvedBy = req.user._id;
+  product.moderationNote = reason;
+
+  await product.save();
+
+  res.json({
+    success: true,
+    message: 'Product rejected successfully',
+    data: product,
+  });
+}));
 
 module.exports = router;
