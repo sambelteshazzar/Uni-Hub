@@ -3,7 +3,6 @@
 // DELIVERY MODULE - Delivery Management
 // ============================================
 
-
 class DeliveryManager {
   constructor () {
     this.DELIVERY_STORAGE_KEY = `${STORAGE_KEY_PREFIX}deliveries`;

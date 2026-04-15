@@ -5,7 +5,6 @@
  * ============================================
  */
 
-
 class MessageManager {
   constructor () {
     this.socket = null;

@@ -3,7 +3,6 @@
 // NOTIFICATIONS MODULE - Notification System
 // ============================================
 
-
 class NotificationManager {
   constructor () {
     this.NOTIFICATION_STORAGE_KEY = `${STORAGE_KEY_PREFIX}notifications`;

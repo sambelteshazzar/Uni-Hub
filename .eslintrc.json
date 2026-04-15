@@ -34,6 +34,8 @@
   },
   "globals": {
     "APP_NAME": "readonly",
+    "API_URL": "readonly",
+    "io": "readonly",
     "APP_VERSION": "readonly",
     "STORAGE_KEY_PREFIX": "readonly",
     "STORAGE_KEYS": "readonly",
@@ -69,6 +71,9 @@
     "toastManager": "readonly",
     "notificationManager": "readonly",
     "modalManager": "readonly",
+    "messageManager": "readonly",
+    "reviewManager": "readonly",
+    "messagesPage": "readonly",
     "adminAuthManager": "readonly",
     "adminProductsManager": "readonly",
     "adminUsersManager": "readonly",

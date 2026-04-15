@@ -20,12 +20,12 @@ class Pages {
     // Home/Landing
     router.register('/', () => this.renderLanding());
     router.register('/home', () => this.renderLanding());
-    
+
     // Auth
     router.register('/login', () => this.renderLogin());
     router.register('/register', () => this.renderRegister());
     console.log('✓ Auth routes registered');
-    
+
     // Main pages
     router.register('/browse', () => this.renderBrowseProducts());
     router.register('/cart', () => this.renderCart());
@@ -35,7 +35,7 @@ class Pages {
     router.register('/profile', () => this.renderProfile());
     router.register('/orders', () => this.renderOrders());
     console.log('✓ Main routes registered');
-    
+
     // Product detail
     router.register('/product/:id', (params) => this.renderProductDetail(params.id));
 
@@ -3062,7 +3062,7 @@ class Pages {
    */
   static async loadProductReviews (productId) {
     const container = document.getElementById('product-reviews-container');
-    if (!container) return;
+    if (!container) {return;}
 
     const product = productsManager.getById(productId);
     if (!product) {
@@ -3097,7 +3097,7 @@ class Pages {
         ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
         : '0';
 
-      let html = `
+      const html = `
         <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
           <div style="text-align: center;">
             <div style="font-size: 2.5rem; font-weight: 800; color: #fafafa;">${avgRating}</div>
@@ -3144,14 +3144,14 @@ class Pages {
    * Format review time
    */
   static formatReviewTime (date) {
-    if (!date) return '';
+    if (!date) {return '';}
     const d = new Date(date);
     const now = new Date();
     const diff = now - d;
 
-    if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
-    if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
-    if (diff < 604800000) return Math.floor(diff / 86400000) + 'd ago';
+    if (diff < 3600000) {return Math.floor(diff / 60000) + 'm ago';}
+    if (diff < 86400000) {return Math.floor(diff / 3600000) + 'h ago';}
+    if (diff < 604800000) {return Math.floor(diff / 86400000) + 'd ago';}
     return d.toLocaleDateString();
   }
 

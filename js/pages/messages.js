@@ -5,8 +5,6 @@
  * ============================================
  */
 
-/* global messageManager, StorageManager, toastManager, Formatter */
-
 class MessagesPage {
   constructor () {
     this.currentConversation = null;

@@ -3,7 +3,6 @@
 // CART MODULE - Shopping Cart Management
 // ============================================
 
-
 class CartManager {
   constructor () {
     this.items = [];

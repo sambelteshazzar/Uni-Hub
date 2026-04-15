@@ -3,7 +3,6 @@
 // CHECKOUT MODULE - Order Processing
 // ============================================
 
-
 // Delivery fees configuration
 const DELIVERY_FEES = {
   [DELIVERY_MODES.BOLT]: 15,

@@ -5,8 +5,6 @@
  * ============================================
  */
 
-/* global API_URL, StorageManager, toastManager */
-
 class ReviewManager {
   constructor () {
     this.currentSellerId = null;

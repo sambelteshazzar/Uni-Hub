@@ -3,7 +3,6 @@
 // MODALS MODULE - Modal/Dialog Management
 // ============================================
 
-
 class ModalManager {
   constructor () {
     this.activeModals = [];

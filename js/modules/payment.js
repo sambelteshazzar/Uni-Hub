@@ -3,7 +3,6 @@
 // PAYMENT MODULE - Payment Processing
 // ============================================
 
-
 class PaymentManager {
   constructor () {
     this.PAYMENT_STORAGE_KEY = `${STORAGE_KEY_PREFIX}payments`;
