@@ -4926,20 +4926,20 @@ class Pages {
       <div class="admin-container">
         <aside class="admin-sidebar">
           <div class="admin-brand">
-            <div class="admin-brand-icon">⚙️</div>
+            <div class="admin-brand-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div>
             <div class="admin-brand-name">Admin Panel</div>
           </div>
           <nav class="admin-nav-section">
             <ul class="admin-menu">
               <li class="admin-menu-item">
                 <a href="#" class="admin-menu-link" onclick="Pages.renderAdminDashboard()">
-                  <span class="admin-menu-icon">📊</span>
+                  <span class="admin-menu-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></span>
                   <span>Dashboard</span>
                 </a>
               </li>
               <li class="admin-menu-item">
                 <a href="#" class="admin-menu-link active">
-                  <span class="admin-menu-icon">👥</span>
+                  <span class="admin-menu-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
                   <span>Users</span>
                 </a>
               </li>
@@ -4978,14 +4978,16 @@ class Pages {
                     <td>${user.university}</td>
                     <td><span class="role-badge ${user.role}">${user.role}</span></td>
                     <td>
-                      <span class="status-badge ${user.isVerified ? 'delivered' : 'placed'}">
-                        ${user.isVerified ? 'Verified' : 'Pending'}
+                      <span class="status-badge ${user.isSuspended ? 'rejected' : 'delivered'}">
+                        ${user.isSuspended ? 'Suspended' : 'Active'}
                       </span>
                     </td>
                     <td>
                       <div class="table-actions">
-                        <button class="table-action-btn edit" title="Edit">✏️</button>
-                        <button class="table-action-btn delete" title="Delete">🗑️</button>
+                        ${user.role === 'admin' ? '' : user.isSuspended
+    ? `<button class="btn btn-sm btn-success" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminUnbanUser('${user.id}')">Unban</button>`
+    : `<button class="btn btn-sm btn-danger" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminBanUser('${user.id}')">Ban</button>`
+}
                       </div>
                     </td>
                   </tr>
@@ -5011,20 +5013,20 @@ class Pages {
       <div class="admin-container">
         <aside class="admin-sidebar">
           <div class="admin-brand">
-            <div class="admin-brand-icon">⚙️</div>
+            <div class="admin-brand-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div>
             <div class="admin-brand-name">Admin Panel</div>
           </div>
           <nav class="admin-nav-section">
             <ul class="admin-menu">
               <li class="admin-menu-item">
                 <a href="#" class="admin-menu-link" onclick="Pages.renderAdminDashboard()">
-                  <span class="admin-menu-icon">📊</span>
+                  <span class="admin-menu-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></span>
                   <span>Dashboard</span>
                 </a>
               </li>
               <li class="admin-menu-item">
                 <a href="#" class="admin-menu-link active">
-                  <span class="admin-menu-icon">📦</span>
+                  <span class="admin-menu-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg></span>
                   <span>Products</span>
                 </a>
               </li>
@@ -5042,8 +5044,8 @@ class Pages {
                   <th>Product</th>
                   <th>Category</th>
                   <th>Price</th>
-                  <th>Condition</th>
                   <th>Seller</th>
+                  <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -5054,18 +5056,24 @@ class Pages {
                   <tr>
                     <td>
                       <div class="product-cell">
-                        <img src="${product.images[0]}" alt="${product.title}" class="product-image-small" />
+                        <img src="${product.images?.[0] || 'https://placehold.co/50'}" alt="${product.title}" class="product-image-small" />
                         <span>${product.title}</span>
                       </div>
                     </td>
                     <td>${Formatter.capitalize(product.category)}</td>
                     <td>${Formatter.formatPrice(product.price)}</td>
-                    <td><span class="condition-badge ${product.condition}">${Formatter.capitalize(product.condition)}</span></td>
-                    <td>${product.seller.name}</td>
+                    <td>${product.seller.name || product.seller}</td>
+                    <td>
+                      <span class="status-badge ${product.status === 'pending' ? 'placed' : 'delivered'}">
+                        ${product.status || 'active'}
+                      </span>
+                    </td>
                     <td>
                       <div class="table-actions">
-                        <button class="table-action-btn view" title="View">👁️</button>
-                        <button class="table-action-btn delete" title="Delete">🗑️</button>
+                        ${product.status === 'pending' ? `
+                          <button class="btn btn-sm btn-success" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminApproveProduct('${product.id}')">Approve</button>
+                          <button class="btn btn-sm btn-danger" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminRejectProduct('${product.id}')">Reject</button>
+                        ` : `<span class="text-muted">-</span>`}
                       </div>
                     </td>
                   </tr>
@@ -5326,5 +5334,67 @@ class Pages {
         </main>
       </div>
     `;
+  }
+
+  // ==========================================
+  // ADMIN ACTION HANDLERS
+  // ==========================================
+
+  /**
+   * Approve a product
+   */
+  static async adminApproveProduct (productId) {
+    if (!confirm('Are you sure you want to approve this product?')) return;
+    try {
+      await api.request('/admin/products/' + productId + '/approve', { method: 'PUT' });
+      toastManager.show('Product approved successfully', 'success');
+      this.renderAdminProducts();
+    } catch (e) {
+      toastManager.show(e.message || 'Failed to approve product', 'error');
+    }
+  }
+
+  /**
+   * Reject a product
+   */
+  static async adminRejectProduct (productId) {
+    const reason = prompt('Please enter a reason for rejection:');
+    if (!reason) return;
+    try {
+      await api.request('/admin/products/' + productId + '/reject', { method: 'PUT', body: JSON.stringify({ reason }) });
+      toastManager.show('Product rejected successfully', 'info');
+      this.renderAdminProducts();
+    } catch (e) {
+      toastManager.show(e.message || 'Failed to reject product', 'error');
+    }
+  }
+
+  /**
+   * Ban a user
+   */
+  static async adminBanUser (userId) {
+    const reason = prompt('Please enter a reason for banning this user:');
+    if (!reason) return;
+    try {
+      await api.request('/admin/users/' + userId + '/ban', { method: 'PUT', body: JSON.stringify({ action: 'ban', reason }) });
+      toastManager.show('User has been banned', 'success');
+      this.renderAdminUsers();
+    } catch (e) {
+      toastManager.show(e.message || 'Failed to ban user', 'error');
+    }
+  }
+
+  /**
+   * Unban a user
+   */
+  static async adminUnbanUser (userId) {
+    if (!confirm('Are you sure you want to unban this user?')) return;
+    try {
+      await api.request('/admin/users/' + userId + '/ban', { method: 'PUT', body: JSON.stringify({ action: 'unban' }) });
+      toastManager.show('User has been unbanned', 'success');
+      this.renderAdminUsers();
+    } catch (e) {
+      toastManager.show(e.message || 'Failed to unban user', 'error');
+    }
   }
 }
