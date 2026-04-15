@@ -2485,13 +2485,37 @@ class Pages {
     // Show original navbar and footer for non-landing pages
     this.showOriginalNavFooter();
 
+    // Show loading skeleton immediately
+    const mainContent = document.getElementById('main-content');
+    mainContent.innerHTML = `
+      <div class="bb-browse-page">
+        <div class="bb-browse-header"><div class="bb-browse-header-inner">
+          <div class="skeleton skeleton-title"></div><div class="skeleton skeleton-subtitle"></div>
+        </div></div>
+        <div class="bb-browse-layout">
+          <aside class="bb-browse-filters">
+            <div class="skeleton skeleton-filter-title"></div>
+            <div class="skeleton skeleton-filter-item"></div>
+            <div class="skeleton skeleton-filter-item"></div>
+            <div class="skeleton skeleton-filter-item"></div>
+          </aside>
+          <main class="bb-browse-main">
+            <div class="bb-browse-grid skeleton-grid">
+              <div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div>
+              <div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div>
+              <div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div>
+            </div>
+          </main>
+        </div>
+      </div>
+    `;
+
     await productsManager.init();
 
     if (filters.category) {
       productsManager.filter({ category: filters.category });
     }
 
-    const mainContent = document.getElementById('main-content');
     const selectedUniversity = StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
     productsManager.filter({ university: selectedUniversity });
 
