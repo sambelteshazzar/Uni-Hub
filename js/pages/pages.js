@@ -4586,7 +4586,7 @@ class Pages {
         .image-remove-btn:hover { background: rgba(220, 38, 38, 0.8); }
       </style>
     `;
-    
+
     // Initialize the drop-zone click handler
     document.getElementById('image-drop-zone').addEventListener('click', () => {
       document.getElementById('product-images').click();
@@ -4596,7 +4596,7 @@ class Pages {
   // ==========================================
   // IMAGE UPLOAD HANDLERS
   // ==========================================
-  
+
   static selectedProductImages = [];
 
   static handleImageSelect (event) {
@@ -4612,7 +4612,7 @@ class Pages {
 
   static processImageFiles (files) {
     const validFiles = files.filter(f => f.type.startsWith('image/') && f.size <= 5 * 1024 * 1024);
-    
+
     validFiles.forEach(file => {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -4621,7 +4621,7 @@ class Pages {
       };
       reader.readAsDataURL(file);
     });
-    
+
     if (validFiles.length !== files.length) {
       toastManager.show('Some files were skipped (invalid type or too large)', 'warning');
     }
@@ -4629,8 +4629,8 @@ class Pages {
 
   static renderImagePreviews () {
     const grid = document.getElementById('image-preview-grid');
-    if (!grid) return;
-    
+    if (!grid) {return;}
+
     grid.innerHTML = Pages.selectedProductImages.map((img, idx) => `
       <div class="image-preview-item">
         <img src="${img.preview}" alt="Preview" />
@@ -4689,7 +4689,7 @@ class Pages {
             headers: { 'Authorization': `Bearer ${StorageManager.get(StorageManager.keys?.authToken || 'authToken')}` },
             body: formData,
           });
-          
+
           if (!response.ok) {
             // Fallback to local base64 if upload fails
             productData.images = Pages.selectedProductImages.map(img => img.preview);
@@ -5227,7 +5227,7 @@ class Pages {
                         ${product.status === 'pending' ? `
                           <button class="btn btn-sm btn-success" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminApproveProduct('${product.id}')">Approve</button>
                           <button class="btn btn-sm btn-danger" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminRejectProduct('${product.id}')">Reject</button>
-                        ` : `<span class="text-muted">-</span>`}
+                        ` : '<span class="text-muted">-</span>'}
                       </div>
                     </td>
                   </tr>
@@ -5498,7 +5498,7 @@ class Pages {
    * Approve a product
    */
   static async adminApproveProduct (productId) {
-    if (!confirm('Are you sure you want to approve this product?')) return;
+    if (!confirm('Are you sure you want to approve this product?')) {return;}
     try {
       await api.request('/admin/products/' + productId + '/approve', { method: 'PUT' });
       toastManager.show('Product approved successfully', 'success');
@@ -5513,7 +5513,7 @@ class Pages {
    */
   static async adminRejectProduct (productId) {
     const reason = prompt('Please enter a reason for rejection:');
-    if (!reason) return;
+    if (!reason) {return;}
     try {
       await api.request('/admin/products/' + productId + '/reject', { method: 'PUT', body: JSON.stringify({ reason }) });
       toastManager.show('Product rejected successfully', 'info');
@@ -5528,7 +5528,7 @@ class Pages {
    */
   static async adminBanUser (userId) {
     const reason = prompt('Please enter a reason for banning this user:');
-    if (!reason) return;
+    if (!reason) {return;}
     try {
       await api.request('/admin/users/' + userId + '/ban', { method: 'PUT', body: JSON.stringify({ action: 'ban', reason }) });
       toastManager.show('User has been banned', 'success');
@@ -5542,7 +5542,7 @@ class Pages {
    * Unban a user
    */
   static async adminUnbanUser (userId) {
-    if (!confirm('Are you sure you want to unban this user?')) return;
+    if (!confirm('Are you sure you want to unban this user?')) {return;}
     try {
       await api.request('/admin/users/' + userId + '/ban', { method: 'PUT', body: JSON.stringify({ action: 'unban' }) });
       toastManager.show('User has been unbanned', 'success');
