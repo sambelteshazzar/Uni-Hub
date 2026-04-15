@@ -4484,10 +4484,17 @@ class Pages {
         <form class="add-product-form" onsubmit="Pages.handleAddProduct(event)">
           <div class="form-section">
             <h3 class="form-section-title">Product Images</h3>
-            <div class="image-upload">
-              <div class="image-upload-icon">📷</div>
-              <div class="image-upload-text">Click to upload images</div>
-              <div class="image-upload-hint">Supports: JPG, PNG (Max 5MB)</div>
+            <div class="image-upload-container">
+              <div id="image-drop-zone" class="image-drop-zone" 
+                   ondragover="event.preventDefault(); this.classList.add('drag-over')" 
+                   ondragleave="this.classList.remove('drag-over')" 
+                   ondrop="Pages.handleImageDrop(event); this.classList.remove('drag-over')">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <div class="upload-text">Drag & drop images here or click to browse</div>
+                <div class="upload-hint">Supports: JPG, PNG, WebP (Max 5MB per image)</div>
+                <input type="file" id="product-images" name="images" multiple accept="image/*" style="display: none;" onchange="Pages.handleImageSelect(event)" />
+              </div>
+              <div id="image-preview-grid" class="image-preview-grid"></div>
             </div>
           </div>
           <div class="form-section">
@@ -4529,37 +4536,184 @@ class Pages {
           </div>
           <div class="form-actions">
             <button type="button" class="btn btn-outline" onclick="Pages.renderSellerDashboard()">Cancel</button>
-            <button type="submit" class="btn btn-primary">Add Product</button>
+            <button type="submit" class="btn btn-primary" id="submit-product-btn">Add Product</button>
           </div>
         </form>
       </div>
+      <style>
+        .image-upload-container { margin-bottom: 1.5rem; }
+        .image-drop-zone {
+          border: 2px dashed #d1d5db;
+          border-radius: 12px;
+          padding: 3rem 1rem;
+          text-align: center;
+          cursor: pointer;
+          background: #f9fafb;
+          transition: all 0.2s;
+        }
+        .image-drop-zone:hover, .image-drop-zone.drag-over {
+          border-color: #6366f1;
+          background: rgba(99, 102, 241, 0.05);
+        }
+        .image-drop-zone svg { color: #9ca3af; margin-bottom: 1rem; }
+        .upload-text { font-weight: 600; color: #374151; margin-bottom: 0.25rem; }
+        .upload-hint { font-size: 0.8rem; color: #6b7280; }
+        .image-preview-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+          gap: 12px;
+          margin-top: 1rem;
+        }
+        .image-preview-item {
+          position: relative;
+          aspect-ratio: 1;
+          border-radius: 8px;
+          overflow: hidden;
+          border: 1px solid #e5e7eb;
+        }
+        .image-preview-item img { width: 100%; height: 100%; object-fit: cover; }
+        .image-remove-btn {
+          position: absolute;
+          top: 4px; right: 4px;
+          background: rgba(0,0,0,0.6);
+          color: white;
+          border: none;
+          border-radius: 50%;
+          width: 20px; height: 20px;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer; font-size: 12px;
+        }
+        .image-remove-btn:hover { background: rgba(220, 38, 38, 0.8); }
+      </style>
     `;
+    
+    // Initialize the drop-zone click handler
+    document.getElementById('image-drop-zone').addEventListener('click', () => {
+      document.getElementById('product-images').click();
+    });
+  }
+
+  // ==========================================
+  // IMAGE UPLOAD HANDLERS
+  // ==========================================
+  
+  static selectedProductImages = [];
+
+  static handleImageSelect (event) {
+    const files = Array.from(event.target.files);
+    Pages.processImageFiles(files);
+  }
+
+  static handleImageDrop (event) {
+    event.preventDefault();
+    const files = Array.from(event.dataTransfer.files);
+    Pages.processImageFiles(files);
+  }
+
+  static processImageFiles (files) {
+    const validFiles = files.filter(f => f.type.startsWith('image/') && f.size <= 5 * 1024 * 1024);
+    
+    validFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        Pages.selectedProductImages.push({ file, preview: e.target.result });
+        Pages.renderImagePreviews();
+      };
+      reader.readAsDataURL(file);
+    });
+    
+    if (validFiles.length !== files.length) {
+      toastManager.show('Some files were skipped (invalid type or too large)', 'warning');
+    }
+  }
+
+  static renderImagePreviews () {
+    const grid = document.getElementById('image-preview-grid');
+    if (!grid) return;
+    
+    grid.innerHTML = Pages.selectedProductImages.map((img, idx) => `
+      <div class="image-preview-item">
+        <img src="${img.preview}" alt="Preview" />
+        <button type="button" class="image-remove-btn" onclick="Pages.removeProductImage(${idx})">&times;</button>
+      </div>
+    `).join('');
+  }
+
+  static removeProductImage (index) {
+    Pages.selectedProductImages.splice(index, 1);
+    Pages.renderImagePreviews();
   }
 
   /**
    * Handle Add Product
    */
-  static handleAddProduct (event) {
+  static async handleAddProduct (event) {
     event.preventDefault();
     const form = event.target;
+    const submitBtn = document.getElementById('submit-product-btn');
 
-    const productData = {
-      title: form.title.value,
-      description: form.description.value,
-      category: form.category.value,
-      condition: form.condition.value,
-      price: form.price.value,
-      deliveryModes: ['bolt', 'yango', 'inperson'],
-      paymentModes: ['momo', 'telecel', 'cash'],
-    };
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Uploading...';
 
-    const result = productsManager.addProduct(productData);
+    try {
+      // 1. Create the product first to get an ID
+      const productData = {
+        title: form.title.value,
+        description: form.description.value,
+        category: form.category.value,
+        condition: form.condition.value,
+        price: form.price.value,
+        deliveryModes: ['bolt', 'yango', 'inperson'],
+        paymentModes: ['momo', 'telecel', 'cash'],
+      };
 
-    if (result.success) {
+      const result = productsManager.addProduct(productData);
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      const productId = result.data?.id || result.product?.id;
+
+      // 2. Upload images if any were selected
+      if (Pages.selectedProductImages.length > 0 && productId) {
+        const formData = new FormData();
+        Pages.selectedProductImages.forEach(img => {
+          formData.append('images', img.file);
+        });
+
+        // Use the backend API if available, otherwise fallback to local
+        try {
+          const response = await fetch(`${window.API_URL}/products/${productId}/images`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${StorageManager.get(StorageManager.keys?.authToken || 'authToken')}` },
+            body: formData,
+          });
+          
+          if (!response.ok) {
+            // Fallback to local base64 if upload fails
+            productData.images = Pages.selectedProductImages.map(img => img.preview);
+          } else {
+            const uploadResult = await response.json();
+            productData.images = uploadResult.data?.images || Pages.selectedProductImages.map(img => img.preview);
+          }
+        } catch (e) {
+          // Fallback to local base64
+          productData.images = Pages.selectedProductImages.map(img => img.preview);
+        }
+
+        // Update the product with the new images
+        productsManager.updateProduct(productId, productData);
+      }
+
       notificationManager.success('Product Listed', result.message);
+      Pages.selectedProductImages = []; // Clear selected images
       Pages.renderManageProducts();
-    } else {
-      notificationManager.error('Error', result.error);
+    } catch (e) {
+      notificationManager.error('Error', e.message);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Add Product';
     }
   }
 
