@@ -410,6 +410,14 @@ class MessagesPage {
       minute: '2-digit',
     });
 
+    // Read receipt status icons
+    let statusIcon = '';
+    if (isSent) {
+      statusIcon = msg.isRead
+        ? '<span class="message-status read">✓✓</span>'
+        : '<span class="message-status">✓</span>';
+    }
+
     return `
       <div class="message-group ${isSent ? 'sent' : 'received'}">
         <div class="message-bubble">
@@ -417,10 +425,42 @@ class MessagesPage {
         </div>
         <div class="message-time">
           ${time}
-          ${isSent ? `<span class="message-status ${msg.isRead ? 'read' : ''}">${msg.isRead ? '✓✓' : '✓'}</span>` : ''}
+          ${statusIcon}
         </div>
       </div>
     `;
+  }
+
+  // ==========================================
+  // TYPING INDICATORS & STATUS
+  // ==========================================
+
+  showTypingIndicator () {
+    const container = document.getElementById('messages-container');
+    if (!container || container.querySelector('.typing-indicator')) {
+      return;
+    }
+
+    const indicator = document.createElement('div');
+    indicator.className = 'typing-indicator';
+    indicator.innerHTML = '<span></span><span></span><span></span>';
+    container.appendChild(indicator);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  hideTypingIndicator () {
+    const indicator = document.getElementById('typing-indicator') || document.querySelector('.typing-indicator');
+    if (indicator) {
+      indicator.remove();
+    }
+  }
+
+  updateOnlineStatus (userId, isOnline) {
+    const statusEl = document.getElementById('chat-status');
+    if (statusEl) {
+      statusEl.textContent = isOnline ? 'Online' : 'Offline';
+      statusEl.style.color = isOnline ? '#10b981' : '#6b7280';
+    }
   }
 
   /**
