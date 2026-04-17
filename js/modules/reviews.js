@@ -27,7 +27,7 @@ class ReviewManager {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${StorageManager.get(StorageManager.keys?.authToken || 'authToken')}`,
+          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
         },
         body: JSON.stringify({
           sellerId,
@@ -111,7 +111,7 @@ class ReviewManager {
 
       const response = await fetch(`${API_URL}/reviews/my-reviews?${params}`, {
         headers: {
-          Authorization: `Bearer ${StorageManager.get(StorageManager.keys?.authToken || 'authToken')}`,
+          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
         },
       });
 
@@ -139,7 +139,7 @@ class ReviewManager {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${StorageManager.get(StorageManager.keys?.authToken || 'authToken')}`,
+          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
         },
         body: JSON.stringify(data),
       });
@@ -170,7 +170,7 @@ class ReviewManager {
       const response = await fetch(`${API_URL}/reviews/${reviewId}`, {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${StorageManager.get(StorageManager.keys?.authToken || 'authToken')}`,
+          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
         },
       });
 
@@ -200,7 +200,7 @@ class ReviewManager {
       const response = await fetch(`${API_URL}/reviews/${reviewId}/helpful`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${StorageManager.get(StorageManager.keys?.authToken || 'authToken')}`,
+          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
         },
       });
 
@@ -226,7 +226,7 @@ class ReviewManager {
       const response = await fetch(`${API_URL}/reviews/${reviewId}/report`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${StorageManager.get(StorageManager.keys?.authToken || 'authToken')}`,
+          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
         },
       });
 
@@ -258,7 +258,7 @@ class ReviewManager {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${StorageManager.get(StorageManager.keys?.authToken || 'authToken')}`,
+          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
         },
         body: JSON.stringify({ comment }),
       });

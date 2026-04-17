@@ -56,7 +56,7 @@ class Pages {
    * Navigate to Messages (with auth check)
    */
   static navigateToMessages () {
-    const token = StorageManager.get(StorageManager.keys?.authToken || 'authToken');
+    const token = StorageManager.getAuthToken();
     if (!token && typeof authManager !== 'undefined' && !authManager.isLoggedIn()) {
       toastManager?.show('Please log in to access messages', 'info');
       this.renderLogin();
@@ -4710,7 +4710,7 @@ class Pages {
         try {
           const response = await fetch(`${window.API_URL}/products/${productId}/images`, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${StorageManager.get(StorageManager.keys?.authToken || 'authToken')}` },
+            headers: { 'Authorization': `Bearer ${StorageManager.getAuthToken()}` },
             body: formData,
           });
 

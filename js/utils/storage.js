@@ -89,6 +89,26 @@ class StorageManager {
     }
     return items;
   }
+
+  /**
+   * Get authentication token from storage
+   * Tries multiple locations for backward compatibility
+   * @returns {string|null} - Auth token or null if not found
+   */
+  static getAuthToken () {
+    try {
+      // Try STORAGE_KEYS.CURRENT_USER first (contains user object with token)
+      const currentUser = this.get(STORAGE_KEYS.CURRENT_USER, true);
+      if (currentUser && currentUser.token) {
+        return currentUser.token;
+      }
+      // Fallback to checking raw 'authToken' key for direct token storage
+      return this.get('authToken', false);
+    } catch (error) {
+      console.error('Error retrieving auth token from storage:', error);
+      return null;
+    }
+  }
 }
 
 // Export singleton instance

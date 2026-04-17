@@ -79,9 +79,24 @@ class MessageManager {
    * Connect to Socket.IO server
    */
   connect () {
-    const token = StorageManager.get(StorageManager.keys?.authToken || 'authToken');
+    // Get auth token from appropriate storage location
+    let token;
+    try {
+      // Try STORAGE_KEYS.CURRENT_USER first (contains user object with token)
+      const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
+      if (currentUser && currentUser.token) {
+        token = currentUser.token;
+      } else {
+        // Fallback to checking raw 'authToken' key for direct token storage
+        token = StorageManager.get('authToken', false);
+      }
+    } catch (error) {
+      console.error('Error retrieving auth token from storage:', error);
+      return;
+    }
 
     if (!token) {
+      console.warn('No authentication token found - cannot connect to real-time messaging');
       return;
     }
 
@@ -222,7 +237,7 @@ class MessageManager {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${StorageManager.get(StorageManager.keys?.authToken || 'authToken')}`,
+          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
         },
         body: JSON.stringify(data),
       });
@@ -308,7 +323,7 @@ class MessageManager {
 
       const response = await fetch(`${API_URL}/messages/conversations?${params}`, {
         headers: {
-          Authorization: `Bearer ${StorageManager.get(StorageManager.keys?.authToken || 'authToken')}`,
+          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
         },
       });
 
@@ -333,7 +348,7 @@ class MessageManager {
     try {
       const response = await fetch(`${API_URL}/messages/conversation/${conversationId}`, {
         headers: {
-          Authorization: `Bearer ${StorageManager.get(StorageManager.keys?.authToken || 'authToken')}`,
+          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
         },
       });
 
@@ -364,7 +379,7 @@ class MessageManager {
         `${API_URL}/messages/conversation/${conversationId}/messages?${params}`,
         {
           headers: {
-            Authorization: `Bearer ${StorageManager.get(StorageManager.keys?.authToken || 'authToken')}`,
+            Authorization: `Bearer ${StorageManager.getAuthToken()}`,
           },
         },
       );
@@ -389,7 +404,7 @@ class MessageManager {
     try {
       const response = await fetch(`${API_URL}/messages/unread-count`, {
         headers: {
-          Authorization: `Bearer ${StorageManager.get(StorageManager.keys?.authToken || 'authToken')}`,
+          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
         },
       });
 
@@ -416,7 +431,7 @@ class MessageManager {
       const response = await fetch(`${API_URL}/messages/${messageId}`, {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${StorageManager.get(StorageManager.keys?.authToken || 'authToken')}`,
+          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
         },
       });
 
@@ -448,7 +463,7 @@ class MessageManager {
 
       const response = await fetch(`${API_URL}/messages/search?${params}`, {
         headers: {
-          Authorization: `Bearer ${StorageManager.get(StorageManager.keys?.authToken || 'authToken')}`,
+          Authorization: `Bearer ${StorageManager.getAuthToken()}`,
         },
       });
 

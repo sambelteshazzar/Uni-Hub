@@ -26,7 +26,7 @@ class MessagesPage {
     }
 
     // Check if user is logged in
-    const token = StorageManager.get(StorageManager.keys?.authToken || 'authToken');
+    const token = StorageManager.getAuthToken();
     if (!token) {
       if (window.Pages) {
         window.Pages.renderLogin();
@@ -680,7 +680,7 @@ class MessagesPage {
    * Helper: Get current user ID
    */
   getCurrentUserId () {
-    const token = StorageManager.get(StorageManager.keys?.authToken || 'authToken');
+    const token = StorageManager.getAuthToken();
     if (!token) {
       return null;
     }

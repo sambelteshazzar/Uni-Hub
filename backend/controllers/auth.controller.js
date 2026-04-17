@@ -55,80 +55,59 @@ exports.register = asyncHandler(async (req, res) => {
  * @route   POST /api/auth/login
  * @access  Public
  */
-exports.login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+exports.login = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
 
-    // Validate input
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        error: 'Please provide email and password',
-      });
-    }
-
-    // Find user and include password
-    const user = await User.findOne({ email }).select('+password');
-
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid credentials',
-      });
-    }
-
-    // Check if user is active
-    if (!user.isActive) {
-      return res.status(401).json({
-        success: false,
-        error: 'Account is deactivated',
-      });
-    }
-
-    // Check if user is suspended/banned
-    if (user.isSuspended) {
-      return res.status(403).json({
-        success: false,
-        error: user.banReason
-          ? `Account suspended: ${user.banReason}`
-          : 'Your account has been suspended. Contact support for more information.',
-        isSuspended: true,
-      });
-    }
-
-    // Check password
-    const isMatch = await user.comparePassword(password);
-
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid credentials',
-      });
-    }
-
-    // Update last login
-    user.lastLogin = new Date();
-    await user.save();
-
-    // Generate token
-    const token = generateToken(user._id);
-
-    res.json({
-      success: true,
-      message: 'Login successful',
-      data: {
-        user: user.getPublicProfile(),
-        token,
-      },
-    });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Login failed',
-    });
+  // Validate input
+  if (!email || !password) {
+    throw new ApiError(400, 'Please provide email and password');
   }
-};
+
+  // Find user and include password
+  const user = await User.findOne({ email }).select('+password');
+
+  if (!user) {
+    throw new ApiError(401, 'Invalid credentials');
+  }
+
+  // Check if user is active
+  if (!user.isActive) {
+    throw new ApiError(401, 'Account is deactivated');
+  }
+
+  // Check if user is suspended/banned
+  if (user.isSuspended) {
+    throw new ApiError(
+      403,
+      user.banReason
+        ? `Account suspended: ${user.banReason}`
+        : 'Your account has been suspended. Contact support for more information.'
+    );
+  }
+
+  // Check password
+  const isMatch = await user.comparePassword(password);
+
+  if (!isMatch) {
+    throw new ApiError(401, 'Invalid credentials');
+  }
+
+  // Update last login
+  user.lastLogin = new Date();
+  await user.save();
+
+  // Generate token
+  const token = generateToken(user._id);
+
+  res.json({
+    success: true,
+    message: 'Login successful',
+    data: {
+      user: user.getPublicProfile(),
+      token,
+    },
+  });
+});
 
 /**
  * @desc    Get current user profile
