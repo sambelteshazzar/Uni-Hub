@@ -20,7 +20,7 @@
     // LOGIN - Best Buy Style
     // ============================================
     Pages.renderLogin = function () {
-      this.showOriginalNavFooter();
+      Pages.showOriginalNavFooter();
 
       const mainContent = document.getElementById('main-content');
       mainContent.innerHTML =
@@ -167,7 +167,7 @@
     // REGISTER - Best Buy Style
     // ============================================
     Pages.renderRegister = async function () {
-      this.showOriginalNavFooter();
+      Pages.showOriginalNavFooter();
 
       const mainContent = document.getElementById('main-content');
       let config = { universities: [] };
@@ -349,11 +349,11 @@
       const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
       if (!currentUser) {
         alert('Please login to view your dashboard.');
-        this.renderLogin();
+        Pages.renderLogin();
         return;
       }
 
-      this.showOriginalNavFooter();
+      Pages.showOriginalNavFooter();
 
       const orders = await checkoutManager.getUserOrders(currentUser.id || '');
       const wishlist = productsManager.getWishlist();
