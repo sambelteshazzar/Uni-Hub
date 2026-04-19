@@ -257,8 +257,20 @@
       window.API_URL = 'http://localhost:5000/api';
     </script>
 
-    <!-- Utils -->
+    <!-- Utils (constants first, as regular script to be globally available) -->
     <script type="module" src="js/utils/constants.js?v=2"></script>
+    <!-- Make constants available to module scripts -->
+    <script>
+      // Ensure constants are available before modules load
+      if (typeof window !== 'undefined') {
+        const constantsCheck = setInterval(() => {
+          if (typeof APP_NAME !== 'undefined' && typeof STORAGE_KEYS !== 'undefined') {
+            // Constants are ready
+            clearInterval(constantsCheck);
+          }
+        }, 10);
+      }
+    </script>
     <script type="module" src="js/utils/storage.js?v=2"></script>
     <script type="module" src="js/utils/validation.js?v=2"></script>
     <script type="module" src="js/utils/formatters.js?v=2"></script>
@@ -300,7 +312,7 @@
     <script type="module" src="js/pages/messages.js?v=2"></script>
     <script type="module" src="js/pages/landing-page-loader.js?v=2"></script>
 
-    <!-- Global Setup - Expose all modules and constants -->
+    <!-- Global Setup - Expose all modules and constants (regular script to run before modules) -->
     <script type="module" src="js/setup/globals.js?v=2"></script>
 
     <!-- App Initialization -->
