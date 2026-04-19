@@ -2,7 +2,7 @@
 // FORMAT & DISPLAY UTILITIES
 // ============================================
 
-class _Formatter {
+class Formatter {
   /**
    * Format price with currency
    * @param {number} price - Price in base units
@@ -173,3 +173,10 @@ class _Formatter {
   }
 }
 
+// Export singleton instance
+const formatter = new Formatter();
+
+// Make globally available for module scripts
+if (typeof window !== 'undefined') {
+  window.Formatter = formatter;
+}

@@ -233,3 +233,8 @@ class Router {
 
 // Create singleton instance
 const router = new Router();
+
+// Make globally available for module scripts
+if (typeof window !== 'undefined') {
+  window.router = router;
+}

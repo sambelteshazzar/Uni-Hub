@@ -5576,3 +5576,11 @@ class Pages {
     }
   }
 }
+
+// Export singleton instance
+const pagesManager = new Pages();
+
+// Make globally available for module scripts
+if (typeof window !== 'undefined') {
+  window.Pages = pagesManager;
+}

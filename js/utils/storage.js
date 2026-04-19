@@ -2,7 +2,7 @@
 // LOCAL STORAGE MANAGEMENT
 // ============================================
 
-class _StorageManager {
+class StorageManager {
   /**
    * Save data to localStorage
    * @param {string} key - Storage key
@@ -112,3 +112,11 @@ class _StorageManager {
 }
 
 // Export singleton instance
+
+// Export singleton instance
+const storageManager = new StorageManager();
+
+// Make globally available for module scripts
+if (typeof window !== 'undefined') {
+  window.StorageManager = storageManager;
+}

@@ -3,7 +3,7 @@
 // FORM VALIDATION UTILITIES
 // ============================================
 
-class _Validator {
+class Validator {
   /**
    * Validate email address
    * @param {string} email
@@ -125,3 +125,10 @@ class _Validator {
   }
 }
 
+// Export singleton instance
+const validator = new Validator();
+
+// Make globally available for module scripts
+if (typeof window !== 'undefined') {
+  window.Validator = validator;
+}

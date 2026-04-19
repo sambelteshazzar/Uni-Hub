@@ -62,6 +62,7 @@
     "_api": "readonly",
     "router": "readonly",
     "app": "readonly",
+    "Pages": "readonly",
     "authManager": "readonly",
     "_authManager": "readonly",
     "productsManager": "readonly",

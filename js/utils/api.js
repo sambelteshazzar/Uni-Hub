@@ -220,4 +220,9 @@ class API {
 
 // Create singleton instance
 // Create singleton instance
-const _api = new API();
+const api = new API();
+
+// Make globally available for module scripts
+if (typeof window !== 'undefined') {
+  window.api = api;
+}

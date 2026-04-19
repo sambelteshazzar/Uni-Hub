@@ -161,3 +161,8 @@ class App {
 
 // Create singleton instance
 const app = new App();
+
+// Make globally available for module scripts
+if (typeof window !== 'undefined') {
+  window.app = app;
+}
