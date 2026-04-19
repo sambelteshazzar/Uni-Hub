@@ -420,4 +420,9 @@ class CheckoutManager {
 }
 
 // Create singleton instance
-const _checkoutManager = new CheckoutManager();
+const checkoutManager = new CheckoutManager();
+
+// Make globally available for module scripts
+if (typeof window !== 'undefined') {
+  window.checkoutManager = checkoutManager;
+}

@@ -334,4 +334,9 @@ class AuthManager {
 }
 
 // Create singleton instance
-const _authManager = new AuthManager();
+const authManager = new AuthManager();
+
+// Make globally available for module scripts
+if (typeof window !== 'undefined') {
+  window.authManager = authManager;
+}

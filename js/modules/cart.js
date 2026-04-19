@@ -248,4 +248,9 @@ class CartManager {
 }
 
 // Create singleton instance
-const _cartManager = new CartManager();
+const cartManager = new CartManager();
+
+// Make globally available for module scripts
+if (typeof window !== 'undefined') {
+  window.cartManager = cartManager;
+}

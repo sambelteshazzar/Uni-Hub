@@ -279,6 +279,11 @@ class ProductsManager {
 // Create singleton instance
 const productsManager = new ProductsManager();
 
+// Make globally available for module scripts
+if (typeof window !== 'undefined') {
+  window.productsManager = productsManager;
+}
+
 // Hostel-specific functionality extension
 class HostelProductsManager {
   constructor () {
