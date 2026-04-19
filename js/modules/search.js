@@ -7,7 +7,10 @@ class SearchManager {
   constructor () {
     this.searchHistory = [];
     this.recentSearches = [];
-    this.loadHistory();
+    // Only load if StorageManager is available
+    if (typeof StorageManager !== 'undefined' && typeof StorageManager.get === 'function') {
+      this.loadHistory();
+    }
   }
 
   /**

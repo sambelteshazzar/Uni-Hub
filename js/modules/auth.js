@@ -4,7 +4,10 @@ class AuthManager {
     this.currentUser = null;
     this.isAuthenticated = false;
     this.useBackend = true; // Backend API enabled
-    this.loadUser();
+    // Only load if StorageManager is available
+    if (typeof StorageManager !== 'undefined' && typeof StorageManager.get === 'function') {
+      this.loadUser();
+    }
   }
 
   /**

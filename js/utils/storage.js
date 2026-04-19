@@ -111,12 +111,9 @@ class StorageManager {
   }
 }
 
-// Export singleton instance
-
-// Export singleton instance
-const storageManager = new StorageManager();
-
-// Make globally available for module scripts
+// Export class for use across module scripts
 if (typeof window !== 'undefined') {
-  window.StorageManager = storageManager;
+  window.StorageManager = StorageManager;
+  // Signal that this module is loaded
+  window.dispatchEvent(new CustomEvent('module-loaded', { detail: 'StorageManager' }));
 }

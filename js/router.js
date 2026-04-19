@@ -237,4 +237,6 @@ const router = new Router();
 // Make globally available for module scripts
 if (typeof window !== 'undefined') {
   window.router = router;
+  // Signal that this module is loaded
+  window.dispatchEvent(new CustomEvent('module-loaded', { detail: 'router' }));
 }

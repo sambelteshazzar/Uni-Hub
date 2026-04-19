@@ -7,7 +7,10 @@ class AdminUsersManager {
   constructor () {
     this.USERS_STORAGE_KEY = `${STORAGE_KEY_PREFIX}users`;
     this.users = [];
-    this.loadUsers();
+    // Only load if both api and StorageManager are available
+    if (typeof api !== 'undefined' && typeof StorageManager !== 'undefined' && typeof StorageManager.get === 'function') {
+      this.loadUsers();
+    }
   }
 
   /**

@@ -7,7 +7,10 @@ class AdminAuthManager {
   constructor () {
     this.ADMIN_STORAGE_KEY = `${STORAGE_KEY_PREFIX}admin_session`;
     this.adminUser = null;
-    this.load();
+    // Only load if StorageManager is available
+    if (typeof StorageManager !== 'undefined' && typeof StorageManager.get === 'function') {
+      this.load();
+    }
   }
 
   /**

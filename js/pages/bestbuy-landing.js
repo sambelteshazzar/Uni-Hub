@@ -4,38 +4,45 @@
 // ============================================
 
 (function () {
-  // Store original renderLanding
-  const _originalRenderLanding = Pages.renderLanding;
+  // Wait for Pages to be available
+  const waitForPages = setInterval(function () {
+    if (typeof Pages === 'undefined' || typeof api === 'undefined') {
+      return; // Not ready yet
+    }
+    clearInterval(waitForPages);
 
-  // Override renderLanding
-  Pages.renderLanding = async function () {
+    // Store original renderLanding
+    const _originalRenderLanding = Pages.renderLanding;
+
+    // Override renderLanding
+    Pages.renderLanding = async function () {
     // DON'T hide navbar - we need the Sign In/Sign Up buttons visible
     // Just show the footer since we have our own landing content
 
-    const mainContent = document.getElementById('main-content');
-    let config = { universities: [], categories: [] };
+      const mainContent = document.getElementById('main-content');
+      let config = { universities: [], categories: [] };
 
-    try {
-      config = await api.loadJSON('data/config.json');
-    } catch (error) {
-      console.error('Error loading config:', error);
-    }
+      try {
+        config = await api.loadJSON('data/config.json');
+      } catch (error) {
+        console.error('Error loading config:', error);
+      }
 
-    // Build universities HTML
-    let universitiesHTML = '';
-    if (config.universities && config.universities.length > 0) {
-      universitiesHTML = config.universities
-        .map(function (uni, i) {
-          const images = [
-            '1541339907198-e08756dedf3f',
-            '1592280771190-3e2e4d571952',
-            '1523050854058-8df90110c9f1',
-            '1562774053-701939374585',
-            '1509062522246-3755977927d7',
-          ];
-          const _img = images[i % images.length];
-          return (
-            '<div class="bb-category-card" onclick="Pages.selectUniversity(\'' +
+      // Build universities HTML
+      let universitiesHTML = '';
+      if (config.universities && config.universities.length > 0) {
+        universitiesHTML = config.universities
+          .map(function (uni, i) {
+            const images = [
+              '1541339907198-e08756dedf3f',
+              '1592280771190-3e2e4d571952',
+              '1523050854058-8df90110c9f1',
+              '1562774053-701939374585',
+              '1509062522246-3755977927d7',
+            ];
+            const _img = images[i % images.length];
+            return (
+              '<div class="bb-category-card" onclick="Pages.selectUniversity(\'' +
             uni.id +
             '\'); return false;">' +
             '<div class="bb-category-icon">🎓</div>' +
@@ -46,28 +53,28 @@
             (100 + i * 50) +
             '+ items</p>' +
             '</div>'
-          );
-        })
-        .join('');
-    }
+            );
+          })
+          .join('');
+      }
 
-    // Build categories HTML
-    let categoriesHTML = '';
-    if (config.categories && config.categories.length > 0) {
-      const icons = {
-        textbooks: '📚',
-        electronics: '💻',
-        dorm: '🏠',
-        clothing: '👕',
-        sports: '⚽',
-        furniture: '🪑',
-        other: '📦',
-      };
-      categoriesHTML = config.categories
-        .map(function (cat) {
-          const icon = icons[cat.id] || '📦';
-          return (
-            '<a href="#/browse?category=' +
+      // Build categories HTML
+      let categoriesHTML = '';
+      if (config.categories && config.categories.length > 0) {
+        const icons = {
+          textbooks: '📚',
+          electronics: '💻',
+          dorm: '🏠',
+          clothing: '👕',
+          sports: '⚽',
+          furniture: '🪑',
+          other: '📦',
+        };
+        categoriesHTML = config.categories
+          .map(function (cat) {
+            const icon = icons[cat.id] || '📦';
+            return (
+              '<a href="#/browse?category=' +
             cat.id +
             '" class="bb-category-card">' +
             '<div class="bb-category-icon">' +
@@ -80,12 +87,12 @@
             (cat.count || '50+') +
             ' items</p>' +
             '</a>'
-          );
-        })
-        .join('');
-    }
+            );
+          })
+          .join('');
+      }
 
-    mainContent.innerHTML =
+      mainContent.innerHTML =
       '<div class="bb-landing">' +
       '<!-- Hero Section -->' +
       '<section class="bb-hero" style="min-height: 85vh; display: flex; align-items: center; padding: 6rem 2rem 4rem; position: relative; overflow: hidden; background: linear-gradient(135deg, #0046be 0%, #003399 100%);">' +
@@ -279,9 +286,10 @@
       '</section>' +
       '</div>';
 
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+      // Scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
-  console.log('✅ Best Buy landing page renderer loaded');
+    console.log('✅ Best Buy landing page renderer loaded');
+  }, 50); // Check every 50ms
 })();

@@ -8,7 +8,10 @@ class NotificationManager {
     this.NOTIFICATION_STORAGE_KEY = `${STORAGE_KEY_PREFIX}notifications`;
     this.notifications = [];
     this.listeners = [];
-    this.load();
+    // Only load if StorageManager is available
+    if (typeof StorageManager !== 'undefined' && typeof StorageManager.get === 'function') {
+      this.load();
+    }
   }
 
   /**

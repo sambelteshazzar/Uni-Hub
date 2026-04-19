@@ -5577,10 +5577,9 @@ class Pages {
   }
 }
 
-// Export singleton instance
-const pagesManager = new Pages();
-
-// Make globally available for module scripts
+// Export class for use across module scripts
 if (typeof window !== 'undefined') {
-  window.Pages = pagesManager;
+  window.Pages = Pages;
+  // Signal that this module is loaded
+  window.dispatchEvent(new CustomEvent('module-loaded', { detail: 'Pages' }));
 }

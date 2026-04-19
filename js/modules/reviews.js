@@ -285,7 +285,7 @@ class ReviewManager {
    * @param {number} size - Font size in px
    * @returns {string}
    */
-  generateStars (rating, size = 16) {
+  generateStars (rating, _size = 16) {
     const fullStars = Math.floor(rating);
     const hasHalf = rating % 1 >= 0.5;
     const emptyStars = 5 - fullStars - (hasHalf ? 1 : 0);

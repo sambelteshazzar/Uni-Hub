@@ -6,7 +6,10 @@
 class CartManager {
   constructor () {
     this.items = [];
-    this.load();
+    // Only load if StorageManager is available
+    if (typeof StorageManager !== 'undefined' && typeof StorageManager.get === 'function') {
+      this.load();
+    }
   }
 
   /**

@@ -214,7 +214,7 @@ class ModalManager {
       message,
       confirmText = 'Yes',
       cancelText = 'No',
-      onConfirm,
+      _onConfirm,
       onCancel,
     } = options;
 
@@ -262,7 +262,7 @@ class ModalManager {
    * @param {Object} options - Options
    */
   showConditionSelector (options) {
-    const { onSelect, currentValue } = options;
+    const { _onSelect, currentValue } = options;
 
     const conditions = [
       { id: 'excellent', name: 'Excellent', icon: '🟢', description: 'Like new, barely used' },

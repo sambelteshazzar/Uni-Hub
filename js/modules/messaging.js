@@ -22,7 +22,10 @@ class MessageManager {
     this.unreadCount = 0;
     this.isConnected = false;
 
-    this.init();
+    // Only init if dependencies are available
+    if (typeof io !== 'undefined' && typeof StorageManager !== 'undefined') {
+      this.init();
+    }
   }
 
   /**

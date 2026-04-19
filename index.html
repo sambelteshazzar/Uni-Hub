@@ -318,9 +318,55 @@
     <!-- App Initialization -->
     <script>
       console.log('App initialization script loaded');
+      
+      // Wait for critical modules to load before initializing
+      const requiredModules = ['StorageManager', 'Pages', 'app', 'router'];
+      const loadedModules = new Set();
+      
+      const moduleLoader = new Promise((resolve) => {
+        const checkReady = () => {
+          // Check if all required modules are available
+          const allLoaded = requiredModules.every(mod => {
+            if (mod === 'router' && typeof window.router !== 'undefined') return true;
+            if (mod === 'app' && typeof window.app !== 'undefined') return true;
+            if (mod === 'Pages' && typeof window.Pages !== 'undefined') return true;
+            if (mod === 'StorageManager' && typeof window.StorageManager !== 'undefined') return true;
+            return false;
+          });
+          
+          if (allLoaded) {
+            console.log('✓ All required modules loaded');
+            resolve();
+          }
+        };
+        
+        // Listen for module-loaded events
+        window.addEventListener('module-loaded', (e) => {
+          loadedModules.add(e.detail);
+          console.log(`✓ Module loaded: ${e.detail}`);
+          checkReady();
+        });
+        
+        // Fallback: check every 100ms for up to 10 seconds
+        let attempts = 0;
+        const fallbackCheck = setInterval(() => {
+          attempts++;
+          if (attempts > 100) {
+            clearInterval(fallbackCheck);
+            console.warn('⚠️ Module loader timeout, proceeding anyway');
+            resolve();
+          }
+          checkReady();
+        }, 100);
+      });
+      
       // Initialize app on page load
       document.addEventListener('DOMContentLoaded', async function () {
         console.log('DOMContentLoaded event fired');
+        
+        // Wait for all required modules to be available
+        await moduleLoader;
+        
         // Show loading state immediately
         var mainContent = document.getElementById('main-content');
         if (mainContent) {
@@ -334,6 +380,31 @@
         }
 
         try {
+          console.log('About to reinitialize managers with StorageManager available');
+          // Re-initialize managers that couldn't load in constructor
+          if (typeof authManager !== 'undefined' && !authManager.currentUser) {
+            authManager.loadUser();
+          }
+          if (typeof cartManager !== 'undefined' && cartManager.items.length === 0) {
+            cartManager.load();
+          }
+          if (typeof searchManager !== 'undefined' && searchManager.searchHistory.length === 0) {
+            searchManager.loadHistory();
+          }
+          if (typeof notificationManager !== 'undefined' && notificationManager.notifications.length === 0) {
+            notificationManager.load();
+          }
+          if (typeof adminAuthManager !== 'undefined' && !adminAuthManager.adminUser) {
+            adminAuthManager.load();
+          }
+          if (typeof adminUsersManager !== 'undefined' && adminUsersManager.users.length === 0) {
+            adminUsersManager.loadUsers();
+          }
+          if (typeof messagingManager !== 'undefined') {
+            messagingManager.init();
+          }
+          console.log('✓ Managers reinitialized');
+
           console.log('About to call app.init()');
           // Initialize the application
           await app.init();

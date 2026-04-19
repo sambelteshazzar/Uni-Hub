@@ -4,19 +4,26 @@
 // ============================================
 
 (function () {
-  // Store originals
-  const _originalRenderLogin = Pages.renderLogin;
-  const _originalRenderRegister = Pages.renderRegister;
-  const _originalRenderDashboard = Pages.renderDashboard;
+  // Wait for Pages to be available
+  const waitForPages = setInterval(function () {
+    if (typeof Pages === 'undefined') {
+      return; // Not ready yet
+    }
+    clearInterval(waitForPages);
 
-  // ============================================
-  // LOGIN - Best Buy Style
-  // ============================================
-  Pages.renderLogin = function () {
-    this.showOriginalNavFooter();
+    // Store originals
+    const _originalRenderLogin = Pages.renderLogin;
+    const _originalRenderRegister = Pages.renderRegister;
+    const _originalRenderDashboard = Pages.renderDashboard;
 
-    const mainContent = document.getElementById('main-content');
-    mainContent.innerHTML =
+    // ============================================
+    // LOGIN - Best Buy Style
+    // ============================================
+    Pages.renderLogin = function () {
+      this.showOriginalNavFooter();
+
+      const mainContent = document.getElementById('main-content');
+      mainContent.innerHTML =
       '<div class="bb-auth-page">' +
       '<div class="bb-auth-branding">' +
       '<style>' +
@@ -81,102 +88,102 @@
       '</div>' +
       '</div>';
 
-    window.scrollTo({ top: 0 });
+      window.scrollTo({ top: 0 });
 
-    // Typewriter animation for Sign In page
-    (function initTypewriter () {
-      const phrases = [
-        'Welcome Back',
-        'Your Campus Marketplace',
-        'Great Deals Await You',
-        'Sign In & Start Shopping',
-      ];
-      const speed = 80;
-      const deleteSpeed = 40;
-      const pauseDuration = 2000;
-      let phraseIndex = 0;
-      let charIndex = 0;
-      let isDeleting = false;
-      let isPaused = false;
-      const textEl = document.getElementById('bb-typewriter-text');
-      const cursorEl = document.getElementById('bb-typewriter-cursor');
-      if (!textEl || !cursorEl) {
-        return;
-      }
-
-      function type () {
-        const currentPhrase = phrases[phraseIndex];
-
-        if (isPaused) {
-          setTimeout(function () {
-            isPaused = false;
-            isDeleting = true;
-            type();
-          }, pauseDuration);
+      // Typewriter animation for Sign In page
+      (function initTypewriter () {
+        const phrases = [
+          'Welcome Back',
+          'Your Campus Marketplace',
+          'Great Deals Await You',
+          'Sign In & Start Shopping',
+        ];
+        const speed = 80;
+        const deleteSpeed = 40;
+        const pauseDuration = 2000;
+        let phraseIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        let isPaused = false;
+        const textEl = document.getElementById('bb-typewriter-text');
+        const cursorEl = document.getElementById('bb-typewriter-cursor');
+        if (!textEl || !cursorEl) {
           return;
         }
 
-        if (isDeleting) {
-          charIndex--;
-          textEl.textContent = currentPhrase.substring(0, charIndex);
-          if (charIndex <= 0) {
-            isDeleting = false;
-            phraseIndex = (phraseIndex + 1) % phrases.length;
-            setTimeout(type, 300);
-          } else {
-            setTimeout(type, deleteSpeed);
+        function type () {
+          const currentPhrase = phrases[phraseIndex];
+
+          if (isPaused) {
+            setTimeout(function () {
+              isPaused = false;
+              isDeleting = true;
+              type();
+            }, pauseDuration);
+            return;
           }
-        } else {
-          charIndex++;
-          textEl.textContent = currentPhrase.substring(0, charIndex);
-          if (charIndex >= currentPhrase.length) {
-            isPaused = true;
-            setTimeout(type, pauseDuration);
+
+          if (isDeleting) {
+            charIndex--;
+            textEl.textContent = currentPhrase.substring(0, charIndex);
+            if (charIndex <= 0) {
+              isDeleting = false;
+              phraseIndex = (phraseIndex + 1) % phrases.length;
+              setTimeout(type, 300);
+            } else {
+              setTimeout(type, deleteSpeed);
+            }
           } else {
-            setTimeout(type, speed);
+            charIndex++;
+            textEl.textContent = currentPhrase.substring(0, charIndex);
+            if (charIndex >= currentPhrase.length) {
+              isPaused = true;
+              setTimeout(type, pauseDuration);
+            } else {
+              setTimeout(type, speed);
+            }
           }
         }
+
+        type();
+      })();
+    };
+
+    Pages.handleLoginBB = async function (event) {
+      event.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      const result = await authManager.login(email, password);
+      if (result.success) {
+        Pages.updateNavbar();
+        Pages.updateCartBadge();
+        Pages.renderDashboard();
+      } else {
+        alert('Login failed: ' + result.error);
+      }
+    };
+
+    // ============================================
+    // REGISTER - Best Buy Style
+    // ============================================
+    Pages.renderRegister = async function () {
+      this.showOriginalNavFooter();
+
+      const mainContent = document.getElementById('main-content');
+      let config = { universities: [] };
+      try {
+        config = await api.loadJSON('data/config.json');
+      } catch (e) {
+        console.error('Error loading config:', e);
       }
 
-      type();
-    })();
-  };
+      const uniOptions = config.universities
+        .map(function (u) {
+          return '<option value="' + u.id + '">' + u.name + '</option>';
+        })
+        .join('');
 
-  Pages.handleLoginBB = async function (event) {
-    event.preventDefault();
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    const result = await authManager.login(email, password);
-    if (result.success) {
-      Pages.updateNavbar();
-      Pages.updateCartBadge();
-      Pages.renderDashboard();
-    } else {
-      alert('Login failed: ' + result.error);
-    }
-  };
-
-  // ============================================
-  // REGISTER - Best Buy Style
-  // ============================================
-  Pages.renderRegister = async function () {
-    this.showOriginalNavFooter();
-
-    const mainContent = document.getElementById('main-content');
-    let config = { universities: [] };
-    try {
-      config = await api.loadJSON('data/config.json');
-    } catch (e) {
-      console.error('Error loading config:', e);
-    }
-
-    const uniOptions = config.universities
-      .map(function (u) {
-        return '<option value="' + u.id + '">' + u.name + '</option>';
-      })
-      .join('');
-
-    mainContent.innerHTML =
+      mainContent.innerHTML =
       '<div class="bb-auth-page">' +
       '<div class="bb-auth-branding">' +
       '<style>' +
@@ -255,114 +262,114 @@
       '</div>' +
       '</div>';
 
-    window.scrollTo({ top: 0 });
+      window.scrollTo({ top: 0 });
 
-    // Typewriter animation - mimics the React framer-motion version
-    (function initTypewriter () {
-      const phrases = [
-        'Join Uni-Hub Today',
-        'Buy & Sell on Campus',
-        'Verified Students Only',
-        'Save Up to 70%',
-      ];
-      const speed = 80;
-      const deleteSpeed = 40;
-      const pauseDuration = 2000;
-      let phraseIndex = 0;
-      let charIndex = 0;
-      let isDeleting = false;
-      let isPaused = false;
-      const textEl = document.getElementById('bb-typewriter-text');
-      const cursorEl = document.getElementById('bb-typewriter-cursor');
-      if (!textEl || !cursorEl) {
-        return;
-      }
-
-      function type () {
-        const currentPhrase = phrases[phraseIndex];
-
-        if (isPaused) {
-          setTimeout(function () {
-            isPaused = false;
-            isDeleting = true;
-            type();
-          }, pauseDuration);
+      // Typewriter animation - mimics the React framer-motion version
+      (function initTypewriter () {
+        const phrases = [
+          'Join Uni-Hub Today',
+          'Buy & Sell on Campus',
+          'Verified Students Only',
+          'Save Up to 70%',
+        ];
+        const speed = 80;
+        const deleteSpeed = 40;
+        const pauseDuration = 2000;
+        let phraseIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        let isPaused = false;
+        const textEl = document.getElementById('bb-typewriter-text');
+        const cursorEl = document.getElementById('bb-typewriter-cursor');
+        if (!textEl || !cursorEl) {
           return;
         }
 
-        if (isDeleting) {
-          charIndex--;
-          textEl.textContent = currentPhrase.substring(0, charIndex);
-          if (charIndex <= 0) {
-            isDeleting = false;
-            phraseIndex = (phraseIndex + 1) % phrases.length;
-            setTimeout(type, 300);
-          } else {
-            setTimeout(type, deleteSpeed);
+        function type () {
+          const currentPhrase = phrases[phraseIndex];
+
+          if (isPaused) {
+            setTimeout(function () {
+              isPaused = false;
+              isDeleting = true;
+              type();
+            }, pauseDuration);
+            return;
           }
-        } else {
-          charIndex++;
-          textEl.textContent = currentPhrase.substring(0, charIndex);
-          if (charIndex >= currentPhrase.length) {
-            isPaused = true;
-            setTimeout(type, pauseDuration);
+
+          if (isDeleting) {
+            charIndex--;
+            textEl.textContent = currentPhrase.substring(0, charIndex);
+            if (charIndex <= 0) {
+              isDeleting = false;
+              phraseIndex = (phraseIndex + 1) % phrases.length;
+              setTimeout(type, 300);
+            } else {
+              setTimeout(type, deleteSpeed);
+            }
           } else {
-            setTimeout(type, speed);
+            charIndex++;
+            textEl.textContent = currentPhrase.substring(0, charIndex);
+            if (charIndex >= currentPhrase.length) {
+              isPaused = true;
+              setTimeout(type, pauseDuration);
+            } else {
+              setTimeout(type, speed);
+            }
           }
         }
+
+        // Start the animation
+        type();
+      })();
+    };
+
+    Pages.handleRegisterBB = async function (event) {
+      event.preventDefault();
+      const firstName = document.getElementById('reg-firstName').value;
+      const lastName = document.getElementById('reg-lastName').value;
+      const email = document.getElementById('reg-email').value;
+      const password = document.getElementById('reg-password').value;
+      const university = document.getElementById('reg-university').value;
+      const fullName = firstName + ' ' + lastName;
+      const result = await authManager.register(fullName, email, password, university);
+      if (result.success) {
+        Pages.updateNavbar();
+        Pages.updateCartBadge();
+        Pages.renderDashboard();
+      } else {
+        alert('Registration failed: ' + result.error);
+      }
+    };
+
+    // ============================================
+    // DASHBOARD - Best Buy Style
+    // ============================================
+    Pages.renderDashboard = async function () {
+      const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
+      if (!currentUser) {
+        alert('Please login to view your dashboard.');
+        this.renderLogin();
+        return;
       }
 
-      // Start the animation
-      type();
-    })();
-  };
+      this.showOriginalNavFooter();
 
-  Pages.handleRegisterBB = async function (event) {
-    event.preventDefault();
-    const firstName = document.getElementById('reg-firstName').value;
-    const lastName = document.getElementById('reg-lastName').value;
-    const email = document.getElementById('reg-email').value;
-    const password = document.getElementById('reg-password').value;
-    const university = document.getElementById('reg-university').value;
-    const fullName = firstName + ' ' + lastName;
-    const result = await authManager.register(fullName, email, password, university);
-    if (result.success) {
-      Pages.updateNavbar();
-      Pages.updateCartBadge();
-      Pages.renderDashboard();
-    } else {
-      alert('Registration failed: ' + result.error);
-    }
-  };
+      const orders = await checkoutManager.getUserOrders(currentUser.id || '');
+      const wishlist = productsManager.getWishlist();
+      const cartCount = cartManager.getCount();
+      const initials = currentUser.fullName
+        .split(' ')
+        .map(function (n) {
+          return n[0];
+        })
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+      const recentOrders = Array.isArray(orders) ? orders.slice(0, 5) : [];
 
-  // ============================================
-  // DASHBOARD - Best Buy Style
-  // ============================================
-  Pages.renderDashboard = async function () {
-    const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
-    if (!currentUser) {
-      alert('Please login to view your dashboard.');
-      this.renderLogin();
-      return;
-    }
-
-    this.showOriginalNavFooter();
-
-    const orders = await checkoutManager.getUserOrders(currentUser.id || '');
-    const wishlist = productsManager.getWishlist();
-    const cartCount = cartManager.getCount();
-    const initials = currentUser.fullName
-      .split(' ')
-      .map(function (n) {
-        return n[0];
-      })
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-    const recentOrders = Array.isArray(orders) ? orders.slice(0, 5) : [];
-
-    const mainContent = document.getElementById('main-content');
-    mainContent.innerHTML =
+      const mainContent = document.getElementById('main-content');
+      mainContent.innerHTML =
       '<div class="bb-dashboard">' +
       '<div class="bb-dashboard-header">' +
       '<div class="bb-dashboard-header-inner">' +
@@ -612,124 +619,125 @@
       '</div>' +
       '</div>';
 
-    window.scrollTo({ top: 0 });
-  };
+      window.scrollTo({ top: 0 });
+    };
 
-  // Best Buy dashboard tab switcher
-  Pages.switchDashboardTabBB = function (tabId) {
-    document.querySelectorAll('.bb-dashboard-nav-link').forEach(function (tab) {
-      tab.classList.toggle('active', tab.dataset.tab === tabId);
-    });
-    document.querySelectorAll('.bb-panel').forEach(function (panel) {
-      panel.classList.toggle('active', panel.id === 'bb-panel-' + tabId);
-    });
-  };
+    // Best Buy dashboard tab switcher
+    Pages.switchDashboardTabBB = function (tabId) {
+      document.querySelectorAll('.bb-dashboard-nav-link').forEach(function (tab) {
+        tab.classList.toggle('active', tab.dataset.tab === tabId);
+      });
+      document.querySelectorAll('.bb-panel').forEach(function (panel) {
+        panel.classList.toggle('active', panel.id === 'bb-panel-' + tabId);
+      });
+    };
 
-  // ============================================
-  // NAVBAR INTERACTIONS
-  // ============================================
+    // ============================================
+    // NAVBAR INTERACTIONS
+    // ============================================
 
-  // Toggle expandable search bar
-  Pages.toggleSearch = function () {
-    const searchBar = document.getElementById('navbar-search');
-    if (searchBar) {
-      searchBar.classList.toggle('active');
-      if (searchBar.classList.contains('active')) {
-        const input = document.getElementById('navbar-search-input');
-        if (input) {
-          setTimeout(function () {
-            input.focus();
-          }, 100);
+    // Toggle expandable search bar
+    Pages.toggleSearch = function () {
+      const searchBar = document.getElementById('navbar-search');
+      if (searchBar) {
+        searchBar.classList.toggle('active');
+        if (searchBar.classList.contains('active')) {
+          const input = document.getElementById('navbar-search-input');
+          if (input) {
+            setTimeout(function () {
+              input.focus();
+            }, 100);
+          }
         }
       }
-    }
-  };
+    };
 
-  // Handle search submission
-  Pages.handleSearch = function () {
-    const input = document.getElementById('navbar-search-input');
-    if (input && input.value.trim()) {
-      window.location.hash = '/browse?q=' + encodeURIComponent(input.value.trim());
-      Pages.toggleSearch();
-    }
-  };
-
-  // Enter key on search input
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter' && e.target.id === 'navbar-search-input') {
-      Pages.handleSearch();
-    }
-    if (e.key === 'Escape') {
-      const searchBar = document.getElementById('navbar-search');
-      if (searchBar && searchBar.classList.contains('active')) {
+    // Handle search submission
+    Pages.handleSearch = function () {
+      const input = document.getElementById('navbar-search-input');
+      if (input && input.value.trim()) {
+        window.location.hash = '/browse?q=' + encodeURIComponent(input.value.trim());
         Pages.toggleSearch();
       }
-      Pages.closeMobileMenu();
-    }
-  });
+    };
 
-  // Toggle mobile menu drawer
-  Pages.toggleMobileMenu = function () {
-    const drawer = document.getElementById('navbar-drawer');
-    const overlay = document.getElementById('navbar-overlay');
-    if (drawer && overlay) {
-      drawer.classList.add('active');
-      overlay.classList.add('active');
-      document.body.style.overflow = 'hidden';
-    }
-  };
+    // Enter key on search input
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && e.target.id === 'navbar-search-input') {
+        Pages.handleSearch();
+      }
+      if (e.key === 'Escape') {
+        const searchBar = document.getElementById('navbar-search');
+        if (searchBar && searchBar.classList.contains('active')) {
+          Pages.toggleSearch();
+        }
+        Pages.closeMobileMenu();
+      }
+    });
 
-  // Close mobile menu drawer
-  Pages.closeMobileMenu = function () {
-    const drawer = document.getElementById('navbar-drawer');
-    const overlay = document.getElementById('navbar-overlay');
-    if (drawer && overlay) {
-      drawer.classList.remove('active');
-      overlay.classList.remove('active');
-      document.body.style.overflow = 'auto';
-    }
-  };
+    // Toggle mobile menu drawer
+    Pages.toggleMobileMenu = function () {
+      const drawer = document.getElementById('navbar-drawer');
+      const overlay = document.getElementById('navbar-overlay');
+      if (drawer && overlay) {
+        drawer.classList.add('active');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+    };
 
-  // Override updateNavbar to also update mobile drawer
-  const originalUpdateNavbar = Pages.updateNavbar;
-  Pages.updateNavbar = function () {
-    if (originalUpdateNavbar) {
-      originalUpdateNavbar.call(this);
-    }
-    const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
-    const authBtns = document.getElementById('navbar-auth-buttons');
-    const userMenu = document.getElementById('navbar-user-menu');
-    const drawerAuth = document.getElementById('navbar-drawer-auth');
-    const drawerUser = document.getElementById('navbar-drawer-user');
+    // Close mobile menu drawer
+    Pages.closeMobileMenu = function () {
+      const drawer = document.getElementById('navbar-drawer');
+      const overlay = document.getElementById('navbar-overlay');
+      if (drawer && overlay) {
+        drawer.classList.remove('active');
+        overlay.classList.remove('active');
+        document.body.style.overflow = 'auto';
+      }
+    };
 
-    if (currentUser) {
-      if (authBtns) {
-        authBtns.style.display = 'none';
+    // Override updateNavbar to also update mobile drawer
+    const originalUpdateNavbar = Pages.updateNavbar;
+    Pages.updateNavbar = function () {
+      if (originalUpdateNavbar) {
+        originalUpdateNavbar.call(this);
       }
-      if (userMenu) {
-        userMenu.style.display = 'flex';
-      }
-      if (drawerAuth) {
-        drawerAuth.style.display = 'none';
-      }
-      if (drawerUser) {
-        drawerUser.style.display = 'block';
-      }
-    } else {
-      if (authBtns) {
-        authBtns.style.display = 'flex';
-      }
-      if (userMenu) {
-        userMenu.style.display = 'none';
-      }
-      if (drawerAuth) {
-        drawerAuth.style.display = 'block';
-      }
-      if (drawerUser) {
-        drawerUser.style.display = 'none';
-      }
-    }
-  };
+      const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
+      const authBtns = document.getElementById('navbar-auth-buttons');
+      const userMenu = document.getElementById('navbar-user-menu');
+      const drawerAuth = document.getElementById('navbar-drawer-auth');
+      const drawerUser = document.getElementById('navbar-drawer-user');
 
-  console.log('✓ Best Buy auth & dashboard renderers loaded');
+      if (currentUser) {
+        if (authBtns) {
+          authBtns.style.display = 'none';
+        }
+        if (userMenu) {
+          userMenu.style.display = 'flex';
+        }
+        if (drawerAuth) {
+          drawerAuth.style.display = 'none';
+        }
+        if (drawerUser) {
+          drawerUser.style.display = 'block';
+        }
+      } else {
+        if (authBtns) {
+          authBtns.style.display = 'flex';
+        }
+        if (userMenu) {
+          userMenu.style.display = 'none';
+        }
+        if (drawerAuth) {
+          drawerAuth.style.display = 'block';
+        }
+        if (drawerUser) {
+          drawerUser.style.display = 'none';
+        }
+      }
+    };
+
+    console.log('✓ Best Buy auth & dashboard renderers loaded');
+  }, 50); // Check every 50ms
 })();
