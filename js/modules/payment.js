@@ -297,4 +297,4 @@ class PaymentManager {
 }
 
 // Create singleton instance
-const paymentManager = new PaymentManager();
+const _paymentManager = new PaymentManager();

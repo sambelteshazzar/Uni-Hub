@@ -5,9 +5,9 @@
 
 (function () {
   // Store originals
-  const originalRenderLogin = Pages.renderLogin;
-  const originalRenderRegister = Pages.renderRegister;
-  const originalRenderDashboard = Pages.renderDashboard;
+  const _originalRenderLogin = Pages.renderLogin;
+  const _originalRenderRegister = Pages.renderRegister;
+  const _originalRenderDashboard = Pages.renderDashboard;
 
   // ============================================
   // LOGIN - Best Buy Style

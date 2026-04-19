@@ -1,6 +1,7 @@
 // ============================================
 // APPLICATION CONSTANTS
 // ============================================
+/* eslint-disable no-unused-vars */
 
 const APP_NAME = 'Uni-Hub';
 const APP_VERSION = '1.0.0';

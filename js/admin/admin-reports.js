@@ -403,4 +403,4 @@ class AdminReportsManager {
 }
 
 // Create singleton instance
-const adminReportsManager = new AdminReportsManager();
+const _adminReportsManager = new AdminReportsManager();

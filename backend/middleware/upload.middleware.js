@@ -46,10 +46,10 @@ const upload = multer({
 module.exports = {
   // Upload single image
   uploadSingle: (fieldName = 'image') => upload.single(fieldName),
-  
+
   // Upload multiple images
   uploadMultiple: (fieldName = 'images', maxCount = 5) => upload.array(fieldName, maxCount),
-  
+
   // Upload multiple fields
   uploadFields: (fields) => upload.fields(fields),
 };

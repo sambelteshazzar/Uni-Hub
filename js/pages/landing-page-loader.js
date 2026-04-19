@@ -3,7 +3,7 @@
 // Loads and assembles the Good Garms–adapted landing page
 // ============================================
 
-class LandingPageLoader {
+class _LandingPageLoader {
   /**
    * Fetch an HTML component file and return its content
    * @param {string} path - Relative path from project root

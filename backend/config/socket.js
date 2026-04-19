@@ -62,7 +62,7 @@ const initializeSocket = (io) => {
 
         // Verify user is a participant
         const isParticipant = conversation.participants.some(
-          p => p.toString() === socket.userId
+          p => p.toString() === socket.userId,
         );
 
         if (!isParticipant) {
@@ -108,7 +108,7 @@ const initializeSocket = (io) => {
 
         // Verify user is a participant
         const receiver = conversation.participants.find(
-          p => p._id.toString() !== socket.userId
+          p => p._id.toString() !== socket.userId,
         );
 
         if (!receiver) {

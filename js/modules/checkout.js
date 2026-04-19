@@ -420,4 +420,4 @@ class CheckoutManager {
 }
 
 // Create singleton instance
-const checkoutManager = new CheckoutManager();
+const _checkoutManager = new CheckoutManager();

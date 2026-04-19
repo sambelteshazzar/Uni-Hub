@@ -277,4 +277,4 @@ class AdminAuthManager {
 }
 
 // Create singleton instance
-const adminAuthManager = new AdminAuthManager();
+const _adminAuthManager = new AdminAuthManager();

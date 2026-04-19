@@ -5,7 +5,7 @@
 
 (function () {
   // Store original renderLanding
-  const originalRenderLanding = Pages.renderLanding;
+  const _originalRenderLanding = Pages.renderLanding;
 
   // Override renderLanding
   Pages.renderLanding = async function () {
@@ -33,7 +33,7 @@
             '1562774053-701939374585',
             '1509062522246-3755977927d7',
           ];
-          const img = images[i % images.length];
+          const _img = images[i % images.length];
           return (
             '<div class="bb-category-card" onclick="Pages.selectUniversity(\'' +
             uni.id +

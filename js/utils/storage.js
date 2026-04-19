@@ -2,7 +2,7 @@
 // LOCAL STORAGE MANAGEMENT
 // ============================================
 
-class StorageManager {
+class _StorageManager {
   /**
    * Save data to localStorage
    * @param {string} key - Storage key

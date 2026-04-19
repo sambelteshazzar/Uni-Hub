@@ -331,4 +331,4 @@ class AuthManager {
 }
 
 // Create singleton instance
-const authManager = new AuthManager();
+const _authManager = new AuthManager();

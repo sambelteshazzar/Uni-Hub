@@ -169,7 +169,6 @@ router.put('/products/:id/reject', asyncHandler(async (req, res) => {
   });
 }));
 
-
 /**
  * @desc    Ban/suspend a user
  * @route   PUT /api/admin/users/:id/ban

@@ -3,7 +3,7 @@ import { resolve } from 'path';
 
 export default defineConfig({
   root: '.',
-  publicDir: '.',
+  publicDir: false,
   build: {
     outDir: 'dist',
     emptyOutDir: true,
@@ -12,6 +12,7 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
       },
     },
+    copyPublicDir: false,
   },
   server: {
     port: 3000,

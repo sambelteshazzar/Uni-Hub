@@ -184,4 +184,4 @@ class RegionManager {
 }
 
 // Create singleton instance
-const regionManager = new RegionManager();
+const _regionManager = new RegionManager();

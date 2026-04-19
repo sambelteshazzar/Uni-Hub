@@ -721,4 +721,4 @@ class MessagesPage {
 }
 
 // Initialize and export
-const messagesPage = new MessagesPage();
+const _messagesPage = new MessagesPage();

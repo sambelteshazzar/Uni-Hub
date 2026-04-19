@@ -340,4 +340,4 @@ class HostelProductsManager {
 
 /* exported hostelProductsManager */
 // Create hostel products manager instance
-const hostelProductsManager = new HostelProductsManager();
+const _hostelProductsManager = new HostelProductsManager();

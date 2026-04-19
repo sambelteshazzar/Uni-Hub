@@ -72,7 +72,7 @@ conversationSchema.index({ order: 1 });
 // Ensure unique conversation between two users for same product
 conversationSchema.index(
   { participants: 1, product: 1 },
-  { unique: true, partialFilterExpression: { product: { $exists: true } } }
+  { unique: true, partialFilterExpression: { product: { $exists: true } } },
 );
 
 // Virtual for getting the other participant

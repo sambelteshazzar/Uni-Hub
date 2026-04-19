@@ -349,4 +349,4 @@ class AdminProductsManager {
 }
 
 // Create singleton instance
-const adminProductsManager = new AdminProductsManager();
+const _adminProductsManager = new AdminProductsManager();

@@ -52,7 +52,7 @@ class MessageManager {
    * Load Socket.IO client library dynamically
    */
   loadSocketIO () {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, _reject) => {
       // Try CDN first as fallback
       const script = document.createElement('script');
       script.src = 'https://cdn.socket.io/4.7.2/socket.io.min.js';
@@ -540,4 +540,4 @@ class MessageManager {
 }
 
 // Initialize and export
-const messageManager = new MessageManager();
+const _messageManager = new MessageManager();

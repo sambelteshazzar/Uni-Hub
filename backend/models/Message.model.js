@@ -114,7 +114,7 @@ messageSchema.statics.markConversationAsRead = async function (conversationId, u
     {
       isRead: true,
       readAt: new Date(),
-    }
+    },
   );
 };
 

@@ -318,4 +318,4 @@ class SearchManager {
 }
 
 // Create singleton instance
-const searchManager = new SearchManager();
+const _searchManager = new SearchManager();

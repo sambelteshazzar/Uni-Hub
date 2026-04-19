@@ -351,4 +351,4 @@ class AdminUsersManager {
 }
 
 // Create singleton instance
-const adminUsersManager = new AdminUsersManager();
+const _adminUsersManager = new AdminUsersManager();

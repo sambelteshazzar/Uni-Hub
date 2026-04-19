@@ -3,7 +3,7 @@
 // FORM VALIDATION UTILITIES
 // ============================================
 
-class Validator {
+class _Validator {
   /**
    * Validate email address
    * @param {string} email

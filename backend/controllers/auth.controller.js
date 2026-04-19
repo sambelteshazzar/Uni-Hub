@@ -1,4 +1,4 @@
-const jwt = require("jsonwebtoken");
+const jwt = require('jsonwebtoken');
 /**
  * ============================================
  * Authentication Controller
@@ -7,7 +7,7 @@ const jwt = require("jsonwebtoken");
  */
 
 const User = require('../models/User.model');
-const { generateToken } = require('../utils/token.util');
+const { generateToken, generateResetToken } = require('../utils/token.util');
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
 
 /**
@@ -81,7 +81,7 @@ exports.login = asyncHandler(async (req, res) => {
       403,
       user.banReason
         ? `Account suspended: ${user.banReason}`
-        : 'Your account has been suspended. Contact support for more information.'
+        : 'Your account has been suspended. Contact support for more information.',
     );
   }
 

@@ -466,7 +466,7 @@ exports.respondToReview = async (req, res) => {
 /**
  * Helper: Update seller's average rating
  */
-async function updateSellerRating(sellerId) {
+async function updateSellerRating (sellerId) {
   try {
     const summary = await Review.calculateAverageRating(sellerId);
 

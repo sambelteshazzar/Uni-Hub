@@ -49,7 +49,7 @@ exports.sendMessage = async (req, res) => {
       conversation = await Conversation.findOrCreateConversation(
         req.user._id,
         receiverId,
-        productId
+        productId,
       );
     }
 
@@ -117,7 +117,7 @@ exports.getConversationMessages = async (req, res) => {
     }
 
     const isParticipant = conversation.participants.some(
-      p => p.toString() === req.user._id.toString()
+      p => p.toString() === req.user._id.toString(),
     );
 
     if (!isParticipant) {
@@ -226,7 +226,7 @@ exports.getConversation = async (req, res) => {
 
     // Verify user is participant
     const isParticipant = conversation.participants.some(
-      p => p._id.toString() === req.user._id.toString()
+      p => p._id.toString() === req.user._id.toString(),
     );
 
     if (!isParticipant) {

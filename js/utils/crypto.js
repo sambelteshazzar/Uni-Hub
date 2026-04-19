@@ -4,7 +4,7 @@
 // Uses Web Crypto API (native to modern browsers)
 // For production, implement on backend with bcryptjs
 
-class CryptoUtil {
+class _CryptoUtil {
   /**
    * Hash a password using SHA-256
    * Note: SHA-256 is not ideal for passwords (use bcrypt on backend)
