@@ -4,45 +4,40 @@
 // ============================================
 
 (function () {
-  // Wait for Pages to be available
-  const waitForPages = setInterval(function () {
-    if (typeof Pages === 'undefined' || typeof api === 'undefined') {
-      return; // Not ready yet
-    }
-    clearInterval(waitForPages);
+  // eslint-disable-next-line no-console
+  console.log('🔧 bestbuy-landing.js module loaded');
 
-    // Store original renderLanding
-    const _originalRenderLanding = Pages.renderLanding;
-
-    // Override renderLanding
-    Pages.renderLanding = async function () {
+  // Define the Best Buy landing page renderer function
+  const renderBestBuyLanding = async function () {
+    // eslint-disable-next-line no-console
+    console.log('🎨 Best Buy renderLanding called');
     // DON'T hide navbar - we need the Sign In/Sign Up buttons visible
     // Just show the footer since we have our own landing content
 
-      const mainContent = document.getElementById('main-content');
-      let config = { universities: [], categories: [] };
+    const mainContent = document.getElementById('main-content');
+    let config = { universities: [], categories: [] };
 
-      try {
-        config = await api.loadJSON('data/config.json');
-      } catch (error) {
-        console.error('Error loading config:', error);
-      }
+    try {
+      config = await window.api.loadJSON('data/config.json');
+    } catch (error) {
+      console.error('Error loading config:', error);
+    }
 
-      // Build universities HTML
-      let universitiesHTML = '';
-      if (config.universities && config.universities.length > 0) {
-        universitiesHTML = config.universities
-          .map(function (uni, i) {
-            const images = [
-              '1541339907198-e08756dedf3f',
-              '1592280771190-3e2e4d571952',
-              '1523050854058-8df90110c9f1',
-              '1562774053-701939374585',
-              '1509062522246-3755977927d7',
-            ];
-            const _img = images[i % images.length];
-            return (
-              '<div class="bb-category-card" onclick="Pages.selectUniversity(\'' +
+    // Build universities HTML
+    let universitiesHTML = '';
+    if (config.universities && config.universities.length > 0) {
+      universitiesHTML = config.universities
+        .map(function (uni, i) {
+          const images = [
+            '1541339907198-e08756dedf3f',
+            '1592280771190-3e2e4d571952',
+            '1523050854058-8df90110c9f1',
+            '1562774053-701939374585',
+            '1509062522246-3755977927d7',
+          ];
+          const _img = images[i % images.length];
+          return (
+            '<div class="bb-category-card" onclick="Pages.selectUniversity(\'' +
             uni.id +
             '\'); return false;">' +
             '<div class="bb-category-icon">🎓</div>' +
@@ -53,28 +48,28 @@
             (100 + i * 50) +
             '+ items</p>' +
             '</div>'
-            );
-          })
-          .join('');
-      }
+          );
+        })
+        .join('');
+    }
 
-      // Build categories HTML
-      let categoriesHTML = '';
-      if (config.categories && config.categories.length > 0) {
-        const icons = {
-          textbooks: '📚',
-          electronics: '💻',
-          dorm: '🏠',
-          clothing: '👕',
-          sports: '⚽',
-          furniture: '🪑',
-          other: '📦',
-        };
-        categoriesHTML = config.categories
-          .map(function (cat) {
-            const icon = icons[cat.id] || '📦';
-            return (
-              '<a href="#/browse?category=' +
+    // Build categories HTML
+    let categoriesHTML = '';
+    if (config.categories && config.categories.length > 0) {
+      const icons = {
+        textbooks: '📚',
+        electronics: '💻',
+        dorm: '🏠',
+        clothing: '👕',
+        sports: '⚽',
+        furniture: '🪑',
+        other: '📦',
+      };
+      categoriesHTML = config.categories
+        .map(function (cat) {
+          const icon = icons[cat.id] || '📦';
+          return (
+            '<a href="#/browse?category=' +
             cat.id +
             '" class="bb-category-card">' +
             '<div class="bb-category-icon">' +
@@ -87,12 +82,12 @@
             (cat.count || '50+') +
             ' items</p>' +
             '</a>'
-            );
-          })
-          .join('');
-      }
+          );
+        })
+        .join('');
+    }
 
-      mainContent.innerHTML =
+    mainContent.innerHTML =
       '<div class="bb-landing">' +
       '<!-- Hero Section -->' +
       '<section class="bb-hero" style="min-height: 85vh; display: flex; align-items: center; padding: 6rem 2rem 4rem; position: relative; overflow: hidden; background: linear-gradient(135deg, #0046be 0%, #003399 100%);">' +
@@ -286,10 +281,37 @@
       '</section>' +
       '</div>';
 
-      // Scroll to top
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-    console.log('✅ Best Buy landing page renderer loaded');
-  }, 50); // Check every 50ms
+  // Try to immediately override Pages.renderLanding
+  // eslint-disable-next-line no-console
+  console.log('📋 Checking if Pages is available...');
+  if (typeof window.Pages !== 'undefined') {
+    // eslint-disable-next-line no-console
+    console.log('✅ Pages found immediately, overriding renderLanding');
+    // eslint-disable-next-line no-console
+    console.log('Original renderLanding:', typeof window.Pages.renderLanding);
+    window.Pages.renderLanding = renderBestBuyLanding;
+    console.log('✅ Best Buy landing page renderer loaded (immediate)');
+    console.log('New renderLanding:', typeof window.Pages.renderLanding);
+    // Signal that best buy landing is ready
+    window._bestBuyLandingReady = true;
+    window.dispatchEvent(new CustomEvent('module-loaded', { detail: 'BestBuyLandingReady' }));
+  } else {
+    console.log('⏳ Pages not found, waiting...');
+    // Fallback: wait for Pages to be available
+    const waitForPages = setInterval(function () {
+      if (typeof window.Pages !== 'undefined') {
+        clearInterval(waitForPages);
+        console.log('✅ Pages found after waiting, overriding renderLanding');
+        window.Pages.renderLanding = renderBestBuyLanding;
+        console.log('✅ Best Buy landing page renderer loaded (deferred)');
+        // Signal that best buy landing is ready
+        window._bestBuyLandingReady = true;
+        window.dispatchEvent(new CustomEvent('module-loaded', { detail: 'BestBuyLandingReady' }));
+      }
+    }, 50); // Check every 50ms
+  }
 })();

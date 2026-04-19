@@ -320,7 +320,7 @@
       console.log('App initialization script loaded');
       
       // Wait for critical modules to load before initializing
-      const requiredModules = ['StorageManager', 'Pages', 'app', 'router'];
+      const requiredModules = ['StorageManager', 'Pages', 'app', 'router', 'BestBuyLandingReady'];
       const loadedModules = new Set();
       
       const moduleLoader = new Promise((resolve) => {
@@ -331,6 +331,7 @@
             if (mod === 'app' && typeof window.app !== 'undefined') return true;
             if (mod === 'Pages' && typeof window.Pages !== 'undefined') return true;
             if (mod === 'StorageManager' && typeof window.StorageManager !== 'undefined') return true;
+            if (mod === 'BestBuyLandingReady' && window._bestBuyLandingReady === true) return true;
             return false;
           });
           
