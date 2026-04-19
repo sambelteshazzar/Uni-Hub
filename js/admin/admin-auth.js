@@ -280,4 +280,10 @@ class AdminAuthManager {
 }
 
 // Create singleton instance
-const _adminAuthManager = new AdminAuthManager();
+const adminAuthManager = new AdminAuthManager();
+
+// Export to window for cross-module access
+window.adminAuthManager = adminAuthManager;
+if (typeof dispatchEvent !== 'undefined') {
+  dispatchEvent(new Event('module-loaded', { detail: 'AdminAuthManager' }));
+}

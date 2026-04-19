@@ -484,4 +484,10 @@ class NotificationManager {
 }
 
 // Create singleton instance
-const _notificationManager = new NotificationManager();
+const notificationManager = new NotificationManager();
+
+// Export to window for cross-module access
+window.notificationManager = notificationManager;
+if (typeof dispatchEvent !== 'undefined') {
+  dispatchEvent(new Event('module-loaded', { detail: 'NotificationManager' }));
+}

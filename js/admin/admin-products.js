@@ -349,4 +349,10 @@ class AdminProductsManager {
 }
 
 // Create singleton instance
-const _adminProductsManager = new AdminProductsManager();
+const adminProductsManager = new AdminProductsManager();
+
+// Export to window for cross-module access
+window.adminProductsManager = adminProductsManager;
+if (typeof dispatchEvent !== 'undefined') {
+  dispatchEvent(new Event('module-loaded', { detail: 'AdminProductsManager' }));
+}

@@ -212,4 +212,10 @@ class ToastManager {
 }
 
 // Create singleton instance
-const _toastManager = new ToastManager();
+const toastManager = new ToastManager();
+
+// Export to window for cross-module access
+window.toastManager = toastManager;
+if (typeof dispatchEvent !== 'undefined') {
+  dispatchEvent(new Event('module-loaded', { detail: 'ToastManager' }));
+}

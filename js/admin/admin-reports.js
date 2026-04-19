@@ -403,4 +403,10 @@ class AdminReportsManager {
 }
 
 // Create singleton instance
-const _adminReportsManager = new AdminReportsManager();
+const adminReportsManager = new AdminReportsManager();
+
+// Export to window for cross-module access
+window.adminReportsManager = adminReportsManager;
+if (typeof dispatchEvent !== 'undefined') {
+  dispatchEvent(new Event('module-loaded', { detail: 'AdminReportsManager' }));
+}

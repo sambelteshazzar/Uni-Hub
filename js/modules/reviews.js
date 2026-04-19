@@ -364,4 +364,10 @@ class ReviewManager {
 }
 
 // Initialize and export
-const _reviewManager = new ReviewManager();
+const reviewManager = new ReviewManager();
+
+// Export to window for cross-module access
+window.reviewManager = reviewManager;
+if (typeof dispatchEvent !== 'undefined') {
+  dispatchEvent(new Event('module-loaded', { detail: 'ReviewManager' }));
+}

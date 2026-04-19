@@ -354,4 +354,10 @@ class AdminUsersManager {
 }
 
 // Create singleton instance
-const _adminUsersManager = new AdminUsersManager();
+const adminUsersManager = new AdminUsersManager();
+
+// Export to window for cross-module access
+window.adminUsersManager = adminUsersManager;
+if (typeof dispatchEvent !== 'undefined') {
+  dispatchEvent(new Event('module-loaded', { detail: 'AdminUsersManager' }));
+}
