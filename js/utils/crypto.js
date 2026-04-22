@@ -56,3 +56,11 @@ class _CryptoUtil {
   }
 }
 
+// Export CryptoUtil class to window for cross-module access
+window.CryptoUtil = _CryptoUtil;
+
+// Dispatch module-loaded event
+if (typeof dispatchEvent !== 'undefined') {
+  dispatchEvent(new Event('module-loaded', { detail: 'CryptoUtil' }));
+}
+
