@@ -125,10 +125,12 @@ class Validator {
   }
 }
 
-// Export singleton instance
-const validator = new Validator();
-
-// Make globally available for module scripts
+// Export Validator class for static method access
 if (typeof window !== 'undefined') {
-  window.Validator = validator;
+  window.Validator = Validator;
+}
+
+// Also dispatch module-loaded event
+if (typeof dispatchEvent !== 'undefined') {
+  dispatchEvent(new Event('module-loaded', { detail: 'Validator' }));
 }
