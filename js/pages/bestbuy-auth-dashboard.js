@@ -242,6 +242,10 @@
       '</button>' +
       '</div>' +
       '</div>' +
+      '<div class="bb-form-group">' +
+      '<label for="reg-phone" class="bb-form-label">Phone Number <span class="required-star">*</span></label>' +
+      '<input type="tel" id="reg-phone" name="phone" class="bb-form-input" placeholder="+233 50 123 4567" required />' +
+      '</div>' +
       '<div class="bb-university-select">' +
       '<label for="reg-university" class="bb-form-label">University <span class="required-star">*</span></label>' +
       '<select id="reg-university" name="university" class="bb-form-input" required>' +
@@ -329,10 +333,20 @@
       const firstName = document.getElementById('reg-firstName').value;
       const lastName = document.getElementById('reg-lastName').value;
       const email = document.getElementById('reg-email').value;
+      const phone = document.getElementById('reg-phone').value;
       const password = document.getElementById('reg-password').value;
       const university = document.getElementById('reg-university').value;
       const fullName = firstName + ' ' + lastName;
-      const result = await authManager.register(fullName, email, password, university);
+
+      const userData = {
+        fullName: fullName,
+        email: email,
+        phone: phone,
+        password: password,
+        university: university,
+      };
+
+      const result = await authManager.register(userData);
       if (result.success) {
         Pages.updateNavbar();
         Pages.updateCartBadge();
