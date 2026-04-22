@@ -157,7 +157,7 @@
       if (result.success) {
         Pages.updateNavbar();
         Pages.updateCartBadge();
-        Pages.renderDashboard();
+        Pages.renderBrowseProducts();
       } else {
         alert('Login failed: ' + result.error);
       }
@@ -350,7 +350,7 @@
       if (result.success) {
         Pages.updateNavbar();
         Pages.updateCartBadge();
-        Pages.renderDashboard();
+        Pages.renderBrowseProducts();
       } else {
         alert('Registration failed: ' + result.error);
       }
