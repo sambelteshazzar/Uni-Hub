@@ -26,14 +26,15 @@ router.get('/stats', asyncHandler(async (req, res) => {
   const totalProducts = await Product.countDocuments();
   const totalOrders = await Order.countDocuments();
 
-  const pendingVerifications = await require('../models/StudentVerification.model')
-    .countDocuments({ status: 'pending' });
+    const pendingVerifications = await require('../models/StudentVerification.model')
+      .countDocuments({ status: 'pending' });
 
-  // Revenue calculation (completed orders)
-  const completedOrders = await Order.find({ 'payment.status': 'completed' });
-  const totalRevenue = completedOrders.reduce((sum, order) => {
-    return sum + order.pricing.grandTotal;
-  }, 0);
+    // Revenue calculation using aggregation (avoids loading all orders into memory)
+    const revenueResult = await Order.aggregate([
+      { $match: { 'payment.status': 'completed' } },
+      { $group: { _id: null, totalRevenue: { $sum: '$pricing.grandTotal' } } },
+    ]);
+    const totalRevenue = revenueResult.length > 0 ? revenueResult[0].totalRevenue : 0;
 
   // Recent orders
   const recentOrders = await Order.find()

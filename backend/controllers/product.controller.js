@@ -318,21 +318,30 @@ exports.uploadProductImages = asyncHandler(async (req, res) => {
   const { uploadImage } = require('../utils/cloudinary.util');
   const uploadedUrls = [];
 
-  for (const file of req.files) {
-    try {
-      const result = await uploadImage(file.path);
-      uploadedUrls.push(result.secure_url);
-    } catch (error) {
-      console.error(`Failed to upload ${file.originalname}:`, error.message);
+    for (const file of req.files) {
+      try {
+        const result = await uploadImage(file.path);
+        uploadedUrls.push(result.secure_url);
+      } catch (error) {
+        console.error(`Failed to upload ${file.originalname}:`, error.message);
+      } finally {
+        const fs = require('fs');
+        try { fs.unlinkSync(file.path); } catch (e) { /* ignore cleanup errors */ }
+      }
     }
-  }
 
-  if (uploadedUrls.length === 0) {
-    throw new ApiError(500, 'Failed to upload any images');
-  }
+    if (uploadedUrls.length === 0) {
+      throw new ApiError(500, 'Failed to upload any images');
+    }
 
-  // Add to product images array
-  product.images = [...(product.images || []), ...uploadedUrls];
+    // Enforce max 5 images per product
+    const maxImages = 5;
+    const currentCount = (product.images || []).length;
+    if (currentCount + uploadedUrls.length > maxImages) {
+      product.images = [...(product.images || []), ...uploadedUrls.slice(0, maxImages - currentCount)];
+    } else {
+      product.images = [...(product.images || []), ...uploadedUrls];
+    }
   await product.save();
 
   res.json({

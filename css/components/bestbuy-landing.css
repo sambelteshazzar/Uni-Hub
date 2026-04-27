@@ -11,11 +11,12 @@
 }
 
 /* ============================================
-   HERO BANNER - Best Buy Style
-   Large promotional area with deals/featured
-   ============================================ */
+HERO BANNER - Best Buy Style
+Large promotional area with deals/featured
+============================================ */
 .bb-hero {
-  background: linear-gradient(135deg, #0046be 0%, #003399 100%);
+  background: linear-gradient(135deg, rgba(0, 70, 190, 0.92), rgba(0, 51, 153, 0.95)),
+              url('/assets/images/hero-students.jpg') center/cover no-repeat;
   padding: var(--space-4xl) 0;
   position: relative;
   overflow: hidden;
@@ -289,8 +290,17 @@
 }
 
 .bb-category-icon {
-  font-size: var(--text-3xl);
+  width: 32px;
+  height: 32px;
   margin-bottom: var(--space-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bb-category-icon svg {
+  width: 100%;
+  height: 100%;
 }
 
 .bb-category-name {
@@ -304,6 +314,48 @@
   font-size: var(--text-xs);
   color: #666666;
   margin: 0;
+}
+
+/* ============================================
+UNIVERSITIES SECTION - Background Image
+Added background image for "Choose Your University" section
+============================================ */
+#universities .bb-section-header {
+  position: relative;
+  padding: 3rem 2rem;
+  margin-bottom: var(--space-2xl);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(0, 70, 190, 0.85), rgba(0, 51, 153, 0.9)),
+              url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1200&h=400&fit=crop') center/cover no-repeat;
+  text-align: center;
+  overflow: hidden;
+}
+
+#universities .bb-section-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1200&h=400&fit=crop') center/cover no-repeat;
+  opacity: 0.3;
+  z-index: 0;
+}
+
+#universities .bb-section-title {
+  position: relative;
+  z-index: 1;
+  color: #ffffff;
+  font-size: var(--text-3xl);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+#universities .bb-section-subtitle {
+  position: relative;
+  z-index: 1;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: var(--text-lg);
 }
 
 /* ============================================
@@ -441,4 +493,48 @@
   .bb-steps-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ============================================
+HERO TEXT ANIMATION
+Scale-in effect for "Buy & sell with students like you"
+============================================ */
+
+#hero-animated-text {
+  /* Prevent line breaks in the entire text */
+  white-space: nowrap;
+  /* Ensure text is visible */
+  color: #ffffff;
+  letter-spacing: normal;
+}
+
+#hero-animated-text .hero-char {
+  /* Each animated character - must be inline-block for transform */
+  display: inline-block !important;
+  will-change: transform, opacity;
+  /* Prevent line breaks between characters */
+  white-space: nowrap;
+  /* Initial state */
+  opacity: 0;
+  transform: scale(0);
+  /* Ensure proper vertical alignment */
+  vertical-align: middle;
+  /* Prevent margin issues */
+  margin: 0;
+  padding: 0;
+}
+
+/* Preserve the yellow color for "students like you" */
+#hero-animated-text > span[style*="color:#ffce00"],
+#hero-animated-text > span[style*="color: #ffce00"] {
+  color: #ffce00 !important;
+  /* Prevent line breaks in yellow text */
+  white-space: nowrap;
+  display: inline;
+}
+
+/* Ensure yellow text characters inherit color */
+#hero-animated-text > span[style*="color:#ffce00"] .hero-char,
+#hero-animated-text > span[style*="color: #ffce00"] .hero-char {
+  color: #ffce00 !important;
 }

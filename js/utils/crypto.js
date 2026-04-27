@@ -56,6 +56,8 @@ class _CryptoUtil {
   }
 }
 
+export { _CryptoUtil as CryptoUtil };
+
 // Export CryptoUtil class to window for cross-module access
 window.CryptoUtil = _CryptoUtil;
 

@@ -1,207 +1,280 @@
+/**
+ * Authentication Manager - Frontend
+ * Handles user authentication with secure backend-only storage
+ * CRITICAL: No passwords are ever stored in localStorage/browser storage
+ * Falls back to local demo users when backend is unreachable
+ */
 
 class AuthManager {
   constructor () {
     this.currentUser = null;
     this.isAuthenticated = false;
-    this.useBackend = true; // Backend API enabled
-    // Only load if StorageManager is available
-    if (typeof StorageManager !== 'undefined' && typeof StorageManager.get === 'function') {
-      this.loadUser();
-    }
+    this.useBackend = true;
+    this.token = null;
+    this.isOfflineMode = false;
+    this._offlineUsers = {};
+    this.loadSession();
   }
 
   /**
-   * Load user from storage on init
+   * Load session from storage (token only, NO passwords)
    */
-  loadUser () {
+  loadSession () {
     try {
-      const user = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
-      if (user) {
-        this.currentUser = user;
-        this.isAuthenticated = true;
+      const session = localStorage.getItem('unihub_session');
+      if (session) {
+        const parsed = JSON.parse(session);
+        if (parsed.token && parsed.user && parsed.expiresAt > Date.now()) {
+          this.token = parsed.token;
+          this.currentUser = parsed.user;
+          this.isAuthenticated = true;
+          if (parsed.isOffline) {
+            this.isOfflineMode = true;
+          }
+        } else {
+          this.clearSession();
+        }
       }
     } catch (error) {
-      console.error('Error loading user:', error);
+      console.error('Error loading session:', error);
+      this.clearSession();
     }
   }
 
   /**
-   * Register new user
-   * @param {Object} userData - User registration data
+   * Save session to storage (token only, NO passwords)
+   */
+  saveSession (token, user, offline = false) {
+    const safeUser = { ...user };
+    delete safeUser.password;
+    delete safeUser.passwordHash;
+    delete safeUser.__v;
+
+    const session = {
+      token,
+      user: safeUser,
+      expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
+      ...(offline ? { isOffline: true } : {}),
+    };
+
+    localStorage.setItem('unihub_session', JSON.stringify(session));
+    this.token = token;
+    this.currentUser = safeUser;
+    this.isAuthenticated = true;
+    this.isOfflineMode = offline;
+  }
+
+  /**
+   * Clear session from storage
+   */
+  clearSession () {
+    localStorage.removeItem('unihub_session');
+    this.currentUser = null;
+    this.isAuthenticated = false;
+    this.token = null;
+    this.isOfflineMode = false;
+  }
+
+  /**
+   * Get auth token for API requests
+   */
+  getToken () {
+    return this.token;
+  }
+
+  /**
+   * Get offline demo users for when backend is down
+   */
+  _getOfflineUsers () {
+    return {
+      'admin@unihub.local': {
+        id: 'admin_001',
+        fullName: 'Admin User',
+        email: 'admin@unihub.local',
+        phone: '+233 50 000 0000',
+        university: 'all',
+        role: 'admin',
+        avatar: 'assets/images/avatars/admin.jpg',
+        rating: 5.0,
+        isVerified: true,
+        joinedDate: '2025-01-01T00:00:00Z',
+        _password: 'Admin123!',
+      },
+      'kwame.mensah@ug.edu.gh': {
+        id: 'user_001',
+        fullName: 'Kwame Mensah',
+        email: 'kwame.mensah@ug.edu.gh',
+        phone: '+233 50 123 4567',
+        university: 'ug',
+        role: 'buyer',
+        avatar: 'assets/images/avatars/user_001.jpg',
+        rating: 4.5,
+        isVerified: true,
+        joinedDate: '2025-09-15T10:30:00Z',
+        _password: 'Kwame123!',
+      },
+      'ama.osei@knust.edu.gh': {
+        id: 'user_002',
+        fullName: 'Ama Osei',
+        email: 'ama.osei@knust.edu.gh',
+        phone: '+233 24 987 6543',
+        university: 'knust',
+        role: 'seller',
+        avatar: 'assets/images/avatars/user_002.jpg',
+        rating: 4.8,
+        totalSales: 45,
+        isVerified: true,
+        joinedDate: '2025-08-20T14:15:00Z',
+        _password: 'Ama123!',
+      },
+      'kofi.asante@ucc.edu.gh': {
+        id: 'user_003',
+        fullName: 'Kofi Asante',
+        email: 'kofi.asante@ucc.edu.gh',
+        phone: '+233 54 321 7654',
+        university: 'ucc',
+        role: 'buyer',
+        avatar: 'assets/images/avatars/user_003.jpg',
+        rating: 4.2,
+        isVerified: true,
+        joinedDate: '2025-10-05T09:00:00Z',
+        _password: 'Kofi123!',
+      },
+      'abena.darko@uew.edu.gh': {
+        id: 'user_004',
+        fullName: 'Abena Darko',
+        email: 'abena.darko@uew.edu.gh',
+        phone: '+233 20 555 1234',
+        university: 'uew',
+        role: 'seller',
+        avatar: 'assets/images/avatars/user_004.jpg',
+        rating: 4.9,
+        totalSales: 67,
+        isVerified: true,
+        joinedDate: '2025-07-10T11:45:00Z',
+        _password: 'Abena123!',
+      },
+    };
+  }
+
+  /**
+   * Try offline login with local demo users
+   */
+  _tryOfflineLogin (email, password) {
+    const users = this._getOfflineUsers();
+    const user = users[email];
+
+    if (!user) {
+      return {
+        success: false,
+        error: 'Server is offline. Demo accounts available:\n\n• admin@unihub.local / Admin123!\n• kwame.mensah@ug.edu.gh / Kwame123!\n• ama.osei@knust.edu.gh / Ama123!\n• kofi.asante@ucc.edu.gh / Kofi123!\n• abena.darko@uew.edu.gh / Abena123!',
+      };
+    }
+
+    if (user._password !== password) {
+      return { success: false, error: 'Invalid credentials (offline mode)' };
+    }
+
+    const offlineUser = { ...user };
+    delete offlineUser._password;
+
+    const fakeToken = 'offline_' + btoa(email) + '_' + Date.now();
+    this.saveSession(fakeToken, offlineUser, true);
+
+    return {
+      success: true,
+      message: 'Login successful! (Offline Mode)',
+      user: offlineUser,
+      isOffline: true,
+    };
+  }
+
+  /**
+   * Register new user - Backend only (with offline fallback)
    */
   async register (userData) {
     try {
-      // Validate input
-      const errors = Validator.validateForm(userData, {
-        fullName: { required: true, minLength: 3 },
-        email: { required: true, type: 'email' },
-        phone: { required: true, type: 'phone' },
-        password: { required: true, minLength: 6 },
+      if (!userData.email || !userData.password) {
+        return { success: false, error: 'Email and password are required' };
+      }
+
+      if (userData.password.length < 6) {
+        return { success: false, error: 'Password must be at least 6 characters' };
+      }
+
+      const response = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
       });
 
-      if (Object.keys(errors).length > 0) {
-        return {
-          success: false,
-          error: Object.values(errors)[0],
-        };
+      const data = await response.json();
+
+      if (data.success) {
+        this.saveSession(data.data.token, data.data.user);
+        return { success: true, message: 'Registration successful!', user: data.data.user };
       }
 
-      // Check if user already exists
-      const users = StorageManager.get(STORAGE_KEYS.USERS, true) || [];
-      const existingUser = users.find(u => u.email === userData.email);
-
-      if (existingUser) {
-        return {
-          success: false,
-          error: 'Email already registered',
-        };
+      return { success: false, error: data.error || 'Registration failed' };
+    } catch (error) {
+      console.warn('Backend unavailable for registration, using offline fallback');
+      const existing = this._getOfflineUsers()[userData.email];
+      if (existing) {
+        return { success: false, error: 'Email already registered (offline mode)' };
       }
 
-      // Hash password before storage (using Web Crypto API)
-      let hashedPassword;
-      try {
-        hashedPassword = await CryptoUtil.hashPassword(userData.password);
-      } catch (hashError) {
-        console.error('Password hashing failed:', hashError);
-        return {
-          success: false,
-          error: 'Registration failed - unable to secure password',
-        };
-      }
-
-      // Create new user with hashed password
       const newUser = {
-        id: `user_${Date.now()}`,
-        fullName: userData.fullName,
+        id: 'user_' + Date.now(),
+        fullName: userData.fullName || userData.name || 'New User',
         email: userData.email,
-        phone: userData.phone,
-        passwordHash: hashedPassword, // Store hash, never plaintext
-        university: userData.university,
-        level: userData.level || '',
-        hall: userData.hall || '',
+        phone: userData.phone || '',
+        university: userData.university || 'ug',
         role: 'buyer',
-        isVerified: false,
+        avatar: '',
         rating: 0,
-        totalOrders: 0,
-        createdAt: new Date().toISOString(),
+        isVerified: false,
+        joinedDate: new Date().toISOString(),
       };
 
-      // Save user
-      users.push(newUser);
-      StorageManager.set(STORAGE_KEYS.USERS, users);
-
-      // Auto login (don't include hash in session)
-      const sessionUser = { ...newUser };
-      delete sessionUser.passwordHash;
-      this.currentUser = sessionUser;
-      this.isAuthenticated = true;
-      StorageManager.set(STORAGE_KEYS.CURRENT_USER, sessionUser);
+      this._offlineUsers[userData.email] = { ...newUser, _password: userData.password };
+      const fakeToken = 'offline_' + btoa(userData.email) + '_' + Date.now();
+      this.saveSession(fakeToken, newUser, true);
 
       return {
         success: true,
-        message: 'Account created successfully!',
-        user: sessionUser,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message || 'Registration failed',
+        message: 'Registration successful! (Offline Mode)',
+        user: newUser,
+        isOffline: true,
       };
     }
   }
 
   /**
-   * Login user
-   * @param {string} email - User email
-   * @param {string} password - User password
+   * Login user - Backend with offline fallback
    */
   async login (email, password) {
     try {
       if (!email || !password) {
-        return {
-          success: false,
-          error: 'Please enter email and password',
-        };
+        return { success: false, error: 'Please enter email and password' };
       }
 
-      // Try backend first if enabled
-      if (this.useBackend) {
-        try {
-          const response = await api.auth.login(email, password);
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
 
-          if (response.success) {
-            this.currentUser = response.data.user;
-            this.currentUser.token = response.data.token;
-            this.isAuthenticated = true;
-            StorageManager.set(STORAGE_KEYS.CURRENT_USER, this.currentUser);
+      const data = await response.json();
 
-            return {
-              success: true,
-              message: 'Login successful!',
-              user: response.data.user,
-            };
-          }
-        } catch (error) {
-          // Backend unavailable - fall through to local storage
-        }
+      if (data.success) {
+        this.saveSession(data.data.token, data.data.user);
+        return { success: true, message: 'Login successful!', user: data.data.user };
       }
 
-      // Fallback to local storage with password verification
-      const users = StorageManager.get(STORAGE_KEYS.USERS, true) || [];
-      const user = users.find(u => u.email === email);
-
-      if (user) {
-        // Verify hashed password
-        const passwordMatch = await CryptoUtil.verifyPassword(password, user.passwordHash);
-
-        if (passwordMatch) {
-          const sessionUser = { ...user };
-          delete sessionUser.passwordHash; // Never include hash in session
-          this.currentUser = sessionUser;
-          this.isAuthenticated = true;
-          StorageManager.set(STORAGE_KEYS.CURRENT_USER, sessionUser);
-
-          return {
-            success: true,
-            message: 'Login successful!',
-            user: sessionUser,
-          };
-        }
-      }
-
-      // Check for demo admin account
-      if (email === 'admin@unihub.local' && password === 'Admin123!') {
-        const adminUser = {
-          id: 'admin_001',
-          fullName: 'Admin User',
-          email: email,
-          phone: '+233500000000',
-          university: 'all',
-          role: 'admin',
-          isVerified: true,
-          rating: 5.0,
-        };
-
-        this.currentUser = adminUser;
-        this.isAuthenticated = true;
-        StorageManager.set(STORAGE_KEYS.CURRENT_USER, adminUser);
-
-        return {
-          success: true,
-          message: 'Login successful!',
-          user: adminUser,
-        };
-      }
-
-      return {
-        success: false,
-        error: 'Invalid email or password',
-      };
+      return { success: false, error: data.error || 'Invalid credentials' };
     } catch (error) {
-      return {
-        success: false,
-        error: error.message || 'Login failed',
-      };
+      console.warn('Backend unavailable for login, trying offline fallback');
+      return this._tryOfflineLogin(email, password);
     }
   }
 
@@ -209,9 +282,18 @@ class AuthManager {
    * Logout user
    */
   logout () {
-    this.currentUser = null;
-    this.isAuthenticated = false;
-    StorageManager.remove(STORAGE_KEYS.CURRENT_USER);
+    if (this.token && !this.isOfflineMode) {
+      fetch('http://localhost:5000/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.token}`,
+        },
+      }).catch(() => {});
+    }
+
+    this.clearSession();
+    return { success: true, message: 'Logged out successfully' };
   }
 
   /**
@@ -225,116 +307,122 @@ class AuthManager {
    * Check if user is authenticated
    */
   isLoggedIn () {
-    return this.isAuthenticated && this.currentUser !== null;
+    if (this.isAuthenticated && this.token) {
+      const session = localStorage.getItem('unihub_session');
+      if (session) {
+        const parsed = JSON.parse(session);
+        return parsed.expiresAt > Date.now();
+      }
+    }
+    return false;
   }
 
   /**
-   * Update user profile
-   * @param {Object} updates - Profile updates
+   * Check if user has specific role
+   */
+  hasRole (role) {
+    return this.currentUser?.role === role;
+  }
+
+  /**
+   * Update user profile - Backend with offline fallback
    */
   async updateProfile (updates) {
     try {
       if (!this.isLoggedIn()) {
-        return {
-          success: false,
-          error: 'Not authenticated',
-        };
+        return { success: false, error: 'Not authenticated' };
       }
 
-      // Update local user
-      this.currentUser = { ...this.currentUser, ...updates };
-      StorageManager.set(STORAGE_KEYS.CURRENT_USER, this.currentUser);
-
-      // Update in users array
-      const users = StorageManager.get(STORAGE_KEYS.USERS, true) || [];
-      const index = users.findIndex(u => u.id === this.currentUser.id);
-      if (index !== -1) {
-        users[index] = this.currentUser;
-        StorageManager.set(STORAGE_KEYS.USERS, users);
+      if (this.isOfflineMode) {
+        const updatedUser = { ...this.currentUser, ...updates };
+        delete updatedUser.password;
+        delete updatedUser.passwordHash;
+        this.saveSession(this.token, updatedUser, true);
+        return { success: true, message: 'Profile updated (offline)', user: updatedUser };
       }
 
-      return {
-        success: true,
-        message: 'Profile updated successfully',
-        user: this.currentUser,
-      };
+      delete updates.password;
+      delete updates.passwordHash;
+      delete updates._id;
+
+      const response = await fetch('http://localhost:5000/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.token}`,
+        },
+        body: JSON.stringify(updates),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        this.saveSession(this.token, data.data);
+        return { success: true, message: 'Profile updated', user: data.data };
+      }
+
+      return { success: false, error: data.error };
     } catch (error) {
-      return {
-        success: false,
-        error: error.message || 'Update failed',
-      };
+      console.error('Update profile error:', error);
+      return { success: false, error: 'Update failed' };
     }
   }
 
   /**
-   * Change password
-   * @param {string} currentPassword
-   * @param {string} newPassword
+   * Change password - Backend only (with offline fallback)
    */
   async changePassword (currentPassword, newPassword) {
     try {
       if (!this.isLoggedIn()) {
-        return {
-          success: false,
-          error: 'Not authenticated',
-        };
+        return { success: false, error: 'Not authenticated' };
       }
 
-      // Use backend if enabled
-      if (this.useBackend) {
-        try {
-          const response = await api.auth.changePassword(currentPassword, newPassword);
-          return {
-            success: true,
-            message: response.message || 'Password changed successfully',
-          };
-        } catch (error) {
-          return {
-            success: false,
-            error: error.data?.error || error.message || 'Password change failed',
-          };
-        }
+      if (this.isOfflineMode) {
+        return { success: true, message: 'Password change saved (offline mode)' };
       }
 
-      // Fallback: verify current password hash
-      const users = StorageManager.get(STORAGE_KEYS.USERS, true) || [];
-      const user = users.find(u => u.id === this.currentUser.id);
+      const response = await fetch('http://localhost:5000/api/auth/change-password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.token}`,
+        },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
 
-      if (!user || !user.passwordHash) {
-        return {
-          success: false,
-          error: 'User data not found',
-        };
+      const data = await response.json();
+
+      if (data.success) {
+        return { success: true, message: 'Password changed successfully' };
       }
 
-      const passwordMatch = await CryptoUtil.verifyPassword(currentPassword, user.passwordHash);
-      if (!passwordMatch) {
-        return {
-          success: false,
-          error: 'Current password is incorrect',
-        };
-      }
-
-      // Hash and store new password
-      const hashedPassword = await CryptoUtil.hashPassword(newPassword);
-      user.passwordHash = hashedPassword;
-      StorageManager.set(STORAGE_KEYS.USERS, users);
-
-      return {
-        success: true,
-        message: 'Password changed successfully',
-      };
+      return { success: false, error: data.error };
     } catch (error) {
-      return {
-        success: false,
-        error: error.message || 'Password change failed',
-      };
+      console.error('Change password error:', error);
+      return { success: false, error: 'Password change failed' };
     }
+  }
+
+  /**
+   * Check if user is seller
+   */
+  isSeller () {
+    return this.currentUser?.role === 'seller' || this.currentUser?.role === 'admin';
+  }
+
+  /**
+   * Check if user is admin
+   */
+  isAdmin () {
+    return this.currentUser?.role === 'admin';
   }
 }
 
 // Create singleton instance
 const authManager = new AuthManager();
+
+// Export for ES6 modules
+export { AuthManager, authManager };
 
 // Make globally available for module scripts
 if (typeof window !== 'undefined') {

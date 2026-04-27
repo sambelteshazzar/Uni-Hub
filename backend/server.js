@@ -6,6 +6,16 @@
  */
 
 require('dotenv').config();
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
 const http = require('http');
 const { Server } = require('socket.io');
 const express = require('express');
@@ -27,6 +37,9 @@ const deliveryRoutes = require('./routes/delivery.routes');
 const reportRoutes = require('./routes/report.routes');
 const messageRoutes = require('./routes/message.routes');
 const reviewRoutes = require('./routes/review.routes');
+const wishlistRoutes = require('./routes/wishlist.routes');
+const notificationRoutes = require('./routes/notification.routes');
+const searchRoutes = require('./routes/search.routes');
 
 // Import database configuration
 const { connectDatabase } = require('./config/database');
@@ -37,22 +50,64 @@ const { initializeSocket } = require('./config/socket');
 // Import error handlers
 const { errorHandler, notFoundHandler } = require('./utils/errorHandler');
 
+const { sanitizeMongoQuery, sanitizeXss } = require('./middleware/sanitize.middleware');
+const { csrfTokenHandler, csrfProtection } = require('./middleware/csrf.middleware');
+
 // Initialize Express app
 const app = express();
+
+// Shared io instance — set during server startup
+let io = null;
 
 // ============================================
 // Middleware
 // ============================================
 
 // Security headers
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+      imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+      connectSrc: ["'self'", 'http://localhost:5000', 'ws://localhost:5000'],
+      frameAncestors: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+    },
+  },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+}));
 
-// Enable CORS for frontend
+// HTTPS enforcement in production
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    if (req.headers['x-forwarded-proto'] && req.headers['x-forwarded-proto'] !== 'https') {
+      return res.redirect(301, `https://${req.headers.host}${req.originalUrl}`);
+    }
+    next();
+  });
+}
+
+// Enable CORS — support multiple origins from env
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:8000')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:8000',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS not allowed for this origin'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
 }));
 
 // Rate limiting - general
@@ -68,8 +123,8 @@ app.use('/api/', limiter);
 
 // Stricter rate limiting for auth endpoints
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 requests per 15 minutes
+  windowMs: 15 * 60 * 1000,
+  max: 10,
   message: {
     success: false,
     error: 'Too many authentication attempts, please try again later.',
@@ -77,9 +132,61 @@ const authLimiter = rateLimit({
 });
 app.use('/api/auth/', authLimiter);
 
+// Rate limiting for verification endpoints
+const verificationLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: {
+    success: false,
+    error: 'Too many verification attempts, please try again later.',
+  },
+});
+app.use('/api/verification/', verificationLimiter);
+
+// Rate limiting for review endpoints
+const reviewLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: {
+    success: false,
+    error: 'Too many review submissions, please try again later.',
+  },
+});
+app.use('/api/reviews/', reviewLimiter);
+
+// Rate limiting for message endpoints
+const messageLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 50,
+  message: {
+    success: false,
+    error: 'Too many messages, please slow down.',
+  },
+});
+app.use('/api/messages/', messageLimiter);
+
+// Rate limiting for order endpoints
+const orderLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: {
+    success: false,
+    error: 'Too many order requests, please try again later.',
+  },
+});
+app.use('/api/orders/', orderLimiter);
+
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Input sanitization
+app.use(sanitizeMongoQuery);
+app.use(sanitizeXss);
+
+// CSRF protection
+app.use(csrfTokenHandler);
+app.use(csrfProtection);
 
 // Compression
 app.use(compression());
@@ -135,6 +242,15 @@ app.use('/api/messages', messageRoutes);
 
 // Review routes (seller ratings)
 app.use('/api/reviews', reviewRoutes);
+
+// Wishlist routes
+app.use('/api/wishlist', wishlistRoutes);
+
+// Notification routes
+app.use('/api/notifications', notificationRoutes);
+
+// Search routes (advanced search, suggestions, trending, history)
+app.use('/api/search', searchRoutes);
 
 // ============================================
 // Error Handling
@@ -201,6 +317,19 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
+    // Validate critical environment variables
+    const requiredEnvVars = ['JWT_SECRET', 'MONGODB_URI'];
+    const missingVars = requiredEnvVars.filter(v => !process.env[v]);
+    if (missingVars.length > 0) {
+      console.error(`Missing required environment variables: ${missingVars.join(', ')}`);
+      process.exit(1);
+    }
+
+  if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32)) {
+    console.error('JWT_SECRET must be at least 32 characters in production');
+    process.exit(1);
+  }
+
     // Connect to database
     await connectDatabase();
 
@@ -208,9 +337,9 @@ const startServer = async () => {
     const server = http.createServer(app);
 
     // Initialize Socket.io
-    const io = new Server(server, {
+    io = new Server(server, {
       cors: {
-        origin: process.env.FRONTEND_URL || 'http://localhost:8000',
+        origin: allowedOrigins,
         credentials: true,
         methods: ['GET', 'POST'],
       },
@@ -218,6 +347,9 @@ const startServer = async () => {
 
     // Initialize Socket.io handlers
     initializeSocket(io);
+
+    // Make io accessible to controllers
+    app.set('io', io);
 
     // Start server
     server.listen(PORT, () => {
@@ -243,4 +375,4 @@ const startServer = async () => {
 
 startServer();
 
-module.exports = app;
+module.exports = { app, getIo: () => io };

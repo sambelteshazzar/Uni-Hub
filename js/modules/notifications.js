@@ -108,18 +108,23 @@ class NotificationManager {
    * @returns {string}
    */
   getDefaultIcon (type) {
-    const icons = {
-      success: '✅',
-      error: '❌',
-      warning: '⚠️',
-      info: 'ℹ️',
-      order: '📦',
-      payment: '💳',
-      delivery: '🚚',
-      message: '💬',
-      system: '🔔',
-    };
-    return icons[type] || 'ℹ️';
+    // Return SVG icons from Icons library if available
+    if (typeof Icons !== 'undefined') {
+      const icons = {
+        success: Icons.checkCircle,
+        error: Icons.error,
+        warning: Icons.warning,
+        info: Icons.info,
+        order: Icons.package,
+        payment: Icons.creditCard,
+        delivery: Icons.truck,
+        message: Icons.message,
+        system: Icons.bell,
+      };
+      return icons[type] || Icons.info;
+    }
+    // Fallback to simple text if Icons not loaded
+    return '';
   }
 
   /**
@@ -485,6 +490,8 @@ class NotificationManager {
 
 // Create singleton instance
 const notificationManager = new NotificationManager();
+
+export { NotificationManager, notificationManager };
 
 // Export to window for cross-module access
 window.notificationManager = notificationManager;

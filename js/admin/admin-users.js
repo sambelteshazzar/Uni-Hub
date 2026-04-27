@@ -41,8 +41,9 @@ class AdminUsersManager {
    * @returns {Array}
    */
   getAllUsers () {
-    // Also include currently logged in users from sessions
-    const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
+    // Also include currently logged in users from sessions (authManager format)
+    const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
+    const currentUser = session?.user || null;
     if (currentUser && !this.users.find(u => u.id === currentUser.id)) {
       return [...this.users, currentUser];
     }

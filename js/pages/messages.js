@@ -721,4 +721,12 @@ class MessagesPage {
 }
 
 // Initialize and export
-const _messagesPage = new MessagesPage();
+const messagesPage = new MessagesPage();
+
+// Make globally available for module scripts
+if (typeof window !== 'undefined') {
+  window.messagesPage = messagesPage;
+}
+
+// Export for ES6 modules
+export { MessagesPage, messagesPage };

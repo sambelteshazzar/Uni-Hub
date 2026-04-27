@@ -92,18 +92,22 @@ class StorageManager {
 
   /**
    * Get authentication token from storage
-   * Tries multiple locations for backward compatibility
+   * Uses 'unihub_session' (authManager's storage key)
    * @returns {string|null} - Auth token or null if not found
    */
   static getAuthToken () {
     try {
-      // Try STORAGE_KEYS.CURRENT_USER first (contains user object with token)
-      const currentUser = this.get(STORAGE_KEYS.CURRENT_USER, true);
-      if (currentUser && currentUser.token) {
-        return currentUser.token;
+      // Get session from authManager's storage key
+      const session = this.get('unihub_session', true);
+      if (session && session.token) {
+        return session.token;
       }
-      // Fallback to checking raw 'authToken' key for direct token storage
-      return this.get('authToken', false);
+      // Fallback: try STORAGE_KEYS.SESSION
+      const sessionFromKey = this.get(STORAGE_KEYS.SESSION, true);
+      if (sessionFromKey && sessionFromKey.token) {
+        return sessionFromKey.token;
+      }
+      return null;
     } catch (error) {
       console.error('Error retrieving auth token from storage:', error);
       return null;
@@ -112,8 +116,8 @@ class StorageManager {
 }
 
 // Export class for use across module scripts
+export { StorageManager };
+
 if (typeof window !== 'undefined') {
   window.StorageManager = StorageManager;
-  // Signal that this module is loaded
-  window.dispatchEvent(new CustomEvent('module-loaded', { detail: 'StorageManager' }));
 }

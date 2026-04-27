@@ -25,10 +25,57 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    // Calculate totals
+    if (!delivery || !delivery.mode) {
+      return res.status(400).json({
+        success: false,
+        error: 'Delivery information is required',
+      });
+    }
+
+    if (!payment || !payment.mode) {
+      return res.status(400).json({
+        success: false,
+        error: 'Payment information is required',
+      });
+    }
+
+    const productIds = items.map(item => item.productId);
+    const dbProducts = await Product.find({ _id: { $in: productIds } });
+
+    if (dbProducts.length !== items.length) {
+      return res.status(400).json({
+        success: false,
+        error: 'One or more products not found',
+      });
+    }
+
+    const productMap = new Map(dbProducts.map(p => [p._id.toString(), p]));
+
     let subtotal = 0;
+    const verifiedItems = [];
     for (const item of items) {
-      subtotal += item.price * item.quantity;
+      const dbProduct = productMap.get(item.productId);
+      if (!dbProduct) {
+        return res.status(400).json({
+          success: false,
+          error: `Product ${item.productId} not found`,
+        });
+      }
+      if (dbProduct.status === 'sold') {
+        return res.status(400).json({
+          success: false,
+          error: `Product "${dbProduct.title}" is no longer available`,
+        });
+      }
+      subtotal += dbProduct.price * item.quantity;
+      verifiedItems.push({
+        productId: item.productId,
+        title: dbProduct.title,
+        price: dbProduct.price,
+        quantity: item.quantity,
+        seller: dbProduct.seller,
+        image: item.image || (dbProduct.images && dbProduct.images[0]) || '',
+      });
     }
 
     const deliveryFee = delivery.mode === 'inperson' ? 0 : delivery.mode === 'yango' ? 12 : 15;
@@ -43,7 +90,7 @@ exports.createOrder = async (req, res) => {
         phone: req.user.phone,
         university: req.user.university,
       },
-      items,
+      items: verifiedItems,
       pricing: {
         subtotal,
         deliveryFee,
@@ -53,15 +100,14 @@ exports.createOrder = async (req, res) => {
       payment,
     });
 
-    // Update product status if sold
-    for (const item of items) {
-      await Product.findByIdAndUpdate(item.productId, {
-        status: 'sold',
-      });
-    }
+    // Update product statuses atomically
+    await Product.updateMany(
+      { _id: { $in: productIds } },
+      { status: 'sold' }
+    );
 
     // Update user's total orders
-    req.user.totalOrders += 1;
+    req.user.totalOrders = (req.user.totalOrders || 0) + 1;
     await req.user.save();
 
     res.status(201).json({

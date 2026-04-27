@@ -16,11 +16,7 @@ class Router {
    * Does NOT handle initial load - call start() after routes are registered
    */
   init () {
-    // Listen to hash changes (for back/forward buttons)
     window.addEventListener('hashchange', () => this.handleHashChange());
-
-    // Listen to popstate (for back/forward buttons)
-    window.addEventListener('popstate', () => this.handleHashChange());
   }
 
   /**
@@ -234,9 +230,10 @@ class Router {
 // Create singleton instance
 const router = new Router();
 
+// Export for ES6 modules
+export { Router, router };
+
 // Make globally available for module scripts
 if (typeof window !== 'undefined') {
   window.router = router;
-  // Signal that this module is loaded
-  window.dispatchEvent(new CustomEvent('module-loaded', { detail: 'router' }));
 }

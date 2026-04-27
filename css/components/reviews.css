@@ -12,6 +12,8 @@
 .star {
   color: #d1d5db;
   transition: color 0.2s ease;
+  width: 1em;
+  height: 1em;
 }
 
 .star.full {
@@ -27,6 +29,13 @@
 
 .star.empty {
   color: #d1d5db;
+}
+
+/* Star SVG styling */
+.star svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 /* --- Star Rating Input --- */

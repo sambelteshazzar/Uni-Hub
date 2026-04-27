@@ -270,10 +270,67 @@ class ProductsManager {
     return wishlist.includes(productId);
   }
 
-  getWishlist () {
-    const wishlist = StorageManager.get(this.wishlistKey, true) || [];
-    return this.products.filter(p => wishlist.includes(p.id));
-  }
+getWishlist () {
+const wishlist = StorageManager.get(this.wishlistKey, true) || [];
+return this.products.filter(p => wishlist.includes(p.id));
+}
+
+/**
+* Recently Viewed management
+*/
+addToRecentlyViewed (productId) {
+const key = STORAGE_KEYS.RECENTLY_VIEWED;
+let viewed = StorageManager.get(key, true) || [];
+viewed = viewed.filter(id => id !== productId);
+viewed.unshift(productId);
+if (viewed.length > 20) viewed = viewed.slice(0, 20);
+StorageManager.set(key, viewed);
+}
+
+getRecentlyViewed (limit = 8) {
+const viewed = StorageManager.get(STORAGE_KEYS.RECENTLY_VIEWED, true) || [];
+const limited = viewed.slice(0, limit);
+return limited.map(id => this.products.find(p => p.id === id)).filter(Boolean);
+}
+
+clearRecentlyViewed () {
+StorageManager.remove(STORAGE_KEYS.RECENTLY_VIEWED);
+}
+
+/**
+* Price tracking for wishlist items
+*/
+trackWishlistPrices () {
+const key = STORAGE_KEYS.PRICE_HISTORY;
+const history = StorageManager.get(key, true) || {};
+const wishlistIds = StorageManager.get(this.wishlistKey, true) || [];
+const priceDrops = [];
+
+wishlistIds.forEach(id => {
+const product = this.products.find(p => p.id === id);
+if (!product) return;
+const currentPrice = product.price;
+const previous = history[id];
+if (previous && previous.price > currentPrice) {
+priceDrops.push({
+id,
+title: product.title,
+oldPrice: previous.price,
+newPrice: currentPrice,
+saved: previous.price - currentPrice,
+});
+}
+history[id] = { price: currentPrice, updatedAt: Date.now() };
+});
+
+StorageManager.set(key, history);
+return priceDrops;
+}
+
+getPriceHistory (productId) {
+const history = StorageManager.get(STORAGE_KEYS.PRICE_HISTORY, true) || {};
+return history[productId] || null;
+}
 }
 
 // Create singleton instance

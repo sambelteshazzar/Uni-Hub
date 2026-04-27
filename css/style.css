@@ -1,11 +1,79 @@
 @layer base, component;
 
 /* ============================================
-   GLOBAL STYLES & RESET
-   Clean, Minimalist E-commerce Theme
-   ============================================ */
+GLOBAL STYLES & RESET
+Clean, Minimalist E-commerce Theme
+============================================ */
 
 @import url('variables.css');
+
+/* ============================================
+SVG ICON SYSTEM
+Ensures all SVG icons have consistent sizing
+============================================ */
+.icon,
+.icon svg {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.icon-sm { width: 16px; height: 16px; }
+.icon-md { width: 20px; height: 20px; }
+.icon-lg { width: 24px; height: 24px; }
+.icon-xl { width: 32px; height: 32px; }
+
+/* Category and feature icons */
+.category-icon svg,
+.feature-icon svg,
+.bb-category-icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+/* Button icons */
+.btn svg,
+button svg {
+  width: 1.2em;
+  height: 1.2em;
+  margin-right: 0.25em;
+}
+
+/* Empty state icons */
+.empty-cart-icon svg,
+.empty-icon svg {
+  width: 48px;
+  height: 48px;
+  opacity: 0.5;
+}
+
+/* Rating stars */
+.rating-stars svg,
+.star-rating svg,
+.bb-browse-rating-stars svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Nav icons */
+.nav-icon svg,
+.seller-nav-icon svg,
+.admin-menu-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Dashboard icons */
+.dv-order-icon svg,
+.dv-empty-icon svg,
+.dv-stat-icon svg,
+.admin-stat-icon svg,
+.seller-stat-icon svg {
+  width: 24px;
+  height: 24px;
+}
 
 * {
   margin: 0;
@@ -249,6 +317,203 @@ img {
   display: block;
 }
 
+/* Footer Styles */
+.footer-container {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Newsletter Section */
+.footer-newsletter {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.footer-newsletter-content {
+  flex: 1;
+  min-width: 300px;
+}
+
+.footer-newsletter-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.footer-newsletter-form-wrapper {
+  flex: 1;
+  min-width: 300px;
+}
+
+.footer-newsletter-form {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.footer-input-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 250px;
+}
+
+.footer-input-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #9ca3af;
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.footer-newsletter-input {
+  width: 100%;
+  padding: 0.625rem 1rem 0.625rem 3rem;
+  color: #6b7280;
+  background: #ffffff;
+  outline: none;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.footer-newsletter-btn {
+  padding: 0.625rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #ffffff;
+  background: #0046be;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.footer-newsletter-btn:hover {
+  background: #003399;
+}
+
+/* Footer Links Section */
+.footer-links-section {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 2.5rem 0 2rem;
+}
+
+.footer-brand-col {
+  flex: 1;
+  min-width: 200px;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.footer-brand-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+}
+
+.footer-brand-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.footer-description {
+  color: #6b7280;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  max-width: 16rem;
+}
+
+.footer-links-col {
+  flex: 1;
+  min-width: 150px;
+}
+
+.footer-links-title {
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.footer-links-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.footer-link {
+  color: #6b7280;
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: color 0.2s;
+}
+
+.footer-link:hover {
+  color: #0046be;
+}
+
+/* Footer Bottom */
+.footer-bottom {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 1.5rem 0;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.footer-copyright {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.footer-social {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.footer-social-link {
+  color: #9ca3af;
+  transition: color 0.2s;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.footer-social-link:hover {
+  color: #6b7280;
+}
+
+.footer-social-link svg {
+  width: 100%;
+  height: 100%;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   html {
@@ -261,5 +526,19 @@ img {
 
   h2 {
     font-size: var(--text-2xl);
+  }
+
+  .footer-newsletter {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .footer-links-section {
+    flex-direction: column;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    text-align: center;
   }
 }

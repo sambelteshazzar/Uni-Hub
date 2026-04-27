@@ -47,11 +47,11 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
 });
 
 /**
- * @desc    Get user by ID
- * @route   GET /api/users/:id
- * @access  Public
+ * @desc Get user by ID
+ * @route GET /api/users/:id
+ * @access Private
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id', protect, async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
 

@@ -9,8 +9,38 @@ const jwt = require('jsonwebtoken');
 const Message = require('../models/Message.model');
 const Conversation = require('../models/Conversation.model');
 
-// Store online users
+// Store online users — supports multiple tabs per user
 const onlineUsers = new Map();
+
+/**
+ * Add a socket ID for a user (supports multiple tabs)
+ */
+function addUserSocket (userId, socketId) {
+  if (!onlineUsers.has(userId)) {
+    onlineUsers.set(userId, new Set());
+  }
+  onlineUsers.get(userId).add(socketId);
+}
+
+/**
+ * Remove a socket ID for a user
+ */
+function removeUserSocket (userId, socketId) {
+  const sockets = onlineUsers.get(userId);
+  if (sockets) {
+    sockets.delete(socketId);
+    if (sockets.size === 0) {
+      onlineUsers.delete(userId);
+    }
+  }
+}
+
+/**
+ * Get all socket IDs for a user
+ */
+function getUserSockets (userId) {
+  return onlineUsers.has(userId) ? [...onlineUsers.get(userId)] : [];
+}
 
 /**
  * Initialize Socket.io
@@ -44,8 +74,8 @@ const initializeSocket = (io) => {
     // eslint-disable-next-line no-console
     console.log(`User connected: ${socket.userId}`);
 
-    // Store user's socket connection
-    onlineUsers.set(socket.userId, socket.id);
+    // Store user's socket connection (multi-tab support)
+    addUserSocket(socket.userId, socket.id);
 
     // Join user's personal room
     socket.join(`user_${socket.userId}`);
@@ -148,12 +178,11 @@ const initializeSocket = (io) => {
           conversationId,
         });
 
-        // Send notification to receiver if offline
-        const receiverSocketId = onlineUsers.get(receiver._id.toString());
-        if (!receiverSocketId) {
-          // Receiver is offline, could send push notification here
-          // For now, just update the unread count
-        }
+      // Send notification to receiver if offline
+      const receiverSockets = getUserSockets(receiver._id.toString());
+      if (receiverSockets.length === 0) {
+        // Receiver is offline, could send push notification here
+      }
       } catch (error) {
         socket.emit('error', { message: 'Failed to send message' });
       }
@@ -186,34 +215,34 @@ const initializeSocket = (io) => {
           return;
         }
 
-        if (!message.isRead) {
-          await message.markAsRead();
+      if (!message.isRead) {
+        await message.markAsRead();
 
-          // Notify sender that message was read
-          const senderSocketId = onlineUsers.get(message.sender.toString());
-          if (senderSocketId) {
-            io.to(senderSocketId).emit('message_read', {
-              messageId,
-              conversationId: message.conversationId.toString(),
-              readBy: socket.userId,
-            });
-          }
-        }
+        // Notify all of sender's tabs that message was read
+        const senderSockets = getUserSockets(message.sender.toString());
+        senderSockets.forEach(socketId => {
+          io.to(socketId).emit('message_read', {
+            messageId,
+            conversationId: message.conversationId.toString(),
+            readBy: socket.userId,
+          });
+        });
+      }
       } catch (error) {
         // Silently fail for read receipts
       }
     });
 
-    // Handle disconnect
-    socket.on('disconnect', () => {
-      onlineUsers.delete(socket.userId);
-      // eslint-disable-next-line no-console
-      console.log(`User disconnected: ${socket.userId}`);
+  // Handle disconnect
+  socket.on('disconnect', () => {
+    removeUserSocket(socket.userId, socket.id);
+    console.log(`User disconnected: ${socket.userId}`);
 
-      // Notify user's conversations that they went offline
-      // This could be optimized with a debounce
+    // Notify user's conversations they went offline (only if no tabs remain)
+    if (!onlineUsers.has(socket.userId)) {
       io.emit('user_offline', { userId: socket.userId });
-    });
+    }
+  });
   });
 
   // Export helper functions

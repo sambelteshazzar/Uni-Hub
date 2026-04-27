@@ -321,6 +321,8 @@ class DeliveryManager {
 // Create singleton instance
 const deliveryManager = new DeliveryManager();
 
+export { DeliveryManager, deliveryManager };
+
 // Export to window for cross-module access
 window.deliveryManager = deliveryManager;
 if (typeof dispatchEvent !== 'undefined') {

@@ -1,4 +1,5 @@
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
+const { escapeRegex } = require('../middleware/sanitize.middleware');
 /**
  * ============================================
  * Message Controller
@@ -378,7 +379,7 @@ exports.searchMessages = async (req, res) => {
     }
 
     const searchQuery = {
-      content: { $regex: query, $options: 'i' },
+      content: { $regex: escapeRegex(query), $options: 'i' },
       deletedBy: { $ne: req.user._id },
     };
 

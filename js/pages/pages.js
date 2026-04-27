@@ -15,42 +15,55 @@ class Pages {
   /**
    * Register all page routes with the router
    */
-  static registerRoutes () {
-    console.log('✓ Pages.registerRoutes() called');
-    // Home/Landing
-    router.register('/', () => this.renderLanding());
-    router.register('/home', () => this.renderLanding());
+static registerRoutes () {
+console.log('✓ Pages.registerRoutes() called');
+// Home/Landing
+router.register('/', () => this.renderLanding());
+router.register('/home', () => this.renderLanding());
 
-    // Auth
-    router.register('/login', () => this.renderLogin());
-    router.register('/register', () => this.renderRegister());
-    console.log('✓ Auth routes registered');
+// Auth
+router.register('/login', () => this.renderLogin());
+router.register('/register', () => this.renderRegister());
+console.log('✓ Auth routes registered');
 
-    // Main pages
-    router.register('/browse', () => this.renderBrowseProducts());
-    router.register('/cart', () => this.renderCart());
-    router.register('/checkout', () => this.renderCheckout());
-    router.register('/sell', () => this.renderSellerDashboard());
-    router.register('/dashboard', () => this.renderDashboard());
-    router.register('/profile', () => this.renderProfile());
-    router.register('/orders', () => this.renderOrders());
-    console.log('✓ Main routes registered');
+// Main pages
+router.register('/browse', (params) => this.renderBrowse(params));
+router.register('/cart', () => this.renderCart());
+router.register('/checkout', () => this.renderCheckout());
+router.register('/sell', () => this.renderSellerDashboard());
+router.register('/dashboard', () => this.renderDashboard());
+router.register('/profile', () => this.renderProfile());
+router.register('/orders', () => this.renderOrders());
+router.register('/wishlist', () => this.renderWishlist());
+router.register('/faq', () => this.renderFAQ());
+console.log('✓ Main routes registered');
 
-    // Product detail
-    router.register('/product/:id', (params) => this.renderProductDetail(params.id));
+// Product detail
+router.register('/product/:id', (params) => this.renderProductDetail(params.id));
 
-    // Messaging
-    router.register('/messages', (params) => messagesPage.render(params));
+// Messaging
+router.register('/messages', (params) => messagesPage.render(params));
 
-    // Admin
-    router.register('/admin', () => this.renderAdminDashboard());
-    router.register('/admin/products', () => this.renderAdminProducts());
-    router.register('/admin/users', () => this.renderAdminUsers());
-    router.register('/admin/orders', () => this.renderAdminOrders());
-    router.register('/admin/reports', () => this.renderAdminReports());
+// Admin
+router.register('/admin', () => this.renderAdminDashboard());
+router.register('/admin/products', () => this.renderAdminProducts());
+router.register('/admin/users', () => this.renderAdminUsers());
+router.register('/admin/orders', () => this.renderAdminOrders());
+router.register('/admin/reports', () => this.renderAdminReports());
 
-    console.log('✓ All routes registered successfully');
-  }
+console.log('✓ All routes registered successfully');
+}
+
+static formatConditionLabel (condition) {
+const labels = {
+new: 'New',
+'like-new': 'Like New',
+fair: 'Fair',
+good: 'Good',
+excellent: 'Excellent',
+};
+return labels[condition] || (condition ? condition.charAt(0).toUpperCase() + condition.slice(1).replace(/-/g, ' ') : 'Good');
+}
 
   /**
    * Navigate to Messages (with auth check)
@@ -66,10 +79,62 @@ class Pages {
   }
 
   /**
+   * Handle search submission from navbar
+   */
+  static handleSearch () {
+    const input = document.getElementById('navbar-search-input');
+    if (input && input.value.trim()) {
+      window.location.hash = '/browse?q=' + encodeURIComponent(input.value.trim());
+      this.renderBrowse({ search: input.value.trim() });
+    }
+  }
+
+  /**
+   * Toggle mobile menu drawer
+   */
+  static toggleMobileMenu () {
+    const drawer = document.getElementById('navbar-drawer');
+    const overlay = document.getElementById('navbar-overlay');
+    if (drawer && overlay) {
+      drawer.classList.add('active');
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  /**
+   * Close mobile menu drawer
+   */
+  static closeMobileMenu () {
+    const drawer = document.getElementById('navbar-drawer');
+    const overlay = document.getElementById('navbar-overlay');
+    if (drawer && overlay) {
+      drawer.classList.remove('active');
+      overlay.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    }
+  }
+
+  /**
+   * Render SVG star rating
+   */
+  static renderStars (rating) {
+    let html = '';
+    for (let i = 1; i <= 5; i++) {
+      if (i <= rating) {
+        html += Icons.star;
+      } else {
+        html += Icons.starOutline;
+      }
+    }
+    return html;
+  }
+
+  /**
    * Hide original navbar and footer for landing page
    */
   static hideOriginalNavFooter () {
-    const navbar = document.getElementById('navbar-container');
+    const navbar = document.getElementById('navbar');
     const footer = document.getElementById('footer');
     if (navbar) {
       navbar.style.display = 'none';
@@ -85,10 +150,10 @@ class Pages {
    * Show original navbar and footer for other pages
    */
   static showOriginalNavFooter () {
-    const navbar = document.getElementById('navbar-container');
+    const navbar = document.getElementById('navbar');
     const footer = document.getElementById('footer');
     if (navbar && navbar.getAttribute('data-hidden') === 'true') {
-      navbar.style.display = 'block';
+      navbar.style.display = '';
       navbar.removeAttribute('data-hidden');
     }
     if (footer && footer.getAttribute('data-hidden') === 'true') {
@@ -740,7 +805,7 @@ class Pages {
               <path d="m4.9 4.9 2.9 2.9"></path>
             </svg>
             <span style="color: #e0e7ff; font-size: 0.875rem; font-weight: 500;">
-              🎉 New: <strong>Free delivery</strong> for first-time buyers at University of Ghana! &nbsp;&nbsp;|&nbsp;&nbsp; 
+              ${Icons.party} New: <strong>Free delivery</strong> for first-time buyers at University of Ghana! &nbsp;&nbsp;|&nbsp;&nbsp; 
               <a href="#" onclick="Pages.renderRegister(); return false;" style="color: #6366f1; text-decoration: underline; text-underline-offset: 2px;">Sign up now</a>
             </span>
           </div>
@@ -947,7 +1012,7 @@ class Pages {
                   <div class="university-card-overlay"></div>
                   <div class="university-card-content">
                     <h3 class="university-card-name">${uni.name}</h3>
-                    <p class="university-card-meta">📍 ${uni.campus} • ${100 + i * 50}+ items</p>
+                    <p class="university-card-meta">${Icons.locationPin} ${uni.campus} • ${100 + i * 50}+ items</p>
                   </div>
                 </div>
               `,
@@ -983,10 +1048,10 @@ class Pages {
             <!-- Tabbed Category Navigation -->
             <div class="category-tabs" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin-bottom: 2rem;">
               <button class="category-tab active" data-category="all" onclick="Pages.filterCategoryTab('all', this)" style="padding: 0.625rem 1.25rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); cursor: pointer; transition: all 0.2s;">All</button>
-              <button class="category-tab" data-category="textbooks" onclick="Pages.filterCategoryTab('textbooks', this)" style="padding: 0.625rem 1.25rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: transparent; color: #a3a3a3; border: 1px solid rgba(63,63,70,1); cursor: pointer; transition: all 0.2s;">📚 Textbooks</button>
-              <button class="category-tab" data-category="electronics" onclick="Pages.filterCategoryTab('electronics', this)" style="padding: 0.625rem 1.25rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: transparent; color: #a3a3a3; border: 1px solid rgba(63,63,70,1); cursor: pointer; transition: all 0.2s;">💻 Electronics</button>
-              <button class="category-tab" data-category="hostel-items" onclick="Pages.filterCategoryTab('hostel-items', this)" style="padding: 0.625rem 1.25rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: transparent; color: #a3a3a3; border: 1px solid rgba(63,63,70,1); cursor: pointer; transition: all 0.2s;">🏠 Hostel</button>
-              <button class="category-tab" data-category="fashion" onclick="Pages.filterCategoryTab('fashion', this)" style="padding: 0.625rem 1.25rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: transparent; color: #a3a3a3; border: 1px solid rgba(63,63,70,1); cursor: pointer; transition: all 0.2s;">👕 Fashion</button>
+              <button class="category-tab" data-category="textbooks" onclick="Pages.filterCategoryTab('textbooks', this)" style="padding: 0.625rem 1.25rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: transparent; color: #a3a3a3; border: 1px solid rgba(63,63,70,1); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.25rem;">${Icons.textbooks} Textbooks</button>
+              <button class="category-tab" data-category="electronics" onclick="Pages.filterCategoryTab('electronics', this)" style="padding: 0.625rem 1.25rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: transparent; color: #a3a3a3; border: 1px solid rgba(63,63,70,1); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.25rem;">${Icons.monitor} Electronics</button>
+              <button class="category-tab" data-category="hostel-items" onclick="Pages.filterCategoryTab('hostel-items', this)" style="padding: 0.625rem 1.25rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: transparent; color: #a3a3a3; border: 1px solid rgba(63,63,70,1); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.25rem;">${Icons.hostel} Hostel</button>
+              <button class="category-tab" data-category="fashion" onclick="Pages.filterCategoryTab('fashion', this)" style="padding: 0.625rem 1.25rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: transparent; color: #a3a3a3; border: 1px solid rgba(63,63,70,1); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.25rem;">${Icons.fashion} Fashion</button>
             </div>
             
             <div class="categories-grid">
@@ -1316,7 +1381,7 @@ class Pages {
       <div class="auth-container">
         <div class="auth-card verification-card">
           <div class="verification-header">
-            <div class="verification-icon">🎓</div>
+            <div class="verification-icon">${Icons.graduation}</div>
             <h2>Verify Your Student Status</h2>
             <p class="verification-subtitle">Confirm you're a student at <span class="verification-university-name">${universityName}</span></p>
           </div>
@@ -1324,12 +1389,12 @@ class Pages {
           <!-- Verification Method Tabs -->
           <div class="verification-tabs">
             <button class="verification-tab active" data-tab="email" onclick="Pages.switchVerificationTab('email')">
-              <span class="tab-icon">📧</span>
+              <span class="tab-icon">${Icons.email}</span>
               <span class="tab-label">University Email</span>
               <span class="tab-desc">For continuing students</span>
             </button>
             <button class="verification-tab" data-tab="document" onclick="Pages.switchVerificationTab('document')">
-              <span class="tab-icon">📄</span>
+              <span class="tab-icon">${Icons.document}</span>
               <span class="tab-label">Admission Documents</span>
               <span class="tab-desc">For new students</span>
             </button>
@@ -1338,7 +1403,7 @@ class Pages {
           <!-- Email Verification Form -->
           <form id="verification-form-email" class="verification-form active" onsubmit="Pages.handleStudentVerification(event)">
             <div class="verification-info">
-              <p><strong>🎓 For Continuing Students:</strong> Use your official university email address for instant verification.</p>
+              <p><strong>${Icons.graduation} For Continuing Students:</strong> Use your official university email address for instant verification.</p>
             </div>
 
             <div class="form-group">
@@ -1438,7 +1503,7 @@ class Pages {
           <!-- Document Verification Form -->
           <form id="verification-form-document" class="verification-form" onsubmit="Pages.handleDocumentVerification(event)">
             <div class="verification-info warning">
-              <p><strong>📋 For New/Level 100 Students:</strong> Upload your admission letter or student ID for manual verification. This may take 24-48 hours.</p>
+              <p><strong>${Icons.clipboard} For New/Level 100 Students:</strong> Upload your admission letter or student ID for manual verification. This may take 24-48 hours.</p>
             </div>
 
             <div class="form-group">
@@ -1508,7 +1573,7 @@ class Pages {
             <div class="form-group">
               <label class="required">Upload Admission Documents</label>
               <div class="file-upload-area" onclick="document.getElementById('doc-files').click()">
-                <div class="upload-icon">📤</div>
+                <div class="upload-icon">${Icons.upload}</div>
                 <div class="upload-text">Click to upload or drag and drop</div>
                 <div class="upload-hint">Accepted: Admission Letter, Student ID, Acceptance Letter (JPG, PNG, PDF - Max 5MB each)</div>
                 <input type="file" id="doc-files" name="docFiles" multiple accept=".jpg,.jpeg,.png,.pdf" style="display: none;" required onchange="Pages.handleFileSelect(event)" />
@@ -1906,16 +1971,18 @@ class Pages {
           margin-bottom: 0;
           font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
-        .auth-link {
-          color: #6366f1;
-          text-decoration: none;
-          font-weight: 500;
-          transition: color 0.2s;
-          cursor: pointer;
-        }
-        .auth-link:hover {
-          color: #818cf8;
-        }
+.auth-link {
+      color: #6366f1;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+      cursor: pointer;
+      display: inline-block;
+    }
+    .auth-link:hover {
+      color: #4f46e5;
+      text-decoration: underline;
+    }
       </style>
 
       <div class="auth-card-modern">
@@ -1976,33 +2043,51 @@ class Pages {
                   <circle cx="12" cy="12" r="3"></circle>
                 </svg>
               </button>
-            </div>
-          </div>
-
-          <button type="submit" class="submit-btn submit-btn-primary">Sign In</button>
-        </form>
-
-        <div class="auth-footer-links">
-          <p>
-            Don't have an account?
-            <a onclick="Pages.switchAuthModal('register')" class="auth-link">Sign up</a>
-          </p>
-        </div>
+</div>
       </div>
-    `;
+
+      <div style="display: flex; justify-content: flex-end; margin: -0.5rem 0 0.5rem;">
+        <a onclick="Pages.renderForgotPassword(); Pages.closeAuthOverlay(); return false;" 
+           class="auth-link" 
+           style="font-size: 0.875rem; color: #71717a; transition: color 0.2s; cursor: pointer;"
+           onmouseover="this.style.color='#6366f1'" 
+           onmouseout="this.style.color='#71717a'">
+          Forgot password?
+        </a>
+      </div>
+
+      <button type="submit" class="submit-btn submit-btn-primary">Sign In</button>
+    </form>
+
+    <div class="auth-footer-links">
+      <p>
+        Don't have an account?
+        <a onclick="Pages.switchAuthModal('register')" class="auth-link">Sign up</a>
+      </p>
+    </div>
+  </div>
+`;
 
     document.body.appendChild(overlay);
   }
 
   /**
    * Close Auth Overlay
+   * @param {boolean} immediate - If true, removes overlay immediately without animation
    */
-  static closeAuthOverlay () {
-    const overlay = document.getElementById('auth-overlay');
-    if (overlay) {
-      overlay.style.animation = 'fadeIn 0.2s ease-out reverse';
-      setTimeout(() => overlay.remove(), 200);
-    }
+  static closeAuthOverlay (immediate = false) {
+    // Remove all auth overlays to be safe
+    const overlays = document.querySelectorAll('#auth-overlay');
+    overlays.forEach(overlay => {
+      if (overlay) {
+        if (immediate) {
+          overlay.remove();
+        } else {
+          overlay.style.animation = 'fadeIn 0.2s ease-out reverse';
+          setTimeout(() => overlay.remove(), 200);
+        }
+      }
+    });
   }
 
   /**
@@ -2049,16 +2134,42 @@ class Pages {
     const result = await authManager.login(email, password);
 
     if (result.success) {
-      // Close the auth overlay
-      this.closeAuthOverlay();
+      // Close the auth overlay immediately (no animation delay)
+      this.closeAuthOverlay(true);
       // Update navbar to show user menu
       this.updateNavbar();
       this.updateCartBadge();
-      // Navigate to browse page
-      this.renderBrowse();
-    } else {
-      alert('Login failed: ' + result.error);
-    }
+      // Force redirect to browse page using multiple methods for reliability
+      try {
+        // Method 1: Use router if available
+        if (typeof router !== 'undefined' && router.navigate) {
+          router.navigate('/browse');
+        }
+        // Method 2: Direct hash change (always works)
+        window.location.hash = '#/browse';
+        // Method 3: Render directly as fallback
+        setTimeout(() => {
+          this.renderBrowse();
+        }, 50);
+      } catch (e) {
+        console.error('Navigation error:', e);
+        // Final fallback
+        window.location.hash = '#/browse';
+        this.renderBrowse();
+      }
+} else {
+  if (result.isOffline) {
+    this.closeAuthOverlay(true);
+    this.updateNavbar();
+    this.updateCartBadge();
+    this.updateWishlistBadge();
+    notificationManager?.warning('Offline Mode', 'You are logged in with demo data. Some features may be limited.');
+    window.location.hash = '#/browse';
+    this.renderBrowse();
+  } else {
+    alert('Login failed: ' + result.error);
+  }
+}
   }
 
   /**
@@ -2325,8 +2436,28 @@ class Pages {
     const result = await authManager.register(userData);
 
     if (result.success) {
-      alert(result.message);
-      this.renderBrowse();
+      // Show success toast instead of alert
+      if (typeof toastManager !== 'undefined') {
+        toastManager?.show(result.message, 'success');
+      }
+      // Force redirect to browse page using multiple methods for reliability
+      try {
+        // Method 1: Use router if available
+        if (typeof router !== 'undefined' && router.navigate) {
+          router.navigate('/browse');
+        }
+        // Method 2: Direct hash change (always works)
+        window.location.hash = '#/browse';
+        // Method 3: Render directly as fallback
+        setTimeout(() => {
+          this.renderBrowse();
+        }, 50);
+      } catch (e) {
+        console.error('Navigation error:', e);
+        // Final fallback
+        window.location.hash = '#/browse';
+        this.renderBrowse();
+      }
     } else {
       alert('Registration failed: ' + result.error);
     }
@@ -2485,152 +2616,373 @@ class Pages {
     // Show original navbar and footer for non-landing pages
     this.showOriginalNavFooter();
 
-    // Show loading skeleton immediately
     const mainContent = document.getElementById('main-content');
-    mainContent.innerHTML = `
-      <div class="bb-browse-page">
-        <div class="bb-browse-header"><div class="bb-browse-header-inner">
-          <div class="skeleton skeleton-title"></div><div class="skeleton skeleton-subtitle"></div>
-        </div></div>
-        <div class="bb-browse-layout">
-          <aside class="bb-browse-filters">
-            <div class="skeleton skeleton-filter-title"></div>
-            <div class="skeleton skeleton-filter-item"></div>
-            <div class="skeleton skeleton-filter-item"></div>
-            <div class="skeleton skeleton-filter-item"></div>
-          </aside>
-          <main class="bb-browse-main">
-            <div class="bb-browse-grid skeleton-grid">
-              <div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div>
-              <div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div>
-              <div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div>
-            </div>
-          </main>
-        </div>
-      </div>
-    `;
+
+    // Show loading skeleton immediately
+    mainContent.innerHTML = this.renderBrowseSkeleton();
 
     await productsManager.init();
 
+    // Apply filters
     if (filters.category) {
       productsManager.filter({ category: filters.category });
     }
 
-    const selectedUniversity = StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
-    productsManager.filter({ university: selectedUniversity });
+    if (filters.search) {
+      productsManager.filter({ searchQuery: filters.search });
+    }
+
+    // Get selected university from storage or filters
+    const selectedUniversity = filters.university || StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
+    if (selectedUniversity) {
+      productsManager.filter({ university: selectedUniversity });
+    }
 
     const paginatedData = productsManager.getPaginated(1);
     const totalProducts = paginatedData.total || paginatedData.products.length;
 
-    mainContent.innerHTML =
-      '<div class="bb-browse-page">' +
-      '<!-- Breadcrumb -->' +
-      '<div class="bb-breadcrumb-bar">' +
-      '<div class="bb-breadcrumb-container">' +
-      '<a href="#/" class="bb-breadcrumb-link" onclick="Pages.renderLanding(); return false;">Home</a>' +
-      '<span class="bb-breadcrumb-separator">›</span>' +
-      '<span class="bb-breadcrumb-current">Top Deals</span>' +
-      '</div>' +
-      '</div>' +
-      '<!-- Header Banner -->' +
-      '<div class="bb-browse-header">' +
-      '<div class="bb-browse-header-inner">' +
-      '<h1 class="bb-browse-title">Top Deals</h1>' +
-      '<p class="bb-browse-subtitle">Save big on items from students at your university</p>' +
-      '</div>' +
-      '</div>' +
-      '<!-- Toolbar -->' +
-      '<div class="bb-browse-toolbar">' +
-      '<div class="bb-browse-toolbar-inner">' +
-      '<div class="bb-browse-search">' +
-      '<input type="text" id="bb-search-input" name="search" class="bb-browse-search-input" placeholder="Search deals..." onkeyup="Pages.applyBrowseFilters()" />' +
-      '<button class="bb-browse-search-btn" onclick="Pages.applyBrowseFilters()">🔍</button>' +
-      '</div>' +
-      '<div class="bb-browse-results">Showing <strong>' +
-      totalProducts +
-      '</strong> deals</div>' +
-      '<div class="bb-browse-sort">' +
-      '<span class="bb-browse-sort-label">Sort by:</span>' +
-      '<select id="bb-sort-select" onchange="Pages.applySortOrder()">' +
-      '<option value="newest">Best Selling</option>' +
-      '<option value="price-low">Price: Low to High</option>' +
-      '<option value="price-high">Price: High to Low</option>' +
-      '<option value="rating">Customer Rating</option>' +
-      '<option value="savings">Biggest Savings</option>' +
-      '</select>' +
-      '</div>' +
-      '</div>' +
-      '</div>' +
-      '<!-- Layout: Sidebar + Grid -->' +
-      '<div class="bb-browse-layout">' +
-      '<!-- Filter Sidebar -->' +
-      '<aside class="bb-browse-filters">' +
-      '<!-- Category Filter -->' +
-      '<div class="bb-filter-group">' +
-      '<h3 class="bb-filter-title">Category</h3>' +
-      '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-all" name="category" value="all" checked onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-all">All Categories</label></div>' +
-      '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-textbooks" name="category" value="textbooks" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-textbooks">Textbooks</label><span class="bb-filter-count">120</span></div>' +
-      '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-electronics" name="category" value="electronics" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-electronics">Electronics</label><span class="bb-filter-count">85</span></div>' +
-      '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-dorm" name="category" value="dorm" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-dorm">Dorm & Room</label><span class="bb-filter-count">95</span></div>' +
-      '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-furniture" name="category" value="furniture" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-furniture">Furniture</label><span class="bb-filter-count">45</span></div>' +
-      '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-clothing" name="category" value="clothing" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-clothing">Clothing</label><span class="bb-filter-count">60</span></div>' +
-      '<div class="bb-filter-option"><input type="checkbox" id="bb-cat-sports" name="category" value="sports" onchange="Pages.applyBrowseFilters()" /><label for="bb-cat-sports">Sports</label><span class="bb-filter-count">35</span></div>' +
-      '</div>' +
-      '<!-- Condition Filter -->' +
-      '<div class="bb-filter-group">' +
-      '<h3 class="bb-filter-title">Condition</h3>' +
-      '<div class="bb-filter-option"><input type="checkbox" id="bb-cond-new" name="condition" value="new" onchange="Pages.applyBrowseFilters()" /><label for="bb-cond-new">New</label></div>' +
-      '<div class="bb-filter-option"><input type="checkbox" id="bb-cond-excellent" name="condition" value="excellent" onchange="Pages.applyBrowseFilters()" /><label for="bb-cond-excellent">Excellent</label></div>' +
-      '<div class="bb-filter-option"><input type="checkbox" id="bb-cond-good" name="condition" value="good" onchange="Pages.applyBrowseFilters()" /><label for="bb-cond-good">Good</label></div>' +
-      '<div class="bb-filter-option"><input type="checkbox" id="bb-cond-fair" name="condition" value="fair" onchange="Pages.applyBrowseFilters()" /><label for="bb-cond-fair">Fair</label></div>' +
-      '</div>' +
-      '<!-- Price Range -->' +
-      '<div class="bb-filter-group">' +
-      '<h3 class="bb-filter-title">Price</h3>' +
-      '<div class="bb-price-range">' +
-      '<input type="range" id="bb-price-range" name="priceRange" class="bb-price-slider" min="0" max="5000" value="5000" oninput="document.getElementById(\'bb-price-val\').textContent=this.value; Pages.applyBrowseFilters()" />' +
-      '<div class="bb-price-values"><span>GHS 0</span><span>Up to <strong>GHS <span id="bb-price-val">5000</span></strong></span></div>' +
-      '</div>' +
-      '</div>' +
-      '<!-- Rating Filter -->' +
-      '<div class="bb-filter-group">' +
-      '<h3 class="bb-filter-title">Customer Rating</h3>' +
-      '<div class="bb-filter-rating"><input type="radio" name="bb-rating" id="bb-rate-4" value="4" onchange="Pages.applyBrowseFilters()" /><span class="bb-filter-stars">★★★★☆</span><span class="bb-filter-rating-label">& up</span></div>' +
-      '<div class="bb-filter-rating"><input type="radio" name="bb-rating" id="bb-rate-3" value="3" onchange="Pages.applyBrowseFilters()" /><span class="bb-filter-stars">★★★☆☆</span><span class="bb-filter-rating-label">& up</span></div>' +
-      '<div class="bb-filter-rating"><input type="radio" name="bb-rating" id="bb-rate-all" value="" checked onchange="Pages.applyBrowseFilters()" /><span class="bb-filter-rating-label">All Ratings</span></div>' +
-      '</div>' +
-      '<button class="bb-clear-filters" onclick="Pages.resetBrowseFilters()">✕ Clear All Filters</button>' +
-      '</aside>' +
-      '<!-- Product Grid -->' +
-      '<main class="bb-browse-main">' +
-      '<div class="bb-browse-grid" id="bb-browse-grid">' +
-      (paginatedData.products.length > 0
-        ? paginatedData.products
-          .map(function (product) {
-            return Pages.renderBBProductCard(product);
-          })
-          .join('')
-        : '<div class="bb-browse-empty"><div class="bb-browse-empty-icon">🔍</div><h3>No deals found</h3><p>Try adjusting your filters or search terms.</p></div>') +
-      '</div>' +
-      '<!-- Pagination -->' +
-      (paginatedData.pages > 1
-        ? '<div class="bb-browse-pagination">' +
-          Array.from({ length: paginatedData.pages }, function (_, i) {
-            return (
-              '<button class="bb-page-btn ' +
-              (i + 1 === paginatedData.currentPage ? 'active' : '') +
-              '" onclick="Pages.goToBrowsePage(' +
-              (i + 1) +
-              ')">' +
-              (i + 1) +
-              '</button>'
-            );
-          }).join('') +
-          '</div>'
-        : '') +
-      '</main>' +
-      '</div>' +
-      '</div>';
+    // Render the modern browse page
+    mainContent.innerHTML = this.renderBrowseModernHTML(paginatedData, totalProducts);
+
+    // Update search input with current search query if present
+    if (filters.search) {
+      const searchInput = document.getElementById('navbar-search-input');
+      if (searchInput) {
+        searchInput.value = filters.search;
+      }
+    }
+  }
+
+  /**
+   * Render Browse Page Loading Skeleton
+   */
+  static renderBrowseSkeleton () {
+    return `
+      <div class="browse-modern">
+        <div class="browse-hero" style="padding: 2rem;">
+          <div class="skeleton" style="height: 40px; width: 300px; background: rgba(255,255,255,0.2); border-radius: 8px; margin-bottom: 1rem;"></div>
+          <div class="skeleton" style="height: 20px; width: 200px; background: rgba(255,255,255,0.2); border-radius: 4px;"></div>
+        </div>
+        <div class="browse-layout">
+          <aside class="browse-sidebar" style="height: 400px;">
+            <div class="skeleton" style="height: 20px; width: 80%; margin-bottom: 1rem; border-radius: 4px;"></div>
+            <div class="skeleton" style="height: 12px; width: 100%; margin-bottom: 0.5rem; border-radius: 4px;"></div>
+            <div class="skeleton" style="height: 12px; width: 100%; margin-bottom: 0.5rem; border-radius: 4px;"></div>
+            <div class="skeleton" style="height: 12px; width: 100%; margin-bottom: 0.5rem; border-radius: 4px;"></div>
+          </aside>
+          <div class="products-grid-modern">
+            ${Array(6).fill().map(() => `
+              <div class="product-card-modern">
+                <div class="product-card-image-wrap">
+                  <div class="skeleton-image" style="width: 100%; height: 100%;"></div>
+                </div>
+                <div class="product-card-info">
+                  <div class="skeleton" style="height: 12px; width: 40%; margin-bottom: 0.5rem; border-radius: 4px;"></div>
+                  <div class="skeleton" style="height: 16px; width: 100%; margin-bottom: 0.5rem; border-radius: 4px;"></div>
+                  <div class="skeleton" style="height: 20px; width: 60%; border-radius: 4px;"></div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+      <style>
+        .skeleton {
+          background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+          background-size: 200% 100%;
+          animation: shimmer 1.5s infinite;
+        }
+        .skeleton-image {
+          background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+          background-size: 200% 100%;
+          animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      </style>
+    `;
+  }
+
+  /**
+   * Render Modern Browse Page HTML
+   */
+  static renderBrowseModernHTML (paginatedData, totalProducts) {
+    const categories = [
+      { id: 'all', name: 'All', icon: 'cart', count: totalProducts },
+      { id: 'textbooks', name: 'Textbooks', icon: 'books', count: 120 },
+      { id: 'electronics', name: 'Electronics', icon: 'laptop', count: 85 },
+      { id: 'dorm', name: 'Dorm & Room', icon: 'home', count: 95 },
+      { id: 'furniture', name: 'Furniture', icon: 'chair', count: 45 },
+      { id: 'clothing', name: 'Clothing', icon: 'shirt', count: 60 },
+      { id: 'sports', name: 'Sports', icon: 'soccer', count: 35 },
+    ];
+
+    return `
+      <div class="browse-modern">
+        <!-- Hero Banner -->
+        <div class="browse-hero">
+          <div class="browse-hero-content">
+            <h1 class="browse-hero-title">Discover Student Deals</h1>
+            <p class="browse-hero-subtitle">Find amazing items from students at your university</p>
+            <div class="browse-hero-stats">
+              <div class="browse-hero-stat">
+                <div class="browse-hero-stat-icon">${Icons.package}</div>
+                <span>${totalProducts}+ items listed</span>
+              </div>
+              <div class="browse-hero-stat">
+                <div class="browse-hero-stat-icon">${Icons.graduation}</div>
+                <span>Verified students only</span>
+              </div>
+              <div class="browse-hero-stat">
+                <div class="browse-hero-stat-icon">${Icons.truck}</div>
+                <span>Campus delivery available</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Category Pills -->
+        <div class="browse-categories">
+          <div class="browse-categories-scroll">
+            ${categories.map(cat => `
+              <button class="category-pill ${cat.id === 'all' ? 'active' : ''}" onclick="Pages.filterByCategory('${cat.id}')">
+                ${Icons[cat.icon] || ''}
+                ${cat.name}
+                <span class="pill-count">${cat.count}</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Main Layout -->
+        <div class="browse-layout">
+          <!-- Mobile Filter Toggle -->
+          <button class="mobile-filter-toggle" onclick="Pages.toggleMobileFilters()">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M3 4h18M6 12h12M9 20h6"/>
+            </svg>
+            Filters
+          </button>
+
+          <!-- Sidebar -->
+          <aside class="browse-sidebar" id="browse-sidebar">
+            <div class="sidebar-section">
+              <div class="sidebar-title">
+                Filters
+                <span class="sidebar-clear" onclick="Pages.resetBrowseFilters()">Clear all</span>
+              </div>
+            </div>
+
+            <div class="sidebar-section">
+              <div class="sidebar-title">Category</div>
+              <div class="filter-option">
+                <input type="checkbox" id="cat-textbooks" onchange="Pages.applyBrowseFilters()">
+                <label for="cat-textbooks">Textbooks</label>
+                <span class="filter-count">120</span>
+              </div>
+              <div class="filter-option">
+                <input type="checkbox" id="cat-electronics" onchange="Pages.applyBrowseFilters()">
+                <label for="cat-electronics">Electronics</label>
+                <span class="filter-count">85</span>
+              </div>
+              <div class="filter-option">
+                <input type="checkbox" id="cat-dorm" onchange="Pages.applyBrowseFilters()">
+                <label for="cat-dorm">Dorm Items</label>
+                <span class="filter-count">95</span>
+              </div>
+              <div class="filter-option">
+                <input type="checkbox" id="cat-furniture" onchange="Pages.applyBrowseFilters()">
+                <label for="cat-furniture">Furniture</label>
+                <span class="filter-count">45</span>
+              </div>
+            </div>
+
+<div class="sidebar-section">
+<div class="sidebar-title">Condition</div>
+<div class="filter-option">
+<input type="checkbox" id="cond-new" onchange="Pages.applyBrowseFilters()">
+<label for="cond-new">New</label>
+</div>
+<div class="filter-option">
+<input type="checkbox" id="cond-like-new" onchange="Pages.applyBrowseFilters()">
+<label for="cond-like-new">Like New</label>
+</div>
+<div class="filter-option">
+<input type="checkbox" id="cond-excellent" onchange="Pages.applyBrowseFilters()">
+<label for="cond-excellent">Excellent</label>
+</div>
+<div class="filter-option">
+<input type="checkbox" id="cond-good" onchange="Pages.applyBrowseFilters()">
+<label for="cond-good">Good</label>
+</div>
+<div class="filter-option">
+<input type="checkbox" id="cond-fair" onchange="Pages.applyBrowseFilters()">
+<label for="cond-fair">Fair</label>
+</div>
+</div>
+
+            <div class="sidebar-section">
+              <div class="sidebar-title">Price Range</div>
+              <div class="price-range-inputs">
+                <input type="number" class="price-input" placeholder="Min" id="price-min">
+                <span class="price-separator">-</span>
+                <input type="number" class="price-input" placeholder="Max" id="price-max">
+              </div>
+            </div>
+
+            <div class="sidebar-section">
+              <div class="sidebar-title">Rating</div>
+              <div class="rating-option" onclick="Pages.setRatingFilter(4)">
+                <span class="rating-stars">${Icons.star}${Icons.star}${Icons.star}${Icons.star}${Icons.starOutline}</span>
+                <span class="rating-label">& up</span>
+              </div>
+              <div class="rating-option" onclick="Pages.setRatingFilter(3)">
+                <span class="rating-stars">${Icons.star}${Icons.star}${Icons.star}${Icons.starOutline}${Icons.starOutline}</span>
+                <span class="rating-label">& up</span>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Overlay for mobile -->
+          <div class="sidebar-overlay" id="sidebar-overlay" onclick="Pages.toggleMobileFilters()"></div>
+
+          <!-- Products Grid -->
+          <div class="browse-content">
+            <div class="browse-toolbar">
+              <div class="results-count">
+                Showing <strong>${paginatedData.products.length}</strong> of <strong>${totalProducts}</strong> items
+              </div>
+              <select class="sort-select" onchange="Pages.applySortOrder()" id="sort-select">
+                <option value="newest">Newest First</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="rating">Highest Rated</option>
+              </select>
+            </div>
+
+            <div class="products-grid-modern">
+              ${paginatedData.products.length > 0
+                ? paginatedData.products.map(product => this.renderProductCardModern(product)).join('')
+                : `
+<div class="browse-empty" style="grid-column: 1/-1;">
+              <div class="browse-empty-icon" style="width: 64px; height: 64px; margin: 0 auto 1rem;">${Icons.search}</div>
+              <h3>No items found</h3>
+              <p>Try adjusting your filters or search for something else</p>
+              <button class="btn btn-primary" onclick="Pages.resetBrowseFilters()">Clear Filters</button>
+            </div>
+                `
+              }
+            </div>
+
+${paginatedData.pages > 1 ? `
+<div class="pagination">
+${Array.from({ length: paginatedData.pages }, (_, i) => `
+<button class="page-btn ${i + 1 === paginatedData.currentPage ? 'active' : ''}" onclick="Pages.goToBrowsePage(${i + 1})">
+${i + 1}
+</button>
+`).join('')}
+</div>
+` : ''}
+</div>
+</div>
+
+${Pages.renderRecentlyViewedSection()}
+</div>
+`;
+  }
+
+  /**
+   * Render Modern Product Card
+   */
+  static renderProductCardModern (product) {
+    const isInWishlist = productsManager.isInWishlist?.(product.id) || false;
+    const initials = product.seller?.name
+      ? product.seller.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+      : 'UN';
+const conditionClass = product.condition || 'good';
+const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
+    const categoryLabel = product.category
+      ? product.category.charAt(0).toUpperCase() + product.category.slice(1).replace('-', ' ')
+      : 'Item';
+
+    return `
+      <div class="product-card-modern" onclick="Pages.renderProductDetail('${product.id}')">
+        <div class="product-card-image-wrap">
+          <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" class="product-card-image" loading="lazy">
+          <div class="product-badges">
+            <span class="product-badge badge-condition ${conditionClass}">${conditionLabel}</span>
+          </div>
+<button class="wishlist-btn ${isInWishlist ? 'active' : ''}" onclick="event.stopPropagation(); Pages.toggleWishlist(event, '${product.id}')">
+          ${isInWishlist ? Icons.heart : Icons.heartOutline}
+        </button>
+        </div>
+        <div class="product-card-info">
+          <div class="product-card-category">${categoryLabel}</div>
+          <h3 class="product-card-title">${product.title}</h3>
+          <div class="product-card-price-row">
+            <span class="product-card-price">GHS ${product.price?.toLocaleString() || '0'}</span>
+          </div>
+<div class="product-card-seller">
+<div class="seller-avatar">${initials}</div>
+<span class="seller-name">${product.seller?.name || 'Unknown'}</span>
+${product.seller?.rating ? `
+<div class="seller-rating">
+${Icons.star}
+<span>${product.seller.rating}</span>
+</div>
+` : ''}
+${product.seller?.rating >= 4.5 ? '<span class="trust-badge trust-badge-top-seller"><svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Top Seller</span>' : ''}
+${product.seller?.verified ? '<span class="trust-badge trust-badge-verified"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>Verified</span>' : ''}
+</div>
+        </div>
+        <button class="quick-add-btn" onclick="event.stopPropagation(); cartManager?.add(${JSON.stringify(product).replace(/"/g, '&quot;')}); Pages.updateCartBadge();" title="Add to cart">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+        </button>
+      </div>
+    `;
+  }
+
+  /**
+   * Filter by Category (for category pills)
+   */
+  static filterByCategory (categoryId) {
+    // Update active pill
+    document.querySelectorAll('.category-pill').forEach(pill => {
+      pill.classList.remove('active');
+    });
+    event.target.closest('.category-pill').classList.add('active');
+
+    // Apply filter
+    if (categoryId === 'all') {
+      productsManager.resetFilters();
+    } else {
+      productsManager.filter({ category: categoryId });
+    }
+
+    // Re-render
+    this.renderBrowse();
+  }
+
+  /**
+   * Toggle Mobile Filters
+   */
+  static toggleMobileFilters () {
+    const sidebar = document.getElementById('browse-sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    sidebar?.classList.toggle('open');
+    overlay?.classList.toggle('open');
+  }
+
+  /**
+   * Set Rating Filter
+   */
+  static setRatingFilter (rating) {
+productsManager.filter({ minRating: rating });
+    this.renderBrowse();
   }
 
   /**
@@ -2638,15 +2990,16 @@ class Pages {
    */
   static renderProductCard (product) {
     const isInWishlist = productsManager.isInWishlist(product.id);
-    const initials = product.seller.name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-    const conditionLabel = product.condition.charAt(0).toUpperCase() + product.condition.slice(1);
-    const categoryLabel =
-      product.category.charAt(0).toUpperCase() + product.category.slice(1).replace('-', ' ');
+    const initials = product.seller?.name
+      ?.split(' ')
+      ?.map(n => n[0])
+      ?.join('')
+      ?.toUpperCase()
+      ?.slice(0, 2) || 'UN';
+    const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
+    const categoryLabel = product.category
+      ? product.category.charAt(0).toUpperCase() + product.category.slice(1).replace('-', ' ')
+      : 'Other';
 
     return `
       <div class="store-product-card" onclick="Pages.renderProductDetail('${product.id}')">
@@ -2657,7 +3010,7 @@ class Pages {
           <button class="store-wishlist-btn ${isInWishlist ? 'active' : ''}"
                   onclick="Pages.toggleWishlist(event, '${product.id}')"
                   title="${isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}">
-            ${isInWishlist ? '❤️' : '🤍'}
+            ${isInWishlist ? Icons.heart : Icons.heartOutline}
           </button>
         </div>
 
@@ -2670,22 +3023,23 @@ class Pages {
             <span class="store-product-currency">GHS</span>
           </div>
 
-          <!-- Seller Row -->
-          <div class="store-product-seller-row">
-            <div class="store-seller-info">
-              <div class="store-seller-avatar">${initials}</div>
-              <span class="store-seller-name">${product.seller.name}</span>
-            </div>
-            <div class="store-seller-rating">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              ${product.seller.rating || '4.5'}
-            </div>
-          </div>
+<!-- Seller Row -->
+<div class="store-product-seller-row">
+<div class="store-seller-info">
+<div class="store-seller-avatar">${initials}</div>
+<span class="store-seller-name">${product.seller.name}</span>
+${product.seller?.rating >= 4.5 ? '<span class="trust-badge trust-badge-top-seller"><svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Top</span>' : ''}
+</div>
+<div class="store-seller-rating">
+<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+${product.seller.rating || '4.5'}
+</div>
+</div>
         </div>
 
         <!-- Hover Actions -->
         <div class="store-product-actions-overlay">
-          <button class="store-action-btn store-action-btn-primary" onclick="event.stopPropagation(); cartManager.add(${JSON.stringify(product).replace(/"/g, '&quot;')}); Pages.updateCartBadge();">🛒 Add to Cart</button>
+          <button class="store-action-btn store-action-btn-primary" onclick="event.stopPropagation(); cartManager.add(${JSON.stringify(product).replace(/"/g, '&quot;')}); Pages.updateCartBadge();">${Icons.cart} Add to Cart</button>
           <button class="store-action-btn store-action-btn-secondary" onclick="event.stopPropagation(); Pages.renderProductDetail('${product.id}')">View</button>
         </div>
       </div>
@@ -2697,15 +3051,13 @@ class Pages {
    */
   static renderBBProductCard (product) {
     const isInWishlist = productsManager.isInWishlist(product.id);
-    const initials = product.seller.name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-    const conditionLabel = product.condition.charAt(0).toUpperCase() + product.condition.slice(1);
-    const categoryLabel =
-      product.category.charAt(0).toUpperCase() + product.category.slice(1).replace('-', ' ');
+    const initials = product.seller?.name
+      ? product.seller.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+      : 'UN';
+    const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
+    const categoryLabel = product.category
+      ? product.category.charAt(0).toUpperCase() + product.category.slice(1).replace('-', ' ')
+      : 'Other';
     const isDeal = product.price > 30;
     const savingsPercent = isDeal ? Math.round(Math.random() * 30 + 30) : 0;
 
@@ -2719,7 +3071,7 @@ class Pages {
       '" onclick="event.stopPropagation(); Pages.toggleWishlist(event, \'' +
       product.id +
       '\');">' +
-      (isInWishlist ? '❤️' : '🤍') +
+      (isInWishlist ? Icons.heart : Icons.heartOutline) +
       '</button>' +
       '<img src="' +
       product.images[0] +
@@ -2734,7 +3086,7 @@ class Pages {
       product.title +
       '</h3>' +
       '<div class="bb-browse-rating">' +
-      '<span class="bb-browse-rating-stars">★★★★☆</span>' +
+      '<span class="bb-browse-rating-stars">' + Icons.star + Icons.star + Icons.star + Icons.star + Icons.starOutline + '</span>' +
       '<span class="bb-browse-rating-count">(' +
       (product.seller.rating || '4.5') +
       ')</span>' +
@@ -2761,7 +3113,7 @@ class Pages {
       '</span>' +
       '<button class="bb-browse-add-cart" onclick="event.stopPropagation(); cartManager.add(' +
       JSON.stringify(product).replace(/"/g, '&quot;') +
-      '); Pages.updateCartBadge();">🛒 Add to Cart</button>' +
+      '); Pages.updateCartBadge();">' + Icons.cart + ' Add to Cart</button>' +
       '<div class="bb-browse-seller">' +
       '<div class="bb-browse-seller-avatar">' +
       initials +
@@ -2775,21 +3127,23 @@ class Pages {
     );
   }
 
-  /**
-   * Toggle Wishlist
-   */
-  static toggleWishlist (event, productId) {
-    event.stopPropagation();
+/**
+* Toggle Wishlist
+*/
+static toggleWishlist (event, productId) {
+event.stopPropagation();
 
-    if (productsManager.isInWishlist(productId)) {
-      productsManager.removeFromWishlist(productId);
-    } else {
-      productsManager.addToWishlist(productId);
-    }
+if (productsManager.isInWishlist(productId)) {
+productsManager.removeFromWishlist(productId);
+notificationManager?.info('Removed from Wishlist', 'Product removed from your wishlist');
+} else {
+productsManager.addToWishlist(productId);
+notificationManager?.success('Added to Wishlist', 'Product saved to your wishlist');
+}
 
-    // Re-render browse
-    this.renderBrowse();
-  }
+Pages.updateWishlistBadge();
+this.renderBrowse();
+}
 
   /**
    * Apply Browse Filters
@@ -2848,17 +3202,50 @@ class Pages {
   /**
    * Re-render just the products grid (for filtering without page refresh)
    */
-  static renderBrowseProducts () {
-    const paginatedData = productsManager.getPaginated(1);
-    const productsGrid = document.querySelector('.products-grid');
+static renderBrowseProducts () {
+const paginatedData = productsManager.getPaginated(1);
+const productsGrid = document.querySelector('.products-grid');
 
-    if (productsGrid) {
-      productsGrid.innerHTML =
-        paginatedData.products.length > 0
-          ? paginatedData.products.map(product => this.renderProductCard(product)).join('')
-          : '<div class="empty-state">No products found. Try adjusting your filters.</div>';
-    }
-  }
+if (productsGrid) {
+productsGrid.innerHTML =
+paginatedData.products.length > 0
+? paginatedData.products.map(product => this.renderProductCard(product)).join('')
+: '<div class="empty-state">No products found. Try adjusting your filters.</div>';
+}
+}
+
+/**
+* Render Recently Viewed Section HTML
+*/
+static renderRecentlyViewedSection () {
+const recentlyViewed = productsManager.getRecentlyViewed(8);
+if (!recentlyViewed || recentlyViewed.length === 0) return '';
+
+return `
+<div class="recently-viewed-section" style="padding: 2rem 0 1rem;">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+<h2 style="font-size:1.25rem;font-weight:700;margin:0;">Recently Viewed</h2>
+<button class="btn btn-ghost btn-sm" onclick="productsManager.clearRecentlyViewed(); Pages.renderBrowse();" style="font-size:0.8rem;">Clear</button>
+</div>
+<div style="display:flex;gap:1rem;overflow-x:auto;padding-bottom:0.5rem;scrollbar-width:thin;">
+${recentlyViewed.map(product => {
+const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
+return `
+<div onclick="Pages.renderProductDetail('${product.id}')" style="min-width:160px;max-width:160px;cursor:pointer;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--neutral-200);transition:box-shadow 0.2s;background:var(--bg-primary);" onmouseover="this.style.boxShadow='var(--shadow-card-hover)'" onmouseout="this.style.boxShadow='none'">
+<div style="aspect-ratio:1;overflow:hidden;background:var(--neutral-100);">
+<img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
+</div>
+<div style="padding:0.5rem;">
+<div style="font-size:0.75rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${product.title}</div>
+<div style="font-size:0.8rem;font-weight:700;color:var(--price-color);margin-top:2px;">GHS ${product.price?.toLocaleString() || '0'}</div>
+<span class="condition-badge ${product.condition || 'good'}" style="font-size:0.65rem;padding:2px 6px;margin-top:4px;">${conditionLabel}</span>
+</div>
+</div>`;
+}).join('')}
+</div>
+</div>
+`;
+}
 
   /**
    * Go to Browse Page (pagination)
@@ -2878,13 +3265,15 @@ class Pages {
   /**
    * Render Product Detail Page - Modern Professional Design
    */
-  static renderProductDetail (productId) {
-    const product = productsManager.getById(productId);
+static renderProductDetail (productId) {
+const product = productsManager.getById(productId);
 
-    if (!product) {
-      alert('Product not found');
-      return;
-    }
+if (!product) {
+alert('Product not found');
+return;
+}
+
+productsManager.addToRecentlyViewed(productId);
 
     const mainContent = document.getElementById('main-content');
     const isInWishlist = productsManager.isInWishlist(productId);
@@ -2894,9 +3283,10 @@ class Pages {
       .join('')
       .toUpperCase()
       .slice(0, 2);
-    const conditionLabel = product.condition.charAt(0).toUpperCase() + product.condition.slice(1);
-    const categoryLabel =
-      product.category.charAt(0).toUpperCase() + product.category.slice(1).replace('-', ' ');
+const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
+    const categoryLabel = product.category
+      ? product.category.charAt(0).toUpperCase() + product.category.slice(1).replace('-', ' ')
+      : 'Other';
 
     mainContent.innerHTML = `
       <style>
@@ -3032,14 +3422,14 @@ class Pages {
 
             <!-- Action Buttons -->
             <div class="pd-actions">
-              <button class="pd-btn pd-btn-primary" onclick="cartManager.add(${JSON.stringify(product).replace(/"/g, '&quot;')}); Pages.updateCartBadge(); if(typeof toastManager!=='undefined') toastManager.success('Added to cart','Product added successfully');">
-                🛒 Add to Cart
-              </button>
+<button class="pd-btn pd-btn-primary" onclick="cartManager.add(${JSON.stringify(product).replace(/"/g, '&quot;')}); Pages.updateCartBadge(); if(typeof toastManager!=='undefined') toastManager.success('Added to cart','Product added successfully');">
+          ${Icons.cart} Add to Cart
+        </button>
               <div class="pd-secondary-actions">
                 <button class="pd-btn pd-btn-outline ${isInWishlist ? 'active' : ''}" onclick="Pages.toggleWishlistDetail('${productId}')">
-                  ${isInWishlist ? '❤️ Saved' : '🤍 Save'}
+                  ${isInWishlist ? Icons.heart + ' Saved' : Icons.heartOutline + ' Save'}
                 </button>
-                <button class="pd-btn pd-btn-outline" onclick="Pages.shareProduct('${productId}')">📤 Share</button>
+                <button class="pd-btn pd-btn-outline" onclick="Pages.shareProduct('${productId}')">${Icons.upload} Share</button>
               </div>
             </div>
           </div>
@@ -3066,20 +3456,47 @@ class Pages {
     this.loadProductReviews(productId);
   }
 
-  /**
-   * Toggle Wishlist in Detail View
-   */
-  static toggleWishlistDetail (productId) {
-    if (productsManager.isInWishlist(productId)) {
-      productsManager.removeFromWishlist(productId);
-      notificationManager.info('Removed from Wishlist', 'Product removed from your wishlist');
-    } else {
-      productsManager.addToWishlist(productId);
-      notificationManager.success('Added to Wishlist', 'Product saved to your wishlist');
-    }
+/**
+* Toggle Wishlist in Detail View
+*/
+static toggleWishlistDetail (productId) {
+if (productsManager.isInWishlist(productId)) {
+productsManager.removeFromWishlist(productId);
+notificationManager?.info('Removed from Wishlist', 'Product removed from your wishlist');
+} else {
+productsManager.addToWishlist(productId);
+notificationManager?.success('Added to Wishlist', 'Product saved to your wishlist');
+}
 
-    this.renderProductDetail(productId);
-  }
+Pages.updateWishlistBadge();
+this.renderProductDetail(productId);
+}
+
+/**
+* Add all wishlist items to cart
+*/
+static addAllWishlistToCart () {
+const wishlistProducts = productsManager.getWishlist();
+let added = 0;
+wishlistProducts.forEach(product => {
+const result = cartManager?.add(product);
+if (result?.success) added++;
+});
+Pages.updateCartBadge();
+notificationManager?.success('Added to Cart', `${added} item${added !== 1 ? 's' : ''} added to your cart`);
+}
+
+/**
+* Clear entire wishlist
+*/
+static clearWishlist () {
+if (!confirm('Remove all items from your wishlist?')) return;
+const wishlistIds = StorageManager.get(productsManager.wishlistKey, true) || [];
+wishlistIds.forEach(id => productsManager.removeFromWishlist(id));
+Pages.updateWishlistBadge();
+Pages.renderWishlist();
+notificationManager?.info('Wishlist Cleared', 'All items removed from your wishlist');
+}
 
   /**
    * Load and display reviews for a product's seller
@@ -3125,7 +3542,7 @@ class Pages {
         <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
           <div style="text-align: center;">
             <div style="font-size: 2.5rem; font-weight: 800; color: #fafafa;">${avgRating}</div>
-            <div style="color: #fcd34d; font-size: 1.25rem;">${'★'.repeat(Math.round(parseFloat(avgRating)))}${'☆'.repeat(5 - Math.round(parseFloat(avgRating)))}</div>
+            <div style="color: #fcd34d; font-size: 1.25rem;">${this.renderStars(Math.round(parseFloat(avgRating)))}</div>
             <div style="font-size: 0.8rem; color: #71717a;">${reviews.length} review${reviews.length !== 1 ? 's' : ''}</div>
           </div>
           <div style="flex: 1;">
@@ -3145,7 +3562,7 @@ class Pages {
    */
   static renderReviewItem (review) {
     const timeAgo = this.formatReviewTime(review.createdAt);
-    const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+    const stars = this.renderStars(review.rating);
 
     return `
       <div style="padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
@@ -3183,7 +3600,8 @@ class Pages {
    * Write Review for Seller
    */
   static async writeReview (sellerId) {
-    const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
+    const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
+    const currentUser = session?.user || null;
     if (!currentUser) {
       toastManager?.show('Please login to write a review', 'info');
       this.renderLogin();
@@ -3220,37 +3638,66 @@ class Pages {
     }
   }
 
-  /**
-   * Share Product
-   */
-  static shareProduct (productId) {
-    const product = productsManager.getById(productId);
-    const shareUrl = window.location.href.split('#')[0] + `#product/${productId}`;
+/**
+* Share Product
+*/
+static shareProduct (productId) {
+const product = productsManager.getById(productId);
+const shareUrl = window.location.href.split('#')[0] + `#product/${productId}`;
+const shareText = `Check out this item on Uni-Hub: ${product.title} - GHS ${product.price?.toLocaleString() || '0'}`;
 
-    // Try to use Web Share API if available
-    if (navigator.share) {
-      navigator
-        .share({
-          title: product.title,
-          text: `Check out this item on Uni-Hub: ${product.title}`,
-          url: shareUrl,
-        })
-        .catch(error => {
-          // eslint-disable-next-line no-console
-          console.log('Share cancelled', error);
-        });
-    } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard
-        .writeText(shareUrl)
-        .then(() => {
-          notificationManager.success('Link Copied', 'Product link copied to clipboard');
-        })
-        .catch(() => {
-          prompt('Copy this link:', shareUrl);
-        });
-    }
-  }
+const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`;
+const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+
+const mainContent = document.getElementById('main-content');
+const overlay = document.createElement('div');
+overlay.id = 'share-overlay';
+overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;';
+overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+overlay.innerHTML = `
+<div style="background:var(--bg-primary);border-radius:var(--radius-xl);padding:2rem;max-width:420px;width:100%;box-shadow:var(--shadow-xl);">
+<h3 style="margin:0 0 0.5rem;font-size:1.25rem;">Share this product</h3>
+<p style="color:var(--neutral-600);margin:0 0 1.5rem;font-size:0.9rem;">${product.title}</p>
+<div style="display:flex;flex-direction:column;gap:0.75rem;">
+<a href="${whatsappUrl}" target="_blank" rel="noopener" class="btn btn-outline" style="display:flex;align-items:center;gap:0.75rem;justify-content:center;background:#25D366;color:white;border-color:#25D366;">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.553 4.12 1.52 5.855L0 24l6.335-1.652A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75c-1.97 0-3.79-.58-5.33-1.573l-.383-.228-3.764.982.998-3.648-.25-.398A9.72 9.72 0 012.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75z"/></svg>
+Share on WhatsApp
+</a>
+<a href="${telegramUrl}" target="_blank" rel="noopener" class="btn btn-outline" style="display:flex;align-items:center;gap:0.75rem;justify-content:center;background:#0088cc;color:white;border-color:#0088cc;">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0012 0h-.056zM8.862 7.136l.32-.004c.21 0 .42.075.58.225l3.58 3.38 7.95-4.85c.26-.16.58-.14.82.05.24.19.32.5.21.77L16.6 20.8c-.12.28-.39.45-.68.45a.73.73 0 01-.36-.09l-4.3-2.54-2.27 2.14.48-3.56 7.28-6.84-8.68 4.68-3.72-1.5c-.34-.14-.52-.47-.44-.81.08-.34.36-.57.69-.6l4.9-.43z"/></svg>
+Share on Telegram
+</a>
+<a href="${twitterUrl}" target="_blank" rel="noopener" class="btn btn-outline" style="display:flex;align-items:center;gap:0.75rem;justify-content:center;background:#1DA1F2;color:white;border-color:#1DA1F2;">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.09a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
+Share on Twitter
+</a>
+<button class="btn btn-outline" style="display:flex;align-items:center;gap:0.75rem;justify-content:center;" onclick="Pages.copyShareLink('${shareUrl}')">
+${Icons.copy || '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>'}
+Copy Link
+</button>
+</div>
+<button class="btn btn-ghost" style="width:100%;margin-top:1rem;" onclick="document.getElementById('share-overlay').remove()">Cancel</button>
+</div>
+`;
+
+document.body.appendChild(overlay);
+}
+
+/**
+* Copy share link to clipboard
+*/
+static copyShareLink (url) {
+navigator.clipboard.writeText(url)
+.then(() => {
+notificationManager?.success('Link Copied', 'Product link copied to clipboard');
+document.getElementById('share-overlay')?.remove();
+})
+.catch(() => {
+prompt('Copy this link:', url);
+});
+}
 
   /**
    * Render Cart Page
@@ -3264,7 +3711,7 @@ class Pages {
       mainContent.innerHTML = `
         <div class="container" style="padding: 3rem 1rem;">
           <div class="empty-cart">
-            <div class="empty-cart-icon">🛒</div>
+            <div class="empty-cart-icon">${Icons.cart}</div>
             <h3>Your cart is empty</h3>
             <p>Looks like you haven't added anything to your cart yet.</p>
             <button class="btn btn-primary" onclick="Pages.renderBrowse()">Start Shopping</button>
@@ -3332,7 +3779,7 @@ class Pages {
               <span>${Formatter.formatPrice(summary.grandTotal)}</span>
             </div>
             
-            <button class="btn btn-primary checkout-btn" onclick="Pages.renderCheckout()">
+            <button class="btn btn-primary checkout-btn" onclick="event.preventDefault(); Pages.handleProceedToCheckout();">
               Proceed to Checkout
             </button>
             
@@ -3392,9 +3839,54 @@ class Pages {
   }
 
   /**
+   * Handle Proceed to Checkout button click from Cart
+   */
+  static handleProceedToCheckout () {
+    // Verify required managers are loaded
+    if (typeof cartManager === 'undefined' || !cartManager) {
+      console.error('Cart manager not loaded');
+      alert('Cart is loading. Please try again in a moment.');
+      return;
+    }
+
+    if (typeof checkoutManager === 'undefined' || !checkoutManager) {
+      console.error('Checkout manager not loaded');
+      alert('Checkout is loading. Please try again in a moment.');
+      return;
+    }
+
+    const cartItems = cartManager.getItems();
+
+    // Check if cart is empty
+    if (!cartItems || cartItems.length === 0) {
+      alert('Your cart is empty. Add items before checkout.');
+      return;
+    }
+
+    // Check if user is logged in
+    const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
+    const currentUser = session?.user || null;
+    if (!currentUser) {
+      alert('Please login to complete your order.');
+      this.renderLogin();
+      return;
+    }
+
+    // Navigate to checkout
+    this.renderCheckout();
+  }
+
+  /**
    * Render Checkout Page
    */
   static renderCheckout () {
+    // Verify checkoutManager is loaded
+    if (typeof checkoutManager === 'undefined' || !checkoutManager) {
+      console.error('Checkout manager not loaded yet');
+      alert('Please wait, checkout is loading...');
+      return;
+    }
+
     const mainContent = document.getElementById('main-content');
     const cartItems = cartManager.getItems();
     const summary = cartManager.getSummary();
@@ -3407,12 +3899,16 @@ class Pages {
     }
 
     // Check if user is logged in
-    const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
+    const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
+    const currentUser = session?.user || null;
     if (!currentUser) {
       alert('Please login to complete your order.');
       this.renderLogin();
       return;
     }
+
+    // Update URL hash for proper routing
+    window.location.hash = '/checkout';
 
     const deliveryOptions = checkoutManager.getDeliveryModeOptions();
     const paymentOptions = checkoutManager.getPaymentModeOptions();
@@ -3660,7 +4156,7 @@ class Pages {
 
         if (paymentResult.success) {
           // Send notification
-          notificationManager.success(
+          notificationManager?.success(
             'Order Confirmed',
             `Your order #${result.order.orderNumber} has been confirmed!`,
           );
@@ -3699,7 +4195,7 @@ class Pages {
 
     mainContent.innerHTML = `
       <div class="order-confirmation-container">
-        <div class="confirmation-icon">✅</div>
+        <div class="confirmation-icon">${Icons.checkCircle}</div>
         
         <h1>Order Placed Successfully!</h1>
         <p class="subtitle">Thank you for your purchase</p>
@@ -3760,7 +4256,8 @@ class Pages {
    */
   static renderOrders () {
     const mainContent = document.getElementById('main-content');
-    const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
+    const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
+    const currentUser = session?.user || null;
 
     if (!currentUser) {
       alert('Please login to view your orders.');
@@ -3774,8 +4271,8 @@ class Pages {
       mainContent.innerHTML = `
         <div class="container" style="padding: 3rem 1rem;">
           <div class="empty-cart">
-            <div class="empty-cart-icon">📦</div>
-            <h3>No orders yet</h3>
+<div class="empty-cart-icon">${Icons.package}</div>
+        <h3>No orders yet</h3>
             <p>You haven't placed any orders yet.</p>
             <button class="btn btn-primary" onclick="Pages.renderBrowse()">Start Shopping</button>
           </div>
@@ -3824,15 +4321,17 @@ class Pages {
     .join('')}
               </div>
               
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--neutral-200);">
-                <div style="font-weight: 700; font-size: 1.1rem;">
-                  Total: ${Formatter.formatPrice(order.pricing.grandTotal)}
-                </div>
-                <button class="btn btn-outline btn-sm" onclick="Pages.viewOrderDetails('${order.id}')">
-                  View Details
-                </button>
-              </div>
-            </div>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--neutral-200);">
+<div style="font-weight: 700; font-size: 1.1rem;">
+Total: ${Formatter.formatPrice(order.pricing.grandTotal)}
+</div>
+<button class="btn btn-outline btn-sm" onclick="Pages.viewOrderDetails('${order.id}')">
+View Details
+</button>
+</div>
+
+${Pages.renderOrderTimeline(order.status)}
+</div>
           `,
     )
     .join('')}
@@ -3841,19 +4340,124 @@ class Pages {
     `;
   }
 
-  /**
-   * Get status color
-   */
-  static getStatusColor (status) {
-    const colors = {
-      [ORDER_STATUS.PLACED]: '#6366f1',
-      [ORDER_STATUS.CONFIRMED]: '#10b981',
-      [ORDER_STATUS.IN_TRANSIT]: '#f59e0b',
-      [ORDER_STATUS.DELIVERED]: '#10b981',
-      [ORDER_STATUS.CANCELLED]: '#ef4444',
-    };
-    return colors[status] || '#6366f1';
-  }
+/**
+* Get status color
+*/
+static getStatusColor (status) {
+const colors = {
+[ORDER_STATUS.PLACED]: '#6366f1',
+[ORDER_STATUS.CONFIRMED]: '#10b981',
+[ORDER_STATUS.IN_TRANSIT]: '#f59e0b',
+[ORDER_STATUS.DELIVERED]: '#10b981',
+[ORDER_STATUS.CANCELLED]: '#ef4444',
+};
+return colors[status] || '#6366f1';
+}
+
+/**
+* Render Order Timeline Stepper
+*/
+static renderOrderTimeline (status) {
+if (status === ORDER_STATUS.CANCELLED) {
+return `
+<div class="order-timeline" style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--neutral-200);">
+<div style="display:flex;align-items:center;gap:0.5rem;color:#ef4444;font-weight:600;font-size:0.85rem;">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+Order Cancelled
+</div>
+</div>`;
+}
+
+const steps = [
+{ key: ORDER_STATUS.PLACED, label: 'Placed' },
+{ key: ORDER_STATUS.CONFIRMED, label: 'Confirmed' },
+{ key: ORDER_STATUS.IN_TRANSIT, label: 'In Transit' },
+{ key: ORDER_STATUS.DELIVERED, label: 'Delivered' },
+];
+
+const stepOrder = steps.map(s => s.key);
+const currentIdx = stepOrder.indexOf(status);
+if (currentIdx === -1) return '';
+
+return `
+<div class="order-timeline" style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--neutral-200);">
+<div style="display:flex;align-items:center;width:100%;">
+${steps.map((step, i) => {
+const isCompleted = i <= currentIdx;
+const isCurrent = i === currentIdx;
+const dotColor = isCompleted ? (isCurrent ? this.getStatusColor(status) : '#10b981') : 'var(--neutral-300)';
+const lineColor = i < currentIdx ? '#10b981' : 'var(--neutral-200)';
+return `
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;position:relative;">
+${i > 0 ? `<div style="position:absolute;top:8px;left:-50%;width:100%;height:2px;background:${lineColor};z-index:0;"></div>` : ''}
+<div style="width:18px;height:18px;border-radius:50%;background:${dotColor};border:2px solid ${dotColor};z-index:1;display:flex;align-items:center;justify-content:center;margin-bottom:4px;">
+${isCompleted && !isCurrent ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>' : ''}
+${isCurrent ? '<div style="width:6px;height:6px;border-radius:50%;background:white;"></div>' : ''}
+</div>
+<span style="font-size:0.7rem;color:${isCompleted ? 'var(--neutral-700)' : 'var(--neutral-400)'};font-weight:${isCurrent ? '600' : '400'};text-align:center;white-space:nowrap;">${step.label}</span>
+</div>`;
+}).join('')}
+</div>
+</div>`;
+}
+
+/**
+* View Order Details (expand in page)
+*/
+static viewOrderDetails (orderId) {
+const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
+const currentUser = session?.user || null;
+if (!currentUser) return;
+
+const orders = checkoutManager.getUserOrders(currentUser.id);
+const order = orders.find(o => o.id === orderId);
+if (!order) {
+notificationManager?.error('Not Found', 'Order not found');
+return;
+}
+
+const overlay = document.createElement('div');
+overlay.id = 'order-detail-overlay';
+overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;';
+overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+overlay.innerHTML = `
+<div style="background:var(--bg-primary);border-radius:var(--radius-xl);padding:2rem;max-width:600px;width:100%;box-shadow:var(--shadow-xl);max-height:90vh;overflow-y:auto;">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+<h2 style="margin:0;">Order #${order.orderNumber}</h2>
+<button class="btn btn-ghost btn-sm" onclick="document.getElementById('order-detail-overlay').remove()">Close</button>
+</div>
+<span class="condition-badge ${order.status}" style="background:${this.getStatusColor(order.status)};color:white;padding:0.25rem 0.75rem;border-radius:999px;font-size:0.875rem;margin-bottom:1rem;display:inline-block;">
+${Formatter.capitalize(order.status.replace('-', ' '))}
+</span>
+${Pages.renderOrderTimeline(order.status)}
+<div style="margin-top:1.5rem;">
+<h3 style="font-size:1rem;margin:0 0 1rem;">Items</h3>
+${order.items.map(item => `
+<div style="display:flex;gap:1rem;margin-bottom:0.75rem;align-items:center;">
+<img src="${item.image}" alt="${item.title}" style="width:50px;height:50px;object-fit:cover;border-radius:var(--radius-md);" />
+<div style="flex:1;">
+<div style="font-weight:500;">${item.title}</div>
+<div style="color:var(--neutral-500);font-size:0.85rem;">Qty: ${item.quantity}</div>
+</div>
+<div style="font-weight:600;">${Formatter.formatPrice(item.price * item.quantity)}</div>
+</div>
+`).join('')}
+</div>
+<div style="border-top:1px solid var(--neutral-200);padding-top:1rem;margin-top:1rem;display:flex;justify-content:space-between;align-items:center;">
+<div>
+<div style="color:var(--neutral-500);font-size:0.85rem;">Order Total</div>
+<div style="font-weight:700;font-size:1.25rem;">${Formatter.formatPrice(order.pricing.grandTotal)}</div>
+</div>
+<div style="color:var(--neutral-500);font-size:0.85rem;">
+${Formatter.formatDate(order.createdAt)}
+</div>
+</div>
+</div>
+`;
+
+document.body.appendChild(overlay);
+}
 
   /**
    * View order details
@@ -3865,21 +4469,76 @@ class Pages {
     }
   }
 
-  /**
-   * Update cart badge in navbar
-   */
-  static updateCartBadge () {
-    const badge = document.getElementById('cart-badge');
-    if (badge) {
-      const count = cartManager.getCount();
-      if (count > 0) {
-        badge.textContent = count;
-        badge.style.display = 'flex';
-      } else {
-        badge.style.display = 'none';
-      }
-    }
-  }
+/**
+* Update cart badge in navbar
+*/
+static updateCartBadge () {
+const badge = document.getElementById('cart-badge');
+if (badge) {
+const count = cartManager.getCount();
+if (count > 0) {
+badge.textContent = count;
+badge.style.display = 'flex';
+} else {
+badge.style.display = 'none';
+}
+}
+}
+
+/**
+* Update wishlist badge in navbar
+*/
+static updateWishlistBadge () {
+const badge = document.getElementById('wishlist-badge');
+if (badge) {
+const count = productsManager.getWishlist().length;
+if (count > 0) {
+badge.textContent = count;
+badge.style.display = 'flex';
+} else {
+badge.style.display = 'none';
+}
+}
+}
+
+/**
+* Initialize dark mode from saved preference
+*/
+static initDarkMode () {
+const saved = StorageManager.get(STORAGE_KEYS.THEME, false);
+if (saved === 'dark') {
+document.documentElement.setAttribute('data-theme', 'dark');
+}
+Pages.updateDarkModeIcons();
+}
+
+/**
+* Toggle dark mode
+*/
+static toggleDarkMode () {
+const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+if (isDark) {
+document.documentElement.removeAttribute('data-theme');
+StorageManager.set(STORAGE_KEYS.THEME, 'light');
+} else {
+document.documentElement.setAttribute('data-theme', 'dark');
+StorageManager.set(STORAGE_KEYS.THEME, 'dark');
+}
+Pages.updateDarkModeIcons();
+}
+
+/**
+* Update dark mode toggle icons
+*/
+static updateDarkModeIcons () {
+const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+const sunIcon = document.getElementById('dark-mode-icon-sun');
+const moonIcon = document.getElementById('dark-mode-icon-moon');
+if (sunIcon && moonIcon) {
+sunIcon.style.display = isDark ? 'block' : 'none';
+moonIcon.style.display = isDark ? 'none' : 'block';
+}
+}
 
   /**
    * Update navbar based on authentication state
@@ -3887,16 +4546,32 @@ class Pages {
   static updateNavbar () {
     const authButtons = document.getElementById('navbar-auth-buttons');
     const userMenu = document.getElementById('navbar-user-menu');
-    const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
+    const drawerAuth = document.getElementById('navbar-drawer-auth');
+    const drawerUser = document.getElementById('navbar-drawer-user');
 
-    if (currentUser && authButtons && userMenu) {
-      authButtons.style.display = 'none';
-      userMenu.style.display = 'flex';
-      userMenu.style.gap = 'var(--space-sm)';
-    } else if (authButtons && userMenu) {
-      authButtons.style.display = 'flex';
-      authButtons.style.gap = 'var(--space-sm)';
-      userMenu.style.display = 'none';
+    // Check auth using authManager (which uses unihub_session)
+    const isLoggedIn = typeof authManager !== 'undefined' && authManager.isLoggedIn();
+
+    if (isLoggedIn) {
+      // Desktop navbar - logged in
+      if (authButtons) authButtons.style.display = 'none';
+      if (userMenu) {
+        userMenu.style.display = 'flex';
+        userMenu.style.gap = 'var(--space-sm)';
+      }
+      // Mobile drawer - logged in
+      if (drawerAuth) drawerAuth.style.display = 'none';
+      if (drawerUser) drawerUser.style.display = 'block';
+    } else {
+      // Desktop navbar - logged out
+      if (authButtons) {
+        authButtons.style.display = 'flex';
+        authButtons.style.gap = 'var(--space-sm)';
+      }
+      if (userMenu) userMenu.style.display = 'none';
+      // Mobile drawer - logged out
+      if (drawerAuth) drawerAuth.style.display = 'block';
+      if (drawerUser) drawerUser.style.display = 'none';
     }
   }
 
@@ -3904,42 +4579,180 @@ class Pages {
   // ADDITIONAL PAGE RENDERERS (Placeholder implementations)
   // ============================================
 
-  /**
-   * Render Wishlist Page
-   */
-  static renderWishlist () {
-    const mainContent = document.getElementById('main-content');
-    const wishlistProducts = productsManager.getWishlist();
+/**
+* Render Wishlist Page
+*/
+static renderWishlist () {
+const mainContent = document.getElementById('main-content');
+const wishlistProducts = productsManager.getWishlist();
+const priceDrops = productsManager.trackWishlistPrices();
 
-    if (wishlistProducts.length === 0) {
-      mainContent.innerHTML = `
-        <div class="container" style="padding: 3rem 1rem; text-align: center;">
-          <div class="empty-cart">
-            <div class="empty-cart-icon">🤍</div>
-            <h3>Your wishlist is empty</h3>
-            <p>Save your favorite items to see them here.</p>
-            <button class="btn btn-primary" onclick="Pages.renderBrowse()">Browse Products</button>
-          </div>
-        </div>
-      `;
-      return;
-    }
+if (wishlistProducts.length === 0) {
+mainContent.innerHTML = `
+<div class="container" style="padding: 3rem 1rem; text-align: center;">
+<div class="empty-cart">
+<div class="empty-cart-icon">${Icons.heartOutline}</div>
+<h3>Your wishlist is empty</h3>
+<p>Save your favorite items to see them here.</p>
+<button class="btn btn-primary" onclick="Pages.renderBrowse()">Browse Products</button>
+</div>
+</div>
+`;
+return;
+}
 
-    mainContent.innerHTML = `
-      <div class="container" style="padding: 2rem 1rem;">
-        <h1 style="margin-bottom: 1.5rem;">My Wishlist</h1>
-        <div class="products-grid">
-          ${wishlistProducts.map(product => this.renderProductCard(product)).join('')}
-        </div>
-      </div>
-    `;
-  }
+const priceDropBanner = priceDrops.length > 0
+? `<div style="background:var(--color-success-light);border:1px solid var(--color-success);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2"><path d="M13 17V7M6 17l5-5 5 5M20 7l-5 5"/></svg>
+<div>
+<strong style="color:var(--color-success);">Price Drop Alert!</strong>
+<span style="font-size:0.9rem;"> ${priceDrops.length} item${priceDrops.length > 1 ? 's' : ''} in your wishlist ${priceDrops.length > 1 ? 'have' : 'has'} dropped in price.</span>
+</div>
+${priceDrops.map(d => `<span style="font-size:0.8rem;background:var(--bg-primary);padding:2px 8px;border-radius:var(--radius-md);">${d.title}: GHS ${d.oldPrice.toLocaleString()} → GHS ${d.newPrice.toLocaleString()} <strong style="color:var(--color-success);">(-GHS ${d.saved.toLocaleString()})</strong></span>`).join('')}
+</div>`
+: '';
+
+mainContent.innerHTML = `
+<div class="container" style="padding: 2rem 1rem;">
+${priceDropBanner}
+<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+<div>
+<h1 style="margin: 0;">My Wishlist</h1>
+<p style="color: var(--neutral-600); margin: 0.5rem 0 0;">${wishlistProducts.length} item${wishlistProducts.length !== 1 ? 's' : ''} saved</p>
+</div>
+<div style="display: flex; gap: 0.75rem;">
+<button class="btn btn-outline" onclick="Pages.addAllWishlistToCart()" title="Add all to cart">
+${Icons.cart} Add All to Cart
+</button>
+<button class="btn btn-outline" style="color: var(--color-danger); border-color: var(--color-danger-light);" onclick="Pages.clearWishlist()" title="Remove all">
+${Icons.trash} Clear All
+</button>
+</div>
+</div>
+<div class="wishlist-grid">
+${wishlistProducts.map(product => {
+const initials = product.seller?.name
+? product.seller.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+: 'UN';
+const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
+const conditionClass = product.condition || 'good';
+return `
+<div class="wishlist-card" onclick="Pages.renderProductDetail('${product.id}')">
+<div class="wishlist-card-image">
+<img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy">
+<span class="condition-badge ${conditionClass}" style="position:absolute;top:0.5rem;left:0.5rem;">${conditionLabel}</span>
+<button class="wishlist-card-remove" onclick="event.stopPropagation(); Pages.toggleWishlistDetail('${product.id}')" title="Remove from wishlist">
+<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+</button>
+</div>
+<div class="wishlist-card-info">
+<h3 class="wishlist-card-title">${product.title}</h3>
+<div style="display:flex;align-items:center;gap:0.5rem;margin:0.25rem 0;">
+<span style="font-weight:700;color:var(--price-color);font-size:1.1rem;">GHS ${product.price?.toLocaleString() || '0'}</span>
+</div>
+<div class="wishlist-card-seller">
+<div class="seller-avatar" style="width:24px;height:24px;font-size:10px;">${initials}</div>
+<span style="font-size:0.85rem;color:var(--neutral-600);">${product.seller?.name || 'Unknown'}</span>
+${product.seller?.rating ? `<span style="font-size:0.8rem;color:var(--neutral-500);">★ ${product.seller.rating}</span>` : ''}
+</div>
+<div class="wishlist-card-actions">
+<button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); cartManager?.add(${JSON.stringify(product).replace(/"/g, '&quot;')}); Pages.updateCartBadge(); notificationManager?.success('Added to Cart','Item added to your cart');" style="flex:1;">Add to Cart</button>
+<button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); Pages.shareProduct('${product.id}')" title="Share">
+${Icons.upload}
+</button>
+</div>
+</div>
+</div>`;
+}).join('')}
+</div>
+</div>
+<style>
+.wishlist-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+gap: 1.25rem;
+}
+.wishlist-card {
+background: var(--bg-primary);
+border-radius: var(--radius-lg);
+overflow: hidden;
+cursor: pointer;
+transition: box-shadow 0.2s, transform 0.2s;
+border: 1px solid var(--neutral-200);
+}
+.wishlist-card:hover {
+box-shadow: var(--shadow-card-hover);
+transform: translateY(-2px);
+}
+.wishlist-card-image {
+position: relative;
+aspect-ratio: 1;
+overflow: hidden;
+background: var(--neutral-100);
+}
+.wishlist-card-image img {
+width: 100%;
+height: 100%;
+object-fit: cover;
+}
+.wishlist-card-remove {
+position: absolute;
+top: 0.5rem;
+right: 0.5rem;
+width: 30px;
+height: 30px;
+border-radius: 50%;
+background: rgba(255,255,255,0.9);
+border: none;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+color: var(--neutral-500);
+transition: all 0.15s;
+}
+.wishlist-card-remove:hover {
+background: var(--color-danger);
+color: white;
+}
+.wishlist-card-info {
+padding: 1rem;
+}
+.wishlist-card-title {
+font-size: 0.95rem;
+font-weight: 600;
+margin: 0 0 0.25rem;
+display: -webkit-box;
+-webkit-line-clamp: 2;
+-webkit-box-orient: vertical;
+overflow: hidden;
+}
+.wishlist-card-seller {
+display: flex;
+align-items: center;
+gap: 0.4rem;
+margin: 0.5rem 0 0.75rem;
+}
+.wishlist-card-actions {
+display: flex;
+gap: 0.5rem;
+}
+.btn-sm {
+padding: 0.4rem 0.75rem;
+font-size: 0.8rem;
+}
+</style>
+`;
+
+window.scrollTo(0, 0);
+}
 
   /**
    * Render User Dashboard - Vertical Tabs Modern Design
    */
   static renderDashboard () {
-    const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
+    const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
+    const currentUser = session?.user || null;
 
     if (!currentUser) {
       alert('Please login to view your dashboard.');
@@ -4094,11 +4907,11 @@ class Pages {
       .map(
         order => `
                   <div class="dv-order-item">
-                    <div class="dv-order-icon">📦</div>
-                    <div class="dv-order-info">
-                      <div class="dv-order-number">Order #${order.orderNumber}</div>
-                      <div class="dv-order-amount">${Formatter.formatPrice(order.pricing.grandTotal)}</div>
-                    </div>
+<div class="dv-order-icon">${Icons.package}</div>
+          <div class="dv-order-info">
+            <div class="dv-order-number">Order #${order.orderNumber}</div>
+            <div class="dv-order-amount">${Formatter.formatPrice(order.pricing.grandTotal)}</div>
+          </div>
                     <div class="dv-order-time">${Formatter.formatTimeAgo(order.createdAt)}</div>
                     <span class="dv-order-status ${order.status ? order.status.toLowerCase() : 'placed'}">${order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'Placed'}</span>
                   </div>
@@ -4107,9 +4920,9 @@ class Pages {
       .join('')
     : `
                   <div class="dv-empty">
-                    <div class="dv-empty-icon">📦</div>
-                    <h3>No orders yet</h3>
-                    <p>Start shopping to see your orders here!</p>
+<div class="dv-empty-icon">${Icons.package}</div>
+        <h3>No orders yet</h3>
+        <p>Start shopping to see your orders here!</p>
                   </div>
                 `
 }
@@ -4128,11 +4941,11 @@ class Pages {
       .map(
         order => `
                   <div class="dv-order-item">
-                    <div class="dv-order-icon">📦</div>
-                    <div class="dv-order-info">
-                      <div class="dv-order-number">Order #${order.orderNumber}</div>
-                      <div class="dv-order-amount">${order.items.length} item(s) • ${Formatter.formatPrice(order.pricing.grandTotal)}</div>
-                    </div>
+<div class="dv-order-icon">${Icons.package}</div>
+          <div class="dv-order-info">
+            <div class="dv-order-number">Order #${order.orderNumber}</div>
+            <div class="dv-order-amount">${order.items.length} item(s) • ${Formatter.formatPrice(order.pricing.grandTotal)}</div>
+          </div>
                     <div class="dv-order-time">${Formatter.formatTimeAgo(order.createdAt)}</div>
                     <span class="dv-order-status ${order.status ? order.status.toLowerCase() : 'placed'}">${order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'Placed'}</span>
                   </div>
@@ -4141,9 +4954,9 @@ class Pages {
       .join('')
     : `
                   <div class="dv-empty">
-                    <div class="dv-empty-icon">🛒</div>
-                    <h3>No orders yet</h3>
-                    <p>Browse products and make your first purchase!</p>
+<div class="dv-empty-icon">${Icons.cart}</div>
+        <h3>No orders yet</h3>
+        <p>Browse products and make your first purchase!</p>
                   </div>
                 `
 }
@@ -4166,7 +4979,7 @@ class Pages {
                       <div class="store-product-image">
                         <img src="${product.images[0]}" alt="${product.title}" loading="lazy" />
                         <span class="store-condition-badge ${product.condition}">${product.condition.charAt(0).toUpperCase() + product.condition.slice(1)}</span>
-                        <button class="store-wishlist-btn active" onclick="Pages.toggleWishlist(event, '${product.id}'); Pages.renderDashboard();">❤️</button>
+                        <button class="store-wishlist-btn active" onclick="Pages.toggleWishlist(event, '${product.id}'); Pages.renderDashboard();">${Icons.heart}</button>
                       </div>
                       <div class="store-product-info">
                         <h3 class="store-product-title">${product.title}</h3>
@@ -4183,8 +4996,8 @@ class Pages {
               `
     : `
                 <div class="dv-empty">
-                  <div class="dv-empty-icon">🤍</div>
-                  <h3>Your wishlist is empty</h3>
+<div class="dv-empty-icon">${Icons.heartOutline}</div>
+        <h3>Your wishlist is empty</h3>
                   <p>Save items you love to find them later!</p>
                 </div>
               `
@@ -4205,11 +5018,11 @@ class Pages {
     .map(
       item => `
                     <div class="dv-order-item">
-                      <div class="dv-order-icon">🛒</div>
-                      <div class="dv-order-info">
-                        <div class="dv-order-number">${item.product.title}</div>
-                        <div class="dv-order-amount">Qty: ${item.quantity} × ${item.product.price.toLocaleString()} GHS</div>
-                      </div>
+<div class="dv-order-icon">${Icons.cart}</div>
+          <div class="dv-order-info">
+            <div class="dv-order-number">${item.product.title}</div>
+            <div class="dv-order-amount">Qty: ${item.quantity} × ${item.product.price.toLocaleString()} GHS</div>
+          </div>
                     </div>
                   `,
     )
@@ -4217,14 +5030,14 @@ class Pages {
                 </div>
                 <div style="margin-top:1.5rem;display:flex;gap:0.75rem;">
                   <button class="dv-btn dv-btn-outline" onclick="cartManager.clear(); Pages.renderDashboard();">Clear Cart</button>
-                  <button class="dv-btn dv-btn-primary" onclick="Pages.renderCheckout()">Proceed to Checkout →</button>
+                  <button class="dv-btn dv-btn-primary" onclick="event.preventDefault(); Pages.handleProceedToCheckout();">Proceed to Checkout →</button>
                 </div>
               `
     : `
                 <div class="dv-empty">
-                  <div class="dv-empty-icon">🛒</div>
-                  <h3>Your cart is empty</h3>
-                  <p>Add items to get started!</p>
+<div class="dv-empty-icon">${Icons.cart}</div>
+        <h3>Your cart is empty</h3>
+        <p>Add items to get started!</p>
                 </div>
               `
 }
@@ -4273,7 +5086,7 @@ class Pages {
                   <input type="text" class="dv-form-input" value="${currentUser.role ? currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1) : 'Buyer'}" disabled />
                 </div>
                 <div style="margin-top:2rem;display:flex;flex-direction:column;gap:0.75rem;">
-                  <button class="dv-btn dv-btn-outline" onclick="Pages.renderLogin(); Pages.handleLogout();">
+                  <button class="dv-btn dv-btn-outline" onclick="Pages.handleLogout();">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
                     Log Out
                   </button>
@@ -4305,7 +5118,8 @@ class Pages {
    * Render User Profile
    */
   static renderProfile () {
-    const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
+    const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
+    const currentUser = session?.user || null;
 
     if (!currentUser) {
       alert('Please login to view your profile.');
@@ -4359,9 +5173,9 @@ class Pages {
 
     const result = authManager.updateProfile(updates);
     if (result.success) {
-      notificationManager.success('Profile Updated', result.message);
+      notificationManager?.success('Profile Updated', result.message);
     } else {
-      notificationManager.error('Update Failed', result.error);
+      notificationManager?.error('Update Failed', result.error);
     }
   }
 
@@ -4370,7 +5184,9 @@ class Pages {
    */
   static handleLogout () {
     authManager.logout();
-    notificationManager.info('Logged Out', 'You have been logged out successfully.');
+    notificationManager?.info('Logged Out', 'You have been logged out successfully.');
+    // Update navbar to show login/signup buttons
+    this.updateNavbar();
     this.renderLanding();
   }
 
@@ -4379,7 +5195,7 @@ class Pages {
    */
   static renderNotifications () {
     const mainContent = document.getElementById('main-content');
-    const notifications = notificationManager.getAll();
+    const notifications = notificationManager?.getAll();
 
     mainContent.innerHTML = `
       <div class="container" style="padding: 2rem 1rem; max-width: 800px;">
@@ -4397,10 +5213,10 @@ class Pages {
                   <div style="font-weight: 600;">${n.title}</div>
                   <div style="color: var(--neutral-600);">${n.message}</div>
                   <div style="font-size: 0.875rem; color: var(--neutral-500); margin-top: 0.5rem;">
-                    ${notificationManager.formatTime(n.createdAt)}
+                    ${notificationManager?.formatTime(n.createdAt)}
                   </div>
                 </div>
-                <button class="remove-btn" onclick="notificationManager.delete('${n.id}'); Pages.renderNotifications();">×</button>
+                <button class="remove-btn" onclick="notificationManager?.delete('${n.id}'); Pages.renderNotifications();">×</button>
               </div>
             `,
     )
@@ -4409,8 +5225,8 @@ class Pages {
         `
     : `
           <div class="empty-cart">
-            <div class="empty-cart-icon">🔔</div>
-            <h3>No notifications</h3>
+<div class="empty-cart-icon">${Icons.bell}</div>
+        <h3>No notifications</h3>
             <p>You're all caught up!</p>
           </div>
         `
@@ -4423,7 +5239,8 @@ class Pages {
    * Render Seller Dashboard
    */
   static renderSellerDashboard () {
-    const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
+    const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
+    const currentUser = session?.user || null;
 
     if (!currentUser) {
       alert('Please login to access seller dashboard.');
@@ -4438,31 +5255,31 @@ class Pages {
       <div class="seller-dashboard">
         <aside class="seller-sidebar">
           <div class="seller-brand">
-            <div class="seller-brand-icon">🏪</div>
+            <div class="seller-brand-icon">${Icons.store}</div>
             <div class="seller-brand-name">Seller Hub</div>
           </div>
           <ul class="seller-nav">
             <li class="seller-nav-item">
               <a href="#" class="seller-nav-link active">
-                <span class="seller-nav-icon">📊</span>
+                <span class="seller-nav-icon">${Icons.chart}</span>
                 <span>Dashboard</span>
               </a>
             </li>
             <li class="seller-nav-item">
               <a href="#" class="seller-nav-link" onclick="Pages.renderAddProduct()">
-                <span class="seller-nav-icon">➕</span>
+                <span class="seller-nav-icon">${Icons.plus}</span>
                 <span>Add Product</span>
               </a>
             </li>
             <li class="seller-nav-item">
               <a href="#" class="seller-nav-link" onclick="Pages.renderManageProducts()">
-                <span class="seller-nav-icon">📦</span>
+                <span class="seller-nav-icon">${Icons.package}</span>
                 <span>Manage Products</span>
               </a>
             </li>
             <li class="seller-nav-item">
               <a href="#" class="seller-nav-link" onclick="Pages.renderSellerOrders()">
-                <span class="seller-nav-icon">📋</span>
+                <span class="seller-nav-icon">${Icons.clipboard}</span>
                 <span>Orders</span>
               </a>
             </li>
@@ -4478,7 +5295,7 @@ class Pages {
           <div class="seller-stats">
             <div class="seller-stat-card">
               <div class="seller-stat-header">
-                <div class="seller-stat-icon">📦</div>
+                <div class="seller-stat-icon">${Icons.package}</div>
               </div>
               <div class="seller-stat-value">${sellerProducts.length}</div>
               <div class="seller-stat-label">Total Products</div>
@@ -4493,7 +5310,8 @@ class Pages {
    * Render Add Product Page
    */
   static renderAddProduct () {
-    const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
+    const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
+    const currentUser = session?.user || null;
 
     if (!currentUser) {
       alert('Please login to list products.');
@@ -4730,11 +5548,11 @@ class Pages {
         productsManager.updateProduct(productId, productData);
       }
 
-      notificationManager.success('Product Listed', result.message);
+      notificationManager?.success('Product Listed', result.message);
       Pages.selectedProductImages = []; // Clear selected images
       Pages.renderManageProducts();
     } catch (e) {
-      notificationManager.error('Error', e.message);
+      notificationManager?.error('Error', e.message);
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Add Product';
@@ -4745,7 +5563,8 @@ class Pages {
    * Render Manage Products Page
    */
   static renderManageProducts () {
-    const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
+    const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
+    const currentUser = session?.user || null;
     const sellerProducts = productsManager.getBySeller(currentUser?.id || '');
 
     const mainContent = document.getElementById('main-content');
@@ -4783,10 +5602,10 @@ class Pages {
         `
     : `
           <div class="empty-cart">
-            <div class="empty-cart-icon">📦</div>
-            <h3>No products yet</h3>
-            <p>Start selling by adding your first product.</p>
-            <button class="btn btn-primary" onclick="Pages.renderAddProduct()">Add Product</button>
+<div class="empty-cart-icon">${Icons.package}</div>
+        <h3>No products yet</h3>
+        <p>Start selling by adding your first product.</p>
+        <button class="btn btn-primary" onclick="Pages.renderAddProduct()">Add Product</button>
           </div>
         `
 }
@@ -4803,8 +5622,8 @@ class Pages {
       <div class="container" style="padding: 2rem 1rem;">
         <h1 style="margin-bottom: 1.5rem;">Seller Orders</h1>
         <div class="empty-cart">
-          <div class="empty-cart-icon">📋</div>
-          <h3>No orders yet</h3>
+<div class="empty-cart-icon">${Icons.clipboard}</div>
+        <h3>No orders yet</h3>
           <p>Orders will appear here when customers purchase your products.</p>
         </div>
       </div>
@@ -4854,7 +5673,7 @@ class Pages {
   delivery
     ? `
           <div class="order-confirmation-container">
-            <div class="confirmation-icon">🚚</div>
+            <div class="confirmation-icon">${Icons.truck}</div>
             <h2>Order #${delivery.orderNumber}</h2>
             <div class="status-badge ${delivery.status}" style="display: inline-block; margin: 1rem 0;">
               ${Formatter.capitalize(delivery.status)}
@@ -4877,9 +5696,9 @@ class Pages {
         `
     : `
           <div class="empty-cart">
-            <div class="empty-cart-icon">📦</div>
-            <h3>Order not found</h3>
-            <p>Unable to track this order.</p>
+<div class="empty-cart-icon">${Icons.package}</div>
+        <h3>Order not found</h3>
+        <p>Unable to track this order.</p>
             <button class="btn btn-primary" onclick="Pages.renderOrders()">View My Orders</button>
           </div>
         `
@@ -4942,7 +5761,7 @@ class Pages {
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `
       <div class="container" style="padding: 2rem 1rem; text-align: center;">
-        <div class="confirmation-icon">✅</div>
+        <div class="confirmation-icon">${Icons.checkCircle}</div>
         <h1>Payment Successful!</h1>
         <p style="color: var(--neutral-600); margin-bottom: 2rem;">Your payment has been processed successfully.</p>
         <button class="btn btn-primary" onclick="Pages.renderBrowse()">Continue Shopping</button>
@@ -4968,45 +5787,45 @@ class Pages {
       <div class="admin-container">
         <aside class="admin-sidebar">
           <div class="admin-brand">
-            <div class="admin-brand-icon">⚙️</div>
+            <div class="admin-brand-icon">'${Icons.settings}'</div>
             <div class="admin-brand-name">Admin Panel</div>
           </div>
           <nav class="admin-nav-section">
             <div class="admin-nav-title">Main</div>
             <ul class="admin-menu">
-              <li class="admin-menu-item">
-                <a href="#" class="admin-menu-link active">
-                  <span class="admin-menu-icon">📊</span>
-                  <span>Dashboard</span>
-                </a>
-              </li>
+<li class="admin-menu-item">
+              <a href="#" class="admin-menu-link active">
+                <span class="admin-menu-icon">${Icons.chart}</span>
+                <span>Dashboard</span>
+              </a>
+            </li>
               <li class="admin-menu-item">
                 <a href="#" class="admin-menu-link" onclick="Pages.renderAdminUsers()">
-                  <span class="admin-menu-icon">👥</span>
+                  <span class="admin-menu-icon">${Icons.users}</span>
                   <span>Users</span>
                 </a>
               </li>
               <li class="admin-menu-item">
                 <a href="#" class="admin-menu-link" onclick="Pages.renderAdminProducts()">
-                  <span class="admin-menu-icon">📦</span>
+                  <span class="admin-menu-icon">${Icons.package}</span>
                   <span>Products</span>
                 </a>
               </li>
-              <li class="admin-menu-item">
-                <a href="#" class="admin-menu-link" onclick="Pages.renderAdminOrders()">
-                  <span class="admin-menu-icon">📋</span>
-                  <span>Orders</span>
+<li class="admin-menu-item">
+              <a href="#" class="admin-menu-link" onclick="Pages.renderAdminOrders()">
+                <span class="admin-menu-icon">${Icons.clipboard}</span>
+                <span>Orders</span>
                 </a>
-              </li>
-              <li class="admin-menu-item">
-                <a href="#" class="admin-menu-link" onclick="Pages.renderAdminReports()">
-                  <span class="admin-menu-icon">📈</span>
-                  <span>Reports</span>
-                </a>
-              </li>
-            </ul>
-          </nav>
-        </aside>
+</li>
+            <li class="admin-menu-item">
+              <a href="#" class="admin-menu-link" onclick="Pages.renderAdminReports()">
+                <span class="admin-menu-icon">${Icons.chart}</span>
+                <span>Reports</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
         <main class="admin-main">
           <div class="admin-header">
             <h1 class="admin-title">Dashboard Overview</h1>
@@ -5017,28 +5836,28 @@ class Pages {
           <div class="admin-stats">
             <div class="admin-stat-card">
               <div class="admin-stat-header">
-                <div class="admin-stat-icon primary">👥</div>
+                <div class="admin-stat-icon primary">${Icons.users}</div>
               </div>
               <div class="admin-stat-value">${stats.summary.totalUsers}</div>
               <div class="admin-stat-label">Total Users</div>
             </div>
             <div class="admin-stat-card">
               <div class="admin-stat-header">
-                <div class="admin-stat-icon success">📦</div>
+                <div class="admin-stat-icon success">${Icons.package}</div>
               </div>
               <div class="admin-stat-value">${stats.summary.totalProducts}</div>
               <div class="admin-stat-label">Total Products</div>
             </div>
             <div class="admin-stat-card">
               <div class="admin-stat-header">
-                <div class="admin-stat-icon warning">📋</div>
+                <div class="admin-stat-icon warning">${Icons.clipboard}</div>
               </div>
               <div class="admin-stat-value">${stats.summary.totalOrders}</div>
               <div class="admin-stat-label">Total Orders</div>
             </div>
             <div class="admin-stat-card">
               <div class="admin-stat-header">
-                <div class="admin-stat-icon danger">💰</div>
+                <div class="admin-stat-icon danger">${Icons.money}</div>
               </div>
               <div class="admin-stat-value">${Formatter.formatPrice(stats.summary.totalRevenue)}</div>
               <div class="admin-stat-label">Total Revenue</div>
@@ -5086,10 +5905,10 @@ class Pages {
     const result = await adminAuthManager.login(form.email.value, form.password.value);
 
     if (result.success) {
-      notificationManager.success('Login Successful', 'Welcome to Admin Panel');
+      notificationManager?.success('Login Successful', 'Welcome to Admin Panel');
       Pages.renderAdminDashboard();
     } else {
-      notificationManager.error('Login Failed', result.error);
+      notificationManager?.error('Login Failed', result.error);
     }
   }
 
@@ -5277,7 +6096,7 @@ class Pages {
       <div class="admin-container">
         <aside class="admin-sidebar">
           <div class="admin-brand">
-            <div class="admin-brand-icon">⚙️</div>
+            <div class="admin-brand-icon">'${Icons.settings}'</div>
             <div class="admin-brand-name">Admin Panel</div>
           </div>
           <nav class="admin-nav-section">
@@ -5327,7 +6146,7 @@ class Pages {
                     <td>${Formatter.formatDate(order.createdAt)}</td>
                     <td>
                       <div class="table-actions">
-                        <button class="table-action-btn view" title="View">👁️</button>
+                        <button class="table-action-btn view" title="View">${Icons.view}</button>
                       </div>
                     </td>
                   </tr>
@@ -5353,7 +6172,7 @@ class Pages {
       <div class="admin-container">
         <aside class="admin-sidebar">
           <div class="admin-brand">
-            <div class="admin-brand-icon">⚙️</div>
+            <div class="admin-brand-icon">'${Icons.settings}'</div>
             <div class="admin-brand-name">Admin Panel</div>
           </div>
           <nav class="admin-nav-section">
@@ -5366,7 +6185,7 @@ class Pages {
               </li>
               <li class="admin-menu-item">
                 <a href="#" class="admin-menu-link active">
-                  <span class="admin-menu-icon">🌍</span>
+                  <span class="admin-menu-icon">${Icons.globe}</span>
                   <span>Regions</span>
                 </a>
               </li>
@@ -5397,7 +6216,7 @@ class Pages {
                     <td>${region.universities.length}</td>
                     <td>
                       <div class="table-actions">
-                        <button class="table-action-btn edit" title="Edit">✏️</button>
+                        <button class="table-action-btn edit" title="Edit">${Icons.edit}</button>
                       </div>
                     </td>
                   </tr>
@@ -5423,7 +6242,7 @@ class Pages {
       <div class="admin-container">
         <aside class="admin-sidebar">
           <div class="admin-brand">
-            <div class="admin-brand-icon">⚙️</div>
+            <div class="admin-brand-icon">'${Icons.settings}'</div>
             <div class="admin-brand-name">Admin Panel</div>
           </div>
           <nav class="admin-nav-section">
@@ -5433,16 +6252,16 @@ class Pages {
                   <span class="admin-menu-icon">📊</span>
                   <span>Dashboard</span>
                 </a>
-              </li>
-              <li class="admin-menu-item">
-                <a href="#" class="admin-menu-link active">
-                  <span class="admin-menu-icon">📈</span>
-                  <span>Reports</span>
-                </a>
-              </li>
-            </ul>
-          </nav>
-        </aside>
+</li>
+            <li class="admin-menu-item">
+              <a href="#" class="admin-menu-link active">
+                <span class="admin-menu-icon">${Icons.chart}</span>
+                <span>Reports</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
         <main class="admin-main">
           <div class="admin-header">
             <h1 class="admin-title">Analytics & Reports</h1>
@@ -5569,17 +6388,100 @@ class Pages {
     if (!confirm('Are you sure you want to unban this user?')) {return;}
     try {
       await api.request('/admin/users/' + userId + '/ban', { method: 'PUT', body: JSON.stringify({ action: 'unban' }) });
-      toastManager.show('User has been unbanned', 'success');
-      this.renderAdminUsers();
-    } catch (e) {
-      toastManager.show(e.message || 'Failed to unban user', 'error');
+    toastManager.show('User has been unbanned', 'success');
+        this.renderAdminUsers();
+      } catch (e) {
+        toastManager.show(e.message || 'Failed to unban user', 'error');
     }
+  }
+
+  static renderFAQ () {
+    const mainContent = document.getElementById('main-content');
+    if (!mainContent) {
+      return;
+    }
+
+    const faqItems = [
+      {
+        q: 'What is Uni-Hub?',
+        a: 'Uni-Hub is a student marketplace for buying and selling items within university communities in Ghana. Whether you\'re looking for textbooks, electronics, hostel essentials, or fashion items, Uni-Hub connects you with fellow students.',
+      },
+      {
+        q: 'How do I create an account?',
+        a: 'Click the "Sign up" button in the navigation bar. You\'ll need to provide your name, email, phone number, and university. You can also verify your student status to gain a trusted badge on your profile.',
+      },
+      {
+        q: 'How do I list an item for sale?',
+        a: 'Once logged in, click "Sell" in the navigation bar. You\'ll be taken to your seller dashboard where you can add a new product with photos, description, price, and delivery options.',
+      },
+      {
+        q: 'What payment methods are supported?',
+        a: 'Uni-Hub supports Mobile Money (MoMo), Telecel Cash, Bank Transfer, and Cash on Delivery. Payment options are set by each seller.',
+      },
+      {
+        q: 'How does delivery work?',
+        a: 'Sellers can offer delivery through Bolt, Yango, or in-person pickup. Delivery fees depend on the method chosen. In-person pickup is always free — just arrange a meeting on campus.',
+      },
+      {
+        q: 'How do I verify my student status?',
+        a: 'Go to your Dashboard and click "Verify Student Status". You can verify via your university email address or by uploading your student ID card for manual review.',
+      },
+      {
+        q: 'Is my payment secure?',
+        a: 'Uni-Hub uses secure payment processing. For Mobile Money and bank transfers, payments are processed through trusted providers. Always confirm delivery before releasing payment.',
+      },
+      {
+        q: 'Can I return an item?',
+        a: 'Returns depend on the seller\'s policy. We recommend discussing return terms with the seller before purchasing. If you have a dispute, you can report the transaction through your order page.',
+      },
+      {
+        q: 'How do I contact a seller?',
+        a: 'Use the in-app messaging feature. Go to any product page and click "Message Seller" to start a conversation. All communications happen within Uni-Hub for your safety.',
+      },
+      {
+        q: 'What if I encounter a scam?',
+        a: 'Report the user immediately through their profile or product page. Our admin team reviews all reports. Verified students with good ratings are generally safer to trade with.',
+      },
+    ];
+
+    mainContent.innerHTML = `
+      <div class="faq-page" style="max-width: 800px; margin: 0 auto; padding: 3rem 1.5rem;">
+        <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary, #111827);">Frequently Asked Questions</h1>
+        <p style="color: var(--text-secondary, #6b7280); margin-bottom: 2.5rem; font-size: 1.05rem;">Everything you need to know about buying and selling on Uni-Hub.</p>
+        <div class="faq-list">
+          ${faqItems.map((item, i) => `
+            <details class="faq-item" style="border: 1px solid var(--border-color, #e5e7eb); border-radius: 0.75rem; margin-bottom: 0.75rem; overflow: hidden; background: var(--bg-primary, #fff);${i === 0 ? ' open;' : ''}">
+              <summary style="padding: 1.25rem 1.5rem; font-weight: 600; cursor: pointer; font-size: 1rem; color: var(--text-primary, #111827); list-style: none; display: flex; justify-content: space-between; align-items: center;">
+                ${item.q}
+                <svg style="width: 20px; height: 20px; flex-shrink: 0; margin-left: 1rem; transition: transform 0.2s;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+              </summary>
+              <div style="padding: 0 1.5rem 1.25rem; color: var(--text-secondary, #6b7280); line-height: 1.6; font-size: 0.95rem;">
+                ${item.a}
+              </div>
+            </details>
+          `).join('')}
+        </div>
+        <div style="margin-top: 3rem; text-align: center; padding: 2rem; background: var(--bg-secondary, #f9fafb); border-radius: 0.75rem;">
+          <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary, #111827);">Still have questions?</h2>
+          <p style="color: var(--text-secondary, #6b7280); margin-bottom: 1.5rem;">Can't find what you're looking for? Reach out to our support team.</p>
+          <button class="btn btn-primary" onclick="Pages.navigate('/messages'); return false;">Contact Support</button>
+        </div>
+      </div>
+      <style>
+        details[open] > summary svg { transform: rotate(180deg); }
+        summary::-webkit-details-marker { display: none; }
+        .faq-item[open] { border-color: var(--primary, #0046be); }
+      </style>
+    `;
+
+    window.scrollTo(0, 0);
   }
 }
 
-// Export class for use across module scripts
+// Export for ES6 modules
+export { Pages };
+
+// Make globally available for module scripts
 if (typeof window !== 'undefined') {
   window.Pages = Pages;
-  // Signal that this module is loaded
-  window.dispatchEvent(new CustomEvent('module-loaded', { detail: 'Pages' }));
 }

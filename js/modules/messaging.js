@@ -83,16 +83,17 @@ class MessageManager {
    * Connect to Socket.IO server
    */
   connect () {
-    // Get auth token from appropriate storage location
+    // Get auth token from session (authManager storage format)
     let token;
     try {
-      // Try STORAGE_KEYS.CURRENT_USER first (contains user object with token)
-      const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
-      if (currentUser && currentUser.token) {
-        token = currentUser.token;
+      // Get session from authManager's storage key
+      const session = StorageManager.get('unihub_session', true);
+      if (session && session.token) {
+        token = session.token;
       } else {
-        // Fallback to checking raw 'authToken' key for direct token storage
-        token = StorageManager.get('authToken', false);
+        // Fallback to STORAGE_KEYS.SESSION
+        const sessionFromKey = StorageManager.get(STORAGE_KEYS.SESSION, true);
+        token = sessionFromKey?.token || null;
       }
     } catch (error) {
       console.error('Error retrieving auth token from storage:', error);
@@ -544,4 +545,10 @@ class MessageManager {
 }
 
 // Initialize and export
-const _messageManager = new MessageManager();
+const messageManager = new MessageManager();
+
+if (typeof window !== 'undefined') {
+  window.messageManager = messageManager;
+}
+
+export { MessageManager, messageManager };

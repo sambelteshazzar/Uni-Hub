@@ -5,22 +5,47 @@
 
 class API {
   constructor (baseURL = null) {
-    // Use provided URL, window config, or default to local backend
-    // Note: process.env doesn't work in browser context
     this.baseURL =
       baseURL || (typeof window !== 'undefined' && window.API_URL) || 'http://localhost:5000/api';
-    this.timeout = 30000; // 30 seconds
+    this.timeout = 30000;
+    this._csrfToken = null;
+    this._csrfPromise = null;
+  }
+
+  async fetchCsrfToken () {
+    if (this._csrfToken) return this._csrfToken;
+    if (this._csrfPromise) return this._csrfPromise;
+
+    this._csrfPromise = fetch(`${this.baseURL.replace('/api', '')}/api/auth/csrf-token`, {
+      credentials: 'include',
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.csrfToken) {
+          this._csrfToken = data.csrfToken;
+          return this._csrfToken;
+        }
+        return null;
+      })
+      .catch(() => null)
+      .finally(() => {
+        this._csrfPromise = null;
+      });
+
+    return this._csrfPromise;
   }
 
   /**
    * Get auth token from storage
+   * Note: auth.js uses 'unihub_session', NOT 'unihub_current_user'
    */
   getToken () {
     try {
-      const user = localStorage.getItem('unihub_current_user');
-      if (user) {
-        const userData = JSON.parse(user);
-        return userData.token;
+      // Use the same key as auth.js: 'unihub_session'
+      const session = localStorage.getItem('unihub_session');
+      if (session) {
+        const sessionData = JSON.parse(session);
+        return sessionData.token;
       }
     } catch (error) {
       console.error('Error getting token:', error);
@@ -38,16 +63,26 @@ class API {
     try {
       const fullUrl = url.startsWith('http') ? url : this.baseURL + url;
 
-      // Get auth token
       const token = this.getToken();
+
+      const isMutating = options.method && !['GET', 'HEAD', 'OPTIONS'].includes(options.method.toUpperCase());
+      let csrfHeaders = {};
+      if (isMutating) {
+        const csrfToken = await this.fetchCsrfToken();
+        if (csrfToken) {
+          csrfHeaders = { 'X-CSRF-Token': csrfToken };
+        }
+      }
 
       const response = await Promise.race([
         fetch(fullUrl, {
           headers: {
             'Content-Type': 'application/json',
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...csrfHeaders,
             ...options.headers,
           },
+          ...(isMutating ? { credentials: 'include' } : {}),
           ...options,
         }),
         new Promise((_, reject) =>
@@ -58,6 +93,31 @@ class API {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
+        if (response.status === 403 && data.error && data.error.toLowerCase().includes('csrf')) {
+          this._csrfToken = null;
+          const retryCsrfToken = await this.fetchCsrfToken();
+          if (retryCsrfToken) {
+            const retryResponse = await fetch(fullUrl, {
+              headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                'X-CSRF-Token': retryCsrfToken,
+                ...options.headers,
+              },
+              credentials: 'include',
+              ...options,
+            });
+            const retryData = await retryResponse.json().catch(() => ({}));
+            if (!retryResponse.ok) {
+              const error = new Error(retryData.error || retryResponse.statusText);
+              error.status = retryResponse.status;
+              error.data = retryData;
+              throw error;
+            }
+            return retryData;
+          }
+        }
+
         const error = new Error(data.error || response.statusText);
         error.status = response.status;
         error.data = data;
@@ -66,13 +126,11 @@ class API {
 
       return data;
     } catch (error) {
-      // Network errors (backend not running) - return empty data gracefully
       if (error instanceof TypeError && error.message === 'Failed to fetch') {
         console.warn('Backend unavailable - using local fallback');
         return { success: false, data: null, isOffline: true };
       }
 
-      // Timeout errors
       if (error.message === 'Request timeout') {
         console.warn('Request timed out - using local fallback');
         return { success: false, data: null, isOffline: true };
@@ -80,12 +138,10 @@ class API {
 
       console.error('API Error:', error);
 
-      // Handle 401 (unauthorized) - clear user data
       if (error.status === 401) {
-        localStorage.removeItem('unihub_current_user');
-        // Redirect to login if on a protected page
+        localStorage.removeItem('unihub_session');
         if (window.location.hash && !window.location.hash.includes('login')) {
-          // Session expired - will redirect on next navigation
+          window.location.hash = '/login';
         }
       }
 
@@ -219,8 +275,10 @@ class API {
 }
 
 // Create singleton instance
-// Create singleton instance
 const api = new API();
+
+// Export for ES6 modules
+export { API, api };
 
 // Make globally available for module scripts
 if (typeof window !== 'undefined') {

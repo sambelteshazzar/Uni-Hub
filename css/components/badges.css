@@ -52,55 +52,75 @@
 
 /* Condition Badges */
 .condition-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: 4px 12px;
-  font-size: var(--text-xs);
-  font-weight: var(--font-weight-semibold);
-  border-radius: 999px;
+display: inline-flex;
+align-items: center;
+gap: var(--space-xs);
+padding: 4px 12px;
+font-size: var(--text-xs);
+font-weight: var(--font-weight-semibold);
+border-radius: 999px;
+}
+
+.condition-badge.new {
+background: #ede9fe;
+color: #5b21b6;
+}
+
+.condition-badge.like-new {
+background: #e0e7ff;
+color: #3730a3;
 }
 
 .condition-badge.fair {
-  background: #fef3c7;
-  color: #92400e;
+background: #fef3c7;
+color: #92400e;
 }
 
 .condition-badge.good {
-  background: #dbeafe;
-  color: #1e40af;
+background: #dbeafe;
+color: #1e40af;
 }
 
 .condition-badge.excellent {
-  background: #d1fae5;
-  color: #065f46;
+background: #d1fae5;
+color: #065f46;
 }
 
 /* Product Card Condition Badge */
 .product-card-badge {
-  position: absolute;
-  top: var(--space-sm);
-  left: var(--space-sm);
-  padding: 4px 10px;
-  font-size: var(--text-xs);
-  font-weight: var(--font-weight-semibold);
-  border-radius: var(--radius-md);
-  text-transform: capitalize;
+position: absolute;
+top: var(--space-sm);
+left: var(--space-sm);
+padding: 4px 10px;
+font-size: var(--text-xs);
+font-weight: var(--font-weight-semibold);
+border-radius: var(--radius-md);
+text-transform: capitalize;
+}
+
+.product-card-badge.new {
+background: rgba(237, 233, 254, 0.95);
+color: #5b21b6;
+}
+
+.product-card-badge.like-new {
+background: rgba(224, 231, 254, 0.95);
+color: #3730a3;
 }
 
 .product-card-badge.fair {
-  background: rgba(254, 243, 199, 0.95);
-  color: #92400e;
+background: rgba(254, 243, 199, 0.95);
+color: #92400e;
 }
 
 .product-card-badge.good {
-  background: rgba(219, 234, 254, 0.95);
-  color: #1e40af;
+background: rgba(219, 234, 254, 0.95);
+color: #1e40af;
 }
 
 .product-card-badge.excellent {
-  background: rgba(209, 250, 229, 0.95);
-  color: #065f46;
+background: rgba(209, 250, 229, 0.95);
+color: #065f46;
 }
 
 /* Status Badges */
@@ -176,15 +196,53 @@
 
 /* Verified Badge */
 .verified-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--color-primary);
-  color: var(--color-white);
-  font-size: 10px;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+width: 18px;
+height: 18px;
+border-radius: 50%;
+background: var(--color-primary);
+color: var(--color-white);
+font-size: 10px;
+}
+
+/* Trust Badges */
+.trust-badge {
+display: inline-flex;
+align-items: center;
+gap: 4px;
+padding: 3px 8px;
+font-size: 11px;
+font-weight: var(--font-weight-semibold);
+border-radius: 999px;
+white-space: nowrap;
+}
+
+.trust-badge-top-seller {
+background: #fef3c7;
+color: #92400e;
+}
+
+.trust-badge-verified {
+background: #d1fae5;
+color: #065f46;
+}
+
+.trust-badge-secure {
+background: #dbeafe;
+color: #1e40af;
+}
+
+.trust-badge-buyer-protect {
+background: #ede9fe;
+color: #5b21b6;
+}
+
+.trust-badge svg {
+width: 12px;
+height: 12px;
+flex-shrink: 0;
 }
 
 /* New Badge */

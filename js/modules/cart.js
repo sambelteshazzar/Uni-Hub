@@ -250,6 +250,9 @@ class CartManager {
 // Create singleton instance
 const cartManager = new CartManager();
 
+// Export for ES6 modules
+export { CartManager, cartManager };
+
 // Make globally available for module scripts
 if (typeof window !== 'undefined') {
   window.cartManager = cartManager;

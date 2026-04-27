@@ -297,4 +297,10 @@ class PaymentManager {
 }
 
 // Create singleton instance
-const _paymentManager = new PaymentManager();
+const paymentManager = new PaymentManager();
+
+if (typeof window !== 'undefined') {
+  window.paymentManager = paymentManager;
+}
+
+export { PaymentManager, paymentManager };

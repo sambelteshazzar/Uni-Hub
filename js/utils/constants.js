@@ -8,14 +8,19 @@ const APP_VERSION = '1.0.0';
 const STORAGE_KEY_PREFIX = 'unihub_';
 
 // Storage keys
+// NOTE: CURRENT_USER now uses 'unihub_session' (not 'unihub_current_user')
+// This is the key used by authManager.js for storing session data
 const STORAGE_KEYS = {
-  CURRENT_USER: `${STORAGE_KEY_PREFIX}current_user`,
+  CURRENT_USER: `${STORAGE_KEY_PREFIX}session`,
+  SESSION: `${STORAGE_KEY_PREFIX}session`,
   SELECTED_UNIVERSITY: `${STORAGE_KEY_PREFIX}selected_university`,
   STUDENT_VERIFICATION: `${STORAGE_KEY_PREFIX}student_verification`,
   USERS: `${STORAGE_KEY_PREFIX}users`,
   FAVORITES: `${STORAGE_KEY_PREFIX}favorites`,
   CART: `${STORAGE_KEY_PREFIX}cart`,
   SEARCH_HISTORY: `${STORAGE_KEY_PREFIX}search_history`,
+  RECENTLY_VIEWED: `${STORAGE_KEY_PREFIX}recently_viewed`,
+  PRICE_HISTORY: `${STORAGE_KEY_PREFIX}price_history`,
   THEME: `${STORAGE_KEY_PREFIX}theme`,
   LANGUAGE: `${STORAGE_KEY_PREFIX}language`,
 };
@@ -47,6 +52,8 @@ const API_ENDPOINTS = {
 
 // Product conditions
 const PRODUCT_CONDITIONS = {
+  NEW: 'new',
+  LIKE_NEW: 'like-new',
   FAIR: 'fair',
   GOOD: 'good',
   EXCELLENT: 'excellent',
@@ -106,6 +113,7 @@ const ROUTES = {
   CART: '/cart',
   CHECKOUT: '/checkout',
   ORDERS: '/orders',
+  WISHLIST: '/wishlist',
   SELLING: '/selling',
   ADD_PRODUCT: '/add-product',
   ADMIN: '/admin',
@@ -183,6 +191,7 @@ if (typeof window !== 'undefined') {
   window.VALIDATION_PATTERNS = VALIDATION_PATTERNS;
   window.ERROR_MESSAGES = ERROR_MESSAGES;
   window.SUCCESS_MESSAGES = SUCCESS_MESSAGES;
-  window.PAGINATION = PAGINATION;
-  window.TIME = TIME;
+window.PAGINATION = PAGINATION;
+window.TIME = TIME;
+window.ORDER_STATUS = ORDER_STATUS;
 }

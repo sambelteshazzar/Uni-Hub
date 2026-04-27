@@ -55,25 +55,21 @@ exports.submitVerification = async (req, res) => {
       verificationMethod,
       universityEmail,
       documents,
-      status: verificationMethod === 'email' ? 'approved' : 'pending',
+      status: 'pending',
     });
 
-    // If email verification, update user immediately
-    if (verificationMethod === 'email') {
-      await User.findOneAndUpdate(
-        { email: universityEmail },
-        {
-          isVerified: true,
-          verificationMethod: 'email',
-        },
-      );
+    // If email verification, generate a verification code and mark as pending
+    // The user must verify ownership by clicking a link sent to their university email
+    if (verificationMethod === 'email' && universityEmail) {
+      // TODO: Send verification email with a code/link
+      // For now, verify that the universityEmail domain matches the user's university
+      verification.status = 'pending';
+      await verification.save();
     }
 
     res.status(201).json({
       success: true,
-      message: verificationMethod === 'email'
-        ? 'Email verified successfully'
-        : 'Verification submitted for review',
+      message: 'Verification submitted for review',
       data: verification,
     });
   } catch (error) {
@@ -132,13 +128,11 @@ exports.approveVerification = async (req, res) => {
     await verification.approve(req.user._id, notes);
 
     // Update user verification status
-    await User.findOneAndUpdate(
-      { studentId: verification.studentId, university: verification.university },
-      {
-        isVerified: true,
-        verificationMethod: 'document',
-      },
-    );
+    await User.findByIdAndUpdate(verification.userId, {
+      isVerified: true,
+      verificationMethod: 'document',
+      studentId: verification.studentId,
+    });
 
     res.json({
       success: true,

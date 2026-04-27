@@ -1,246 +1,335 @@
 /**
- * ============================================
- * Seed Database Script
- * Populate database with initial data
- * ============================================
+ * Database Seeding Script
+ * Populates the database with sample data for development
  */
-
 require('dotenv').config();
+
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const path = require('path');
-const { connectDatabase } = require(path.join(__dirname, '..', 'config', 'database'));
-const User = require(path.join(__dirname, '..', 'models', 'User.model'));
-const Product = require(path.join(__dirname, '..', 'models', 'Product.model'));
-const StudentVerification = require(path.join(__dirname, '..', 'models', 'StudentVerification.model'));
+const User = require('../models/User.model');
+const Product = require('../models/Product.model');
+const Order = require('../models/Order.model');
+const Review = require('../models/Review.model');
+const Message = require('../models/Message.model');
+const Conversation = require('../models/Conversation.model');
+const Payment = require('../models/Payment.model');
+const Delivery = require('../models/Delivery.model');
+const StudentVerification = require('../models/StudentVerification.model');
 
-const seedData = async () => {
+// Ghana Universities
+const GHANA_UNIVERSITIES = [
+  'University of Ghana (UG)',
+  'Kwame Nkrumah University of Science and Technology (KNUST)',
+  'University of Cape Coast (UCC)',
+  'University of Professional Studies, Accra (UPSA)',
+  'Ghana Institute of Management and Public Administration (GIMPA)',
+  'Ashesi University',
+  'University of Mines and Technology (UMaT)',
+  'Central University',
+  'Valley View University',
+  'Kofi Annan University of IT',
+];
+
+// Sample Users
+const SAMPLE_USERS = [
+  {
+    fullName: 'John Doe',
+    email: 'john@student.ug.edu.gh',
+    password: 'Student123!',
+    phone: '+233501234567',
+    university: 'University of Ghana (UG)',
+    level: '300',
+    hall: 'Legon Hall',
+    role: 'seller',
+    isVerified: true,
+    rating: 4.5,
+  },
+  {
+    fullName: 'Jane Smith',
+    email: 'jane@student.knust.edu.gh',
+    password: 'Student123!',
+    phone: '+233502345678',
+    university: 'Kwame Nkrumah University of Science and Technology (KNUST)',
+    level: '200',
+    hall: 'Queen Elizabeth II Hall',
+    role: 'seller',
+    isVerified: true,
+    rating: 4.8,
+  },
+  {
+    fullName: 'Mike Johnson',
+    email: 'mike@student.ucc.edu.gh',
+    password: 'Student123!',
+    phone: '+233503456789',
+    university: 'University of Cape Coast (UCC)',
+    level: '400',
+    hall: 'Casely Hayford Hall',
+    role: 'seller',
+    isVerified: false,
+    rating: 3.5,
+  },
+  {
+    fullName: 'Sarah Williams',
+    email: 'sarah@student.upsa.edu.gh',
+    password: 'Student123!',
+    phone: '+233504567890',
+    university: 'University of Professional Studies, Accra (UPSA)',
+    level: '100',
+    hall: 'N/A',
+    role: 'buyer',
+    isVerified: true,
+    rating: 0,
+  },
+  {
+    fullName: 'Admin User',
+    email: 'admin@unihub.local',
+    password: 'Admin123!',
+    phone: '+233500000000',
+    university: 'All Universities',
+    level: 'postgrad',
+    role: 'admin',
+    isVerified: true,
+    rating: 5.0,
+  },
+];
+
+// Sample Products
+const SAMPLE_PRODUCTS = [
+  {
+    title: 'MacBook Pro 2021 - 16 inch',
+    description: 'Excellent condition MacBook Pro with M1 Pro chip. 16GB RAM, 512GB SSD. Comes with original charger and box. Selling because I upgraded to the M2 version.',
+    price: 8500,
+    category: 'electronics',
+    condition: 'excellent',
+    images: [
+      'https://images.unsplash.com/photo-1517336714731-489689fd1ca4?w=800',
+      'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=800',
+    ],
+    deliveryModes: ['bolt', 'yango', 'inperson'],
+    paymentModes: ['momo', 'bank', 'cash'],
+    status: 'active',
+  },
+  {
+    title: 'Samsung Galaxy S22 Ultra',
+    description: 'Like new Samsung S22 Ultra. 128GB storage. Still under warranty. Comes with charger and case.',
+    price: 4200,
+    category: 'electronics',
+    condition: 'excellent',
+    images: [
+      'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=800',
+    ],
+    deliveryModes: ['yango', 'inperson'],
+    paymentModes: ['momo', 'cash'],
+    status: 'active',
+  },
+  {
+    title: 'Textbook: Principles of Economics (Gregory Mankiw)',
+    description: 'Economics textbook used in ECON 101. 7th edition. Some highlights and notes but in good condition.',
+    price: 150,
+    category: 'textbooks',
+    condition: 'good',
+    images: [
+      'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800',
+    ],
+    deliveryModes: ['inperson'],
+    paymentModes: ['cash', 'momo'],
+    status: 'active',
+  },
+  {
+    title: 'Electric Kettle - 1.7L',
+    description: 'Fast boiling electric kettle. Used for 1 year but still works perfectly. Selling as I\'m moving out of hostel.',
+    price: 120,
+    category: 'appliances',
+    condition: 'good',
+    images: [
+      'https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=800',
+    ],
+    deliveryModes: ['bolt', 'inperson'],
+    paymentModes: ['cash', 'momo'],
+    status: 'active',
+  },
+  {
+    title: 'Student Desk Lamp with USB Port',
+    description: 'LED desk lamp with adjustable brightness. Has USB charging port. Perfect for hostel study sessions.',
+    price: 80,
+    category: 'hostel-items',
+    condition: 'good',
+    images: [
+      'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=800',
+    ],
+    deliveryModes: ['inperson'],
+    paymentModes: ['cash'],
+    status: 'active',
+  },
+  {
+    title: 'Mini Fridge - 50L',
+    description: 'Hisense mini fridge perfect for hostel rooms. Energy efficient. Some scratches on outside but works great.',
+    price: 650,
+    category: 'appliances',
+    condition: 'fair',
+    images: [
+      'https://images.unsplash.com/photo-1571175443880-49e1d58b2c63?w=800',
+    ],
+    deliveryModes: ['bolt', 'yango', 'inperson'],
+    paymentModes: ['momo', 'cash'],
+    status: 'active',
+  },
+  {
+    title: 'Sony WH-1000XM4 Headphones',
+    description: 'Premium noise cancelling headphones. Amazing for studying in noisy hostels. Original case included.',
+    price: 1800,
+    category: 'electronics',
+    condition: 'excellent',
+    images: [
+      'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=800',
+    ],
+    deliveryModes: ['bolt', 'yango', 'inperson'],
+    paymentModes: ['momo', 'bank', 'cash'],
+    status: 'active',
+  },
+  {
+    title: 'Scientific Calculator - Casio FX-991ES',
+    description: 'Essential for engineering and science courses. All functions working perfectly.',
+    price: 180,
+    category: 'textbooks',
+    condition: 'good',
+    images: [
+      'https://images.unsplash.com/photo-1587145820266-a5951ee86f6e?w=800',
+    ],
+    deliveryModes: ['inperson'],
+    paymentModes: ['cash'],
+    status: 'active',
+  },
+  {
+    title: 'Nike Air Force 1 - Size 42',
+    description: 'White Air Force 1s. Worn a few times but cleaned and in great condition. Original box included.',
+    price: 450,
+    category: 'fashion',
+    condition: 'good',
+    images: [
+      'https://images.unsplash.com/photo-1549298916-b41d94d575f9?w=800',
+    ],
+    deliveryModes: ['bolt', 'inperson'],
+    paymentModes: ['cash', 'momo'],
+    status: 'active',
+  },
+  {
+    title: 'Textbook: Introduction to Psychology',
+    description: 'Psychology 101 textbook. 5th edition. Very minimal highlighting.',
+    price: 120,
+    category: 'textbooks',
+    condition: 'good',
+    images: [
+      'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=800',
+    ],
+    deliveryModes: ['inperson'],
+    paymentModes: ['cash'],
+    status: 'active',
+  },
+  {
+    title: 'iPad Air 4th Gen with Apple Pencil',
+    description: '64GB iPad Air with Apple Pencil. Perfect for taking notes in class. Screen protector installed.',
+    price: 3200,
+    category: 'electronics',
+    condition: 'excellent',
+    images: [
+      'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=800',
+    ],
+    deliveryModes: ['bolt', 'yango', 'inperson'],
+    paymentModes: ['momo', 'bank', 'cash'],
+    status: 'active',
+  },
+  {
+    title: 'Bedside Table / Nightstand',
+    description: 'Wooden bedside table with drawer. Minor wear but sturdy. Must collect from Hall 2.',
+    price: 90,
+    category: 'hostel-items',
+    condition: 'fair',
+    images: [
+      'https://images.unsplash.com/photo-1532372320572-cda25653a26d?w=800',
+    ],
+    deliveryModes: ['inperson'],
+    paymentModes: ['cash'],
+    status: 'active',
+  },
+];
+
+// Seed function
+async function seedDatabase () {
   try {
-    await connectDatabase();
+    // Connect to database
+    console.log('🔗 Connecting to MongoDB...');
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/uni-hub');
+    console.log('✅ Connected to MongoDB');
+
+    if (process.env.NODE_ENV === 'production') {
+      console.error('❌ Cannot seed in production environment');
+      process.exit(1);
+    }
 
     // Clear existing data
+    console.log('🗑️ Clearing existing data...');
     await User.deleteMany({});
     await Product.deleteMany({});
+    await Order.deleteMany({});
+    await Review.deleteMany({});
+    await Message.deleteMany({});
+    await Conversation.deleteMany({});
+    await Payment.deleteMany({});
+    await Delivery.deleteMany({});
     await StudentVerification.deleteMany({});
+    console.log('✅ Data cleared');
 
-    console.log('✅ Cleared existing data');
+    // Create users
+    console.log('👤 Creating sample users...');
+    const createdUsers = [];
 
-    // Create admin user
-    const adminPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'Admin123!', 10);
-    const admin = await User.create({
-      fullName: 'Admin User',
-      email: process.env.ADMIN_EMAIL || 'admin@unihub.local',
-      phone: '+233500000000',
-      password: adminPassword,
-      university: 'all',
-      role: 'admin',
-      isVerified: true,
-      rating: 5.0,
-    });
+    for (const userData of SAMPLE_USERS) {
+      const hashedPassword = await bcrypt.hash(userData.password, 10);
+      const user = await User.create({
+        ...userData,
+        password: hashedPassword,
+      });
+      createdUsers.push(user);
+      console.log(`   ✅ Created: ${user.fullName} (${user.role})`);
+    }
 
-    console.log('✅ Created admin user');
+    // Create products
+    console.log('📦 Creating sample products...');
+    const sellers = createdUsers.filter(u => u.role === 'seller');
 
-    // Create sample users
-    const users = await User.create([
-      {
-        fullName: 'Kwame Mensah',
-        email: 'kwame.mensah@ug.edu.gh',
-        phone: '+233501234567',
-        password: await bcrypt.hash('password123', 10),
-        university: 'ug',
-        level: '300',
-        hall: 'Commonwealth Hall',
-        role: 'buyer',
-        isVerified: true,
-        rating: 4.5,
-        totalOrders: 12,
-      },
-      {
-        fullName: 'Ama Osei',
-        email: 'ama.osei@knust.edu.gh',
-        phone: '+233249876543',
-        password: await bcrypt.hash('password123', 10),
-        university: 'knust',
-        level: '400',
-        hall: 'Queen Elizabeth II Hall',
-        role: 'seller',
-        isVerified: true,
-        rating: 4.8,
-        totalSales: 45,
-      },
-      {
-        fullName: 'Kofi Asante',
-        email: 'kofi.asante@ucc.edu.gh',
-        phone: '+233543217654',
-        password: await bcrypt.hash('password123', 10),
-        university: 'ucc',
-        level: '200',
-        role: 'buyer',
-        isVerified: true,
-        rating: 4.2,
-        totalOrders: 8,
-      },
-      {
-        fullName: 'Abena Darko',
-        email: 'abena.darko@uew.edu.gh',
-        phone: '+233205551234',
-        password: await bcrypt.hash('password123', 10),
-        university: 'uew',
-        level: 'postgrad',
-        role: 'seller',
-        isVerified: true,
-        rating: 4.9,
-        totalSales: 67,
-      },
-    ]);
+    for (let i = 0; i < SAMPLE_PRODUCTS.length; i++) {
+      const productData = SAMPLE_PRODUCTS[i];
+      const seller = sellers[i % sellers.length]; // Rotate through sellers
 
-    console.log('✅ Created sample users');
+      const product = await Product.create({
+        ...productData,
+        seller: seller._id,
+        sellerName: seller.fullName,
+        sellerRating: seller.rating,
+        university: seller.university,
+      });
+      console.log(`   ✅ Created: ${product.title} (${product.price} GHS)`);
+    }
 
-    // Create sample products
-    const products = await Product.create([
-      {
-        title: 'NASCO 1.5HP Split Air Conditioner',
-        description: 'Slightly used NASCO air conditioner in good working condition. Very efficient cooling. Original remote included.',
-        price: 1200,
-        category: 'appliances',
-        condition: 'good',
-        images: ['https://via.placeholder.com/400x300?text=Air+Conditioner'],
-        seller: users[1]._id,
-        sellerName: 'Ama Osei',
-        sellerRating: 4.8,
-        university: 'ug',
-        deliveryModes: ['bolt', 'yango', 'inperson'],
-        paymentModes: ['momo', 'telecel', 'bank'],
-        status: 'active',
-      },
-      {
-        title: 'Single Bed with Mattress',
-        description: 'Metal frame single bed with fairly new mattress. Suitable for hostel. Very sturdy.',
-        price: 450,
-        category: 'hostel-items',
-        condition: 'good',
-        images: ['https://via.placeholder.com/400x300?text=Bed'],
-        seller: users[0]._id,
-        sellerName: 'Kwame Mensah',
-        sellerRating: 4.5,
-        university: 'ug',
-        deliveryModes: ['bolt', 'inperson'],
-        paymentModes: ['momo', 'cash'],
-        status: 'active',
-      },
-      {
-        title: 'Samsung Galaxy A13 - Black',
-        description: 'Excellent condition Samsung Galaxy A13. Screen protector and case included. One year old, no scratches.',
-        price: 850,
-        category: 'electronics',
-        condition: 'excellent',
-        images: ['https://via.placeholder.com/400x300?text=Samsung+Phone'],
-        seller: users[1]._id,
-        sellerName: 'Ama Osei',
-        sellerRating: 4.8,
-        university: 'knust',
-        deliveryModes: ['bolt', 'yango', 'inperson'],
-        paymentModes: ['momo', 'bank'],
-        status: 'active',
-      },
-      {
-        title: 'Introductory Economics Textbook',
-        description: 'Samuelson\'s Economics textbook (10th edition). Lightly used, all pages intact. Perfect for ECON 101.',
-        price: 85,
-        category: 'textbooks',
-        condition: 'good',
-        images: ['https://via.placeholder.com/400x300?text=Textbook'],
-        seller: users[0]._id,
-        sellerName: 'Kwame Mensah',
-        sellerRating: 4.5,
-        university: 'ug',
-        deliveryModes: ['inperson'],
-        paymentModes: ['momo', 'cash'],
-        status: 'active',
-      },
-      {
-        title: 'Dell Laptop Backpack',
-        description: 'Durable Dell laptop backpack with multiple compartments. Fits up to 17-inch laptop. Fair condition, still very usable.',
-        price: 120,
-        category: 'accessories',
-        condition: 'fair',
-        images: ['https://via.placeholder.com/400x300?text=Backpack'],
-        seller: users[2]._id,
-        sellerName: 'Kofi Asante',
-        sellerRating: 4.2,
-        university: 'ucc',
-        deliveryModes: ['bolt', 'yango', 'inperson'],
-        paymentModes: ['momo', 'telecel'],
-        status: 'active',
-      },
-      {
-        title: 'HP ProBook 450 Laptop',
-        description: 'Intel i5 processor, 8GB RAM, 256GB SSD. Battery life 5-6 hours. Minor scratches on screen bezel. Runs Windows 11.',
-        price: 2100,
-        category: 'electronics',
-        condition: 'good',
-        images: ['https://via.placeholder.com/400x300?text=Laptop'],
-        seller: users[0]._id,
-        sellerName: 'Kwame Mensah',
-        sellerRating: 4.5,
-        university: 'ug',
-        deliveryModes: ['inperson'],
-        paymentModes: ['bank', 'momo'],
-        status: 'active',
-      },
-      {
-        title: 'Used Chemistry Lab Coat',
-        description: 'White chemistry lab coat, size M. Clean and ready to use. Slight staining on sleeve.',
-        price: 45,
-        category: 'fashion',
-        condition: 'fair',
-        images: ['https://via.placeholder.com/400x300?text=Lab+Coat'],
-        seller: users[1]._id,
-        sellerName: 'Ama Osei',
-        sellerRating: 4.8,
-        university: 'knust',
-        deliveryModes: ['yango', 'inperson'],
-        paymentModes: ['momo', 'cash'],
-        status: 'active',
-      },
-      {
-        title: 'Study Table with Drawer',
-        description: 'Wooden study table with one drawer and shelf. Good for assignments. Fair condition.',
-        price: 280,
-        category: 'hostel-items',
-        condition: 'fair',
-        images: ['https://via.placeholder.com/400x300?text=Study+Table'],
-        seller: users[0]._id,
-        sellerName: 'Kwame Mensah',
-        sellerRating: 4.5,
-        university: 'ug',
-        deliveryModes: ['bolt', 'inperson'],
-        paymentModes: ['momo', 'telecel', 'cash'],
-        status: 'active',
-      },
-    ]);
+    console.log('\n🎉 Database seeded successfully!');
+    console.log('\n📋 Test Accounts:');
+    console.log('   Admin: admin@unihub.local / Admin123!');
+    console.log('   Seller: john@student.ug.edu.gh / Student123!');
+    console.log('   Buyer: sarah@student.upsa.edu.gh / Student123!');
 
-    console.log('✅ Created sample products');
-
-    console.log('\n╔═══════════════════════════════════════════════════════════╗');
-    console.log('║                                                           ║');
-    console.log('║   🎉 Database seeded successfully!                        ║');
-    console.log('║                                                           ║');
-    console.log('║   Admin Login:                                            ║');
-    console.log(`║   Email: ${process.env.ADMIN_EMAIL || 'admin@unihub.local'}                    ║`);
-    console.log(`║   Password: ${process.env.ADMIN_PASSWORD || 'Admin123!'}                         ║`);
-    console.log('║                                                           ║');
-    console.log('║   Sample User Login:                                      ║');
-    console.log('║   Email: kwame.mensah@ug.edu.gh                           ║');
-    console.log('║   Password: password123                                   ║');
-    console.log('║                                                           ║');
-    console.log('╚═══════════════════════════════════════════════════════════╝\n');
-
-    process.exit(0);
   } catch (error) {
-    console.error('❌ Seed error:', error);
+    console.error('❌ Seeding failed:', error);
     process.exit(1);
+  } finally {
+    await mongoose.connection.close();
+    console.log('\n👋 Disconnected from MongoDB');
   }
-};
+}
 
-seedData();
+// Run if executed directly
+if (require.main === module) {
+  seedDatabase();
+}
+
+module.exports = { seedDatabase, SAMPLE_USERS, SAMPLE_PRODUCTS };

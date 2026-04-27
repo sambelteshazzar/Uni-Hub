@@ -186,6 +186,8 @@ class RegionManager {
 // Create singleton instance
 const regionManager = new RegionManager();
 
+export { RegionManager, regionManager };
+
 // Export to window for cross-module access
 window.regionManager = regionManager;
 if (typeof dispatchEvent !== 'undefined') {

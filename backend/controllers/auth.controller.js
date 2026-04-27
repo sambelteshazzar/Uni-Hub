@@ -239,17 +239,23 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
     });
   }
 
-  // Generate reset token
-  const resetToken = generateResetToken(user._id);
+    // Generate reset token
+    const resetToken = generateResetToken(user._id);
+    user.resetToken = resetToken;
+    user.resetTokenExpiry = Date.now() + 3600000; // 1 hour
+    await user.save({ validateBeforeSave: false });
 
-  // In production, send email with reset link
-  // For now, return the token so frontend can use it
-  // NOTE: In production, use nodemailer to send email instead
-  res.json({
-    success: true,
-    message: 'Password reset token generated. In production, this would be emailed to the user.',
-    resetToken, // Remove this in production - only for development/testing
-  });
+    // In production, send email with reset link containing the token
+    // The token should ONLY be delivered via email, never in the API response
+    if (process.env.NODE_ENV === 'production') {
+      // TODO: Send email with nodemailer containing reset link
+      // await sendResetEmail(user.email, resetToken);
+    }
+
+    res.json({
+      success: true,
+      message: 'If an account with that email exists, a password reset link has been sent.',
+    });
 });
 
 /**
@@ -264,8 +270,12 @@ exports.resetPassword = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Token and new password are required');
   }
 
-  if (newPassword.length < 6) {
-    throw new ApiError(400, 'Password must be at least 6 characters');
+  if (newPassword.length < 8) {
+    throw new ApiError(400, 'Password must be at least 8 characters with uppercase, lowercase, number, and special character');
+  }
+
+  if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(newPassword)) {
+    throw new ApiError(400, 'Password must contain uppercase, lowercase, number, and special character');
   }
 
   // Verify reset token

@@ -23,7 +23,7 @@ class ReviewManager {
         throw new Error('Seller ID and rating are required');
       }
 
-      const response = await fetch(`${API_URL}/reviews`, {
+      const response = await fetch(`${window.API_URL || ''}/api/reviews`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -291,7 +291,7 @@ class ReviewManager {
     const emptyStars = 5 - fullStars - (hasHalf ? 1 : 0);
 
     let html =
-      '<div class="star-rating" style="font-size: ${size}px; display: inline-flex; gap: 2px;">';
+      `<div class="star-rating" style="font-size: ${_size}px; display: inline-flex; gap: 2px;">`;
 
     for (let i = 0; i < fullStars; i++) {
       html += '<span class="star full">★</span>';
@@ -365,6 +365,8 @@ class ReviewManager {
 
 // Initialize and export
 const reviewManager = new ReviewManager();
+
+export { ReviewManager, reviewManager };
 
 // Export to window for cross-module access
 window.reviewManager = reviewManager;

@@ -162,9 +162,10 @@ class App {
 // Create singleton instance
 const app = new App();
 
+// Export for ES6 modules
+export { App, app };
+
 // Make globally available for module scripts
 if (typeof window !== 'undefined') {
   window.app = app;
-  // Signal that this module is loaded
-  window.dispatchEvent(new CustomEvent('module-loaded', { detail: 'app' }));
 }

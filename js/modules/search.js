@@ -321,4 +321,10 @@ class SearchManager {
 }
 
 // Create singleton instance
-const _searchManager = new SearchManager();
+const searchManager = new SearchManager();
+
+if (typeof window !== 'undefined') {
+  window.searchManager = searchManager;
+}
+
+export { SearchManager, searchManager };

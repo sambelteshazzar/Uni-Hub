@@ -59,9 +59,11 @@ const protect = async (req, res, next) => {
         });
       }
 
-      // Update last login
-      req.user.lastLogin = new Date();
-      await req.user.save();
+      // Update last login (throttled — only if >5 min since last update)
+      const fiveMinAgo = Date.now() - 5 * 60 * 1000;
+      if (!req.user.lastLogin || new Date(req.user.lastLogin).getTime() < fiveMinAgo) {
+        User.findByIdAndUpdate(req.user._id, { lastLogin: new Date() }).exec();
+      }
 
       next();
     } catch (error) {

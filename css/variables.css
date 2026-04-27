@@ -63,10 +63,12 @@
   --color-info: var(--info);
   --color-info-light: var(--info-light);
 
-  /* Product Condition Colors */
-  --condition-fair: #d27500; /* Amber */
-  --condition-good: #1a8917; /* Green */
-  --condition-excellent: #0046be; /* Blue */
+/* Product Condition Colors */
+--condition-new: #5b21b6; /* Purple */
+--condition-like-new: #3730a3; /* Indigo */
+--condition-fair: #d27500; /* Amber */
+--condition-good: #1a8917; /* Green */
+--condition-excellent: #0046be; /* Blue */
 
   /* Price Color - Best Buy blue for prices */
   --price-color: #0046be; /* Blue for prices */
@@ -175,8 +177,87 @@
   --breakpoint-xl: 1280px;
   --breakpoint-2xl: 1536px;
 
-  /* Layout */
-  --header-height: 72px; /* Taller for Best Buy style */
-  --max-content-width: 1400px; /* Wide content area like Best Buy */
-  --sidebar-width: 260px;
+/* Layout */
+--header-height: 72px; /* Taller for Best Buy style */
+--max-content-width: 1400px; /* Wide content area like Best Buy */
+--sidebar-width: 260px;
+}
+
+/* ============================================
+DARK MODE THEME
+============================================ */
+[data-theme="dark"] {
+--primary: #6d9eff;
+--primary-hover: #4d7fdb;
+--primary-light: #1e2a3a;
+--color-primary: var(--primary);
+--color-primary-hover: var(--primary-hover);
+--color-primary-light: var(--primary-light);
+
+--secondary: #ffce00;
+--secondary-hover: #e6b800;
+--secondary-light: #2a2500;
+--color-secondary: var(--secondary);
+--color-secondary-hover: var(--secondary-hover);
+--color-secondary-light: var(--secondary-light);
+
+--accent: #6d9eff;
+--accent-hover: #4d7fdb;
+--color-accent: var(--accent);
+--color-accent-hover: var(--accent-hover);
+
+--neutral-900: #f0f0f0;
+--neutral-800: #e0e0e0;
+--neutral-700: #c0c0c0;
+--neutral-600: #a0a0a0;
+--neutral-500: #808080;
+--neutral-400: #606060;
+--neutral-300: #444444;
+--neutral-200: #333333;
+--neutral-100: #1e1e1e;
+--neutral-50: #161616;
+
+--bg-primary: #121212;
+--bg-secondary: #1a1a1a;
+--bg-tertiary: #242424;
+--color-white: #ffffff;
+--color-text: var(--neutral-700);
+
+--success: #4caf50;
+--success-light: #1a2e1a;
+--warning: #ffb74d;
+--warning-light: #2a2210;
+--danger: #ef5350;
+--danger-light: #2a1212;
+--info: #6d9eff;
+--info-light: #1e2a3a;
+--color-success: var(--success);
+--color-success-light: var(--success-light);
+--color-warning: var(--warning);
+--color-warning-light: var(--warning-light);
+--color-danger: var(--danger);
+--color-danger-light: var(--danger-light);
+--color-info: var(--info);
+--color-info-light: var(--info-light);
+
+--condition-new: #a78bfa;
+--condition-like-new: #818cf8;
+--condition-fair: #ffb74d;
+--condition-good: #66bb6a;
+--condition-excellent: #6d9eff;
+
+--price-color: #6d9eff;
+--price-deal: #ef5350;
+
+--shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+--shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+--shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+--shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4), 0 4px 6px rgba(0, 0, 0, 0.3);
+--shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.5), 0 10px 10px rgba(0, 0, 0, 0.3);
+--shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+--shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.4), 0 4px 8px rgba(0, 0, 0, 0.3);
+
+--border-light: 1px solid var(--neutral-200);
+--border-medium: 1px solid var(--neutral-300);
+--border-dark: 1px solid var(--neutral-400);
 }

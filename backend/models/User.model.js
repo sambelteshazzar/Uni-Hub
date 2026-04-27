@@ -38,6 +38,11 @@ const userSchema = new mongoose.Schema({
     required: [true, 'University is required'],
     trim: true,
   },
+  studentId: {
+    type: String,
+    trim: true,
+    sparse: true,
+  },
   level: {
     type: String,
     enum: ['100', '200', '300', '400', '500', 'postgrad', 'phd'],
@@ -139,7 +144,14 @@ const userSchema = new mongoose.Schema({
   lastLogin: {
     type: Date,
   },
-}, {
+  isOnline: {
+    type: Boolean,
+    default: false,
+  },
+  passwordChangedAt: {
+    type: Date,
+  },
+  }, {
   timestamps: true, // Adds createdAt and updatedAt
 });
 

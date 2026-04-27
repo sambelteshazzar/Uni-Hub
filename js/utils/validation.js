@@ -125,6 +125,8 @@ class Validator {
   }
 }
 
+export { Validator };
+
 // Export Validator class for static method access
 if (typeof window !== 'undefined') {
   window.Validator = Validator;

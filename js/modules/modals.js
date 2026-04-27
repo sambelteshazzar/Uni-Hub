@@ -65,24 +65,29 @@ class ModalManager {
     const container = document.createElement('div');
     container.className = `modal-container modal-${modal.size}`;
 
-    // Header
     if (modal.title) {
       const header = document.createElement('div');
       header.className = 'modal-header';
-      header.innerHTML = `
-        <h3>${modal.title}</h3>
-        ${modal.closable ? '<button class="modal-close" onclick="modalManager.close(\'' + modal.id + '\')">×</button>' : ''}
-      `;
+      const titleEl = document.createElement('h3');
+      titleEl.textContent = modal.title;
+      header.appendChild(titleEl);
+
+      if (modal.closable) {
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'modal-close';
+        closeBtn.textContent = '×';
+        closeBtn.addEventListener('click', () => this.close(modal.id));
+        header.appendChild(closeBtn);
+      }
+
       container.appendChild(header);
     }
 
-    // Body
     const body = document.createElement('div');
     body.className = 'modal-body';
     body.innerHTML = modal.content;
     container.appendChild(body);
 
-    // Footer (if provided)
     if (modal.footer) {
       const footer = document.createElement('div');
       footer.className = 'modal-footer';
@@ -92,7 +97,6 @@ class ModalManager {
 
     overlay.appendChild(container);
 
-    // Close on overlay click
     if (modal.closable) {
       overlay.addEventListener('click', e => {
         if (e.target === overlay) {
@@ -101,7 +105,6 @@ class ModalManager {
       });
     }
 
-    // Close on ESC key
     if (modal.closable) {
       const escHandler = e => {
         if (e.key === 'Escape') {
@@ -182,26 +185,46 @@ class ModalManager {
       error: '❌',
     };
 
-    return this.open({
+    const contentEl = document.createElement('div');
+    contentEl.className = 'modal-confirm';
+    const iconDiv = document.createElement('div');
+    iconDiv.className = 'modal-confirm-icon';
+    iconDiv.textContent = icons[type] || icons.info;
+    const msgP = document.createElement('p');
+    msgP.textContent = message;
+    contentEl.appendChild(iconDiv);
+    contentEl.appendChild(msgP);
+
+    const modalId = this.open({
       type: 'alert',
       title: title,
-      content: `
-        <div class="modal-confirm">
-          <div class="modal-confirm-icon">${icons[type] || icons.info}</div>
-          <p>${message}</p>
-        </div>
-      `,
-      footer: `
-        <button class="btn btn-primary" onclick="modalManager.closeAndCallback('${this.activeModals[this.activeModals.length - 1]?.id}', true)">
-          OK
-        </button>
-      `,
+      content: contentEl.outerHTML,
       onClose: () => {
         if (onConfirm) {
           onConfirm(false);
         }
       },
     });
+
+    const footerEl = document.createElement('div');
+    const okBtn = document.createElement('button');
+    okBtn.className = 'btn btn-primary';
+    okBtn.textContent = 'OK';
+    okBtn.addEventListener('click', () => this.closeAndCallback(modalId, true));
+    footerEl.appendChild(okBtn);
+
+    const modalOverlay = this.modalContainer.querySelector(`[data-modal-id="${modalId}"]`);
+    if (modalOverlay) {
+      const container = modalOverlay.querySelector('.modal-container');
+      const existingFooter = container.querySelector('.modal-footer');
+      if (existingFooter) existingFooter.remove();
+      const footer = document.createElement('div');
+      footer.className = 'modal-footer';
+      footer.appendChild(okBtn);
+      container.appendChild(footer);
+    }
+
+    return modalId;
   }
 
   /**
@@ -218,28 +241,44 @@ class ModalManager {
       onCancel,
     } = options;
 
+    const contentEl = document.createElement('div');
+    contentEl.className = 'modal-confirm';
+    const msgP = document.createElement('p');
+    msgP.textContent = message;
+    contentEl.appendChild(msgP);
+
     const modalId = this.open({
       type: 'confirm',
       title: title,
-      content: `
-        <div class="modal-confirm">
-          <p>${message}</p>
-        </div>
-      `,
-      footer: `
-        <button class="btn btn-outline" onclick="modalManager.close('${modalId}')">
-          ${cancelText}
-        </button>
-        <button class="btn btn-primary" onclick="modalManager.closeAndCallback('${modalId}', true)">
-          ${confirmText}
-        </button>
-      `,
+      content: contentEl.outerHTML,
       onClose: () => {
         if (onCancel) {
           onCancel();
         }
       },
     });
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn btn-outline';
+    cancelBtn.textContent = cancelText;
+    cancelBtn.addEventListener('click', () => this.close(modalId));
+
+    const confirmBtn = document.createElement('button');
+    confirmBtn.className = 'btn btn-primary';
+    confirmBtn.textContent = confirmText;
+    confirmBtn.addEventListener('click', () => this.closeAndCallback(modalId, true));
+
+    const modalOverlay = this.modalContainer.querySelector(`[data-modal-id="${modalId}"]`);
+    if (modalOverlay) {
+      const container = modalOverlay.querySelector('.modal-container');
+      const existingFooter = container.querySelector('.modal-footer');
+      if (existingFooter) existingFooter.remove();
+      const footer = document.createElement('div');
+      footer.className = 'modal-footer';
+      footer.appendChild(cancelBtn);
+      footer.appendChild(confirmBtn);
+      container.appendChild(footer);
+    }
 
     return modalId;
   }
@@ -270,35 +309,73 @@ class ModalManager {
       { id: 'fair', name: 'Fair', icon: '🟠', description: 'Well-used with visible wear' },
     ];
 
-    const content = `
-      <div class="condition-selector">
-        ${conditions
-    .map(
-      c => `
-          <div class="condition-option ${currentValue === c.id ? 'selected' : ''}" 
-               onclick="modalManager.selectCondition('${c.id}', '${modalId}')">
-            <input type="radio" name="condition" value="${c.id}" ${currentValue === c.id ? 'checked' : ''} />
-            <div class="condition-icon">${c.icon}</div>
-            <div class="condition-info">
-              <h4>${c.name}</h4>
-              <p>${c.description}</p>
-            </div>
-          </div>
-        `,
-    )
-    .join('')}
-      </div>
-    `;
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'condition-selector';
+
+    conditions.forEach(c => {
+      const optionDiv = document.createElement('div');
+      optionDiv.className = 'condition-option' + (currentValue === c.id ? ' selected' : '');
+
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = 'condition';
+      radio.value = c.id;
+      if (currentValue === c.id) radio.checked = true;
+
+      const iconDiv = document.createElement('div');
+      iconDiv.className = 'condition-icon';
+      iconDiv.textContent = c.icon;
+
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'condition-info';
+      const h4 = document.createElement('h4');
+      h4.textContent = c.name;
+      const p = document.createElement('p');
+      p.textContent = c.description;
+      infoDiv.appendChild(h4);
+      infoDiv.appendChild(p);
+
+      optionDiv.appendChild(radio);
+      optionDiv.appendChild(iconDiv);
+      optionDiv.appendChild(infoDiv);
+
+      optionDiv.addEventListener('click', () => {
+        this.selectedCondition = c.id;
+        contentDiv.querySelectorAll('.condition-option').forEach(o => o.classList.remove('selected'));
+        optionDiv.classList.add('selected');
+        radio.checked = true;
+      });
+
+      contentDiv.appendChild(optionDiv);
+    });
 
     const modalId = this.open({
       type: 'condition-selector',
       title: 'Select Item Condition',
-      content: content,
-      footer: `
-        <button class="btn btn-outline" onclick="modalManager.close('${modalId}')">Cancel</button>
-        <button class="btn btn-primary" onclick="modalManager.confirmCondition('${modalId}')">Select</button>
-      `,
+      content: contentDiv.outerHTML,
     });
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn btn-outline';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', () => this.close(modalId));
+
+    const selectBtn = document.createElement('button');
+    selectBtn.className = 'btn btn-primary';
+    selectBtn.textContent = 'Select';
+    selectBtn.addEventListener('click', () => this.confirmCondition(modalId));
+
+    const modalOverlay = this.modalContainer.querySelector(`[data-modal-id="${modalId}"]`);
+    if (modalOverlay) {
+      const container = modalOverlay.querySelector('.modal-container');
+      const existingFooter = container.querySelector('.modal-footer');
+      if (existingFooter) existingFooter.remove();
+      const footer = document.createElement('div');
+      footer.className = 'modal-footer';
+      footer.appendChild(cancelBtn);
+      footer.appendChild(selectBtn);
+      container.appendChild(footer);
+    }
 
     this.selectedCondition = currentValue;
   }
@@ -340,20 +417,31 @@ class ModalManager {
    * @param {string} alt - Alt text
    */
   showImage (imageUrl, alt = '') {
-    this.open({
+    const modalId = this.open({
       type: 'image',
       size: 'xl',
       content: `
         <div class="image-modal-content">
-          <img src="${imageUrl}" alt="${alt}" />
+          <img src="${SecurityUtils.escapeHtml(imageUrl)}" alt="${SecurityUtils.escapeHtml(alt)}" />
         </div>
       `,
-      footer: `
-        <button class="btn btn-outline" onclick="modalManager.close('${this.activeModals[this.activeModals.length - 1]?.id}')">
-          Close
-        </button>
-      `,
     });
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'btn btn-outline';
+    closeBtn.textContent = 'Close';
+    closeBtn.addEventListener('click', () => this.close(modalId));
+
+    const modalOverlay = this.modalContainer.querySelector(`[data-modal-id="${modalId}"]`);
+    if (modalOverlay) {
+      const container = modalOverlay.querySelector('.modal-container');
+      const existingFooter = container.querySelector('.modal-footer');
+      if (existingFooter) existingFooter.remove();
+      const footer = document.createElement('div');
+      footer.className = 'modal-footer';
+      footer.appendChild(closeBtn);
+      container.appendChild(footer);
+    }
   }
 
   /**
@@ -361,41 +449,78 @@ class ModalManager {
    * @param {Object} product - Product object
    */
   showProductQuickView (product) {
-    const content = `
-      <div class="product-quick-view">
-        <div class="quick-view-image">
-          <img src="${product.images[0]}" alt="${product.title}" />
-        </div>
-        <div class="quick-view-details">
-          <h3>${product.title}</h3>
-          <div class="quick-view-price">${Formatter.formatPrice(product.price)}</div>
-          <div class="quick-view-condition">
-            <span class="condition-badge ${product.condition}">
-              ${Formatter.getConditionBadge(product.condition)}
-            </span>
-          </div>
-          <p class="quick-view-description">${Formatter.truncate(product.description, 150)}</p>
-          <div class="quick-view-seller">
-            <strong>Seller:</strong> ${product.seller.name} (${product.seller.rating}⭐)
-          </div>
-        </div>
-      </div>
-    `;
+    const content = document.createElement('div');
+    content.className = 'product-quick-view';
 
-    this.open({
+    const imageDiv = document.createElement('div');
+    imageDiv.className = 'quick-view-image';
+    const img = document.createElement('img');
+    img.src = product.images[0];
+    img.alt = product.title;
+    imageDiv.appendChild(img);
+
+    const detailsDiv = document.createElement('div');
+    detailsDiv.className = 'quick-view-details';
+
+    const h3 = document.createElement('h3');
+    h3.textContent = product.title;
+
+    const priceDiv = document.createElement('div');
+    priceDiv.className = 'quick-view-price';
+    priceDiv.textContent = Formatter.formatPrice(product.price);
+
+    const condDiv = document.createElement('div');
+    condDiv.className = 'quick-view-condition';
+    condDiv.innerHTML = `<span class="condition-badge ${product.condition}">${Formatter.getConditionBadge(product.condition)}</span>`;
+
+    const descP = document.createElement('p');
+    descP.className = 'quick-view-description';
+    descP.textContent = Formatter.truncate(product.description, 150);
+
+    const sellerDiv = document.createElement('div');
+    sellerDiv.className = 'quick-view-seller';
+    sellerDiv.textContent = `Seller: ${product.seller.name} (${product.seller.rating}⭐)`;
+
+    detailsDiv.appendChild(h3);
+    detailsDiv.appendChild(priceDiv);
+    detailsDiv.appendChild(condDiv);
+    detailsDiv.appendChild(descP);
+    detailsDiv.appendChild(sellerDiv);
+
+    content.appendChild(imageDiv);
+    content.appendChild(detailsDiv);
+
+    const modalId = this.open({
       type: 'quick-view',
       size: 'lg',
       title: 'Quick View',
-      content: content,
-      footer: `
-        <button class="btn btn-outline" onclick="modalManager.close('${this.activeModals[this.activeModals.length - 1]?.id}')">
-          Close
-        </button>
-        <button class="btn btn-primary" onclick="Pages.renderProductDetail('${product.id}'); modalManager.close('${this.activeModals[this.activeModals.length - 1]?.id}')">
-          View Full Details
-        </button>
-      `,
+      content: content.outerHTML,
     });
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'btn btn-outline';
+    closeBtn.textContent = 'Close';
+    closeBtn.addEventListener('click', () => this.close(modalId));
+
+    const viewBtn = document.createElement('button');
+    viewBtn.className = 'btn btn-primary';
+    viewBtn.textContent = 'View Full Details';
+    viewBtn.addEventListener('click', () => {
+      Pages.renderProductDetail(product.id);
+      this.close(modalId);
+    });
+
+    const modalOverlay = this.modalContainer.querySelector(`[data-modal-id="${modalId}"]`);
+    if (modalOverlay) {
+      const container = modalOverlay.querySelector('.modal-container');
+      const existingFooter = container.querySelector('.modal-footer');
+      if (existingFooter) existingFooter.remove();
+      const footer = document.createElement('div');
+      footer.className = 'modal-footer';
+      footer.appendChild(closeBtn);
+      footer.appendChild(viewBtn);
+      container.appendChild(footer);
+    }
   }
 
   /**
@@ -416,4 +541,10 @@ class ModalManager {
 }
 
 // Create singleton instance
-const _modalManager = new ModalManager();
+const modalManager = new ModalManager();
+
+if (typeof window !== 'undefined') {
+  window.modalManager = modalManager;
+}
+
+export { ModalManager, modalManager };

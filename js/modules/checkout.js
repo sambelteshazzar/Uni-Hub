@@ -3,17 +3,22 @@
 // CHECKOUT MODULE - Order Processing
 // ============================================
 
-// Delivery fees configuration
-const DELIVERY_FEES = {
-  [DELIVERY_MODES.BOLT]: 15,
-  [DELIVERY_MODES.YANGO]: 12,
-  [DELIVERY_MODES.IN_PERSON]: 0,
-};
+function getDeliveryFees () {
+  if (typeof DELIVERY_MODES === 'undefined') {
+    return { bolt: 15, yango: 12, inperson: 0 };
+  }
+  return {
+    [DELIVERY_MODES.BOLT]: 15,
+    [DELIVERY_MODES.YANGO]: 12,
+    [DELIVERY_MODES.IN_PERSON]: 0,
+  };
+}
 
 class CheckoutManager {
   constructor () {
     this.ORDER_STORAGE_KEY = `${STORAGE_KEY_PREFIX}orders`;
     this.useBackend = true; // Backend API enabled
+    this.DELIVERY_FEES = getDeliveryFees();
   }
 
   /**
@@ -40,8 +45,9 @@ class CheckoutManager {
       };
     }
 
-    // Get current user
-    const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
+    // Get current user from session (authManager storage format)
+    const session = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
+    const currentUser = session?.user || null;
     if (!currentUser) {
       return {
         success: false,
@@ -166,7 +172,7 @@ class CheckoutManager {
    * @returns {number} - Delivery fee
    */
   calculateDeliveryFee (mode, _subtotal) {
-    return DELIVERY_FEES[mode] ?? DELIVERY_FEES[DELIVERY_MODES.IN_PERSON];
+    return this.DELIVERY_FEES[mode] ?? this.DELIVERY_FEES[DELIVERY_MODES.IN_PERSON] ?? 0;
   }
 
   /**
@@ -296,19 +302,19 @@ class CheckoutManager {
       {
         value: DELIVERY_MODES.IN_PERSON,
         label: 'In-Person Pickup',
-        fee: DELIVERY_FEES[DELIVERY_MODES.IN_PERSON],
+        fee: this.DELIVERY_FEES[DELIVERY_MODES.IN_PERSON] ?? 0,
         icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8a2 2 0 012-2h14a2 2 0 012 2v13"/><path d="M9 21V12h6v9"/><path d="M1 21h22"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>',
       },
       {
         value: DELIVERY_MODES.YANGO,
         label: 'Yango Delivery',
-        fee: DELIVERY_FEES[DELIVERY_MODES.YANGO],
+        fee: this.DELIVERY_FEES[DELIVERY_MODES.YANGO] ?? 12,
         icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 002 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>',
       },
       {
         value: DELIVERY_MODES.BOLT,
         label: 'Bolt Delivery',
-        fee: DELIVERY_FEES[DELIVERY_MODES.BOLT],
+        fee: this.DELIVERY_FEES[DELIVERY_MODES.BOLT] ?? 15,
         icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H4a2 2 0 01-2-2V5a2 2 0 012-2h16a2 2 0 012 2v10a2 2 0 01-2 2h-1"/><path d="M12 17V5"/><path d="M5 17a2 2 0 104 0"/><path d="M15 17a2 2 0 104 0"/></svg>',
       },
     ];
@@ -421,6 +427,8 @@ class CheckoutManager {
 
 // Create singleton instance
 const checkoutManager = new CheckoutManager();
+
+export { CheckoutManager, checkoutManager };
 
 // Make globally available for module scripts
 if (typeof window !== 'undefined') {

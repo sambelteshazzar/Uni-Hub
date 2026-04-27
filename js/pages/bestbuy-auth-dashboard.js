@@ -149,19 +149,20 @@
       })();
     };
 
-    Pages.handleLoginBB = async function (event) {
-      event.preventDefault();
-      const email = document.getElementById('login-email').value;
-      const password = document.getElementById('login-password').value;
-      const result = await authManager.login(email, password);
-      if (result.success) {
-        Pages.updateNavbar();
-        Pages.updateCartBadge();
-        Pages.renderBrowseProducts();
-      } else {
-        alert('Login failed: ' + result.error);
-      }
-    };
+Pages.handleLoginBB = async function (event) {
+  event.preventDefault();
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+  const result = await authManager.login(email, password);
+  if (result.success) {
+    Pages.updateNavbar();
+    Pages.updateCartBadge();
+    // Redirect to landing page after login
+    Pages.renderLanding();
+  } else {
+    alert('Login failed: ' + result.error);
+  }
+};
 
     // ============================================
     // REGISTER - Best Buy Style
@@ -346,26 +347,28 @@
         university: university,
       };
 
-      const result = await authManager.register(userData);
-      if (result.success) {
-        Pages.updateNavbar();
-        Pages.updateCartBadge();
-        Pages.renderBrowseProducts();
-      } else {
-        alert('Registration failed: ' + result.error);
-      }
-    };
+  const result = await authManager.register(userData);
+  if (result.success) {
+    Pages.updateNavbar();
+    Pages.updateCartBadge();
+    // Redirect to landing page after registration
+    Pages.renderLanding();
+  } else {
+    alert('Registration failed: ' + result.error);
+  }
+};
 
-    // ============================================
-    // DASHBOARD - Best Buy Style
-    // ============================================
-    Pages.renderDashboard = async function () {
-      const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
-      if (!currentUser) {
-        alert('Please login to view your dashboard.');
-        Pages.renderLogin();
-        return;
-      }
+  // ============================================
+  // DASHBOARD - Best Buy Style
+  // ============================================
+  Pages.renderDashboard = async function () {
+    const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
+    const currentUser = session?.user || null;
+    if (!currentUser) {
+      alert('Please login to view your dashboard.');
+      Pages.renderLogin();
+      return;
+    }
 
       Pages.showOriginalNavFooter();
 
@@ -551,7 +554,7 @@
             })
             .join('') +
           '</div>'
-        : '<div class="bb-empty"><div class="bb-empty-icon">🤍</div><h3 class="bb-empty-title">Your wishlist is empty</h3><p class="bb-empty-desc">Save items you love to find them later!</p></div>') +
+        : '<div class="bb-empty"><div class="bb-empty-icon">' + Icons.heartOutline + '</div><h3 class="bb-empty-title">Your wishlist is empty</h3><p class="bb-empty-desc">Save items you love to find them later!</p></div>') +
       '</div>' +
       // CART PANEL
       '<div class="bb-panel" id="bb-panel-cart">' +
@@ -581,7 +584,7 @@
           '</div>' +
           '<div style="margin-top:1.5rem;display:flex;gap:var(--space-md);">' +
           '<button onclick="cartManager.clear(); Pages.renderDashboard();" style="padding:var(--space-md) var(--space-xl);border:1px solid #d4d4d4;border-radius:var(--radius-md);background:#fff;font-size:var(--text-sm);font-weight:600;cursor:pointer;">Clear Cart</button>' +
-          '<button onclick="Pages.renderCheckout();" style="padding:var(--space-md) var(--space-xl);background:#0046be;color:#fff;border:none;border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:700;cursor:pointer;">Proceed to Checkout →</button>' +
+          '<button onclick="event.preventDefault(); Pages.handleProceedToCheckout();" style="padding:var(--space-md) var(--space-xl);background:#0046be;color:#fff;border:none;border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:700;cursor:pointer;">Proceed to Checkout →</button>' +
           '</div>'
         : '<div class="bb-empty"><div class="bb-empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg></div><h3 class="bb-empty-title">Your cart is empty</h3><p class="bb-empty-desc">Add items to get started!</p></div>') +
       '</div>' +
@@ -616,8 +619,8 @@
       '<p class="bb-panel-subtitle">Manage your account preferences.</p>' +
       '</div>' +
       '<div class="bb-profile-form">' +
-      '<div class="bb-form-group"><label class="bb-form-label">Account Status</label><input type="text" class="bb-form-input" value="' +
-      (currentUser.isVerified ? '✓ Verified' : '⏳ Pending Verification') +
+'<div class="bb-form-group"><label class="bb-form-label">Account Status</label><input type="text" class="bb-form-input" value="' +
+        (currentUser.isVerified ? 'Verified' : 'Pending Verification') +
       '" disabled /></div>' +
       '<div class="bb-form-group"><label class="bb-form-label">Role</label><input type="text" class="bb-form-input" value="' +
       (currentUser.role
@@ -625,7 +628,7 @@
         : 'Buyer') +
       '" disabled /></div>' +
       '<div style="margin-top:var(--space-xl);">' +
-      '<button onclick="Pages.renderLogin(); Pages.handleLogout();" style="width:100%;height:48px;padding:0 var(--space-xl);border:1px solid #d4d4d4;border-radius:var(--radius-md);background:#fff;font-size:var(--text-sm);font-weight:600;cursor:pointer;color:#1a1a1a;">🚪 Log Out</button>' +
+      '<button onclick="Pages.handleLogout();" style="width:100%;height:48px;padding:0 var(--space-xl);border:1px solid #d4d4d4;border-radius:var(--radius-md);background:#fff;font-size:var(--text-sm);font-weight:600;cursor:pointer;color:#1a1a1a;">' + Icons.logout + ' Log Out</button>' +
       '</div>' +
       '</div>' +
       '</div>' +
@@ -711,45 +714,27 @@
       }
     };
 
-    // Override updateNavbar to also update mobile drawer
-    const originalUpdateNavbar = Pages.updateNavbar;
-    Pages.updateNavbar = function () {
-      if (originalUpdateNavbar) {
-        originalUpdateNavbar.call(this);
-      }
-      const currentUser = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
-      const authBtns = document.getElementById('navbar-auth-buttons');
-      const userMenu = document.getElementById('navbar-user-menu');
-      const drawerAuth = document.getElementById('navbar-drawer-auth');
-      const drawerUser = document.getElementById('navbar-drawer-user');
+// Override updateNavbar to also update mobile drawer
+const originalUpdateNavbar = Pages.updateNavbar;
+Pages.updateNavbar = function () {
+  // Use authManager for authentication check (not STORAGE_KEYS)
+  const isLoggedIn = typeof authManager !== 'undefined' && authManager.isLoggedIn();
+  const authBtns = document.getElementById('navbar-auth-buttons');
+  const userMenu = document.getElementById('navbar-user-menu');
+  const drawerAuth = document.getElementById('navbar-drawer-auth');
+  const drawerUser = document.getElementById('navbar-drawer-user');
 
-      if (currentUser) {
-        if (authBtns) {
-          authBtns.style.display = 'none';
-        }
-        if (userMenu) {
-          userMenu.style.display = 'flex';
-        }
-        if (drawerAuth) {
-          drawerAuth.style.display = 'none';
-        }
-        if (drawerUser) {
-          drawerUser.style.display = 'block';
-        }
-      } else {
-        if (authBtns) {
-          authBtns.style.display = 'flex';
-        }
-        if (userMenu) {
-          userMenu.style.display = 'none';
-        }
-        if (drawerAuth) {
-          drawerAuth.style.display = 'block';
-        }
-        if (drawerUser) {
-          drawerUser.style.display = 'none';
-        }
-      }
+  if (isLoggedIn) {
+    if (authBtns) authBtns.style.display = 'none';
+    if (userMenu) userMenu.style.display = 'flex';
+    if (drawerAuth) drawerAuth.style.display = 'none';
+    if (drawerUser) drawerUser.style.display = 'block';
+  } else {
+    if (authBtns) authBtns.style.display = 'flex';
+    if (userMenu) userMenu.style.display = 'none';
+    if (drawerAuth) drawerAuth.style.display = 'block';
+    if (drawerUser) drawerUser.style.display = 'none';
+  }
     };
 
     console.log('✓ Best Buy auth & dashboard renderers loaded');

@@ -173,10 +173,10 @@ class Formatter {
   }
 }
 
-// Export singleton instance
-const formatter = new Formatter();
-
-// Make globally available for module scripts
+// Make globally available for module scripts (use class, not instance, since methods are static)
 if (typeof window !== 'undefined') {
-  window.Formatter = formatter;
+  window.Formatter = Formatter;
 }
+
+// Export for ES6 modules
+export { Formatter };

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Fixes</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .test { padding: 10px; margin: 10px 0; border: 1px solid #ccc; }
+        .pass { background: #d4edda; border-color: #28a745; }
+        .fail { background: #f8d7da; border-color: #dc3545; }
+        .info { background: #d1ecf1; border-color: #17a2b8; }
+    </style>
+</head>
+<body>
+    <h1>Testing Uni-Hub Fixes</h1>
+    
+    <div id="results"></div>
+    
+    <script>
+        const results = [];
+        
+        // Test 1: Check if Pages class has methods
+        results.push({
+            name: 'Pages.handleSearch exists',
+            pass: typeof Pages !== 'undefined' && typeof Pages.handleSearch === 'function',
+            info: 'handleSearch: ' + (typeof Pages?.handleSearch)
+        });
+        
+        // Test 2: Check if renderCheckout exists
+        results.push({
+            name: 'Pages.renderCheckout exists',
+            pass: typeof Pages !== 'undefined' && typeof Pages.renderCheckout === 'function',
+            info: 'renderCheckout: ' + (typeof Pages?.renderCheckout)
+        });
+        
+        // Test 3: Check if renderForgotPassword exists
+        results.push({
+            name: 'Pages.renderForgotPassword exists',
+            pass: typeof Pages !== 'undefined' && typeof Pages.renderForgotPassword === 'function',
+            info: 'renderForgotPassword: ' + (typeof Pages?.renderForgotPassword)
+        });
+        
+        // Test 4: Check if cartManager exists
+        results.push({
+            name: 'cartManager exists',
+            pass: typeof cartManager !== 'undefined',
+            info: 'cartManager: ' + (typeof cartManager)
+        });
+        
+        // Test 5: Check if checkoutManager exists
+        results.push({
+            name: 'checkoutManager exists',
+            pass: typeof checkoutManager !== 'undefined',
+            info: 'checkoutManager: ' + (typeof checkoutManager)
+        });
+        
+        // Display results
+        const container = document.getElementById('results');
+        results.forEach(r => {
+            const div = document.createElement('div');
+            div.className = 'test ' + (r.pass ? 'pass' : 'fail');
+            div.innerHTML = '<strong>' + (r.pass ? '✓ PASS' : '✗ FAIL') + ':</strong> ' + r.name + 
+                           '<br><small>' + r.info + '</small>';
+            container.appendChild(div);
+        });
+        
+        // Browser cache notice
+        const notice = document.createElement('div');
+        notice.className = 'test info';
+        notice.innerHTML = '<strong>⚠ Note:</strong> If tests fail, try hard refreshing the page (Ctrl+Shift+R or Cmd+Shift+R) to clear browser cache.';
+        container.appendChild(notice);
+    </script>
+</body>
+</html>

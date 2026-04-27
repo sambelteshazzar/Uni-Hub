@@ -39,14 +39,32 @@ class ToastManager {
     const icon = this.getIconForType(type);
     const toastTitle = title || this.getDefaultTitle(type);
 
-    toast.innerHTML = `
-      <div class="toast-icon">${icon}</div>
-      <div class="toast-content">
-        <div class="toast-title">${toastTitle}</div>
-        <div class="toast-message">${message}</div>
-      </div>
-      <button class="toast-close" onclick="toastManager.dismiss('${toastId}')">×</button>
-    `;
+    const iconEl = document.createElement('div');
+    iconEl.className = 'toast-icon';
+    iconEl.textContent = icon;
+
+    const contentEl = document.createElement('div');
+    contentEl.className = 'toast-content';
+
+    const titleEl = document.createElement('div');
+    titleEl.className = 'toast-title';
+    titleEl.textContent = toastTitle;
+
+    const messageEl = document.createElement('div');
+    messageEl.className = 'toast-message';
+    messageEl.textContent = message;
+
+    contentEl.appendChild(titleEl);
+    contentEl.appendChild(messageEl);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'toast-close';
+    closeBtn.textContent = '×';
+    closeBtn.addEventListener('click', () => this.dismiss(toastId));
+
+    toast.appendChild(iconEl);
+    toast.appendChild(contentEl);
+    toast.appendChild(closeBtn);
 
     this.container.appendChild(toast);
     this.toasts.push({ id: toastId, element: toast });
@@ -213,6 +231,8 @@ class ToastManager {
 
 // Create singleton instance
 const toastManager = new ToastManager();
+
+export { ToastManager, toastManager };
 
 // Export to window for cross-module access
 window.toastManager = toastManager;
