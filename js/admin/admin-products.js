@@ -324,28 +324,30 @@ class AdminProductsManager {
   exportToCSV () {
     const products = this.getAllProducts();
     const headers = [
-      'ID',
-      'Title',
-      'Price',
-      'Category',
-      'Condition',
-      'Seller',
-      'University',
-      'Created',
+      'ID', 'Title', 'Price', 'Category', 'Condition', 'Seller', 'University', 'Created',
     ];
     const rows = products.map(p => [
-      p.id,
-      p.title,
-      p.price,
-      p.category,
-      p.condition,
-      p.seller.name,
-      p.university,
-      p.createdAt,
+      p.id, p.title, p.price, p.category, p.condition, p.seller.name, p.university, p.createdAt,
     ]);
 
-    return [headers, ...rows].map(row => row.join(',')).join('\n');
+    const csvContent = [headers, ...rows].map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+    this._downloadCSV(csvContent, 'uni-hub-products.csv');
+    return csvContent;
   }
+
+  _downloadCSV (csvContent, filename) {
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+}
 }
 
 // Create singleton instance

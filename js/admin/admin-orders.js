@@ -246,27 +246,29 @@ class AdminOrdersManager {
   exportToCSV () {
     const orders = this.getAllOrders();
     const headers = [
-      'Order Number',
-      'Customer',
-      'Email',
-      'Status',
-      'Total',
-      'Payment',
-      'Delivery',
-      'Date',
+      'Order Number', 'Customer', 'Email', 'Status', 'Total', 'Payment', 'Delivery', 'Date',
     ];
     const rows = orders.map(o => [
-      o.orderNumber,
-      o.customer.name,
-      o.customer.email,
-      o.status,
-      o.pricing.grandTotal,
-      o.payment.mode,
-      o.delivery.mode,
-      o.createdAt,
+      o.orderNumber, o.customer.name, o.customer.email, o.status,
+      o.pricing.grandTotal, o.payment.mode, o.delivery.mode, o.createdAt,
     ]);
 
-    return [headers, ...rows].map(row => row.join(',')).join('\n');
+    const csvContent = [headers, ...rows].map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+    this._downloadCSV(csvContent, 'uni-hub-orders.csv');
+    return csvContent;
+  }
+
+  _downloadCSV (csvContent, filename) {
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 
   /**

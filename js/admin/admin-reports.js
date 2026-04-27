@@ -335,15 +335,79 @@ class AdminReportsManager {
    * @param {string} type - Report type
    * @param {Object} options - Report options
    */
-  generatePDFReport (type, _options = {}) {
-    // In production, this would use a library like jsPDF
-    // Removed console.log for production
+  generatePDFReport (type, options = {}) {
+    const reportContent = this._buildReportHTML(type, options);
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Uni-Hub Report — ${type}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 40px; color: #1f2937; }
+            h1 { color: #0046be; border-bottom: 2px solid #0046be; padding-bottom: 8px; }
+            h2 { color: #374151; margin-top: 24px; }
+            table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+            th, td { border: 1px solid #e5e7eb; padding: 8px 12px; text-align: left; }
+            th { background: #f3f4f6; font-weight: 600; }
+            .meta { color: #6b7280; font-size: 13px; margin-bottom: 24px; }
+            @media print { body { padding: 20px; } }
+          </style>
+        </head>
+        <body>${reportContent}</body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => { printWindow.print(); }, 500);
+    }
 
     return {
       success: true,
       message: 'Report generated successfully',
-      url: '/reports/download/' + Date.now(),
     };
+  }
+
+  _buildReportHTML (type, options) {
+    const date = new Date().toLocaleDateString('en-GH', { year: 'numeric', month: 'long', day: 'numeric' });
+    let content = `<h1>Uni-Hub ${type.charAt(0).toUpperCase() + type.slice(1)} Report</h1><p class="meta">Generated on ${date}</p>`;
+
+    try {
+      if (type === 'sales') {
+        const stats = this.getSalesStats(options.period || 'month');
+        content += `<h2>Sales Summary</h2><table><tr><th>Metric</th><th>Value</th></tr>`;
+        content += `<tr><td>Total Revenue</td><td>GHS ${stats.totalRevenue || 0}</td></tr>`;
+        content += `<tr><td>Total Orders</td><td>${stats.totalOrders || 0}</td></tr>`;
+        content += `<tr><td>Average Order</td><td>GHS ${stats.averageOrder || 0}</td></tr>`;
+        content += `</table>`;
+      } else if (type === 'users') {
+        const users = adminUsersManager.getAllUsers();
+        content += `<h2>User Summary</h2><table><tr><th>ID</th><th>Name</th><th>Email</th><th>University</th><th>Role</th><th>Verified</th></tr>`;
+        users.forEach(u => {
+          content += `<tr><td>${u.id || ''}</td><td>${u.fullName || ''}</td><td>${u.email || ''}</td><td>${u.university || ''}</td><td>${u.role || ''}</td><td>${u.isVerified ? 'Yes' : 'No'}</td></tr>`;
+        });
+        content += `</table>`;
+      } else if (type === 'products') {
+        const products = adminProductsManager.getAllProducts();
+        content += `<h2>Product Summary</h2><table><tr><th>Title</th><th>Price</th><th>Category</th><th>Condition</th><th>Seller</th><th>Status</th></tr>`;
+        products.forEach(p => {
+          content += `<tr><td>${p.title || ''}</td><td>GHS ${p.price || 0}</td><td>${p.category || ''}</td><td>${p.condition || ''}</td><td>${p.seller?.name || ''}</td><td>${p.status || ''}</td></tr>`;
+        });
+        content += `</table>`;
+      } else if (type === 'orders') {
+        const orders = adminOrdersManager.getAllOrders();
+        content += `<h2>Order Summary</h2><table><tr><th>Order #</th><th>Customer</th><th>Status</th><th>Total</th><th>Payment</th><th>Date</th></tr>`;
+        orders.forEach(o => {
+          content += `<tr><td>${o.orderNumber || ''}</td><td>${o.customer?.name || ''}</td><td>${o.status || ''}</td><td>GHS ${o.pricing?.grandTotal || 0}</td><td>${o.payment?.mode || ''}</td><td>${o.createdAt || ''}</td></tr>`;
+        });
+        content += `</table>`;
+      }
+    } catch (e) {
+      content += `<p>Report data unavailable.</p>`;
+    }
+
+    return content;
   }
 
   /**

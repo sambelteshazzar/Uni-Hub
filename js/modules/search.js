@@ -211,8 +211,17 @@ class SearchManager {
    * Get trending searches (placeholder)
    * @returns {Array}
    */
-  getTrendingSearches () {
-    // This would be populated from analytics data
+  async getTrendingSearches () {
+    if (typeof api !== 'undefined') {
+      try {
+        const response = await api.search.trending();
+        if (response.success && response.data) {
+          return response.data;
+        }
+      } catch (error) {
+        // Backend unavailable — fall through to defaults
+      }
+    }
     return ['laptop', 'textbooks', 'phone', 'bed', 'blender'];
   }
 

@@ -286,12 +286,6 @@ class DeliveryManager {
     };
   }
 
-  /**
-   * Schedule delivery (for future use)
-   * @param {string} deliveryId - Delivery ID
-   * @param {string} scheduledTime - Scheduled delivery time
-   * @returns {Object}
-   */
   scheduleDelivery (deliveryId, scheduledTime) {
     const delivery = this.getDeliveryById(deliveryId);
 

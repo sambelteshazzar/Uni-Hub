@@ -227,9 +227,6 @@ class PaymentManager {
     ];
   }
 
-  /**
-   * Refund payment (for future use)
-   */
   async refundPayment (paymentId, reason) {
     const payment = this.getPaymentById(paymentId);
 
@@ -247,7 +244,21 @@ class PaymentManager {
       };
     }
 
-    // Process refund
+    if (typeof api !== 'undefined') {
+      try {
+        const response = await api.post('/payment/refund', { paymentId, reason });
+        if (response.success) {
+          payment.status = 'refunded';
+          payment.refundReason = reason;
+          payment.refundedAt = new Date().toISOString();
+          this.updatePayment(payment);
+          return { success: true, message: 'Refund processed successfully' };
+        }
+      } catch (error) {
+        // Backend unavailable — fall through to local processing
+      }
+    }
+
     payment.status = 'refunded';
     payment.refundReason = reason;
     payment.refundedAt = new Date().toISOString();

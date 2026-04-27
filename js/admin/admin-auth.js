@@ -239,23 +239,24 @@ class AdminAuthManager {
    * @param {string} newPassword - New password
    * @returns {Object}
    */
-  changePassword (currentPassword, _newPassword) {
-    // SECURITY WARNING: In production, this should:
-    // 1. Verify current password hash on the server
-    // 2. Validate new password strength
-    // 3. Hash new password using bcrypt with salt
-    // 4. Update password in the database
-    if (currentPassword === 'Admin123!') {
-      return {
-        success: true,
-        message: 'Password changed successfully',
-      };
+  async changePassword (currentPassword, newPassword) {
+    if (typeof api !== 'undefined') {
+      try {
+        const session = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
+        if (session?.token) {
+          const response = await api.auth.changePassword(currentPassword, newPassword);
+          if (response.success) {
+            this.logActivity('Password changed');
+            return { success: true, message: 'Password changed successfully' };
+          }
+          return { success: false, error: response.error || 'Failed to change password' };
+        }
+      } catch (error) {
+        return { success: false, error: error.message || 'Failed to change password' };
+      }
     }
 
-    return {
-      success: false,
-      error: 'Current password is incorrect',
-    };
+    return { success: false, error: 'You must be logged in to change your password' };
   }
 
   /**
