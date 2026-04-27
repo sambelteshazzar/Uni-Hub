@@ -35,8 +35,12 @@ router.register('/dashboard', () => this.renderDashboard());
 router.register('/profile', () => this.renderProfile());
 router.register('/orders', () => this.renderOrders());
 router.register('/wishlist', () => this.renderWishlist());
-router.register('/faq', () => this.renderFAQ());
-console.log('✓ Main routes registered');
+    router.register('/faq', () => this.renderFAQ());
+    router.register('/terms', () => this.renderTerms());
+    router.register('/privacy', () => this.renderPrivacy());
+    router.register('/about', () => this.renderAbout());
+    router.register('/contact', () => this.renderContact());
+    console.log('✓ Main routes registered');
 
 // Product detail
 router.register('/product/:id', (params) => this.renderProductDetail(params.id));
