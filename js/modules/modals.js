@@ -7,6 +7,8 @@ class ModalManager {
   constructor () {
     this.activeModals = [];
     this.modalContainer = null;
+    this._previousFocusElement = null;
+    this._trapHandlers = new Map();
   }
 
   /**
@@ -44,9 +46,48 @@ class ModalManager {
     // Prevent body scroll
     document.body.style.overflow = 'hidden';
 
+    // Save previously focused element
+    this._previousFocusElement = document.activeElement;
+
     // Trigger animation
     setTimeout(() => {
       modalElement.classList.add('active');
+
+      // Focus first focusable element inside modal
+      const focusable = modalElement.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length > 0) {
+        focusable[0].focus();
+      }
+
+      // Set up focus trap
+      const trapHandler = e => {
+        if (e.key !== 'Tab') return;
+
+        const focusableEls = modalElement.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusableEls.length === 0) return;
+
+        const firstEl = focusableEls[0];
+        const lastEl = focusableEls[focusableEls.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstEl) {
+            e.preventDefault();
+            lastEl.focus();
+          }
+        } else {
+          if (document.activeElement === lastEl) {
+            e.preventDefault();
+            firstEl.focus();
+          }
+        }
+      };
+
+      document.addEventListener('keydown', trapHandler);
+      this._trapHandlers.set(modal.id, trapHandler);
     }, 10);
 
     return modal.id;
@@ -61,9 +102,15 @@ class ModalManager {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.dataset.modalId = modal.id;
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    if (modal.title) {
+      overlay.setAttribute('aria-label', modal.title);
+    }
 
     const container = document.createElement('div');
     container.className = `modal-container modal-${modal.size}`;
+    container.setAttribute('role', 'document');
 
     if (modal.title) {
       const header = document.createElement('div');
@@ -132,6 +179,13 @@ class ModalManager {
     const modal = this.activeModals[modalIndex];
     const overlay = this.modalContainer.querySelector(`[data-modal-id="${modalId}"]`);
 
+    // Remove focus trap handler
+    const trapHandler = this._trapHandlers.get(modalId);
+    if (trapHandler) {
+      document.removeEventListener('keydown', trapHandler);
+      this._trapHandlers.delete(modalId);
+    }
+
     if (overlay) {
       overlay.classList.remove('active');
 
@@ -144,6 +198,12 @@ class ModalManager {
         // Restore body scroll if no more modals
         if (this.activeModals.length === 0) {
           document.body.style.overflow = '';
+        }
+
+        // Restore focus to previously focused element
+        if (this._previousFocusElement && typeof this._previousFocusElement.focus === 'function') {
+          this._previousFocusElement.focus();
+          this._previousFocusElement = null;
         }
 
         // Call onClose callback

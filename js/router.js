@@ -105,6 +105,12 @@ class Router {
 
       // Scroll to top
       window.scrollTo(0, 0);
+
+      // Focus management: move focus to main content for accessibility
+      const mainContent = document.getElementById('main-content');
+      if (mainContent) {
+        mainContent.focus();
+      }
     } catch (error) {
       console.error('Navigation error:', error);
       this.showError(error.message);
