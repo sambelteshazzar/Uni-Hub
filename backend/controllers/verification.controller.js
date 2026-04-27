@@ -1,13 +1,8 @@
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
-/**
- * ============================================
- * Student Verification Controller
- * Handle student verification submissions and reviews
- * ============================================
- */
-
 const StudentVerification = require('../models/StudentVerification.model');
 const User = require('../models/User.model');
+const { sendVerificationEmail } = require('../utils/emailService');
+const crypto = require('crypto');
 
 /**
  * @desc    Submit verification request
@@ -61,10 +56,15 @@ exports.submitVerification = async (req, res) => {
     // If email verification, generate a verification code and mark as pending
     // The user must verify ownership by clicking a link sent to their university email
     if (verificationMethod === 'email' && universityEmail) {
-      // TODO: Send verification email with a code/link
-      // For now, verify that the universityEmail domain matches the user's university
+      const verificationCode = crypto.randomBytes(3).toString('hex').toUpperCase();
+      verification.verificationCode = verificationCode;
       verification.status = 'pending';
       await verification.save();
+
+      if (process.env.EMAIL_USER) {
+        const universityName = req.user.university || 'your university';
+        await sendVerificationEmail(universityEmail, verificationCode, universityName);
+      }
     }
 
     res.status(201).json({

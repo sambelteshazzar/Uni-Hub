@@ -1,14 +1,8 @@
 const jwt = require('jsonwebtoken');
-/**
- * ============================================
- * Authentication Controller
- * Handle register, login, logout, profile
- * ============================================
- */
-
 const User = require('../models/User.model');
 const { generateToken, generateResetToken } = require('../utils/token.util');
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
+const { sendPasswordResetEmail } = require('../utils/emailService');
 
 /**
  * @desc    Register new user
@@ -245,12 +239,10 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
     user.resetTokenExpiry = Date.now() + 3600000; // 1 hour
     await user.save({ validateBeforeSave: false });
 
-    // In production, send email with reset link containing the token
-    // The token should ONLY be delivered via email, never in the API response
-    if (process.env.NODE_ENV === 'production') {
-      // TODO: Send email with nodemailer containing reset link
-      // await sendResetEmail(user.email, resetToken);
-    }
+  // Send password reset email
+  if (process.env.NODE_ENV === 'production' || process.env.EMAIL_USER) {
+    await sendPasswordResetEmail(user.email, resetToken);
+  }
 
     res.json({
       success: true,
