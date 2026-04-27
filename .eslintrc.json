@@ -105,6 +105,7 @@
     "LandingPageMethods": "readonly",
     "AuthPageMethods": "readonly",
     "BrowsePageMethods": "readonly",
+    "StaticPageMethods": "readonly",
     "BasePage": "readonly",
     "AuthPage": "readonly",
     "LandingPage": "readonly",

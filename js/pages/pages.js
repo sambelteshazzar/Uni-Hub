@@ -6480,6 +6480,16 @@ window.scrollTo(0, 0);
 
     window.scrollTo(0, 0);
   }
+
+  static renderTerms () { return StaticPageMethods.renderTerms(); }
+
+  static renderPrivacy () { return StaticPageMethods.renderPrivacy(); }
+
+  static renderAbout () { return StaticPageMethods.renderAbout(); }
+
+  static renderContact () { return StaticPageMethods.renderContact(); }
+
+  static _handleContactForm (event) { return StaticPageMethods._handleContactForm(event); }
 }
 
 // Export for ES6 modules
