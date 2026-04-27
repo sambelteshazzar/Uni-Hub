@@ -21,6 +21,9 @@ const deliveryRoutes = require('../routes/delivery.routes');
 const reportRoutes = require('../routes/report.routes');
 const messageRoutes = require('../routes/message.routes');
 const reviewRoutes = require('../routes/review.routes');
+const wishlistRoutes = require('../routes/wishlist.routes');
+const notificationRoutes = require('../routes/notification.routes');
+const searchRoutes = require('../routes/search.routes');
 
 // Create test app
 const createTestApp = () => {
@@ -62,6 +65,9 @@ const createTestApp = () => {
   app.use('/api/reports', reportRoutes);
   app.use('/api/messages', messageRoutes);
   app.use('/api/reviews', reviewRoutes);
+  app.use('/api/wishlist', wishlistRoutes);
+  app.use('/api/notifications', notificationRoutes);
+  app.use('/api/search', searchRoutes);
 
   // 404 handler
   app.use((_req, res) => {

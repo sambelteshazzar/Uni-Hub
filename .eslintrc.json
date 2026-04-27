@@ -102,10 +102,24 @@
     "_adminReportsManager": "readonly",
     "hostelProductsManager": "readonly",
     "_hostelProductsManager": "readonly",
+    "LandingPageMethods": "readonly",
+    "AuthPageMethods": "readonly",
+    "BrowsePageMethods": "readonly",
     "BasePage": "readonly",
     "AuthPage": "readonly",
     "LandingPage": "readonly",
     "Pages": "readonly"
   },
-  "ignorePatterns": ["node_modules/", "dist/", "backend/node_modules/"]
+  "ignorePatterns": ["node_modules/", "dist/", "backend/node_modules/"],
+  "overrides": [
+    {
+      "files": ["backend/tests/**/*.js"],
+      "env": {
+        "jest": true
+      },
+      "rules": {
+        "no-console": "off"
+      }
+    }
+  ]
 }

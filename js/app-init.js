@@ -54,12 +54,15 @@ const MODULE_DEPENDENCIES = {
 
   // Level 5: Pages (depends on everything)
   pages: [
-    { name: 'pages', file: 'js/pages/pages.js', exposes: ['Pages'] },
-    { name: 'bestbuy-landing', file: 'js/pages/bestbuy-landing.js', exposes: [] },
-    { name: 'bestbuy-auth-dashboard', file: 'js/pages/bestbuy-auth-dashboard.js', exposes: [] },
-    { name: 'messages', file: 'js/pages/messages.js', exposes: ['messagesPage'] },
-    { name: 'landing-page-loader', file: 'js/pages/landing-page-loader.js', exposes: [] },
-  ],
+  { name: 'landing-page-methods', file: 'js/pages/landing-page-methods.js', exposes: ['LandingPageMethods'] },
+  { name: 'auth-pages', file: 'js/pages/auth-pages.js', exposes: ['AuthPageMethods'] },
+  { name: 'browse-pages', file: 'js/pages/browse-pages.js', exposes: ['BrowsePageMethods'] },
+  { name: 'pages', file: 'js/pages/pages.js', exposes: ['Pages'] },
+  { name: 'bestbuy-landing', file: 'js/pages/bestbuy-landing.js', exposes: [] },
+  { name: 'bestbuy-auth-dashboard', file: 'js/pages/bestbuy-auth-dashboard.js', exposes: [] },
+  { name: 'messages', file: 'js/pages/messages.js', exposes: ['messagesPage'] },
+  { name: 'landing-page-loader', file: 'js/pages/landing-page-loader.js', exposes: [] },
+],
 
   // Level 6: Globals exposure
   setup: [

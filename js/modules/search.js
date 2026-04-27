@@ -179,15 +179,24 @@ class SearchManager {
    * @param {string} query - Partial query
    * @returns {Array}
    */
-  getSuggestions (query) {
+  async getSuggestions (query) {
     if (!query || query.length < 2) {
       return [];
     }
 
+    if (typeof api !== 'undefined') {
+      try {
+        const response = await api.search.suggestions(query);
+        if (response.success && response.data) {
+          return response.data;
+        }
+      } catch (error) {
+        // Backend unavailable — fall through to local
+      }
+    }
+
     const normalizedQuery = query.toLowerCase();
     const allProducts = productsManager.getAll();
-
-    // Get unique suggestions from product titles
     const suggestions = new Set();
 
     allProducts.forEach(product => {
@@ -198,7 +207,6 @@ class SearchManager {
         }
       });
 
-      // Also add full titles that match
       if (product.title.toLowerCase().includes(normalizedQuery)) {
         suggestions.add(product.title);
       }
