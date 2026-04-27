@@ -272,6 +272,34 @@ class API {
     getProducts: params => this.get('/admin/products', params),
     getOrders: params => this.get('/admin/orders', params),
   };
+
+  wishlist = {
+    getAll: () => this.get('/wishlist'),
+    add: productId => this.post(`/wishlist/${productId}`),
+    remove: productId => this.delete(`/wishlist/${productId}`),
+    clear: () => this.delete('/wishlist'),
+  };
+
+  notifications = {
+    getAll: params => this.get('/notifications', params),
+    getUnreadCount: () => this.get('/notifications/unread-count'),
+    create: data => this.post('/notifications', data),
+    markAsRead: id => this.put(`/notifications/${id}/read`),
+    markAllAsRead: () => this.put('/notifications/read-all'),
+    delete: id => this.delete(`/notifications/${id}`),
+    deleteAll: () => this.delete('/notifications/all'),
+    deleteRead: () => this.delete('/notifications/read'),
+  };
+
+  search = {
+    advanced: params => this.get('/search', params),
+    suggestions: q => this.get('/search/suggestions', { q }),
+    trending: () => this.get('/search/trending'),
+    getHistory: () => this.get('/search/history'),
+    addHistory: query => this.post('/search/history', { query }),
+    clearHistory: () => this.delete('/search/history'),
+    removeHistoryItem: query => this.delete(`/search/history/${encodeURIComponent(query)}`),
+  };
 }
 
 // Create singleton instance
