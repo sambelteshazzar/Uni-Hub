@@ -48,15 +48,15 @@ async function advancedSearch (req, res) {
 
     if (priceMin || priceMax) {
       filter.price = {};
-      if (priceMin) filter.price.$gte = parseFloat(priceMin);
-      if (priceMax) filter.price.$lte = parseFloat(priceMax);
+      if (priceMin) {filter.price.$gte = parseFloat(priceMin);}
+      if (priceMax) {filter.price.$lte = parseFloat(priceMax);}
     }
 
     let sortOption = { createdAt: -1 };
-    if (sortBy === 'price-low') sortOption = { price: 1 };
-    else if (sortBy === 'price-high') sortOption = { price: -1 };
-    else if (sortBy === 'rating') sortOption = { sellerRating: -1 };
-    else if (sortBy === 'popular') sortOption = { views: -1 };
+    if (sortBy === 'price-low') {sortOption = { price: 1 };}
+    else if (sortBy === 'price-high') {sortOption = { price: -1 };}
+    else if (sortBy === 'rating') {sortOption = { sellerRating: -1 };}
+    else if (sortBy === 'popular') {sortOption = { views: -1 };}
 
     const pageNum = Math.max(1, parseInt(page));
     const limit = Math.min(100, Math.max(1, parseInt(pageSize)));
