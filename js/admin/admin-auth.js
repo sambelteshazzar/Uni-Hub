@@ -28,14 +28,20 @@ class AdminAuthManager {
    * @returns {Object} - Login result
    */
   async login (email, password) {
-    // In production, this should call backend API with proper authentication
-    // Credentials should be verified server-side with hashed passwords
     try {
-      // Try backend authentication first
       const response = await api.admin.login(email, password);
-      if (response.success) {
+      if (response.success && response.data?.user) {
+        const user = response.data.user;
+
+        if (user.role !== 'admin') {
+          return {
+            success: false,
+            error: 'Access denied. Admin credentials required.',
+          };
+        }
+
         const adminUser = {
-          ...response.data.user,
+          ...user,
           loginAt: new Date().toISOString(),
         };
 
@@ -50,7 +56,26 @@ class AdminAuthManager {
         };
       }
     } catch (error) {
-      // Backend not available, will return error below
+      // Backend not available, try offline fallback
+    }
+
+    // Offline fallback: use authManager session if user is admin
+    const currentUser = typeof authManager !== 'undefined' ? authManager.getCurrentUser() : null;
+    if (currentUser && currentUser.role === 'admin' && currentUser.email === email) {
+      const adminUser = {
+        ...currentUser,
+        loginAt: new Date().toISOString(),
+      };
+
+      this.adminUser = adminUser;
+      StorageManager.set(this.ADMIN_STORAGE_KEY, adminUser);
+      this.logActivity('Admin login (offline)', { email });
+
+      return {
+        success: true,
+        message: 'Login successful (offline)',
+        user: adminUser,
+      };
     }
 
     return {
@@ -73,7 +98,21 @@ class AdminAuthManager {
    * @returns {boolean}
    */
   isLoggedIn () {
-    return this.adminUser !== null;
+    if (this.adminUser) {
+      return true;
+    }
+
+    // Fallback: check if authManager has an admin session
+    if (typeof authManager !== 'undefined') {
+      const user = authManager.getCurrentUser();
+      if (user && user.role === 'admin' && authManager.isLoggedIn()) {
+        this.adminUser = { ...user, loginAt: new Date().toISOString() };
+        StorageManager.set(this.ADMIN_STORAGE_KEY, this.adminUser);
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**

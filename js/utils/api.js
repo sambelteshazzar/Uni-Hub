@@ -268,6 +268,7 @@ class API {
    * Admin API
    */
   admin = {
+    login: (email, password) => this.post('/auth/login', { email, password }),
     getStats: () => this.get('/admin/stats'),
     getProducts: params => this.get('/admin/products', params),
     createProduct: data => this.post('/admin/products', data),

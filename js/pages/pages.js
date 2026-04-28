@@ -2138,40 +2138,53 @@ return labels[condition] || (condition ? condition.charAt(0).toUpperCase() + con
 
     const result = await authManager.login(email, password);
 
+    const isAdmin = (user) => user && user.role === 'admin';
+
     if (result.success) {
-      // Close the auth overlay immediately (no animation delay)
       this.closeAuthOverlay(true);
-      // Update navbar to show user menu
       this.updateNavbar();
       this.updateCartBadge();
-      // Force redirect to browse page using multiple methods for reliability
+      this.updateWishlistBadge();
+
+      const user = result.user || authManager.getCurrentUser();
+      if (isAdmin(user)) {
+        try {
+          await adminAuthManager.login(email, password);
+        } catch (e) { /* non-critical */ }
+        window.location.hash = '#/admin';
+        this.renderAdminDashboard();
+        return;
+      }
+
       try {
-        // Method 1: Use router if available
         if (typeof router !== 'undefined' && router.navigate) {
           router.navigate('/browse');
         }
-        // Method 2: Direct hash change (always works)
         window.location.hash = '#/browse';
-        // Method 3: Render directly as fallback
         setTimeout(() => {
           this.renderBrowse();
         }, 50);
       } catch (e) {
-        console.error('Navigation error:', e);
-        // Final fallback
         window.location.hash = '#/browse';
         this.renderBrowse();
       }
-} else {
-  if (result.isOffline) {
-    this.closeAuthOverlay(true);
-    this.updateNavbar();
-    this.updateCartBadge();
-    this.updateWishlistBadge();
-    notificationManager?.warning('Offline Mode', 'You are logged in with demo data. Some features may be limited.');
-    window.location.hash = '#/browse';
-    this.renderBrowse();
-  } else {
+    } else if (result.isOffline) {
+      this.closeAuthOverlay(true);
+      this.updateNavbar();
+      this.updateCartBadge();
+      this.updateWishlistBadge();
+      notificationManager?.warning('Offline Mode', 'You are logged in with demo data. Some features may be limited.');
+
+      const user = authManager.getCurrentUser();
+      if (isAdmin(user)) {
+        window.location.hash = '#/admin';
+        this.renderAdminDashboard();
+        return;
+      }
+
+      window.location.hash = '#/browse';
+      this.renderBrowse();
+    } else {
     alert('Login failed: ' + result.error);
   }
 }
