@@ -1,25 +1,47 @@
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
-/**
- * ============================================
- * Review Controller
- * Handle seller ratings and reviews
- * ============================================
- */
+const { db, generateId, parseJson, stringifyJson, mapReviewRow } = require('../utils/db');
 
-const Review = require('../models/Review.model');
-const User = require('../models/User.model');
-const Order = require('../models/Order.model');
+function calculateAverageRating (sellerId) {
+  const row = db('reviews').db.prepare(
+    `SELECT AVG(rating) as averageRating, COUNT(*) as totalReviews FROM reviews WHERE seller = ?`
+  ).get(sellerId);
 
-/**
- * @desc    Create a review for a seller
- * @route   POST /api/reviews
- * @access  Private
- */
+  const breakdown = db('reviews').db.prepare(
+    `SELECT rating, COUNT(*) as count FROM reviews WHERE seller = ? GROUP BY rating ORDER BY rating DESC`
+  ).all(sellerId);
+
+  const ratingBreakdown = {};
+  for (let i = 1; i <= 5; i++) {
+    ratingBreakdown[i] = 0;
+  }
+  for (const b of breakdown) {
+    ratingBreakdown[b.rating] = b.count;
+  }
+
+  return {
+    averageRating: row.averageRating ? Math.round(row.averageRating * 10) / 10 : 0,
+    totalReviews: row.totalReviews || 0,
+    ratingBreakdown,
+  };
+}
+
+async function updateSellerRating (sellerId) {
+  try {
+    const summary = calculateAverageRating(sellerId);
+
+    db('users').findByIdAndUpdate(sellerId, {
+      rating: summary.averageRating,
+      totalReviews: summary.totalReviews,
+    });
+  } catch (error) {
+    console.error('Failed to update seller rating:', error);
+  }
+}
+
 exports.createReview = async (req, res) => {
   try {
     const { sellerId, productId, orderId, rating, comment, detailedRatings } = req.body;
 
-    // Validate required fields
     if (!sellerId || !rating) {
       return res.status(400).json({
         success: false,
@@ -27,7 +49,6 @@ exports.createReview = async (req, res) => {
       });
     }
 
-    // Validate rating range
     if (rating < 1 || rating > 5) {
       return res.status(400).json({
         success: false,
@@ -35,16 +56,14 @@ exports.createReview = async (req, res) => {
       });
     }
 
-    // Cannot review yourself
-    if (sellerId === req.user._id.toString()) {
+    if (sellerId === req.user.id) {
       return res.status(400).json({
         success: false,
         error: 'You cannot review yourself',
       });
     }
 
-    // Check if seller exists
-    const seller = await User.findById(sellerId);
+    const seller = db('users').findById(sellerId);
     if (!seller) {
       return res.status(404).json({
         success: false,
@@ -52,9 +71,8 @@ exports.createReview = async (req, res) => {
       });
     }
 
-    // If order ID provided, verify the transaction
     if (orderId) {
-      const order = await Order.findById(orderId);
+      const order = db('orders').findById(orderId);
       if (!order) {
         return res.status(404).json({
           success: false,
@@ -62,9 +80,9 @@ exports.createReview = async (req, res) => {
         });
       }
 
-      // Verify user was involved in this order
-      const isCustomer = order.userId.toString() === req.user._id.toString();
-      const isSeller = order.items.some(item => item.seller.toString() === req.user._id.toString());
+      const isCustomer = order.userId === req.user.id;
+      const orderItems = db('order_items').find({ orderId });
+      const isSeller = orderItems.some(item => item.seller === req.user.id);
 
       if (!isCustomer && !isSeller) {
         return res.status(403).json({
@@ -73,9 +91,8 @@ exports.createReview = async (req, res) => {
         });
       }
 
-      // Check if review already exists for this order
-      const existingReview = await Review.findOne({
-        reviewer: req.user._id,
+      const existingReview = db('reviews').findOne({
+        reviewer: req.user.id,
         seller: sellerId,
         order: orderId,
       });
@@ -88,23 +105,32 @@ exports.createReview = async (req, res) => {
       }
     }
 
-    // Create review
-    const review = await Review.create({
-      reviewer: req.user._id,
+    const review = db('reviews').create({
+      reviewer: req.user.id,
       seller: sellerId,
-      product: productId || undefined,
-      order: orderId || undefined,
+      product: productId || null,
+      order: orderId || null,
       rating,
-      comment,
-      detailedRatings,
+      comment: comment || '',
+      detailedRatings_accuracy: detailedRatings?.accuracy || null,
+      detailedRatings_communication: detailedRatings?.communication || null,
+      detailedRatings_value: detailedRatings?.value || null,
+      helpfulVotes: stringifyJson([]),
+      reportCount: 0,
+      sellerResponse_comment: null,
+      sellerResponse_respondedAt: null,
     });
 
-    // Populate review with reviewer info
-    const populatedReview = await Review.findById(review._id)
-      .populate('reviewer', 'fullName avatar university')
-      .populate('product', 'title images');
+    const reviewer = db('users').findById(req.user.id);
+    const populatedReview = {
+      ...mapReviewRow(review),
+      reviewer: reviewer ? { id: reviewer.id, fullName: reviewer.fullName, avatar: reviewer.avatar, university: reviewer.university } : null,
+      product: productId ? (() => {
+        const p = db('products').findById(productId);
+        return p ? { id: p.id, title: p.title, images: parseJson(p.images) } : null;
+      })() : null,
+    };
 
-    // Update seller's average rating
     await updateSellerRating(sellerId);
 
     res.status(201).json({
@@ -114,15 +140,6 @@ exports.createReview = async (req, res) => {
     });
   } catch (error) {
     console.error('Create review error:', error);
-
-    // Handle duplicate key error (unique constraint)
-    if (error.code === 11000) {
-      return res.status(400).json({
-        success: false,
-        error: 'You have already reviewed this seller',
-      });
-    }
-
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to submit review',
@@ -130,18 +147,12 @@ exports.createReview = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get reviews for a seller
- * @route   GET /api/reviews/seller/:sellerId
- * @access  Public
- */
 exports.getSellerReviews = async (req, res) => {
   try {
     const { sellerId } = req.params;
     const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = -1 } = req.query;
 
-    // Check if seller exists
-    const seller = await User.findById(sellerId);
+    const seller = db('users').findById(sellerId);
     if (!seller) {
       return res.status(404).json({
         success: false,
@@ -149,23 +160,35 @@ exports.getSellerReviews = async (req, res) => {
       });
     }
 
-    // Get reviews and average rating
-    const result = await Review.getSellerReviews(sellerId, {
-      page: parseInt(page),
-      limit: parseInt(limit),
-      sortBy,
-      sortOrder: parseInt(sortOrder),
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    const sortObj = {};
+    sortObj[sortBy] = parseInt(sortOrder);
+
+    const reviews = db('reviews').find({ seller: sellerId }, { sort: sortObj, limit: limitNum, skip });
+    const total = db('reviews').countDocuments({ seller: sellerId });
+
+    const populatedReviews = reviews.map(r => {
+      const reviewer = db('users').findById(r.reviewer);
+      const product = r.product ? db('products').findById(r.product) : null;
+      return {
+        ...mapReviewRow(r),
+        reviewer: reviewer ? { id: reviewer.id, fullName: reviewer.fullName, avatar: reviewer.avatar, university: reviewer.university } : null,
+        product: product ? { id: product.id, title: product.title, images: parseJson(product.images) } : null,
+      };
     });
 
-    const averageRating = await Review.calculateAverageRating(sellerId);
+    const averageRating = calculateAverageRating(sellerId);
 
     res.json({
       success: true,
       data: {
-        reviews: result.reviews,
-        total: result.total,
-        pages: result.pages,
-        currentPage: result.currentPage,
+        reviews: populatedReviews,
+        total,
+        pages: Math.ceil(total / limitNum),
+        currentPage: pageNum,
         averageRating: averageRating.averageRating,
         totalReviews: averageRating.totalReviews,
         ratingBreakdown: averageRating.ratingBreakdown,
@@ -180,16 +203,11 @@ exports.getSellerReviews = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get seller rating summary
- * @route   GET /api/reviews/seller/:sellerId/summary
- * @access  Public
- */
 exports.getSellerRatingSummary = async (req, res) => {
   try {
     const { sellerId } = req.params;
 
-    const summary = await Review.calculateAverageRating(sellerId);
+    const summary = calculateAverageRating(sellerId);
 
     res.json({
       success: true,
@@ -204,31 +222,37 @@ exports.getSellerRatingSummary = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get user's reviews (as reviewer)
- * @route   GET /api/reviews/my-reviews
- * @access  Private
- */
 exports.getMyReviews = async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
 
-    const reviews = await Review.find({ reviewer: req.user._id })
-      .populate('seller', 'fullName avatar university')
-      .populate('product', 'title images')
-      .sort({ createdAt: -1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit);
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
 
-    const count = await Review.countDocuments({ reviewer: req.user._id });
+    const reviews = db('reviews').find(
+      { reviewer: req.user.id },
+      { sort: { createdAt: -1 }, limit: limitNum, skip },
+    );
+    const count = db('reviews').countDocuments({ reviewer: req.user.id });
+
+    const populatedReviews = reviews.map(r => {
+      const seller = db('users').findById(r.seller);
+      const product = r.product ? db('products').findById(r.product) : null;
+      return {
+        ...mapReviewRow(r),
+        seller: seller ? { id: seller.id, fullName: seller.fullName, avatar: seller.avatar, university: seller.university } : null,
+        product: product ? { id: product.id, title: product.title, images: parseJson(product.images) } : null,
+      };
+    });
 
     res.json({
       success: true,
       data: {
-        reviews,
+        reviews: populatedReviews,
         total: count,
-        pages: Math.ceil(count / limit),
-        currentPage: page,
+        pages: Math.ceil(count / limitNum),
+        currentPage: pageNum,
       },
     });
   } catch (error) {
@@ -240,16 +264,11 @@ exports.getMyReviews = async (req, res) => {
   }
 };
 
-/**
- * @desc    Update a review
- * @route   PUT /api/reviews/:id
- * @access  Private
- */
 exports.updateReview = async (req, res) => {
   try {
     const { rating, comment, detailedRatings } = req.body;
 
-    const review = await Review.findById(req.params.id);
+    const review = db('reviews').findById(req.params.id);
 
     if (!review) {
       return res.status(404).json({
@@ -258,15 +277,14 @@ exports.updateReview = async (req, res) => {
       });
     }
 
-    // Verify ownership
-    if (review.reviewer.toString() !== req.user._id.toString()) {
+    if (review.reviewer !== req.user.id) {
       return res.status(403).json({
         success: false,
         error: 'Not authorized to update this review',
       });
     }
 
-    // Update fields
+    const updateData = {};
     if (rating) {
       if (rating < 1 || rating > 5) {
         return res.status(400).json({
@@ -274,28 +292,38 @@ exports.updateReview = async (req, res) => {
           error: 'Rating must be between 1 and 5',
         });
       }
-      review.rating = rating;
+      updateData.rating = rating;
     }
     if (comment !== undefined) {
-      review.comment = comment;
+      updateData.comment = comment;
     }
     if (detailedRatings) {
-      review.detailedRatings = { ...review.detailedRatings, ...detailedRatings };
+      const existing = {
+        accuracy: review.detailedRatings_accuracy,
+        communication: review.detailedRatings_communication,
+        value: review.detailedRatings_value,
+      };
+      updateData.detailedRatings_accuracy = detailedRatings.accuracy !== undefined ? detailedRatings.accuracy : existing.accuracy;
+      updateData.detailedRatings_communication = detailedRatings.communication !== undefined ? detailedRatings.communication : existing.communication;
+      updateData.detailedRatings_value = detailedRatings.value !== undefined ? detailedRatings.value : existing.value;
     }
 
-    await review.save();
+    db('reviews').updateById(review.id, updateData);
 
-    // Update seller's average rating
-    await updateSellerRating(review.seller.toString());
+    await updateSellerRating(review.seller);
 
-    const updatedReview = await Review.findById(review._id)
-      .populate('reviewer', 'fullName avatar university')
-      .populate('product', 'title images');
+    const updatedReview = db('reviews').findById(review.id);
+    const reviewer = db('users').findById(updatedReview.reviewer);
+    const product = updatedReview.product ? db('products').findById(updatedReview.product) : null;
 
     res.json({
       success: true,
       message: 'Review updated successfully',
-      data: updatedReview,
+      data: {
+        ...mapReviewRow(updatedReview),
+        reviewer: reviewer ? { id: reviewer.id, fullName: reviewer.fullName, avatar: reviewer.avatar, university: reviewer.university } : null,
+        product: product ? { id: product.id, title: product.title, images: parseJson(product.images) } : null,
+      },
     });
   } catch (error) {
     console.error('Update review error:', error);
@@ -306,14 +334,9 @@ exports.updateReview = async (req, res) => {
   }
 };
 
-/**
- * @desc    Delete a review
- * @route   DELETE /api/reviews/:id
- * @access  Private
- */
 exports.deleteReview = async (req, res) => {
   try {
-    const review = await Review.findById(req.params.id);
+    const review = db('reviews').findById(req.params.id);
 
     if (!review) {
       return res.status(404).json({
@@ -322,9 +345,8 @@ exports.deleteReview = async (req, res) => {
       });
     }
 
-    // Verify ownership or admin
     const isAdmin = req.user.role === 'admin';
-    const isOwner = review.reviewer.toString() === req.user._id.toString();
+    const isOwner = review.reviewer === req.user.id;
 
     if (!isOwner && !isAdmin) {
       return res.status(403).json({
@@ -333,10 +355,10 @@ exports.deleteReview = async (req, res) => {
       });
     }
 
-    await review.deleteOne();
+    const sellerId = review.seller;
+    db('reviews').deleteById(review.id);
 
-    // Update seller's average rating
-    await updateSellerRating(review.seller.toString());
+    await updateSellerRating(sellerId);
 
     res.json({
       success: true,
@@ -351,14 +373,9 @@ exports.deleteReview = async (req, res) => {
   }
 };
 
-/**
- * @desc    Mark review as helpful
- * @route   POST /api/reviews/:id/helpful
- * @access  Private
- */
 exports.markHelpful = async (req, res) => {
   try {
-    const review = await Review.findById(req.params.id);
+    const review = db('reviews').findById(req.params.id);
 
     if (!review) {
       return res.status(404).json({
@@ -367,12 +384,18 @@ exports.markHelpful = async (req, res) => {
       });
     }
 
-    const helpfulCount = await review.addHelpfulVote(req.user._id);
+    const votes = parseJson(review.helpfulVotes) || [];
+    if (!votes.includes(req.user.id)) {
+      votes.push(req.user.id);
+      db('reviews').updateById(review.id, {
+        helpfulVotes: stringifyJson(votes),
+      });
+    }
 
     res.json({
       success: true,
       message: 'Review marked as helpful',
-      data: { helpfulCount },
+      data: { helpfulCount: votes.length },
     });
   } catch (error) {
     console.error('Mark helpful error:', error);
@@ -383,14 +406,9 @@ exports.markHelpful = async (req, res) => {
   }
 };
 
-/**
- * @desc    Report a review
- * @route   POST /api/reviews/:id/report
- * @access  Private
- */
 exports.reportReview = async (req, res) => {
   try {
-    const review = await Review.findById(req.params.id);
+    const review = db('reviews').findById(req.params.id);
 
     if (!review) {
       return res.status(404).json({
@@ -399,7 +417,9 @@ exports.reportReview = async (req, res) => {
       });
     }
 
-    await review.report();
+    db('reviews').updateById(review.id, {
+      reportCount: (review.reportCount || 0) + 1,
+    });
 
     res.json({
       success: true,
@@ -414,11 +434,6 @@ exports.reportReview = async (req, res) => {
   }
 };
 
-/**
- * @desc    Seller respond to review
- * @route   POST /api/reviews/:id/respond
- * @access  Private
- */
 exports.respondToReview = async (req, res) => {
   try {
     const { comment } = req.body;
@@ -430,7 +445,7 @@ exports.respondToReview = async (req, res) => {
       });
     }
 
-    const review = await Review.findById(req.params.id);
+    const review = db('reviews').findById(req.params.id);
 
     if (!review) {
       return res.status(404).json({
@@ -439,20 +454,24 @@ exports.respondToReview = async (req, res) => {
       });
     }
 
-    // Verify user is the seller
-    if (review.seller.toString() !== req.user._id.toString()) {
+    if (review.seller !== req.user.id) {
       return res.status(403).json({
         success: false,
         error: 'Only the seller can respond to this review',
       });
     }
 
-    await review.addSellerResponse(comment);
+    db('reviews').updateById(review.id, {
+      sellerResponse_comment: comment,
+      sellerResponse_respondedAt: new Date().toISOString(),
+    });
+
+    const updatedReview = db('reviews').findById(review.id);
 
     res.json({
       success: true,
       message: 'Response added successfully',
-      data: review,
+      data: mapReviewRow(updatedReview),
     });
   } catch (error) {
     console.error('Respond to review error:', error);
@@ -462,19 +481,3 @@ exports.respondToReview = async (req, res) => {
     });
   }
 };
-
-/**
- * Helper: Update seller's average rating
- */
-async function updateSellerRating (sellerId) {
-  try {
-    const summary = await Review.calculateAverageRating(sellerId);
-
-    await User.findByIdAndUpdate(sellerId, {
-      rating: summary.averageRating,
-      totalReviews: summary.totalReviews,
-    });
-  } catch (error) {
-    console.error('Failed to update seller rating:', error);
-  }
-}

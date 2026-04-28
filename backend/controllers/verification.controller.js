@@ -1,14 +1,8 @@
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
-const StudentVerification = require('../models/StudentVerification.model');
-const User = require('../models/User.model');
+const { db, generateId, toBool, fromBool } = require('../utils/db');
 const { sendVerificationEmail } = require('../utils/emailService');
 const crypto = require('crypto');
 
-/**
- * @desc    Submit verification request
- * @route   POST /api/verification
- * @access  Public
- */
 exports.submitVerification = async (req, res) => {
   try {
     const {
@@ -24,8 +18,7 @@ exports.submitVerification = async (req, res) => {
       documents,
     } = req.body;
 
-    // Check if already verified
-    const existing = await StudentVerification.findOne({
+    const existing = db('student_verifications').findOne({
       studentId,
       university,
       status: 'approved',
@@ -38,8 +31,8 @@ exports.submitVerification = async (req, res) => {
       });
     }
 
-    // Create verification request
-    const verification = await StudentVerification.create({
+    const verificationData = {
+      id: generateId(),
       studentId,
       fullName,
       email,
@@ -49,23 +42,22 @@ exports.submitVerification = async (req, res) => {
       hall,
       verificationMethod,
       universityEmail,
-      documents,
+      documents: JSON.stringify(documents),
       status: 'pending',
-    });
+    };
 
-    // If email verification, generate a verification code and mark as pending
-    // The user must verify ownership by clicking a link sent to their university email
     if (verificationMethod === 'email' && universityEmail) {
       const verificationCode = crypto.randomBytes(3).toString('hex').toUpperCase();
-      verification.verificationCode = verificationCode;
-      verification.status = 'pending';
-      await verification.save();
+      verificationData.verificationCode = verificationCode;
+      verificationData.status = 'pending';
 
       if (process.env.EMAIL_USER) {
         const universityName = req.user.university || 'your university';
         await sendVerificationEmail(universityEmail, verificationCode, universityName);
       }
     }
+
+    const verification = db('student_verifications').create(verificationData);
 
     res.status(201).json({
       success: true,
@@ -81,21 +73,26 @@ exports.submitVerification = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get pending verifications (admin)
- * @route   GET /api/verification/pending
- * @access  Private (admin)
- */
 exports.getPendingVerifications = async (req, res) => {
   try {
-    const verifications = await StudentVerification.getPending()
-      .populate('reviewedBy', 'fullName');
+    const verifications = db('student_verifications').find(
+      { status: 'pending' },
+      { sort: { createdAt: -1 } },
+    );
+
+    const populatedVerifications = verifications.map(v => {
+      const reviewer = db('users').findById(v.reviewedBy);
+      return {
+        ...v,
+        reviewedBy: reviewer ? { id: reviewer.id, fullName: reviewer.fullName } : null,
+      };
+    });
 
     res.json({
       success: true,
       data: {
-        verifications,
-        total: verifications.length,
+        verifications: populatedVerifications,
+        total: populatedVerifications.length,
       },
     });
   } catch (error) {
@@ -107,16 +104,11 @@ exports.getPendingVerifications = async (req, res) => {
   }
 };
 
-/**
- * @desc    Approve verification
- * @route   PUT /api/verification/:id/approve
- * @access  Private (admin)
- */
 exports.approveVerification = async (req, res) => {
   try {
     const { notes } = req.body;
 
-    const verification = await StudentVerification.findById(req.params.id);
+    const verification = db('student_verifications').findById(req.params.id);
 
     if (!verification) {
       return res.status(404).json({
@@ -125,19 +117,25 @@ exports.approveVerification = async (req, res) => {
       });
     }
 
-    await verification.approve(req.user._id, notes);
-
-    // Update user verification status
-    await User.findByIdAndUpdate(verification.userId, {
-      isVerified: true,
-      verificationMethod: 'document',
-      studentId: verification.studentId,
+    db('student_verifications').updateById(verification.id, {
+      status: 'approved',
+      reviewedBy: req.user.id,
+      reviewedAt: new Date().toISOString(),
+      reviewNotes: notes || '',
     });
+
+    if (verification.userId) {
+      db('users').findByIdAndUpdate(verification.userId, {
+        isVerified: toBool(true),
+        verificationMethod: 'document',
+        studentId: verification.studentId,
+      });
+    }
 
     res.json({
       success: true,
       message: 'Verification approved',
-      data: verification,
+      data: db('student_verifications').findById(verification.id),
     });
   } catch (error) {
     console.error('Approve verification error:', error);
@@ -148,16 +146,11 @@ exports.approveVerification = async (req, res) => {
   }
 };
 
-/**
- * @desc    Reject verification
- * @route   PUT /api/verification/:id/reject
- * @access  Private (admin)
- */
 exports.rejectVerification = async (req, res) => {
   try {
     const { notes } = req.body;
 
-    const verification = await StudentVerification.findById(req.params.id);
+    const verification = db('student_verifications').findById(req.params.id);
 
     if (!verification) {
       return res.status(404).json({
@@ -166,12 +159,17 @@ exports.rejectVerification = async (req, res) => {
       });
     }
 
-    await verification.reject(req.user._id, notes);
+    db('student_verifications').updateById(verification.id, {
+      status: 'rejected',
+      reviewedBy: req.user.id,
+      reviewedAt: new Date().toISOString(),
+      reviewNotes: notes || '',
+    });
 
     res.json({
       success: true,
       message: 'Verification rejected',
-      data: verification,
+      data: db('student_verifications').findById(verification.id),
     });
   } catch (error) {
     console.error('Reject verification error:', error);
@@ -182,16 +180,14 @@ exports.rejectVerification = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get verification status
- * @route   GET /api/verification/status/:studentId/:university
- * @access  Public
- */
 exports.getVerificationStatus = async (req, res) => {
   try {
     const { studentId, university } = req.params;
 
-    const verification = await StudentVerification.getByStudent(studentId, university);
+    const verification = db('student_verifications').findOne({
+      studentId,
+      university,
+    });
 
     if (!verification) {
       return res.json({
@@ -203,14 +199,19 @@ exports.getVerificationStatus = async (req, res) => {
       });
     }
 
+    const latestVerification = db('student_verifications').find(
+      { studentId, university },
+      { sort: { createdAt: -1 }, limit: 1 },
+    )[0];
+
     res.json({
       success: true,
       data: {
-        isVerified: verification.status === 'approved',
-        status: verification.status,
-        submittedAt: verification.createdAt,
-        reviewedAt: verification.reviewedAt,
-        reviewNotes: verification.reviewNotes,
+        isVerified: latestVerification.status === 'approved',
+        status: latestVerification.status,
+        submittedAt: latestVerification.createdAt,
+        reviewedAt: latestVerification.reviewedAt,
+        reviewNotes: latestVerification.reviewNotes,
       },
     });
   } catch (error) {

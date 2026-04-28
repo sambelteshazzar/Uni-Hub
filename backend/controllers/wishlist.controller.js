@@ -1,20 +1,22 @@
-const Wishlist = require('../models/Wishlist.model');
-const Product = require('../models/Product.model');
+const { db, mapProductRow } = require('../utils/db');
 
 async function getWishlist (req, res) {
   try {
-    const wishlistItems = await Wishlist.find({ user: req.user._id })
-      .populate('product')
-      .sort({ createdAt: -1 });
+    const wishlistItems = db('wishlists').find(
+      { user: req.user.id },
+      { sort: { createdAt: -1 } },
+    );
 
-    const products = wishlistItems
-      .filter(item => item.product)
-      .map(item => {
-        const p = item.product.toObject();
-        p.id = p._id.toString();
-        delete p.__v;
-        return p;
-      });
+    const products = [];
+    for (const item of wishlistItems) {
+      const product = db('products').findById(item.product);
+      if (product) {
+        products.push({
+          ...product,
+          id: product.id || product._id,
+        });
+      }
+    }
 
     res.json({
       success: true,
@@ -32,7 +34,7 @@ async function addToWishlist (req, res) {
   try {
     const { productId } = req.params;
 
-    const product = await Product.findById(productId);
+    const product = db('products').findById(productId);
     if (!product) {
       return res.status(404).json({
         success: false,
@@ -40,8 +42,8 @@ async function addToWishlist (req, res) {
       });
     }
 
-    const existing = await Wishlist.findOne({
-      user: req.user._id,
+    const existing = db('wishlists').findOne({
+      user: req.user.id,
       product: productId,
     });
 
@@ -52,8 +54,8 @@ async function addToWishlist (req, res) {
       });
     }
 
-    await Wishlist.create({
-      user: req.user._id,
+    db('wishlists').create({
+      user: req.user.id,
       product: productId,
     });
 
@@ -73,12 +75,12 @@ async function removeFromWishlist (req, res) {
   try {
     const { productId } = req.params;
 
-    const result = await Wishlist.deleteOne({
-      user: req.user._id,
+    const result = db('wishlists').deleteOne({
+      user: req.user.id,
       product: productId,
     });
 
-    if (result.deletedCount === 0) {
+    if (result === 0) {
       return res.status(404).json({
         success: false,
         error: 'Product not found in wishlist',
@@ -99,7 +101,7 @@ async function removeFromWishlist (req, res) {
 
 async function clearWishlist (req, res) {
   try {
-    await Wishlist.deleteMany({ user: req.user._id });
+    db('wishlists').deleteMany({ user: req.user.id });
 
     res.json({
       success: true,

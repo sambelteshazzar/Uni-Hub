@@ -1,11 +1,50 @@
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
-const Product = require('../models/Product.model');
+const { db, mapProductRow } = require('../utils/db');
 const logActivity = require('../utils/logActivity');
 
+function populateSeller(product) {
+  const seller = db('users').findById(product.seller);
+  if (seller) {
+    product.seller = {
+      _id: seller.id,
+      id: seller.id,
+      fullName: seller.fullName,
+      rating: seller.rating,
+      avatar: seller.avatar,
+    };
+  }
+  product._id = product.id;
+  return product;
+}
+
+function populateSellerDetail(product) {
+  const seller = db('users').findById(product.seller);
+  if (seller) {
+    product.seller = {
+      _id: seller.id,
+      id: seller.id,
+      fullName: seller.fullName,
+      email: seller.email,
+      phone: seller.phone,
+      rating: seller.rating,
+      avatar: seller.avatar,
+      university: seller.university,
+    };
+  }
+  product._id = product.id;
+  return product;
+}
+
+function getPublicProduct(product) {
+  product._id = product.id;
+  delete product.__v;
+  return product;
+}
+
 /**
- * @desc    Get all products with filtering, sorting, pagination
- * @route   GET /api/products
- * @access  Public
+ * @desc Get all products with filtering, sorting, pagination
+ * @route GET /api/products
+ * @access Public
  */
 exports.getProducts = async (req, res) => {
   try {
@@ -24,13 +63,13 @@ exports.getProducts = async (req, res) => {
     // Build query
     const query = { status: 'active' };
 
-    if (category) {query.category = category;}
-    if (condition) {query.condition = condition;}
-    if (university) {query.university = university;}
+    if (category) { query.category = category; }
+    if (condition) { query.condition = condition; }
+    if (university) { query.university = university; }
     if (minPrice || maxPrice) {
       query.price = {};
-      if (minPrice) {query.price.$gte = Number(minPrice);}
-      if (maxPrice) {query.price.$lte = Number(maxPrice);}
+      if (minPrice) { query.price.$gte = Number(minPrice); }
+      if (maxPrice) { query.price.$lte = Number(maxPrice); }
     }
 
     // Text search
@@ -41,35 +80,33 @@ exports.getProducts = async (req, res) => {
     // Sorting
     let sortOptions = {};
     switch (sortBy) {
-    case 'price-low':
-      sortOptions = { price: 1 };
-      break;
-    case 'price-high':
-      sortOptions = { price: -1 };
-      break;
-    case 'newest':
-      sortOptions = { createdAt: -1 };
-      break;
-    default:
-      sortOptions = { createdAt: -1 };
+      case 'price-low':
+        sortOptions = { price: 1 };
+        break;
+      case 'price-high':
+        sortOptions = { price: -1 };
+        break;
+      case 'newest':
+        sortOptions = { createdAt: -1 };
+        break;
+      default:
+        sortOptions = { createdAt: -1 };
     }
 
     // Pagination
     const skip = (page - 1) * limit;
-    const total = await Product.countDocuments(query);
+    const total = db('products').countDocuments(query);
     const pages = Math.ceil(total / limit);
 
     // Execute query
-    const products = await Product.find(query)
-      .sort(sortOptions)
-      .skip(skip)
-      .limit(Number(limit))
-      .populate('seller', 'fullName rating avatar');
+    const products = db('products').find(query, { sort: sortOptions, limit: Number(limit), skip });
+
+    const populated = products.map(p => populateSeller(p));
 
     res.json({
       success: true,
       data: {
-        products,
+        products: populated,
         pagination: {
           page: Number(page),
           limit: Number(limit),
@@ -88,14 +125,13 @@ exports.getProducts = async (req, res) => {
 };
 
 /**
- * @desc    Get single product by ID
- * @route   GET /api/products/:id
- * @access  Public
+ * @desc Get single product by ID
+ * @route GET /api/products/:id
+ * @access Public
  */
 exports.getProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id)
-      .populate('seller', 'fullName email phone rating avatar university');
+    const product = db('products').findById(req.params.id);
 
     if (!product) {
       return res.status(404).json({
@@ -105,11 +141,13 @@ exports.getProduct = async (req, res) => {
     }
 
     // Increment view count
-    await product.incrementViews();
+    db('products').updateById(product.id, { views: (product.views || 0) + 1 });
+
+    const populated = populateSellerDetail(product);
 
     res.json({
       success: true,
-      data: product.getPublicProduct(),
+      data: getPublicProduct(populated),
     });
   } catch (error) {
     console.error('Get product error:', error);
@@ -121,9 +159,9 @@ exports.getProduct = async (req, res) => {
 };
 
 /**
- * @desc    Create new product
- * @route   POST /api/products
- * @access  Private
+ * @desc Create new product
+ * @route POST /api/products
+ * @access Private
  */
 exports.createProduct = async (req, res) => {
   try {
@@ -139,7 +177,7 @@ exports.createProduct = async (req, res) => {
     } = req.body;
 
     // Create product
-    const product = await Product.create({
+    const product = db('products').create({
       title,
       description,
       price,
@@ -148,18 +186,18 @@ exports.createProduct = async (req, res) => {
       images,
       deliveryModes,
       paymentModes,
-      seller: req.user._id,
+      seller: req.user.id,
       sellerName: req.user.fullName,
       sellerRating: req.user.rating,
       university: req.user.university,
     });
 
-    await logActivity('product_create', req.user, { productId: product._id, title: product.title, category: product.category, price: product.price }, 'info', req);
+    await logActivity('product_create', req.user, { productId: product.id, title: product.title, category: product.category, price: product.price }, 'info', req);
 
     res.status(201).json({
       success: true,
       message: 'Product created successfully',
-      data: product.getPublicProduct(),
+      data: getPublicProduct(product),
     });
   } catch (error) {
     console.error('Create product error:', error);
@@ -171,13 +209,13 @@ exports.createProduct = async (req, res) => {
 };
 
 /**
- * @desc    Update product
- * @route   PUT /api/products/:id
- * @access  Private (owner only)
+ * @desc Update product
+ * @route PUT /api/products/:id
+ * @access Private (owner only)
  */
 exports.updateProduct = async (req, res) => {
   try {
-    let product = await Product.findById(req.params.id);
+    let product = db('products').findById(req.params.id);
 
     if (!product) {
       return res.status(404).json({
@@ -187,7 +225,7 @@ exports.updateProduct = async (req, res) => {
     }
 
     // Check ownership
-    if (product.seller.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    if (product.seller !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
         error: 'Not authorized to update this product',
@@ -196,22 +234,23 @@ exports.updateProduct = async (req, res) => {
 
     // Update fields
     const allowedFields = ['title', 'description', 'price', 'category', 'condition', 'images', 'deliveryModes', 'paymentModes', 'status'];
+    const updates = {};
     allowedFields.forEach(field => {
       if (req.body[field] !== undefined) {
-        product[field] = req.body[field];
+        updates[field] = req.body[field];
       }
     });
 
-    await product.save();
+    db('products').updateById(product.id, updates);
 
-    product = await Product.findById(product._id);
+    product = db('products').findById(product.id);
 
-    await logActivity('product_update', req.user, { productId: product._id, title: product.title, updatedFields: Object.keys(req.body).filter(k => allowedFields.includes(k)) }, 'info', req);
+    await logActivity('product_update', req.user, { productId: product.id, title: product.title, updatedFields: Object.keys(req.body).filter(k => allowedFields.includes(k)) }, 'info', req);
 
     res.json({
       success: true,
       message: 'Product updated successfully',
-      data: product.getPublicProduct(),
+      data: getPublicProduct(product),
     });
   } catch (error) {
     console.error('Update product error:', error);
@@ -223,13 +262,13 @@ exports.updateProduct = async (req, res) => {
 };
 
 /**
- * @desc    Delete product
- * @route   DELETE /api/products/:id
- * @access  Private (owner only)
+ * @desc Delete product
+ * @route DELETE /api/products/:id
+ * @access Private (owner only)
  */
 exports.deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = db('products').findById(req.params.id);
 
     if (!product) {
       return res.status(404).json({
@@ -239,14 +278,14 @@ exports.deleteProduct = async (req, res) => {
     }
 
     // Check ownership
-    if (product.seller.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    if (product.seller !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
         error: 'Not authorized to delete this product',
       });
     }
 
-    await product.deleteOne();
+    db('products').deleteById(product.id);
 
     await logActivity('product_delete', req.user, { productId: req.params.id, title: product.title }, 'warning', req);
 
@@ -264,18 +303,18 @@ exports.deleteProduct = async (req, res) => {
 };
 
 /**
- * @desc    Get products by seller
- * @route   GET /api/products/seller/my-products
- * @access  Private
+ * @desc Get products by seller
+ * @route GET /api/products/seller/my-products
+ * @access Private
  */
 exports.getMyProducts = async (req, res) => {
   try {
     const { status = 'active' } = req.query;
 
-    const products = await Product.find({
-      seller: req.user._id,
+    const products = db('products').find({
+      seller: req.user.id,
       status,
-    }).sort({ createdAt: -1 });
+    }, { sort: { createdAt: -1 } });
 
     res.json({
       success: true,
@@ -294,19 +333,19 @@ exports.getMyProducts = async (req, res) => {
 };
 
 /**
- * @desc    Upload product images to Cloudinary
- * @route   POST /api/products/:id/images
- * @access  Private (Seller only)
+ * @desc Upload product images to Cloudinary
+ * @route POST /api/products/:id/images
+ * @access Private (Seller only)
  */
 exports.uploadProductImages = asyncHandler(async (req, res) => {
-  const product = await Product.findById(req.params.id);
+  const product = db('products').findById(req.params.id);
 
   if (!product) {
     throw new ApiError(404, 'Product not found');
   }
 
   // Check ownership
-  if (product.seller.toString() !== req.user._id.toString()) {
+  if (product.seller !== req.user.id) {
     throw new ApiError(403, 'Not authorized to update this product');
   }
 
@@ -337,19 +376,20 @@ exports.uploadProductImages = asyncHandler(async (req, res) => {
   // Enforce max 5 images per product
   const maxImages = 5;
   const currentCount = (product.images || []).length;
+  let newImages;
   if (currentCount + uploadedUrls.length > maxImages) {
-    product.images = [...(product.images || []), ...uploadedUrls.slice(0, maxImages - currentCount)];
+    newImages = [...(product.images || []), ...uploadedUrls.slice(0, maxImages - currentCount)];
   } else {
-    product.images = [...(product.images || []), ...uploadedUrls];
+    newImages = [...(product.images || []), ...uploadedUrls];
   }
-  await product.save();
+  db('products').updateById(product.id, { images: newImages });
 
   res.json({
     success: true,
     message: `${uploadedUrls.length} image(s) uploaded successfully`,
     data: {
       images: uploadedUrls,
-      totalImages: product.images.length,
+      totalImages: newImages.length,
     },
   });
 });

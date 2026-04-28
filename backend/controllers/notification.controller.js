@@ -1,40 +1,40 @@
-const Notification = require('../models/Notification.model');
+const { db, toBool, fromBool } = require('../utils/db');
 
 async function getNotifications (req, res) {
   try {
     const { type, read, startDate, endDate } = req.query;
 
-    const query = { user: req.user._id };
+    const query = { user: req.user.id };
 
     if (type) {
       query.type = type;
     }
 
     if (read !== undefined) {
-      query.read = read === 'true';
+      query.read = read === 'true' ? 1 : 0;
     }
 
     if (startDate || endDate) {
       query.createdAt = {};
-      if (startDate) {query.createdAt.$gte = new Date(startDate);}
-      if (endDate) {query.createdAt.$lte = new Date(endDate);}
+      if (startDate) { query.createdAt.$gte = startDate; }
+      if (endDate) { query.createdAt.$lte = endDate; }
     }
 
     query.$or = [
       { expiresAt: null },
-      { expiresAt: { $gt: new Date() } },
+      { expiresAt: { $gt: new Date().toISOString() } },
     ];
 
-    const notifications = await Notification.find(query)
-      .sort({ createdAt: -1 })
-      .limit(100);
-
-    const data = notifications.map(n => {
-      const obj = n.toObject();
-      obj.id = obj._id.toString();
-      delete obj.__v;
-      return obj;
+    const notifications = db('notifications').find(query, {
+      sort: { createdAt: -1 },
+      limit: 100,
     });
+
+    const data = notifications.map(n => ({
+      ...n,
+      id: n.id || n._id,
+      read: fromBool(n.read),
+    }));
 
     res.json({
       success: true,
@@ -50,12 +50,12 @@ async function getNotifications (req, res) {
 
 async function getUnreadCount (req, res) {
   try {
-    const count = await Notification.countDocuments({
-      user: req.user._id,
-      read: false,
+    const count = db('notifications').countDocuments({
+      user: req.user.id,
+      read: 0,
       $or: [
         { expiresAt: null },
-        { expiresAt: { $gt: new Date() } },
+        { expiresAt: { $gt: new Date().toISOString() } },
       ],
     });
 
@@ -82,22 +82,22 @@ async function createNotification (req, res) {
       });
     }
 
-    const notification = await Notification.create({
-      user: req.user._id,
+    const notification = db('notifications').create({
+      user: req.user.id,
       type: type || 'info',
       title,
       message,
-      icon,
+      icon: icon || null,
+      read: 0,
       expiresAt: expiresAt || null,
     });
 
-    const obj = notification.toObject();
-    obj.id = obj._id.toString();
-    delete obj.__v;
-
     res.status(201).json({
       success: true,
-      data: obj,
+      data: {
+        ...notification,
+        read: fromBool(notification.read),
+      },
     });
   } catch (error) {
     res.status(500).json({
@@ -109,10 +109,9 @@ async function createNotification (req, res) {
 
 async function markAsRead (req, res) {
   try {
-    const notification = await Notification.findOneAndUpdate(
-      { _id: req.params.id, user: req.user._id },
-      { read: true },
-      { new: true },
+    const notification = db('notifications').findOneAndUpdate(
+      { id: req.params.id, user: req.user.id },
+      { read: toBool(true) },
     );
 
     if (!notification) {
@@ -124,7 +123,10 @@ async function markAsRead (req, res) {
 
     res.json({
       success: true,
-      data: notification.toObject(),
+      data: {
+        ...notification,
+        read: fromBool(notification.read),
+      },
     });
   } catch (error) {
     res.status(500).json({
@@ -136,9 +138,9 @@ async function markAsRead (req, res) {
 
 async function markAllAsRead (req, res) {
   try {
-    await Notification.updateMany(
-      { user: req.user._id, read: false },
-      { read: true },
+    db('notifications').updateMany(
+      { user: req.user.id, read: 0 },
+      { read: toBool(true) },
     );
 
     res.json({
@@ -155,12 +157,12 @@ async function markAllAsRead (req, res) {
 
 async function deleteNotification (req, res) {
   try {
-    const result = await Notification.deleteOne({
-      _id: req.params.id,
-      user: req.user._id,
+    const result = db('notifications').deleteOne({
+      id: req.params.id,
+      user: req.user.id,
     });
 
-    if (result.deletedCount === 0) {
+    if (result === 0) {
       return res.status(404).json({
         success: false,
         error: 'Notification not found',
@@ -181,7 +183,7 @@ async function deleteNotification (req, res) {
 
 async function deleteAllNotifications (req, res) {
   try {
-    await Notification.deleteMany({ user: req.user._id });
+    db('notifications').deleteMany({ user: req.user.id });
 
     res.json({
       success: true,
@@ -197,9 +199,9 @@ async function deleteAllNotifications (req, res) {
 
 async function deleteReadNotifications (req, res) {
   try {
-    await Notification.deleteMany({
-      user: req.user._id,
-      read: true,
+    db('notifications').deleteMany({
+      user: req.user.id,
+      read: 1,
     });
 
     res.json({

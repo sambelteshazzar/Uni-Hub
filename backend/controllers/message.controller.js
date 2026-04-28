@@ -1,21 +1,44 @@
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
-const { escapeRegex } = require('../middleware/sanitize.middleware');
-/**
- * ============================================
- * Message Controller
- * Handle in-app messaging between users
- * ============================================
- */
+const { db, generateId, toBool, fromBool, parseJson, stringifyJson } = require('../utils/db');
 
-const Message = require('../models/Message.model');
-const Conversation = require('../models/Conversation.model');
-const User = require('../models/User.model');
+function escapeRegex (str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
-/**
- * @desc    Send a new message
- * @route   POST /api/messages
- * @access  Private
- */
+async function findOrCreateConversation (userId1, userId2, productId) {
+  const existing = db('conversations').db.prepare(
+    `SELECT c.* FROM conversations c
+     JOIN conversation_participants cp1 ON cp1.conversationId = c.id AND cp1.userId = ?
+     JOIN conversation_participants cp2 ON cp2.conversationId = c.id AND cp2.userId = ?
+     WHERE c.productId ${productId ? '= ?' : 'IS NULL'}
+     LIMIT 1`
+  ).get(userId1, userId2, ...(productId ? [productId] : []));
+
+  if (existing) {
+    return existing;
+  }
+
+  const conversation = db('conversations').create({
+    productId: productId || null,
+    lastMessage: null,
+    lastActivity: new Date().toISOString(),
+    status: 'active',
+  });
+
+  db('conversation_participants').create({
+    conversationId: conversation.id,
+    userId: userId1,
+    unreadCount: 0,
+  });
+  db('conversation_participants').create({
+    conversationId: conversation.id,
+    userId: userId2,
+    unreadCount: 0,
+  });
+
+  return conversation;
+}
+
 exports.sendMessage = async (req, res) => {
   try {
     const { conversationId, receiverId, content, type = 'text', imageUrl, productId } = req.body;
@@ -27,8 +50,7 @@ exports.sendMessage = async (req, res) => {
       });
     }
 
-    // Verify receiver exists
-    const receiver = await User.findById(receiverId);
+    const receiver = db('users').findById(receiverId);
     if (!receiver) {
       return res.status(404).json({
         success: false,
@@ -36,10 +58,9 @@ exports.sendMessage = async (req, res) => {
       });
     }
 
-    // Find or create conversation
     let conversation;
     if (conversationId) {
-      conversation = await Conversation.findById(conversationId);
+      conversation = db('conversations').findById(conversationId);
       if (!conversation) {
         return res.status(404).json({
           success: false,
@@ -47,46 +68,52 @@ exports.sendMessage = async (req, res) => {
         });
       }
     } else {
-      conversation = await Conversation.findOrCreateConversation(
-        req.user._id,
-        receiverId,
-        productId,
-      );
+      conversation = await findOrCreateConversation(req.user.id, receiverId, productId);
     }
 
-    // Create message
-    const message = await Message.create({
-      conversationId: conversation._id,
-      sender: req.user._id,
+    const message = db('messages').create({
+      conversationId: conversation.id,
+      sender: req.user.id,
       receiver: receiverId,
       content,
       type,
-      imageUrl: type === 'image' ? imageUrl : undefined,
+      imageUrl: type === 'image' ? imageUrl : null,
+      isRead: 0,
     });
 
-    // Update conversation
-    conversation.lastMessage = message._id;
-    conversation.lastActivity = new Date();
+    db('conversations').updateById(conversation.id, {
+      lastMessage: message.id,
+      lastActivity: new Date().toISOString(),
+    });
 
-    // Increment unread count for receiver
-    const currentUnread = conversation.unreadCount.get(receiverId) || 0;
-    conversation.unreadCount.set(receiverId, currentUnread + 1);
+    const participant = db('conversation_participants').findOne({
+      conversationId: conversation.id,
+      userId: receiverId,
+    });
+    if (participant) {
+      db('conversation_participants').updateById(participant.id, {
+        unreadCount: (participant.unreadCount || 0) + 1,
+      });
+    }
 
-    await conversation.save();
+    const senderUser = db('users').findById(req.user.id);
+    const populatedMessage = {
+      ...message,
+      sender: senderUser ? { id: senderUser.id, fullName: senderUser.fullName, avatar: senderUser.avatar, university: senderUser.university } : null,
+      receiver: { id: receiver.id, fullName: receiver.fullName, avatar: receiver.avatar, university: receiver.university },
+    };
 
-    // Populate message with sender info
-    const populatedMessage = await Message.findById(message._id)
-      .populate('sender', 'fullName avatar university')
-      .populate('receiver', 'fullName avatar university')
-      .populate('product', 'title price images')
-      .populate('conversationId', 'status');
+    if (productId) {
+      const product = db('products').findById(productId);
+      populatedMessage.product = product ? { id: product.id, title: product.title, price: product.price, images: parseJson(product.images) } : null;
+    }
 
     res.status(201).json({
       success: true,
       message: 'Message sent successfully',
       data: {
         message: populatedMessage,
-        conversationId: conversation._id,
+        conversationId: conversation.id,
       },
     });
   } catch (error) {
@@ -98,18 +125,12 @@ exports.sendMessage = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get messages for a conversation
- * @route   GET /api/messages/conversation/:conversationId
- * @access  Private
- */
 exports.getConversationMessages = async (req, res) => {
   try {
     const { conversationId } = req.params;
     const { page = 1, limit = 50 } = req.query;
 
-    // Verify user is participant
-    const conversation = await Conversation.findById(conversationId);
+    const conversation = db('conversations').findById(conversationId);
     if (!conversation) {
       return res.status(404).json({
         success: false,
@@ -117,9 +138,8 @@ exports.getConversationMessages = async (req, res) => {
       });
     }
 
-    const isParticipant = conversation.participants.some(
-      p => p.toString() === req.user._id.toString(),
-    );
+    const participants = db('conversation_participants').find({ conversationId });
+    const isParticipant = participants.some(p => p.userId === req.user.id);
 
     if (!isParticipant) {
       return res.status(403).json({
@@ -128,33 +148,58 @@ exports.getConversationMessages = async (req, res) => {
       });
     }
 
-    // Get messages
-    const messages = await Message.find({
-      conversationId,
-      deletedBy: { $ne: req.user._id },
-    })
-      .populate('sender', 'fullName avatar university')
-      .populate('receiver', 'fullName avatar university')
-      .sort({ createdAt: -1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit);
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
 
-    const count = await Message.countDocuments({
-      conversationId,
-      deletedBy: { $ne: req.user._id },
+    const allMessageIds = db('messages').find(
+      { conversationId },
+      { sort: { createdAt: -1 } },
+    ).map(m => m.id);
+
+    const filteredMessageIds = [];
+    for (const mid of allMessageIds) {
+      const deleted = db('message_deleted_by').findOne({ messageId: mid, userId: req.user.id });
+      if (!deleted) {
+        filteredMessageIds.push(mid);
+      }
+    }
+
+    const totalFiltered = filteredMessageIds.length;
+    const pagedIds = filteredMessageIds.slice(skip, skip + limitNum);
+
+    const messages = pagedIds.map(mid => {
+      const msg = db('messages').findById(mid);
+      const sender = db('users').findById(msg.sender);
+      const receiver = db('users').findById(msg.receiver);
+      return {
+        ...msg,
+        isRead: fromBool(msg.isRead),
+        sender: sender ? { id: sender.id, fullName: sender.fullName, avatar: sender.avatar, university: sender.university } : null,
+        receiver: receiver ? { id: receiver.id, fullName: receiver.fullName, avatar: receiver.avatar, university: receiver.university } : null,
+      };
     });
 
-    // Mark messages as read
-    await Message.markConversationAsRead(conversationId, req.user._id);
-    await conversation.markAsRead(req.user._id);
+    db('messages').updateMany(
+      { conversationId, receiver: req.user.id, isRead: 0 },
+      { isRead: toBool(true), readAt: new Date().toISOString() },
+    );
+
+    const convParticipant = db('conversation_participants').findOne({
+      conversationId,
+      userId: req.user.id,
+    });
+    if (convParticipant) {
+      db('conversation_participants').updateById(convParticipant.id, { unreadCount: 0 });
+    }
 
     res.json({
       success: true,
       data: {
         messages: messages.reverse(),
-        total: count,
-        pages: Math.ceil(count / limit),
-        currentPage: page,
+        total: totalFiltered,
+        pages: Math.ceil(totalFiltered / limitNum),
+        currentPage: pageNum,
       },
     });
   } catch (error) {
@@ -166,32 +211,66 @@ exports.getConversationMessages = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get user's conversations
- * @route   GET /api/messages/conversations
- * @access  Private
- */
 exports.getUserConversations = async (req, res) => {
   try {
     const { page = 1, limit = 20, status = 'active' } = req.query;
 
-    const result = await Conversation.getUserConversations(req.user._id, {
-      page: parseInt(page),
-      limit: parseInt(limit),
-      status,
-    });
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const offset = (pageNum - 1) * limitNum;
 
-    // Get total unread messages
-    const unreadCount = await Conversation.getUserUnreadCount(req.user._id);
+    const totalRow = db('conversations').db.prepare(
+      `SELECT COUNT(*) as count FROM conversations c
+       JOIN conversation_participants cp ON cp.conversationId = c.id
+       WHERE cp.userId = ? AND c.status = ?`
+    ).get(req.user.id, status);
+
+    const rows = db('conversations').db.prepare(
+      `SELECT c.* FROM conversations c
+       JOIN conversation_participants cp ON cp.conversationId = c.id
+       WHERE cp.userId = ? AND c.status = ?
+       ORDER BY c.lastActivity DESC
+       LIMIT ? OFFSET ?`
+    ).all(req.user.id, status, limitNum, offset);
+
+    const conversations = [];
+    for (const conv of rows) {
+      const participants = db('conversation_participants').find({ conversationId: conv.id });
+      const otherParticipant = participants.find(p => p.userId !== req.user.id);
+      const otherUser = otherParticipant ? db('users').findById(otherParticipant.userId) : null;
+
+      const lastMsg = conv.lastMessage ? db('messages').findById(conv.lastMessage) : null;
+
+      let product = null;
+      if (conv.productId) {
+        product = db('products').findById(conv.productId);
+      }
+
+      conversations.push({
+        ...conv,
+        participants: participants.map(p => {
+          const u = db('users').findById(p.userId);
+          return u ? { id: u.id, fullName: u.fullName, avatar: u.avatar, university: u.university, isOnline: fromBool(u.isOnline) } : null;
+        }).filter(Boolean),
+        otherUser: otherUser ? { id: otherUser.id, fullName: otherUser.fullName, avatar: otherUser.avatar, university: otherUser.university } : null,
+        lastMessage: lastMsg ? { content: lastMsg.content, sender: lastMsg.sender, createdAt: lastMsg.createdAt, type: lastMsg.type } : null,
+        product: product ? { id: product.id, title: product.title, price: product.price, images: parseJson(product.images) } : null,
+        unreadCount: participants.find(p => p.userId === req.user.id)?.unreadCount || 0,
+      });
+    }
+
+    const unreadRow = db('conversations').db.prepare(
+      `SELECT COALESCE(SUM(unreadCount), 0) as total FROM conversation_participants WHERE userId = ?`
+    ).get(req.user.id);
 
     res.json({
       success: true,
       data: {
-        conversations: result.conversations,
-        total: result.total,
-        pages: result.pages,
-        currentPage: result.currentPage,
-        unreadCount,
+        conversations,
+        total: totalRow.count,
+        pages: Math.ceil(totalRow.count / limitNum),
+        currentPage: pageNum,
+        unreadCount: unreadRow.total,
       },
     });
   } catch (error) {
@@ -203,20 +282,11 @@ exports.getUserConversations = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get conversation details
- * @route   GET /api/messages/conversation/:conversationId
- * @access  Private
- */
 exports.getConversation = async (req, res) => {
   try {
     const { conversationId } = req.params;
 
-    const conversation = await Conversation.findById(conversationId)
-      .populate('participants', 'fullName avatar university isOnline')
-      .populate('lastMessage', 'content sender createdAt type')
-      .populate('product', 'title price images')
-      .populate('order', 'orderNumber status pricing');
+    const conversation = db('conversations').findById(conversationId);
 
     if (!conversation) {
       return res.status(404).json({
@@ -225,10 +295,8 @@ exports.getConversation = async (req, res) => {
       });
     }
 
-    // Verify user is participant
-    const isParticipant = conversation.participants.some(
-      p => p._id.toString() === req.user._id.toString(),
-    );
+    const participants = db('conversation_participants').find({ conversationId });
+    const isParticipant = participants.some(p => p.userId === req.user.id);
 
     if (!isParticipant) {
       return res.status(403).json({
@@ -237,12 +305,35 @@ exports.getConversation = async (req, res) => {
       });
     }
 
-    // Mark as read
-    await conversation.markAsRead(req.user._id);
+    const convParticipant = db('conversation_participants').findOne({
+      conversationId,
+      userId: req.user.id,
+    });
+    if (convParticipant) {
+      db('conversation_participants').updateById(convParticipant.id, { unreadCount: 0 });
+    }
+
+    const populatedConversation = {
+      ...conversation,
+      participants: participants.map(p => {
+        const u = db('users').findById(p.userId);
+        return u ? { id: u.id, fullName: u.fullName, avatar: u.avatar, university: u.university, isOnline: fromBool(u.isOnline) } : null;
+      }).filter(Boolean),
+    };
+
+    if (conversation.lastMessage) {
+      const lastMsg = db('messages').findById(conversation.lastMessage);
+      populatedConversation.lastMessage = lastMsg ? { content: lastMsg.content, sender: lastMsg.sender, createdAt: lastMsg.createdAt, type: lastMsg.type } : null;
+    }
+
+    if (conversation.productId) {
+      const product = db('products').findById(conversation.productId);
+      populatedConversation.product = product ? { id: product.id, title: product.title, price: product.price, images: parseJson(product.images) } : null;
+    }
 
     res.json({
       success: true,
-      data: conversation,
+      data: populatedConversation,
     });
   } catch (error) {
     console.error('Get conversation error:', error);
@@ -253,16 +344,11 @@ exports.getConversation = async (req, res) => {
   }
 };
 
-/**
- * @desc    Mark message as read
- * @route   PUT /api/messages/:messageId/read
- * @access  Private
- */
 exports.markAsRead = async (req, res) => {
   try {
     const { messageId } = req.params;
 
-    const message = await Message.findById(messageId);
+    const message = db('messages').findById(messageId);
     if (!message) {
       return res.status(404).json({
         success: false,
@@ -270,15 +356,17 @@ exports.markAsRead = async (req, res) => {
       });
     }
 
-    // Verify user is receiver
-    if (message.receiver.toString() !== req.user._id.toString()) {
+    if (message.receiver !== req.user.id) {
       return res.status(403).json({
         success: false,
         error: 'Not authorized',
       });
     }
 
-    await message.markAsRead();
+    db('messages').updateById(messageId, {
+      isRead: toBool(true),
+      readAt: new Date().toISOString(),
+    });
 
     res.json({
       success: true,
@@ -293,16 +381,11 @@ exports.markAsRead = async (req, res) => {
   }
 };
 
-/**
- * @desc    Delete a message (soft delete)
- * @route   DELETE /api/messages/:messageId
- * @access  Private
- */
 exports.deleteMessage = async (req, res) => {
   try {
     const { messageId } = req.params;
 
-    const message = await Message.findById(messageId);
+    const message = db('messages').findById(messageId);
     if (!message) {
       return res.status(404).json({
         success: false,
@@ -310,9 +393,7 @@ exports.deleteMessage = async (req, res) => {
       });
     }
 
-    // Verify user is sender or receiver
-    const isSenderOrReceiver = message.sender.toString() === req.user._id.toString() ||
-      message.receiver.toString() === req.user._id.toString();
+    const isSenderOrReceiver = message.sender === req.user.id || message.receiver === req.user.id;
 
     if (!isSenderOrReceiver) {
       return res.status(403).json({
@@ -321,10 +402,9 @@ exports.deleteMessage = async (req, res) => {
       });
     }
 
-    // Add user to deletedBy array
-    if (!message.deletedBy.includes(req.user._id)) {
-      message.deletedBy.push(req.user._id);
-      await message.save();
+    const alreadyDeleted = db('message_deleted_by').findOne({ messageId, userId: req.user.id });
+    if (!alreadyDeleted) {
+      db('message_deleted_by').create({ messageId, userId: req.user.id });
     }
 
     res.json({
@@ -340,14 +420,9 @@ exports.deleteMessage = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get unread message count
- * @route   GET /api/messages/unread-count
- * @access  Private
- */
 exports.getUnreadCount = async (req, res) => {
   try {
-    const count = await Message.getUnreadCount(req.user._id);
+    const count = db('messages').countDocuments({ receiver: req.user.id, isRead: 0 });
 
     res.json({
       success: true,
@@ -362,11 +437,6 @@ exports.getUnreadCount = async (req, res) => {
   }
 };
 
-/**
- * @desc    Search messages
- * @route   GET /api/messages/search
- * @access  Private
- */
 exports.searchMessages = async (req, res) => {
   try {
     const { query, conversationId, page = 1, limit = 20 } = req.query;
@@ -378,32 +448,47 @@ exports.searchMessages = async (req, res) => {
       });
     }
 
-    const searchQuery = {
-      content: { $regex: escapeRegex(query), $options: 'i' },
-      deletedBy: { $ne: req.user._id },
-    };
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const offset = (pageNum - 1) * limitNum;
+
+    let sql = `SELECT m.* FROM messages m
+               LEFT JOIN message_deleted_by mdb ON mdb.messageId = m.id AND mdb.userId = ?
+               WHERE m.content LIKE ? AND mdb.id IS NULL`;
+    const params = [req.user.id, `%${query}%`];
 
     if (conversationId) {
-      searchQuery.conversationId = conversationId;
+      sql += ' AND m.conversationId = ?';
+      params.push(conversationId);
     }
 
-    const messages = await Message.find(searchQuery)
-      .populate('sender', 'fullName avatar university')
-      .populate('receiver', 'fullName avatar university')
-      .populate('conversationId', 'participants')
-      .sort({ createdAt: -1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit);
+    const countSql = sql.replace('SELECT m.*', 'SELECT COUNT(*) as count');
+    const countRow = db('messages').db.prepare(countSql).get(...params);
+    const count = countRow.count;
 
-    const count = await Message.countDocuments(searchQuery);
+    sql += ' ORDER BY m.createdAt DESC LIMIT ? OFFSET ?';
+    params.push(limitNum, offset);
+
+    const rows = db('messages').db.prepare(sql).all(...params);
+
+    const messages = rows.map(msg => {
+      const sender = db('users').findById(msg.sender);
+      const receiver = db('users').findById(msg.receiver);
+      return {
+        ...msg,
+        isRead: fromBool(msg.isRead),
+        sender: sender ? { id: sender.id, fullName: sender.fullName, avatar: sender.avatar, university: sender.university } : null,
+        receiver: receiver ? { id: receiver.id, fullName: receiver.fullName, avatar: receiver.avatar, university: receiver.university } : null,
+      };
+    });
 
     res.json({
       success: true,
       data: {
         messages,
         total: count,
-        pages: Math.ceil(count / limit),
-        currentPage: page,
+        pages: Math.ceil(count / limitNum),
+        currentPage: pageNum,
       },
     });
   } catch (error) {

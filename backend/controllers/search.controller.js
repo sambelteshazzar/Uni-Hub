@@ -1,6 +1,8 @@
-const Product = require('../models/Product.model');
-const SearchHistory = require('../models/SearchHistory.model');
-const { escapeRegex } = require('../middleware/sanitize.middleware');
+const { db, mapProductRow, parseJson } = require('../utils/db');
+
+function escapeRegex (str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 async function advancedSearch (req, res) {
   try {
@@ -22,11 +24,10 @@ async function advancedSearch (req, res) {
       if (query.length >= 3) {
         filter.$text = { $search: query };
       } else {
-        const regex = new RegExp(escapeRegex(query), 'i');
         filter.$or = [
-          { title: regex },
-          { description: regex },
-          { category: regex },
+          { title: { $regex: escapeRegex(query) } },
+          { description: { $regex: escapeRegex(query) } },
+          { category: { $regex: escapeRegex(query) } },
         ];
       }
     }
@@ -48,41 +49,36 @@ async function advancedSearch (req, res) {
 
     if (priceMin || priceMax) {
       filter.price = {};
-      if (priceMin) {filter.price.$gte = parseFloat(priceMin);}
-      if (priceMax) {filter.price.$lte = parseFloat(priceMax);}
+      if (priceMin) { filter.price.$gte = parseFloat(priceMin); }
+      if (priceMax) { filter.price.$lte = parseFloat(priceMax); }
     }
 
     let sortOption = { createdAt: -1 };
-    if (sortBy === 'price-low') {sortOption = { price: 1 };}
-    else if (sortBy === 'price-high') {sortOption = { price: -1 };}
-    else if (sortBy === 'rating') {sortOption = { sellerRating: -1 };}
-    else if (sortBy === 'popular') {sortOption = { views: -1 };}
+    if (sortBy === 'price-low') { sortOption = { price: 1 }; }
+    else if (sortBy === 'price-high') { sortOption = { price: -1 }; }
+    else if (sortBy === 'rating') { sortOption = { sellerRating: -1 }; }
+    else if (sortBy === 'popular') { sortOption = { views: -1 }; }
 
     const pageNum = Math.max(1, parseInt(page));
     const limit = Math.min(100, Math.max(1, parseInt(pageSize)));
     const skip = (pageNum - 1) * limit;
 
-    const [results, totalResults] = await Promise.all([
-      Product.find(filter)
-        .populate('seller', 'fullName rating')
-        .sort(sortOption)
-        .skip(skip)
-        .limit(limit),
-      Product.countDocuments(filter),
-    ]);
+    const results = db('products').find(filter, { sort: sortOption, limit, skip });
+    const totalResults = db('products').countDocuments(filter);
 
     const totalPages = Math.ceil(totalResults / limit);
 
     const data = results.map(p => {
-      const obj = p.toObject();
-      obj.id = obj._id.toString();
-      if (obj.seller && typeof obj.seller === 'object') {
-        obj.seller.id = obj.seller._id.toString();
-        obj.seller.name = obj.seller.fullName;
-        obj.seller.rating = obj.seller.rating || 0;
-        delete obj.seller._id;
-        delete obj.seller.fullName;
-      }
+      const seller = db('users').findById(p.seller);
+      const obj = {
+        ...p,
+        id: p.id || p._id,
+        seller: seller ? {
+          id: seller.id,
+          name: seller.fullName,
+          rating: seller.rating || 0,
+        } : null,
+      };
       delete obj.__v;
       return obj;
     });
@@ -118,14 +114,10 @@ async function getSuggestions (req, res) {
       return res.json({ success: true, data: [] });
     }
 
-    const regex = new RegExp(escapeRegex(q), 'i');
-
-    const products = await Product.find({
-      status: 'active',
-      title: regex,
-    })
-      .select('title -_id')
-      .limit(10);
+    const products = db('products').find(
+      { status: 'active', title: { $regex: escapeRegex(q) } },
+      { limit: 10 },
+    );
 
     const titleSet = new Set();
     products.forEach(p => {
@@ -154,12 +146,9 @@ async function getSuggestions (req, res) {
 
 async function getTrending (req, res) {
   try {
-    const trending = await Product.aggregate([
-      { $match: { status: 'active' } },
-      { $group: { _id: '$category', count: { $sum: '$views' } } },
-      { $sort: { count: -1 } },
-      { $limit: 5 },
-    ]);
+    const trending = db('products').db.prepare(
+      `SELECT category as _id, SUM(views) as count FROM products WHERE status = ? GROUP BY category ORDER BY count DESC LIMIT 5`
+    ).all('active');
 
     const data = trending.map(t => t._id);
 
@@ -177,10 +166,10 @@ async function getTrending (req, res) {
 
 async function getSearchHistory (req, res) {
   try {
-    const history = await SearchHistory.find({ user: req.user._id })
-      .select('query -_id')
-      .sort({ createdAt: -1 })
-      .limit(10);
+    const history = db('search_history').find(
+      { user: req.user.id },
+      { sort: { createdAt: -1 }, limit: 10 },
+    );
 
     const data = history.map(h => h.query);
 
@@ -207,21 +196,26 @@ async function addSearchHistory (req, res) {
       });
     }
 
-    await SearchHistory.findOneAndUpdate(
-      { user: req.user._id, query: query.trim() },
-      { createdAt: new Date() },
-      { upsert: true, new: true },
-    );
+    const trimmed = query.trim();
+    const existing = db('search_history').findOne({ user: req.user.id, query: trimmed });
 
-    const count = await SearchHistory.countDocuments({ user: req.user._id });
+    if (existing) {
+      db('search_history').updateById(existing.id, { createdAt: new Date().toISOString() });
+    } else {
+      db('search_history').create({ user: req.user.id, query: trimmed });
+    }
+
+    const count = db('search_history').countDocuments({ user: req.user.id });
     if (count > 10) {
-      const oldest = await SearchHistory.find({ user: req.user._id })
-        .sort({ createdAt: 1 })
-        .skip(10);
-      if (oldest.length > 0) {
-        await SearchHistory.deleteMany({
-          _id: { $in: oldest.map(o => o._id) },
-        });
+      const oldest = db('search_history').find(
+        { user: req.user.id },
+        { sort: { createdAt: 1 }, limit: count },
+      );
+      if (oldest.length > 10) {
+        const toDelete = oldest.slice(10).map(o => o.id);
+        for (const id of toDelete) {
+          db('search_history').deleteById(id);
+        }
       }
     }
 
@@ -239,7 +233,7 @@ async function addSearchHistory (req, res) {
 
 async function clearSearchHistory (req, res) {
   try {
-    await SearchHistory.deleteMany({ user: req.user._id });
+    db('search_history').deleteMany({ user: req.user.id });
 
     res.json({
       success: true,
@@ -257,8 +251,8 @@ async function removeSearchHistoryItem (req, res) {
   try {
     const { query } = req.params;
 
-    await SearchHistory.deleteOne({
-      user: req.user._id,
+    db('search_history').deleteOne({
+      user: req.user.id,
       query: decodeURIComponent(query),
     });
 

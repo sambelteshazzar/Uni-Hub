@@ -1,123 +1,128 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User.model');
+const bcrypt = require('bcryptjs');
+const { db, mapUserRow } = require('../utils/db');
 const { generateToken, generateResetToken } = require('../utils/token.util');
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { sendPasswordResetEmail } = require('../utils/emailService');
 const logActivity = require('../utils/logActivity');
 
+function getPublicProfile(user) {
+  const { password: _, resetToken: __, resetTokenExpiry: ___, ...profile } = user;
+  profile._id = profile.id;
+  return profile;
+}
+
 /**
- * @desc    Register new user
- * @route   POST /api/auth/register
- * @access  Public
+ * @desc Register new user
+ * @route POST /api/auth/register
+ * @access Public
  */
 exports.register = asyncHandler(async (req, res) => {
   const { fullName, email, phone, password, university, level, hall } = req.body;
 
-  // Check if user already exists
-  const existingUser = await User.findOne({ email });
+  const existingUser = await db('users').findOne({ email });
   if (existingUser) {
     throw new ApiError(400, 'Email already registered');
   }
 
-  // Create user
-  const user = await User.create({
+  const hashedPassword = await bcrypt.hash(password, 12);
+
+  const user = await db('users').create({
     fullName,
     email,
     phone,
-    password,
+    password: hashedPassword,
     university,
     level,
     hall,
     role: 'buyer',
-    isVerified: false,
+    isVerified: 0,
   });
 
-  const token = generateToken(user._id);
+  const mappedUser = mapUserRow(user);
 
-  await logActivity('signup', user, { email: user.email, university: user.university }, 'info', req);
+  const token = generateToken(mappedUser.id);
+
+  await logActivity('signup', mappedUser, { email: mappedUser.email, university: mappedUser.university }, 'info', req);
 
   res.status(201).json({
     success: true,
     message: 'Account created successfully',
     data: {
-      user: user.getPublicProfile(),
+      user: getPublicProfile(mappedUser),
       token,
     },
   });
 });
 
 /**
- * @desc    Login user
- * @route   POST /api/auth/login
- * @access  Public
+ * @desc Login user
+ * @route POST /api/auth/login
+ * @access Public
  */
 exports.login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  // Validate input
   if (!email || !password) {
     throw new ApiError(400, 'Please provide email and password');
   }
 
-  // Find user and include password
-  const user = await User.findOne({ email }).select('+password');
+  const user = await db('users').findOne({ email });
 
   if (!user) {
     throw new ApiError(401, 'Invalid credentials');
   }
 
-  // Check if user is active
-  if (!user.isActive) {
+  const mappedUser = mapUserRow(user);
+
+  if (!mappedUser.isActive) {
     throw new ApiError(401, 'Account is deactivated');
   }
 
-  // Check if user is suspended/banned
-  if (user.isSuspended) {
+  if (mappedUser.isSuspended) {
     throw new ApiError(
       403,
-      user.banReason
-        ? `Account suspended: ${user.banReason}`
+      mappedUser.banReason
+        ? `Account suspended: ${mappedUser.banReason}`
         : 'Your account has been suspended. Contact support for more information.',
     );
   }
 
-  // Check password
-  const isMatch = await user.comparePassword(password);
+  const isMatch = await bcrypt.compare(password, user.password);
 
   if (!isMatch) {
     throw new ApiError(401, 'Invalid credentials');
   }
 
-  // Update last login
-  user.lastLogin = new Date();
-  await user.save();
+  await db('users').updateById(user.id, { lastLogin: new Date().toISOString() });
 
-  await logActivity('login', user, { email: user.email }, 'info', req);
+  const token = generateToken(mappedUser.id);
 
-  const token = generateToken(user._id);
+  await logActivity('login', mappedUser, { email: mappedUser.email }, 'info', req);
 
   res.json({
     success: true,
     message: 'Login successful',
     data: {
-      user: user.getPublicProfile(),
+      user: getPublicProfile(mappedUser),
       token,
     },
   });
 });
 
 /**
- * @desc    Get current user profile
- * @route   GET /api/auth/me
- * @access  Private
+ * @desc Get current user profile
+ * @route GET /api/auth/me
+ * @access Private
  */
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const user = await db('users').findById(req.user.id);
+    const mappedUser = mapUserRow(user);
 
     res.json({
       success: true,
-      data: user.getPublicProfile(),
+      data: getPublicProfile(mappedUser),
     });
   } catch (error) {
     console.error('Get profile error:', error);
@@ -129,15 +134,15 @@ exports.getMe = async (req, res) => {
 };
 
 /**
- * @desc    Update user profile
- * @route   PUT /api/auth/profile
- * @access  Private
+ * @desc Update user profile
+ * @route PUT /api/auth/profile
+ * @access Private
  */
 exports.updateProfile = async (req, res) => {
   try {
     const { fullName, phone, bio, hall, level } = req.body;
 
-    const user = await User.findById(req.user._id);
+    const user = await db('users').findById(req.user.id);
 
     if (!user) {
       return res.status(404).json({
@@ -146,19 +151,20 @@ exports.updateProfile = async (req, res) => {
       });
     }
 
-    // Update fields
-    if (fullName) { user.fullName = fullName; }
-    if (phone) { user.phone = phone; }
-    if (bio) { user.bio = bio; }
-    if (hall) { user.hall = hall; }
-    if (level) { user.level = level; }
+    const updates = {};
+    if (fullName) updates.fullName = fullName;
+    if (phone) updates.phone = phone;
+    if (bio) updates.bio = bio;
+    if (hall) updates.hall = hall;
+    if (level) updates.level = level;
 
-    await user.save();
+    const updatedUser = await db('users').updateById(user.id, updates);
+    const mappedUser = mapUserRow(updatedUser);
 
     res.json({
       success: true,
       message: 'Profile updated successfully',
-      data: user.getPublicProfile(),
+      data: getPublicProfile(mappedUser),
     });
   } catch (error) {
     console.error('Update profile error:', error);
@@ -170,9 +176,9 @@ exports.updateProfile = async (req, res) => {
 };
 
 /**
- * @desc    Change password
- * @route   PUT /api/auth/change-password
- * @access  Private
+ * @desc Change password
+ * @route PUT /api/auth/change-password
+ * @access Private
  */
 exports.changePassword = async (req, res) => {
   try {
@@ -185,10 +191,9 @@ exports.changePassword = async (req, res) => {
       });
     }
 
-    const user = await User.findById(req.user._id).select('+password');
+    const user = await db('users').findById(req.user.id);
 
-    // Check current password
-    const isMatch = await user.comparePassword(currentPassword);
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
 
     if (!isMatch) {
       return res.status(401).json({
@@ -197,10 +202,14 @@ exports.changePassword = async (req, res) => {
       });
     }
 
-    user.password = newPassword;
-    await user.save();
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    await db('users').updateById(user.id, {
+      password: hashedPassword,
+      passwordChangedAt: new Date().toISOString(),
+    });
 
-    await logActivity('password_change', user, { email: user.email }, 'warning', req);
+    const mappedUser = mapUserRow(user);
+    await logActivity('password_change', mappedUser, { email: mappedUser.email }, 'warning', req);
 
     res.json({
       success: true,
@@ -216,9 +225,9 @@ exports.changePassword = async (req, res) => {
 };
 
 /**
- * @desc    Request password reset (sends email with reset link)
- * @route   POST /api/auth/forgot-password
- * @access  Public
+ * @desc Request password reset (sends email with reset link)
+ * @route POST /api/auth/forgot-password
+ * @access Public
  */
 exports.forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
@@ -227,23 +236,21 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Email is required');
   }
 
-  const user = await User.findOne({ email });
+  const user = await db('users').findOne({ email });
 
   if (!user) {
-    // Don't reveal if user exists for security
     return res.json({
       success: true,
       message: 'If an account with that email exists, a password reset link has been sent.',
     });
   }
 
-  // Generate reset token
-  const resetToken = generateResetToken(user._id);
-  user.resetToken = resetToken;
-  user.resetTokenExpiry = Date.now() + 3600000; // 1 hour
-  await user.save({ validateBeforeSave: false });
+  const resetToken = generateResetToken(user.id);
+  await db('users').updateById(user.id, {
+    resetToken,
+    resetTokenExpiry: Date.now() + 3600000,
+  });
 
-  // Send password reset email
   if (process.env.NODE_ENV === 'production' || process.env.EMAIL_USER) {
     await sendPasswordResetEmail(user.email, resetToken);
   }
@@ -255,9 +262,9 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
 });
 
 /**
- * @desc    Reset password using token
- * @route   POST /api/auth/reset-password
- * @access  Public
+ * @desc Reset password using token
+ * @route POST /api/auth/reset-password
+ * @access Public
  */
 exports.resetPassword = asyncHandler(async (req, res) => {
   const { token, newPassword } = req.body;
@@ -274,7 +281,6 @@ exports.resetPassword = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Password must contain uppercase, lowercase, number, and special character');
   }
 
-  // Verify reset token
   let decoded;
   try {
     decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -282,20 +288,23 @@ exports.resetPassword = asyncHandler(async (req, res) => {
     throw new ApiError(401, 'Invalid or expired reset token');
   }
 
-  // Check token type
   if (decoded.type !== 'reset') {
     throw new ApiError(401, 'Invalid token type');
   }
 
-  // Find user and update password
-  const user = await User.findById(decoded.id);
+  const user = await db('users').findById(decoded.id);
 
   if (!user) {
     throw new ApiError(404, 'User not found');
   }
 
-  user.password = newPassword;
-  await user.save();
+  const hashedPassword = await bcrypt.hash(newPassword, 12);
+  await db('users').updateById(user.id, {
+    password: hashedPassword,
+    passwordChangedAt: new Date().toISOString(),
+    resetToken: null,
+    resetTokenExpiry: null,
+  });
 
   res.json({
     success: true,

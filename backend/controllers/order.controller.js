@@ -1,19 +1,16 @@
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
-/**
- * ============================================
- * Order Controller
- * Create, update, and manage orders
- * ============================================
- */
+const { db, generateId, parseJson, mapOrderRow, toBool, fromBool } = require('../utils/db');
 
-const Order = require('../models/Order.model');
-const Product = require('../models/Product.model');
+function getPublicOrder (order) {
+  if (!order) return null;
+  const mapped = mapOrderRow(order);
+  return {
+    ...mapped,
+    _id: mapped.id,
+    items: order._items || [],
+  };
+}
 
-/**
- * @desc    Create new order
- * @route   POST /api/orders
- * @access  Private
- */
 exports.createOrder = async (req, res) => {
   try {
     const { items, delivery, payment } = req.body;
@@ -40,7 +37,7 @@ exports.createOrder = async (req, res) => {
     }
 
     const productIds = items.map(item => item.productId);
-    const dbProducts = await Product.find({ _id: { $in: productIds } });
+    const dbProducts = db('products').find({ id: { $in: productIds } });
 
     if (dbProducts.length !== items.length) {
       return res.status(400).json({
@@ -49,7 +46,7 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    const productMap = new Map(dbProducts.map(p => [p._id.toString(), p]));
+    const productMap = new Map(dbProducts.map(p => [p.id, p]));
 
     let subtotal = 0;
     const verifiedItems = [];
@@ -67,53 +64,74 @@ exports.createOrder = async (req, res) => {
           error: `Product "${dbProduct.title}" is no longer available`,
         });
       }
+      const images = parseJson(dbProduct.images) || [];
       subtotal += dbProduct.price * item.quantity;
+      const sellerUser = db('users').findById(dbProduct.seller);
       verifiedItems.push({
         productId: item.productId,
         title: dbProduct.title,
         price: dbProduct.price,
         quantity: item.quantity,
         seller: dbProduct.seller,
-        image: item.image || (dbProduct.images && dbProduct.images[0]) || '',
+        sellerName: sellerUser ? sellerUser.fullName : '',
+        image: item.image || (images && images[0]) || '',
       });
     }
 
     const deliveryFee = delivery.mode === 'inperson' ? 0 : delivery.mode === 'yango' ? 12 : 15;
     const grandTotal = subtotal + deliveryFee;
 
-    // Create order
-    const order = await Order.create({
-      userId: req.user._id,
-      customer: {
-        name: req.user.fullName,
-        email: req.user.email,
-        phone: req.user.phone,
-        university: req.user.university,
-      },
-      items: verifiedItems,
-      pricing: {
-        subtotal,
-        deliveryFee,
-        grandTotal,
-      },
-      delivery,
-      payment,
+    const order = db('orders').create({
+      userId: req.user.id,
+      customer_name: req.user.fullName,
+      customer_email: req.user.email,
+      customer_phone: req.user.phone || '',
+      customer_university: req.user.university || '',
+      pricing_subtotal: subtotal,
+      pricing_deliveryFee: deliveryFee,
+      pricing_grandTotal: grandTotal,
+      pricing_currency: 'GHS',
+      delivery_mode: delivery.mode,
+      delivery_address: delivery.address || '',
+      delivery_instructions: delivery.instructions || '',
+      delivery_status: 'pending',
+      payment_mode: payment.mode,
+      payment_status: 'pending',
+      payment_transactionId: '',
+      payment_paidAt: '',
+      status: 'pending',
+      orderNumber: `ORD-${Date.now()}`,
     });
 
-    // Update product statuses atomically
-    await Product.updateMany(
-      { _id: { $in: productIds } },
-      { status: 'sold' }
-    );
+    for (const vItem of verifiedItems) {
+      db('order_items').create({
+        orderId: order.id,
+        productId: vItem.productId,
+        title: vItem.title,
+        price: vItem.price,
+        quantity: vItem.quantity,
+        seller: vItem.seller,
+        sellerName: vItem.sellerName,
+        image: vItem.image,
+      });
+    }
 
-    // Update user's total orders
-    req.user.totalOrders = (req.user.totalOrders || 0) + 1;
-    await req.user.save();
+    for (const pid of productIds) {
+      db('products').updateById(pid, { status: 'sold' });
+    }
+
+    db('users').updateById(req.user.id, {
+      totalOrders: (req.user.totalOrders || 0) + 1,
+    });
+
+    const createdOrder = db('orders').findById(order.id);
+    const orderItems = db('order_items').find({ orderId: order.id });
+    createdOrder._items = orderItems;
 
     res.status(201).json({
       success: true,
       message: 'Order created successfully',
-      data: order.getPublicOrder(),
+      data: getPublicOrder(createdOrder),
     });
   } catch (error) {
     console.error('Create order error:', error);
@@ -124,22 +142,24 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get user's orders
- * @route   GET /api/orders/my-orders
- * @access  Private
- */
 exports.getMyOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ userId: req.user._id })
-      .sort({ createdAt: -1 })
-      .populate('items.productId', 'title images');
+    const orders = db('orders').find(
+      { userId: req.user.id },
+      { sort: { createdAt: -1 } },
+    );
+
+    const populatedOrders = orders.map(order => {
+      const items = db('order_items').find({ orderId: order.id });
+      order._items = items;
+      return getPublicOrder(order);
+    });
 
     res.json({
       success: true,
       data: {
-        orders,
-        total: orders.length,
+        orders: populatedOrders,
+        total: populatedOrders.length,
       },
     });
   } catch (error) {
@@ -151,17 +171,9 @@ exports.getMyOrders = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get single order
- * @route   GET /api/orders/:id
- * @access  Private
- */
 exports.getOrder = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id)
-      .populate('userId', 'fullName email')
-      .populate('items.productId', 'title images')
-      .populate('items.seller', 'fullName email phone');
+    const order = db('orders').findById(req.params.id);
 
     if (!order) {
       return res.status(404).json({
@@ -170,17 +182,27 @@ exports.getOrder = async (req, res) => {
       });
     }
 
-    // Check ownership or admin
-    if (order.userId._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    if (order.userId !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
         error: 'Not authorized to view this order',
       });
     }
 
+    const items = db('order_items').find({ orderId: order.id });
+    order._items = items;
+
+    const user = db('users').findById(order.userId);
+    order.userId = user ? { id: user.id, fullName: user.fullName, email: user.email } : order.userId;
+
+    for (const item of items) {
+      const seller = db('users').findById(item.seller);
+      item.seller = seller ? { id: seller.id, fullName: seller.fullName, email: seller.email, phone: seller.phone } : item.seller;
+    }
+
     res.json({
       success: true,
-      data: order.getPublicOrder(),
+      data: getPublicOrder(order),
     });
   } catch (error) {
     console.error('Get order error:', error);
@@ -191,11 +213,6 @@ exports.getOrder = async (req, res) => {
   }
 };
 
-/**
- * @desc    Update order status
- * @route   PUT /api/orders/:id/status
- * @access  Private (admin only)
- */
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { status, note } = req.body;
@@ -207,7 +224,7 @@ exports.updateOrderStatus = async (req, res) => {
       });
     }
 
-    const order = await Order.findById(req.params.id);
+    const order = db('orders').findById(req.params.id);
 
     if (!order) {
       return res.status(404).json({
@@ -216,12 +233,25 @@ exports.updateOrderStatus = async (req, res) => {
       });
     }
 
-    await order.updateStatus(status, note);
+    db('orders').updateById(order.id, {
+      status,
+    });
+
+    db('order_status_history').create({
+      orderId: order.id,
+      status,
+      note: note || '',
+      updatedBy: req.user.id,
+    });
+
+    const updatedOrder = db('orders').findById(order.id);
+    const items = db('order_items').find({ orderId: order.id });
+    updatedOrder._items = items;
 
     res.json({
       success: true,
       message: 'Order status updated',
-      data: order.getPublicOrder(),
+      data: getPublicOrder(updatedOrder),
     });
   } catch (error) {
     console.error('Update order status error:', error);
@@ -232,16 +262,11 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
-/**
- * @desc    Complete payment
- * @route   POST /api/orders/:id/payment
- * @access  Private
- */
 exports.completePayment = async (req, res) => {
   try {
     const { transactionId } = req.body;
 
-    const order = await Order.findById(req.params.id);
+    const order = db('orders').findById(req.params.id);
 
     if (!order) {
       return res.status(404).json({
@@ -250,20 +275,28 @@ exports.completePayment = async (req, res) => {
       });
     }
 
-    // Check ownership
-    if (order.userId.toString() !== req.user._id.toString()) {
+    if (order.userId !== req.user.id) {
       return res.status(403).json({
         success: false,
         error: 'Not authorized',
       });
     }
 
-    await order.completePayment(transactionId || `txn_${Date.now()}`);
+    const txnId = transactionId || `txn_${Date.now()}`;
+    db('orders').updateById(order.id, {
+      payment_status: 'completed',
+      payment_transactionId: txnId,
+      payment_paidAt: new Date().toISOString(),
+    });
+
+    const updatedOrder = db('orders').findById(order.id);
+    const items = db('order_items').find({ orderId: order.id });
+    updatedOrder._items = items;
 
     res.json({
       success: true,
       message: 'Payment completed',
-      data: order.getPublicOrder(),
+      data: getPublicOrder(updatedOrder),
     });
   } catch (error) {
     console.error('Complete payment error:', error);
@@ -274,14 +307,9 @@ exports.completePayment = async (req, res) => {
   }
 };
 
-/**
- * @desc    Cancel order
- * @route   PUT /api/orders/:id/cancel
- * @access  Private
- */
 exports.cancelOrder = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id);
+    const order = db('orders').findById(req.params.id);
 
     if (!order) {
       return res.status(404).json({
@@ -290,8 +318,7 @@ exports.cancelOrder = async (req, res) => {
       });
     }
 
-    // Check ownership
-    if (order.userId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    if (order.userId !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
         error: 'Not authorized',
@@ -305,11 +332,20 @@ exports.cancelOrder = async (req, res) => {
       });
     }
 
-    await order.updateStatus('cancelled', 'Order cancelled by user');
+    db('orders').updateById(order.id, {
+      status: 'cancelled',
+    });
 
-    // Reactivate products
-    for (const item of order.items) {
-      await Product.findByIdAndUpdate(item.productId, { status: 'active' });
+    db('order_status_history').create({
+      orderId: order.id,
+      status: 'cancelled',
+      note: 'Order cancelled by user',
+      updatedBy: req.user.id,
+    });
+
+    const orderItems = db('order_items').find({ orderId: order.id });
+    for (const item of orderItems) {
+      db('products').updateById(item.productId, { status: 'active' });
     }
 
     res.json({

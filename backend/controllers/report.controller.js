@@ -1,54 +1,38 @@
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
-/**
- * ============================================
- * Report Controller
- * Generate reports and analytics
- * ============================================
- */
+const { db, fromBool, parseJson, mapProductRow, mapOrderRow } = require('../utils/db');
 
-const Order = require('../models/Order.model');
-const Product = require('../models/Product.model');
-const User = require('../models/User.model');
-
-/**
- * @desc    Get admin dashboard stats
- * @route   GET /api/reports/stats
- * @access  Private (admin only)
- */
 exports.getDashboardStats = asyncHandler(async (req, res) => {
-  // Get total counts
-  const totalUsers = await User.countDocuments();
-  const totalProducts = await Product.countDocuments();
-  const totalOrders = await Order.countDocuments();
+  const totalUsers = db('users').countDocuments();
+  const totalProducts = db('products').countDocuments();
+  const totalOrders = db('orders').countDocuments();
 
-  // Get orders by status
-  const ordersByStatus = await Order.aggregate([
-    { $group: { _id: '$status', count: { $sum: 1 } } },
-  ]);
+  const ordersByStatus = db('orders').db.prepare(
+    `SELECT status as _id, COUNT(*) as count FROM orders GROUP BY status`
+  ).all();
 
-  // Get revenue (completed orders only)
-  const revenueData = await Order.aggregate([
-    { $match: { status: 'delivered' } },
-    { $group: { _id: null, total: { $sum: '$pricing.grandTotal' } } },
-  ]);
+  const revenueRow = db('orders').db.prepare(
+    `SELECT SUM(pricing_grandTotal) as total FROM orders WHERE status = 'delivered'`
+  ).get();
 
-  // Get recent orders
-  const recentOrders = await Order.find()
-    .sort({ createdAt: -1 })
-    .limit(10)
-    .populate('userId', 'fullName email');
+  const recentOrders = db('orders').find({}, { sort: { createdAt: -1 }, limit: 10 });
+  const populatedRecentOrders = recentOrders.map(o => {
+    const user = db('users').findById(o.userId);
+    const items = db('order_items').find({ orderId: o.id });
+    const mapped = mapOrderRow(o);
+    return {
+      ...mapped,
+      _id: mapped.id,
+      userId: user ? { id: user.id, fullName: user.fullName, email: user.email } : o.userId,
+      items,
+    };
+  });
 
-  // Get top products
-  const topProducts = await Product.find({ status: 'sold' })
-    .sort({ createdAt: -1 })
-    .limit(10);
+  const topProducts = db('products').find({ status: 'sold' }, { sort: { createdAt: -1 }, limit: 10 });
 
-  // Get user growth (last 7 days)
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-  const newUsers = await User.countDocuments({
-    createdAt: { $gte: sevenDaysAgo },
+  const newUsers = db('users').countDocuments({
+    createdAt: { $gte: sevenDaysAgo.toISOString() },
   });
 
   res.json({
@@ -58,58 +42,54 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
         totalUsers,
         totalProducts,
         totalOrders,
-        totalRevenue: revenueData[0]?.total || 0,
+        totalRevenue: revenueRow.total || 0,
         newUsersLast7Days: newUsers,
       },
       ordersByStatus: ordersByStatus.reduce((acc, item) => {
         acc[item._id] = item.count;
         return acc;
       }, {}),
-      recentOrders,
+      recentOrders: populatedRecentOrders,
       topProducts,
     },
   });
 });
 
-/**
- * @desc    Get sales report
- * @route   GET /api/reports/sales
- * @access  Private (admin only)
- */
 exports.getSalesReport = asyncHandler(async (req, res) => {
   const { startDate, endDate, groupBy = 'day' } = req.query;
 
-  const dateQuery = {};
-  if (startDate || endDate) {
-    dateQuery.createdAt = {};
-    if (startDate) {dateQuery.createdAt.$gte = new Date(startDate);}
-    if (endDate) {dateQuery.createdAt.$lte = new Date(endDate);}
-  }
-
-  // Group by format
   let groupFormat;
   switch (groupBy) {
-  case 'week':
-    groupFormat = '%Y-%U';
-    break;
-  case 'month':
-    groupFormat = '%Y-%m';
-    break;
-  default:
-    groupFormat = '%Y-%m-%d';
+    case 'week':
+      groupFormat = '%Y-%W';
+      break;
+    case 'month':
+      groupFormat = '%Y-%m';
+      break;
+    default:
+      groupFormat = '%Y-%m-%d';
   }
 
-  const salesData = await Order.aggregate([
-    { $match: dateQuery },
-    {
-      $group: {
-        _id: { $dateToString: { format: groupFormat, date: '$createdAt' } },
-        totalSales: { $sum: '$pricing.grandTotal' },
-        orderCount: { $sum: 1 },
-      },
-    },
-    { $sort: { _id: 1 } },
-  ]);
+  let sql = `SELECT strftime('${groupFormat}', createdAt) as _id, SUM(pricing_grandTotal) as totalSales, COUNT(*) as orderCount FROM orders`;
+  const params = [];
+
+  const conditions = [];
+  if (startDate) {
+    conditions.push('createdAt >= ?');
+    params.push(new Date(startDate).toISOString());
+  }
+  if (endDate) {
+    conditions.push('createdAt <= ?');
+    params.push(new Date(endDate).toISOString());
+  }
+
+  if (conditions.length > 0) {
+    sql += ' WHERE ' + conditions.join(' AND ');
+  }
+
+  sql += ` GROUP BY _id ORDER BY _id ASC`;
+
+  const salesData = db('orders').db.prepare(sql).all(...params);
 
   res.json({
     success: true,
@@ -120,24 +100,24 @@ exports.getSalesReport = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Get product performance report
- * @route   GET /api/reports/products
- * @access  Private (admin only)
- */
 exports.getProductReport = asyncHandler(async (req, res) => {
   const { category, university, status } = req.query;
 
   const query = {};
-  if (category) {query.category = category;}
-  if (university) {query.university = university;}
-  if (status) {query.status = status;}
+  if (category) { query.category = category; }
+  if (university) { query.university = university; }
+  if (status) { query.status = status; }
 
-  const products = await Product.find(query)
-    .populate('seller', 'fullName email rating')
-    .sort({ createdAt: -1 });
+  const products = db('products').find(query, { sort: { createdAt: -1 } });
 
-  // Calculate stats
+  const populatedProducts = products.map(p => {
+    const seller = db('users').findById(p.seller);
+    return {
+      ...mapProductRow(p),
+      seller: seller ? { id: seller.id, fullName: seller.fullName, email: seller.email, rating: seller.rating } : p.seller,
+    };
+  });
+
   const totalProducts = products.length;
   const soldProducts = products.filter(p => p.status === 'sold').length;
   const activeProducts = products.filter(p => p.status === 'active').length;
@@ -145,7 +125,7 @@ exports.getProductReport = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     data: {
-      products,
+      products: populatedProducts,
       stats: {
         total: totalProducts,
         sold: soldProducts,
@@ -155,28 +135,26 @@ exports.getProductReport = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Get user activity report
- * @route   GET /api/reports/users
- * @access  Private (admin only)
- */
 exports.getUserReport = asyncHandler(async (req, res) => {
   const { role, university, isVerified } = req.query;
 
   const query = {};
-  if (role) {query.role = role;}
-  if (university) {query.university = university;}
-  if (isVerified !== undefined) {query.isVerified = isVerified === 'true';}
+  if (role) { query.role = role; }
+  if (university) { query.university = university; }
+  if (isVerified !== undefined) { query.isVerified = isVerified === 'true' ? 1 : 0; }
 
-  const users = await User.find(query)
-    .select('-password')
-    .sort({ createdAt: -1 });
+  const users = db('users').find(query, { sort: { createdAt: -1 } });
+
+  const sanitizedUsers = users.map(u => {
+    const { password, ...rest } = u;
+    return rest;
+  });
 
   res.json({
     success: true,
     data: {
-      users,
-      total: users.length,
+      users: sanitizedUsers,
+      total: sanitizedUsers.length,
     },
   });
 });

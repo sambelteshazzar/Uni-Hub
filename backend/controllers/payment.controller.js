@@ -1,19 +1,6 @@
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
-/**
- * ============================================
- * Payment Controller
- * Handle payment processing and verification
- * ============================================
- */
+const { db, mapOrderRow, toBool, fromBool } = require('../utils/db');
 
-const Order = require('../models/Order.model');
-const Payment = require('../models/Payment.model');
-
-/**
- * @desc    Initialize payment
- * @route   POST /api/payment
- * @access  Private
- */
 exports.initializePayment = async (req, res) => {
   try {
     const { orderId, paymentMode } = req.body;
@@ -25,7 +12,7 @@ exports.initializePayment = async (req, res) => {
       });
     }
 
-    const order = await Order.findById(orderId);
+    const order = db('orders').findById(orderId);
 
     if (!order) {
       return res.status(404).json({
@@ -34,19 +21,19 @@ exports.initializePayment = async (req, res) => {
       });
     }
 
-    // Check ownership
-    if (order.userId.toString() !== req.user._id.toString()) {
+    if (order.userId !== req.user.id) {
       return res.status(403).json({
         success: false,
         error: 'Not authorized to pay for this order',
       });
     }
 
-    // Create payment record
-    const payment = await Payment.create({
-      orderId: order._id,
-      userId: req.user._id,
-      amount: order.pricing.grandTotal,
+    const mappedOrder = mapOrderRow(order);
+
+    const payment = db('payments').create({
+      orderId: order.id,
+      userId: req.user.id,
+      amount: mappedOrder.pricing.grandTotal,
       currency: 'GHS',
       mode: paymentMode,
       status: 'pending',
@@ -56,7 +43,7 @@ exports.initializePayment = async (req, res) => {
       success: true,
       message: 'Payment initialized',
       data: {
-        paymentId: payment._id,
+        paymentId: payment.id,
         amount: payment.amount,
         mode: payment.mode,
         instructions: getPaymentInstructions(paymentMode, order),
@@ -71,11 +58,6 @@ exports.initializePayment = async (req, res) => {
   }
 };
 
-/**
- * @desc    Verify payment
- * @route   POST /api/payment/verify
- * @access  Private
- */
 exports.verifyPayment = async (req, res) => {
   try {
     const { paymentId, transactionId } = req.body;
@@ -87,7 +69,7 @@ exports.verifyPayment = async (req, res) => {
       });
     }
 
-    const payment = await Payment.findById(paymentId).populate('orderId');
+    const payment = db('payments').findById(paymentId);
 
     if (!payment) {
       return res.status(404).json({
@@ -96,30 +78,34 @@ exports.verifyPayment = async (req, res) => {
       });
     }
 
-    // Check ownership
-    if (payment.userId.toString() !== req.user._id.toString()) {
+    if (payment.userId !== req.user.id) {
       return res.status(403).json({
         success: false,
         error: 'Not authorized',
       });
     }
 
-    // Update payment status
-    payment.status = 'completed';
-    payment.transactionId = transactionId || `txn_${Date.now()}`;
-    payment.verifiedAt = new Date();
-    await payment.save();
+    const txnId = transactionId || `txn_${Date.now()}`;
+    db('payments').updateById(paymentId, {
+      status: 'completed',
+      transactionId: txnId,
+      verifiedAt: new Date().toISOString(),
+    });
 
-    // Update order payment status
-    const order = payment.orderId;
-    order.payment.status = 'completed';
-    order.payment.transactionId = payment.transactionId;
-    await order.save();
+    const order = db('orders').findById(payment.orderId);
+    if (order) {
+      db('orders').updateById(order.id, {
+        payment_status: 'completed',
+        payment_transactionId: txnId,
+      });
+    }
+
+    const updatedPayment = db('payments').findById(paymentId);
 
     res.json({
       success: true,
       message: 'Payment verified successfully',
-      data: payment,
+      data: updatedPayment,
     });
   } catch (error) {
     console.error('Verify payment error:', error);
@@ -130,22 +116,26 @@ exports.verifyPayment = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get payment history
- * @route   GET /api/payment/history
- * @access  Private
- */
 exports.getPaymentHistory = async (req, res) => {
   try {
-    const payments = await Payment.find({ userId: req.user._id })
-      .populate('orderId', 'orderNumber status')
-      .sort({ createdAt: -1 });
+    const payments = db('payments').find(
+      { userId: req.user.id },
+      { sort: { createdAt: -1 } },
+    );
+
+    const populatedPayments = payments.map(p => {
+      const order = db('orders').findById(p.orderId);
+      return {
+        ...p,
+        orderId: order ? { id: order.id, orderNumber: order.orderNumber, status: order.status } : p.orderId,
+      };
+    });
 
     res.json({
       success: true,
       data: {
-        payments,
-        total: payments.length,
+        payments: populatedPayments,
+        total: populatedPayments.length,
       },
     });
   } catch (error) {
@@ -157,16 +147,9 @@ exports.getPaymentHistory = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get payment by ID
- * @route   GET /api/payment/:id
- * @access  Private
- */
 exports.getPayment = async (req, res) => {
   try {
-    const payment = await Payment.findById(req.params.id)
-      .populate('orderId', 'orderNumber pricing')
-      .populate('userId', 'fullName email');
+    const payment = db('payments').findById(req.params.id);
 
     if (!payment) {
       return res.status(404).json({
@@ -175,17 +158,25 @@ exports.getPayment = async (req, res) => {
       });
     }
 
-    // Check ownership or admin
-    if (payment.userId._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    if (payment.userId !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
         error: 'Not authorized',
       });
     }
 
+    const order = db('orders').findById(payment.orderId);
+    const user = db('users').findById(payment.userId);
+
+    const populatedPayment = {
+      ...payment,
+      orderId: order ? { id: order.id, orderNumber: order.orderNumber, pricing: mapOrderRow(order).pricing } : payment.orderId,
+      userId: user ? { id: user.id, fullName: user.fullName, email: user.email } : payment.userId,
+    };
+
     res.json({
       success: true,
-      data: payment,
+      data: populatedPayment,
     });
   } catch (error) {
     console.error('Get payment error:', error);
@@ -196,36 +187,33 @@ exports.getPayment = async (req, res) => {
   }
 };
 
-/**
- * Helper: Get payment instructions based on mode
- */
 function getPaymentInstructions (paymentMode, order) {
   switch (paymentMode) {
-  case 'momo':
-    return {
-      message: 'Enter your MoMo number to complete payment',
-      provider: 'MTN Mobile Money',
-    };
-  case 'telecel':
-    return {
-      message: 'Enter your Telecel number to complete payment',
-      provider: 'Telecel Cash',
-    };
-  case 'bank':
-    return {
-      message: 'Transfer to the following account',
-      bankName: 'GCB Bank',
-      accountName: 'Uni-Hub Ghana',
-      accountNumber: '1234567890',
-      reference: order.orderNumber,
-    };
-  case 'cash':
-    return {
-      message: 'Pay when you receive your items',
-    };
-  default:
-    return {
-      message: 'Follow the payment instructions',
-    };
+    case 'momo':
+      return {
+        message: 'Enter your MoMo number to complete payment',
+        provider: 'MTN Mobile Money',
+      };
+    case 'telecel':
+      return {
+        message: 'Enter your Telecel number to complete payment',
+        provider: 'Telecel Cash',
+      };
+    case 'bank':
+      return {
+        message: 'Transfer to the following account',
+        bankName: 'GCB Bank',
+        accountName: 'Uni-Hub Ghana',
+        accountNumber: '1234567890',
+        reference: order.orderNumber,
+      };
+    case 'cash':
+      return {
+        message: 'Pay when you receive your items',
+      };
+    default:
+      return {
+        message: 'Follow the payment instructions',
+      };
   }
 }
