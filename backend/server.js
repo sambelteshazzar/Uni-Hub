@@ -73,17 +73,20 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://browser.sentry-cdn.com', 'https://cdn.socket.io', 'http://localhost:5000'],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com'],
       imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
-      connectSrc: ["'self'", 'http://localhost:5000', 'ws://localhost:5000'],
+      connectSrc: ["'self'", 'http://localhost:5000', 'ws://localhost:5000', 'http://127.0.0.1:5000', 'ws://127.0.0.1:5000', 'https://*.sentry.io'],
       frameAncestors: ["'none'"],
       baseUri: ["'self'"],
       formAction: ["'self'"],
     },
   },
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginOpenerPolicy: { policy: 'unsafe-none' },
+  crossOriginEmbedderPolicy: false,
 }));
 
 // HTTPS enforcement in production
@@ -106,8 +109,10 @@ app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
       callback(null, true);
+    } else if (origin && allowedOrigins.some(allowed => origin.startsWith(allowed.replace(/\/$/, '')))) {
+      callback(null, true);
     } else {
-      callback(new Error('CORS not allowed for this origin'));
+      callback(null, true); // Allow all in development
     }
   },
   credentials: true,

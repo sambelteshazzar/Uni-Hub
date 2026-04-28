@@ -2185,10 +2185,9 @@ return labels[condition] || (condition ? condition.charAt(0).toUpperCase() + con
       window.location.hash = '#/browse';
       this.renderBrowse();
     } else {
-    alert('Login failed: ' + result.error);
-  }
-}
-  }
+      alert('Login failed: ' + result.error);
+      }
+    }
 
   /**
    * Render Register Page - Modern Dark Design
@@ -4474,20 +4473,10 @@ ${Formatter.formatDate(order.createdAt)}
 </div>
 `;
 
-document.body.appendChild(overlay);
-}
-
-  /**
-   * View order details
-   */
-  static viewOrderDetails (orderId) {
-    const order = checkoutManager.getOrderById(orderId);
-    if (order) {
-      this.renderOrderConfirmation(order);
-    }
+    document.body.appendChild(overlay);
   }
 
-/**
+  /**
 * Update cart badge in navbar
 */
 static updateCartBadge () {

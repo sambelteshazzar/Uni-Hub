@@ -175,6 +175,7 @@ const TIME = {
 
 // Make constants available globally for module scripts
 if (typeof window !== 'undefined') {
+  window.API_URL = API_ENDPOINTS.BASE_URL;
   window.APP_NAME = APP_NAME;
   window.APP_VERSION = APP_VERSION;
   window.STORAGE_KEY_PREFIX = STORAGE_KEY_PREFIX;
