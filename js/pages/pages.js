@@ -49,11 +49,12 @@ router.register('/product/:id', (params) => this.renderProductDetail(params.id))
 router.register('/messages', (params) => messagesPage.render(params));
 
 // Admin
-router.register('/admin', () => this.renderAdminDashboard());
-router.register('/admin/products', () => this.renderAdminProducts());
-router.register('/admin/users', () => this.renderAdminUsers());
-router.register('/admin/orders', () => this.renderAdminOrders());
-router.register('/admin/reports', () => this.renderAdminReports());
+  router.register('/admin', () => this.renderAdminDashboard());
+    router.register('/admin/products', () => this.renderAdminProducts());
+    router.register('/admin/users', () => this.renderAdminUsers());
+    router.register('/admin/orders', () => this.renderAdminOrders());
+    router.register('/admin/reports', () => this.renderAdminReports());
+    router.register('/admin/activity', () => this.renderAdminActivity());
 
 console.log('✓ All routes registered successfully');
 }
@@ -5821,18 +5822,24 @@ window.scrollTo(0, 0);
                 <span>Orders</span>
                 </a>
 </li>
-            <li class="admin-menu-item">
-              <a href="#" class="admin-menu-link" onclick="Pages.renderAdminReports()">
-                <span class="admin-menu-icon">${Icons.chart}</span>
-                <span>Reports</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
+        <li class="admin-menu-item">
+          <a href="#" class="admin-menu-link" onclick="Pages.renderAdminReports()">
+            <span class="admin-menu-icon">${Icons.chart}</span>
+            <span>Reports</span>
+          </a>
+        </li>
+        <li class="admin-menu-item">
+          <a href="#" class="admin-menu-link" onclick="Pages.renderAdminActivity()">
+            <span class="admin-menu-icon">${Icons.clock || Icons.chart}</span>
+            <span>Activity</span>
+          </a>
+        </li>
+      </ul>
+      </nav>
       </aside>
-        <main class="admin-main">
-          <div class="admin-header">
-            <h1 class="admin-title">Dashboard Overview</h1>
+      <main class="admin-main">
+      <div class="admin-header">
+      <h1 class="admin-title">Dashboard Overview</h1>
             <div class="admin-actions">
               <button class="btn btn-outline" onclick="adminAuthManager.logout(); Pages.renderLanding();">Logout</button>
             </div>
@@ -6034,10 +6041,13 @@ window.scrollTo(0, 0);
             </ul>
           </nav>
         </aside>
-        <main class="admin-main">
-          <div class="admin-header">
-            <h1 class="admin-title">Product Management</h1>
-          </div>
+      <main class="admin-main">
+      <div class="admin-header">
+      <h1 class="admin-title">Product Management</h1>
+      <div class="admin-actions">
+        <button class="btn btn-primary" onclick="Pages.renderAdminProductCreate()" style="padding:0.5rem 1.25rem;font-size:0.875rem;">+ Add Product</button>
+      </div>
+      </div>
           <div class="admin-table-container">
             <table class="admin-table">
               <thead>
@@ -6256,17 +6266,23 @@ window.scrollTo(0, 0);
                   <span class="admin-menu-icon">📊</span>
                   <span>Dashboard</span>
                 </a>
-</li>
-            <li class="admin-menu-item">
-              <a href="#" class="admin-menu-link active">
-                <span class="admin-menu-icon">${Icons.chart}</span>
-                <span>Reports</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
-      </aside>
-        <main class="admin-main">
+      </li>
+      <li class="admin-menu-item">
+        <a href="#" class="admin-menu-link active">
+          <span class="admin-menu-icon">${Icons.chart}</span>
+          <span>Reports</span>
+        </a>
+      </li>
+      <li class="admin-menu-item">
+        <a href="#" class="admin-menu-link" onclick="Pages.renderAdminActivity()">
+          <span class="admin-menu-icon">${Icons.clock || Icons.chart}</span>
+          <span>Activity</span>
+        </a>
+      </li>
+    </ul>
+    </nav>
+    </aside>
+    <main class="admin-main">
           <div class="admin-header">
             <h1 class="admin-title">Analytics & Reports</h1>
           </div>
@@ -6396,6 +6412,356 @@ window.scrollTo(0, 0);
         this.renderAdminUsers();
       } catch (e) {
         toastManager.show(e.message || 'Failed to unban user', 'error');
+    }
+  }
+
+  static async renderAdminActivity () {
+    const mainContent = document.getElementById('main-content');
+
+    mainContent.innerHTML = `
+      <div class="admin-container">
+        <aside class="admin-sidebar">
+          <div class="admin-brand">
+            <div class="admin-brand-icon">'${Icons.settings}'</div>
+            <div class="admin-brand-name">Admin Panel</div>
+          </div>
+          <nav class="admin-nav-section">
+            <ul class="admin-menu">
+              <li class="admin-menu-item">
+                <a href="#" class="admin-menu-link" onclick="Pages.renderAdminDashboard()">
+                  <span class="admin-menu-icon">${Icons.chart}</span>
+                  <span>Dashboard</span>
+                </a>
+              </li>
+              <li class="admin-menu-item">
+                <a href="#" class="admin-menu-link" onclick="Pages.renderAdminProducts()">
+                  <span class="admin-menu-icon">${Icons.package}</span>
+                  <span>Products</span>
+                </a>
+              </li>
+              <li class="admin-menu-item">
+                <a href="#" class="admin-menu-link" onclick="Pages.renderAdminOrders()">
+                  <span class="admin-menu-icon">${Icons.clipboard}</span>
+                  <span>Orders</span>
+                </a>
+              </li>
+              <li class="admin-menu-item">
+                <a href="#" class="admin-menu-link" onclick="Pages.renderAdminReports()">
+                  <span class="admin-menu-icon">${Icons.chart}</span>
+                  <span>Reports</span>
+                </a>
+              </li>
+              <li class="admin-menu-item">
+                <a href="#" class="admin-menu-link active">
+                  <span class="admin-menu-icon">${Icons.clock || Icons.chart}</span>
+                  <span>Activity</span>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </aside>
+        <main class="admin-main">
+          <div class="admin-header">
+            <h1 class="admin-title">Activity Monitor</h1>
+            <div class="admin-actions">
+              <select id="activity-filter-action" onchange="Pages._loadActivityLogs()" style="padding:0.5rem;border-radius:6px;border:1px solid var(--border-color);">
+                <option value="">All Actions</option>
+                <option value="login">Login</option>
+                <option value="signup">Signup</option>
+                <option value="purchase">Purchase</option>
+                <option value="product_create">Product Created</option>
+                <option value="product_update">Product Updated</option>
+                <option value="product_delete">Product Deleted</option>
+                <option value="admin_ban">User Banned</option>
+                <option value="admin_approve">Product Approved</option>
+                <option value="admin_reject">Product Rejected</option>
+                <option value="password_change">Password Change</option>
+              </select>
+              <select id="activity-filter-severity" onchange="Pages._loadActivityLogs()" style="padding:0.5rem;border-radius:6px;border:1px solid var(--border-color);">
+                <option value="">All Severity</option>
+                <option value="info">Info</option>
+                <option value="warning">Warning</option>
+                <option value="critical">Critical</option>
+              </select>
+            </div>
+          </div>
+          <div id="activity-stats-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem;"></div>
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>User</th>
+                  <th>Action</th>
+                  <th>Details</th>
+                  <th>Severity</th>
+                </tr>
+              </thead>
+              <tbody id="activity-logs-tbody">
+                <tr><td colspan="5" style="text-align:center;padding:2rem;">Loading activity logs...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top:1rem;text-align:center;">
+            <button class="btn btn-outline" onclick="Pages._loadActivityLogs()" style="margin-right:0.5rem;">Refresh</button>
+            <button class="btn btn-outline" id="activity-load-more" onclick="Pages._loadMoreActivity()" style="display:none;">Load More</button>
+          </div>
+        </main>
+      </div>
+    `;
+
+    this._activityPage = 1;
+    this._loadActivityLogs();
+  }
+
+  static async _loadActivityLogs () {
+    const actionFilter = document.getElementById('activity-filter-action')?.value || '';
+    const severityFilter = document.getElementById('activity-filter-severity')?.value || '';
+    const tbody = document.getElementById('activity-logs-tbody');
+    const statsCards = document.getElementById('activity-stats-cards');
+
+    if (!tbody) { return; }
+    this._activityPage = 1;
+
+    try {
+      const params = { page: this._activityPage, limit: 50 };
+      if (actionFilter) { params.action = actionFilter; }
+      if (severityFilter) { params.severity = severityFilter; }
+
+      const [logsRes, statsRes, onlineRes] = await Promise.all([
+        api.admin.getActivity(params).catch(() => ({ success: false })),
+        api.admin.getActivityStats().catch(() => ({ success: false })),
+        api.admin.getOnlineUsers().catch(() => ({ success: false })),
+      ]);
+
+      if (statsRes.success && statsRes.data) {
+        const s = statsRes.data;
+        statsCards.innerHTML = `
+          <div class="admin-stat-card"><div class="admin-stat-value">${s.totalToday || 0}</div><div class="admin-stat-label">Events Today</div></div>
+          <div class="admin-stat-card"><div class="admin-stat-value">${s.totalThisWeek || 0}</div><div class="admin-stat-label">Events This Week</div></div>
+          <div class="admin-stat-card"><div class="admin-stat-value">${onlineRes.success ? onlineRes.data.onlineCount : '?'}</div><div class="admin-stat-label">Online Now</div></div>
+        `;
+      }
+
+      if (logsRes.success && logsRes.data) {
+        this._renderActivityRows(logsRes.data.logs || [], tbody);
+        const moreBtn = document.getElementById('activity-load-more');
+        if (moreBtn) { moreBtn.style.display = logsRes.data.page < logsRes.data.pages ? '' : 'none'; }
+      } else {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;">Could not load activity logs from server. Showing local activity.</td></tr>';
+        const localActivities = adminAuthManager.getActivityLog().slice(0, 50);
+        const localRows = localActivities.map(a => `
+          <tr>
+            <td>${new Date(a.timestamp).toLocaleString()}</td>
+            <td>Admin</td>
+            <td>${a.action}</td>
+            <td>${JSON.stringify(a.details || {}).substring(0, 80)}</td>
+            <td><span style="padding:2px 8px;border-radius:4px;font-size:0.75rem;background:var(--color-primary-light);color:var(--color-primary);">info</span></td>
+          </tr>
+        `).join('');
+        tbody.innerHTML = localRows || '<tr><td colspan="5" style="text-align:center;padding:2rem;">No activity records found.</td></tr>';
+      }
+    } catch (error) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--color-danger);">Error loading activity logs.</td></tr>';
+    }
+  }
+
+  static async _loadMoreActivity () {
+    this._activityPage = (this._activityPage || 1) + 1;
+    const actionFilter = document.getElementById('activity-filter-action')?.value || '';
+    const severityFilter = document.getElementById('activity-filter-severity')?.value || '';
+    const tbody = document.getElementById('activity-logs-tbody');
+
+    try {
+      const params = { page: this._activityPage, limit: 50 };
+      if (actionFilter) { params.action = actionFilter; }
+      if (severityFilter) { params.severity = severityFilter; }
+
+      const res = await api.admin.getActivity(params);
+      if (res.success && res.data) {
+        this._renderActivityRows(res.data.logs || [], tbody, true);
+        const moreBtn = document.getElementById('activity-load-more');
+        if (moreBtn) { moreBtn.style.display = res.data.page < res.data.pages ? '' : 'none'; }
+      }
+    } catch (error) {
+      toastManager.show('Failed to load more logs', 'error');
+    }
+  }
+
+  static _renderActivityRows (logs, tbody, append = false) {
+    const severityColors = {
+      info: 'background:var(--color-primary-light);color:var(--color-primary);',
+      warning: 'background:#fef3c7;color:#92400e;',
+      critical: 'background:#fee2e2;color:#991b1b;',
+    };
+
+    const actionLabels = {
+      login: 'Login',
+      logout: 'Logout',
+      signup: 'Signup',
+      purchase: 'Purchase',
+      product_create: 'Product Created',
+      product_update: 'Product Updated',
+      product_delete: 'Product Deleted',
+      review_create: 'Review Created',
+      message_send: 'Message Sent',
+      wishlist_add: 'Wishlist Add',
+      profile_update: 'Profile Updated',
+      password_change: 'Password Changed',
+      admin_ban: 'User Banned',
+      admin_approve: 'Product Approved',
+      admin_reject: 'Product Rejected',
+      search: 'Search',
+    };
+
+    const rows = (logs || []).map(log => {
+      const time = new Date(log.createdAt).toLocaleString();
+      const user = log.userName || log.userEmail || 'System';
+      const action = actionLabels[log.action] || log.action;
+      const details = log.details ? JSON.stringify(log.details).substring(0, 100) : '-';
+      const severity = log.severity || 'info';
+      const sevStyle = severityColors[severity] || severityColors.info;
+
+      return `<tr>
+        <td style="white-space:nowrap;font-size:0.85rem;">${time}</td>
+        <td>${user}</td>
+        <td><strong>${action}</strong></td>
+        <td style="font-size:0.85rem;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${details}">${details}</td>
+        <td><span style="padding:2px 8px;border-radius:4px;font-size:0.75rem;${sevStyle}">${severity}</span></td>
+      </tr>`;
+    }).join('');
+
+    if (append) {
+      tbody.insertAdjacentHTML('beforeend', rows);
+    } else {
+      tbody.innerHTML = rows || '<tr><td colspan="5" style="text-align:center;padding:2rem;">No activity records found.</td></tr>';
+    }
+  }
+
+  static renderAdminProductCreate () {
+    const mainContent = document.getElementById('main-content');
+    const categories = ['electronics', 'textbooks', 'appliances', 'hostel-items', 'fashion', 'accessories', 'thrifts'];
+    const conditions = ['new', 'like-new', 'good', 'fair', 'excellent'];
+
+    mainContent.innerHTML = `
+      <div class="admin-container">
+        <aside class="admin-sidebar">
+          <div class="admin-brand">
+            <div class="admin-brand-icon">'${Icons.settings}'</div>
+            <div class="admin-brand-name">Admin Panel</div>
+          </div>
+          <nav class="admin-nav-section">
+            <ul class="admin-menu">
+              <li class="admin-menu-item"><a href="#" class="admin-menu-link" onclick="Pages.renderAdminProducts()"><span class="admin-menu-icon">${Icons.package}</span><span>Products</span></a></li>
+              <li class="admin-menu-item"><a href="#" class="admin-menu-link active"><span class="admin-menu-icon">➕</span><span>Add Product</span></a></li>
+            </ul>
+          </nav>
+        </aside>
+        <main class="admin-main">
+          <div class="admin-header">
+            <h1 class="admin-title">Add New Product</h1>
+            <button class="btn btn-outline" onclick="Pages.renderAdminProducts()">Back to Products</button>
+          </div>
+          <form id="admin-product-form" onsubmit="Pages._handleAdminProductCreate(event)" style="max-width:700px;">
+            <div style="display:grid;gap:1rem;">
+              <div>
+                <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Title *</label>
+                <input type="text" name="title" required style="width:100%;padding:0.75rem;border:1px solid var(--border-color);border-radius:8px;" placeholder="e.g. MacBook Pro 2021">
+              </div>
+              <div>
+                <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Description *</label>
+                <textarea name="description" required rows="4" style="width:100%;padding:0.75rem;border:1px solid var(--border-color);border-radius:8px;" placeholder="Describe the item..."></textarea>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                <div>
+                  <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Price (GHS) *</label>
+                  <input type="number" name="price" required min="1" style="width:100%;padding:0.75rem;border:1px solid var(--border-color);border-radius:8px;" placeholder="0">
+                </div>
+                <div>
+                  <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Category *</label>
+                  <select name="category" required style="width:100%;padding:0.75rem;border:1px solid var(--border-color);border-radius:8px;">
+                    ${categories.map(c => '<option value="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>').join('')}
+                  </select>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                <div>
+                  <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Condition *</label>
+                  <select name="condition" required style="width:100%;padding:0.75rem;border:1px solid var(--border-color);border-radius:8px;">
+                    ${conditions.map(c => '<option value="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>').join('')}
+                  </select>
+                </div>
+                <div>
+                  <label style="display:block;margin-bottom:0.25rem;font-weight:600;">University</label>
+                  <input type="text" name="university" style="width:100%;padding:0.75rem;border:1px solid var(--border-color);border-radius:8px;" placeholder="Leave blank for your university">
+                </div>
+              </div>
+              <div>
+                <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Image URLs (one per line)</label>
+                <textarea name="images" rows="3" style="width:100%;padding:0.75rem;border:1px solid var(--border-color);border-radius:8px;" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"></textarea>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                <div>
+                  <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Delivery Modes</label>
+                  <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+                    <label><input type="checkbox" name="deliveryModes" value="bolt"> Bolt</label>
+                    <label><input type="checkbox" name="deliveryModes" value="yango"> Yango</label>
+                    <label><input type="checkbox" name="deliveryModes" value="inperson"> In-Person</label>
+                  </div>
+                </div>
+                <div>
+                  <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Payment Modes</label>
+                  <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+                    <label><input type="checkbox" name="paymentModes" value="momo"> MoMo</label>
+                    <label><input type="checkbox" name="paymentModes" value="telecel"> Telecel</label>
+                    <label><input type="checkbox" name="paymentModes" value="bank"> Bank</label>
+                    <label><input type="checkbox" name="paymentModes" value="cash"> Cash</label>
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top:1rem;">
+                <button type="submit" class="btn btn-primary" style="padding:0.75rem 2rem;">Create Product</button>
+              </div>
+            </div>
+          </form>
+        </main>
+      </div>
+    `;
+  }
+
+  static async _handleAdminProductCreate (event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+
+    const images = formData.get('images').split('\n').map(u => u.trim()).filter(Boolean);
+    const deliveryModes = formData.getAll('deliveryModes');
+    const paymentModes = formData.getAll('paymentModes');
+
+    const data = {
+      title: formData.get('title'),
+      description: formData.get('description'),
+      price: Number(formData.get('price')),
+      category: formData.get('category'),
+      condition: formData.get('condition'),
+      images: images.length > 0 ? images : ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800'],
+      deliveryModes,
+      paymentModes,
+    };
+
+    const university = formData.get('university')?.trim();
+    if (university) { data.university = university; }
+
+    try {
+      const result = await api.admin.createProduct(data);
+      if (result.success) {
+        toastManager.show('Product created successfully', 'success');
+        this.renderAdminProducts();
+      } else {
+        toastManager.show(result.error || 'Failed to create product', 'error');
+      }
+    } catch (error) {
+      toastManager.show(error.message || 'Failed to create product', 'error');
     }
   }
 

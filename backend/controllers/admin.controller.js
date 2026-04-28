@@ -9,7 +9,9 @@ const User = require('../models/User.model');
 const Product = require('../models/Product.model');
 const Order = require('../models/Order.model');
 const StudentVerification = require('../models/StudentVerification.model');
+const ActivityLog = require('../models/ActivityLog.model');
 const { ApiError } = require('../utils/errorHandler');
+const logActivity = require('../utils/logActivity');
 
 exports.getDashboardStats = async (req, res) => {
   const totalUsers = await User.countDocuments();
@@ -106,6 +108,8 @@ exports.approveProduct = async (req, res) => {
 
   await product.save();
 
+  await logActivity('admin_approve', req.user, { productId: product._id, title: product.title }, 'info', req);
+
   res.json({
     success: true,
     message: 'Product approved successfully',
@@ -130,6 +134,8 @@ exports.rejectProduct = async (req, res) => {
   product.moderationNote = reason;
 
   await product.save();
+
+  await logActivity('admin_reject', req.user, { productId: product._id, title: product.title, reason }, 'warning', req);
 
   res.json({
     success: true,
@@ -175,6 +181,8 @@ exports.banUser = async (req, res) => {
 
   await user.save();
 
+  await logActivity('admin_ban', req.user, { targetUserId: user._id, targetEmail: user.email, action, reason: reason || null }, action === 'ban' ? 'critical' : 'info', req);
+
   res.json({
     success: true,
     message: action === 'ban' ? 'User has been banned successfully' : 'User has been unbanned successfully',
@@ -210,5 +218,139 @@ exports.getBannedUsers = async (req, res) => {
       page: Number(page),
       pages: Math.ceil(total / limit),
     },
+  });
+};
+
+exports.getActivityLogs = async (req, res) => {
+  const { action, severity, userId, startDate, endDate, page = 1, limit = 50 } = req.query;
+
+  const query = {};
+  if (action) { query.action = action; }
+  if (severity) { query.severity = severity; }
+  if (userId) { query.user = userId; }
+  if (startDate || endDate) {
+    query.createdAt = {};
+    if (startDate) { query.createdAt.$gte = new Date(startDate); }
+    if (endDate) { query.createdAt.$lte = new Date(endDate); }
+  }
+
+  const logs = await ActivityLog.find(query)
+    .sort({ createdAt: -1 })
+    .limit(Number(limit))
+    .skip((page - 1) * limit);
+
+  const total = await ActivityLog.countDocuments(query);
+
+  res.json({
+    success: true,
+    data: {
+      logs,
+      total,
+      page: Number(page),
+      pages: Math.ceil(total / limit),
+    },
+  });
+};
+
+exports.getActivityStats = async (req, res) => {
+  const stats = await ActivityLog.getStats();
+  const result = stats.length > 0 ? stats[0] : { totalToday: 0, totalThisWeek: 0, byAction: {}, bySeverity: {} };
+
+  res.json({
+    success: true,
+    data: result,
+  });
+};
+
+exports.getOnlineUsers = async (req, res) => {
+  const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+  const recentLogins = await ActivityLog.find({ action: 'login', createdAt: { $gte: fiveMinAgo } })
+    .sort({ createdAt: -1 })
+    .select('user userName userEmail university createdAt');
+
+  const seen = new Set();
+  const onlineUsers = recentLogins.filter(l => {
+    if (seen.has(l.user?.toString())) { return false; }
+    seen.add(l.user?.toString());
+    return true;
+  });
+
+  res.json({
+    success: true,
+    data: {
+      onlineCount: onlineUsers.length,
+      users: onlineUsers,
+    },
+  });
+};
+
+exports.adminCreateProduct = async (req, res) => {
+  const { title, description, price, category, condition, images, deliveryModes, paymentModes, university } = req.body;
+
+  const product = await Product.create({
+    title,
+    description,
+    price,
+    category,
+    condition,
+    images: images || [],
+    deliveryModes: deliveryModes || [],
+    paymentModes: paymentModes || [],
+    seller: req.user._id,
+    sellerName: req.user.fullName,
+    sellerRating: req.user.rating,
+    university: university || req.user.university,
+    status: 'active',
+    approvedBy: req.user._id,
+  });
+
+  await logActivity('product_create', req.user, { productId: product._id, title: product.title, adminCreated: true }, 'info', req);
+
+  res.status(201).json({
+    success: true,
+    message: 'Product created by admin',
+    data: product.getPublicProduct(),
+  });
+};
+
+exports.adminUpdateProduct = async (req, res) => {
+  const product = await Product.findById(req.params.id);
+
+  if (!product) {
+    throw new ApiError(404, 'Product not found');
+  }
+
+  const allowedFields = ['title', 'description', 'price', 'category', 'condition', 'images', 'deliveryModes', 'paymentModes', 'status', 'university'];
+  allowedFields.forEach(field => {
+    if (req.body[field] !== undefined) {
+      product[field] = req.body[field];
+    }
+  });
+
+  await product.save();
+
+  await logActivity('product_update', req.user, { productId: product._id, title: product.title, adminUpdated: true }, 'info', req);
+
+  res.json({
+    success: true,
+    message: 'Product updated by admin',
+    data: product.getPublicProduct(),
+  });
+};
+
+exports.adminDeleteProduct = async (req, res) => {
+  const product = await Product.findById(req.params.id);
+
+  if (!product) {
+    throw new ApiError(404, 'Product not found');
+  }
+
+  await product.deleteOne();
+
+  await logActivity('product_delete', req.user, { productId: req.params.id, title: product.title, adminDeleted: true }, 'warning', req);
+
+  res.json({
+    success: true,
+    message: 'Product deleted by admin',
   });
 };

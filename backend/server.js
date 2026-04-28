@@ -7,6 +7,9 @@
 
 require('dotenv').config();
 
+const { initSentry, requestHandler: sentryRequest, errorHandler: sentryError } = require('./utils/sentry');
+initSentry();
+
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection:', reason);
 });
@@ -55,6 +58,8 @@ const { csrfTokenHandler, csrfProtection } = require('./middleware/csrf.middlewa
 
 // Initialize Express app
 const app = express();
+
+app.use(sentryRequest());
 
 // Shared io instance — set during server startup
 let io = null;
@@ -259,10 +264,13 @@ app.use('/api/search', searchRoutes);
 // 404 handler
 app.use((_req, res) => {
   res.status(404).json({
-    success: false,
-    error: 'Route not found',
+  success: false,
+  error: 'Route not found',
   });
 });
+
+// Sentry error handler (before custom error handler)
+app.use(sentryError());
 
 // Global error handler
 app.use((err, _req, res, _next) => {

@@ -7,11 +7,12 @@
 name="description"
 content="Uni-Hub - Buy and sell items within your university community"
 />
-    <meta name="theme-color" content="#0046be" />
+  <meta name="theme-color" content="#0046be" />
+  <meta name="sentry-dsn" content="" />
 
-    <!-- Security Headers (Meta Tags) -->
-    <!-- Note: These should also be configured on the server -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' http://localhost:5000 ws://localhost:5000; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <!-- Security Headers (Meta Tags) -->
+  <!-- Note: These should also be configured on the server -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://browser.sentry-cdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' http://localhost:5000 ws://localhost:5000 https://*.sentry.io; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta http-equiv="X-Frame-Options" content="DENY">
   <meta http-equiv="X-XSS-Protection" content="1; mode=block">
@@ -296,10 +297,14 @@ The global university marketplace for students to buy and sell essentials.
 </footer>
 </div>
 
-<!-- Icons Library -->
-    <script type="module" src="js/utils/icons.js?v=5"></script>
+  <!-- Icons Library -->
+  <script type="module" src="js/utils/icons.js?v=5"></script>
 
-    <!-- App Initialization - Single Entry Point -->
+  <!-- Sentry Browser SDK (loaded from CDN, configured via meta tag) -->
+  <script src="https://browser.sentry-cdn.com/8.33.0/bundle.tracing.replay.min.js" crossorigin="anonymous"></script>
+  <script type="module" src="js/utils/sentry.js?v=5"></script>
+
+  <!-- App Initialization - Single Entry Point -->
     <script type="module" src="js/app-init.js?v=5"></script>
 </body>
 </html>

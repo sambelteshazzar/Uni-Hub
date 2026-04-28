@@ -108,6 +108,11 @@ if (typeof CryptoUtil !== 'undefined') {
 if (typeof api !== 'undefined') {
   window.api = api;
 }
+// eslint-disable-next-line no-undef
+if (typeof sentryManager !== 'undefined') {
+  window.sentryManager = sentryManager;
+  sentryManager.init();
+}
 
 // ====================
 // CORE - router and app

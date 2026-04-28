@@ -3,7 +3,25 @@
     {
       "id": "ug",
       "name": "University of Ghana (UG)",
+      "campus": "Legon, Accra",
+      "region": "Greater Accra"
+    },
+    {
+      "id": "upsa",
+      "name": "University of Professional Studies, Accra (UPSA)",
       "campus": "Accra",
+      "region": "Greater Accra"
+    },
+    {
+      "id": "gimpa",
+      "name": "Ghana Institute of Management & Public Administration (GIMPA)",
+      "campus": "Achimota, Accra",
+      "region": "Greater Accra"
+    },
+    {
+      "id": "ashesi",
+      "name": "Ashesi University",
+      "campus": "Berekuso",
       "region": "Greater Accra"
     },
     {
@@ -13,8 +31,26 @@
       "region": "Greater Accra"
     },
     {
+      "id": "gctu",
+      "name": "Ghana Communication Technology University (GCTU)",
+      "campus": "Tesano, Accra",
+      "region": "Greater Accra"
+    },
+    {
+      "id": "central-uni",
+      "name": "Central University",
+      "campus": "Miotso, Greater Accra",
+      "region": "Greater Accra"
+    },
+    {
       "id": "knust",
       "name": "Kwame Nkrumah University of Science & Technology (KNUST)",
+      "campus": "Kumasi",
+      "region": "Ashanti"
+    },
+    {
+      "id": "kstu",
+      "name": "Kumasi Technical University (KsTU)",
       "campus": "Kumasi",
       "region": "Ashanti"
     },
@@ -25,22 +61,124 @@
       "region": "Central"
     },
     {
-      "id": "uds",
-      "name": "University for Development Studies (UDS)",
-      "campus": "Tamale",
-      "region": "Northern"
-    },
-    {
       "id": "uew",
       "name": "University of Education, Winneba (UEW)",
       "campus": "Winneba",
       "region": "Central"
     },
     {
-      "id": "aamusted",
-      "name": "Ashesi University",
-      "campus": "Berekuso",
+      "id": "cctu",
+      "name": "Cape Coast Technical University (CCTU)",
+      "campus": "Cape Coast",
+      "region": "Central"
+    },
+    {
+      "id": "uds",
+      "name": "University for Development Studies (UDS)",
+      "campus": "Tamale",
+      "region": "Northern"
+    },
+    {
+      "id": "ttu",
+      "name": "Takoradi Technical University (TTU)",
+      "campus": "Sekondi-Takoradi",
+      "region": "Western"
+    },
+    {
+      "id": "uenr",
+      "name": "University of Energy & Natural Resources (UENR)",
+      "campus": "Sunyani",
+      "region": "Bono"
+    },
+    {
+      "id": "stu",
+      "name": "Sunyani Technical University (STU)",
+      "campus": "Sunyani",
+      "region": "Bono"
+    },
+    {
+      "id": "uhas",
+      "name": "University of Health & Allied Sciences (UHAS)",
+      "campus": "Ho",
+      "region": "Volta"
+    },
+    {
+      "id": "ho-technical",
+      "name": "Ho Technical University",
+      "campus": "Ho",
+      "region": "Volta"
+    },
+    {
+      "id": "umat",
+      "name": "University of Mines & Technology (UMaT)",
+      "campus": "Tarkwa",
+      "region": "Western"
+    },
+    {
+      "id": "ktu",
+      "name": "Koforidua Technical University (KTU)",
+      "campus": "Koforidua",
+      "region": "Eastern"
+    },
+    {
+      "id": "vvu",
+      "name": "Valley View University",
+      "campus": "Oyibi, Greater Accra",
       "region": "Greater Accra"
+    },
+    {
+      "id": "btu",
+      "name": "Bolgatanga Technical University (BTU)",
+      "campus": "Bolgatanga",
+      "region": "Upper East"
+    },
+    {
+      "id": "udsc",
+      "name": "C.K. Tedem University of Technology & Applied Sciences",
+      "campus": "Navrongo",
+      "region": "Upper East"
+    },
+    {
+      "id": "sdombo",
+      "name": "Simon Diebo University",
+      "campus": "Wa",
+      "region": "Upper West"
+    },
+    {
+      "id": "uenr-ty",
+      "name": "UENR Dormaa Campus",
+      "campus": "Dormaa Ahenkro",
+      "region": "Bono East"
+    },
+    {
+      "id": "techiman-sec",
+      "name": "Techiman Institute of Business & Technology",
+      "campus": "Techiman",
+      "region": "Bono East"
+    },
+    {
+      "id": "ahafo-sec",
+      "name": "Ahafo Community Technical Institute",
+      "campus": "Goaso",
+      "region": "Ahafo"
+    },
+    {
+      "id": "damongo-sec",
+      "name": "Savannah Technical Institute",
+      "campus": "Damongo",
+      "region": "Savannah"
+    },
+    {
+      "id": "nalerigu-sec",
+      "name": "North East Technical Institute",
+      "campus": "Nalerigu",
+      "region": "North East"
+    },
+    {
+      "id": "oti-sec",
+      "name": "Oti Community Technical Institute",
+      "campus": "Dambai",
+      "region": "Oti"
     }
   ],
   "categories": [

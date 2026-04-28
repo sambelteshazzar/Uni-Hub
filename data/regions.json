@@ -4,19 +4,19 @@
       "id": "greater-accra",
       "name": "Greater Accra",
       "capital": "Accra",
-      "universities": ["ug", "aamusted"]
+      "universities": ["ug", "upsa", "gimpa", "ashesi", "atu", "gctu", "central-uni", "vvu"]
     },
     {
       "id": "ashanti",
       "name": "Ashanti",
       "capital": "Kumasi",
-      "universities": ["knust"]
+      "universities": ["knust", "kstu"]
     },
     {
       "id": "central",
       "name": "Central",
       "capital": "Cape Coast",
-      "universities": ["ucc", "uew"]
+      "universities": ["ucc", "uew", "cctu"]
     },
     {
       "id": "northern",
@@ -28,67 +28,67 @@
       "id": "western",
       "name": "Western",
       "capital": "Sekondi-Takoradi",
-      "universities": []
+      "universities": ["ttu", "umat"]
     },
     {
       "id": "eastern",
       "name": "Eastern",
       "capital": "Koforidua",
-      "universities": []
+      "universities": ["ktu"]
     },
     {
       "id": "volta",
       "name": "Volta",
       "capital": "Ho",
-      "universities": []
+      "universities": ["uhas", "ho-technical"]
     },
     {
       "id": "upper-east",
       "name": "Upper East",
       "capital": "Bolgatanga",
-      "universities": []
+      "universities": ["btu", "udsc"]
     },
     {
       "id": "upper-west",
       "name": "Upper West",
       "capital": "Wa",
-      "universities": []
+      "universities": ["sdombo"]
     },
     {
       "id": "bono",
       "name": "Bono",
       "capital": "Sunyani",
-      "universities": []
+      "universities": ["uenr", "stu"]
     },
     {
       "id": "bono-east",
       "name": "Bono East",
       "capital": "Techiman",
-      "universities": []
+      "universities": ["uenr-ty", "techiman-sec"]
     },
     {
       "id": "ahafo",
       "name": "Ahafo",
       "capital": "Goaso",
-      "universities": []
+      "universities": ["ahafo-sec"]
     },
     {
       "id": "savannah",
       "name": "Savannah",
       "capital": "Damongo",
-      "universities": []
+      "universities": ["damongo-sec"]
     },
     {
       "id": "north-east",
       "name": "North East",
       "capital": "Nalerigu",
-      "universities": []
+      "universities": ["nalerigu-sec"]
     },
     {
       "id": "oti",
       "name": "Oti",
       "capital": "Dambai",
-      "universities": []
+      "universities": ["oti-sec"]
     }
   ]
 }

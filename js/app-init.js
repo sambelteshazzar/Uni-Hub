@@ -17,6 +17,7 @@ const MODULE_DEPENDENCIES = {
     { name: 'formatters', file: 'js/utils/formatters.js', exposes: ['Formatter'] },
     { name: 'crypto', file: 'js/utils/crypto.js', exposes: ['CryptoUtil'] },
     { name: 'api', file: 'js/utils/api.js', exposes: ['api'] },
+    { name: 'sentry', file: 'js/utils/sentry.js', exposes: ['sentryManager'], required: false },
     { name: 'footer', file: 'js/utils/footer.js', exposes: ['footerUtils'], required: false },
   ],
 

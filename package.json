@@ -26,9 +26,10 @@
     "eslint": "^8.56.0",
     "http-server": "^14.1.1",
     "prettier": "^3.1.1",
-    "vite": "^5.0.10"
+    "vite": "^8.0.10"
   },
   "dependencies": {
+    "@sentry/browser": "^10.50.0",
     "socket.io-client": "^4.8.3"
   }
 }

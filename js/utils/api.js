@@ -270,7 +270,17 @@ class API {
   admin = {
     getStats: () => this.get('/admin/stats'),
     getProducts: params => this.get('/admin/products', params),
+    createProduct: data => this.post('/admin/products', data),
+    updateProduct: (id, data) => this.put(`/admin/products/${id}`, data),
+    deleteProduct: id => this.delete(`/admin/products/${id}`),
     getOrders: params => this.get('/admin/orders', params),
+    getActivity: params => this.get('/admin/activity', params),
+    getActivityStats: () => this.get('/admin/activity/stats'),
+    getOnlineUsers: () => this.get('/admin/online-users'),
+    approveProduct: id => this.put(`/admin/products/${id}/approve`),
+    rejectProduct: (id, reason) => this.put(`/admin/products/${id}/reject`, { reason }),
+    banUser: (id, reason) => this.put(`/admin/users/${id}/ban`, { action: 'ban', reason }),
+    unbanUser: id => this.put(`/admin/users/${id}/ban`, { action: 'unban' }),
   };
 
   wishlist = {

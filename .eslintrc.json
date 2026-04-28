@@ -109,7 +109,9 @@
     "BasePage": "readonly",
     "AuthPage": "readonly",
     "LandingPage": "readonly",
-    "Pages": "readonly"
+    "Pages": "readonly",
+    "sentryManager": "readonly",
+    "Sentry": "readonly"
   },
   "ignorePatterns": ["node_modules/", "dist/", "backend/node_modules/"],
   "overrides": [

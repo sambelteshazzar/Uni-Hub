@@ -7,6 +7,7 @@
 
 const jwt = require('jsonwebtoken');
 const User = require('../models/User.model');
+const { setUserContext } = require('../utils/sentry');
 
 /**
  * Protect routes - Verify JWT token
@@ -33,7 +34,6 @@ const protect = async (req, res, next) => {
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // Get user from token
       req.user = await User.findById(decoded.id).select('-password');
 
       if (!req.user) {
@@ -42,6 +42,8 @@ const protect = async (req, res, next) => {
           error: 'User not found',
         });
       }
+
+      setUserContext(req.user);
 
       // Check if user is active
       if (!req.user.isActive) {

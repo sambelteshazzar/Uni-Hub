@@ -1,12 +1,6 @@
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
-/**
- * ============================================
- * Product Controller
- * CRUD operations for products
- * ============================================
- */
-
 const Product = require('../models/Product.model');
+const logActivity = require('../utils/logActivity');
 
 /**
  * @desc    Get all products with filtering, sorting, pagination
@@ -160,6 +154,8 @@ exports.createProduct = async (req, res) => {
       university: req.user.university,
     });
 
+    await logActivity('product_create', req.user, { productId: product._id, title: product.title, category: product.category, price: product.price }, 'info', req);
+
     res.status(201).json({
       success: true,
       message: 'Product created successfully',
@@ -210,6 +206,8 @@ exports.updateProduct = async (req, res) => {
 
     product = await Product.findById(product._id);
 
+    await logActivity('product_update', req.user, { productId: product._id, title: product.title, updatedFields: Object.keys(req.body).filter(k => allowedFields.includes(k)) }, 'info', req);
+
     res.json({
       success: true,
       message: 'Product updated successfully',
@@ -249,6 +247,8 @@ exports.deleteProduct = async (req, res) => {
     }
 
     await product.deleteOne();
+
+    await logActivity('product_delete', req.user, { productId: req.params.id, title: product.title }, 'warning', req);
 
     res.json({
       success: true,
@@ -318,30 +318,30 @@ exports.uploadProductImages = asyncHandler(async (req, res) => {
   const { uploadImage } = require('../utils/cloudinary.util');
   const uploadedUrls = [];
 
-    for (const file of req.files) {
-      try {
-        const result = await uploadImage(file.path);
-        uploadedUrls.push(result.secure_url);
-      } catch (error) {
-        console.error(`Failed to upload ${file.originalname}:`, error.message);
-      } finally {
-        const fs = require('fs');
-        try { fs.unlinkSync(file.path); } catch (e) { /* ignore cleanup errors */ }
-      }
+  for (const file of req.files) {
+    try {
+      const result = await uploadImage(file.path);
+      uploadedUrls.push(result.secure_url);
+    } catch (error) {
+      console.error(`Failed to upload ${file.originalname}:`, error.message);
+    } finally {
+      const fs = require('fs');
+      try { fs.unlinkSync(file.path); } catch (e) { /* ignore cleanup errors */ }
     }
+  }
 
-    if (uploadedUrls.length === 0) {
-      throw new ApiError(500, 'Failed to upload any images');
-    }
+  if (uploadedUrls.length === 0) {
+    throw new ApiError(500, 'Failed to upload any images');
+  }
 
-    // Enforce max 5 images per product
-    const maxImages = 5;
-    const currentCount = (product.images || []).length;
-    if (currentCount + uploadedUrls.length > maxImages) {
-      product.images = [...(product.images || []), ...uploadedUrls.slice(0, maxImages - currentCount)];
-    } else {
-      product.images = [...(product.images || []), ...uploadedUrls];
-    }
+  // Enforce max 5 images per product
+  const maxImages = 5;
+  const currentCount = (product.images || []).length;
+  if (currentCount + uploadedUrls.length > maxImages) {
+    product.images = [...(product.images || []), ...uploadedUrls.slice(0, maxImages - currentCount)];
+  } else {
+    product.images = [...(product.images || []), ...uploadedUrls];
+  }
   await product.save();
 
   res.json({

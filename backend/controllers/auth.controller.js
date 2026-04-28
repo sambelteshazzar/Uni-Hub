@@ -3,6 +3,7 @@ const User = require('../models/User.model');
 const { generateToken, generateResetToken } = require('../utils/token.util');
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { sendPasswordResetEmail } = require('../utils/emailService');
+const logActivity = require('../utils/logActivity');
 
 /**
  * @desc    Register new user
@@ -31,8 +32,9 @@ exports.register = asyncHandler(async (req, res) => {
     isVerified: false,
   });
 
-  // Generate token
   const token = generateToken(user._id);
+
+  await logActivity('signup', user, { email: user.email, university: user.university }, 'info', req);
 
   res.status(201).json({
     success: true,
@@ -90,7 +92,8 @@ exports.login = asyncHandler(async (req, res) => {
   user.lastLogin = new Date();
   await user.save();
 
-  // Generate token
+  await logActivity('login', user, { email: user.email }, 'info', req);
+
   const token = generateToken(user._id);
 
   res.json({
@@ -194,9 +197,10 @@ exports.changePassword = async (req, res) => {
       });
     }
 
-    // Update password
     user.password = newPassword;
     await user.save();
+
+    await logActivity('password_change', user, { email: user.email }, 'warning', req);
 
     res.json({
       success: true,
@@ -233,21 +237,21 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
     });
   }
 
-    // Generate reset token
-    const resetToken = generateResetToken(user._id);
-    user.resetToken = resetToken;
-    user.resetTokenExpiry = Date.now() + 3600000; // 1 hour
-    await user.save({ validateBeforeSave: false });
+  // Generate reset token
+  const resetToken = generateResetToken(user._id);
+  user.resetToken = resetToken;
+  user.resetTokenExpiry = Date.now() + 3600000; // 1 hour
+  await user.save({ validateBeforeSave: false });
 
   // Send password reset email
   if (process.env.NODE_ENV === 'production' || process.env.EMAIL_USER) {
     await sendPasswordResetEmail(user.email, resetToken);
   }
 
-    res.json({
-      success: true,
-      message: 'If an account with that email exists, a password reset link has been sent.',
-    });
+  res.json({
+    success: true,
+    message: 'If an account with that email exists, a password reset link has been sent.',
+  });
 });
 
 /**

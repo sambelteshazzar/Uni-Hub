@@ -21,6 +21,7 @@
   "author": "Uni-Hub Team",
   "license": "MIT",
   "dependencies": {
+    "@sentry/node": "^10.50.0",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^1.41.0",
     "compression": "^1.7.4",
