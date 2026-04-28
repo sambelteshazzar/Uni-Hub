@@ -1,15 +1,16 @@
-const ActivityLog = require('../models/ActivityLog.model');
+const { db, generateId } = require('../utils/db');
 
-async function logActivity (action, user, details = {}, severity = 'info', req = null) {
+function logActivity (action, user, details = {}, severity = 'info', req = null) {
   try {
     const logData = {
+      id: generateId(),
       action,
-      details,
+      details: details ? JSON.stringify(details) : null,
       severity,
     };
 
     if (user) {
-      logData.user = user._id;
+      logData.user = user.id || user._id;
       logData.userEmail = user.email;
       logData.userName = user.fullName;
       logData.userRole = user.role;
@@ -21,7 +22,7 @@ async function logActivity (action, user, details = {}, severity = 'info', req =
       logData.userAgent = req.headers['user-agent'];
     }
 
-    await ActivityLog.create(logData);
+    db('activity_logs').create(logData);
   } catch (error) {
     console.error('Activity log error:', error.message);
   }

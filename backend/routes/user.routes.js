@@ -7,32 +7,51 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth.middleware');
-const User = require('../models/User.model');
+const { db, mapUserRow } = require('../utils/db');
 
-/**
- * @desc    Get all users (admin)
- * @route   GET /api/users
- * @access  Private (admin)
- */
+function getPublicProfile (user) {
+  if (!user) return null;
+  return {
+    id: user.id,
+    fullName: user.fullName,
+    email: user.email,
+    phone: user.phone,
+    university: user.university,
+    level: user.level,
+    hall: user.hall,
+    avatar: user.avatar,
+    bio: user.bio,
+    isVerified: user.isVerified,
+    rating: user.rating,
+    totalOrders: user.totalOrders,
+    totalSales: user.totalSales,
+    totalReviews: user.totalReviews,
+    role: user.role,
+    isActive: user.isActive,
+    createdAt: user.createdAt,
+  };
+}
+
 router.get('/', protect, authorize('admin'), async (req, res) => {
   try {
     const { university, role, page = 1, limit = 20 } = req.query;
 
-    const query = {};
-    if (university) {query.university = university;}
-    if (role) {query.role = role;}
+    const where = {};
+    if (university) { where.university = university; }
+    if (role) { where.role = role; }
 
-    const users = await User.find(query)
-      .sort({ createdAt: -1 })
-      .limit(Number(limit))
-      .skip((page - 1) * limit);
+    const users = db('users').find(where, {
+      sort: { createdAt: -1 },
+      limit: Number(limit),
+      skip: (page - 1) * limit,
+    });
 
-    const total = await User.countDocuments(query);
+    const total = db('users').countDocuments(where);
 
     res.json({
       success: true,
       data: {
-        users: users.map(u => u.getPublicProfile()),
+        users: users.map(u => getPublicProfile(u)),
         total,
         page: Number(page),
       },
@@ -46,14 +65,9 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-/**
- * @desc Get user by ID
- * @route GET /api/users/:id
- * @access Private
- */
 router.get('/:id', protect, async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select('-password');
+    const user = db('users').findById(req.params.id);
 
     if (!user) {
       return res.status(404).json({
@@ -64,7 +78,7 @@ router.get('/:id', protect, async (req, res) => {
 
     res.json({
       success: true,
-      data: user.getPublicProfile(),
+      data: getPublicProfile(user),
     });
   } catch (error) {
     console.error('Get user error:', error);
@@ -75,16 +89,11 @@ router.get('/:id', protect, async (req, res) => {
   }
 });
 
-/**
- * @desc    Update user (admin)
- * @route   PUT /api/users/:id
- * @access  Private (admin)
- */
 router.put('/:id', protect, authorize('admin'), async (req, res) => {
   try {
     const { isSuspended, role, isVerified } = req.body;
 
-    const user = await User.findById(req.params.id);
+    const user = db('users').findById(req.params.id);
 
     if (!user) {
       return res.status(404).json({
@@ -93,16 +102,17 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
       });
     }
 
-    if (isSuspended !== undefined) {user.isSuspended = isSuspended;}
-    if (role !== undefined) {user.role = role;}
-    if (isVerified !== undefined) {user.isVerified = isVerified;}
+    const updates = {};
+    if (isSuspended !== undefined) { updates.isSuspended = isSuspended; }
+    if (role !== undefined) { updates.role = role; }
+    if (isVerified !== undefined) { updates.isVerified = isVerified; }
 
-    await user.save();
+    const updated = db('users').updateById(req.params.id, updates);
 
     res.json({
       success: true,
       message: 'User updated',
-      data: user.getPublicProfile(),
+      data: getPublicProfile(updated),
     });
   } catch (error) {
     console.error('Update user error:', error);
@@ -113,14 +123,9 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-/**
- * @desc    Delete user (admin)
- * @route   DELETE /api/users/:id
- * @access  Private (admin)
- */
 router.delete('/:id', protect, authorize('admin'), async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = db('users').findById(req.params.id);
 
     if (!user) {
       return res.status(404).json({
@@ -129,9 +134,7 @@ router.delete('/:id', protect, authorize('admin'), async (req, res) => {
       });
     }
 
-    // Soft delete - deactivate instead of delete
-    user.isActive = false;
-    await user.save();
+    db('users').updateById(req.params.id, { isActive: false });
 
     res.json({
       success: true,

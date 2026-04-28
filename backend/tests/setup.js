@@ -1,19 +1,14 @@
 /**
  * Test Setup File
- * Configure test environment with in-memory MongoDB
+ * Configure test environment with in-memory SQLite
  */
-const { MongoMemoryServer } = require('mongodb-memory-server');
-const mongoose = require('mongoose');
+const { connectDatabase, getDb } = require('../config/database');
 
-// Set test environment
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test-secret-key-for-jwt-testing-only';
+process.env.SQLITE_PATH = ':memory:';
 
-let mongod = null;
-
-// Global test utilities
 global.testUtils = {
-  // Generate random test user
   generateTestUser: () => ({
     fullName: `Test User ${Date.now()}`,
     email: `test_${Date.now()}@example.com`,
@@ -24,7 +19,6 @@ global.testUtils = {
     role: 'buyer',
   }),
 
-  // Generate random test product
   generateTestProduct: (sellerId) => ({
     title: `Test Product ${Date.now()}`,
     description: 'A test product for automated testing',
@@ -37,50 +31,32 @@ global.testUtils = {
   }),
 };
 
-// Start in-memory MongoDB and connect before all tests
-beforeAll(async () => {
+beforeAll(() => {
   try {
-    // Create in-memory MongoDB instance
-    mongod = await MongoMemoryServer.create();
-    const mongoUri = mongod.getUri();
-
-    // Set the connection string
-    process.env.MONGODB_URI = mongoUri;
-
-    // Connect Mongoose to the in-memory database
-    await mongoose.connect(mongoUri);
-
-    console.log('✅ Connected to in-memory MongoDB');
+    connectDatabase();
+    console.log('✅ Connected to in-memory SQLite');
   } catch (error) {
-    console.error('❌ Failed to start in-memory MongoDB:', error);
+    console.error('❌ Failed to connect to SQLite:', error);
     throw error;
-  }
-}, 30000); // 30 second timeout
-
-// Clear collections after each test
-afterEach(async () => {
-  if (mongoose.connection.readyState === 1) { // Connected
-    const collections = mongoose.connection.collections;
-    for (const key in collections) {
-      await collections[key].deleteMany({});
-    }
   }
 });
 
-// Disconnect and stop in-memory MongoDB after all tests
-afterAll(async () => {
+afterEach(() => {
   try {
-    if (mongoose.connection.readyState === 1) {
-      await mongoose.connection.close();
-      console.log('✅ Disconnected from MongoDB');
-    }
-    if (mongod) {
-      await mongod.stop();
-      console.log('✅ In-memory MongoDB stopped');
+    const database = getDb();
+    const tables = [
+      'delivery_status_history', 'order_status_history', 'order_items',
+      'verification_documents', 'message_deleted_by', 'conversation_participants',
+      'search_history', 'activity_logs', 'wishlists', 'notifications',
+      'messages', 'conversations', 'deliveries', 'payments', 'reviews',
+      'orders', 'products', 'student_verifications', 'users',
+    ];
+    for (const table of tables) {
+      database.exec(`DELETE FROM ${table}`);
     }
   } catch (error) {
-    console.error('❌ Error during cleanup:', error);
+    console.error('❌ Error clearing tables:', error);
   }
-}, 30000); // 30 second timeout
+});
 
 console.log('✅ Test environment configured');

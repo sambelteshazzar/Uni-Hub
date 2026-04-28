@@ -10,7 +10,7 @@ COPY backend/ ./backend/
 RUN addgroup -g 1001 -S appgroup && \
     adduser -S appuser -u 1001 -G appgroup
 
-RUN mkdir -p /app/backend/uploads && \
+RUN mkdir -p /app/backend/uploads /app/backend/data && \
     chown -R appuser:appgroup /app
 
 USER appuser

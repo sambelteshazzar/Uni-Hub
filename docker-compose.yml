@@ -10,7 +10,7 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=5000
-      - MONGODB_URI=mongodb://mongo:27017/unihub
+      - SQLITE_PATH=/app/data/unihub.db
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRE=${JWT_EXPIRE:-7d}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5000}
@@ -22,26 +22,9 @@ services:
       - SMTP_USER=${SMTP_USER:-}
       - SMTP_PASS=${SMTP_PASS:-}
       - RECAPTCHA_SECRET=${RECAPTCHA_SECRET:-}
-    depends_on:
-      mongo:
-        condition: service_healthy
-    restart: unless-stopped
-
-  mongo:
-    image: mongo:7
-    ports:
-      - '27017:27017'
     volumes:
-      - mongo-data:/data/db
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER:-unihub}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASS:-unihub_local_dev}
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - db-data:/app/data
     restart: unless-stopped
 
 volumes:
-  mongo-data:
+  db-data:

@@ -3,7 +3,7 @@
  * Prevents NoSQL injection and XSS attacks
  */
 
-function sanitizeMongoQuery (req, res, next) {
+function sanitizeQuery (req, res, next) {
   const sanitize = (obj) => {
     if (!obj || typeof obj !== 'object') return obj;
     const sanitized = Array.isArray(obj) ? [] : {};
@@ -55,7 +55,7 @@ function sanitizeXss (req, res, next) {
 
 function validateObjectId (req, res, next) {
   const idParam = req.params.id;
-  if (idParam && !/^[0-9a-fA-F]{24}$/.test(idParam)) {
+  if (idParam && !/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(idParam) && !/^[0-9a-fA-F]{24}$/.test(idParam)) {
     return res.status(400).json({
       success: false,
       error: 'Invalid ID format',
@@ -69,8 +69,9 @@ function escapeRegex (str) {
 }
 
 module.exports = {
-  sanitizeMongoQuery,
-  sanitizeXss,
-  validateObjectId,
-  escapeRegex,
+sanitizeQuery,
+sanitizeMongoQuery: sanitizeQuery,
+sanitizeXss,
+validateObjectId,
+escapeRegex,
 };

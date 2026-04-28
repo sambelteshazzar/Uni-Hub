@@ -53,7 +53,7 @@ const { initializeSocket } = require('./config/socket');
 // Import error handlers
 const { errorHandler, notFoundHandler } = require('./utils/errorHandler');
 
-const { sanitizeMongoQuery, sanitizeXss } = require('./middleware/sanitize.middleware');
+const { sanitizeQuery, sanitizeXss } = require('./middleware/sanitize.middleware');
 const { csrfTokenHandler, csrfProtection } = require('./middleware/csrf.middleware');
 
 // Initialize Express app
@@ -186,7 +186,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Input sanitization
-app.use(sanitizeMongoQuery);
+app.use(sanitizeQuery);
 app.use(sanitizeXss);
 
 // CSRF protection
@@ -276,22 +276,11 @@ app.use(sentryError());
 app.use((err, _req, res, _next) => {
   console.error('Error:', err);
 
-  // Mongoose validation error
-  if (err.name === 'ValidationError') {
-    const errors = Object.values(err.errors).map(e => e.message);
+  // SQLite constraint error
+  if (err.message && err.message.includes('UNIQUE constraint failed')) {
     return res.status(400).json({
       success: false,
-      error: 'Validation Error',
-      details: errors,
-    });
-  }
-
-  // Mongoose duplicate key error
-  if (err.code === 11000) {
-    const field = Object.keys(err.keyPattern)[0];
-    return res.status(400).json({
-      success: false,
-      error: `${field} already exists`,
+      error: 'A record with this information already exists',
     });
   }
 
@@ -326,7 +315,7 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   try {
     // Validate critical environment variables
-    const requiredEnvVars = ['JWT_SECRET', 'MONGODB_URI'];
+    const requiredEnvVars = ['JWT_SECRET'];
     const missingVars = requiredEnvVars.filter(v => !process.env[v]);
     if (missingVars.length > 0) {
       console.error(`Missing required environment variables: ${missingVars.join(', ')}`);
@@ -338,8 +327,7 @@ const startServer = async () => {
     process.exit(1);
   }
 
-    // Connect to database
-    await connectDatabase();
+    connectDatabase();
 
     // Create HTTP server
     const server = http.createServer(app);

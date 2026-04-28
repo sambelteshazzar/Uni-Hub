@@ -1,22 +1,13 @@
 /**
  * Database Seeding Script
- * Populates the database with sample data for development
+ * Populates the SQLite database with sample data for development
  */
 require('dotenv').config();
 
-const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const User = require('../models/User.model');
-const Product = require('../models/Product.model');
-const Order = require('../models/Order.model');
-const Review = require('../models/Review.model');
-const Message = require('../models/Message.model');
-const Conversation = require('../models/Conversation.model');
-const Payment = require('../models/Payment.model');
-const Delivery = require('../models/Delivery.model');
-const StudentVerification = require('../models/StudentVerification.model');
+const { connectDatabase, getDb } = require('../config/database');
+const { generateId } = require('../utils/db');
 
-// Ghana Universities
 const GHANA_UNIVERSITIES = [
   'University of Ghana (UG)',
   'Kwame Nkrumah University of Science and Technology (KNUST)',
@@ -40,7 +31,6 @@ const GHANA_UNIVERSITIES = [
   'Cape Coast Technical University (CCTU)',
 ];
 
-// Sample Users
 const SAMPLE_USERS = [
   {
     fullName: 'John Doe',
@@ -51,7 +41,7 @@ const SAMPLE_USERS = [
     level: '300',
     hall: 'Legon Hall',
     role: 'seller',
-    isVerified: true,
+    isVerified: 1,
     rating: 4.5,
   },
   {
@@ -63,7 +53,7 @@ const SAMPLE_USERS = [
     level: '200',
     hall: 'Queen Elizabeth II Hall',
     role: 'seller',
-    isVerified: true,
+    isVerified: 1,
     rating: 4.8,
   },
   {
@@ -75,7 +65,7 @@ const SAMPLE_USERS = [
     level: '400',
     hall: 'Casely Hayford Hall',
     role: 'seller',
-    isVerified: false,
+    isVerified: 0,
     rating: 3.5,
   },
   {
@@ -87,7 +77,7 @@ const SAMPLE_USERS = [
     level: '100',
     hall: 'N/A',
     role: 'buyer',
-    isVerified: true,
+    isVerified: 1,
     rating: 0,
   },
   {
@@ -99,7 +89,7 @@ const SAMPLE_USERS = [
     level: '300',
     hall: 'Sunyani Hall',
     role: 'seller',
-    isVerified: true,
+    isVerified: 1,
     rating: 4.2,
   },
   {
@@ -111,7 +101,7 @@ const SAMPLE_USERS = [
     level: '200',
     hall: 'Ho Campus Hall',
     role: 'seller',
-    isVerified: true,
+    isVerified: 1,
     rating: 4.0,
   },
   {
@@ -123,7 +113,7 @@ const SAMPLE_USERS = [
     level: '400',
     hall: 'Tarkwa Hall',
     role: 'seller',
-    isVerified: false,
+    isVerified: 0,
     rating: 3.8,
   },
   {
@@ -135,7 +125,7 @@ const SAMPLE_USERS = [
     level: '300',
     hall: 'Tamale Campus',
     role: 'buyer',
-    isVerified: true,
+    isVerified: 1,
     rating: 0,
   },
   {
@@ -146,12 +136,11 @@ const SAMPLE_USERS = [
     university: 'All Universities',
     level: 'postgrad',
     role: 'admin',
-    isVerified: true,
+    isVerified: 1,
     rating: 5.0,
   },
 ];
 
-// Sample Products
 const SAMPLE_PRODUCTS = [
   {
     title: 'MacBook Pro 2021 - 16 inch',
@@ -159,10 +148,7 @@ const SAMPLE_PRODUCTS = [
     price: 8500,
     category: 'electronics',
     condition: 'excellent',
-    images: [
-      'https://images.unsplash.com/photo-1517336714731-489689fd1ca4?w=800',
-      'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1517336714731-489689fd1ca4?w=800', 'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=800'],
     deliveryModes: ['bolt', 'yango', 'inperson'],
     paymentModes: ['momo', 'bank', 'cash'],
     status: 'active',
@@ -173,9 +159,7 @@ const SAMPLE_PRODUCTS = [
     price: 4200,
     category: 'electronics',
     condition: 'excellent',
-    images: [
-      'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=800'],
     deliveryModes: ['yango', 'inperson'],
     paymentModes: ['momo', 'cash'],
     status: 'active',
@@ -186,22 +170,18 @@ const SAMPLE_PRODUCTS = [
     price: 150,
     category: 'textbooks',
     condition: 'good',
-    images: [
-      'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800'],
     deliveryModes: ['inperson'],
     paymentModes: ['cash', 'momo'],
     status: 'active',
   },
   {
     title: 'Electric Kettle - 1.7L',
-    description: 'Fast boiling electric kettle. Used for 1 year but still works perfectly. Selling as I\'m moving out of hostel.',
+    description: "Fast boiling electric kettle. Used for 1 year but still works perfectly. Selling as I'm moving out of hostel.",
     price: 120,
     category: 'appliances',
     condition: 'good',
-    images: [
-      'https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=800'],
     deliveryModes: ['bolt', 'inperson'],
     paymentModes: ['cash', 'momo'],
     status: 'active',
@@ -212,9 +192,7 @@ const SAMPLE_PRODUCTS = [
     price: 80,
     category: 'hostel-items',
     condition: 'good',
-    images: [
-      'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=800'],
     deliveryModes: ['inperson'],
     paymentModes: ['cash'],
     status: 'active',
@@ -225,9 +203,7 @@ const SAMPLE_PRODUCTS = [
     price: 650,
     category: 'appliances',
     condition: 'fair',
-    images: [
-      'https://images.unsplash.com/photo-1571175443880-49e1d58b2c63?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1571175443880-49e1d58b2c63?w=800'],
     deliveryModes: ['bolt', 'yango', 'inperson'],
     paymentModes: ['momo', 'cash'],
     status: 'active',
@@ -238,9 +214,7 @@ const SAMPLE_PRODUCTS = [
     price: 1800,
     category: 'electronics',
     condition: 'excellent',
-    images: [
-      'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=800'],
     deliveryModes: ['bolt', 'yango', 'inperson'],
     paymentModes: ['momo', 'bank', 'cash'],
     status: 'active',
@@ -251,9 +225,7 @@ const SAMPLE_PRODUCTS = [
     price: 180,
     category: 'textbooks',
     condition: 'good',
-    images: [
-      'https://images.unsplash.com/photo-1587145820266-a5951ee86f6e?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1587145820266-a5951ee86f6e?w=800'],
     deliveryModes: ['inperson'],
     paymentModes: ['cash'],
     status: 'active',
@@ -264,9 +236,7 @@ const SAMPLE_PRODUCTS = [
     price: 450,
     category: 'fashion',
     condition: 'good',
-    images: [
-      'https://images.unsplash.com/photo-1549298916-b41d94d575f9?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1549298916-b41d94d575f9?w=800'],
     deliveryModes: ['bolt', 'inperson'],
     paymentModes: ['cash', 'momo'],
     status: 'active',
@@ -277,9 +247,7 @@ const SAMPLE_PRODUCTS = [
     price: 120,
     category: 'textbooks',
     condition: 'good',
-    images: [
-      'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=800'],
     deliveryModes: ['inperson'],
     paymentModes: ['cash'],
     status: 'active',
@@ -290,9 +258,7 @@ const SAMPLE_PRODUCTS = [
     price: 3200,
     category: 'electronics',
     condition: 'excellent',
-    images: [
-      'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=800'],
     deliveryModes: ['bolt', 'yango', 'inperson'],
     paymentModes: ['momo', 'bank', 'cash'],
     status: 'active',
@@ -303,9 +269,7 @@ const SAMPLE_PRODUCTS = [
     price: 90,
     category: 'hostel-items',
     condition: 'fair',
-    images: [
-      'https://images.unsplash.com/photo-1532372320572-cda25653a26d?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1532372320572-cda25653a26d?w=800'],
     deliveryModes: ['inperson'],
     paymentModes: ['cash'],
     status: 'active',
@@ -316,9 +280,7 @@ const SAMPLE_PRODUCTS = [
     price: 200,
     category: 'textbooks',
     condition: 'good',
-    images: [
-      'https://images.unsplash.com/photo-1532012197267-84d572d396d3?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1532012197267-84d572d396d3?w=800'],
     deliveryModes: ['inperson'],
     paymentModes: ['cash', 'momo'],
     status: 'active',
@@ -329,9 +291,7 @@ const SAMPLE_PRODUCTS = [
     price: 65,
     category: 'appliances',
     condition: 'new',
-    images: [
-      'https://images.unsplash.com/photo-1570222094114-d054c8c2534a?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1570222094114-d054c8c2534a?w=800'],
     deliveryModes: ['bolt', 'inperson'],
     paymentModes: ['momo', 'cash'],
     status: 'active',
@@ -342,9 +302,7 @@ const SAMPLE_PRODUCTS = [
     price: 180,
     category: 'textbooks',
     condition: 'like-new',
-    images: [
-      'https://images.unsplash.com/photo-1544716306-60d53367f5e0?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1544716306-60d53367f5e0?w=800'],
     deliveryModes: ['inperson'],
     paymentModes: ['cash', 'momo'],
     status: 'active',
@@ -355,9 +313,7 @@ const SAMPLE_PRODUCTS = [
     price: 75,
     category: 'appliances',
     condition: 'good',
-    images: [
-      'https://images.unsplash.com/photo-1585771724684-38269d663cd8?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1585771724684-38269d663cd8?w=800'],
     deliveryModes: ['inperson'],
     paymentModes: ['cash'],
     status: 'active',
@@ -368,9 +324,7 @@ const SAMPLE_PRODUCTS = [
     price: 120,
     category: 'fashion',
     condition: 'good',
-    images: [
-      'https://images.unsplash.com/photo-1595950653106-6c9ebd614d63?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1595950653106-6c9ebd614d63?w=800'],
     deliveryModes: ['bolt', 'inperson'],
     paymentModes: ['cash', 'momo'],
     status: 'active',
@@ -381,9 +335,7 @@ const SAMPLE_PRODUCTS = [
     price: 55,
     category: 'hostel-items',
     condition: 'good',
-    images: [
-      'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800'],
     deliveryModes: ['bolt', 'inperson'],
     paymentModes: ['cash', 'momo'],
     status: 'active',
@@ -394,9 +346,7 @@ const SAMPLE_PRODUCTS = [
     price: 160,
     category: 'textbooks',
     condition: 'good',
-    images: [
-      'https://images.unsplash.com/photo-1554224155-8d04cb21cd6e?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1554224155-8d04cb21cd6e?w=800'],
     deliveryModes: ['inperson'],
     paymentModes: ['cash'],
     status: 'active',
@@ -407,9 +357,7 @@ const SAMPLE_PRODUCTS = [
     price: 250,
     category: 'electronics',
     condition: 'excellent',
-    images: [
-      'https://images.unsplash.com/photo-1608043152269-423db454c56d?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1608043152269-423db454c56d?w=800'],
     deliveryModes: ['bolt', 'yango', 'inperson'],
     paymentModes: ['momo', 'cash'],
     status: 'active',
@@ -420,9 +368,7 @@ const SAMPLE_PRODUCTS = [
     price: 180,
     category: 'hostel-items',
     condition: 'new',
-    images: [
-      'https://images.unsplash.com/photo-1631048143973-a7b2875a6c90?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1631048143973-a7b2875a6c90?w=800'],
     deliveryModes: ['bolt', 'inperson'],
     paymentModes: ['momo', 'cash'],
     status: 'active',
@@ -433,9 +379,7 @@ const SAMPLE_PRODUCTS = [
     price: 140,
     category: 'textbooks',
     condition: 'good',
-    images: [
-      'https://images.unsplash.com/photo-1589829085413-56dde8ae571b?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1589829085413-56dde8ae571b?w=800'],
     deliveryModes: ['inperson'],
     paymentModes: ['cash'],
     status: 'active',
@@ -446,9 +390,7 @@ const SAMPLE_PRODUCTS = [
     price: 150,
     category: 'appliances',
     condition: 'good',
-    images: [
-      'https://images.unsplash.com/photo-1585515320310-4e8c2b0e1b1c?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1585515320310-4e8c2b0e1b1c?w=800'],
     deliveryModes: ['bolt', 'inperson'],
     paymentModes: ['momo', 'cash'],
     status: 'active',
@@ -459,9 +401,7 @@ const SAMPLE_PRODUCTS = [
     price: 45,
     category: 'electronics',
     condition: 'new',
-    images: [
-      'https://images.unsplash.com/photo-1527864550417-7fd6fc6a8c5e?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1527864550417-7fd6fc6a8c5e?w=800'],
     deliveryModes: ['inperson'],
     paymentModes: ['cash', 'momo'],
     status: 'active',
@@ -472,9 +412,7 @@ const SAMPLE_PRODUCTS = [
     price: 70,
     category: 'hostel-items',
     condition: 'good',
-    images: [
-      'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800'],
     deliveryModes: ['inperson'],
     paymentModes: ['cash'],
     status: 'active',
@@ -485,89 +423,96 @@ const SAMPLE_PRODUCTS = [
     price: 180,
     category: 'fashion',
     condition: 'like-new',
-    images: [
-      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800',
-    ],
+    images: ['https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800'],
     deliveryModes: ['bolt', 'yango', 'inperson'],
     paymentModes: ['momo', 'cash'],
     status: 'active',
   },
 ];
 
-// Seed function
 async function seedDatabase () {
   try {
-    // Connect to database
-    console.log('🔗 Connecting to MongoDB...');
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/uni-hub');
-    console.log('✅ Connected to MongoDB');
-
     if (process.env.NODE_ENV === 'production') {
       console.error('❌ Cannot seed in production environment');
       process.exit(1);
     }
 
-    // Clear existing data
+    console.log('🔗 Connecting to SQLite...');
+    connectDatabase();
+    const database = getDb();
+    console.log('✅ Connected to SQLite');
+
     console.log('🗑️ Clearing existing data...');
-    await User.deleteMany({});
-    await Product.deleteMany({});
-    await Order.deleteMany({});
-    await Review.deleteMany({});
-    await Message.deleteMany({});
-    await Conversation.deleteMany({});
-    await Payment.deleteMany({});
-    await Delivery.deleteMany({});
-    await StudentVerification.deleteMany({});
+    database.exec(`
+      DELETE FROM delivery_status_history;
+      DELETE FROM order_status_history;
+      DELETE FROM order_items;
+      DELETE FROM verification_documents;
+      DELETE FROM message_deleted_by;
+      DELETE FROM conversation_participants;
+      DELETE FROM search_history;
+      DELETE FROM activity_logs;
+      DELETE FROM wishlists;
+      DELETE FROM notifications;
+      DELETE FROM messages;
+      DELETE FROM conversations;
+      DELETE FROM deliveries;
+      DELETE FROM payments;
+      DELETE FROM reviews;
+      DELETE FROM orders;
+      DELETE FROM products;
+      DELETE FROM student_verifications;
+      DELETE FROM users;
+    `);
     console.log('✅ Data cleared');
 
-    // Create users
     console.log('👤 Creating sample users...');
     const createdUsers = [];
+    const insertUser = database.prepare(`
+      INSERT INTO users (id, fullName, email, phone, university, level, hall, password, role, isVerified, rating, isActive, isSuspended)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0)
+    `);
 
     for (const userData of SAMPLE_USERS) {
       const hashedPassword = await bcrypt.hash(userData.password, 10);
-      const user = await User.create({
-        ...userData,
-        password: hashedPassword,
-      });
-      createdUsers.push(user);
-      console.log(`   ✅ Created: ${user.fullName} (${user.role})`);
+      const id = generateId();
+      insertUser.run(id, userData.fullName, userData.email, userData.phone, userData.university, userData.level, userData.hall, hashedPassword, userData.role, userData.isVerified, userData.rating);
+      createdUsers.push({ id, ...userData });
+      console.log(`  ✅ Created: ${userData.fullName} (${userData.role})`);
     }
 
-    // Create products
     console.log('📦 Creating sample products...');
     const sellers = createdUsers.filter(u => u.role === 'seller');
+    const insertProduct = database.prepare(`
+      INSERT INTO products (id, title, description, price, currency, category, condition, images, seller, sellerName, sellerRating, university, deliveryModes, paymentModes, status)
+      VALUES (?, ?, ?, ?, 'GHS', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
 
     for (let i = 0; i < SAMPLE_PRODUCTS.length; i++) {
       const productData = SAMPLE_PRODUCTS[i];
-      const seller = sellers[i % sellers.length]; // Rotate through sellers
-
-      const product = await Product.create({
-        ...productData,
-        seller: seller._id,
-        sellerName: seller.fullName,
-        sellerRating: seller.rating,
-        university: seller.university,
-      });
-      console.log(`   ✅ Created: ${product.title} (${product.price} GHS)`);
+      const seller = sellers[i % sellers.length];
+      const id = generateId();
+      insertProduct.run(
+        id, productData.title, productData.description, productData.price,
+        productData.category, productData.condition,
+        JSON.stringify(productData.images), seller.id, seller.fullName, seller.rating, seller.university,
+        JSON.stringify(productData.deliveryModes), JSON.stringify(productData.paymentModes), productData.status,
+      );
+      console.log(`  ✅ Created: ${productData.title} (${productData.price} GHS)`);
     }
 
     console.log('\n🎉 Database seeded successfully!');
     console.log('\n📋 Test Accounts:');
-    console.log('   Admin: admin@unihub.local / Admin123!');
-    console.log('   Seller: john@student.ug.edu.gh / Student123!');
-    console.log('   Buyer: sarah@student.upsa.edu.gh / Student123!');
+    console.log('  Admin: admin@unihub.local / Admin123!');
+    console.log('  Seller: john@student.ug.edu.gh / Student123!');
+    console.log('  Buyer: sarah@student.upsa.edu.gh / Student123!');
 
   } catch (error) {
     console.error('❌ Seeding failed:', error);
     process.exit(1);
-  } finally {
-    await mongoose.connection.close();
-    console.log('\n👋 Disconnected from MongoDB');
   }
 }
 
-// Run if executed directly
 if (require.main === module) {
   seedDatabase();
 }

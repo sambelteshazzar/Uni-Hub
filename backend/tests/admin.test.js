@@ -3,7 +3,7 @@
  */
 const request = require('supertest');
 const { createTestApp } = require('./test-server');
-const User = require('../models/User.model');
+const { db } = require('../utils/db');
 
 describe('Admin API', () => {
   let app;
@@ -21,7 +21,7 @@ describe('Admin API', () => {
     const adminRes = await request(app).post('/api/auth/register').send(adminUser);
     adminToken = adminRes.body.data.token;
     const adminId = adminRes.body.data.user._id || adminRes.body.data.user.id;
-    await User.findByIdAndUpdate(adminId, { role: 'admin' });
+    db('users').updateById(adminId, { role: 'admin' });
 
     const buyerUser = global.testUtils.generateTestUser();
     buyerUser.email = `buyer_${Date.now()}@example.com`;

@@ -6,15 +6,10 @@
  */
 
 const jwt = require('jsonwebtoken');
-const Message = require('../models/Message.model');
-const Conversation = require('../models/Conversation.model');
+const { db, mapUserRow, mapProductRow, fromBool, toBool } = require('../utils/db');
 
-// Store online users — supports multiple tabs per user
 const onlineUsers = new Map();
 
-/**
- * Add a socket ID for a user (supports multiple tabs)
- */
 function addUserSocket (userId, socketId) {
   if (!onlineUsers.has(userId)) {
     onlineUsers.set(userId, new Set());
@@ -22,9 +17,6 @@ function addUserSocket (userId, socketId) {
   onlineUsers.get(userId).add(socketId);
 }
 
-/**
- * Remove a socket ID for a user
- */
 function removeUserSocket (userId, socketId) {
   const sockets = onlineUsers.get(userId);
   if (sockets) {
@@ -35,19 +27,11 @@ function removeUserSocket (userId, socketId) {
   }
 }
 
-/**
- * Get all socket IDs for a user
- */
 function getUserSockets (userId) {
   return onlineUsers.has(userId) ? [...onlineUsers.get(userId)] : [];
 }
 
-/**
- * Initialize Socket.io
- * @param {Object} io - Socket.io server instance
- */
 const initializeSocket = (io) => {
-  // Middleware for authentication
   io.use(async (socket, next) => {
     try {
       const token = socket.handshake.auth?.token || socket.handshake.query?.token;
@@ -56,10 +40,7 @@ const initializeSocket = (io) => {
         return next(new Error('Authentication error: No token provided'));
       }
 
-      // Verify JWT token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      // Attach user info to socket
       socket.userId = decoded.id;
       socket.user = decoded;
 
@@ -69,40 +50,32 @@ const initializeSocket = (io) => {
     }
   });
 
-  // Handle connections
   io.on('connection', (socket) => {
-    // eslint-disable-next-line no-console
     console.log(`User connected: ${socket.userId}`);
 
-    // Store user's socket connection (multi-tab support)
     addUserSocket(socket.userId, socket.id);
 
-    // Join user's personal room
     socket.join(`user_${socket.userId}`);
 
-    // Handle joining a conversation room
     socket.on('join_conversation', async (conversationId) => {
       try {
-        const conversation = await Conversation.findById(conversationId);
+        const conversation = db('conversations').findById(conversationId);
 
         if (!conversation) {
           socket.emit('error', { message: 'Conversation not found' });
           return;
         }
 
-        // Verify user is a participant
-        const isParticipant = conversation.participants.some(
-          p => p.toString() === socket.userId,
-        );
+        const participant = db('conversation_participants')
+          .findOne({ conversationId, userId: socket.userId });
 
-        if (!isParticipant) {
+        if (!participant) {
           socket.emit('error', { message: 'Not authorized to join this conversation' });
           return;
         }
 
         socket.join(`conversation_${conversationId}`);
 
-        // Notify other participants
         socket.to(`conversation_${conversationId}`).emit('user_typing', {
           userId: socket.userId,
           isTyping: false,
@@ -112,12 +85,10 @@ const initializeSocket = (io) => {
       }
     });
 
-    // Handle leaving a conversation room
     socket.on('leave_conversation', (conversationId) => {
       socket.leave(`conversation_${conversationId}`);
     });
 
-    // Handle new message
     socket.on('send_message', async (data) => {
       try {
         const { conversationId, content, type = 'text', imageUrl, productId } = data;
@@ -127,68 +98,73 @@ const initializeSocket = (io) => {
           return;
         }
 
-        // Find conversation
-        const conversation = await Conversation.findById(conversationId)
-          .populate('participants', '_id fullName avatar');
+        const conversation = db('conversations').findById(conversationId);
 
         if (!conversation) {
           socket.emit('error', { message: 'Conversation not found' });
           return;
         }
 
-        // Verify user is a participant
-        const receiver = conversation.participants.find(
-          p => p._id.toString() !== socket.userId,
-        );
+        const participants = db('conversation_participants')
+          .find({ conversationId });
 
-        if (!receiver) {
+        const receiverParticipant = participants.find(p => p.userId !== socket.userId);
+
+        if (!receiverParticipant) {
           socket.emit('error', { message: 'Invalid conversation' });
           return;
         }
 
-        // Create message in database
-        const message = await Message.create({
+        const receiverId = receiverParticipant.userId;
+
+        const message = db('messages').create({
           conversationId,
           sender: socket.userId,
-          receiver: receiver._id,
+          receiver: receiverId,
           content,
           type,
           imageUrl: type === 'image' ? imageUrl : undefined,
-          product: productId,
+          product: productId || null,
         });
 
-        // Update conversation
-        conversation.lastMessage = message._id;
-        conversation.lastActivity = new Date();
+        db('conversations').updateById(conversationId, {
+          lastMessage: message.id,
+          lastActivity: new Date().toISOString(),
+        });
 
-        // Increment unread count for receiver
-        const currentUnread = conversation.unreadCount.get(receiver._id.toString()) || 0;
-        conversation.unreadCount.set(receiver._id.toString(), currentUnread + 1);
-        await conversation.save();
+        db('conversation_participants').updateMany(
+          { conversationId, userId: receiverId },
+          { unreadCount: (receiverParticipant.unreadCount || 0) + 1 },
+        );
 
-        // Populate message for broadcasting
-        const populatedMessage = await Message.findById(message._id)
-          .populate('sender', 'fullName avatar university')
-          .populate('receiver', 'fullName avatar university')
-          .populate('product', 'title price images');
+        const senderUser = db('users').findById(socket.userId);
+        const receiverUser = db('users').findById(receiverId);
 
-        // Broadcast to conversation room
+        const broadcastMessage = {
+          ...message,
+          sender: senderUser ? { id: senderUser.id, fullName: senderUser.fullName, avatar: senderUser.avatar, university: senderUser.university } : null,
+          receiver: receiverUser ? { id: receiverUser.id, fullName: receiverUser.fullName, avatar: receiverUser.avatar, university: receiverUser.university } : null,
+        };
+
+        if (productId) {
+          const productRow = db('products').findById(productId);
+          broadcastMessage.product = productRow ? { id: productRow.id, title: productRow.title, price: productRow.price, images: JSON.parse(productRow.images || '[]') } : null;
+        }
+
         io.to(`conversation_${conversationId}`).emit('new_message', {
-          message: populatedMessage,
+          message: broadcastMessage,
           conversationId,
         });
 
-      // Send notification to receiver if offline
-      const receiverSockets = getUserSockets(receiver._id.toString());
-      if (receiverSockets.length === 0) {
-        // Receiver is offline, could send push notification here
-      }
+        const receiverSockets = getUserSockets(receiverId);
+        if (receiverSockets.length === 0) {
+          // Receiver is offline — could send push notification here
+        }
       } catch (error) {
         socket.emit('error', { message: 'Failed to send message' });
       }
     });
 
-    // Handle typing indicator
     socket.on('typing_start', (data) => {
       const { conversationId } = data;
       socket.to(`conversation_${conversationId}`).emit('user_typing', {
@@ -205,47 +181,45 @@ const initializeSocket = (io) => {
       });
     });
 
-    // Handle message read
     socket.on('message_read', async (data) => {
       try {
         const { messageId } = data;
 
-        const message = await Message.findById(messageId);
+        const message = db('messages').findById(messageId);
         if (!message) {
           return;
         }
 
-      if (!message.isRead) {
-        await message.markAsRead();
-
-        // Notify all of sender's tabs that message was read
-        const senderSockets = getUserSockets(message.sender.toString());
-        senderSockets.forEach(socketId => {
-          io.to(socketId).emit('message_read', {
-            messageId,
-            conversationId: message.conversationId.toString(),
-            readBy: socket.userId,
+        if (!fromBool(message.isRead)) {
+          db('messages').updateById(messageId, {
+            isRead: toBool(true),
+            readAt: new Date().toISOString(),
           });
-        });
-      }
+
+          const senderSockets = getUserSockets(message.sender);
+          senderSockets.forEach(socketId => {
+            io.to(socketId).emit('message_read', {
+              messageId,
+              conversationId: message.conversationId,
+              readBy: socket.userId,
+            });
+          });
+        }
       } catch (error) {
         // Silently fail for read receipts
       }
     });
 
-  // Handle disconnect
-  socket.on('disconnect', () => {
-    removeUserSocket(socket.userId, socket.id);
-    console.log(`User disconnected: ${socket.userId}`);
+    socket.on('disconnect', () => {
+      removeUserSocket(socket.userId, socket.id);
+      console.log(`User disconnected: ${socket.userId}`);
 
-    // Notify user's conversations they went offline (only if no tabs remain)
-    if (!onlineUsers.has(socket.userId)) {
-      io.emit('user_offline', { userId: socket.userId });
-    }
-  });
+      if (!onlineUsers.has(socket.userId)) {
+        io.emit('user_offline', { userId: socket.userId });
+      }
+    });
   });
 
-  // Export helper functions
   return {
     onlineUsers,
     io,
