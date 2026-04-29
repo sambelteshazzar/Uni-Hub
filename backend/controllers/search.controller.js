@@ -111,38 +111,47 @@ async function getSuggestions (req, res) {
     const { q } = req.query;
 
     if (!q || q.length < 2) {
-      return res.json({ success: true, data: [] });
+    return res.json({ success: true, data: [] });
     }
 
     const products = db('products').find(
-      { status: 'active', title: { $regex: escapeRegex(q) } },
-      { limit: 10 },
+    { status: 'active', title: { $regex: escapeRegex(q) } },
+    { limit: 10, sort: { views: -1 } },
     );
 
+    const suggestions = [];
     const titleSet = new Set();
     products.forEach(p => {
-      titleSet.add(p.title);
-      const words = p.title.split(/\s+/);
-      words.forEach(word => {
-        if (word.toLowerCase().startsWith(q.toLowerCase())) {
-          titleSet.add(word);
-        }
-      });
+    const images = parseJson(p.images) || [];
+    if (!titleSet.has(p.title.toLowerCase())) {
+    titleSet.add(p.title.toLowerCase());
+    suggestions.push({
+    title: p.title,
+    price: p.price,
+    image: images[0] || null,
+    category: p.category,
     });
-
-    const suggestions = Array.from(titleSet).slice(0, 5);
+    }
+    const words = p.title.split(/\s+/);
+    words.forEach(word => {
+    if (word.toLowerCase().startsWith(q.toLowerCase()) && word.length > 2 && !titleSet.has(word.toLowerCase())) {
+    titleSet.add(word.toLowerCase());
+    suggestions.push({ title: word, price: null, image: null, category: null });
+    }
+    });
+    });
 
     res.json({
-      success: true,
-      data: suggestions,
+    success: true,
+    data: suggestions.slice(0, 8),
     });
-  } catch (error) {
+    } catch (error) {
     res.status(500).json({
-      success: false,
-      error: 'Failed to get suggestions',
+    success: false,
+    error: 'Failed to get suggestions',
     });
-  }
-}
+    }
+    }
 
 async function getTrending (req, res) {
   try {

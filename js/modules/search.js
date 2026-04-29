@@ -7,10 +7,127 @@ class SearchManager {
   constructor () {
     this.searchHistory = [];
     this.recentSearches = [];
-    // Only load if StorageManager is available
+    this.autocompleteTimeout = null;
+    this.autocompleteVisible = false;
     if (typeof StorageManager !== 'undefined' && typeof StorageManager.get === 'function') {
       this.loadHistory();
     }
+  }
+
+  handleAutocomplete (query) {
+    clearTimeout(this.autocompleteTimeout);
+    if (!query || query.length < 2) {
+      this.hideAutocomplete();
+      return;
+    }
+    this.autocompleteTimeout = setTimeout(() => {
+      this.fetchAndShowSuggestions(query);
+    }, 250);
+  }
+
+  async fetchAndShowSuggestions (query) {
+    try {
+      const suggestions = await this.getSuggestions(query);
+      const historyMatches = this.searchHistory
+        .filter(h => h.toLowerCase().includes(query.toLowerCase()))
+        .slice(0, 3)
+        .map(h => ({ type: 'history', text: h }));
+
+      const suggestionItems = suggestions.map(s => ({
+        type: typeof s === 'object' && s.title ? 'product' : 'suggestion',
+        text: typeof s === 'object' ? s.title : s,
+        image: typeof s === 'object' ? s.image : null,
+        price: typeof s === 'object' ? s.price : null,
+      }));
+
+      const allItems = [...historyMatches, ...suggestionItems];
+      this.renderAutocomplete(allItems, query);
+    } catch (error) {
+      // Autocomplete failure is non-critical
+    }
+  }
+
+  renderAutocomplete (items, query) {
+    const container = document.getElementById('search-autocomplete');
+    if (!container) return;
+
+    if (items.length === 0) {
+      this.hideAutocomplete();
+      return;
+    }
+
+    const highlighted = (text, q) => {
+      const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+      return text.replace(regex, '<strong>$1</strong>');
+    };
+
+    let html = '';
+    items.forEach(item => {
+      const icon = item.type === 'history'
+        ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+        : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>';
+
+      html += `<div class="autocomplete-item" data-type="${item.type}" data-value="${item.text}" onmousedown="if(typeof searchManager!=='undefined')searchManager.selectSuggestion('${item.text.replace(/'/g, "\\'")}')">`;
+      html += `<span class="autocomplete-icon">${icon}</span>`;
+      if (item.image) {
+        html += `<img class="autocomplete-thumb" src="${item.image}" alt="" />`;
+      }
+      html += `<span class="autocomplete-text">${highlighted(item.text, query)}</span>`;
+      if (item.price) {
+        html += `<span class="autocomplete-price">GHS ${item.price}</span>`;
+      }
+      if (item.type === 'history') {
+        html += `<button class="autocomplete-remove" onmousedown="event.stopPropagation(); if(typeof searchManager!=='undefined')searchManager.removeSuggestion('${item.text.replace(/'/g, "\\'")}')">&times;</button>`;
+      }
+      html += '</div>';
+    });
+
+    container.innerHTML = html;
+    container.style.display = 'block';
+    this.autocompleteVisible = true;
+  }
+
+  showAutocomplete () {
+    const input = document.getElementById('navbar-search-input');
+    if (input && input.value && input.value.length >= 2 && this.autocompleteVisible) {
+      const container = document.getElementById('search-autocomplete');
+      if (container && container.innerHTML) {
+        container.style.display = 'block';
+      }
+    } else if (input && input.value.length < 2) {
+      const container = document.getElementById('search-autocomplete');
+      if (container && this.searchHistory.length > 0) {
+        const recentItems = this.searchHistory.slice(0, 5).map(h => ({
+          type: 'history',
+          text: h,
+        }));
+        this.renderAutocomplete(recentItems, '');
+      }
+    }
+  }
+
+  hideAutocomplete () {
+    const container = document.getElementById('search-autocomplete');
+    if (container) {
+      container.style.display = 'none';
+    }
+    this.autocompleteVisible = false;
+  }
+
+  selectSuggestion (text) {
+    const input = document.getElementById('navbar-search-input');
+    if (input) {
+      input.value = text;
+    }
+    this.hideAutocomplete();
+    if (typeof Pages !== 'undefined') {
+      Pages.handleSearch();
+    }
+  }
+
+  removeSuggestion (text) {
+    this.removeFromHistory(text);
+    this.handleAutocomplete(document.getElementById('navbar-search-input')?.value || '');
   }
 
   /**

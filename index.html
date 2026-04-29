@@ -100,11 +100,12 @@ content="Uni-Hub - Buy and sell items within your university community"
         <a href="#/faq" class="navbar-link">FAQ</a>
       </div>
 
-<!-- Search Bar (always visible) -->
-<div class="navbar-search-always">
-    <input type="text" class="navbar-search-input" placeholder="Search for textbooks, electronics, dorm items..." id="navbar-search-input" name="search" aria-label="Search products" onkeypress="if(event.key==='Enter'&&typeof Pages!=='undefined')Pages.handleSearch()" />
-    <button class="navbar-search-btn-submit" onclick="typeof Pages!=='undefined'&&Pages.handleSearch()" aria-label="Search">Search</button>
-</div>
+  <!-- Search Bar (always visible) -->
+  <div class="navbar-search-always" style="position:relative;">
+  <input type="text" class="navbar-search-input" placeholder="Search for textbooks, electronics, dorm items..." id="navbar-search-input" name="search" aria-label="Search products" autocomplete="off" onkeypress="if(event.key==='Enter'&&typeof Pages!=='undefined')Pages.handleSearch()" oninput="if(typeof searchManager!=='undefined')searchManager.handleAutocomplete(this.value)" onfocus="if(typeof searchManager!=='undefined')searchManager.showAutocomplete()" onblur="setTimeout(function(){if(typeof searchManager!=='undefined')searchManager.hideAutocomplete()},200)" />
+  <button class="navbar-search-btn-submit" onclick="typeof Pages!=='undefined'&&Pages.handleSearch()" aria-label="Search">Search</button>
+  <div id="search-autocomplete" class="search-autocomplete" style="display:none;"></div>
+  </div>
 
 <!-- Right Side Actions -->
 <div class="navbar-actions">
