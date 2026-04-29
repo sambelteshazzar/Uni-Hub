@@ -190,6 +190,26 @@ class AuthManager {
   }
 
   /**
+   * Fetch CSRF token from backend
+   */
+  async _fetchCsrfToken () {
+    try {
+      const baseURL = (typeof window !== 'undefined' && window.API_URL) || 'http://localhost:5000/api';
+      const response = await fetch(`${baseURL.replace('/api', '')}/api/auth/csrf-token`, {
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.success && data.csrfToken) {
+        this._csrfToken = data.csrfToken;
+        return data.csrfToken;
+      }
+    } catch (error) {
+      console.warn('Failed to fetch CSRF token');
+    }
+    return null;
+  }
+
+  /**
    * Register new user - Backend only (with offline fallback)
    */
   async register (userData) {
@@ -202,9 +222,14 @@ class AuthManager {
         return { success: false, error: 'Password must be at least 6 characters' };
       }
 
+      const csrfToken = await this._fetchCsrfToken();
       const response = await fetch('http://localhost:5000/api/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+        },
+        credentials: 'include',
         body: JSON.stringify(userData),
       });
 
@@ -258,9 +283,14 @@ class AuthManager {
         return { success: false, error: 'Please enter email and password' };
       }
 
+      const csrfToken = await this._fetchCsrfToken();
       const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+        },
+        credentials: 'include',
         body: JSON.stringify({ email, password }),
       });
 
@@ -283,12 +313,16 @@ class AuthManager {
    */
   logout () {
     if (this.token && !this.isOfflineMode) {
-      fetch('http://localhost:5000/api/auth/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.token}`,
-        },
+      this._fetchCsrfToken().then(csrfToken => {
+        fetch('http://localhost:5000/api/auth/logout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${this.token}`,
+            ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+          },
+          credentials: 'include',
+        }).catch(() => {});
       }).catch(() => {});
     }
 
@@ -345,12 +379,15 @@ class AuthManager {
       delete updates.passwordHash;
       delete updates._id;
 
+      const csrfToken = await this._fetchCsrfToken();
       const response = await fetch('http://localhost:5000/api/auth/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${this.token}`,
+          ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
         },
+        credentials: 'include',
         body: JSON.stringify(updates),
       });
 
@@ -381,12 +418,15 @@ class AuthManager {
         return { success: true, message: 'Password change saved (offline mode)' };
       }
 
+      const csrfToken = await this._fetchCsrfToken();
       const response = await fetch('http://localhost:5000/api/auth/change-password', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${this.token}`,
+          ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
         },
+        credentials: 'include',
         body: JSON.stringify({ currentPassword, newPassword }),
       });
 
