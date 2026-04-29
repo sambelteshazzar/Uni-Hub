@@ -1,5 +1,6 @@
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { db, generateId, parseJson, mapOrderRow, toBool, fromBool } = require('../utils/db');
+const { notifyOrderCreated, notifyOrderStatusChanged, notifyPaymentCompleted, notifyOrderCancelled } = require('../utils/notificationHelper');
 
 function getPublicOrder (order) {
   if (!order) return null;
@@ -124,11 +125,14 @@ exports.createOrder = async (req, res) => {
       totalOrders: (req.user.totalOrders || 0) + 1,
     });
 
-    const createdOrder = db('orders').findById(order.id);
-    const orderItems = db('order_items').find({ orderId: order.id });
-    createdOrder._items = orderItems;
+  const createdOrder = db('orders').findById(order.id);
+  const orderItems = db('order_items').find({ orderId: order.id });
+  createdOrder._items = orderItems;
 
-    res.status(201).json({
+  const io = req.app.get('io');
+  notifyOrderCreated(io, createdOrder, orderItems, req.user);
+
+  res.status(201).json({
       success: true,
       message: 'Order created successfully',
       data: getPublicOrder(createdOrder),
@@ -237,20 +241,23 @@ exports.updateOrderStatus = async (req, res) => {
       status,
     });
 
-    db('order_status_history').create({
-      orderId: order.id,
-      status,
-      note: note || '',
-      updatedBy: req.user.id,
-    });
+  db('order_status_history').create({
+  orderId: order.id,
+  status,
+  note: note || '',
+  updatedBy: req.user.id,
+  });
 
-    const updatedOrder = db('orders').findById(order.id);
-    const items = db('order_items').find({ orderId: order.id });
-    updatedOrder._items = items;
+  const updatedOrder = db('orders').findById(order.id);
+  const items = db('order_items').find({ orderId: order.id });
+  updatedOrder._items = items;
 
-    res.json({
-      success: true,
-      message: 'Order status updated',
+  const io = req.app.get('io');
+  notifyOrderStatusChanged(io, updatedOrder, status, req.user);
+
+  res.json({
+  success: true,
+  message: 'Order status updated',
       data: getPublicOrder(updatedOrder),
     });
   } catch (error) {
