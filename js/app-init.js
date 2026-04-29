@@ -175,24 +175,28 @@ class ModuleLoader {
    * Initialize the application after modules are loaded
    */
   async initializeApp() {
-    // Initialize app
-    if (typeof app !== 'undefined' && app.init) {
-      await app.init();
+    // Initialize app - use window.* because ES6 module scope doesn't have bare globals
+    if (window.app && window.app.init) {
+      await window.app.init();
       console.log('✓ App initialized');
     }
 
     // Register routes
-if (typeof Pages !== 'undefined' && Pages.registerRoutes) {
-Pages.registerRoutes();
-Pages.initDarkMode();
-Pages.updateWishlistBadge();
-console.log('✓ Routes registered');
-}
+    if (window.Pages && window.Pages.registerRoutes) {
+      window.Pages.registerRoutes();
+      window.Pages.initDarkMode();
+      window.Pages.updateWishlistBadge();
+      console.log('✓ Routes registered');
+    } else {
+      console.error('✗ Pages class not found on window - routes NOT registered');
+    }
 
     // Start router
-    if (typeof router !== 'undefined' && router.start) {
-      router.start();
+    if (window.router && window.router.start) {
+      window.router.start();
       console.log('✓ Router started');
+    } else {
+      console.error('✗ Router not found on window - router NOT started');
     }
 
     // Reinitialize managers that need DOM ready
@@ -235,8 +239,8 @@ console.log('✓ Routes registered');
     const hash = window.location.hash;
 
     if (!hash || hash === '#/' || hash === '#') {
-      if (typeof Pages !== 'undefined' && Pages.renderLanding) {
-        await Pages.renderLanding();
+      if (window.Pages && window.Pages.renderLanding) {
+        await window.Pages.renderLanding();
         console.log('✓ Landing page rendered');
       }
     }
