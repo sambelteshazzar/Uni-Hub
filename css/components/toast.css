@@ -42,9 +42,15 @@
   border-left-color: var(--primary);
 }
 
-.toast-order,
-.toast-payment,
-.toast-delivery {
+.toast-order, .toast-delivery {
+  border-left-color: var(--warning);
+}
+
+.toast-payment {
+  border-left-color: var(--success);
+}
+
+.toast-system, .toast-message {
   border-left-color: var(--primary);
 }
 

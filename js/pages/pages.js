@@ -2140,13 +2140,17 @@ return labels[condition] || (condition ? condition.charAt(0).toUpperCase() + con
 
     const isAdmin = (user) => user && user.role === 'admin';
 
-    if (result.success) {
-      this.closeAuthOverlay(true);
-      this.updateNavbar();
-      this.updateCartBadge();
-      this.updateWishlistBadge();
+  if (result.success) {
+  this.closeAuthOverlay(true);
+  this.updateNavbar();
+  this.updateCartBadge();
+  this.updateWishlistBadge();
 
-      const user = result.user || authManager.getCurrentUser();
+  if (typeof notificationManager !== 'undefined' && notificationManager.requestBrowserPermission) {
+  notificationManager.requestBrowserPermission();
+  }
+
+  const user = result.user || authManager.getCurrentUser();
       if (isAdmin(user)) {
         try {
           await adminAuthManager.login(email, password);

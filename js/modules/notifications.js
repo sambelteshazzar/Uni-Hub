@@ -8,9 +8,168 @@ class NotificationManager {
     this.NOTIFICATION_STORAGE_KEY = `${STORAGE_KEY_PREFIX}notifications`;
     this.notifications = [];
     this.listeners = [];
-    // Only load if StorageManager is available
+    this.socketListenersSetup = false;
+    this.lastSyncAt = null;
     if (typeof StorageManager !== 'undefined' && typeof StorageManager.get === 'function') {
       this.load();
+    }
+    this.setupSocketListeners();
+    this.startPeriodicSync();
+  }
+
+  setupSocketListeners () {
+    if (this.socketListenersSetup) return;
+
+    const trySetup = () => {
+      if (typeof messageManager !== 'undefined' && messageManager && messageManager.socket) {
+        const socket = messageManager.socket;
+
+        socket.on('order_status_changed', data => {
+          const statusLabels = {
+            confirmed: 'confirmed',
+            'in-transit': 'is in transit',
+            delivered: 'has been delivered',
+            cancelled: 'has been cancelled',
+            pending: 'is pending',
+            placed: 'has been placed',
+          };
+          const statusText = statusLabels[data.status] || data.status;
+
+          let title, message, type;
+          if (data.type === 'seller_new_order') {
+            title = 'New Order!';
+            message = `You have a new order #${data.orderNumber}.`;
+            type = 'order';
+          } else if (data.type === 'seller_order_cancelled') {
+            title = 'Order Cancelled';
+            message = `Order #${data.orderNumber} has been cancelled by the buyer.`;
+            type = 'order';
+          } else if (data.type === 'order_cancelled') {
+            title = 'Order Cancelled';
+            message = `Your order #${data.orderNumber} has been cancelled.`;
+            type = 'order';
+          } else {
+            title = 'Order Update';
+            message = `Your order #${data.orderNumber} ${statusText}.`;
+            type = 'order';
+          }
+
+          this.create({ type, title, message });
+          this.updateNavBadge();
+          if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification(title, { body: message, icon: '/favicon.ico' });
+          }
+        });
+
+        socket.on('payment_status_changed', data => {
+          let title, message;
+          if (data.type === 'payment_completed') {
+            title = 'Payment Completed';
+            message = `Payment for order #${data.orderNumber} has been completed.`;
+          } else if (data.type === 'payment_verified') {
+            title = 'Payment Verified';
+            message = `Your payment for order #${data.orderNumber} has been verified.`;
+          } else {
+            title = 'Payment Update';
+            message = `Payment status for order #${data.orderNumber} updated.`;
+          }
+
+          this.create({ type: 'payment', title, message });
+          this.updateNavBadge();
+          if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification(title, { body: message, icon: '/favicon.ico' });
+          }
+        });
+
+        socket.on('delivery_status_changed', data => {
+          const statusLabels = {
+            pending: 'is being prepared',
+            processing: 'is being processed',
+            'picked-up': 'has been picked up',
+            'in-transit': 'is in transit',
+            delivered: 'has been delivered',
+            cancelled: 'has been cancelled',
+            failed: 'delivery failed',
+          };
+          const statusText = statusLabels[data.status] || data.status;
+          const title = 'Delivery Update';
+          const message = `Your delivery #${data.deliveryNumber} ${statusText}.`;
+
+          this.create({ type: 'delivery', title, message });
+          this.updateNavBadge();
+          if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification(title, { body: message, icon: '/favicon.ico' });
+          }
+        });
+
+        this.socketListenersSetup = true;
+      }
+    };
+
+    trySetup();
+
+    if (!this.socketListenersSetup) {
+      let attempts = 0;
+      const interval = setInterval(() => {
+        trySetup();
+        attempts++;
+        if (this.socketListenersSetup || attempts >= 20) {
+          clearInterval(interval);
+        }
+      }, 3000);
+    }
+  }
+
+  async syncFromBackend () {
+    if (typeof api === 'undefined' || !api.notifications) return;
+
+    try {
+      const response = await api.notifications.getAll({ read: 'false' });
+      if (response.success && response.data) {
+        const backendNotifications = response.data;
+        const existingIds = new Set(this.notifications.map(n => n.backendId));
+        let newCount = 0;
+
+        for (const bn of backendNotifications) {
+          if (!existingIds.has(bn.id)) {
+            this.notifications.unshift({
+              id: this.generateId(),
+              backendId: bn.id,
+              type: bn.type || 'info',
+              title: bn.title,
+              message: bn.message,
+              icon: bn.icon || this.getDefaultIcon(bn.type),
+              read: bn.read || false,
+              createdAt: bn.createdAt || new Date().toISOString(),
+              expiresAt: bn.expiresAt || null,
+            });
+            newCount++;
+          }
+        }
+
+        if (newCount > 0) {
+          this.save();
+          this.notifyListeners();
+          this.updateNavBadge();
+        }
+
+        this.lastSyncAt = new Date().toISOString();
+      }
+    } catch (error) {
+      // Sync failure is non-critical
+    }
+  }
+
+  startPeriodicSync () {
+    this.syncFromBackend();
+    setInterval(() => {
+      this.syncFromBackend();
+    }, 60000);
+  }
+
+  requestBrowserPermission () {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
     }
   }
 
@@ -128,6 +287,18 @@ class NotificationManager {
   }
 
   /**
+   * Update notification badge in navigation
+   */
+  updateNavBadge () {
+    const unreadCount = this.getUnreadCount();
+    const badge = document.querySelector('.notification-badge, .notif-badge, [data-notif-badge]');
+    if (badge) {
+      badge.textContent = unreadCount > 0 ? (unreadCount > 99 ? '99+' : unreadCount) : '';
+      badge.style.display = unreadCount > 0 ? '' : 'none';
+    }
+  }
+
+  /**
    * Generate unique ID
    * @returns {string}
    */
@@ -197,6 +368,11 @@ class NotificationManager {
     this.notifications[index].read = true;
     this.save();
     this.notifyListeners();
+    this.updateNavBadge();
+
+    if (this.notifications[index].backendId && typeof api !== 'undefined' && api.notifications) {
+      api.notifications.markAsRead(this.notifications[index].backendId).catch(() => {});
+    }
 
     return {
       success: true,
@@ -214,6 +390,11 @@ class NotificationManager {
     });
     this.save();
     this.notifyListeners();
+    this.updateNavBadge();
+
+    if (typeof api !== 'undefined' && api.notifications) {
+      api.notifications.markAllAsRead().catch(() => {});
+    }
 
     return {
       success: true,

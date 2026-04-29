@@ -1,5 +1,6 @@
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { db, mapOrderRow, toBool, fromBool } = require('../utils/db');
+const { notifyPaymentVerified } = require('../utils/notificationHelper');
 
 exports.initializePayment = async (req, res) => {
   try {
@@ -100,9 +101,12 @@ exports.verifyPayment = async (req, res) => {
       });
     }
 
-    const updatedPayment = db('payments').findById(paymentId);
+  const updatedPayment = db('payments').findById(paymentId);
 
-    res.json({
+  const io = req.app.get('io');
+  notifyPaymentVerified(io, updatedPayment, order);
+
+  res.json({
       success: true,
       message: 'Payment verified successfully',
       data: updatedPayment,

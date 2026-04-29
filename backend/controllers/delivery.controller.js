@@ -1,5 +1,6 @@
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { db, generateId, mapDeliveryRow } = require('../utils/db');
+const { notifyDeliveryCreated, notifyDeliveryStatusChanged } = require('../utils/notificationHelper');
 
 function generateDeliveryNumber () {
   const now = new Date();
@@ -50,14 +51,17 @@ exports.createDelivery = async (req, res) => {
       status: 'pending',
     });
 
-    db('delivery_status_history').create({
-      id: generateId(),
-      deliveryId: delivery.id,
-      status: 'pending',
-      note: 'Delivery record created',
-    });
+  db('delivery_status_history').create({
+  id: generateId(),
+  deliveryId: delivery.id,
+  status: 'pending',
+  note: 'Delivery record created',
+  });
 
-    res.status(201).json({ success: true, message: 'Delivery record created', data: mapDeliveryRow(delivery) });
+  const io = req.app.get('io');
+  notifyDeliveryCreated(io, delivery);
+
+  res.status(201).json({ success: true, message: 'Delivery record created', data: mapDeliveryRow(delivery) });
   } catch (error) {
     console.error('Create delivery error:', error);
     res.status(500).json({ success: false, error: error.message || 'Failed to create delivery' });
@@ -118,8 +122,12 @@ exports.updateDeliveryStatus = async (req, res) => {
       location_longitude: location?.longitude || null,
     });
 
-    const updated = db('deliveries').findById(delivery.id);
-    res.json({ success: true, message: 'Delivery status updated', data: mapDeliveryRow(updated) });
+  const updated = db('deliveries').findById(delivery.id);
+
+  const io = req.app.get('io');
+  notifyDeliveryStatusChanged(io, updated);
+
+  res.json({ success: true, message: 'Delivery status updated', data: mapDeliveryRow(updated) });
   } catch (error) {
     console.error('Update delivery status error:', error);
     res.status(500).json({ success: false, error: error.message || 'Failed to update delivery' });

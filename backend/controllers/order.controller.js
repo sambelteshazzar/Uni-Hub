@@ -296,13 +296,16 @@ exports.completePayment = async (req, res) => {
       payment_paidAt: new Date().toISOString(),
     });
 
-    const updatedOrder = db('orders').findById(order.id);
-    const items = db('order_items').find({ orderId: order.id });
-    updatedOrder._items = items;
+  const updatedOrder = db('orders').findById(order.id);
+  const items = db('order_items').find({ orderId: order.id });
+  updatedOrder._items = items;
 
-    res.json({
-      success: true,
-      message: 'Payment completed',
+  const io = req.app.get('io');
+  notifyPaymentCompleted(io, updatedOrder);
+
+  res.json({
+  success: true,
+  message: 'Payment completed',
       data: getPublicOrder(updatedOrder),
     });
   } catch (error) {
@@ -350,12 +353,16 @@ exports.cancelOrder = async (req, res) => {
       updatedBy: req.user.id,
     });
 
-    const orderItems = db('order_items').find({ orderId: order.id });
-    for (const item of orderItems) {
-      db('products').updateById(item.productId, { status: 'active' });
-    }
+  const orderItems = db('order_items').find({ orderId: order.id });
+  for (const item of orderItems) {
+  db('products').updateById(item.productId, { status: 'active' });
+  }
 
-    res.json({
+  const io = req.app.get('io');
+  const cancelledOrder = db('orders').findById(order.id);
+  notifyOrderCancelled(io, cancelledOrder);
+
+  res.json({
       success: true,
       message: 'Order cancelled successfully',
     });

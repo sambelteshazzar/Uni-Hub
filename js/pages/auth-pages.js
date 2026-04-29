@@ -746,13 +746,18 @@ const AuthPageMethods = {
 
     const result = await authManager.login(email, password);
 
-    if (result.success) {
-      // Close the auth overlay immediately (no animation delay)
-      Pages.closeAuthOverlay(true);
-      // Update navbar to show user menu
-      Pages.updateNavbar();
-      Pages.updateCartBadge();
-      // Force redirect to browse page using multiple methods for reliability
+  if (result.success) {
+  // Close the auth overlay immediately (no animation delay)
+  Pages.closeAuthOverlay(true);
+  // Update navbar to show user menu
+  Pages.updateNavbar();
+  Pages.updateCartBadge();
+
+  if (typeof notificationManager !== 'undefined' && notificationManager.requestBrowserPermission) {
+  notificationManager.requestBrowserPermission();
+  }
+
+  // Force redirect to browse page using multiple methods for reliability
       try {
         // Method 1: Use router if available
         if (typeof router !== 'undefined' && router.navigate) {
