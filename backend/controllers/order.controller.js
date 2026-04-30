@@ -68,15 +68,16 @@ exports.createOrder = async (req, res) => {
       const images = parseJson(dbProduct.images) || [];
       subtotal += dbProduct.price * item.quantity;
       const sellerUser = db('users').findById(dbProduct.seller);
-      verifiedItems.push({
-        productId: item.productId,
-        title: dbProduct.title,
-        price: dbProduct.price,
-        quantity: item.quantity,
-        seller: dbProduct.seller,
-        sellerName: sellerUser ? sellerUser.fullName : '',
-        image: item.image || (images && images[0]) || '',
-      });
+  verifiedItems.push({
+  productId: item.productId,
+  title: dbProduct.title,
+  price: dbProduct.price,
+  quantity: item.quantity,
+  seller: dbProduct.seller,
+  sellerName: sellerUser ? sellerUser.fullName : '',
+  image: item.image || (images && images[0]) || '',
+  variant: item.variant || null,
+  });
     }
 
     const deliveryFee = delivery.mode === 'inperson' ? 0 : delivery.mode === 'yango' ? 12 : 15;

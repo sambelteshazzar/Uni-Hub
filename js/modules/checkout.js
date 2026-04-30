@@ -59,11 +59,12 @@ class CheckoutManager {
     if (this.useBackend) {
       try {
         // Map frontend payment/delivery modes to backend format
-        const orderData = {
-          items: cartManager.getItems().map(item => ({
-            productId: item.product.id,
-            quantity: item.quantity,
-          })),
+  const orderData = {
+  items: cartManager.getItems().map(item => ({
+  productId: item.product.id,
+  quantity: item.quantity,
+  variant: item.variant || null,
+  })),
           deliveryMode: checkoutData.deliveryMode,
           deliveryAddress: checkoutData.deliveryAddress,
           deliveryInstructions: checkoutData.deliveryInstructions,
@@ -102,14 +103,15 @@ class CheckoutManager {
         phone: checkoutData.phone || currentUser.phone,
         university: currentUser.university,
       },
-      items: cartManager.getItems().map(item => ({
-        productId: item.product.id,
-        title: item.product.title,
-        price: item.product.price,
-        quantity: item.quantity,
-        seller: item.product.seller,
-        image: item.product.images[0],
-      })),
+  items: cartManager.getItems().map(item => ({
+  productId: item.product.id,
+  title: item.product.title,
+  price: item.product.price + (item.variant ? item.variant.price || 0 : 0),
+  quantity: item.quantity,
+  seller: item.product.seller,
+  image: item.product.images[0],
+  variant: item.variant || null,
+  })),
       pricing: {
         subtotal: cartSummary.subtotal,
         deliveryFee: deliveryFee,

@@ -3373,7 +3373,7 @@ const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
         <div class="pd-layout">
           <!-- Image Section -->
           <div class="pd-image-section">
-            <img src="${product.images[0]}" alt="${product.title}" class="pd-main-image" />
+            <img src="${product.images[0]}" alt="${product.title}" class="pd-main-image" onerror="this.src='/assets/images/products/no-image.svg'" />
           </div>
 
           <!-- Info Section -->
@@ -3438,12 +3438,28 @@ const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
               <div class="pd-methods-label">Payment Methods</div>
               <div class="pd-methods-list">
                 ${(product.paymentModes || []).map(m => `<span class="pd-method-tag">${m.toUpperCase()}</span>`).join('')}
-              </div>
-            </div>
+  </div>
+  </div>
 
-            <!-- Action Buttons -->
-            <div class="pd-actions">
-<button class="pd-btn pd-btn-primary" onclick="cartManager.add(${JSON.stringify(product).replace(/"/g, '&quot;')}); Pages.updateCartBadge(); if(typeof toastManager!=='undefined') toastManager.success('Added to cart','Product added successfully');">
+  ${product.variants && product.variants.length > 0 ? `
+  <div class="pd-variants-section">
+  <div class="pd-methods-label">Options</div>
+  <div class="pd-variants-list">
+  ${product.variants.map((v, i) => `
+  <button class="pd-variant-btn" data-variant-index="${i}" onclick="Pages.selectVariant(this, ${i})">
+  <span class="pd-variant-label">${v.label}</span>
+  <span class="pd-variant-value">${v.value}</span>
+  ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
+  </button>
+  `).join('')}
+  </div>
+  <input type="hidden" id="selected-variant-index" value="-1" />
+  </div>
+  ` : ''}
+
+  <!-- Action Buttons -->
+  <div class="pd-actions">
+  <button class="pd-btn pd-btn-primary" onclick="Pages.addToCartWithVariant('${productId}')">
           ${Icons.cart} Add to Cart
         </button>
               <div class="pd-secondary-actions">
@@ -3473,8 +3489,27 @@ const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
       </div>
     `;
 
-    // Load reviews after DOM is rendered
-    this.loadProductReviews(productId);
+  // Load reviews after DOM is rendered
+  this.loadProductReviews(productId);
+  }
+
+  static selectVariant (btn, index) {
+  document.querySelectorAll('.pd-variant-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('selected-variant-index').value = index;
+  }
+
+  static addToCartWithVariant (productId) {
+  const product = productsManager.getById(productId);
+  if (!product) return;
+  const variantIndex = parseInt(document.getElementById('selected-variant-index')?.value);
+  let variant = null;
+  if (!isNaN(variantIndex) && variantIndex >= 0 && product.variants && product.variants[variantIndex]) {
+  variant = product.variants[variantIndex];
+  }
+  cartManager.add(product, 1, variant);
+  Pages.updateCartBadge();
+  if (typeof toastManager !== 'undefined') toastManager.success('Added to cart', 'Product added successfully');
   }
 
 /**
@@ -3662,14 +3697,24 @@ notificationManager?.info('Wishlist Cleared', 'All items removed from your wishl
 /**
 * Share Product
 */
-static shareProduct (productId) {
-const product = productsManager.getById(productId);
-const shareUrl = window.location.href.split('#')[0] + `#product/${productId}`;
-const shareText = `Check out this item on Uni-Hub: ${product.title} - GHS ${product.price?.toLocaleString() || '0'}`;
+  static shareProduct (productId) {
+  const product = productsManager.getById(productId);
+  const shareUrl = window.location.href.split('#')[0] + `#product/${productId}`;
+  const shareText = `Check out this item on Uni-Hub: ${product.title} - GHS ${product.price?.toLocaleString() || '0'}`;
 
-const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`;
-const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
-const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+  if (navigator.share) {
+  navigator.share({
+  title: product.title,
+  text: shareText,
+  url: shareUrl,
+  }).catch(() => {});
+  return;
+  }
+
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`;
+  const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+  const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
 
 const mainContent = document.getElementById('main-content');
 const overlay = document.createElement('div');
@@ -3694,6 +3739,10 @@ Share on Telegram
 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.09a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
 Share on Twitter
 </a>
+<a href="${facebookUrl}" target="_blank" rel="noopener" class="btn btn-outline" style="display:flex;align-items:center;gap:0.75rem;justify-content:center;background:#1877F2;color:white;border-color:#1877F2;">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+Share on Facebook
+</a>
 <button class="btn btn-outline" style="display:flex;align-items:center;gap:0.75rem;justify-content:center;" onclick="Pages.copyShareLink('${shareUrl}')">
 ${Icons.copy || '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>'}
 Copy Link
@@ -3703,10 +3752,120 @@ Copy Link
 </div>
 `;
 
-document.body.appendChild(overlay);
-}
+  document.body.appendChild(overlay);
+  }
 
-/**
+  static async downloadReceipt (orderId) {
+  const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
+  const currentUser = session?.user || null;
+  if (!currentUser) return;
+
+  let order = null;
+  try {
+  const orders = await checkoutManager.getAllOrders();
+  order = orders.find(o => o.id === orderId);
+  } catch (_) {}
+
+  if (!order) {
+  const localOrders = StorageManager.get(`${STORAGE_KEY_PREFIX}orders`, true) || [];
+  order = localOrders.find(o => o.id === orderId);
+  }
+
+  if (!order) {
+  notificationManager?.error('Not Found', 'Order not found for receipt');
+  return;
+  }
+
+  const itemsHtml = order.items.map(item => `
+  <tr>
+  <td style="padding:8px;border-bottom:1px solid #eee;">${item.title}${item.variant ? `<br><small style="color:#666;">${item.variant.label}: ${item.variant.value}</small>` : ''}</td>
+  <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">${item.quantity}</td>
+  <td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">GHS ${(item.price || 0).toLocaleString()}</td>
+  <td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">GHS ${((item.price || 0) * item.quantity).toLocaleString()}</td>
+  </tr>
+  `).join('');
+
+  const receiptHtml = `<!DOCTYPE html>
+  <html>
+  <head>
+  <title>Receipt - ${order.orderNumber}</title>
+  <style>
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1a1a1a;max-width:700px;margin:0 auto;padding:40px 20px;}
+  .header{text-align:center;border-bottom:2px solid #6366f1;padding-bottom:20px;margin-bottom:20px;}
+  .header h1{color:#6366f1;margin:0;font-size:1.5rem;}
+  .header p{color:#666;margin:4px 0 0;font-size:0.85rem;}
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;}
+  .info-block h4{margin:0 0 4px;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;color:#888;}
+  .info-block p{margin:0;font-size:0.9rem;font-weight:600;}
+  table{width:100%;border-collapse:collapse;margin-bottom:20px;}
+  th{background:#f8f8f8;padding:8px;text-align:left;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.5px;color:#666;border-bottom:2px solid #ddd;}
+  th:last-child,th:nth-child(3){text-align:right;}
+  th:nth-child(2){text-align:center;}
+  .totals{margin-left:auto;width:280px;}
+  .totals-row{display:flex;justify-content:space-between;padding:6px 0;font-size:0.9rem;}
+  .totals-row.grand{font-size:1.1rem;font-weight:700;border-top:2px solid #1a1a1a;padding-top:10px;margin-top:4px;}
+  .footer{text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid #eee;color:#888;font-size:0.8rem;}
+  @media print{body{padding:20px;}}
+  </style>
+  </head>
+  <body>
+  <div class="header">
+  <h1>Uni-Hub</h1>
+  <p>Student Marketplace Receipt</p>
+  </div>
+  <div class="info-grid">
+  <div class="info-block">
+  <h4>Order Number</h4>
+  <p>${order.orderNumber}</p>
+  </div>
+  <div class="info-block">
+  <h4>Date</h4>
+  <p>${Formatter.formatDate(order.createdAt)}</p>
+  </div>
+  <div class="info-block">
+  <h4>Customer</h4>
+  <p>${order.customer?.name || currentUser.fullName || 'N/A'}</p>
+  </div>
+  <div class="info-block">
+  <h4>Status</h4>
+  <p>${Formatter.capitalize((order.status || 'placed').replace('-', ' '))}</p>
+  </div>
+  </div>
+  <table>
+  <thead>
+  <tr><th>Item</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr>
+  </thead>
+  <tbody>${itemsHtml}</tbody>
+  </table>
+  <div class="totals">
+  <div class="totals-row"><span>Subtotal</span><span>GHS ${(order.pricing?.subtotal || 0).toLocaleString()}</span></div>
+  <div class="totals-row"><span>Delivery Fee</span><span>GHS ${(order.pricing?.deliveryFee || 0).toLocaleString()}</span></div>
+  <div class="totals-row grand"><span>Total</span><span>GHS ${(order.pricing?.grandTotal || 0).toLocaleString()}</span></div>
+  </div>
+  <div style="margin-top:24px;padding:16px;background:#f8f8f8;border-radius:8px;font-size:0.85rem;">
+  <strong>Delivery:</strong> ${Formatter.capitalize(order.delivery?.mode || 'N/A')}<br>
+  <strong>Address:</strong> ${order.delivery?.address || 'N/A'}<br>
+  ${order.delivery?.instructions ? `<strong>Instructions:</strong> ${order.delivery.instructions}<br>` : ''}
+  <strong>Payment:</strong> ${Formatter.capitalize(order.payment?.mode || 'N/A')}
+  </div>
+  <div class="footer">
+  <p>Thank you for shopping on Uni-Hub!</p>
+  <p>This receipt was generated on ${new Date().toLocaleDateString()}.</p>
+  </div>
+  <script>window.onload=function(){window.print();}</script>
+  </body>
+  </html>`;
+
+  const receiptWindow = window.open('', '_blank', 'width=800,height=600');
+  if (receiptWindow) {
+  receiptWindow.document.write(receiptHtml);
+  receiptWindow.document.close();
+  } else {
+  notificationManager?.error('Blocked', 'Please allow popups to download receipt');
+  }
+  }
+
+  /**
 * Copy share link to clipboard
 */
 static copyShareLink (url) {
@@ -3757,25 +3916,26 @@ prompt('Copy this link:', url);
       item => `
               <div class="cart-item" data-product-id="${item.product.id}">
                 <div class="cart-item-image">
-                  <img src="${item.product.images[0]}" alt="${item.product.title}" />
+  <img src="${item.product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${item.product.title}" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
                 </div>
                 
-                <div class="cart-item-details">
-                  <h4 class="cart-item-title">${item.product.title}</h4>
-                  <p class="cart-item-seller">Sold by ${item.product.seller.name}</p>
-                  <div class="cart-item-price">${Formatter.formatPrice(item.product.price)}</div>
-                </div>
-                
-                <div class="cart-item-quantity">
-                  <button class="quantity-btn" onclick="Pages.decrementCartQuantity('${item.product.id}')">−</button>
-                  <span class="quantity-display">${item.quantity}</span>
-                  <button class="quantity-btn" onclick="Pages.incrementCartQuantity('${item.product.id}')">+</button>
-                </div>
-                
-                <div class="cart-item-actions">
-                  <div class="cart-item-total">${Formatter.formatPrice(item.product.price * item.quantity)}</div>
-                  <button class="remove-btn" onclick="Pages.removeFromCart('${item.product.id}')">Remove</button>
-                </div>
+  <div class="cart-item-details">
+  <h4 class="cart-item-title">${item.product.title}</h4>
+  <p class="cart-item-seller">Sold by ${item.product.seller.name}</p>
+  ${item.variant ? `<span class="cart-item-variant">${item.variant.label}: ${item.variant.value}${item.variant.price > 0 ? ` (+GHS ${item.variant.price})` : ''}</span>` : ''}
+  <div class="cart-item-price">${Formatter.formatPrice(item.product.price + (item.variant ? item.variant.price || 0 : 0))}</div>
+  </div>
+
+  <div class="cart-item-quantity">
+  <button class="quantity-btn" onclick="Pages.decrementCartQuantity('${item.product.id}')">−</button>
+  <span class="quantity-display">${item.quantity}</span>
+  <button class="quantity-btn" onclick="Pages.incrementCartQuantity('${item.product.id}')">+</button>
+  </div>
+
+  <div class="cart-item-actions">
+  <div class="cart-item-total">${Formatter.formatPrice((item.product.price + (item.variant ? item.variant.price || 0 : 0)) * item.quantity)}</div>
+  <button class="remove-btn" onclick="Pages.removeFromCart('${item.product.id}')">Remove</button>
+  </div>
               </div>
             `,
     )
@@ -4019,16 +4179,17 @@ prompt('Copy this link:', url);
                 ${cartItems
     .map(
       item => `
-                  <div class="order-item">
-                    <div class="order-item-image">
-                      <img src="${item.product.images[0]}" alt="${item.product.title}" />
-                    </div>
-                    <div class="order-item-details">
-                      <div class="order-item-title">${item.product.title}</div>
-                      <div class="order-item-quantity">Qty: ${item.quantity}</div>
-                      <div class="order-item-price">${Formatter.formatPrice(item.product.price * item.quantity)}</div>
-                    </div>
-                  </div>
+  <div class="order-item">
+  <div class="order-item-image">
+  <img src="${item.product.images[0]}" alt="${item.product.title}" />
+  </div>
+  <div class="order-item-details">
+  <div class="order-item-title">${item.product.title}</div>
+  ${item.variant ? `<div class="order-item-quantity" style="color:var(--primary);">${item.variant.label}: ${item.variant.value}${item.variant.price > 0 ? ` (+GHS ${item.variant.price})` : ''}</div>` : ''}
+  <div class="order-item-quantity">Qty: ${item.quantity}</div>
+  <div class="order-item-price">${Formatter.formatPrice((item.product.price + (item.variant ? item.variant.price || 0 : 0)) * item.quantity)}</div>
+  </div>
+  </div>
                 `,
     )
     .join('')}
@@ -4257,14 +4418,17 @@ prompt('Copy this link:', url);
           </div>
         </div>
 
-        <div class="confirmation-actions">
-          <button class="btn btn-primary" onclick="Pages.renderBrowse()">
-            Continue Shopping
-          </button>
-          <button class="btn btn-outline" onclick="Pages.renderOrders()">
-            View My Orders
-          </button>
-        </div>
+  <div class="confirmation-actions">
+  <button class="btn btn-primary" onclick="Pages.renderBrowse()">
+  Continue Shopping
+  </button>
+  <button class="btn btn-outline" onclick="Pages.renderOrders()">
+  View My Orders
+  </button>
+  <button class="btn btn-outline" onclick="Pages.downloadReceipt('${order.id}')">
+  ${Icons.download || ''} Download Receipt
+  </button>
+  </div>
       </div>
     `;
 
@@ -4330,7 +4494,7 @@ prompt('Copy this link:', url);
     .map(
       item => `
                   <div style="display: flex; gap: 1rem; margin-bottom: 0.75rem;">
-                    <img src="${item.image}" alt="${item.title}" style="width: 60px; height: 60px; object-fit: cover; border-radius: var(--radius-md);" />
+                    <img src="${item.image || '/assets/images/products/no-image.svg'}" alt="${item.title}" style="width: 60px; height: 60px; object-fit: cover; border-radius: var(--radius-md);" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
                     <div style="flex: 1;">
                       <div style="font-weight: 500;">${item.title}</div>
                       <div style="color: var(--neutral-500); font-size: 0.875rem;">Qty: ${item.quantity}</div>
@@ -4343,12 +4507,17 @@ prompt('Copy this link:', url);
               </div>
               
 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--neutral-200);">
-<div style="font-weight: 700; font-size: 1.1rem;">
-Total: ${Formatter.formatPrice(order.pricing.grandTotal)}
-</div>
-<button class="btn btn-outline btn-sm" onclick="Pages.viewOrderDetails('${order.id}')">
-View Details
-</button>
+  <div style="font-weight: 700; font-size: 1.1rem;">
+  Total: ${Formatter.formatPrice(order.pricing.grandTotal)}
+  </div>
+  <div style="display:flex;gap:0.5rem;">
+  <button class="btn btn-outline btn-sm" onclick="Pages.viewOrderDetails('${order.id}')">
+  View Details
+  </button>
+  <button class="btn btn-ghost btn-sm" onclick="Pages.downloadReceipt('${order.id}')">
+  Receipt
+  </button>
+  </div>
 </div>
 
 ${Pages.renderOrderTimeline(order.status)}
@@ -4456,7 +4625,7 @@ ${Pages.renderOrderTimeline(order.status)}
 <h3 style="font-size:1rem;margin:0 0 1rem;">Items</h3>
 ${order.items.map(item => `
 <div style="display:flex;gap:1rem;margin-bottom:0.75rem;align-items:center;">
-<img src="${item.image}" alt="${item.title}" style="width:50px;height:50px;object-fit:cover;border-radius:var(--radius-md);" />
+  <img src="${item.image || '/assets/images/products/no-image.svg'}" alt="${item.title}" style="width:50px;height:50px;object-fit:cover;border-radius:var(--radius-md);" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
 <div style="flex:1;">
 <div style="font-weight:500;">${item.title}</div>
 <div style="color:var(--neutral-500);font-size:0.85rem;">Qty: ${item.quantity}</div>
@@ -4465,15 +4634,16 @@ ${order.items.map(item => `
 </div>
 `).join('')}
 </div>
-<div style="border-top:1px solid var(--neutral-200);padding-top:1rem;margin-top:1rem;display:flex;justify-content:space-between;align-items:center;">
-<div>
-<div style="color:var(--neutral-500);font-size:0.85rem;">Order Total</div>
-<div style="font-weight:700;font-size:1.25rem;">${Formatter.formatPrice(order.pricing.grandTotal)}</div>
-</div>
-<div style="color:var(--neutral-500);font-size:0.85rem;">
-${Formatter.formatDate(order.createdAt)}
-</div>
-</div>
+  <div style="border-top:1px solid var(--neutral-200);padding-top:1rem;margin-top:1rem;display:flex;justify-content:space-between;align-items:center;">
+  <div>
+  <div style="color:var(--neutral-500);font-size:0.85rem;">Order Total</div>
+  <div style="font-weight:700;font-size:1.25rem;">${Formatter.formatPrice(order.pricing.grandTotal)}</div>
+  </div>
+  <div style="display:flex;gap:0.5rem;align-items:center;">
+  <button class="btn btn-outline btn-sm" onclick="Pages.downloadReceipt('${order.id}')">Download Receipt</button>
+  <button class="btn btn-ghost btn-sm" onclick="document.getElementById('order-detail-overlay').remove()">Close</button>
+  </div>
+  </div>
 </div>
 `;
 
@@ -5382,11 +5552,17 @@ window.scrollTo(0, 0);
                 <option value="fair">Fair</option>
               </select>
             </div>
-            <div class="form-group">
-              <label for="price" class="required">Price (GHS)</label>
-              <input type="number" id="price" name="price" class="form-control" min="0" step="0.01" required />
-            </div>
-          </div>
+  <div class="form-group">
+  <label for="price" class="required">Price (GHS)</label>
+  <input type="number" id="price" name="price" class="form-control" min="0" step="0.01" required />
+  </div>
+  <div class="form-group">
+  <label>Product Variants <span style="font-weight: normal; color: #6b7280;">(optional)</span></label>
+  <p style="font-size: 0.8rem; color: #6b7280; margin-bottom: 0.5rem;">Add size, color, or other options if the product comes in multiple versions.</p>
+  <div id="product-variants-list"></div>
+  <button type="button" class="btn btn-outline btn-sm" onclick="Pages.addVariantRow()" style="margin-top: 8px;">+ Add Variant</button>
+  </div>
+  </div>
           <div class="form-actions">
             <button type="button" class="btn btn-outline" onclick="Pages.renderSellerDashboard()">Cancel</button>
             <button type="submit" class="btn btn-primary" id="submit-product-btn">Add Product</button>
@@ -5492,6 +5668,40 @@ window.scrollTo(0, 0);
     `).join('');
   }
 
+  static addVariantRow () {
+  const container = document.getElementById('product-variants-list');
+  if (!container) return;
+  const index = container.children.length;
+  const row = document.createElement('div');
+  row.className = 'variant-row';
+  row.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:8px;';
+  row.innerHTML = `
+  <input type="text" class="form-control variant-label" placeholder="Label (e.g. Size)" style="flex:1;min-width:80px;" />
+  <input type="text" class="form-control variant-value" placeholder="Value (e.g. Large)" style="flex:1;min-width:80px;" />
+  <input type="number" class="form-control variant-price" placeholder="Extra GHS" style="flex:0.7;min-width:60px;" min="0" step="0.01" />
+  <input type="number" class="form-control variant-stock" placeholder="Qty" style="flex:0.5;min-width:50px;" min="0" step="1" value="1" />
+  <button type="button" class="btn btn-outline btn-sm" onclick="this.closest('.variant-row').remove()" style="padding:4px 8px;">&times;</button>
+  `;
+  container.appendChild(row);
+  }
+
+  static collectVariants () {
+  const container = document.getElementById('product-variants-list');
+  if (!container) return [];
+  const rows = container.querySelectorAll('.variant-row');
+  const variants = [];
+  rows.forEach(row => {
+  const label = row.querySelector('.variant-label')?.value?.trim();
+  const value = row.querySelector('.variant-value')?.value?.trim();
+  const price = parseFloat(row.querySelector('.variant-price')?.value) || 0;
+  const stock = parseInt(row.querySelector('.variant-stock')?.value) || 1;
+  if (label && value) {
+  variants.push({ label, value, price, stock });
+  }
+  });
+  return variants;
+  }
+
   static removeProductImage (index) {
     Pages.selectedProductImages.splice(index, 1);
     Pages.renderImagePreviews();
@@ -5510,15 +5720,16 @@ window.scrollTo(0, 0);
 
     try {
       // 1. Create the product first to get an ID
-      const productData = {
-        title: form.title.value,
-        description: form.description.value,
-        category: form.category.value,
-        condition: form.condition.value,
-        price: form.price.value,
-        deliveryModes: ['bolt', 'yango', 'inperson'],
-        paymentModes: ['momo', 'telecel', 'cash'],
-      };
+  const productData = {
+  title: form.title.value,
+  description: form.description.value,
+  category: form.category.value,
+  condition: form.condition.value,
+  price: form.price.value,
+  variants: Pages.collectVariants(),
+  deliveryModes: ['bolt', 'yango', 'inperson'],
+  paymentModes: ['momo', 'telecel', 'cash'],
+  };
 
       const result = productsManager.addProduct(productData);
 
@@ -5594,7 +5805,7 @@ window.scrollTo(0, 0);
       product => `
               <div class="seller-product-card">
                 <div class="seller-product-image">
-                  <img src="${product.images[0]}" alt="${product.title}" />
+                  <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
                   <span class="seller-product-status active">Active</span>
                 </div>
                 <div class="seller-product-content">
@@ -5780,113 +5991,219 @@ window.scrollTo(0, 0);
     `;
   }
 
-  /**
-   * Render Admin Dashboard
-   */
-  static renderAdminDashboard () {
-    const adminUser = adminAuthManager.getCurrentUser();
-
-    if (!adminAuthManager.isLoggedIn()) {
-      this.renderAdminLogin();
-      return;
-    }
-
-    const mainContent = document.getElementById('main-content');
-    const stats = adminReportsManager.getDashboardOverview();
-
-    mainContent.innerHTML = `
-      <div class="admin-container">
-        <aside class="admin-sidebar">
-          <div class="admin-brand">
-            <div class="admin-brand-icon">'${Icons.settings}'</div>
-            <div class="admin-brand-name">Admin Panel</div>
-          </div>
-          <nav class="admin-nav-section">
-            <div class="admin-nav-title">Main</div>
-            <ul class="admin-menu">
-<li class="admin-menu-item">
-              <a href="#" class="admin-menu-link active">
-                <span class="admin-menu-icon">${Icons.chart}</span>
-                <span>Dashboard</span>
-              </a>
-            </li>
-              <li class="admin-menu-item">
-                <a href="#" class="admin-menu-link" onclick="Pages.renderAdminUsers()">
-                  <span class="admin-menu-icon">${Icons.users}</span>
-                  <span>Users</span>
-                </a>
-              </li>
-              <li class="admin-menu-item">
-                <a href="#" class="admin-menu-link" onclick="Pages.renderAdminProducts()">
-                  <span class="admin-menu-icon">${Icons.package}</span>
-                  <span>Products</span>
-                </a>
-              </li>
-<li class="admin-menu-item">
-              <a href="#" class="admin-menu-link" onclick="Pages.renderAdminOrders()">
-                <span class="admin-menu-icon">${Icons.clipboard}</span>
-                <span>Orders</span>
-                </a>
-</li>
-        <li class="admin-menu-item">
-          <a href="#" class="admin-menu-link" onclick="Pages.renderAdminReports()">
-            <span class="admin-menu-icon">${Icons.chart}</span>
-            <span>Reports</span>
-          </a>
-        </li>
-        <li class="admin-menu-item">
-          <a href="#" class="admin-menu-link" onclick="Pages.renderAdminActivity()">
-            <span class="admin-menu-icon">${Icons.clock || Icons.chart}</span>
-            <span>Activity</span>
-          </a>
-        </li>
-      </ul>
-      </nav>
-      </aside>
-      <main class="admin-main">
-      <div class="admin-header">
-      <h1 class="admin-title">Dashboard Overview</h1>
-            <div class="admin-actions">
-              <button class="btn btn-outline" onclick="adminAuthManager.logout(); Pages.renderLanding();">Logout</button>
-            </div>
-          </div>
-          <div class="admin-stats">
-            <div class="admin-stat-card">
-              <div class="admin-stat-header">
-                <div class="admin-stat-icon primary">${Icons.users}</div>
-              </div>
-              <div class="admin-stat-value">${stats.summary.totalUsers}</div>
-              <div class="admin-stat-label">Total Users</div>
-            </div>
-            <div class="admin-stat-card">
-              <div class="admin-stat-header">
-                <div class="admin-stat-icon success">${Icons.package}</div>
-              </div>
-              <div class="admin-stat-value">${stats.summary.totalProducts}</div>
-              <div class="admin-stat-label">Total Products</div>
-            </div>
-            <div class="admin-stat-card">
-              <div class="admin-stat-header">
-                <div class="admin-stat-icon warning">${Icons.clipboard}</div>
-              </div>
-              <div class="admin-stat-value">${stats.summary.totalOrders}</div>
-              <div class="admin-stat-label">Total Orders</div>
-            </div>
-            <div class="admin-stat-card">
-              <div class="admin-stat-header">
-                <div class="admin-stat-icon danger">${Icons.money}</div>
-              </div>
-              <div class="admin-stat-value">${Formatter.formatPrice(stats.summary.totalRevenue)}</div>
-              <div class="admin-stat-label">Total Revenue</div>
-            </div>
-          </div>
-        </main>
-      </div>
-    `;
+  static getAdminSidebar (activeItem) {
+  const adminUser = adminAuthManager.getCurrentUser();
+  const items = [
+  { key: 'dashboard', label: 'Dashboard', icon: Icons.chart, action: 'Pages.renderAdminDashboard()' },
+  { key: 'users', label: 'Users', icon: Icons.users, action: 'Pages.renderAdminUsers()' },
+  { key: 'products', label: 'Products', icon: Icons.package, action: 'Pages.renderAdminProducts()' },
+  { key: 'orders', label: 'Orders', icon: Icons.clipboard, action: 'Pages.renderAdminOrders()' },
+  { key: 'reports', label: 'Reports', icon: Icons.chart, action: 'Pages.renderAdminReports()' },
+  { key: 'activity', label: 'Activity', icon: Icons.clock || Icons.chart, action: 'Pages.renderAdminActivity()' },
+  { key: 'regions', label: 'Regions', icon: Icons.globe || Icons.chart, action: 'Pages.renderAdminRegions()' },
+  ];
+  return `
+  <button class="admin-mobile-toggle" onclick="document.querySelector('.admin-sidebar').classList.toggle('open')">&#9776;</button>
+  <aside class="admin-sidebar">
+  <div class="admin-brand">
+  <div class="admin-brand-icon">${Icons.shield || Icons.settings}</div>
+  <div class="admin-brand-name">Admin Panel</div>
+  </div>
+  <div class="admin-user-badge">
+  <div class="admin-user-avatar">${(adminUser?.fullName || 'A').charAt(0).toUpperCase()}</div>
+  <div>
+  <div class="admin-user-name">${adminUser?.fullName || 'Admin'}</div>
+  <div class="admin-user-role">Super Admin</div>
+  </div>
+  </div>
+  <nav class="admin-nav-section">
+  <div class="admin-nav-title">Main</div>
+  <ul class="admin-menu">
+  ${items.map(item => `
+  <li class="admin-menu-item">
+  <a href="#" class="admin-menu-link ${activeItem === item.key ? 'active' : ''}" onclick="${item.action}; return false;">
+  <span class="admin-menu-icon">${item.icon}</span>
+  <span>${item.label}</span>
+  </a>
+  </li>
+  `).join('')}
+  </ul>
+  </nav>
+  <div class="admin-sidebar-footer">
+  <button class="btn btn-ghost btn-sm btn-block" onclick="adminAuthManager.logout(); Pages.renderLanding();">Logout</button>
+  </div>
+  </aside>`;
   }
 
   /**
-   * Render Admin Login
+  * Render Admin Dashboard
+   */
+  static async renderAdminDashboard () {
+  const adminUser = adminAuthManager.getCurrentUser();
+
+  if (!adminAuthManager.isLoggedIn()) {
+  this.renderAdminLogin();
+  return;
+  }
+
+  const mainContent = document.getElementById('main-content');
+
+  mainContent.innerHTML = `
+  <div class="admin-container">
+  ${this.getAdminSidebar('dashboard')}
+  <main class="admin-main">
+  <div class="admin-header">
+  <div>
+  <h1 class="admin-title">Dashboard</h1>
+  <p style="margin:0;color:var(--neutral-500);font-size:0.85rem;">Welcome back, ${adminUser.fullName || 'Admin'}</p>
+  </div>
+  <div class="admin-actions">
+  <span style="color:var(--neutral-500);font-size:0.8rem;">${Formatter.formatDate(new Date().toISOString())}</span>
+  </div>
+  </div>
+
+  <div id="admin-stats-grid" class="admin-stats">
+  <div class="admin-stat-card"><div class="admin-stat-value">--</div><div class="admin-stat-label">Loading...</div></div>
+  <div class="admin-stat-card"><div class="admin-stat-value">--</div><div class="admin-stat-label">Loading...</div></div>
+  <div class="admin-stat-card"><div class="admin-stat-value">--</div><div class="admin-stat-label">Loading...</div></div>
+  <div class="admin-stat-card"><div class="admin-stat-value">--</div><div class="admin-stat-label">Loading...</div></div>
+  </div>
+
+  <div id="admin-dashboard-content"></div>
+  </main>
+  </div>
+  `;
+
+  const stats = await adminReportsManager.getDashboardOverview();
+
+  document.getElementById('admin-stats-grid').innerHTML = `
+  <div class="admin-stat-card">
+  <div class="admin-stat-header">
+  <div class="admin-stat-icon primary">${Icons.users}</div>
+  <span class="admin-stat-change positive">+${stats.today.newUsers} today</span>
+  </div>
+  <div class="admin-stat-value">${stats.summary.totalUsers}</div>
+  <div class="admin-stat-label">Total Users</div>
+  </div>
+  <div class="admin-stat-card">
+  <div class="admin-stat-header">
+  <div class="admin-stat-icon success">${Icons.package}</div>
+  ${stats.summary.pendingProducts > 0 ? `<span class="admin-stat-change warning">${stats.summary.pendingProducts} pending</span>` : ''}
+  </div>
+  <div class="admin-stat-value">${stats.summary.totalProducts}</div>
+  <div class="admin-stat-label">Total Products</div>
+  </div>
+  <div class="admin-stat-card">
+  <div class="admin-stat-header">
+  <div class="admin-stat-icon warning">${Icons.clipboard}</div>
+  ${stats.summary.activeOrders > 0 ? `<span class="admin-stat-change positive">${stats.summary.activeOrders} active</span>` : ''}
+  </div>
+  <div class="admin-stat-value">${stats.summary.totalOrders}</div>
+  <div class="admin-stat-label">Total Orders</div>
+  </div>
+  <div class="admin-stat-card">
+  <div class="admin-stat-header">
+  <div class="admin-stat-icon danger">${Icons.money}</div>
+  <span class="admin-stat-change positive">+GHS ${stats.today.revenue.toLocaleString()} today</span>
+  </div>
+  <div class="admin-stat-value">${Formatter.formatPrice(stats.summary.totalRevenue)}</div>
+  <div class="admin-stat-label">Total Revenue</div>
+  </div>
+  `;
+
+  const recentOrdersHtml = (stats.recentOrders || []).map(o => `
+  <tr>
+  <td style="font-weight:600;">#${o.orderNumber || o.id?.slice(-6)}</td>
+  <td>${o.customer?.name || 'N/A'}</td>
+  <td><span class="admin-status-badge ${o.status}">${Formatter.capitalize((o.status || 'placed').replace('-', ' '))}</span></td>
+  <td style="font-weight:600;">${Formatter.formatPrice(o.pricing?.grandTotal || 0)}</td>
+  <td style="color:var(--neutral-500);font-size:0.8rem;">${Formatter.formatTimeAgo(o.createdAt)}</td>
+  </tr>
+  `).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--neutral-400);padding:2rem;">No orders yet</td></tr>';
+
+  const recentUsersHtml = (stats.recentUsers || []).map(u => `
+  <div class="admin-user-row">
+  <div class="admin-user-avatar-sm">${(u.fullName || 'U').charAt(0).toUpperCase()}</div>
+  <div style="flex:1;">
+  <div style="font-weight:500;">${u.fullName || 'Unknown'}</div>
+  <div style="color:var(--neutral-500);font-size:0.8rem;">${u.email || ''}</div>
+  </div>
+  <span class="admin-role-badge ${u.role || 'buyer'}">${Formatter.capitalize(u.role || 'buyer')}</span>
+  </div>
+  `).join('') || '<div style="text-align:center;color:var(--neutral-400);padding:2rem;">No users yet</div>';
+
+  document.getElementById('admin-dashboard-content').innerHTML = `
+  <div class="admin-dashboard-grid">
+  <div class="admin-card admin-card-2col">
+  <div class="admin-card-header">
+  <h3>Recent Orders</h3>
+  <button class="btn btn-ghost btn-sm" onclick="Pages.renderAdminOrders()">View All</button>
+  </div>
+  <div class="admin-table-container" style="box-shadow:none;border-radius:0;">
+  <table class="admin-table">
+  <thead>
+  <tr><th>Order</th><th>Customer</th><th>Status</th><th>Amount</th><th>Date</th></tr>
+  </thead>
+  <tbody>${recentOrdersHtml}</tbody>
+  </table>
+  </div>
+  </div>
+
+  <div class="admin-card">
+  <div class="admin-card-header">
+  <h3>Recent Users</h3>
+  <button class="btn btn-ghost btn-sm" onclick="Pages.renderAdminUsers()">View All</button>
+  </div>
+  <div style="padding:var(--space-md);">
+  ${recentUsersHtml}
+  </div>
+  </div>
+
+  <div class="admin-card">
+  <div class="admin-card-header">
+  <h3>Quick Actions</h3>
+  </div>
+  <div style="padding:var(--space-md);display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+  <button class="btn btn-outline btn-sm" onclick="Pages.renderAdminProductCreate()">${Icons.plus || '+'} Add Product</button>
+  <button class="btn btn-outline btn-sm" onclick="Pages.renderAdminProducts()">${Icons.package} Products</button>
+  <button class="btn btn-outline btn-sm" onclick="Pages.renderAdminOrders()">${Icons.clipboard} Orders</button>
+  <button class="btn btn-outline btn-sm" onclick="Pages.renderAdminReports()">${Icons.chart} Reports</button>
+  </div>
+  </div>
+
+  <div class="admin-card">
+  <div class="admin-card-header">
+  <h3>Platform Health</h3>
+  </div>
+  <div style="padding:var(--space-md);">
+  <div class="admin-health-row">
+  <span>Pending Products</span>
+  <span class="admin-health-val ${stats.summary.pendingProducts > 0 ? 'warning' : 'good'}">${stats.summary.pendingProducts}</span>
+  </div>
+  <div class="admin-health-row">
+  <span>Active Orders</span>
+  <span class="admin-health-val good">${stats.summary.activeOrders}</span>
+  </div>
+  <div class="admin-health-row">
+  <span>Today Revenue</span>
+  <span class="admin-health-val good">GHS ${stats.today.revenue.toLocaleString()}</span>
+  </div>
+  <div class="admin-health-row">
+  <span>Week Revenue</span>
+  <span class="admin-health-val good">GHS ${stats.thisWeek.revenue.toLocaleString()}</span>
+  </div>
+  <div class="admin-health-row">
+  <span>Month Revenue</span>
+  <span class="admin-health-val good">GHS ${stats.thisMonth.revenue.toLocaleString()}</span>
+  </div>
+  </div>
+  </div>
+  </div>
+`;
+  }
+
+  /**
+  * Render Admin Login
    */
   static renderAdminLogin () {
     const mainContent = document.getElementById('main-content');
@@ -5932,253 +6249,202 @@ window.scrollTo(0, 0);
   /**
    * Render Admin Users Page
    */
-  static renderAdminUsers () {
-    const users = adminUsersManager.getAllUsers();
-    const mainContent = document.getElementById('main-content');
+  static async renderAdminUsers () {
+  const mainContent = document.getElementById('main-content');
 
-    mainContent.innerHTML = `
-      <div class="admin-container">
-        <aside class="admin-sidebar">
-          <div class="admin-brand">
-            <div class="admin-brand-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div>
-            <div class="admin-brand-name">Admin Panel</div>
-          </div>
-          <nav class="admin-nav-section">
-            <ul class="admin-menu">
-              <li class="admin-menu-item">
-                <a href="#" class="admin-menu-link" onclick="Pages.renderAdminDashboard()">
-                  <span class="admin-menu-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></span>
-                  <span>Dashboard</span>
-                </a>
-              </li>
-              <li class="admin-menu-item">
-                <a href="#" class="admin-menu-link active">
-                  <span class="admin-menu-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-                  <span>Users</span>
-                </a>
-              </li>
-            </ul>
-          </nav>
-        </aside>
-        <main class="admin-main">
-          <div class="admin-header">
-            <h1 class="admin-title">User Management</h1>
-          </div>
-          <div class="admin-table-container">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Email</th>
-                  <th>University</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${users
-    .map(
-      user => `
-                  <tr>
-                    <td>
-                      <div class="user-cell">
-                        <div class="user-info">
-                          <div class="user-name">${user.fullName}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>${user.email}</td>
-                    <td>${user.university}</td>
-                    <td><span class="role-badge ${user.role}">${user.role}</span></td>
-                    <td>
-                      <span class="status-badge ${user.isSuspended ? 'rejected' : 'delivered'}">
-                        ${user.isSuspended ? 'Suspended' : 'Active'}
-                      </span>
-                    </td>
-                    <td>
-                      <div class="table-actions">
-                        ${user.role === 'admin' ? '' : user.isSuspended
-    ? `<button class="btn btn-sm btn-success" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminUnbanUser('${user.id}')">Unban</button>`
-    : `<button class="btn btn-sm btn-danger" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminBanUser('${user.id}')">Ban</button>`
-}
-                      </div>
-                    </td>
-                  </tr>
-                `,
-    )
-    .join('')}
-              </tbody>
-            </table>
-          </div>
-        </main>
-      </div>
-    `;
+  mainContent.innerHTML = `
+  <div class="admin-container">
+  ${this.getAdminSidebar('users')}
+  <main class="admin-main">
+  <div class="admin-header">
+  <h1 class="admin-title">User Management</h1>
+  </div>
+  <div class="admin-card">
+  <div class="admin-card-header"><h3>Loading users...</h3></div>
+  <div style="padding:2rem;text-align:center;color:#9ca3af;">Loading...</div>
+  </div>
+  </main>
+  </div>`;
+
+  await adminUsersManager.loadUsers();
+  const users = adminUsersManager.getAllUsers();
+
+  const tableBody = document.querySelector('.admin-card');
+  if (tableBody) {
+  tableBody.outerHTML = `
+  <div class="admin-table-container">
+  <table class="admin-table">
+  <thead>
+  <tr>
+  <th>User</th>
+  <th>Email</th>
+  <th>University</th>
+  <th>Role</th>
+  <th>Status</th>
+  <th>Actions</th>
+  </tr>
+  </thead>
+  <tbody>
+  ${users.map(user => `
+  <tr>
+  <td>
+  <div class="user-cell">
+  <div class="admin-user-avatar-sm">${(user.fullName || 'U').charAt(0).toUpperCase()}</div>
+  <div class="user-info">
+  <div class="user-name">${user.fullName}</div>
+  </div>
+  </div>
+  </td>
+  <td>${user.email}</td>
+  <td>${user.university || '-'}</td>
+  <td><span class="admin-role-badge ${user.role}">${user.role}</span></td>
+  <td>
+  <span class="admin-status-badge ${user.isSuspended ? 'cancelled' : 'delivered'}">
+  ${user.isSuspended ? 'Suspended' : 'Active'}
+  </span>
+  </td>
+  <td>
+  <div class="table-actions">
+  ${user.role === 'admin' ? '' : user.isSuspended
+  ? `<button class="btn btn-sm btn-success" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminUnbanUser('${user.id}')">Unban</button>`
+  : `<button class="btn btn-sm btn-danger" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminBanUser('${user.id}')">Ban</button>`
+  }
+  </div>
+  </td>
+  </tr>
+  `).join('')}
+  </tbody>
+  </table>
+  </div>`;
+  }
   }
 
   /**
    * Render Admin Products Page
    */
   static renderAdminProducts () {
-    const products = adminProductsManager.getAllProducts();
-    const mainContent = document.getElementById('main-content');
+  const products = adminProductsManager.getAllProducts();
+  const mainContent = document.getElementById('main-content');
 
-    mainContent.innerHTML = `
-      <div class="admin-container">
-        <aside class="admin-sidebar">
-          <div class="admin-brand">
-            <div class="admin-brand-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div>
-            <div class="admin-brand-name">Admin Panel</div>
-          </div>
-          <nav class="admin-nav-section">
-            <ul class="admin-menu">
-              <li class="admin-menu-item">
-                <a href="#" class="admin-menu-link" onclick="Pages.renderAdminDashboard()">
-                  <span class="admin-menu-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></span>
-                  <span>Dashboard</span>
-                </a>
-              </li>
-              <li class="admin-menu-item">
-                <a href="#" class="admin-menu-link active">
-                  <span class="admin-menu-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg></span>
-                  <span>Products</span>
-                </a>
-              </li>
-            </ul>
-          </nav>
-        </aside>
-      <main class="admin-main">
-      <div class="admin-header">
-      <h1 class="admin-title">Product Management</h1>
-      <div class="admin-actions">
-        <button class="btn btn-primary" onclick="Pages.renderAdminProductCreate()" style="padding:0.5rem 1.25rem;font-size:0.875rem;">+ Add Product</button>
-      </div>
-      </div>
-          <div class="admin-table-container">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>Product</th>
-                  <th>Category</th>
-                  <th>Price</th>
-                  <th>Seller</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${products
-    .map(
-      product => `
-                  <tr>
-                    <td>
-                      <div class="product-cell">
-                        <img src="${product.images?.[0] || 'https://placehold.co/50'}" alt="${product.title}" class="product-image-small" />
-                        <span>${product.title}</span>
-                      </div>
-                    </td>
-                    <td>${Formatter.capitalize(product.category)}</td>
-                    <td>${Formatter.formatPrice(product.price)}</td>
-                    <td>${product.seller.name || product.seller}</td>
-                    <td>
-                      <span class="status-badge ${product.status === 'pending' ? 'placed' : 'delivered'}">
-                        ${product.status || 'active'}
-                      </span>
-                    </td>
-                    <td>
-                      <div class="table-actions">
-                        ${product.status === 'pending' ? `
-                          <button class="btn btn-sm btn-success" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminApproveProduct('${product.id}')">Approve</button>
-                          <button class="btn btn-sm btn-danger" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminRejectProduct('${product.id}')">Reject</button>
-                        ` : '<span class="text-muted">-</span>'}
-                      </div>
-                    </td>
-                  </tr>
-                `,
-    )
-    .join('')}
-              </tbody>
-            </table>
-          </div>
-        </main>
-      </div>
-    `;
+  mainContent.innerHTML = `
+  <div class="admin-container">
+  ${this.getAdminSidebar('products')}
+  <main class="admin-main">
+  <div class="admin-header">
+  <h1 class="admin-title">Product Management</h1>
+  <div class="admin-actions">
+  <button class="btn btn-primary" onclick="Pages.renderAdminProductCreate()" style="padding:0.5rem 1.25rem;font-size:0.875rem;">+ Add Product</button>
+  </div>
+  </div>
+  <div class="admin-table-container">
+  <table class="admin-table">
+  <thead>
+  <tr>
+  <th>Product</th>
+  <th>Category</th>
+  <th>Price</th>
+  <th>Seller</th>
+  <th>Status</th>
+  <th>Actions</th>
+  </tr>
+  </thead>
+  <tbody>
+  ${products
+  .map(
+  product => `
+  <tr>
+  <td>
+  <div class="product-cell">
+  <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" class="product-image-small" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
+  <span>${product.title}</span>
+  </div>
+  </td>
+  <td>${Formatter.capitalize(product.category)}</td>
+  <td>${Formatter.formatPrice(product.price)}</td>
+  <td>${product.seller.name || product.seller}</td>
+  <td>
+  <span class="admin-status-badge ${product.status === 'pending' ? 'placed' : 'delivered'}">
+  ${product.status || 'active'}
+  </span>
+  </td>
+  <td>
+  <div class="table-actions">
+  ${product.status === 'pending' ? `
+  <button class="btn btn-sm btn-success" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminApproveProduct('${product.id}')">Approve</button>
+  <button class="btn btn-sm btn-danger" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminRejectProduct('${product.id}')">Reject</button>
+  ` : '<span style="color:#9ca3af;">-</span>'}
+  </div>
+  </td>
+  </tr>
+  `,
+  )
+  .join('')}
+  </tbody>
+  </table>
+  </div>
+  </main>
+  </div>
+  `;
   }
 
   /**
    * Render Admin Orders Page
    */
-  static renderAdminOrders () {
-    const orders = adminOrdersManager.getAllOrders();
-    const mainContent = document.getElementById('main-content');
+  static async renderAdminOrders () {
+  const mainContent = document.getElementById('main-content');
 
-    mainContent.innerHTML = `
-      <div class="admin-container">
-        <aside class="admin-sidebar">
-          <div class="admin-brand">
-            <div class="admin-brand-icon">'${Icons.settings}'</div>
-            <div class="admin-brand-name">Admin Panel</div>
-          </div>
-          <nav class="admin-nav-section">
-            <ul class="admin-menu">
-              <li class="admin-menu-item">
-                <a href="#" class="admin-menu-link" onclick="Pages.renderAdminDashboard()">
-                  <span class="admin-menu-icon">📊</span>
-                  <span>Dashboard</span>
-                </a>
-              </li>
-              <li class="admin-menu-item">
-                <a href="#" class="admin-menu-link active">
-                  <span class="admin-menu-icon">📋</span>
-                  <span>Orders</span>
-                </a>
-              </li>
-            </ul>
-          </nav>
-        </aside>
-        <main class="admin-main">
-          <div class="admin-header">
-            <h1 class="admin-title">Order Management</h1>
-          </div>
-          <div class="admin-table-container">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>Order #</th>
-                  <th>Customer</th>
-                  <th>Total</th>
-                  <th>Payment</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${orders
-    .map(
-      order => `
-                  <tr>
-                    <td>${order.orderNumber}</td>
-                    <td>${order.customer.name}</td>
-                    <td>${Formatter.formatPrice(order.pricing.grandTotal)}</td>
-                    <td>${Formatter.capitalize(order.payment.mode)}</td>
-                    <td><span class="status-badge ${order.status}">${Formatter.capitalize(order.status)}</span></td>
-                    <td>${Formatter.formatDate(order.createdAt)}</td>
-                    <td>
-                      <div class="table-actions">
-                        <button class="table-action-btn view" title="View">${Icons.view}</button>
-                      </div>
-                    </td>
-                  </tr>
-                `,
-    )
-    .join('')}
-              </tbody>
-            </table>
-          </div>
-        </main>
-      </div>
-    `;
+  mainContent.innerHTML = `
+  <div class="admin-container">
+  ${this.getAdminSidebar('orders')}
+  <main class="admin-main">
+  <div class="admin-header">
+  <h1 class="admin-title">Order Management</h1>
+  </div>
+  <div class="admin-card">
+  <div class="admin-card-header"><h3>Loading orders...</h3></div>
+  <div style="padding:2rem;text-align:center;color:#9ca3af;">Loading...</div>
+  </div>
+  </main>
+  </div>`;
+
+  const orders = await adminOrdersManager.getAllOrders();
+
+  const card = document.querySelector('.admin-card');
+  if (card) {
+  card.outerHTML = `
+  <div class="admin-table-container">
+  <table class="admin-table">
+  <thead>
+  <tr>
+  <th>Order #</th>
+  <th>Customer</th>
+  <th>Total</th>
+  <th>Payment</th>
+  <th>Status</th>
+  <th>Date</th>
+  <th>Actions</th>
+  </tr>
+  </thead>
+  <tbody>
+  ${orders.map(order => `
+  <tr>
+  <td><strong>${order.orderNumber}</strong></td>
+  <td>${order.customer.name}</td>
+  <td>${Formatter.formatPrice(order.pricing.grandTotal)}</td>
+  <td>${Formatter.capitalize(order.payment.mode)}</td>
+  <td><span class="admin-status-badge ${order.status}">${Formatter.capitalize(order.status)}</span></td>
+  <td>${Formatter.formatDate(order.createdAt)}</td>
+  <td>
+  <div class="table-actions">
+  <button class="table-action-btn view" title="View">${Icons.view}</button>
+  </div>
+  </td>
+  </tr>
+  `).join('')}
+  </tbody>
+  </table>
+  </div>`;
+  }
   }
 
   /**
@@ -6188,31 +6454,10 @@ window.scrollTo(0, 0);
     const regions = regionManager.getAllRegions();
     const mainContent = document.getElementById('main-content');
 
-    mainContent.innerHTML = `
-      <div class="admin-container">
-        <aside class="admin-sidebar">
-          <div class="admin-brand">
-            <div class="admin-brand-icon">'${Icons.settings}'</div>
-            <div class="admin-brand-name">Admin Panel</div>
-          </div>
-          <nav class="admin-nav-section">
-            <ul class="admin-menu">
-              <li class="admin-menu-item">
-                <a href="#" class="admin-menu-link" onclick="Pages.renderAdminDashboard()">
-                  <span class="admin-menu-icon">📊</span>
-                  <span>Dashboard</span>
-                </a>
-              </li>
-              <li class="admin-menu-item">
-                <a href="#" class="admin-menu-link active">
-                  <span class="admin-menu-icon">${Icons.globe}</span>
-                  <span>Regions</span>
-                </a>
-              </li>
-            </ul>
-          </nav>
-        </aside>
-        <main class="admin-main">
+  mainContent.innerHTML = `
+  <div class="admin-container">
+  ${this.getAdminSidebar('regions')}
+  <main class="admin-main">
           <div class="admin-header">
             <h1 class="admin-title">Regional Management</h1>
           </div>
@@ -6254,109 +6499,53 @@ window.scrollTo(0, 0);
   /**
    * Render Admin Reports Page
    */
-  static renderAdminReports () {
-    const stats = adminReportsManager.getDashboardOverview();
-    const mainContent = document.getElementById('main-content');
+  static async renderAdminReports () {
+  const mainContent = document.getElementById('main-content');
 
-    mainContent.innerHTML = `
-      <div class="admin-container">
-        <aside class="admin-sidebar">
-          <div class="admin-brand">
-            <div class="admin-brand-icon">'${Icons.settings}'</div>
-            <div class="admin-brand-name">Admin Panel</div>
-          </div>
-          <nav class="admin-nav-section">
-            <ul class="admin-menu">
-              <li class="admin-menu-item">
-                <a href="#" class="admin-menu-link" onclick="Pages.renderAdminDashboard()">
-                  <span class="admin-menu-icon">📊</span>
-                  <span>Dashboard</span>
-                </a>
-      </li>
-      <li class="admin-menu-item">
-        <a href="#" class="admin-menu-link active">
-          <span class="admin-menu-icon">${Icons.chart}</span>
-          <span>Reports</span>
-        </a>
-      </li>
-      <li class="admin-menu-item">
-        <a href="#" class="admin-menu-link" onclick="Pages.renderAdminActivity()">
-          <span class="admin-menu-icon">${Icons.clock || Icons.chart}</span>
-          <span>Activity</span>
-        </a>
-      </li>
-    </ul>
-    </nav>
-    </aside>
-    <main class="admin-main">
-          <div class="admin-header">
-            <h1 class="admin-title">Analytics & Reports</h1>
-          </div>
-          <div class="reports-grid">
-            <div class="report-card">
-              <div class="report-card-header">
-                <h3 class="report-card-title">Sales Report</h3>
-              </div>
-              <div class="report-card-body">
-                <div class="report-chart">
-                  📊 Sales Chart Placeholder
-                </div>
-                <div style="margin-top: 1rem;">
-                  <div class="detail-row">
-                    <span>Total Revenue</span>
-                    <span>${Formatter.formatPrice(stats.summary.totalRevenue)}</span>
-                  </div>
-                  <div class="detail-row">
-                    <span>Total Orders</span>
-                    <span>${stats.summary.totalOrders}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="report-card">
-              <div class="report-card-header">
-                <h3 class="report-card-title">User Report</h3>
-              </div>
-              <div class="report-card-body">
-                <div class="report-chart">
-                  👥 User Chart Placeholder
-                </div>
-                <div style="margin-top: 1rem;">
-                  <div class="detail-row">
-                    <span>Total Users</span>
-                    <span>${stats.summary.totalUsers}</span>
-                  </div>
-                  <div class="detail-row">
-                    <span>New This Month</span>
-                    <span>${stats.thisMonth.newUsers || 0}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="report-card">
-              <div class="report-card-header">
-                <h3 class="report-card-title">Product Report</h3>
-              </div>
-              <div class="report-card-body">
-                <div class="report-chart">
-                  📦 Product Chart Placeholder
-                </div>
-                <div style="margin-top: 1rem;">
-                  <div class="detail-row">
-                    <span>Total Products</span>
-                    <span>${stats.summary.totalProducts}</span>
-                  </div>
-                  <div class="detail-row">
-                    <span>Avg Price</span>
-                    <span>${Formatter.formatPrice(stats.summary.totalRevenue / stats.summary.totalProducts || 0)}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
-    `;
+  mainContent.innerHTML = `
+  <div class="admin-container">
+  ${this.getAdminSidebar('reports')}
+  <main class="admin-main">
+  <div class="admin-header">
+  <h1 class="admin-title">Analytics & Reports</h1>
+  </div>
+  <div style="padding:2rem;text-align:center;color:#9ca3af;">Loading reports...</div>
+  </main>
+  </div>`;
+
+  const stats = await adminReportsManager.getDashboardOverview();
+
+  const mainEl = document.querySelector('.admin-main');
+  if (mainEl) {
+  mainEl.innerHTML = `
+  <div class="admin-header">
+  <h1 class="admin-title">Analytics & Reports</h1>
+  </div>
+  <div class="admin-dashboard-grid">
+  <div class="admin-card">
+  <div class="admin-card-header"><h3>Sales Report</h3></div>
+  <div style="padding:20px;">
+  <div class="admin-health-row"><span>Total Revenue</span><span class="admin-health-val good">GHS ${stats.summary.totalRevenue.toLocaleString()}</span></div>
+  <div class="admin-health-row"><span>Total Orders</span><span class="admin-health-val good">${stats.summary.totalOrders}</span></div>
+  <div class="admin-health-row"><span>Avg Order Value</span><span class="admin-health-val good">GHS ${stats.summary.totalOrders > 0 ? Math.round(stats.summary.totalRevenue / stats.summary.totalOrders).toLocaleString() : 0}</span></div>
+  </div>
+  </div>
+  <div class="admin-card">
+  <div class="admin-card-header"><h3>User Report</h3></div>
+  <div style="padding:20px;">
+  <div class="admin-health-row"><span>Total Users</span><span class="admin-health-val good">${stats.summary.totalUsers}</span></div>
+  <div class="admin-health-row"><span>New This Month</span><span class="admin-health-val good">${stats.thisMonth.newUsers || 0}</span></div>
+  </div>
+  </div>
+  <div class="admin-card">
+  <div class="admin-card-header"><h3>Product Report</h3></div>
+  <div style="padding:20px;">
+  <div class="admin-health-row"><span>Total Products</span><span class="admin-health-val good">${stats.summary.totalProducts}</span></div>
+  <div class="admin-health-row"><span>Pending Approval</span><span class="admin-health-val warning">${stats.summary.pendingProducts || 0}</span></div>
+  </div>
+  </div>
+  </div>`;
+  }
   }
 
   // ==========================================
@@ -6424,49 +6613,10 @@ window.scrollTo(0, 0);
   static async renderAdminActivity () {
     const mainContent = document.getElementById('main-content');
 
-    mainContent.innerHTML = `
-      <div class="admin-container">
-        <aside class="admin-sidebar">
-          <div class="admin-brand">
-            <div class="admin-brand-icon">'${Icons.settings}'</div>
-            <div class="admin-brand-name">Admin Panel</div>
-          </div>
-          <nav class="admin-nav-section">
-            <ul class="admin-menu">
-              <li class="admin-menu-item">
-                <a href="#" class="admin-menu-link" onclick="Pages.renderAdminDashboard()">
-                  <span class="admin-menu-icon">${Icons.chart}</span>
-                  <span>Dashboard</span>
-                </a>
-              </li>
-              <li class="admin-menu-item">
-                <a href="#" class="admin-menu-link" onclick="Pages.renderAdminProducts()">
-                  <span class="admin-menu-icon">${Icons.package}</span>
-                  <span>Products</span>
-                </a>
-              </li>
-              <li class="admin-menu-item">
-                <a href="#" class="admin-menu-link" onclick="Pages.renderAdminOrders()">
-                  <span class="admin-menu-icon">${Icons.clipboard}</span>
-                  <span>Orders</span>
-                </a>
-              </li>
-              <li class="admin-menu-item">
-                <a href="#" class="admin-menu-link" onclick="Pages.renderAdminReports()">
-                  <span class="admin-menu-icon">${Icons.chart}</span>
-                  <span>Reports</span>
-                </a>
-              </li>
-              <li class="admin-menu-item">
-                <a href="#" class="admin-menu-link active">
-                  <span class="admin-menu-icon">${Icons.clock || Icons.chart}</span>
-                  <span>Activity</span>
-                </a>
-              </li>
-            </ul>
-          </nav>
-        </aside>
-        <main class="admin-main">
+  mainContent.innerHTML = `
+  <div class="admin-container">
+  ${this.getAdminSidebar('activity')}
+  <main class="admin-main">
           <div class="admin-header">
             <h1 class="admin-title">Activity Monitor</h1>
             <div class="admin-actions">
@@ -6649,21 +6799,10 @@ window.scrollTo(0, 0);
     const categories = ['electronics', 'textbooks', 'appliances', 'hostel-items', 'fashion', 'accessories', 'thrifts'];
     const conditions = ['new', 'like-new', 'good', 'fair', 'excellent'];
 
-    mainContent.innerHTML = `
-      <div class="admin-container">
-        <aside class="admin-sidebar">
-          <div class="admin-brand">
-            <div class="admin-brand-icon">'${Icons.settings}'</div>
-            <div class="admin-brand-name">Admin Panel</div>
-          </div>
-          <nav class="admin-nav-section">
-            <ul class="admin-menu">
-              <li class="admin-menu-item"><a href="#" class="admin-menu-link" onclick="Pages.renderAdminProducts()"><span class="admin-menu-icon">${Icons.package}</span><span>Products</span></a></li>
-              <li class="admin-menu-item"><a href="#" class="admin-menu-link active"><span class="admin-menu-icon">➕</span><span>Add Product</span></a></li>
-            </ul>
-          </nav>
-        </aside>
-        <main class="admin-main">
+  mainContent.innerHTML = `
+  <div class="admin-container">
+  ${this.getAdminSidebar('products')}
+  <main class="admin-main">
           <div class="admin-header">
             <h1 class="admin-title">Add New Product</h1>
             <button class="btn btn-outline" onclick="Pages.renderAdminProducts()">Back to Products</button>

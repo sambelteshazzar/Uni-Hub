@@ -603,7 +603,7 @@ renderProductDetail (productId) {
     <div class="pd-layout">
       <!-- Image Section -->
       <div class="pd-image-section">
-        <img src="${product.images[0]}" alt="${product.title}" class="pd-main-image" />
+        <img src="${product.images[0]}" alt="${product.title}" class="pd-main-image" onerror="this.src='/assets/images/products/no-image.svg'" />
       </div>
 
       <!-- Info Section -->
@@ -668,12 +668,28 @@ renderProductDetail (productId) {
           <div class="pd-methods-label">Payment Methods</div>
           <div class="pd-methods-list">
             ${(product.paymentModes || []).map(m => `<span class="pd-method-tag">${m.toUpperCase()}</span>`).join('')}
-          </div>
-        </div>
+  </div>
+  </div>
 
-        <!-- Action Buttons -->
-        <div class="pd-actions">
-          <button class="pd-btn pd-btn-primary" onclick="cartManager.add(${JSON.stringify(product).replace(/"/g, '&quot;')}); Pages.updateCartBadge(); if(typeof toastManager!=='undefined') toastManager.success('Added to cart','Product added successfully');">
+  ${product.variants && product.variants.length > 0 ? `
+  <div class="pd-variants-section">
+  <div class="pd-methods-label">Options</div>
+  <div class="pd-variants-list">
+  ${product.variants.map((v, i) => `
+  <button class="pd-variant-btn" data-variant-index="${i}" onclick="Pages.selectVariant(this, ${i})">
+  <span class="pd-variant-label">${v.label}</span>
+  <span class="pd-variant-value">${v.value}</span>
+  ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
+  </button>
+  `).join('')}
+  </div>
+  <input type="hidden" id="selected-variant-index" value="-1" />
+  </div>
+  ` : ''}
+
+  <!-- Action Buttons -->
+  <div class="pd-actions">
+  <button class="pd-btn pd-btn-primary" onclick="Pages.addToCartWithVariant('${productId}')">
             ${Icons.cart} Add to Cart
           </button>
           <div class="pd-secondary-actions">

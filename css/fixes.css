@@ -208,16 +208,25 @@ button:disabled {
 img[loading='lazy'] {
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
-  animation: loading 1.5s infinite;
+  animation: img-shimmer 1.5s infinite;
+  min-height: 60px;
+  min-width: 60px;
 }
 
-@keyframes loading {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
+[data-theme='dark'] img[loading='lazy'],
+.dark img[loading='lazy'],
+img[loading='lazy'].dark {
+  background: linear-gradient(90deg, #1e1e1e 25%, #2a2a2a 50%, #1e1e1e 75%);
+  background-size: 200% 100%;
+}
+
+@keyframes img-shimmer {
+0% {
+background-position: 200% 0;
+}
+100% {
+background-position: -200% 0;
+}
 }
 
 /* Fix scroll to top behavior */

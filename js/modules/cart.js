@@ -45,7 +45,10 @@ class CartManager {
    * Get cart total price
    */
   getTotal () {
-    return this.items.reduce((total, item) => total + item.product.price * item.quantity, 0);
+  return this.items.reduce((total, item) => {
+  const variantExtra = item.variant ? item.variant.price || 0 : 0;
+  return total + (item.product.price + variantExtra) * item.quantity;
+  }, 0);
   }
 
   /**
@@ -54,33 +57,35 @@ class CartManager {
    * @param {number} quantity - Quantity to add (default: 1)
    * @returns {Object} - Result with success status
    */
-  add (product, quantity = 1) {
-    // Check if product already in cart
-    const existingIndex = this.items.findIndex(item => item.product.id === product.id);
+  add (product, quantity = 1, variant = null) {
+  const variantKey = variant ? `${variant.label}:${variant.value}` : '';
+  const existingIndex = this.items.findIndex(item => {
+  const itemVariantKey = item.variant ? `${item.variant.label}:${item.variant.value}` : '';
+  return item.product.id === product.id && itemVariantKey === variantKey;
+  });
 
-    if (existingIndex !== -1) {
-      // Update quantity
-      this.items[existingIndex].quantity += quantity;
-      this.save();
-      return {
-        success: true,
-        message: 'Quantity updated in cart',
-        action: 'updated',
-      };
-    } else {
-      // Add new item
-      this.items.push({
-        product: product,
-        quantity: quantity,
-        addedAt: new Date().toISOString(),
-      });
-      this.save();
-      return {
-        success: true,
-        message: 'Added to cart',
-        action: 'added',
-      };
-    }
+  if (existingIndex !== -1) {
+  this.items[existingIndex].quantity += quantity;
+  this.save();
+  return {
+  success: true,
+  message: 'Quantity updated in cart',
+  action: 'updated',
+  };
+  } else {
+  this.items.push({
+  product: product,
+  quantity: quantity,
+  variant: variant,
+  addedAt: new Date().toISOString(),
+  });
+  this.save();
+  return {
+  success: true,
+  message: 'Added to cart',
+  action: 'added',
+  };
+  }
   }
 
   /**

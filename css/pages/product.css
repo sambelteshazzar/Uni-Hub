@@ -439,6 +439,69 @@
   color: var(--neutral-700);
 }
 
+/* Variant Selector on Product Detail */
+.pd-variants-section {
+  margin-bottom: var(--space-lg);
+}
+
+.pd-variants-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.pd-variant-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-sm) var(--space-md);
+  border: 2px solid var(--neutral-300);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  min-width: 80px;
+}
+
+.pd-variant-btn:hover {
+  border-color: var(--primary);
+  background: var(--primary-light, rgba(255, 153, 0, 0.05));
+}
+
+.pd-variant-btn.selected {
+  border-color: var(--primary);
+  background: var(--primary-light, rgba(255, 153, 0, 0.12));
+  box-shadow: 0 0 0 2px rgba(255, 153, 0, 0.2);
+}
+
+.pd-variant-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--neutral-500);
+  font-weight: var(--font-semibold);
+}
+
+.pd-variant-value {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--neutral-900);
+}
+
+.pd-variant-price {
+  font-size: var(--text-xs);
+  color: var(--primary);
+  font-weight: var(--font-medium);
+}
+
+/* Variant Row in Product Creation Form */
+.variant-row input.form-control {
+  padding: 6px 10px;
+  font-size: var(--text-sm);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .browse-container {
