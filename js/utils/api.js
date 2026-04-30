@@ -16,23 +16,26 @@ class API {
     if (this._csrfToken) return this._csrfToken;
     if (this._csrfPromise) return this._csrfPromise;
 
-    this._csrfPromise = fetch(`${this.baseURL.replace('/api', '')}/api/auth/csrf-token`, {
+  const csrfPromise = fetch(`${this.baseURL.replace('/api', '')}/api/auth/csrf-token`, {
       credentials: 'include',
     })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.csrfToken) {
-          this._csrfToken = data.csrfToken;
-          return this._csrfToken;
-        }
-        return null;
-      })
-      .catch(() => null)
-      .finally(() => {
+    .then(res => res.json())
+    .then(data => {
+      if (data.success && data.csrfToken) {
+        this._csrfToken = data.csrfToken;
+        return this._csrfToken;
+      }
+      return null;
+    })
+    .catch(() => null)
+    .finally(() => {
+      if (this._csrfPromise === csrfPromise) {
         this._csrfPromise = null;
-      });
+      }
+    });
 
-    return this._csrfPromise;
+  this._csrfPromise = csrfPromise;
+  return csrfPromise;
   }
 
   /**

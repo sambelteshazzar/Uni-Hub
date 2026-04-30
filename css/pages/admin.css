@@ -107,7 +107,7 @@
 }
 
 .admin-menu-item {
-  margin-bottom: var(--space-xs);
+  margin-bottom: 2px;
 }
 
 .admin-menu-link {
@@ -160,9 +160,9 @@
 
 .admin-menu-badge {
   margin-left: auto;
-  background: var(--color-danger);
-  color: var(--color-white);
-  font-size: var(--font-size-xs);
+  background: #dc2626;
+  color: white;
+  font-size: 0.7rem;
   padding: 2px 8px;
   border-radius: 999px;
 }
@@ -192,7 +192,7 @@
 
 .admin-actions {
   display: flex;
-  gap: var(--space-md);
+  gap: 12px;
   align-items: center;
 }
 
@@ -748,11 +748,11 @@
   }
 
   .admin-table {
-  font-size: var(--font-size-xs);
+  font-size: 0.8rem;
   }
 
   .admin-table th, .admin-table td {
-  padding: var(--space-sm);
+  padding: 8px;
   }
 
   .admin-filters {
@@ -765,30 +765,7 @@
 }
 
 @media (max-width: 576px) {
-  .admin-stats {
+.admin-stats {
   grid-template-columns: 1fr;
-  }
-}
-
-  .admin-sidebar {
-    border-right: none;
-    border-bottom: 1px solid var(--neutral-200);
-  }
-
-  .admin-table {
-    font-size: var(--font-size-xs);
-  }
-
-  .admin-table th,
-  .admin-table td {
-    padding: var(--space-sm);
-  }
-
-  .admin-filters {
-    flex-direction: column;
-  }
-
-  .admin-search {
-    min-width: 100%;
   }
 }

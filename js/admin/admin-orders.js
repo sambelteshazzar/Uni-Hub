@@ -154,7 +154,7 @@ class AdminOrdersManager {
   statusCount[o.status] = (statusCount[o.status] || 0) + 1;
   paymentModeCount[o.payment.mode] = (paymentModeCount[o.payment.mode] || 0) + 1;
   deliveryModeCount[o.delivery.mode] = (deliveryModeCount[o.delivery.mode] || 0) + 1;
-
+perform a full debug on the  app, do a thorough scan without leaving anything out.
   if (o.payment.status === 'completed') {
   totalRevenue += o.pricing.grandTotal;
   }

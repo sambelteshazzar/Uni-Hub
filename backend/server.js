@@ -112,7 +112,11 @@ app.use(cors({
     } else if (origin && allowedOrigins.some(allowed => origin.startsWith(allowed.replace(/\/$/, '')))) {
       callback(null, true);
     } else {
-      callback(null, true); // Allow all in development
+      if (process.env.NODE_ENV === 'production') {
+        callback(new Error('CORS not allowed'));
+      } else {
+        callback(null, true);
+      }
     }
   },
   credentials: true,

@@ -10,7 +10,7 @@ class PaymentManager {
     // Set window.PAYSTACK_PUBLIC_KEY in your HTML or use a build-time replacement
     this.PAYSTACK_PUBLIC_KEY =
       (typeof window !== 'undefined' && window.PAYSTACK_PUBLIC_KEY) ||
-      'pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'; // Replace with actual key
+      '';
   }
 
   /**

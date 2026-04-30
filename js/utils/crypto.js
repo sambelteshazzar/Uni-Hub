@@ -17,12 +17,13 @@ class _CryptoUtil {
       throw new Error('Password must be a non-empty string');
     }
 
+    const salt = this.generateSalt();
     const encoder = new TextEncoder();
-    const data = encoder.encode(password);
+    const data = encoder.encode(salt + password);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    return hashHex;
+    return salt + ':' + hashHex;
   }
 
   /**
@@ -37,8 +38,23 @@ class _CryptoUtil {
     }
 
     try {
-      const hashAttempt = await this.hashPassword(password);
-      return hashAttempt === hash;
+      const separatorIndex = hash.indexOf(':');
+      if (separatorIndex === -1) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(password);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        return hashHex === hash;
+      }
+      const salt = hash.substring(0, separatorIndex);
+      const storedHash = hash.substring(separatorIndex + 1);
+      const encoder = new TextEncoder();
+      const data = encoder.encode(salt + password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashHex === storedHash;
     } catch (error) {
       console.error('Password verification failed:', error);
       return false;

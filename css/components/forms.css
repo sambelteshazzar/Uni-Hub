@@ -50,7 +50,7 @@
   opacity: 0.6;
 }
 
-.form-control:error {
+.form-control:invalid {
   border-color: #ff0000;
 }
 

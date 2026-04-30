@@ -49,6 +49,8 @@ function csrfProtection (req, res, next) {
     });
   }
 
+  csrfTokens.delete(csrfToken);
+
   next();
 }
 

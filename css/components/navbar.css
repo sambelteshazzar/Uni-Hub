@@ -534,10 +534,9 @@ color: var(--danger, #ef4444);
 }
 
 @media (max-width: 768px) {
-.search-autocomplete {
-left: -10px;
-right: -10px;
-border-radius: 0;
-}
-}
+  .search-autocomplete {
+    left: -10px;
+    right: -10px;
+    border-radius: 0;
+  }
 }
