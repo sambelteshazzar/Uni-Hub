@@ -165,27 +165,29 @@ exports.getProduct = async (req, res) => {
  */
 exports.createProduct = async (req, res) => {
   try {
-    const {
-      title,
-      description,
-      price,
-      category,
-      condition,
-      images,
-      deliveryModes,
-      paymentModes,
-    } = req.body;
+  const {
+  title,
+  description,
+  price,
+  category,
+  condition,
+  variants,
+  images,
+  deliveryModes,
+  paymentModes,
+  } = req.body;
 
-    // Create product
-    const product = db('products').create({
-      title,
-      description,
-      price,
-      category,
-      condition,
-      images,
-      deliveryModes,
-      paymentModes,
+  // Create product
+  const product = db('products').create({
+  title,
+  description,
+  price,
+  category,
+  condition,
+  variants,
+  images,
+  deliveryModes,
+  paymentModes,
       seller: req.user.id,
       sellerName: req.user.fullName,
       sellerRating: req.user.rating,
@@ -233,7 +235,7 @@ exports.updateProduct = async (req, res) => {
     }
 
     // Update fields
-    const allowedFields = ['title', 'description', 'price', 'category', 'condition', 'images', 'deliveryModes', 'paymentModes', 'status'];
+    const allowedFields = ['title', 'description', 'price', 'category', 'condition', 'variants', 'images', 'deliveryModes', 'paymentModes', 'status'];
     const updates = {};
     allowedFields.forEach(field => {
       if (req.body[field] !== undefined) {

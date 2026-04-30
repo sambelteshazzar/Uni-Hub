@@ -104,18 +104,19 @@ exports.createOrder = async (req, res) => {
       orderNumber: `ORD-${Date.now()}`,
     });
 
-    for (const vItem of verifiedItems) {
-      db('order_items').create({
-        orderId: order.id,
-        productId: vItem.productId,
-        title: vItem.title,
-        price: vItem.price,
-        quantity: vItem.quantity,
-        seller: vItem.seller,
-        sellerName: vItem.sellerName,
-        image: vItem.image,
-      });
-    }
+  for (const vItem of verifiedItems) {
+  db('order_items').create({
+  orderId: order.id,
+  productId: vItem.productId,
+  title: vItem.title,
+  price: vItem.price,
+  quantity: vItem.quantity,
+  seller: vItem.seller,
+  sellerName: vItem.sellerName,
+  image: vItem.image,
+  variant: vItem.variant || null,
+  });
+  }
 
     for (const pid of productIds) {
       db('products').updateById(pid, { status: 'sold' });

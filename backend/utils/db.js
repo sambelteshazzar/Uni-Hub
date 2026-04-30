@@ -48,10 +48,11 @@ function mapUserRow (row) {
 function mapProductRow (row) {
   if (!row) return null;
   return {
-    ...row,
-    images: parseJson(row.images) || [],
-    deliveryModes: parseJson(row.deliveryModes) || [],
-    paymentModes: parseJson(row.paymentModes) || [],
+  ...row,
+  images: parseJson(row.images) || [],
+  deliveryModes: parseJson(row.deliveryModes) || [],
+  paymentModes: parseJson(row.paymentModes) || [],
+  variants: parseJson(row.variants) || [],
   };
 }
 

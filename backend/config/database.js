@@ -76,29 +76,30 @@ function initializeSchema () {
       updatedAt TEXT DEFAULT (datetime('now'))
     );
 
-    CREATE TABLE IF NOT EXISTS products (
-      id TEXT PRIMARY KEY,
-      title TEXT NOT NULL,
-      description TEXT NOT NULL,
-      price REAL NOT NULL CHECK(price >= 0),
-      currency TEXT DEFAULT 'GHS',
-      category TEXT NOT NULL CHECK(category IN ('appliances','hostel-items','accessories','textbooks','electronics','fashion','thrifts')),
-      condition TEXT NOT NULL CHECK(condition IN ('new','like-new','fair','good','excellent')),
-      images TEXT DEFAULT '[]',
-      seller TEXT NOT NULL REFERENCES users(id),
-      sellerName TEXT NOT NULL,
-      sellerRating REAL DEFAULT 0,
-      university TEXT NOT NULL,
-      deliveryModes TEXT DEFAULT '[]',
-      paymentModes TEXT DEFAULT '[]',
-      status TEXT DEFAULT 'pending' CHECK(status IN ('active','pending','sold','inactive','reserved','rejected')),
-      approvedBy TEXT REFERENCES users(id),
-      moderationNote TEXT,
-      views INTEGER DEFAULT 0,
-      likes INTEGER DEFAULT 0,
-      createdAt TEXT DEFAULT (datetime('now')),
-      updatedAt TEXT DEFAULT (datetime('now'))
-    );
+CREATE TABLE IF NOT EXISTS products (
+id TEXT PRIMARY KEY,
+title TEXT NOT NULL,
+description TEXT NOT NULL,
+price REAL NOT NULL CHECK(price >= 0),
+currency TEXT DEFAULT 'GHS',
+category TEXT NOT NULL CHECK(category IN ('appliances','hostel-items','accessories','textbooks','electronics','fashion','thrifts')),
+condition TEXT NOT NULL CHECK(condition IN ('new','like-new','fair','good','excellent')),
+variants TEXT DEFAULT '[]',
+images TEXT DEFAULT '[]',
+seller TEXT NOT NULL REFERENCES users(id),
+sellerName TEXT NOT NULL,
+sellerRating REAL DEFAULT 0,
+university TEXT NOT NULL,
+deliveryModes TEXT DEFAULT '[]',
+paymentModes TEXT DEFAULT '[]',
+status TEXT DEFAULT 'pending' CHECK(status IN ('active','pending','sold','inactive','reserved','rejected')),
+approvedBy TEXT REFERENCES users(id),
+moderationNote TEXT,
+views INTEGER DEFAULT 0,
+likes INTEGER DEFAULT 0,
+createdAt TEXT DEFAULT (datetime('now')),
+updatedAt TEXT DEFAULT (datetime('now'))
+);
 
     CREATE TABLE IF NOT EXISTS orders (
       id TEXT PRIMARY KEY,
@@ -125,17 +126,18 @@ function initializeSchema () {
       updatedAt TEXT DEFAULT (datetime('now'))
     );
 
-    CREATE TABLE IF NOT EXISTS order_items (
-      id TEXT PRIMARY KEY,
-      orderId TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-      productId TEXT NOT NULL REFERENCES products(id),
-      title TEXT NOT NULL,
-      price REAL NOT NULL,
-      quantity INTEGER DEFAULT 1,
-      seller TEXT NOT NULL REFERENCES users(id),
-      sellerName TEXT,
-      image TEXT
-    );
+CREATE TABLE IF NOT EXISTS order_items (
+id TEXT PRIMARY KEY,
+orderId TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+productId TEXT NOT NULL REFERENCES products(id),
+title TEXT NOT NULL,
+price REAL NOT NULL,
+quantity INTEGER DEFAULT 1,
+seller TEXT NOT NULL REFERENCES users(id),
+sellerName TEXT,
+image TEXT,
+variant TEXT
+);
 
     CREATE TABLE IF NOT EXISTS order_status_history (
       id TEXT PRIMARY KEY,
@@ -386,8 +388,21 @@ function initializeSchema () {
 
     CREATE INDEX IF NOT EXISTS idx_verifications_studentId ON student_verifications(studentId, university);
     CREATE INDEX IF NOT EXISTS idx_verifications_email ON student_verifications(email);
-    CREATE INDEX IF NOT EXISTS idx_verifications_status ON student_verifications(status, createdAt DESC);
-  `);
+CREATE INDEX IF NOT EXISTS idx_verifications_status ON student_verifications(status, createdAt DESC);
+`);
+
+  try {
+    const productCols = db.prepare("PRAGMA table_info(products)").all();
+    if (!productCols.find(c => c.name === 'variants')) {
+      db.prepare('ALTER TABLE products ADD COLUMN variants TEXT DEFAULT \'[]\'').run();
+    }
+    const orderItemCols = db.prepare("PRAGMA table_info(order_items)").all();
+    if (!orderItemCols.find(c => c.name === 'variant')) {
+      db.prepare('ALTER TABLE order_items ADD COLUMN variant TEXT').run();
+    }
+  } catch (migrationErr) {
+    console.warn('Migration warning:', migrationErr.message);
+  }
 }
 
 module.exports = { connectDatabase, getDb };
