@@ -2677,21 +2677,15 @@ return labels[condition] || (condition ? condition.charAt(0).toUpperCase() + con
   /**
    * Render Browse Page Loading Skeleton
    */
-  static renderBrowseSkeleton () {
-    return `
-      <div class="browse-modern">
-        <div class="browse-hero" style="padding: 2rem;">
-          <div class="skeleton" style="height: 40px; width: 300px; background: rgba(255,255,255,0.2); border-radius: 8px; margin-bottom: 1rem;"></div>
-          <div class="skeleton" style="height: 20px; width: 200px; background: rgba(255,255,255,0.2); border-radius: 4px;"></div>
-        </div>
-        <div class="browse-layout">
-          <aside class="browse-sidebar" style="height: 400px;">
-            <div class="skeleton" style="height: 20px; width: 80%; margin-bottom: 1rem; border-radius: 4px;"></div>
-            <div class="skeleton" style="height: 12px; width: 100%; margin-bottom: 0.5rem; border-radius: 4px;"></div>
-            <div class="skeleton" style="height: 12px; width: 100%; margin-bottom: 0.5rem; border-radius: 4px;"></div>
-            <div class="skeleton" style="height: 12px; width: 100%; margin-bottom: 0.5rem; border-radius: 4px;"></div>
-          </aside>
-          <div class="products-grid-modern">
+ static renderBrowseSkeleton () {
+ return `
+ <div class="browse-modern">
+ <div class="browse-hero" style="padding: 2rem;">
+ <div class="skeleton" style="height: 40px; width: 300px; background: rgba(255,255,255,0.2); border-radius: 8px; margin-bottom: 1rem;"></div>
+ <div class="skeleton" style="height: 20px; width: 200px; background: rgba(255,255,255,0.2); border-radius: 4px;"></div>
+ </div>
+ <div class="browse-container">
+ <div class="products-grid-modern">
             ${Array(6).fill().map(() => `
               <div class="product-card-modern">
                 <div class="product-card-image-wrap">
@@ -2729,184 +2723,211 @@ return labels[condition] || (condition ? condition.charAt(0).toUpperCase() + con
   /**
    * Render Modern Browse Page HTML
    */
-  static renderBrowseModernHTML (paginatedData, totalProducts) {
-    const categories = [
-      { id: 'all', name: 'All', icon: 'cart', count: totalProducts },
-      { id: 'textbooks', name: 'Textbooks', icon: 'books', count: 120 },
-      { id: 'electronics', name: 'Electronics', icon: 'laptop', count: 85 },
-      { id: 'dorm', name: 'Dorm & Room', icon: 'home', count: 95 },
-      { id: 'furniture', name: 'Furniture', icon: 'chair', count: 45 },
-      { id: 'clothing', name: 'Clothing', icon: 'shirt', count: 60 },
-      { id: 'sports', name: 'Sports', icon: 'soccer', count: 35 },
-    ];
+ static renderBrowseModernHTML (paginatedData, totalProducts) {
+ const allProducts = productsManager.getAll();
+ const categoryCounts = {};
+ allProducts.forEach(p => {
+ categoryCounts[p.category] = (categoryCounts[p.category] || 0) + 1;
+ });
+ const conditionCounts = {};
+ allProducts.forEach(p => {
+ conditionCounts[p.condition] = (conditionCounts[p.condition] || 0) + 1;
+ });
+ const maxPrice = allProducts.length > 0 ? Math.max(...allProducts.map(p => p.price)) : 0;
+ const selectedConditions = productsManager.currentFilters.condition
+ ? (Array.isArray(productsManager.currentFilters.condition) ? productsManager.currentFilters.condition : [productsManager.currentFilters.condition])
+ : [];
 
-    return `
-      <div class="browse-modern">
-        <!-- Hero Banner -->
-        <div class="browse-hero">
-          <div class="browse-hero-content">
-            <h1 class="browse-hero-title">Discover Student Deals</h1>
-            <p class="browse-hero-subtitle">Find amazing items from students at your university</p>
-            <div class="browse-hero-stats">
-              <div class="browse-hero-stat">
-                <div class="browse-hero-stat-icon">${Icons.package}</div>
-                <span>${totalProducts}+ items listed</span>
-              </div>
-              <div class="browse-hero-stat">
-                <div class="browse-hero-stat-icon">${Icons.graduation}</div>
-                <span>Verified students only</span>
-              </div>
-              <div class="browse-hero-stat">
-                <div class="browse-hero-stat-icon">${Icons.truck}</div>
-                <span>Campus delivery available</span>
-              </div>
-            </div>
-          </div>
-        </div>
+ const categories = [
+ { id: 'all', name: 'All', icon: 'cart', count: totalProducts },
+ { id: 'appliances', name: 'Appliances', icon: 'settings', count: categoryCounts['appliances'] || 0 },
+ { id: 'hostel-items', name: 'Hostel Items', icon: 'home', count: categoryCounts['hostel-items'] || 0 },
+ { id: 'accessories', name: 'Accessories', icon: 'bag', count: categoryCounts['accessories'] || 0 },
+ { id: 'textbooks', name: 'Textbooks', icon: 'books', count: categoryCounts['textbooks'] || 0 },
+ { id: 'electronics', name: 'Electronics', icon: 'laptop', count: categoryCounts['electronics'] || 0 },
+ { id: 'fashion', name: 'Fashion', icon: 'shirt', count: categoryCounts['fashion'] || 0 },
+ { id: 'thrifts', name: 'Thrifts', icon: 'gift', count: categoryCounts['thrifts'] || 0 },
+ ];
 
-        <!-- Category Pills -->
-        <div class="browse-categories">
-          <div class="browse-categories-scroll">
-            ${categories.map(cat => `
-              <button class="category-pill ${cat.id === 'all' ? 'active' : ''}" onclick="Pages.filterByCategory('${cat.id}')">
-                ${Icons[cat.icon] || ''}
-                ${cat.name}
-                <span class="pill-count">${cat.count}</span>
-              </button>
-            `).join('')}
-          </div>
-        </div>
+ const conditions = [
+ { id: 'new', name: 'New', count: conditionCounts['new'] || 0 },
+ { id: 'like-new', name: 'Like New', count: conditionCounts['like-new'] || 0 },
+ { id: 'excellent', name: 'Excellent', count: conditionCounts['excellent'] || 0 },
+ { id: 'good', name: 'Good', count: conditionCounts['good'] || 0 },
+ { id: 'fair', name: 'Fair', count: conditionCounts['fair'] || 0 },
+ ];
 
-        <!-- Main Layout -->
-        <div class="browse-layout">
-          <!-- Mobile Filter Toggle -->
-          <button class="mobile-filter-toggle" onclick="Pages.toggleMobileFilters()">
-            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path d="M3 4h18M6 12h12M9 20h6"/>
-            </svg>
-            Filters
-          </button>
+ const selectedCondCount = selectedConditions.length;
 
-          <!-- Sidebar -->
-          <aside class="browse-sidebar" id="browse-sidebar">
-            <div class="sidebar-section">
-              <div class="sidebar-title">
-                Filters
-                <span class="sidebar-clear" onclick="Pages.resetBrowseFilters()">Clear all</span>
-              </div>
-            </div>
+ return `
+ <div class="browse-modern">
+ <!-- Hero Banner -->
+ <div class="browse-hero">
+ <div class="browse-hero-content">
+ <h1 class="browse-hero-title">Discover Student Deals</h1>
+ <p class="browse-hero-subtitle">Find amazing items from students at your university</p>
+ <div class="browse-hero-stats">
+ <div class="browse-hero-stat">
+ <div class="browse-hero-stat-icon">${Icons.package}</div>
+ <span>${totalProducts}+ items listed</span>
+ </div>
+ <div class="browse-hero-stat">
+ <div class="browse-hero-stat-icon">${Icons.graduation}</div>
+ <span>Verified students only</span>
+ </div>
+ <div class="browse-hero-stat">
+ <div class="browse-hero-stat-icon">${Icons.truck}</div>
+ <span>Campus delivery available</span>
+ </div>
+ </div>
+ </div>
+ </div>
 
-            <div class="sidebar-section">
-              <div class="sidebar-title">Category</div>
-              <div class="filter-option">
-                <input type="checkbox" id="cat-textbooks" onchange="Pages.applyBrowseFilters()">
-                <label for="cat-textbooks">Textbooks</label>
-                <span class="filter-count">120</span>
-              </div>
-              <div class="filter-option">
-                <input type="checkbox" id="cat-electronics" onchange="Pages.applyBrowseFilters()">
-                <label for="cat-electronics">Electronics</label>
-                <span class="filter-count">85</span>
-              </div>
-              <div class="filter-option">
-                <input type="checkbox" id="cat-dorm" onchange="Pages.applyBrowseFilters()">
-                <label for="cat-dorm">Dorm Items</label>
-                <span class="filter-count">95</span>
-              </div>
-              <div class="filter-option">
-                <input type="checkbox" id="cat-furniture" onchange="Pages.applyBrowseFilters()">
-                <label for="cat-furniture">Furniture</label>
-                <span class="filter-count">45</span>
-              </div>
-            </div>
+ <!-- Category Pills -->
+ <div class="browse-categories">
+ <div class="browse-categories-scroll">
+ ${categories.map(cat => `
+ <button class="category-pill ${cat.id === productsManager.currentFilters.category ? 'active' : (!productsManager.currentFilters.category && cat.id === 'all' ? 'active' : '')}" onclick="BrowsePageMethods.filterByCategory('${cat.id}')">
+ ${Icons[cat.icon] || ''}
+ ${cat.name}
+ <span class="pill-count">${cat.count}</span>
+ </button>
+ `).join('')}
+ </div>
+ </div>
 
-<div class="sidebar-section">
-<div class="sidebar-title">Condition</div>
-<div class="filter-option">
-<input type="checkbox" id="cond-new" onchange="Pages.applyBrowseFilters()">
-<label for="cond-new">New</label>
-</div>
-<div class="filter-option">
-<input type="checkbox" id="cond-like-new" onchange="Pages.applyBrowseFilters()">
-<label for="cond-like-new">Like New</label>
-</div>
-<div class="filter-option">
-<input type="checkbox" id="cond-excellent" onchange="Pages.applyBrowseFilters()">
-<label for="cond-excellent">Excellent</label>
-</div>
-<div class="filter-option">
-<input type="checkbox" id="cond-good" onchange="Pages.applyBrowseFilters()">
-<label for="cond-good">Good</label>
-</div>
-<div class="filter-option">
-<input type="checkbox" id="cond-fair" onchange="Pages.applyBrowseFilters()">
-<label for="cond-fair">Fair</label>
-</div>
-</div>
+ <!-- Main Content -->
+ <div class="browse-container">
+ <!-- Filter & Sort Bar -->
+ <div class="browse-filter-bar">
+ <!-- Mobile Filter Toggle -->
+ <button class="mobile-filter-toggle" onclick="BrowsePageMethods.toggleMobileFilters()">
+ <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+ <path d="M3 4h18M6 12h12M9 20h6"/>
+ </svg>
+ Filters & Sorting
+ </button>
 
-            <div class="sidebar-section">
-              <div class="sidebar-title">Price Range</div>
-              <div class="price-range-inputs">
-                <input type="number" class="price-input" placeholder="Min" id="price-min">
-                <span class="price-separator">-</span>
-                <input type="number" class="price-input" placeholder="Max" id="price-max">
-              </div>
-            </div>
+ <!-- Desktop Dropdown Filters -->
+ <div class="browse-filters-group" id="browse-filters-group">
+ <!-- Condition Filter -->
+ <details class="filter-dropdown">
+ <summary>
+ <span>Condition</span>
+ <svg class="chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+ <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
+ </svg>
+ </summary>
+ <div class="filter-dropdown-content">
+ <div class="filter-dropdown-header">
+ <span class="selected-count">${selectedCondCount} Selected</span>
+ <button class="reset-link" onclick="BrowsePageMethods.resetConditionFilter()">Reset</button>
+ </div>
+ <div class="filter-dropdown-body">
+ ${conditions.map(cond => `
+ <div class="filter-option">
+ <input type="checkbox" id="cond-${cond.id}" onchange="BrowsePageMethods.applyBrowseFilters()" ${selectedConditions.includes(cond.id) ? 'checked' : ''}>
+ <label for="cond-${cond.id}">${cond.name}</label>
+ <span class="filter-count">${cond.count}</span>
+ </div>
+ `).join('')}
+ </div>
+ </div>
+ </details>
 
-            <div class="sidebar-section">
-              <div class="sidebar-title">Rating</div>
-              <div class="rating-option" onclick="Pages.setRatingFilter(4)">
-                <span class="rating-stars">${Icons.star}${Icons.star}${Icons.star}${Icons.star}${Icons.starOutline}</span>
-                <span class="rating-label">& up</span>
-              </div>
-              <div class="rating-option" onclick="Pages.setRatingFilter(3)">
-                <span class="rating-stars">${Icons.star}${Icons.star}${Icons.star}${Icons.starOutline}${Icons.starOutline}</span>
-                <span class="rating-label">& up</span>
-              </div>
-            </div>
-          </aside>
+ <!-- Price Filter -->
+ <details class="filter-dropdown">
+ <summary>
+ <span>Price</span>
+ <svg class="chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+ <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
+ </svg>
+ </summary>
+ <div class="filter-dropdown-content">
+ <div class="filter-dropdown-header">
+ <span class="selected-count">Max GHS ${maxPrice.toLocaleString()}</span>
+ <button class="reset-link" onclick="BrowsePageMethods.resetPriceFilter()">Reset</button>
+ </div>
+ <div class="filter-dropdown-body">
+ <div class="filter-price-range">
+ <span style="font-size:0.875rem;color:#6b7280;">GHS</span>
+ <input type="number" class="price-input" placeholder="From" id="price-min" value="${productsManager.currentFilters.priceRange?.min > 0 ? productsManager.currentFilters.priceRange.min : ''}">
+ <span class="price-separator">-</span>
+ <span style="font-size:0.875rem;color:#6b7280;">GHS</span>
+ <input type="number" class="price-input" placeholder="To" id="price-max" value="${productsManager.currentFilters.priceRange?.max < Infinity ? productsManager.currentFilters.priceRange.max : ''}">
+ </div>
+ <button style="margin-top:0.75rem;width:100%;padding:0.5rem;background:#6366f1;color:white;border:none;border-radius:8px;font-size:0.8125rem;font-weight:500;cursor:pointer;" onclick="BrowsePageMethods.applyPriceFilter()">Apply</button>
+ </div>
+ </div>
+ </details>
 
-          <!-- Overlay for mobile -->
-          <div class="sidebar-overlay" id="sidebar-overlay" onclick="Pages.toggleMobileFilters()"></div>
+ <!-- Rating Filter -->
+ <details class="filter-dropdown">
+ <summary>
+ <span>Rating</span>
+ <svg class="chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+ <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
+ </svg>
+ </summary>
+ <div class="filter-dropdown-content">
+ <div class="filter-dropdown-body">
+ <div class="filter-rating-option ${productsManager.currentFilters.minRating >= 4 ? 'active' : ''}" onclick="BrowsePageMethods.setRatingFilter(4)">
+ <span class="rating-stars">${Icons.star}${Icons.star}${Icons.star}${Icons.star}${Icons.starOutline}</span>
+ <span class="rating-label">& up</span>
+ </div>
+ <div class="filter-rating-option ${productsManager.currentFilters.minRating >= 3 && productsManager.currentFilters.minRating < 4 ? 'active' : ''}" onclick="BrowsePageMethods.setRatingFilter(3)">
+ <span class="rating-stars">${Icons.star}${Icons.star}${Icons.star}${Icons.starOutline}${Icons.starOutline}</span>
+ <span class="rating-label">& up</span>
+ </div>
+ </div>
+ </div>
+ </details>
 
-          <!-- Products Grid -->
-          <div class="browse-content">
-            <div class="browse-toolbar">
-              <div class="results-count">
-                Showing <strong>${paginatedData.products.length}</strong> of <strong>${totalProducts}</strong> items
-              </div>
-              <select class="sort-select" onchange="Pages.applySortOrder()" id="sort-select">
-                <option value="newest">Newest First</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="rating">Highest Rated</option>
-              </select>
-            </div>
+ ${productsManager.currentFilters.category || productsManager.currentFilters.condition || (productsManager.currentFilters.priceRange && (productsManager.currentFilters.priceRange.min > 0 || productsManager.currentFilters.priceRange.max < Infinity)) || productsManager.currentFilters.minRating ? `
+ <button style="padding:0.5rem 0.875rem;background:transparent;border:1px solid #ef4444;border-radius:8px;font-size:0.8125rem;font-weight:500;color:#ef4444;cursor:pointer;" onclick="Pages.resetBrowseFilters()">Clear all</button>
+ ` : ''}
+ </div>
 
-            <div class="products-grid-modern">
-              ${paginatedData.products.length > 0
-                ? paginatedData.products.map(product => this.renderProductCardModern(product)).join('')
-                : `
-<div class="browse-empty" style="grid-column: 1/-1;">
-              <div class="browse-empty-icon" style="width: 64px; height: 64px; margin: 0 auto 1rem;">${Icons.search}</div>
-              <h3>No items found</h3>
-              <p>Try adjusting your filters or search for something else</p>
-              <button class="btn btn-primary" onclick="Pages.resetBrowseFilters()">Clear Filters</button>
-            </div>
-                `
-              }
-            </div>
+ <!-- Sort -->
+ <div class="browse-sort-group">
+ <select class="sort-select" onchange="Pages.applySortOrder()" id="sort-select">
+ <option value="newest" ${productsManager.currentFilters.sortBy === 'newest' ? 'selected' : ''}>Newest First</option>
+ <option value="price-low" ${productsManager.currentFilters.sortBy === 'price-low' ? 'selected' : ''}>Price: Low to High</option>
+ <option value="price-high" ${productsManager.currentFilters.sortBy === 'price-high' ? 'selected' : ''}>Price: High to Low</option>
+ <option value="rating" ${productsManager.currentFilters.sortBy === 'rating' ? 'selected' : ''}>Highest Rated</option>
+ </select>
+ </div>
+ </div>
 
-${paginatedData.pages > 1 ? `
-<div class="pagination">
-${Array.from({ length: paginatedData.pages }, (_, i) => `
-<button class="page-btn ${i + 1 === paginatedData.currentPage ? 'active' : ''}" onclick="Pages.goToBrowsePage(${i + 1})">
-${i + 1}
-</button>
-`).join('')}
-</div>
-` : ''}
-</div>
+ <!-- Results Count -->
+ <div class="results-count" style="margin-bottom: 1rem;">
+ Showing <strong>${paginatedData.products.length}</strong> of <strong>${totalProducts}</strong> items
+ </div>
+
+ <!-- Products Grid -->
+ <div class="products-grid-modern">
+ ${paginatedData.products.length > 0
+ ? paginatedData.products.map(product => this.renderProductCardModern(product)).join('')
+ : `
+ <div class="browse-empty" style="grid-column: 1/-1;">
+ <div class="browse-empty-icon" style="width: 64px; height: 64px; margin: 0 auto 1rem;">${Icons.search}</div>
+ <h3>No items found</h3>
+ <p>Try adjusting your filters or search for something else</p>
+ <button class="btn btn-primary" onclick="Pages.resetBrowseFilters()">Clear Filters</button>
+ </div>
+ `}
+ </div>
+
+ ${paginatedData.totalPages > 1 ? `
+ <div class="pagination">
+ ${Array.from({ length: paginatedData.totalPages }, (_, i) => `
+ <button class="page-btn ${i + 1 === paginatedData.currentPage ? 'active' : ''}" onclick="Pages.goToBrowsePage(${i + 1})">
+ ${i + 1}
+ </button>
+ `).join('')}
+ </div>
+ ` : ''}
+ </div>
 </div>
 
 ${Pages.renderRecentlyViewedSection()}
@@ -2970,33 +2991,30 @@ ${product.seller?.verified ? '<span class="trust-badge trust-badge-verified"><sv
   /**
    * Filter by Category (for category pills)
    */
-  static filterByCategory (categoryId) {
-    // Update active pill
-    document.querySelectorAll('.category-pill').forEach(pill => {
-      pill.classList.remove('active');
-    });
-    event.target.closest('.category-pill').classList.add('active');
+ static filterByCategory (categoryId) {
+ document.querySelectorAll('.category-pill').forEach(pill => {
+ pill.classList.remove('active');
+ });
 
-    // Apply filter
-    if (categoryId === 'all') {
-      productsManager.resetFilters();
-    } else {
-      productsManager.filter({ category: categoryId });
-    }
+ const clickedPill = event.target.closest('.category-pill');
+ if (clickedPill) clickedPill.classList.add('active');
 
-    // Re-render
-    this.renderBrowse();
-  }
+ if (categoryId === 'all') {
+ productsManager.resetFilters();
+ } else {
+ productsManager.filter({ category: categoryId });
+ }
+
+ this.renderBrowse();
+ }
 
   /**
    * Toggle Mobile Filters
    */
-  static toggleMobileFilters () {
-    const sidebar = document.getElementById('browse-sidebar');
-    const overlay = document.getElementById('sidebar-overlay');
-    sidebar?.classList.toggle('open');
-    overlay?.classList.toggle('open');
-  }
+ static toggleMobileFilters () {
+ const group = document.getElementById('browse-filters-group');
+ group?.classList.toggle('open');
+ }
 
   /**
    * Set Rating Filter
@@ -3170,36 +3188,18 @@ this.renderBrowse();
    * Apply Browse Filters
    */
   static applyBrowseFilters () {
-    const category = document.getElementById('category-filter').value;
-    const searchQuery = document.getElementById('search-input').value;
-    const priceMax = document.getElementById('price-range').value;
-    document.getElementById('price-value').textContent = priceMax;
-
     const conditions = [];
-    if (document.getElementById('fair-check').checked) {
-      conditions.push('fair');
-    }
-    if (document.getElementById('good-check').checked) {
-      conditions.push('good');
-    }
-    if (document.getElementById('excellent-check').checked) {
-      conditions.push('excellent');
-    }
+    if (document.getElementById('cond-new')?.checked) conditions.push('new');
+    if (document.getElementById('cond-like-new')?.checked) conditions.push('like-new');
+    if (document.getElementById('cond-excellent')?.checked) conditions.push('excellent');
+    if (document.getElementById('cond-good')?.checked) conditions.push('good');
+    if (document.getElementById('cond-fair')?.checked) conditions.push('fair');
 
     productsManager.filter({
-      category: category || null,
-      searchQuery: searchQuery,
-      priceRange: { min: 0, max: parseInt(priceMax) },
+      condition: conditions.length > 0 ? conditions : null,
     });
 
-    // Re-apply condition filter if needed
-    if (conditions.length > 0) {
-      productsManager.filteredProducts = productsManager.filteredProducts.filter(p =>
-        conditions.includes(p.condition),
-      );
-    }
-
-    this.renderBrowseProducts();
+    this.renderBrowse();
   }
 
   /**
@@ -3213,12 +3213,12 @@ this.renderBrowse();
   /**
    * Apply Sort Order
    */
-  static applySortOrder () {
-    const sortBy = document.getElementById('sort-select').value;
-    productsManager.currentFilters.sortBy = sortBy;
-    productsManager.applyFilters();
-    this.renderBrowseProducts();
-  }
+ static applySortOrder () {
+ const sortBy = document.getElementById('sort-select').value;
+ productsManager.currentFilters.sortBy = sortBy;
+ productsManager.applyFilters();
+ this.renderBrowse();
+ }
 
   /**
    * Re-render just the products grid (for filtering without page refresh)
