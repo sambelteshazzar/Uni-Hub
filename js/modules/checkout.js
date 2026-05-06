@@ -40,7 +40,7 @@ class CheckoutManager {
    */
   async createOrder (checkoutData) {
     // Validate cart first
-    const cartValidation = cartManager.validate();
+    const cartValidation = _cartManager.validate();
     if (!cartValidation.valid) {
       return {
         success: false,
@@ -58,7 +58,7 @@ class CheckoutManager {
     }
 
     // Get current user from session (authManager storage format)
-    const session = StorageManager.get(STORAGE_KEYS.CURRENT_USER, true);
+    const session = _StorageManager.get(_STORAGE_KEYS.CURRENT_USER, true);
     const currentUser = session?.user || null;
     if (!currentUser) {
       return {
@@ -71,12 +71,12 @@ class CheckoutManager {
     if (this.useBackend) {
       try {
         // Map frontend payment/delivery modes to backend format
-  const orderData = {
-  items: cartManager.getItems().map(item => ({
-  productId: item.product.id,
-  quantity: item.quantity,
-  variant: item.variant || null,
-  })),
+        const orderData = {
+          items: _cartManager.getItems().map(item => ({
+            productId: item.product.id,
+            quantity: item.quantity,
+            variant: item.variant || null,
+          })),
           deliveryMode: checkoutData.deliveryMode,
           deliveryAddress: checkoutData.deliveryAddress,
           deliveryInstructions: checkoutData.deliveryInstructions,
@@ -84,11 +84,10 @@ class CheckoutManager {
           phone: checkoutData.phone || currentUser.phone,
         };
 
-        const response = await api.orders.create(orderData);
+        const response = await _api.orders.create(orderData);
 
         if (response.success) {
-          // Clear cart after successful order
-          cartManager.clear();
+          _cartManager.clear();
           return {
             success: true,
             message: 'Order placed successfully!',
@@ -101,7 +100,7 @@ class CheckoutManager {
     }
 
     // Local fallback
-    const cartSummary = cartManager.getSummary();
+    const cartSummary = _cartManager.getSummary();
     const deliveryFee = this.calculateDeliveryFee(checkoutData.deliveryMode, cartSummary.subtotal);
     const grandTotal = cartSummary.subtotal + deliveryFee;
 
@@ -115,7 +114,7 @@ class CheckoutManager {
         phone: checkoutData.phone || currentUser.phone,
         university: currentUser.university,
       },
-  items: cartManager.getItems().map(item => ({
+  items: _cartManager.getItems().map(item => ({
   productId: item.product.id,
   title: item.product.title,
   price: item.product.price + (item.variant ? item.variant.price || 0 : 0),
@@ -139,15 +138,15 @@ class CheckoutManager {
         mode: checkoutData.paymentMode,
         status: 'pending',
       },
-      status: ORDER_STATUS.PLACED,
+      status: _ORDER_STATUS.PLACED,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
     this.saveOrder(order);
-    cartManager.clear();
+  _cartManager.clear();
 
-    return {
+  return {
       success: true,
       message: 'Order placed successfully!',
       order: order,
@@ -172,7 +171,7 @@ class CheckoutManager {
       return { valid: false, message: 'Please enter a delivery address' };
     }
 
-    if (data.phone && !Validator.isValidPhone(data.phone)) {
+    if (data.phone && !_Validator.isValidPhone(data.phone)) {
       return { valid: false, message: 'Please enter a valid phone number' };
     }
 
@@ -186,7 +185,7 @@ class CheckoutManager {
    * @returns {number} - Delivery fee
    */
   calculateDeliveryFee (mode, _subtotal) {
-    return this.DELIVERY_FEES[mode] ?? this.DELIVERY_FEES[DELIVERY_MODES.IN_PERSON] ?? 0;
+    return this.DELIVERY_FEES[mode] ?? this.DELIVERY_FEES[_DELIVERY_MODES.IN_PERSON] ?? 0;
   }
 
   /**
@@ -219,7 +218,7 @@ class CheckoutManager {
   saveOrder (order) {
     const orders = this.getAllOrders();
     orders.unshift(order); // Add to beginning
-    StorageManager.set(this.ORDER_STORAGE_KEY, orders);
+    _StorageManager.set(this.ORDER_STORAGE_KEY, orders);
   }
 
   /**
@@ -230,7 +229,7 @@ class CheckoutManager {
     // Try backend first
     if (this.useBackend) {
       try {
-        const response = await api.orders.getMyOrders();
+        const response = await _api.orders.getMyOrders();
         if (response.success) {
           return response.data.orders || response.data || [];
         }
@@ -240,7 +239,7 @@ class CheckoutManager {
     }
 
     // Local fallback
-    const orders = StorageManager.get(this.ORDER_STORAGE_KEY, true);
+    const orders = _StorageManager.get(this.ORDER_STORAGE_KEY, true);
     return orders || [];
   }
 
@@ -284,7 +283,7 @@ class CheckoutManager {
     orders[orderIndex].status = status;
     orders[orderIndex].updatedAt = new Date().toISOString();
 
-    StorageManager.set(this.ORDER_STORAGE_KEY, orders);
+    _StorageManager.set(this.ORDER_STORAGE_KEY, orders);
 
     return {
       success: true,
@@ -299,11 +298,11 @@ class CheckoutManager {
    */
   getStatusOptions () {
     return [
-      { value: ORDER_STATUS.PLACED, label: 'Order Placed', color: '#6366f1' },
-      { value: ORDER_STATUS.CONFIRMED, label: 'Confirmed', color: '#10b981' },
-      { value: ORDER_STATUS.IN_TRANSIT, label: 'In Transit', color: '#f59e0b' },
-      { value: ORDER_STATUS.DELIVERED, label: 'Delivered', color: '#10b981' },
-      { value: ORDER_STATUS.CANCELLED, label: 'Cancelled', color: '#ef4444' },
+      { value: _ORDER_STATUS.PLACED, label: 'Order Placed', color: '#6366f1' },
+      { value: _ORDER_STATUS.CONFIRMED, label: 'Confirmed', color: '#10b981' },
+      { value: _ORDER_STATUS.IN_TRANSIT, label: 'In Transit', color: '#f59e0b' },
+      { value: _ORDER_STATUS.DELIVERED, label: 'Delivered', color: '#10b981' },
+      { value: _ORDER_STATUS.CANCELLED, label: 'Cancelled', color: '#ef4444' },
     ];
   }
 
@@ -314,21 +313,21 @@ class CheckoutManager {
   getDeliveryModeOptions () {
     return [
       {
-        value: DELIVERY_MODES.IN_PERSON,
+        value: _DELIVERY_MODES.IN_PERSON,
         label: 'In-Person Pickup',
-        fee: this.DELIVERY_FEES[DELIVERY_MODES.IN_PERSON] ?? 0,
+        fee: this.DELIVERY_FEES[_DELIVERY_MODES.IN_PERSON] ?? 0,
         icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8a2 2 0 012-2h14a2 2 0 012 2v13"/><path d="M9 21V12h6v9"/><path d="M1 21h22"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>',
       },
       {
-        value: DELIVERY_MODES.YANGO,
+        value: _DELIVERY_MODES.YANGO,
         label: 'Yango Delivery',
-        fee: this.DELIVERY_FEES[DELIVERY_MODES.YANGO] ?? 12,
+        fee: this.DELIVERY_FEES[_DELIVERY_MODES.YANGO] ?? 12,
         icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 002 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>',
       },
       {
-        value: DELIVERY_MODES.BOLT,
+        value: _DELIVERY_MODES.BOLT,
         label: 'Bolt Delivery',
-        fee: this.DELIVERY_FEES[DELIVERY_MODES.BOLT] ?? 15,
+        fee: this.DELIVERY_FEES[_DELIVERY_MODES.BOLT] ?? 15,
         icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H4a2 2 0 01-2-2V5a2 2 0 012-2h16a2 2 0 012 2v10a2 2 0 01-2 2h-1"/><path d="M12 17V5"/><path d="M5 17a2 2 0 104 0"/><path d="M15 17a2 2 0 104 0"/></svg>',
       },
     ];
@@ -340,10 +339,10 @@ class CheckoutManager {
    */
   getPaymentModeOptions () {
     return [
-      { value: PAYMENT_MODES.CASH, label: 'Cash on Delivery', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><line x1="6" y1="12" x2="6.01" y2="12"/><line x1="18" y1="12" x2="18.01" y2="12"/></svg>' },
-      { value: PAYMENT_MODES.MOMO, label: 'MTN Mobile Money', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>' },
-      { value: PAYMENT_MODES.TELECEL, label: 'Telecel Cash', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 6h.01"/><path d="M8 10h8"/><path d="M8 14h8"/><path d="M8 18h4"/></svg>' },
-      { value: PAYMENT_MODES.BANK, label: 'Bank Transfer', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M12 3l9 7H3l9-7z"/><path d="M5 10v11"/><path d="M10 10v11"/><path d="M14 10v11"/><path d="M19 10v11"/></svg>' },
+      { value: _PAYMENT_MODES.CASH, label: 'Cash on Delivery', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><line x1="6" y1="12" x2="6.01" y2="12"/><line x1="18" y1="12" x2="18.01" y2="12"/></svg>' },
+      { value: _PAYMENT_MODES.MOMO, label: 'MTN Mobile Money', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>' },
+      { value: _PAYMENT_MODES.TELECEL, label: 'Telecel Cash', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 6h.01"/><path d="M8 10h8"/><path d="M8 14h8"/><path d="M8 18h4"/></svg>' },
+      { value: _PAYMENT_MODES.BANK, label: 'Bank Transfer', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M12 3l9 7H3l9-7z"/><path d="M5 10v11"/><path d="M10 10v11"/><path d="M14 10v11"/><path d="M19 10v11"/></svg>' },
     ];
   }
 
@@ -364,8 +363,8 @@ class CheckoutManager {
     }
 
     // For cash on delivery, mark as confirmed immediately
-    if (paymentMode === PAYMENT_MODES.CASH) {
-      this.updateOrderStatus(orderId, ORDER_STATUS.CONFIRMED);
+    if (paymentMode === _PAYMENT_MODES.CASH) {
+      this.updateOrderStatus(orderId, _ORDER_STATUS.CONFIRMED);
 
       // Create delivery record if deliveryManager is available
       if (typeof deliveryManager !== 'undefined') {
@@ -388,7 +387,7 @@ class CheckoutManager {
         const paymentSuccess = Math.random() > 0.1; // 90% success rate simulation
 
         if (paymentSuccess) {
-          this.updateOrderStatus(orderId, ORDER_STATUS.CONFIRMED);
+          this.updateOrderStatus(orderId, _ORDER_STATUS.CONFIRMED);
 
           // Create delivery record if deliveryManager is available
           if (typeof deliveryManager !== 'undefined') {
