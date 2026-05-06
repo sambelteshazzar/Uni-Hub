@@ -195,6 +195,9 @@ class ProductsManager {
   /**
    * Add product (to backend)
    */
+  /**
+   * Add product (to backend)
+   */
   async addProduct (productData) {
     try {
       if (this.useBackend) {
@@ -204,22 +207,184 @@ class ProductsManager {
           const token = typeof StorageManager !== 'undefined' ? StorageManager.getAuthToken() : null;
           const headers = {};
           if (token) { headers.Authorization = `Bearer ${token}`; }
-          const response = await fetch(`${window.API_URL}/products?limit=100`, {
+          const response = await fetch(`${window.API_URL || 'http://localhost:5000/api'}/products`, {
             signal: controller.signal,
-            headers,
+            headers: {
+              'Content-Type': 'application/json',
+              ...headers,
+            },
+            method: 'POST',
+            body: JSON.stringify(productData),
           });
-}
-history[id] = { price: currentPrice, updatedAt: Date.now() };
-});
+          clearTimeout(timeout);
 
-StorageManager.set(key, history);
-return priceDrops;
-}
+          const data = await response.json();
+          if (response.ok && data.success) {
+            return {
+              success: true,
+              product: data.data,
+            };
+          }
+          return {
+            success: false,
+            error: data.error || 'Failed to add product',
+          };
+        } catch (error) {
+          console.warn('Backend addProduct failed, using local fallback:', error);
+        }
+      }
 
-getPriceHistory (productId) {
-const history = StorageManager.get(STORAGE_KEYS.PRICE_HISTORY, true) || {};
-return history[productId] || null;
-}
+      // Local fallback
+      const product = {
+        id: `prod-${Date.now()}`,
+        ...productData,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      this.products.push(product);
+      this.filteredProducts = [...this.products];
+
+      return {
+        success: true,
+        product,
+      };
+    } catch (error) {
+      console.error('addProduct error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to add product',
+      };
+    }
+  }
+
+  /**
+   * Update product
+   */
+  async updateProduct (productId, updates) {
+    try {
+      if (this.useBackend) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 3000);
+        const token = typeof StorageManager !== 'undefined' ? StorageManager.getAuthToken() : null;
+        const headers = {};
+        if (token) { headers.Authorization = `Bearer ${token}`; }
+        const response = await fetch(`${window.API_URL || 'http://localhost:5000/api'}/products/${productId}`, {
+          signal: controller.signal,
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            ...headers,
+          },
+          body: JSON.stringify(updates),
+        });
+        clearTimeout(timeout);
+
+        const data = await response.json();
+        if (response.ok && data.success) {
+          return { success: true, product: data.data };
+        }
+        return { success: false, error: data.error || 'Failed to update product' };
+      }
+
+      // Local fallback
+      const index = this.products.findIndex(p => p.id === productId);
+      if (index === -1) {
+        return { success: false, error: 'Product not found' };
+      }
+      this.products[index] = {
+        ...this.products[index],
+        ...updates,
+        updatedAt: new Date().toISOString(),
+      };
+      this.filteredProducts = [...this.products];
+      return { success: true, product: this.products[index] };
+    } catch (error) {
+      console.error('updateProduct error:', error);
+      return { success: false, error: error.message || 'Failed to update product' };
+    }
+  }
+
+  /**
+   * Delete product
+   */
+  async deleteProduct (productId) {
+    try {
+      if (this.useBackend) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 3000);
+        const token = typeof StorageManager !== 'undefined' ? StorageManager.getAuthToken() : null;
+        const headers = {};
+        if (token) { headers.Authorization = `Bearer ${token}`; }
+        const response = await fetch(`${window.API_URL || 'http://localhost:5000/api'}/products/${productId}`, {
+          signal: controller.signal,
+          method: 'DELETE',
+          headers,
+        });
+        clearTimeout(timeout);
+
+        if (response.ok) {
+          this.products = this.products.filter(p => p.id !== productId);
+          this.filteredProducts = this.filteredProducts.filter(p => p.id !== productId);
+          return { success: true };
+        }
+        return { success: false, error: 'Failed to delete product' };
+      }
+
+      // Local fallback
+      this.products = this.products.filter(p => p.id !== productId);
+      this.filteredProducts = this.filteredProducts.filter(p => p.id !== productId);
+      return { success: true };
+    } catch (error) {
+      console.error('deleteProduct error:', error);
+      return { success: false, error: error.message || 'Failed to delete product' };
+    }
+  }
+
+  /**
+   * Track price drops for products
+   */
+  trackPriceDrops () {
+    try {
+      const key = `${STORAGE_KEY_PREFIX}price_history`;
+      const history = StorageManager.get(key, true) || {};
+      const priceDrops = [];
+
+      this.products.forEach(product => {
+        const currentPrice = product.price;
+        const previous = history[product.id];
+
+        if (previous && currentPrice < previous.price) {
+          priceDrops.push({
+            product,
+            previousPrice: previous.price,
+            currentPrice,
+          });
+        }
+
+        history[product.id] = { price: currentPrice, updatedAt: Date.now() };
+      });
+
+      StorageManager.set(key, history);
+      return priceDrops;
+    } catch (error) {
+      console.error('trackPriceDrops error:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get price history for a product
+   */
+  getPriceHistory (productId) {
+    try {
+      const key = `${STORAGE_KEY_PREFIX}price_history`;
+      const history = StorageManager.get(key, true) || {};
+      return history[productId] || null;
+    } catch (error) {
+      console.error('getPriceHistory error:', error);
+      return null;
+    }
+  }
 }
 
 // Create singleton instance
@@ -292,3 +457,12 @@ class HostelProductsManager {
 /* exported hostelProductsManager */
 // Create hostel products manager instance
 const _hostelProductsManager = new HostelProductsManager();
+
+// Export for ES6 modules
+export { ProductsManager, productsManager, HostelProductsManager, _hostelProductsManager as hostelProductsManager };
+
+// Make globally available for module scripts
+if (typeof window !== 'undefined') {
+  window.productsManager = productsManager;
+  window.hostelProductsManager = _hostelProductsManager;
+}

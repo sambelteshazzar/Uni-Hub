@@ -14,9 +14,21 @@ function getDeliveryFees () {
   };
 }
 
+const _cartManager = typeof cartManager !== 'undefined' ? cartManager : null;
+const _api = typeof api !== 'undefined' ? api : null;
+const _StorageManager = typeof StorageManager !== 'undefined' ? StorageManager : null;
+const _STORAGE_KEYS = typeof STORAGE_KEYS !== 'undefined' ? STORAGE_KEYS : null;
+const _STORAGE_KEY_PREFIX = typeof STORAGE_KEY_PREFIX !== 'undefined' ? STORAGE_KEY_PREFIX : 'unihub_';
+const _ORDER_STATUS = typeof ORDER_STATUS !== 'undefined' ? ORDER_STATUS : { PLACED: 'placed', CONFIRMED: 'confirmed', IN_TRANSIT: 'in_transit', DELIVERED: 'delivered', CANCELLED: 'cancelled' };
+const _DELIVERY_MODES = typeof DELIVERY_MODES !== 'undefined' ? DELIVERY_MODES : { BOLT: 'bolt', YANGO: 'yango', IN_PERSON: 'in_person' };
+const _PAYMENT_MODES = typeof PAYMENT_MODES !== 'undefined' ? PAYMENT_MODES : { CASH: 'cash', MOMO: 'momo', TELECEL: 'telecel', BANK: 'bank' };
+const _Validator = typeof Validator !== 'undefined' ? Validator : {
+  isValidPhone: (p) => /^[\d\s+()-]{7,15}$/.test(p),
+};
+
 class CheckoutManager {
   constructor () {
-    this.ORDER_STORAGE_KEY = `${STORAGE_KEY_PREFIX}orders`;
+    this.ORDER_STORAGE_KEY = `${_STORAGE_KEY_PREFIX}orders`;
     this.useBackend = true; // Backend API enabled
     this.DELIVERY_FEES = getDeliveryFees();
   }

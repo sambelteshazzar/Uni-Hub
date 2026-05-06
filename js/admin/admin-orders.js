@@ -131,56 +131,25 @@ class AdminOrdersManager {
       }
     }
 
-    order.payment.status = 'refunded';
-    order.payment.refundReason = reason;
-    order.payment.refundedAt = new Date().toISOString();
-    order.status = ORDER_STATUS.CANCELLED;
-    order.updatedAt = new Date().toISOString();
+      const orders = await this._getOrders();
+      const index = orders.findIndex(o => o.id === orderId);
+      if (index !== -1) {
+        orders[index] = order;
+        StorageManager.set(this.ORDERS_STORAGE_KEY, orders);
+      }
 
-    this.invalidateCache();
+      this.invalidateCache();
 
-    adminAuthManager.logActivity('Order refunded', {
-      orderId, reason, amount: order.pricing.grandTotal,
-    });
+      adminAuthManager.logActivity('Order refunded', {
+        orderId, reason, amount: order.pricing.grandTotal,
+      });
 
-    return {
-      success: true,
-      message: 'Refund processed successfully',
-      order: order,
-    };
-  }
-
-  if (order.payment.status !== 'completed') {
-  return {
-  success: false,
-  error: 'Cannot refund an unpaid order',
-  };
-  }
-
-  order.payment.status = 'refunded';
-  order.payment.refundReason = reason;
-  order.payment.refundedAt = new Date().toISOString();
-  order.status = ORDER_STATUS.CANCELLED;
-  order.updatedAt = new Date().toISOString();
-
-  const orders = await this._getOrders();
-  const index = orders.findIndex(o => o.id === orderId);
-  orders[index] = order;
-  StorageManager.set(this.ORDERS_STORAGE_KEY, orders);
-  this.invalidateCache();
-
-  adminAuthManager.logActivity('Order refunded', {
-  orderId,
-  reason,
-  amount: order.pricing.grandTotal,
-  });
-
-  return {
-  success: true,
-  message: 'Refund processed successfully',
-  order: order,
-  };
-  }
+      return {
+        success: true,
+        message: 'Refund processed successfully',
+        order: order,
+      };
+    }
 
   async getStats () {
   const orders = await this._getOrders();
@@ -194,9 +163,9 @@ class AdminOrdersManager {
   orders.forEach(o => {
   statusCount[o.status] = (statusCount[o.status] || 0) + 1;
   paymentModeCount[o.payment.mode] = (paymentModeCount[o.payment.mode] || 0) + 1;
-  deliveryModeCount[o.delivery.mode] = (deliveryModeCount[o.delivery.mode] || 0) + 1;
-perform a full debug on the  app, do a thorough scan without leaving anything out.
-  if (o.payment.status === 'completed') {
+      deliveryModeCount[o.delivery.mode] = (deliveryModeCount[o.delivery.mode] || 0) + 1;
+
+      if (o.payment.status === 'completed') {
   totalRevenue += o.pricing.grandTotal;
   }
 
@@ -316,6 +285,6 @@ const adminOrdersManager = new AdminOrdersManager();
 
 // Export to window for cross-module access
 window.adminOrdersManager = adminOrdersManager;
-if (typeof dispatchEvent !== 'undefined') {
-  dispatchEvent(new Event('module-loaded', { detail: 'AdminOrdersManager' }));
+if (typeof window !== 'undefined') {
+  window.dispatchEvent(new CustomEvent('module-loaded', { detail: { name: 'AdminOrdersManager' } }));
 }
