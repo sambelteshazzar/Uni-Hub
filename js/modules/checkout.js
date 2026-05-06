@@ -434,7 +434,7 @@ class CheckoutManager {
       };
     }
 
-    return this.updateOrderStatus(orderId, ORDER_STATUS.CANCELLED);
+    return this.updateOrderStatus(orderId, _ORDER_STATUS.CANCELLED);
   }
 }
 

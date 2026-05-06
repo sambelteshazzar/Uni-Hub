@@ -3,6 +3,14 @@
 // AUTH PAGE METHODS
 // ============================================
 
+const _Icons = typeof Icons !== 'undefined' ? Icons : {
+  graduation: '🎓',
+  email: '📧',
+  document: '📄',
+  clipboard: '📋',
+  upload: '⬆',
+};
+
 const AuthPageMethods = {
   renderStudentVerification () {
     const mainContent = document.getElementById('main-content');
@@ -37,7 +45,7 @@ const AuthPageMethods = {
     <div class="auth-container">
     <div class="auth-card verification-card">
     <div class="verification-header">
-    <div class="verification-icon">${Icons.graduation}</div>
+    <div class="verification-icon">${_Icons.graduation}</div>
     <h2>Verify Your Student Status</h2>
     <p class="verification-subtitle">Confirm you're a student at <span class="verification-university-name">${universityName}</span></p>
     </div>
@@ -45,12 +53,12 @@ const AuthPageMethods = {
     <!-- Verification Method Tabs -->
     <div class="verification-tabs">
     <button class="verification-tab active" data-tab="email" onclick="Pages.switchVerificationTab('email')">
-    <span class="tab-icon">${Icons.email}</span>
+    <span class="tab-icon">${_Icons.email}</span>
     <span class="tab-label">University Email</span>
     <span class="tab-desc">For continuing students</span>
     </button>
     <button class="verification-tab" data-tab="document" onclick="Pages.switchVerificationTab('document')">
-    <span class="tab-icon">${Icons.document}</span>
+    <span class="tab-icon">${_Icons.document}</span>
     <span class="tab-label">Admission Documents</span>
     <span class="tab-desc">For new students</span>
     </button>
@@ -59,7 +67,7 @@ const AuthPageMethods = {
     <!-- Email Verification Form -->
     <form id="verification-form-email" class="verification-form active" onsubmit="Pages.handleStudentVerification(event)">
     <div class="verification-info">
-    <p><strong>${Icons.graduation} For Continuing Students:</strong> Use your official university email address for instant verification.</p>
+    <p><strong>${_Icons.graduation} For Continuing Students:</strong> Use your official university email address for instant verification.</p>
     </div>
 
     <div class="form-group">
@@ -159,7 +167,7 @@ const AuthPageMethods = {
     <!-- Document Verification Form -->
     <form id="verification-form-document" class="verification-form" onsubmit="Pages.handleDocumentVerification(event)">
     <div class="verification-info warning">
-    <p><strong>${Icons.clipboard} For New/Level 100 Students:</strong> Upload your admission letter or student ID for manual verification. This may take 24-48 hours.</p>
+    <p><strong>${_Icons.clipboard} For New/Level 100 Students:</strong> Upload your admission letter or student ID for manual verification. This may take 24-48 hours.</p>
     </div>
 
     <div class="form-group">
@@ -229,7 +237,7 @@ const AuthPageMethods = {
     <div class="form-group">
     <label class="required">Upload Admission Documents</label>
     <div class="file-upload-area" onclick="document.getElementById('doc-files').click()">
-    <div class="upload-icon">${Icons.upload}</div>
+    <div class="upload-icon">${_Icons.upload}</div>
     <div class="upload-text">Click to upload or drag and drop</div>
     <div class="upload-hint">Accepted: Admission Letter, Student ID, Acceptance Letter (JPG, PNG, PDF - Max 5MB each)</div>
     <input type="file" id="doc-files" name="docFiles" multiple accept=".jpg,.jpeg,.png,.pdf" style="display: none;" required onchange="Pages.handleFileSelect(event)" />

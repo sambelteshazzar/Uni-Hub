@@ -6992,15 +6992,15 @@ window.scrollTo(0, 0);
     window.scrollTo(0, 0);
   }
 
-  static renderTerms () { return StaticPageMethods.renderTerms(); }
+  static renderTerms () { return (typeof StaticPageMethods !== 'undefined' ? StaticPageMethods.renderTerms() : console.warn('StaticPageMethods not loaded')); }
 
-  static renderPrivacy () { return StaticPageMethods.renderPrivacy(); }
+  static renderPrivacy () { return (typeof StaticPageMethods !== 'undefined' ? StaticPageMethods.renderPrivacy() : console.warn('StaticPageMethods not loaded')); }
 
-  static renderAbout () { return StaticPageMethods.renderAbout(); }
+  static renderAbout () { return (typeof StaticPageMethods !== 'undefined' ? StaticPageMethods.renderAbout() : console.warn('StaticPageMethods not loaded')); }
 
-  static renderContact () { return StaticPageMethods.renderContact(); }
+  static renderContact () { return (typeof StaticPageMethods !== 'undefined' ? StaticPageMethods.renderContact() : console.warn('StaticPageMethods not loaded')); }
 
-  static _handleContactForm (event) { return StaticPageMethods._handleContactForm(event); }
+  static _handleContactForm (event) { return (typeof StaticPageMethods !== 'undefined' ? StaticPageMethods._handleContactForm(event) : console.warn('StaticPageMethods not loaded')); }
 }
 
 // Export for ES6 modules
