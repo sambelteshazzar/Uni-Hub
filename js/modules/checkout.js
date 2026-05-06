@@ -427,7 +427,7 @@ class CheckoutManager {
       };
     }
 
-    if (order.status === ORDER_STATUS.DELIVERED) {
+    if (order.status === _ORDER_STATUS.DELIVERED) {
       return {
         success: false,
         error: 'Cannot cancel a delivered order',
