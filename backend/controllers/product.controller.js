@@ -428,12 +428,95 @@ exports.uploadProductImages = asyncHandler(async (req, res) => {
   }
   db('products').updateById(product.id, { images: newImages });
 
-  res.json({
-    success: true,
-    message: `${uploadedUrls.length} image(s) uploaded successfully`,
-    data: {
-      images: uploadedUrls,
-      totalImages: newImages.length,
-    },
+    res.json({
+      success: true,
+      message: `${uploadedUrls.length} image(s) uploaded successfully`,
+      data: {
+        images: uploadedUrls,
+        totalImages: newImages.length,
+      },
+    });
   });
-});
+
+exports.getProductColors = async (req, res) => {
+  try {
+    const product = db('products').findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ success: false, error: 'Product not found' });
+    }
+    const colors = db('product_colors').find({ product_id: req.params.id });
+    res.json({ success: true, data: { colors } });
+  } catch (error) {
+    console.error('Get product colors error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Failed to fetch product colors' });
+  }
+};
+
+exports.addProductColor = async (req, res) => {
+  try {
+    const product = db('products').findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ success: false, error: 'Product not found' });
+    }
+    if (product.seller !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, error: 'Not authorized' });
+    }
+    const { color_name, color_hex, image_url, stock } = req.body;
+    if (!color_name || !color_hex) {
+      return res.status(400).json({ success: false, error: 'color_name and color_hex are required' });
+    }
+    const crypto = require('crypto');
+    const color = db('product_colors').create({
+      id: crypto.randomUUID(),
+      product_id: req.params.id,
+      color_name,
+      color_hex,
+      image_url: image_url || '',
+      stock: stock || 0,
+    });
+    res.status(201).json({ success: true, data: { color } });
+  } catch (error) {
+    console.error('Add product color error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Failed to add product color' });
+  }
+};
+
+exports.updateProductColor = async (req, res) => {
+  try {
+    const color = db('product_colors').findById(req.params.colorId);
+    if (!color || color.product_id !== req.params.id) {
+      return res.status(404).json({ success: false, error: 'Color not found' });
+    }
+    const product = db('products').findById(req.params.id);
+    if (product.seller !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, error: 'Not authorized' });
+    }
+    const allowed = ['color_name', 'color_hex', 'image_url', 'stock'];
+    const updates = {};
+    allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
+    db('product_colors').updateById(req.params.colorId, updates);
+    const updated = db('product_colors').findById(req.params.colorId);
+    res.json({ success: true, data: { color: updated } });
+  } catch (error) {
+    console.error('Update product color error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Failed to update product color' });
+  }
+};
+
+exports.deleteProductColor = async (req, res) => {
+  try {
+    const color = db('product_colors').findById(req.params.colorId);
+    if (!color || color.product_id !== req.params.id) {
+      return res.status(404).json({ success: false, error: 'Color not found' });
+    }
+    const product = db('products').findById(req.params.id);
+    if (product.seller !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, error: 'Not authorized' });
+    }
+    db('product_colors').deleteById(req.params.colorId);
+    res.json({ success: true, message: 'Color deleted' });
+  } catch (error) {
+    console.error('Delete product color error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Failed to delete product color' });
+  }
+};

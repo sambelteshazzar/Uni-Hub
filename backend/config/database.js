@@ -126,7 +126,17 @@ updatedAt TEXT DEFAULT (datetime('now'))
       updatedAt TEXT DEFAULT (datetime('now'))
     );
 
-CREATE TABLE IF NOT EXISTS order_items (
+  CREATE TABLE IF NOT EXISTS product_colors (
+  id TEXT PRIMARY KEY,
+  product_id TEXT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  color_name TEXT NOT NULL,
+  color_hex TEXT NOT NULL,
+  image_url TEXT DEFAULT '',
+  stock INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS order_items (
 id TEXT PRIMARY KEY,
 orderId TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
 productId TEXT NOT NULL REFERENCES products(id),
@@ -388,8 +398,10 @@ variant TEXT
 
     CREATE INDEX IF NOT EXISTS idx_verifications_studentId ON student_verifications(studentId, university);
     CREATE INDEX IF NOT EXISTS idx_verifications_email ON student_verifications(email);
-CREATE INDEX IF NOT EXISTS idx_verifications_status ON student_verifications(status, createdAt DESC);
-`);
+  CREATE INDEX IF NOT EXISTS idx_verifications_status ON student_verifications(status, createdAt DESC);
+
+  CREATE INDEX IF NOT EXISTS idx_product_colors_product_id ON product_colors(product_id);
+ `);
 
   try {
     const productCols = db.prepare("PRAGMA table_info(products)").all();
