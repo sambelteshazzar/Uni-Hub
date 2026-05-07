@@ -86,17 +86,17 @@ content="Uni-Hub - Buy and sell items within your university community"
   <nav class="navbar" id="navbar" role="navigation" aria-label="Main navigation">
 <div class="navbar-container">
 <!-- Brand -->
-<a href="/" class="navbar-brand" onclick="Pages?.renderLanding(); return false;">
+<a href="#/" class="navbar-brand">
 <img src="/favicon.png" alt="Uni-Hub" class="navbar-brand-icon" />
 <span>Uni-Hub</span>
 </a>
 
 <!-- Center Navigation Links -->
       <div class="navbar-menu">
-        <a href="#/" class="navbar-link" onclick="Pages?.renderLanding(); return false;">Home</a>
-        <a href="#/browse" class="navbar-link" onclick="Pages?.renderBrowse(); return false;">Browse</a>
-        <a href="#/sell" class="navbar-link" onclick="Pages?.renderSell(); return false;">Sell</a>
-        <a href="#/messages" class="navbar-link" onclick="Pages?.navigateToMessages(); return false;">Messages</a>
+<a href="#/" class="navbar-link">Home</a>
+<a href="#/browse" class="navbar-link">Browse</a>
+<a href="#/sell" class="navbar-link">Sell</a>
+<a href="#/messages" class="navbar-link">Messages</a>
         <a href="#/faq" class="navbar-link">FAQ</a>
       </div>
 
@@ -133,14 +133,14 @@ content="Uni-Hub - Buy and sell items within your university community"
 
 <!-- Auth buttons -->
 <div id="navbar-auth-buttons">
-<button class="btn btn-ghost" onclick="Pages?.renderLogin(); return false;">Log in</button>
-<button class="btn btn-primary" onclick="Pages?.renderRegister(); return false;">Sign up</button>
+<button class="btn btn-ghost" onclick="Pages?.renderLogin()">Log in</button>
+<button class="btn btn-primary" onclick="Pages?.renderRegister()">Sign up</button>
 </div>
 
 <!-- User menu (when logged in) -->
 <div id="navbar-user-menu" style="display: none">
-<button class="btn btn-ghost" onclick="Pages?.renderDashboard(); return false;">Dashboard</button>
-<button class="btn btn-ghost" onclick="Pages?.handleLogout(); return false;">Log out</button>
+<button class="btn btn-ghost" onclick="Pages?.renderDashboard()">Dashboard</button>
+<button class="btn btn-ghost" onclick="Pages?.handleLogout()">Log out</button>
 </div>
 
 <!-- Mobile Hamburger -->
@@ -161,7 +161,7 @@ content="Uni-Hub - Buy and sell items within your university community"
 <!-- Mobile Drawer -->
 <div class="navbar-drawer" id="navbar-drawer">
 <div class="navbar-drawer-header">
-<a href="/" class="navbar-drawer-brand" onclick="Pages?.renderLanding(); Pages?.closeMobileMenu(); return false;">
+<a href="#/" class="navbar-drawer-brand">
 <img src="/favicon.png" alt="Uni-Hub" class="navbar-drawer-brand-icon" />
 <span>Uni-Hub</span>
 </a>
@@ -173,21 +173,21 @@ content="Uni-Hub - Buy and sell items within your university community"
     </button>
 </div>
 <nav class="navbar-drawer-nav">
-<a href="#/" class="navbar-drawer-link" onclick="Pages?.renderLanding(); Pages?.closeMobileMenu(); return false;">Home</a>
-<a href="#/browse" class="navbar-drawer-link" onclick="Pages?.renderBrowse(); Pages?.closeMobileMenu(); return false;">Browse</a>
-<a href="#/sell" class="navbar-drawer-link" onclick="Pages?.renderSell(); Pages?.closeMobileMenu(); return false;">Sell</a>
-<a href="#/messages" class="navbar-drawer-link" onclick="Pages?.navigateToMessages(); Pages?.closeMobileMenu(); return false;">Messages</a>
-<a href="#/cart" class="navbar-drawer-link" onclick="Pages?.renderCart(); Pages?.closeMobileMenu(); return false;">Cart</a>
-<a href="#/wishlist" class="navbar-drawer-link" onclick="Pages?.renderWishlist(); Pages?.closeMobileMenu(); return false;">Wishlist</a>
-<a href="#/faq" class="navbar-drawer-link" onclick="Pages?.closeMobileMenu(); return false;">FAQ</a>
+<a href="#/" class="navbar-drawer-link" onclick="Pages?.closeMobileMenu()">Home</a>
+<a href="#/browse" class="navbar-drawer-link" onclick="Pages?.closeMobileMenu()">Browse</a>
+<a href="#/sell" class="navbar-drawer-link" onclick="Pages?.closeMobileMenu()">Sell</a>
+<a href="#/messages" class="navbar-drawer-link" onclick="Pages?.closeMobileMenu()">Messages</a>
+<a href="#/cart" class="navbar-drawer-link" onclick="Pages?.closeMobileMenu()">Cart</a>
+<a href="#/wishlist" class="navbar-drawer-link" onclick="Pages?.closeMobileMenu()">Wishlist</a>
+<a href="#/faq" class="navbar-drawer-link" onclick="Pages?.closeMobileMenu()">FAQ</a>
 </nav>
 <div class="navbar-drawer-footer" id="navbar-drawer-footer">
 <div id="navbar-drawer-auth">
-<button class="btn btn-ghost" onclick="Pages?.renderLogin(); Pages?.closeMobileMenu(); return false;" style="margin-bottom: var(--space-sm); border: 1px solid #e5e5e5;">Log in</button>
-<button class="btn btn-primary" onclick="Pages?.renderRegister(); Pages?.closeMobileMenu(); return false;">Sign up</button>
+<button class="btn btn-ghost" onclick="Pages?.renderLogin(); Pages?.closeMobileMenu()" style="margin-bottom: var(--space-sm); border: 1px solid #e5e5e5;">Log in</button>
+<button class="btn btn-primary" onclick="Pages?.renderRegister(); Pages?.closeMobileMenu()">Sign up</button>
 </div>
 <div id="navbar-drawer-user" style="display: none">
-<button class="btn btn-primary" onclick="Pages?.renderDashboard(); Pages?.closeMobileMenu(); return false;">Dashboard</button>
+<button class="btn btn-primary" onclick="Pages?.renderDashboard(); Pages?.closeMobileMenu()">Dashboard</button>
 </div>
 </div>
 </div>
@@ -235,9 +235,9 @@ The global university marketplace for students to buy and sell essentials.
 <div class="footer-links-col">
 <h4 class="footer-links-title">Resources</h4>
 <ul class="footer-links-list">
-              <li><a href="#browse" class="footer-link">Browse Products</a></li>
-              <li><a href="#sell" class="footer-link">Start Selling</a></li>
-              <li><a href="#faq" class="footer-link">FAQ</a></li>
+<li><a href="#/browse" class="footer-link">Browse Products</a></li>
+<li><a href="#/sell" class="footer-link">Start Selling</a></li>
+              <li><a href="#/faq" class="footer-link">FAQ</a></li>
             </ul>
 </div>
 
@@ -256,10 +256,10 @@ The global university marketplace for students to buy and sell essentials.
 <div class="footer-links-col">
 <h4 class="footer-links-title">Explore</h4>
 <ul class="footer-links-list">
-<li><a href="#" class="footer-link">Blog</a></li>
-<li><a href="#" class="footer-link">Roadmap</a></li>
-<li><a href="#" class="footer-link">Universities</a></li>
-<li><a href="#contact" class="footer-link">Contact Us</a></li>
+<li><a href="#/about" class="footer-link">Blog</a></li>
+<li><a href="#/about" class="footer-link">Roadmap</a></li>
+<li><a href="#/browse" class="footer-link">Universities</a></li>
+<li><a href="#/contact" class="footer-link">Contact Us</a></li>
 </ul>
 </div>
 
@@ -267,9 +267,9 @@ The global university marketplace for students to buy and sell essentials.
 <div class="footer-links-col">
 <h4 class="footer-links-title">Company</h4>
 <ul class="footer-links-list">
-<li><a href="#" class="footer-link">Team</a></li>
-<li><a href="#" class="footer-link">Careers</a></li>
-<li><a href="#" class="footer-link">Partners</a></li>
+<li><a href="#/about" class="footer-link">Team</a></li>
+<li><a href="#/about" class="footer-link">Careers</a></li>
+<li><a href="#/about" class="footer-link">Partners</a></li>
 </ul>
 </div>
 </div>

@@ -1,918 +1,640 @@
 /* eslint-disable no-unused-vars */
-// ============================================
-// BROWSE & PRODUCT DETAIL PAGE METHODS
-// ============================================
 
-const BrowsePageMethods = {
-
-async renderBrowse (filters = {}) {
-  Pages.showOriginalNavFooter();
-
-  const mainContent = document.getElementById('main-content');
-
-  mainContent.innerHTML = BrowsePageMethods.renderBrowseSkeleton();
-
-  await productsManager.init();
-
-  if (filters.category) {
-    productsManager.filter({ category: filters.category });
+class BrowsePage {
+  constructor() {
+    this.state = {
+      categories: [],
+      conditions: [],
+      universities: [],
+      selectedCategories: [],
+      selectedConditions: [],
+      selectedUniversities: [],
+      priceRange: { min: 0, max: Infinity },
+      sortBy: 'newest',
+      searchQuery: '',
+      currentPage: 1,
+      pageSize: PAGINATION.DEFAULT_PAGE_SIZE,
+      viewMode: 'grid',
+      mobileDrawerOpen: false,
+      totalProducts: 0,
+    };
+    this._categories = [
+      { id: 'appliances', name: 'Appliances', icon: 'settings' },
+      { id: 'hostel-items', name: 'Hostel Items', icon: 'home' },
+      { id: 'accessories', name: 'Accessories', icon: 'bag' },
+      { id: 'textbooks', name: 'Textbooks', icon: 'books' },
+      { id: 'electronics', name: 'Electronics', icon: 'laptop' },
+      { id: 'fashion', name: 'Fashion', icon: 'shirt' },
+      { id: 'thrifts', name: 'Thrifts', icon: 'gift' },
+    ];
+    this._conditions = [
+      { id: 'new', name: 'New' },
+      { id: 'like-new', name: 'Like New' },
+      { id: 'excellent', name: 'Excellent' },
+      { id: 'good', name: 'Good' },
+      { id: 'fair', name: 'Fair' },
+    ];
+    this._sortOptions = [
+      { value: 'newest', label: 'Newest First' },
+      { value: 'price-low', label: 'Price: Low to High' },
+      { value: 'price-high', label: 'Price: High to Low' },
+      { value: 'popular', label: 'Most Popular' },
+      { value: 'rating', label: 'Best Rated' },
+    ];
+    this._allProducts = [];
+    this._filteredProducts = [];
   }
 
-  if (filters.search) {
-    productsManager.filter({ searchQuery: filters.search });
-  }
+  async render(filters = {}) {
+    Pages.showOriginalNavFooter();
+    const mainContent = document.getElementById('main-content');
+    mainContent.innerHTML = this.renderSkeleton();
 
-  const selectedUniversity = filters.university || StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
-  if (selectedUniversity) {
-    productsManager.filter({ university: selectedUniversity });
-  }
+    await productsManager.init();
 
-  const paginatedData = productsManager.getPaginated(1);
-  const totalProducts = paginatedData.total || paginatedData.products.length;
+    if (filters.category) {
+      productsManager.filter({ category: filters.category });
+      this.state.selectedCategories = [filters.category];
+    }
+    if (filters.search) {
+      productsManager.filter({ searchQuery: filters.search });
+      this.state.searchQuery = filters.search;
+    }
+    if (filters.university) {
+      productsManager.filter({ university: filters.university });
+      this.state.selectedUniversities = [filters.university];
+    }
 
-  mainContent.innerHTML = BrowsePageMethods.renderBrowseModernHTML(paginatedData, totalProducts);
+    const selectedUniversity = filters.university || StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
+    if (selectedUniversity && !filters.university) {
+      productsManager.filter({ university: selectedUniversity });
+      this.state.selectedUniversities = [selectedUniversity];
+    }
 
-  if (filters.search) {
-    const searchInput = document.getElementById('navbar-search-input');
-    if (searchInput) {
-      searchInput.value = filters.search;
+    this._allProducts = productsManager.getAll();
+    this._buildFilterCounts();
+    this._syncFiltersFromManager();
+
+    const paginatedData = productsManager.getPaginated(1);
+    this.state.totalProducts = paginatedData.totalProducts || paginatedData.total || this._filteredProducts.length;
+
+    mainContent.innerHTML = this.renderHTML(paginatedData);
+
+    if (filters.search) {
+      const searchInput = document.getElementById('browse-search-input');
+      if (searchInput) searchInput.value = filters.search;
     }
   }
-},
 
-  renderBrowseSkeleton () {
+  _syncFiltersFromManager() {
+    const cf = productsManager.currentFilters;
+    if (cf.category && !this.state.selectedCategories.includes(cf.category)) {
+      this.state.selectedCategories = [cf.category];
+    }
+    if (cf.condition) {
+      this.state.selectedConditions = Array.isArray(cf.condition) ? [...cf.condition] : [cf.condition];
+    }
+    if (cf.priceRange) {
+      this.state.priceRange = { ...cf.priceRange };
+    }
+    if (cf.sortBy) {
+      this.state.sortBy = cf.sortBy;
+    }
+    if (cf.searchQuery) {
+      this.state.searchQuery = cf.searchQuery;
+    }
+    this._filteredProducts = productsManager.filteredProducts || [...this._allProducts];
+  }
+
+  _buildFilterCounts() {
+    this.state.categories = this._categories.map(cat => ({
+      ...cat,
+      count: this._allProducts.filter(p => p.category === cat.id).length,
+    }));
+    this.state.conditions = this._conditions.map(cond => ({
+      ...cond,
+      count: this._allProducts.filter(p => p.condition === cond.id).length,
+    }));
+    const uniCounts = {};
+    this._allProducts.forEach(p => {
+      if (p.university) uniCounts[p.university] = (uniCounts[p.university] || 0) + 1;
+    });
+    this.state.universities = Object.keys(uniCounts)
+      .sort()
+      .map(id => ({ id, name: id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, ' '), count: uniCounts[id] }));
+  }
+
+  renderSkeleton() {
     return `
-<div class="browse-modern">
-  <div class="browse-hero" style="padding: 2rem;">
-    <div class="skeleton" style="height: 40px; width: 300px; background: rgba(255,255,255,0.2); border-radius: 8px; margin-bottom: 1rem;"></div>
-    <div class="skeleton" style="height: 20px; width: 200px; background: rgba(255,255,255,0.2); border-radius: 4px;"></div>
-  </div>
-  <div class="browse-container">
-    <div class="products-grid-modern">
-      ${Array(6).fill().map(() => `
-      <div class="product-card-modern">
-        <div class="product-card-image-wrap">
-          <div class="skeleton-image" style="width: 100%; height: 100%;"></div>
+      <div class="browse-page">
+        <div class="browse-breadcrumb"><div class="browse-breadcrumb-inner"><div class="browse-skeleton" style="height:14px;width:200px;"></div></div></div>
+        <div class="browse-page-inner">
+          <aside class="browse-sidebar">
+            ${Array(4).fill('').map(() => `<div class="browse-filter-group"><div class="browse-skeleton" style="height:16px;width:80px;margin-bottom:12px;"></div>${Array(4).fill('').map(() => '<div class="browse-skeleton" style="height:24px;width:90%;margin-bottom:8px;"></div>').join('')}</div>`).join('')}
+          </aside>
+          <div class="browse-main">
+            <div class="browse-toolbar"><div class="browse-skeleton" style="height:42px;width:100%;max-width:400px;"></div></div>
+            <div class="browse-product-grid">
+              ${Array(6).fill('').map(() => `<div class="browse-product-card"><div class="browse-product-image-wrap"><div class="browse-skeleton" style="width:100%;height:100%;aspect-ratio:1;"></div></div><div class="browse-product-info"><div class="browse-skeleton" style="height:12px;width:40%;margin-bottom:8px;"></div><div class="browse-skeleton" style="height:16px;width:100%;margin-bottom:8px;"></div><div class="browse-skeleton" style="height:20px;width:60%;"></div></div></div>`).join('')}
+            </div>
+          </div>
         </div>
-        <div class="product-card-info">
-          <div class="skeleton" style="height: 12px; width: 40%; margin-bottom: 0.5rem; border-radius: 4px;"></div>
-          <div class="skeleton" style="height: 16px; width: 100%; margin-bottom: 0.5rem; border-radius: 4px;"></div>
-          <div class="skeleton" style="height: 20px; width: 60%; border-radius: 4px;"></div>
-        </div>
-      </div>
-      `).join('')}
-    </div>
-  </div>
-</div>
-<style>
-.skeleton {
-  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-.skeleton-image {
-  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-</style>
-`;
-},
+      </div>`;
+  }
 
-  renderBrowseModernHTML (paginatedData, totalProducts) {
-    const allProducts = productsManager.getAll();
-    const categoryCounts = {};
-    allProducts.forEach(p => {
-      categoryCounts[p.category] = (categoryCounts[p.category] || 0) + 1;
-    });
-    const conditionCounts = {};
-    allProducts.forEach(p => {
-      conditionCounts[p.condition] = (conditionCounts[p.condition] || 0) + 1;
-    });
-    const maxPrice = allProducts.length > 0 ? Math.max(...allProducts.map(p => p.price)) : 0;
-    const selectedConditions = productsManager.currentFilters.condition
-      ? (Array.isArray(productsManager.currentFilters.condition) ? productsManager.currentFilters.condition : [productsManager.currentFilters.condition])
-      : [];
-
-    const categories = [
-      { id: 'all', name: 'All', icon: 'cart', count: totalProducts },
-      { id: 'appliances', name: 'Appliances', icon: 'settings', count: categoryCounts['appliances'] || 0 },
-      { id: 'hostel-items', name: 'Hostel Items', icon: 'home', count: categoryCounts['hostel-items'] || 0 },
-      { id: 'accessories', name: 'Accessories', icon: 'bag', count: categoryCounts['accessories'] || 0 },
-      { id: 'textbooks', name: 'Textbooks', icon: 'books', count: categoryCounts['textbooks'] || 0 },
-      { id: 'electronics', name: 'Electronics', icon: 'laptop', count: categoryCounts['electronics'] || 0 },
-      { id: 'fashion', name: 'Fashion', icon: 'shirt', count: categoryCounts['fashion'] || 0 },
-      { id: 'thrifts', name: 'Thrifts', icon: 'gift', count: categoryCounts['thrifts'] || 0 },
-    ];
-
-    const conditions = [
-      { id: 'new', name: 'New', count: conditionCounts['new'] || 0 },
-      { id: 'like-new', name: 'Like New', count: conditionCounts['like-new'] || 0 },
-      { id: 'excellent', name: 'Excellent', count: conditionCounts['excellent'] || 0 },
-      { id: 'good', name: 'Good', count: conditionCounts['good'] || 0 },
-      { id: 'fair', name: 'Fair', count: conditionCounts['fair'] || 0 },
-    ];
-
-    const selectedCondCount = selectedConditions.length;
+  renderHTML(paginatedData) {
+    const products = paginatedData.products || [];
+    const totalProducts = this.state.totalProducts;
+    const maxPrice = this._allProducts.length > 0 ? Math.max(...this._allProducts.map(p => p.price)) : 0;
 
     return `
-<div class="browse-modern">
-  <!-- Hero Banner -->
-  <div class="browse-hero">
-    <div class="browse-hero-content">
-      <h1 class="browse-hero-title">Discover Student Deals</h1>
-      <p class="browse-hero-subtitle">Find amazing items from students at your university</p>
-      <div class="browse-hero-stats">
-        <div class="browse-hero-stat">
-          <div class="browse-hero-stat-icon">${Icons.package}</div>
-          <span>${totalProducts}+ items listed</span>
+      <div class="browse-page">
+        ${this.renderBreadcrumb()}
+        <div class="browse-page-inner">
+          ${this.renderSidebar(maxPrice)}
+          ${this.renderMobileDrawer(maxPrice)}
+          <div class="browse-mobile-overlay" id="browse-mobile-overlay" onclick="BrowsePage.closeMobileDrawer()"></div>
+          <main class="browse-main">
+            ${this.renderToolbar(products.length, totalProducts)}
+            ${this.renderActiveFilters()}
+            ${this.renderProductGrid(products)}
+            ${this.renderLoadMore(paginatedData)}
+            ${this.renderPagination(paginatedData)}
+          </main>
         </div>
-        <div class="browse-hero-stat">
-          <div class="browse-hero-stat-icon">${Icons.graduation}</div>
-          <span>Verified students only</span>
+      </div>`;
+  }
+
+  renderBreadcrumb() {
+    const categoryLabel = this.state.selectedCategories.length === 1
+      ? this.state.selectedCategories[0].charAt(0).toUpperCase() + this.state.selectedCategories[0].slice(1).replace(/-/g, ' ')
+      : '';
+    return `
+      <nav class="browse-breadcrumb">
+        <div class="browse-breadcrumb-inner">
+          <a href="#/" class="browse-breadcrumb-link">Home</a>
+          <span class="browse-breadcrumb-sep">/</span>
+          <a href="#/browse" class="browse-breadcrumb-link">Browse</a>
+          ${categoryLabel ? `<span class="browse-breadcrumb-sep">/</span><span class="browse-breadcrumb-current">${categoryLabel}</span>` : '<span class="browse-breadcrumb-current">All Products</span>'}
         </div>
-        <div class="browse-hero-stat">
-          <div class="browse-hero-stat-icon">${Icons.truck}</div>
-          <span>Campus delivery available</span>
+      </nav>`;
+  }
+
+  renderSidebar(maxPrice) {
+    const priceMin = this.state.priceRange.min > 0 ? this.state.priceRange.min : '';
+    const priceMax = this.state.priceRange.max < Infinity ? this.state.priceRange.max : '';
+    const sliderLeft = maxPrice > 0 ? (this.state.priceRange.min / maxPrice) * 100 : 0;
+    const sliderRight = maxPrice > 0 ? (this.state.priceRange.max < Infinity ? (this.state.priceRange.max / maxPrice) * 100 : 100) : 100;
+
+    return `
+      <aside class="browse-sidebar">
+        <div class="browse-filter-group">
+          <div class="browse-filter-group-title">Category</div>
+          ${this.state.categories.map(cat => `
+            <div class="browse-filter-option">
+              <input type="checkbox" id="browse-cat-${cat.id}" ${this.state.selectedCategories.includes(cat.id) ? 'checked' : ''} onchange="BrowsePage.toggleCategory('${cat.id}')">
+              <label for="browse-cat-${cat.id}">${cat.name}</label>
+              <span class="browse-filter-count">${cat.count}</span>
+            </div>
+          `).join('')}
         </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- Category Pills -->
-  <div class="browse-categories">
-    <div class="browse-categories-scroll">
-      ${categories.map(cat => `
-        <button class="category-pill ${cat.id === productsManager.currentFilters.category ? 'active' : (!productsManager.currentFilters.category && cat.id === 'all' ? 'active' : '')}" onclick="BrowsePageMethods.filterByCategory('${cat.id}')">
-          ${Icons[cat.icon] || ''}
-          ${cat.name}
-          <span class="pill-count">${cat.count}</span>
-        </button>
-      `).join('')}
-    </div>
-  </div>
-
-  <!-- Main Content -->
-  <div class="browse-container">
-    <!-- Filter & Sort Bar -->
-    <div class="browse-filter-bar">
-      <!-- Mobile Filter Toggle -->
-      <button class="mobile-filter-toggle" onclick="BrowsePageMethods.toggleMobileFilters()">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path d="M3 4h18M6 12h12M9 20h6"/>
-        </svg>
-        Filters & Sorting
-      </button>
-
-      <!-- Desktop Dropdown Filters -->
-      <div class="browse-filters-group" id="browse-filters-group">
-        <!-- Condition Filter -->
-        <details class="filter-dropdown">
-          <summary>
-            <span>Condition</span>
-            <svg class="chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
-            </svg>
-          </summary>
-          <div class="filter-dropdown-content">
-            <div class="filter-dropdown-header">
-              <span class="selected-count">${selectedCondCount} Selected</span>
-              <button class="reset-link" onclick="BrowsePageMethods.resetConditionFilter()">Reset</button>
-            </div>
-            <div class="filter-dropdown-body">
-              ${conditions.map(cond => `
-                <div class="filter-option">
-                  <input type="checkbox" id="cond-${cond.id}" onchange="BrowsePageMethods.applyBrowseFilters()" ${selectedConditions.includes(cond.id) ? 'checked' : ''}>
-                  <label for="cond-${cond.id}">${cond.name}</label>
-                  <span class="filter-count">${cond.count}</span>
-                </div>
-              `).join('')}
-            </div>
+        <div class="browse-filter-group">
+          <div class="browse-filter-group-title">Price Range</div>
+          <div class="browse-price-inputs">
+            <input type="number" class="browse-price-input" id="browse-price-min" placeholder="Min" value="${priceMin}" min="0">
+            <span class="browse-price-separator">-</span>
+            <input type="number" class="browse-price-input" id="browse-price-max" placeholder="Max" value="${priceMax}" min="0">
           </div>
-        </details>
-
-        <!-- Price Filter -->
-        <details class="filter-dropdown">
-          <summary>
-            <span>Price</span>
-            <svg class="chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
-            </svg>
-          </summary>
-          <div class="filter-dropdown-content">
-            <div class="filter-dropdown-header">
-              <span class="selected-count">Max GHS ${maxPrice.toLocaleString()}</span>
-              <button class="reset-link" onclick="BrowsePageMethods.resetPriceFilter()">Reset</button>
-            </div>
-            <div class="filter-dropdown-body">
-              <div class="filter-price-range">
-                <span style="font-size:0.875rem;color:#6b7280;">GHS</span>
-                <input type="number" class="price-input" placeholder="From" id="price-min" value="${productsManager.currentFilters.priceRange?.min > 0 ? productsManager.currentFilters.priceRange.min : ''}">
-                <span class="price-separator">-</span>
-                <span style="font-size:0.875rem;color:#6b7280;">GHS</span>
-                <input type="number" class="price-input" placeholder="To" id="price-max" value="${productsManager.currentFilters.priceRange?.max < Infinity ? productsManager.currentFilters.priceRange.max : ''}">
-              </div>
-              <button style="margin-top:0.75rem;width:100%;padding:0.5rem;background:#6366f1;color:white;border:none;border-radius:8px;font-size:0.8125rem;font-weight:500;cursor:pointer;" onclick="BrowsePageMethods.applyPriceFilter()">Apply</button>
-            </div>
+          <div class="browse-price-slider-track">
+            <div class="browse-price-slider-fill" style="left:${sliderLeft}%;width:${sliderRight - sliderLeft}%;"></div>
           </div>
-        </details>
+          <button class="browse-price-apply-btn" onclick="BrowsePage.applyPriceFilter()">Apply</button>
+        </div>
 
-        <!-- Rating Filter -->
-        <details class="filter-dropdown">
-          <summary>
-            <span>Rating</span>
-            <svg class="chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
-            </svg>
-          </summary>
-          <div class="filter-dropdown-content">
-            <div class="filter-dropdown-body">
-              <div class="filter-rating-option ${productsManager.currentFilters.minRating >= 4 ? 'active' : ''}" onclick="BrowsePageMethods.setRatingFilter(4)">
-                <span class="rating-stars">${Icons.star}${Icons.star}${Icons.star}${Icons.star}${Icons.starOutline}</span>
-                <span class="rating-label">& up</span>
-              </div>
-              <div class="filter-rating-option ${productsManager.currentFilters.minRating >= 3 && productsManager.currentFilters.minRating < 4 ? 'active' : ''}" onclick="BrowsePageMethods.setRatingFilter(3)">
-                <span class="rating-stars">${Icons.star}${Icons.star}${Icons.star}${Icons.starOutline}${Icons.starOutline}</span>
-                <span class="rating-label">& up</span>
-              </div>
-            </div>
+        <div class="browse-filter-group">
+          <div class="browse-filter-group-title">
+            Condition
+            ${this.state.selectedConditions.length > 0 ? `<span class="browse-filter-group-count">${this.state.selectedConditions.length} selected</span>` : ''}
           </div>
-        </details>
+          ${this.state.conditions.map(cond => `
+            <div class="browse-filter-option">
+              <input type="checkbox" id="browse-cond-${cond.id}" ${this.state.selectedConditions.includes(cond.id) ? 'checked' : ''} onchange="BrowsePage.toggleCondition('${cond.id}')">
+              <label for="browse-cond-${cond.id}">${cond.name}</label>
+              <span class="browse-filter-count">${cond.count}</span>
+            </div>
+          `).join('')}
+        </div>
 
-        ${productsManager.currentFilters.category || productsManager.currentFilters.condition || (productsManager.currentFilters.priceRange && (productsManager.currentFilters.priceRange.min > 0 || productsManager.currentFilters.priceRange.max < Infinity)) || productsManager.currentFilters.minRating ? `
-        <button style="padding:0.5rem 0.875rem;background:transparent;border:1px solid #ef4444;border-radius:8px;font-size:0.8125rem;font-weight:500;color:#ef4444;cursor:pointer;" onclick="Pages.resetBrowseFilters()">Clear all</button>
+        ${this.state.universities.length > 0 ? `
+        <div class="browse-filter-group">
+          <div class="browse-filter-group-title">University</div>
+          ${this.state.universities.slice(0, 8).map(uni => `
+            <div class="browse-filter-option">
+              <input type="checkbox" id="browse-uni-${uni.id}" ${this.state.selectedUniversities.includes(uni.id) ? 'checked' : ''} onchange="BrowsePage.toggleUniversity('${uni.id}')">
+              <label for="browse-uni-${uni.id}">${uni.name}</label>
+              <span class="browse-filter-count">${uni.count}</span>
+            </div>
+          `).join('')}
+        </div>
         ` : ''}
-      </div>
 
-      <!-- Sort -->
-      <div class="browse-sort-group">
-        <select class="sort-select" onchange="Pages.applySortOrder()" id="sort-select">
-          <option value="newest" ${productsManager.currentFilters.sortBy === 'newest' ? 'selected' : ''}>Newest First</option>
-          <option value="price-low" ${productsManager.currentFilters.sortBy === 'price-low' ? 'selected' : ''}>Price: Low to High</option>
-          <option value="price-high" ${productsManager.currentFilters.sortBy === 'price-high' ? 'selected' : ''}>Price: High to Low</option>
-          <option value="rating" ${productsManager.currentFilters.sortBy === 'rating' ? 'selected' : ''}>Highest Rated</option>
-        </select>
-      </div>
-    </div>
+        <button class="browse-clear-filters-btn" onclick="BrowsePage.clearFilters()">Clear All Filters</button>
+      </aside>`;
+  }
 
-    <!-- Results Count -->
-    <div class="results-count" style="margin-bottom: 1rem;">
-      Showing <strong>${paginatedData.products.length}</strong> of <strong>${totalProducts}</strong> items
-    </div>
+  renderMobileDrawer(maxPrice) {
+    const priceMin = this.state.priceRange.min > 0 ? this.state.priceRange.min : '';
+    const priceMax = this.state.priceRange.max < Infinity ? this.state.priceRange.max : '';
 
-    <!-- Products Grid -->
-    <div class="products-grid-modern">
-      ${paginatedData.products.length > 0
-        ? paginatedData.products.map(product => BrowsePageMethods.renderProductCardModern(product)).join('')
-        : `
-        <div class="browse-empty" style="grid-column: 1/-1;">
-          <div class="browse-empty-icon" style="width: 64px; height: 64px; margin: 0 auto 1rem;">${Icons.search}</div>
-          <h3>No items found</h3>
+    return `
+      <div class="browse-mobile-drawer" id="browse-mobile-drawer">
+        <div class="browse-mobile-drawer-header">
+          <span class="browse-mobile-drawer-title">Filters</span>
+          <button class="browse-mobile-drawer-close" onclick="BrowsePage.closeMobileDrawer()">&times;</button>
+        </div>
+        ${this.renderSidebar(maxPrice)}
+      </div>`;
+  }
+
+  renderToolbar(showing, total) {
+    return `
+      <div class="browse-toolbar">
+        <button class="browse-mobile-filter-btn" onclick="BrowsePage.openMobileDrawer()">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 4h18M6 12h12M9 20h6"/></svg>
+          Filters
+        </button>
+        <div class="browse-search">
+          <svg class="browse-search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" class="browse-search-input" id="browse-search-input" placeholder="Search products..." value="${this.state.searchQuery}" onkeyup="BrowsePage.handleSearchKeyup(event)">
+        </div>
+        <span class="browse-results-count">Showing <strong>${showing}</strong> of <strong>${total}</strong> products</span>
+        <div class="browse-toolbar-right">
+          <div class="browse-sort">
+            <span class="browse-sort-label">Sort:</span>
+            <select class="browse-sort-select" id="browse-sort-select" onchange="BrowsePage.sortBy(this.value)">
+              ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
+            </select>
+          </div>
+          <div class="browse-view-toggle">
+            <button class="browse-view-btn ${this.state.viewMode === 'grid' ? 'active' : ''}" onclick="BrowsePage.toggleView('grid')" title="Grid view">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            </button>
+            <button class="browse-view-btn ${this.state.viewMode === 'list' ? 'active' : ''}" onclick="BrowsePage.toggleView('list')" title="List view">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  renderActiveFilters() {
+    const chips = [];
+
+    this.state.selectedCategories.forEach(catId => {
+      const cat = this.state.categories.find(c => c.id === catId);
+      if (cat) chips.push({ label: cat.name, type: 'category', value: catId });
+    });
+
+    this.state.selectedConditions.forEach(condId => {
+      const cond = this.state.conditions.find(c => c.id === condId);
+      if (cond) chips.push({ label: cond.name, type: 'condition', value: condId });
+    });
+
+    this.state.selectedUniversities.forEach(uniId => {
+      const uni = this.state.universities.find(u => u.id === uniId);
+      if (uni) chips.push({ label: uni.name, type: 'university', value: uniId });
+    });
+
+    if (this.state.priceRange.min > 0 || this.state.priceRange.max < Infinity) {
+      const minLabel = this.state.priceRange.min > 0 ? `GHS ${this.state.priceRange.min}` : 'GHS 0';
+      const maxLabel = this.state.priceRange.max < Infinity ? `GHS ${this.state.priceRange.max}` : '';
+      chips.push({ label: `${minLabel} - ${maxLabel || 'Any'}`, type: 'price', value: 'price' });
+    }
+
+    if (chips.length === 0) return '';
+
+    return `
+      <div class="browse-active-filters">
+        ${chips.map(chip => `
+          <span class="browse-filter-chip">
+            ${chip.label}
+            <button class="browse-filter-chip-remove" onclick="BrowsePage.removeFilter('${chip.type}', '${chip.value}')">&times;</button>
+          </span>
+        `).join('')}
+        <button class="browse-filter-chip-clear" onclick="BrowsePage.clearFilters()">Clear All</button>
+      </div>`;
+  }
+
+  renderProductGrid(products) {
+    if (products.length === 0) {
+      return `
+        <div class="browse-empty">
+          <div class="browse-empty-icon">${Icons.search || ''}</div>
+          <h3>No products found</h3>
           <p>Try adjusting your filters or search for something else</p>
-          <button class="btn btn-primary" onclick="Pages.resetBrowseFilters()">Clear Filters</button>
-        </div>
-        `}
-    </div>
-
-    ${paginatedData.totalPages > 1 ? `
-    <div class="pagination">
-      ${Array.from({ length: paginatedData.totalPages }, (_, i) => `
-        <button class="page-btn ${i + 1 === paginatedData.currentPage ? 'active' : ''}" onclick="Pages.goToBrowsePage(${i + 1})">
-          ${i + 1}
-        </button>
-      `).join('')}
-    </div>
-    ` : ''}
-  </div>
-
-  ${BrowsePageMethods.renderRecentlyViewedSection()}
-</div>
-`;
-},
-
-renderProductCardModern (product) {
-  const isInWishlist = productsManager.isInWishlist?.(product.id) || false;
-  const initials = product.seller?.name
-    ? product.seller.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-    : 'UN';
-  const conditionClass = product.condition || 'good';
-  const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
-  const categoryLabel = product.category
-    ? product.category.charAt(0).toUpperCase() + product.category.slice(1).replace('-', ' ')
-    : 'Item';
-
-  return `
-  <div class="product-card-modern" onclick="Pages.renderProductDetail('${product.id}')">
-    <div class="product-card-image-wrap">
-      <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" class="product-card-image" loading="lazy">
-      <div class="product-badges">
-        <span class="product-badge badge-condition ${conditionClass}">${conditionLabel}</span>
-      </div>
-      <button class="wishlist-btn ${isInWishlist ? 'active' : ''}" onclick="event.stopPropagation(); Pages.toggleWishlist(event, '${product.id}')">
-        ${isInWishlist ? Icons.heart : Icons.heartOutline}
-      </button>
-    </div>
-    <div class="product-card-info">
-      <div class="product-card-category">${categoryLabel}</div>
-      <h3 class="product-card-title">${product.title}</h3>
-      <div class="product-card-price-row">
-        <span class="product-card-price">GHS ${product.price?.toLocaleString() || '0'}</span>
-      </div>
-      <div class="product-card-seller">
-        <div class="seller-avatar">${initials}</div>
-        <span class="seller-name">${product.seller?.name || 'Unknown'}</span>
-        ${product.seller?.rating ? `
-        <div class="seller-rating">
-          ${Icons.star}
-          <span>${product.seller.rating}</span>
-        </div>
-        ` : ''}
-        ${product.seller?.rating >= 4.5 ? '<span class="trust-badge trust-badge-top-seller"><svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Top Seller</span>' : ''}
-        ${product.seller?.verified ? '<span class="trust-badge trust-badge-verified"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>Verified</span>' : ''}
-      </div>
-    </div>
-    <button class="quick-add-btn" onclick="event.stopPropagation(); cartManager?.add(${JSON.stringify(product).replace(/"/g, '&quot;')}); Pages.updateCartBadge();" title="Add to cart">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-      </svg>
-    </button>
-  </div>
-  `;
-},
-
-  filterByCategory (categoryId) {
-    document.querySelectorAll('.category-pill').forEach(pill => {
-      pill.classList.remove('active');
-    });
-
-    const clickedPill = event.target.closest('.category-pill');
-    if (clickedPill) clickedPill.classList.add('active');
-
-    if (categoryId === 'all') {
-      productsManager.resetFilters();
-    } else {
-      productsManager.filter({ category: categoryId });
+          <button class="browse-empty-btn" onclick="BrowsePage.clearFilters()">Clear Filters</button>
+        </div>`;
     }
 
-    BrowsePageMethods.renderBrowse();
-  },
+    return `
+      <div class="browse-product-grid ${this.state.viewMode === 'list' ? 'list-view' : ''}" id="browse-product-grid">
+        ${products.map(product => this.renderProductCard(product)).join('')}
+      </div>`;
+  }
 
-  applyBrowseFilters () {
-    const conditions = [];
-    if (document.getElementById('cond-new')?.checked) conditions.push('new');
-    if (document.getElementById('cond-like-new')?.checked) conditions.push('like-new');
-    if (document.getElementById('cond-excellent')?.checked) conditions.push('excellent');
-    if (document.getElementById('cond-good')?.checked) conditions.push('good');
-    if (document.getElementById('cond-fair')?.checked) conditions.push('fair');
+  renderProductCard(product) {
+    const isInWishlist = productsManager.isInWishlist?.(product.id) || false;
+    const initials = product.seller?.name
+      ? product.seller.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+      : 'UN';
+    const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
+    const categoryLabel = product.category
+      ? product.category.charAt(0).toUpperCase() + product.category.slice(1).replace(/-/g, ' ')
+      : 'Item';
 
-    productsManager.filter({
-      condition: conditions.length > 0 ? conditions : null,
-    });
+    return `
+      <div class="browse-product-card" onclick="Pages.renderProductDetail('${product.id}')">
+        <div class="browse-product-image-wrap">
+          <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy">
+          <div class="browse-product-badges">
+            <span class="browse-product-badge ${product.condition || 'good'}">${conditionLabel}</span>
+          </div>
+          <button class="browse-product-wishlist-btn ${isInWishlist ? 'active' : ''}" onclick="event.stopPropagation(); Pages.toggleWishlist(event, '${product.id}')">
+            ${isInWishlist ? (Icons.heart || '') : (Icons.heartOutline || '')}
+          </button>
+        </div>
+        <div class="browse-product-info">
+          <div class="browse-product-category">${categoryLabel}</div>
+          <h3 class="browse-product-title">${product.title}</h3>
+          <div class="browse-product-price">GHS ${product.price?.toLocaleString() || '0'}</div>
+          <div class="browse-product-seller">
+            <div class="browse-product-seller-avatar">${initials}</div>
+            <span class="browse-product-seller-name">${product.seller?.name || 'Unknown'}</span>
+            ${product.seller?.rating ? `<span style="font-size:var(--text-xs);color:var(--secondary);margin-left:auto;">${Icons.star || ''} ${product.seller.rating}</span>` : ''}
+          </div>
+          <button class="browse-product-add-cart-btn" onclick="event.stopPropagation(); cartManager?.add(${JSON.stringify(product).replace(/"/g, '&quot;')}); Pages.updateCartBadge();">Add to Cart</button>
+        </div>
+      </div>`;
+  }
 
-    BrowsePageMethods.renderBrowse();
-  },
+  renderLoadMore(paginatedData) {
+    if (!paginatedData || paginatedData.totalPages <= 1) return '';
+    if (paginatedData.currentPage >= paginatedData.totalPages) return '';
+    return `
+      <div class="browse-load-more">
+        <button class="browse-load-more-btn" onclick="BrowsePage.loadMore()">Load More Products</button>
+      </div>`;
+  }
 
-  applyPriceFilter () {
-    const minEl = document.getElementById('price-min');
-    const maxEl = document.getElementById('price-max');
+  renderPagination(paginatedData) {
+    if (!paginatedData || paginatedData.totalPages <= 1) return '';
+    const pages = [];
+    const current = paginatedData.currentPage;
+    const total = paginatedData.totalPages;
+
+    pages.push(1);
+    if (current > 3) pages.push('...');
+    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+      pages.push(i);
+    }
+    if (current < total - 2) pages.push('...');
+    if (total > 1) pages.push(total);
+
+    return `
+      <div class="browse-pagination">
+        <button class="browse-page-btn" onclick="BrowsePage.goToPage(${current - 1})" ${current <= 1 ? 'disabled style="opacity:0.4;pointer-events:none;"' : ''}>&laquo;</button>
+        ${pages.map(p => p === '...'
+          ? '<span style="padding:0 4px;color:var(--neutral-400);">...</span>'
+          : `<button class="browse-page-btn ${p === current ? 'active' : ''}" onclick="BrowsePage.goToPage(${p})">${p}</button>`
+        ).join('')}
+        <button class="browse-page-btn" onclick="BrowsePage.goToPage(${current + 1})" ${current >= total ? 'disabled style="opacity:0.4;pointer-events:none;"' : ''}>&raquo;</button>
+      </div>`;
+  }
+
+  toggleCategory(catId) {
+    const idx = this.state.selectedCategories.indexOf(catId);
+    if (idx > -1) {
+      this.state.selectedCategories.splice(idx, 1);
+    } else {
+      this.state.selectedCategories.push(catId);
+    }
+    this.applyFilters();
+  }
+
+  toggleCondition(condId) {
+    const idx = this.state.selectedConditions.indexOf(condId);
+    if (idx > -1) {
+      this.state.selectedConditions.splice(idx, 1);
+    } else {
+      this.state.selectedConditions.push(condId);
+    }
+    this.applyFilters();
+  }
+
+  toggleUniversity(uniId) {
+    const idx = this.state.selectedUniversities.indexOf(uniId);
+    if (idx > -1) {
+      this.state.selectedUniversities.splice(idx, 1);
+    } else {
+      this.state.selectedUniversities.push(uniId);
+    }
+    this.applyFilters();
+  }
+
+  applyPriceFilter() {
+    const minEl = document.getElementById('browse-price-min') || document.querySelector('#browse-mobile-drawer #browse-price-min');
+    const maxEl = document.getElementById('browse-price-max') || document.querySelector('#browse-mobile-drawer #browse-price-max');
     const min = minEl?.value ? parseInt(minEl.value) : 0;
     const max = maxEl?.value ? parseInt(maxEl.value) : Infinity;
+    this.state.priceRange = { min, max };
+    this.applyFilters();
+  }
+
+  applyFilters() {
+    if (this.state.selectedCategories.length > 0) {
+      productsManager.filter({ category: this.state.selectedCategories[0] });
+    } else {
+      productsManager.currentFilters.category = null;
+      productsManager.applyFilters();
+    }
 
     productsManager.filter({
-      priceRange: { min, max },
+      condition: this.state.selectedConditions.length > 0 ? [...this.state.selectedConditions] : null,
+      priceRange: { ...this.state.priceRange },
+      sortBy: this.state.sortBy,
+      searchQuery: this.state.searchQuery || '',
     });
 
-    BrowsePageMethods.renderBrowse();
-  },
-
-  resetConditionFilter () {
-    ['cond-new', 'cond-like-new', 'cond-excellent', 'cond-good', 'cond-fair'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.checked = false;
-    });
-    productsManager.filter({ condition: null });
-    BrowsePageMethods.renderBrowse();
-  },
-
-  resetPriceFilter () {
-    const minEl = document.getElementById('price-min');
-    const maxEl = document.getElementById('price-max');
-    if (minEl) minEl.value = '';
-    if (maxEl) maxEl.value = '';
-    productsManager.filter({ priceRange: { min: 0, max: Infinity } });
-    BrowsePageMethods.renderBrowse();
-  },
-
-  toggleMobileFilters () {
-    const group = document.getElementById('browse-filters-group');
-    group?.classList.toggle('open');
-  },
-
-  setRatingFilter (rating) {
-    productsManager.filter({ minRating: rating });
-    BrowsePageMethods.renderBrowse();
-  },
-
-renderProductCard (product) {
-  const isInWishlist = productsManager.isInWishlist(product.id);
-  const initials = product.seller?.name
-    ?.split(' ')
-    ?.map(n => n[0])
-    ?.join('')
-    ?.toUpperCase()
-    ?.slice(0, 2) || 'UN';
-  const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
-  const categoryLabel = product.category
-    ? product.category.charAt(0).toUpperCase() + product.category.slice(1).replace('-', ' ')
-    : 'Other';
-
-  return `
-  <div class="store-product-card" onclick="Pages.renderProductDetail('${product.id}')">
-    <!-- Image -->
-    <div class="store-product-image">
-      <img src="${product.images[0]}" alt="${product.title}" loading="lazy" />
-      <span class="store-condition-badge ${product.condition}">${conditionLabel}</span>
-      <button class="store-wishlist-btn ${isInWishlist ? 'active' : ''}"
-        onclick="Pages.toggleWishlist(event, '${product.id}')"
-        title="${isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}">
-        ${isInWishlist ? Icons.heart : Icons.heartOutline}
-      </button>
-    </div>
-
-    <!-- Product Info -->
-    <div class="store-product-info">
-      <div class="store-product-category">${categoryLabel}</div>
-      <h3 class="store-product-title">${product.title}</h3>
-      <div class="store-product-price-row">
-        <span class="store-product-price">${product.price.toLocaleString()}</span>
-        <span class="store-product-currency">GHS</span>
-      </div>
-
-      <!-- Seller Row -->
-      <div class="store-product-seller-row">
-        <div class="store-seller-info">
-          <div class="store-seller-avatar">${initials}</div>
-          <span class="store-seller-name">${product.seller.name}</span>
-          ${product.seller?.rating >= 4.5 ? '<span class="trust-badge trust-badge-top-seller"><svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Top</span>' : ''}
-        </div>
-        <div class="store-seller-rating">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          ${product.seller.rating || '4.5'}
-        </div>
-      </div>
-    </div>
-
-    <!-- Hover Actions -->
-    <div class="store-product-actions-overlay">
-      <button class="store-action-btn store-action-btn-primary" onclick="event.stopPropagation(); cartManager.add(${JSON.stringify(product).replace(/"/g, '&quot;')}); Pages.updateCartBadge();">${Icons.cart} Add to Cart</button>
-      <button class="store-action-btn store-action-btn-secondary" onclick="event.stopPropagation(); Pages.renderProductDetail('${product.id}')">View</button>
-    </div>
-  </div>
-  `;
-},
-
-renderBBProductCard (product) {
-  const isInWishlist = productsManager.isInWishlist(product.id);
-  const initials = product.seller?.name
-    ? product.seller.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-    : 'UN';
-  const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
-  const categoryLabel = product.category
-    ? product.category.charAt(0).toUpperCase() + product.category.slice(1).replace('-', ' ')
-    : 'Other';
-  const isDeal = product.price > 30;
-  const savingsPercent = isDeal ? Math.round(Math.random() * 30 + 30) : 0;
-
-  return (
-    '<div class="bb-browse-card" onclick="Pages.renderProductDetail(\'' +
-    product.id +
-    '\')">' +
-    (isDeal ? '<div class="bb-browse-deal-badge">Save ' + savingsPercent + '%</div>' : '') +
-    '<button class="bb-browse-save-btn ' +
-    (isInWishlist ? 'active' : '') +
-    '" onclick="event.stopPropagation(); Pages.toggleWishlist(event, \'' +
-    product.id +
-    '\');">' +
-    (isInWishlist ? Icons.heart : Icons.heartOutline) +
-    '</button>' +
-    '<img src="' +
-    product.images[0] +
-    '" alt="' +
-    product.title +
-    '" class="bb-browse-image" loading="lazy" />' +
-    '<div class="bb-browse-info">' +
-    '<p class="bb-browse-category">' +
-    categoryLabel +
-    '</p>' +
-    '<h3 class="bb-browse-title">' +
-    product.title +
-    '</h3>' +
-    '<div class="bb-browse-rating">' +
-    '<span class="bb-browse-rating-stars">' + Icons.star + Icons.star + Icons.star + Icons.star + Icons.starOutline + '</span>' +
-    '<span class="bb-browse-rating-count">(' +
-    (product.seller.rating || '4.5') +
-    ')</span>' +
-    '</div>' +
-    '<div class="bb-browse-pricing">' +
-    '<span class="bb-browse-price">GHS ' +
-    product.price.toLocaleString() +
-    '</span>' +
-    (isDeal
-      ? '<span class="bb-browse-original-price">GHS ' +
-        Math.round(product.price * 1.5).toLocaleString() +
-        '</span>'
-      : '') +
-    (isDeal
-      ? '<p class="bb-browse-savings">Save GHS ' +
-        Math.round(product.price * 0.5).toLocaleString() +
-        ' (' +
-        savingsPercent +
-        '% off)</p>'
-      : '') +
-    '</div>' +
-    '<span class="bb-browse-condition">' +
-    conditionLabel +
-    '</span>' +
-    '<button class="bb-browse-add-cart" onclick="event.stopPropagation(); cartManager.add(' +
-    JSON.stringify(product).replace(/"/g, '&quot;') +
-    '); Pages.updateCartBadge();">' + Icons.cart + ' Add to Cart</button>' +
-    '<div class="bb-browse-seller">' +
-    '<div class="bb-browse-seller-avatar">' +
-    initials +
-    '</div>' +
-    '<span class="bb-browse-seller-name">' +
-    product.seller.name +
-    '</span>' +
-    '</div>' +
-    '</div>' +
-    '</div>'
-  );
-},
-
-renderBrowseProducts () {
-  const paginatedData = productsManager.getPaginated(1);
-  const productsGrid = document.querySelector('.products-grid');
-
-  if (productsGrid) {
-    productsGrid.innerHTML =
-      paginatedData.products.length > 0
-        ? paginatedData.products.map(product => BrowsePageMethods.renderProductCard(product)).join('')
-        : '<div class="empty-state">No products found. Try adjusting your filters.</div>';
-  }
-},
-
-renderRecentlyViewedSection () {
-  const recentlyViewed = productsManager.getRecentlyViewed(8);
-  if (!recentlyViewed || recentlyViewed.length === 0) return '';
-
-  return `
-<div class="recently-viewed-section" style="padding: 2rem 0 1rem;">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
-    <h2 style="font-size:1.25rem;font-weight:700;margin:0;">Recently Viewed</h2>
-    <button class="btn btn-ghost btn-sm" onclick="productsManager.clearRecentlyViewed(); Pages.renderBrowse();" style="font-size:0.8rem;">Clear</button>
-  </div>
-  <div style="display:flex;gap:1rem;overflow-x:auto;padding-bottom:0.5rem;scrollbar-width:thin;">
-    ${recentlyViewed.map(product => {
-      const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
-      return `
-    <div onclick="Pages.renderProductDetail('${product.id}')" style="min-width:160px;max-width:160px;cursor:pointer;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--neutral-200);transition:box-shadow 0.2s;background:var(--bg-primary);" onmouseover="this.style.boxShadow='var(--shadow-card-hover)'" onmouseout="this.style.boxShadow='none'">
-      <div style="aspect-ratio:1;overflow:hidden;background:var(--neutral-100);">
-        <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
-      </div>
-      <div style="padding:0.5rem;">
-        <div style="font-size:0.75rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${product.title}</div>
-        <div style="font-size:0.8rem;font-weight:700;color:var(--price-color);margin-top:2px;">GHS ${product.price?.toLocaleString() || '0'}</div>
-        <span class="condition-badge ${product.condition || 'good'}" style="font-size:0.65rem;padding:2px 6px;margin-top:4px;">${conditionLabel}</span>
-      </div>
-    </div>`;
-    }).join('')}
-  </div>
-</div>
-`;
-},
-
-renderProductDetail (productId) {
-  const product = productsManager.getById(productId);
-
-  if (!product) {
-    alert('Product not found');
-    return;
-  }
-
-  productsManager.addToRecentlyViewed(productId);
-
-  const mainContent = document.getElementById('main-content');
-  const isInWishlist = productsManager.isInWishlist(productId);
-  const initials = product.seller.name
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-  const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
-  const categoryLabel = product.category
-    ? product.category.charAt(0).toUpperCase() + product.category.slice(1).replace('-', ' ')
-    : 'Other';
-
-  mainContent.innerHTML = `
-  <style>
-  .pd-page { min-height: 100vh; background: #0a0a0a; }
-  .pd-breadcrumb { padding: 1rem 2rem; max-width: 1400px; margin: 0 auto; }
-  .pd-back-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: #a1a1aa; font-size: 0.875rem; cursor: pointer; transition: all 0.2s; }
-  .pd-back-btn:hover { border-color: #6366f1; color: #a5b4fc; }
-  .pd-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; max-width: 1400px; margin: 0 auto; padding: 1rem 2rem 4rem; }
-  .pd-image-section { position: sticky; top: 2rem; height: fit-content; }
-  .pd-main-image { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.06); background: #141414; }
-  .pd-info-card { background: #141414; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.06); padding: 2rem; }
-  .pd-category-tag { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(99,102,241,0.15); color: #a5b4fc; margin-bottom: 0.75rem; }
-  .pd-title { font-size: 1.75rem; font-weight: 700; color: #fafafa; letter-spacing: -0.025em; margin-bottom: 1rem; line-height: 1.3; }
-  .pd-meta { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-  .pd-condition { padding: 0.375rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
-  .pd-condition.excellent { background: rgba(16,185,129,0.2); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
-  .pd-condition.good { background: rgba(245,158,11,0.2); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
-  .pd-condition.fair { background: rgba(249,115,22,0.2); color: #fdba74; border: 1px solid rgba(249,115,22,0.3); }
-  .pd-date { font-size: 0.8rem; color: #71717a; }
-  .pd-price-box { margin-bottom: 1.5rem; }
-  .pd-price { font-size: 2.5rem; font-weight: 800; color: #fafafa; letter-spacing: -0.03em; }
-  .pd-price-currency { font-size: 1rem; font-weight: 500; color: #71717a; margin-left: 0.25rem; }
-  .pd-seller-card { background: #18181b; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
-  .pd-seller-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; color: #fff; flex-shrink: 0; }
-  .pd-seller-name { font-size: 0.95rem; font-weight: 600; color: #fafafa; }
-  .pd-seller-rating { font-size: 0.85rem; color: #fcd34d; display: flex; align-items: center; gap: 0.25rem; margin-top: 0.125rem; }
-  .pd-desc-card { background: #18181b; border-radius: 0.75rem; padding: 1.25rem; margin-bottom: 1.5rem; }
-  .pd-desc-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #71717a; margin-bottom: 0.5rem; }
-  .pd-desc-text { font-size: 0.95rem; color: #d4d4d8; line-height: 1.7; }
-  .pd-details-list { list-style: none; padding: 0; margin: 0 0 1.5rem 0; }
-  .pd-details-item { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.875rem; }
-  .pd-details-item:last-child { border-bottom: none; }
-  .pd-details-label { color: #71717a; }
-  .pd-details-value { color: #d4d4d8; font-weight: 500; }
-  .pd-methods-section { margin-bottom: 1.5rem; }
-  .pd-methods-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #71717a; margin-bottom: 0.5rem; }
-  .pd-methods-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-  .pd-method-tag { padding: 0.375rem 0.75rem; border-radius: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); font-size: 0.8rem; color: #d4d4d8; }
-  .pd-actions { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.5rem; }
-  .pd-btn { display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.875rem 1.5rem; border-radius: 0.75rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.25s; border: none; }
-  .pd-btn-primary { background: #6366f1; color: #fff; }
-  .pd-btn-primary:hover { background: #4f46e5; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(99,102,241,0.3); }
-  .pd-btn-outline { background: transparent; color: #d4d4d8; border: 1px solid rgba(255,255,255,0.1); }
-  .pd-btn-outline:hover { border-color: rgba(99,102,241,0.4); color: #a5b4fc; }
-  .pd-btn-outline.active { border-color: rgba(239,68,68,0.4); color: #fca5a5; background: rgba(239,68,68,0.05); }
-  .pd-secondary-actions { display: flex; gap: 0.5rem; }
-  .pd-secondary-actions .pd-btn { flex: 1; padding: 0.625rem; font-size: 0.85rem; }
-  @media (max-width: 768px) {
-    .pd-layout { grid-template-columns: 1fr; padding: 1rem; }
-    .pd-image-section { position: static; }
-    .pd-title { font-size: 1.375rem; }
-    .pd-price { font-size: 2rem; }
-  }
-  </style>
-
-  <div class="pd-page">
-    <!-- Breadcrumb -->
-    <div class="pd-breadcrumb">
-      <button class="pd-back-btn" onclick="history.back()">← Back to Browse</button>
-    </div>
-
-    <!-- Layout -->
-    <div class="pd-layout">
-      <!-- Image Section -->
-      <div class="pd-image-section">
-        <img src="${product.images[0]}" alt="${product.title}" class="pd-main-image" onerror="this.src='/assets/images/products/no-image.svg'" />
-      </div>
-
-      <!-- Info Section -->
-      <div class="pd-info-card">
-        <span class="pd-category-tag">${categoryLabel}</span>
-        <h1 class="pd-title">${product.title}</h1>
-
-        <div class="pd-meta">
-          <span class="pd-condition ${product.condition}">${conditionLabel}</span>
-          <span class="pd-date">Listed ${Formatter.formatTimeAgo(product.createdAt)}</span>
-        </div>
-
-        <!-- Price -->
-        <div class="pd-price-box">
-          <span class="pd-price">${product.price.toLocaleString()}<span class="pd-price-currency">GHS</span></span>
-        </div>
-
-        <!-- Seller -->
-        <div class="pd-seller-card">
-          <div class="pd-seller-avatar">${initials}</div>
-          <div>
-            <div class="pd-seller-name">${product.seller.name}</div>
-            <div class="pd-seller-rating">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              ${product.seller.rating || '4.5'} rating
-            </div>
-          </div>
-        </div>
-
-        <!-- Description -->
-        <div class="pd-desc-card">
-          <div class="pd-desc-label">Description</div>
-          <p class="pd-desc-text">${product.description}</p>
-        </div>
-
-        <!-- Details -->
-        <ul class="pd-details-list">
-          <li class="pd-details-item">
-            <span class="pd-details-label">Category</span>
-            <span class="pd-details-value">${categoryLabel}</span>
-          </li>
-          <li class="pd-details-item">
-            <span class="pd-details-label">Condition</span>
-            <span class="pd-details-value">${conditionLabel}</span>
-          </li>
-          <li class="pd-details-item">
-            <span class="pd-details-label">University</span>
-            <span class="pd-details-value">${product.university ? product.university.toUpperCase() : 'N/A'}</span>
-          </li>
-        </ul>
-
-        <!-- Delivery Methods -->
-        <div class="pd-methods-section">
-          <div class="pd-methods-label">Delivery Methods</div>
-          <div class="pd-methods-list">
-            ${(product.deliveryModes || []).map(m => `<span class="pd-method-tag">${m.charAt(0).toUpperCase() + m.slice(1)}</span>`).join('')}
-          </div>
-        </div>
-
-        <!-- Payment Methods -->
-        <div class="pd-methods-section">
-          <div class="pd-methods-label">Payment Methods</div>
-          <div class="pd-methods-list">
-            ${(product.paymentModes || []).map(m => `<span class="pd-method-tag">${m.toUpperCase()}</span>`).join('')}
-  </div>
-  </div>
-
-  ${product.variants && product.variants.length > 0 ? `
-  <div class="pd-variants-section">
-  <div class="pd-methods-label">Options</div>
-  <div class="pd-variants-list">
-  ${product.variants.map((v, i) => `
-  <button class="pd-variant-btn" data-variant-index="${i}" onclick="Pages.selectVariant(this, ${i})">
-  <span class="pd-variant-label">${v.label}</span>
-  <span class="pd-variant-value">${v.value}</span>
-  ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
-  </button>
-  `).join('')}
-  </div>
-  <input type="hidden" id="selected-variant-index" value="-1" />
-  </div>
-  ` : ''}
-
-  <!-- Action Buttons -->
-  <div class="pd-actions">
-  <button class="pd-btn pd-btn-primary" onclick="Pages.addToCartWithVariant('${productId}')">
-            ${Icons.cart} Add to Cart
-          </button>
-          <div class="pd-secondary-actions">
-            <button class="pd-btn pd-btn-outline ${isInWishlist ? 'active' : ''}" onclick="Pages.toggleWishlistDetail('${productId}')">
-              ${isInWishlist ? Icons.heart + ' Saved' : Icons.heartOutline + ' Save'}
-            </button>
-            <button class="pd-btn pd-btn-outline" onclick="Pages.shareProduct('${productId}')">${Icons.upload} Share</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Reviews Section -->
-    <div style="max-width: 1400px; margin: 0 auto; padding: 2rem;">
-      <div style="background: #141414; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.06); padding: 2rem;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
-          <h2 style="font-size: 1.5rem; font-weight: 700; color: #fafafa; margin: 0;">Seller Reviews</h2>
-          <button onclick="Pages.writeReview('${product.seller?.id || product.seller}')" style="padding: 0.5rem 1rem; background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer;">Write Review</button>
-        </div>
-        <div id="product-reviews-container">
-          <div style="text-align: center; padding: 2rem; color: #71717a;">
-            <p>Loading reviews...</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  `;
-
-  BrowsePageMethods.loadProductReviews(productId);
-},
-
-async loadProductReviews (productId) {
-  const container = document.getElementById('product-reviews-container');
-  if (!container) {return;}
-
-  const product = productsManager.getById(productId);
-  if (!product) {
-    container.innerHTML = '<p style="text-align: center; color: #71717a;">Product not found</p>';
-    return;
-  }
-
-  const sellerId = product.seller?.id || product.seller;
-
-  try {
-    let reviews = [];
-    if (typeof reviewManager !== 'undefined' && reviewManager.getSellerReviews) {
-      try {
-        const result = await reviewManager.getSellerReviews(sellerId, { limit: 10 });
-        reviews = result.reviews || [];
-      } catch (_e) {
-        // Fallback to local storage
-      }
-    }
-
-    if (!reviews || reviews.length === 0) {
-      reviews = [
-        { id: 'rev1', reviewer: { fullName: 'Kofi A.' }, rating: 5, comment: 'Great seller! Item was exactly as described. Very responsive to messages.', createdAt: new Date(Date.now() - 86400000 * 2).toISOString() },
-        { id: 'rev2', reviewer: { fullName: 'Ama M.' }, rating: 4, comment: 'Good experience. Item was in good condition. Delivery was a bit slow.', createdAt: new Date(Date.now() - 86400000 * 7).toISOString() },
-        { id: 'rev3', reviewer: { fullName: 'Yaw D.' }, rating: 5, comment: 'Highly recommend! Fair price and quick delivery.', createdAt: new Date(Date.now() - 86400000 * 14).toISOString() },
-      ];
-    }
-
-    const avgRating = reviews.length > 0
-      ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
-      : '0';
-
-    const html = `
-    <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
-      <div style="text-align: center;">
-        <div style="font-size: 2.5rem; font-weight: 800; color: #fafafa;">${avgRating}</div>
-        <div style="color: #fcd34d; font-size: 1.25rem;">${Pages.renderStars(Math.round(parseFloat(avgRating)))}</div>
-        <div style="font-size: 0.8rem; color: #71717a;">${reviews.length} review${reviews.length !== 1 ? 's' : ''}</div>
-      </div>
-      <div style="flex: 1;">
-        ${reviews.map(r => BrowsePageMethods.renderReviewItem(r)).join('')}
-      </div>
-    </div>
-    `;
-
-    container.innerHTML = html;
-  } catch (error) {
-    container.innerHTML = '<p style="text-align: center; color: #71717a;">Unable to load reviews</p>';
-  }
-},
-
-renderReviewItem (review) {
-  const timeAgo = Pages.formatReviewTime(review.createdAt);
-  const stars = Pages.renderStars(review.rating);
-
-  return `
-  <div style="padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
-    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-      <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; color: #fff;">
-        ${(review.reviewer?.fullName || 'U').charAt(0)}
-      </div>
-      <div>
-        <div style="font-size: 0.9rem; font-weight: 500; color: #fafafa;">${review.reviewer?.fullName || 'Anonymous'}</div>
-        <div style="color: #fcd34d; font-size: 0.85rem;">${stars}</div>
-      </div>
-      <div style="margin-left: auto; font-size: 0.75rem; color: #71717a;">${timeAgo}</div>
-    </div>
-    <p style="font-size: 0.9rem; color: #d4d4d8; line-height: 1.6; margin: 0;">${review.comment || ''}</p>
-  </div>
-  `;
-},
-
-async writeReview (sellerId) {
-  const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
-  const currentUser = session?.user || null;
-  if (!currentUser) {
-    toastManager?.show('Please login to write a review', 'info');
-    Pages.renderLogin();
-    return;
-  }
-
-  const rating = prompt('Rate this seller (1-5 stars):');
-  if (!rating || isNaN(rating) || rating < 1 || rating > 5) {
-    return;
-  }
-
-  const comment = prompt('Write your review (optional):');
-
-  try {
-    if (typeof reviewManager !== 'undefined' && reviewManager.submitReview) {
-      await reviewManager.submitReview({ sellerId, rating: parseInt(rating), comment: comment || '' });
-      toastManager?.show('Review submitted successfully!', 'success');
+    if (this.state.selectedUniversities.length > 0) {
+      productsManager.filter({ university: this.state.selectedUniversities[0] });
     } else {
-      toastManager?.show('Review submitted!', 'success');
+      productsManager.currentFilters.university = null;
+      productsManager.applyFilters();
     }
 
-    const container = document.getElementById('product-reviews-container');
-    if (container) {
-      const hash = window.location.hash;
-      if (hash.startsWith('#/product/')) {
-        const productId = hash.replace('#/product/', '');
-        BrowsePageMethods.renderProductDetail(productId);
+    this._filteredProducts = productsManager.filteredProducts || [];
+    this.state.totalProducts = this._filteredProducts.length;
+
+    const paginatedData = productsManager.getPaginated(1);
+    const mainContent = document.getElementById('main-content');
+    if (mainContent) {
+      mainContent.innerHTML = this.renderHTML(paginatedData);
+    }
+  }
+
+  clearFilters() {
+    this.state.selectedCategories = [];
+    this.state.selectedConditions = [];
+    this.state.selectedUniversities = [];
+    this.state.priceRange = { min: 0, max: Infinity };
+    this.state.sortBy = 'newest';
+    this.state.searchQuery = '';
+    this.state.currentPage = 1;
+    productsManager.resetFilters();
+    this._filteredProducts = productsManager.filteredProducts || [...this._allProducts];
+    this.state.totalProducts = this._filteredProducts.length;
+    const paginatedData = productsManager.getPaginated(1);
+    const mainContent = document.getElementById('main-content');
+    if (mainContent) {
+      mainContent.innerHTML = this.renderHTML(paginatedData);
+    }
+  }
+
+  sortBy(field) {
+    this.state.sortBy = field;
+    productsManager.filter({ sortBy: field });
+    this._filteredProducts = productsManager.filteredProducts || [];
+    this.state.totalProducts = this._filteredProducts.length;
+    const paginatedData = productsManager.getPaginated(1);
+    const mainContent = document.getElementById('main-content');
+    if (mainContent) {
+      mainContent.innerHTML = this.renderHTML(paginatedData);
+    }
+  }
+
+  toggleView(mode) {
+    this.state.viewMode = mode;
+    const grid = document.getElementById('browse-product-grid');
+    if (grid) {
+      grid.classList.toggle('list-view', mode === 'list');
+    }
+    document.querySelectorAll('.browse-view-btn').forEach(btn => btn.classList.remove('active'));
+    const activeBtn = document.querySelector(`.browse-view-btn[onclick="BrowsePage.toggleView('${mode}')"]`);
+    if (activeBtn) activeBtn.classList.add('active');
+  }
+
+  loadMore() {
+    this.state.currentPage += 1;
+    const paginatedData = productsManager.getPaginated(this.state.currentPage);
+    const grid = document.getElementById('browse-product-grid');
+    if (grid && paginatedData.products.length > 0) {
+      const newCards = paginatedData.products.map(p => this.renderProductCard(p)).join('');
+      grid.insertAdjacentHTML('beforeend', newCards);
+      const loadMoreSection = document.querySelector('.browse-load-more');
+      if (paginatedData.currentPage >= paginatedData.totalPages && loadMoreSection) {
+        loadMoreSection.remove();
+      }
+      const paginationSection = document.querySelector('.browse-pagination');
+      if (paginationSection) {
+        paginationSection.outerHTML = this.renderPagination(paginatedData);
       }
     }
-  } catch (error) {
-    toastManager?.show('Failed to submit review', 'error');
   }
-},
 
+  goToPage(page) {
+    const paginatedData = productsManager.getPaginated(page);
+    if (paginatedData.products.length === 0) return;
+    this.state.currentPage = page;
+    const mainContent = document.getElementById('main-content');
+    if (mainContent) {
+      mainContent.innerHTML = this.renderHTML(paginatedData);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  handleSearchKeyup(event) {
+    if (event.key === 'Enter') {
+      const query = event.target.value.trim();
+      this.searchProducts(query);
+    }
+  }
+
+  searchProducts(query) {
+    this.state.searchQuery = query;
+    productsManager.filter({ searchQuery: query });
+    this._filteredProducts = productsManager.filteredProducts || [];
+    this.state.totalProducts = this._filteredProducts.length;
+    const paginatedData = productsManager.getPaginated(1);
+    const mainContent = document.getElementById('main-content');
+    if (mainContent) {
+      mainContent.innerHTML = this.renderHTML(paginatedData);
+    }
+  }
+
+  removeFilter(type, value) {
+    if (type === 'category') {
+      const idx = this.state.selectedCategories.indexOf(value);
+      if (idx > -1) this.state.selectedCategories.splice(idx, 1);
+    } else if (type === 'condition') {
+      const idx = this.state.selectedConditions.indexOf(value);
+      if (idx > -1) this.state.selectedConditions.splice(idx, 1);
+    } else if (type === 'university') {
+      const idx = this.state.selectedUniversities.indexOf(value);
+      if (idx > -1) this.state.selectedUniversities.splice(idx, 1);
+    } else if (type === 'price') {
+      this.state.priceRange = { min: 0, max: Infinity };
+    }
+    this.applyFilters();
+  }
+
+  openMobileDrawer() {
+    this.state.mobileDrawerOpen = true;
+    const drawer = document.getElementById('browse-mobile-drawer');
+    const overlay = document.getElementById('browse-mobile-overlay');
+    if (drawer) {
+      drawer.style.display = 'block';
+      requestAnimationFrame(() => drawer.classList.add('open'));
+    }
+    if (overlay) {
+      overlay.style.display = 'block';
+      requestAnimationFrame(() => overlay.classList.add('open'));
+    }
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeMobileDrawer() {
+    this.state.mobileDrawerOpen = false;
+    const drawer = document.getElementById('browse-mobile-drawer');
+    const overlay = document.getElementById('browse-mobile-overlay');
+    if (drawer) drawer.classList.remove('open');
+    if (overlay) overlay.classList.remove('open');
+    document.body.style.overflow = '';
+    setTimeout(() => {
+      if (drawer) drawer.style.display = '';
+      if (overlay) overlay.style.display = '';
+    }, 250);
+  }
+}
+
+const browsePage = new BrowsePage();
+
+const BrowsePageMethods = {
+  renderBrowse(filters) { return browsePage.render(filters); },
+  filterByCategory(catId) { return browsePage.toggleCategory(catId); },
+  applyBrowseFilters() { return browsePage.applyFilters(); },
+  applyPriceFilter() { return browsePage.applyPriceFilter(); },
+  resetConditionFilter() { browsePage.state.selectedConditions = []; return browsePage.applyFilters(); },
+  resetPriceFilter() { browsePage.state.priceRange = { min: 0, max: Infinity }; return browsePage.applyFilters(); },
+  toggleMobileFilters() { return browsePage.state.mobileDrawerOpen ? browsePage.closeMobileDrawer() : browsePage.openMobileDrawer(); },
+  setRatingFilter(rating) { productsManager.filter({ minRating: rating }); return browsePage.render(); },
+  renderProductCardModern(product) { return browsePage.renderProductCard(product); },
+  renderBBProductCard(product) { return browsePage.renderProductCard(product); },
+  renderProductCard(product) { return browsePage.renderProductCard(product); },
+  renderProductDetail(productId) { return Pages.renderProductDetail(productId); },
+  renderBrowseProducts() { return browsePage.applyFilters(); },
+  renderRecentlyViewedSection() { return ''; },
 };
 
 window.BrowsePageMethods = BrowsePageMethods;
+window.BrowsePage = browsePage;

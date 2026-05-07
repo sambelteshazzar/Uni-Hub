@@ -30,29 +30,41 @@ const asyncHandler = (fn) => {
 };
 
 /**
- * Handle Mongoose validation errors
- * @param {Object} error - Mongoose error object
+ * Handle validation errors
+ * @param {Object} error - Validation error object
  * @returns {Object} - Formatted error response
  */
 const handleValidationError = (error) => {
-  const errors = Object.values(error.errors).map(err => err.message);
+  if (error.errors && typeof error.errors === 'object') {
+    const errors = Object.values(error.errors).map(err => err.message || String(err));
+    return {
+      statusCode: 400,
+      message: 'Validation Error',
+      details: errors,
+    };
+  }
   return {
     statusCode: 400,
-    message: 'Validation Error',
-    details: errors,
+    message: error.message || 'Validation Error',
   };
 };
 
 /**
- * Handle Mongoose duplicate key errors
- * @param {Object} error - Mongoose error object
+ * Handle SQLite constraint errors (replaces Mongoose duplicate key handler)
+ * @param {Object} error - SQLite constraint error
  * @returns {Object} - Formatted error response
  */
 const handleDuplicateKeyError = (error) => {
-  const field = Object.keys(error.keyPattern)[0];
+  if (error.code === 11000) {
+    const field = Object.keys(error.keyPattern || {})[0] || 'record';
+    return {
+      statusCode: 400,
+      message: `${field} already exists`,
+    };
+  }
   return {
     statusCode: 400,
-    message: `${field} already exists`,
+    message: error.message || 'Duplicate entry',
   };
 };
 
@@ -101,6 +113,8 @@ const errorHandler = (err, req, res, _next) => {
   if (err.name === 'ValidationError') {
     errorResponse = handleValidationError(err);
   } else if (err.code === 11000) {
+    errorResponse = handleDuplicateKeyError(err);
+  } else if (err.name === 'SqliteError' || err.code === 'SQLITE_CONSTRAINT') {
     errorResponse = handleDuplicateKeyError(err);
   } else if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
     errorResponse = handleJwtError(err);

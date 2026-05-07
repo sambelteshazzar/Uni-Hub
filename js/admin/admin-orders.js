@@ -131,12 +131,18 @@ class AdminOrdersManager {
       }
     }
 
-      const orders = await this._getOrders();
-      const index = orders.findIndex(o => o.id === orderId);
-      if (index !== -1) {
-        orders[index] = order;
-        StorageManager.set(this.ORDERS_STORAGE_KEY, orders);
-      }
+  order.payment.status = 'refunded';
+  order.payment.refundReason = reason;
+  order.payment.refundedAt = new Date().toISOString();
+  order.status = ORDER_STATUS.CANCELLED;
+  order.updatedAt = new Date().toISOString();
+
+  const orders = await this._getOrders();
+  const index = orders.findIndex(o => o.id === orderId);
+  if (index !== -1) {
+    orders[index] = order;
+    StorageManager.set(this.ORDERS_STORAGE_KEY, orders);
+  }
 
       this.invalidateCache();
 

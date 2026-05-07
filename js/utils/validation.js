@@ -126,6 +126,6 @@ if (typeof window !== 'undefined') {
 }
 
 // Also dispatch module-loaded event
-if (typeof dispatchEvent !== 'undefined') {
-  dispatchEvent(new Event('module-loaded', { detail: 'Validator' }));
+if (typeof window !== 'undefined' && typeof window.dispatchEvent !== 'undefined') {
+  window.dispatchEvent(new Event('module-loaded', { detail: 'Validator' }));
 }

@@ -6,7 +6,6 @@
  */
 
 const { getDb } = require('../config/database');
-const { v4: uuidv4 } = require('crypto');
 
 function generateId () {
   const { randomUUID } = require('crypto');

@@ -270,16 +270,16 @@ app.use('/api/search', searchRoutes);
 // Error Handling
 // ============================================
 
-// 404 handler
-app.use((_req, res) => {
-  res.status(404).json({
-  success: false,
-  error: 'Route not found',
-  });
-});
-
-// Sentry error handler (before custom error handler)
+// Sentry error handler (must be before other error handlers)
 app.use(sentryError());
+
+// 404 handler (after Sentry, before global error handler)
+app.use((_req, res) => {
+res.status(404).json({
+success: false,
+error: 'Route not found',
+});
+});
 
 // Global error handler
 app.use((err, _req, res, _next) => {

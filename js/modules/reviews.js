@@ -74,7 +74,7 @@ class ReviewManager {
       const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = -1 } = options;
       const params = new URLSearchParams({ page, limit, sortBy, sortOrder });
 
-      const response = await this._fetchWithCsrf(`${API_URL}/reviews/seller/${sellerId}?${params}`);
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/seller/${sellerId}?${params}`);
       const result = await response.json();
 
       if (!response.ok) {
@@ -94,7 +94,7 @@ class ReviewManager {
    */
   async getRatingSummary (sellerId) {
     try {
-    const response = await this._fetchWithCsrf(`${API_URL}/reviews/seller/${sellerId}/summary`);
+    const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/seller/${sellerId}/summary`);
     const result = await response.json();
 
     if (!response.ok) {
@@ -112,7 +112,7 @@ async getMyReviews (options = {}) {
     const { page = 1, limit = 10 } = options;
     const params = new URLSearchParams({ page, limit });
 
-    const response = await this._fetchWithCsrf(`${API_URL}/reviews/my-reviews?${params}`);
+    const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/my-reviews?${params}`);
 
       const result = await response.json();
 
@@ -134,7 +134,7 @@ async getMyReviews (options = {}) {
    */
   async updateReview (reviewId, data) {
     try {
-      const response = await this._fetchWithCsrf(`${API_URL}/reviews/${reviewId}`, {
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/${reviewId}`, {
         method: 'PUT',
         body: JSON.stringify(data),
       });
@@ -162,7 +162,7 @@ async getMyReviews (options = {}) {
    */
   async deleteReview (reviewId) {
     try {
-      const response = await this._fetchWithCsrf(`${API_URL}/reviews/${reviewId}`, {
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/${reviewId}`, {
         method: 'DELETE',
       });
 
@@ -189,7 +189,7 @@ async getMyReviews (options = {}) {
    */
   async markHelpful (reviewId) {
     try {
-      const response = await this._fetchWithCsrf(`${API_URL}/reviews/${reviewId}/helpful`, {
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/${reviewId}/helpful`, {
         method: 'POST',
       });
 
@@ -212,7 +212,7 @@ async getMyReviews (options = {}) {
    */
   async reportReview (reviewId) {
     try {
-      const response = await this._fetchWithCsrf(`${API_URL}/reviews/${reviewId}/report`, {
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/${reviewId}/report`, {
         method: 'POST',
       });
 
@@ -240,7 +240,7 @@ async getMyReviews (options = {}) {
    */
   async respondToReview (reviewId, comment) {
     try {
-      const response = await this._fetchWithCsrf(`${API_URL}/reviews/${reviewId}/respond`, {
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/${reviewId}/respond`, {
         method: 'POST',
         body: JSON.stringify({ comment }),
       });

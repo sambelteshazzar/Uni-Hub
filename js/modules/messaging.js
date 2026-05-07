@@ -127,7 +127,7 @@ class MessageManager {
     }
 
     try {
-      const serverUrl = API_URL.replace('/api', '');
+      const serverUrl = (window.API_URL || 'http://localhost:5000/api').replace('/api', '');
 
       this.socket = io(serverUrl, {
         auth: { token },
@@ -259,7 +259,7 @@ class MessageManager {
    */
   async sendMessageHTTP (data) {
     try {
-      const response = await this._fetchWithCsrf(`${API_URL}/messages`, {
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/messages`, {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -343,7 +343,7 @@ class MessageManager {
       const { page = 1, limit = 20, status = 'active' } = options;
       const params = new URLSearchParams({ page, limit, status });
 
-      const response = await this._fetchWithCsrf(`${API_URL}/messages/conversations?${params}`);
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/messages/conversations?${params}`);
 
       const result = await response.json();
 
@@ -359,7 +359,7 @@ class MessageManager {
 
   async getConversation (conversationId) {
     try {
-      const response = await this._fetchWithCsrf(`${API_URL}/messages/conversation/${conversationId}`);
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/messages/conversation/${conversationId}`);
 
       const result = await response.json();
 
@@ -385,7 +385,7 @@ class MessageManager {
       const params = new URLSearchParams({ page, limit });
 
       const response = await this._fetchWithCsrf(
-        `${API_URL}/messages/conversation/${conversationId}/messages?${params}`,
+        `${window.API_URL || 'http://localhost:5000/api'}/messages/conversation/${conversationId}/messages?${params}`,
       );
 
       const result = await response.json();
@@ -406,7 +406,7 @@ class MessageManager {
    */
   async getUnreadCount () {
     try {
-      const response = await this._fetchWithCsrf(`${API_URL}/messages/unread-count`);
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/messages/unread-count`);
 
       const result = await response.json();
 
@@ -428,7 +428,7 @@ class MessageManager {
    */
   async deleteMessage (messageId) {
     try {
-      const response = await this._fetchWithCsrf(`${API_URL}/messages/${messageId}`, {
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/messages/${messageId}`, {
         method: 'DELETE',
       });
 
@@ -458,7 +458,7 @@ class MessageManager {
         params.append('conversationId', conversationId);
       }
 
-      const response = await this._fetchWithCsrf(`${API_URL}/messages/search?${params}`);
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/messages/search?${params}`);
 
       const result = await response.json();
 

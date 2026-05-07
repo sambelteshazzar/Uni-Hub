@@ -668,7 +668,7 @@ const LandingPageMethods = {
               </svg>
               <span style="color: #e0e7ff; font-size: 0.875rem; font-weight: 500;">
                 ${Icons.party} New: <strong>Free delivery</strong> for first-time buyers at University of Ghana! &nbsp;&nbsp;|&nbsp;&nbsp; 
-                <a href="#" onclick="Pages.renderRegister(); return false;" style="color: #6366f1; text-decoration: underline; text-underline-offset: 2px;">Sign up now</a>
+                <a href="#/register" onclick="return false;" style="color: #6366f1; text-decoration: underline; text-underline-offset: 2px;">Sign up now</a>
               </span>
             </div>
           </div>
@@ -688,10 +688,10 @@ const LandingPageMethods = {
               </div>
 
               <div style="display: none; md: display: flex; align-items: center; gap: 2rem; font-size: 0.875rem; font-weight: 500; color: #a3a3a3;">
-                <a href="#browse" style="transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#a3a3a3'">Browse</a>
-                <a href="#universities" style="transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#a3a3a3'">Universities</a>
-                <a href="#sell" style="transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#a3a3a3'">Sell</a>
-                <a href="#faq" style="transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#a3a3a3'">FAQ</a>
+<a href="#/browse" style="transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#a3a3a3'">Browse</a>
+<a href="#/browse" style="transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#a3a3a3'">Universities</a>
+<a href="#/sell" style="transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#a3a3a3'">Sell</a>
+<a href="#/faq" style="transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#a3a3a3'">FAQ</a>
               </div>
 
               <div style="display: flex; align-items: center; gap: 1rem;">
@@ -855,7 +855,7 @@ const LandingPageMethods = {
                   <span class="section-label">Select Your Campus</span>
                   <h2 class="section-title" style="color: white;">Browse by University</h2>
                 </div>
-                <a href="#" onclick="Pages.renderBrowse(); return false;" style="font-size: 0.875rem; color: #a3a3a3; transition: color 0.2s; display: flex; align-items: center; gap: 0.5rem;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#a3a3a3'">
+                <a href="#/browse" style="font-size: 0.875rem; color: #a3a3a3; transition: color 0.2s; display: flex; align-items: center; gap: 0.5rem;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#a3a3a3'">
                   View all items
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M5 12h14"></path>
@@ -1121,10 +1121,10 @@ const LandingPageMethods = {
               <div>
                 <h4 class="footer-column-title">Quick Links</h4>
                 <ul class="footer-links">
-                  <li><a href="#browse">Browse Items</a></li>
-                  <li><a href="#universities">Universities</a></li>
-                  <li><a href="#sell">Start Selling</a></li>
-                  <li><a href="#faq">FAQ</a></li>
+<li><a href="#/browse">Browse Items</a></li>
+<li><a href="#/browse">Universities</a></li>
+<li><a href="#/sell">Start Selling</a></li>
+<li><a href="#/faq">FAQ</a></li>
                 </ul>
               </div>
             
@@ -1132,18 +1132,18 @@ const LandingPageMethods = {
                 <h4 class="footer-column-title">Support</h4>
                 <ul class="footer-links">
                   <li><a href="mailto:support@uni-hub.local">Contact Us</a></li>
-                  <li><a href="#">Help Center</a></li>
-                  <li><a href="#">Safety Tips</a></li>
-                  <li><a href="#">Student Verification</a></li>
+<li><a href="#/faq">Help Center</a></li>
+<li><a href="#/faq">Safety Tips</a></li>
+<li><a href="#/about">Student Verification</a></li>
                 </ul>
               </div>
             
               <div>
                 <h4 class="footer-column-title">Legal</h4>
                 <ul class="footer-links">
-                  <li><a href="#">Privacy Policy</a></li>
-                  <li><a href="#">Terms of Service</a></li>
-                  <li><a href="#">Community Guidelines</a></li>
+<li><a href="#/privacy">Privacy Policy</a></li>
+<li><a href="#/terms">Terms of Service</a></li>
+<li><a href="#/about">Community Guidelines</a></li>
                 </ul>
               </div>
             </div>

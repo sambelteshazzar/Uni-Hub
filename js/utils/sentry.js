@@ -77,6 +77,6 @@ class SentryManager {
 
 const sentryManager = new SentryManager();
 window.sentryManager = sentryManager;
-if (typeof dispatchEvent !== 'undefined') {
-  dispatchEvent(new Event('module-loaded', { detail: 'SentryManager' }));
+if (typeof window !== 'undefined' && typeof window.dispatchEvent !== 'undefined') {
+  window.dispatchEvent(new Event('module-loaded', { detail: 'SentryManager' }));
 }
