@@ -6,6 +6,48 @@
   color: #e5e7eb;
 }
 
+.admin-container .btn-ghost {
+  color: #d1d5db;
+}
+
+.admin-container .btn-ghost:hover:not(:disabled) {
+  background: rgba(255,255,255,0.08);
+  color: #f9fafb;
+}
+
+.admin-container .btn-outline {
+  border-color: rgba(255,255,255,0.2);
+  color: #d1d5db;
+}
+
+.admin-container .btn-outline:hover:not(:disabled) {
+  background: rgba(255,255,255,0.08);
+  color: #f9fafb;
+  border-color: rgba(255,255,255,0.3);
+}
+
+.admin-container .btn-primary {
+  background: #7c3aed;
+  border-color: #7c3aed;
+}
+
+.admin-container .btn-primary:hover:not(:disabled) {
+  background: #6d28d9;
+  border-color: #6d28d9;
+}
+
+.admin-container .btn-success {
+  background: #059669;
+  border-color: #059669;
+  color: white;
+}
+
+.admin-container .btn-danger {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: white;
+}
+
 .admin-sidebar {
   background: #0f172a;
   color: #cbd5e1;
@@ -934,30 +976,30 @@
 }
 
 .table-action-btn.view {
-  color: #059669;
+  color: #34d399;
 }
 
 .table-action-btn.view:hover {
-  background: #d1fae5;
-  border-color: #a7f3d0;
+  background: rgba(5,150,105,0.15);
+  border-color: rgba(5,150,105,0.3);
 }
 
 .table-action-btn.edit {
-  color: #7c3aed;
+  color: #a78bfa;
 }
 
 .table-action-btn.edit:hover {
-  background: #ede9fe;
-  border-color: #ddd6fe;
+  background: rgba(124,58,237,0.15);
+  border-color: rgba(124,58,237,0.3);
 }
 
 .table-action-btn.delete {
-  color: #dc2626;
+  color: #f87171;
 }
 
 .table-action-btn.delete:hover {
-  background: #fee2e2;
-  border-color: #fecaca;
+  background: rgba(220,38,38,0.15);
+  border-color: rgba(220,38,38,0.3);
 }
 
 .admin-pagination {
@@ -1471,190 +1513,6 @@
   align-items: center;
   justify-content: center;
   color: #6b7280;
-}
-
-[data-theme="dark"] .admin-sidebar {
-  background: #0f172a;
-  border-right-color: rgba(255,255,255,0.05);
-}
-
-[data-theme="dark"] .admin-stat-card {
-  border-color: rgba(255,255,255,0.08);
-}
-
-[data-theme="dark"] .admin-stat-icon.primary {
-  background: rgba(124,58,237,0.2);
-  color: #a78bfa;
-}
-
-[data-theme="dark"] .admin-stat-icon.success {
-  background: rgba(5,150,105,0.2);
-  color: #34d399;
-}
-
-[data-theme="dark"] .admin-stat-icon.warning {
-  background: rgba(217,119,6,0.2);
-  color: #fbbf24;
-}
-
-[data-theme="dark"] .admin-stat-icon.danger {
-  background: rgba(219,39,119,0.2);
-  color: #f472b6;
-}
-
-[data-theme="dark"] .admin-stat-icon.info {
-  background: rgba(37,99,235,0.2);
-  color: #60a5fa;
-}
-
-[data-theme="dark"] .admin-css-chart-bar {
-  background: linear-gradient(180deg, #7c3aed, rgba(124,58,237,0.5));
-}
-
-[data-theme="dark"] .admin-table thead {
-  background: rgba(255,255,255,0.05);
-}
-
-[data-theme="dark"] .admin-table tbody tr:nth-child(even) {
-  background: rgba(255,255,255,0.05);
-}
-
-[data-theme="dark"] .admin-table tbody tr:hover {
-  background: rgba(255,255,255,0.08);
-}
-
-[data-theme="dark"] .admin-table tbody tr:nth-child(even):hover {
-  background: rgba(255,255,255,0.08);
-}
-
-[data-theme="dark"] .admin-status-badge.pending,
-[data-theme="dark"] .admin-status-badge.placed {
-  background: rgba(245,158,11,0.15);
-  color: #fbbf24;
-}
-
-[data-theme="dark"] .admin-status-badge.processing,
-[data-theme="dark"] .admin-status-badge.in_transit {
-  background: rgba(59,130,246,0.15);
-  color: #60a5fa;
-}
-
-[data-theme="dark"] .admin-status-badge.completed,
-[data-theme="dark"] .admin-status-badge.delivered,
-[data-theme="dark"] .admin-status-badge.confirmed,
-[data-theme="dark"] .admin-status-badge.active {
-  background: rgba(16,185,129,0.15);
-  color: #34d399;
-}
-
-[data-theme="dark"] .admin-status-badge.cancelled,
-[data-theme="dark"] .admin-status-badge.rejected {
-  background: rgba(239,68,68,0.15);
-  color: #f87171;
-}
-
-[data-theme="dark"] .admin-role-badge.admin {
-  background: rgba(124,58,237,0.15);
-  color: #a78bfa;
-}
-
-[data-theme="dark"] .admin-role-badge.seller {
-  background: rgba(37,99,235,0.15);
-  color: #60a5fa;
-}
-
-[data-theme="dark"] .admin-role-badge.buyer {
-  background: rgba(79,70,229,0.15);
-  color: #818cf8;
-}
-
-[data-theme="dark"] .admin-modal {
-  background: #1f2937;
-  border: 1px solid rgba(255,255,255,0.08);
-}
-
-[data-theme="dark"] .admin-modal-body .form-group input,
-[data-theme="dark"] .admin-modal-body .form-group select,
-[data-theme="dark"] .admin-modal-body .form-group textarea {
-  background: #111827;
-  border-color: rgba(255,255,255,0.12);
-  color: #f9fafb;
-}
-
-[data-theme="dark"] .admin-stat-change.positive {
-  background: rgba(5,150,105,0.15);
-  color: #34d399;
-}
-
-[data-theme="dark"] .admin-stat-change.negative {
-  background: rgba(220,38,38,0.15);
-  color: #f87171;
-}
-
-[data-theme="dark"] .admin-activity-icon.order {
-  background: rgba(217,119,6,0.15);
-  color: #fbbf24;
-}
-
-[data-theme="dark"] .admin-activity-icon.user {
-  background: rgba(37,99,235,0.15);
-  color: #60a5fa;
-}
-
-[data-theme="dark"] .admin-activity-icon.product {
-  background: rgba(5,150,105,0.15);
-  color: #34d399;
-}
-
-[data-theme="dark"] .admin-activity-icon.alert {
-  background: rgba(220,38,38,0.15);
-  color: #f87171;
-}
-
-[data-theme="dark"] .admin-activity-icon.payment {
-  background: rgba(124,58,237,0.15);
-  color: #a78bfa;
-}
-
-[data-theme="dark"] .table-action-btn.view:hover {
-  background: rgba(5,150,105,0.15);
-  border-color: rgba(5,150,105,0.3);
-}
-
-[data-theme="dark"] .table-action-btn.edit:hover {
-  background: rgba(124,58,237,0.15);
-  border-color: rgba(124,58,237,0.3);
-}
-
-[data-theme="dark"] .table-action-btn.delete:hover {
-  background: rgba(220,38,38,0.15);
-  border-color: rgba(220,38,38,0.3);
-}
-
-[data-theme="dark"] .admin-pagination-btn:hover:not(:disabled) {
-  border-color: #7c3aed;
-  color: #7c3aed;
-  background: rgba(124,58,237,0.1);
-}
-
-[data-theme="dark"] .admin-pagination-btn.active {
-  background: #7c3aed;
-  color: white;
-}
-
-[data-theme="dark"] .admin-period-btn:hover {
-  background: rgba(255,255,255,0.05);
-  color: #d1d5db;
-}
-
-[data-theme="dark"] .admin-period-btn.active {
-  background: #7c3aed;
-  color: white;
-}
-
-[data-theme="dark"] .admin-toast-item {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
 }
 
 @media (max-width: 1024px) {

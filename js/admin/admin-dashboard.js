@@ -106,7 +106,7 @@ class AdminDashboard {
         </div>
         <div class="admin-css-chart-legend">
           <div class="admin-css-chart-legend-item">
-            <span class="admin-css-chart-legend-dot" style="background:var(--color-primary)"></span>
+            <span class="admin-css-chart-legend-dot" style="background:#7c3aed"></span>
             Revenue
           </div>
         </div>
@@ -199,14 +199,14 @@ class AdminDashboard {
           </span>
         </td>
         <td style="font-weight:var(--font-semibold);">${Formatter.formatPrice(o.pricing?.grandTotal || 0)}</td>
-        <td style="color:var(--neutral-400);font-size:var(--text-xs);">${Formatter.formatTimeAgo(o.createdAt)}</td>
+        <td style="color:#6b7280;font-size:var(--text-xs);">${Formatter.formatTimeAgo(o.createdAt)}</td>
         <td>
           <div class="table-actions">
             <button class="table-action-btn view" title="View" onclick="Pages.renderAdminOrders()">${Icons.view || '&#128065;'}</button>
           </div>
         </td>
       </tr>
-    `).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--neutral-400);padding:2rem;">No orders yet</td></tr>';
+    `).join('') || '<tr><td colspan="6" style="text-align:center;color:#6b7280;padding:2rem;">No orders yet</td></tr>';
 
     container.innerHTML = `
       <div class="admin-table-container">
@@ -277,7 +277,7 @@ class AdminDashboard {
           <div class="admin-activity-time">${a.time ? Formatter.formatTimeAgo(a.time) : 'Just now'}</div>
         </div>
       </li>
-    `).join('') || '<li style="padding:2rem;text-align:center;color:var(--neutral-400);">No recent activity</li>';
+    `).join('') || '<li style="padding:2rem;text-align:center;color:#6b7280;">No recent activity</li>';
 
     container.innerHTML = `
       <div class="admin-card">
