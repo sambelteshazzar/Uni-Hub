@@ -108,11 +108,11 @@ class FooterUtils {
   showNotification(message, type = 'info') {
     if (typeof notificationManager !== 'undefined' && notificationManager[type]) {
       notificationManager[type](type === 'error' ? 'Error' : 'Success', message);
-    } else if (typeof toastManager !== 'undefined' && toastManager.show) {
-      toastManager.show(message, type);
-    } else {
-      alert(message);
-    }
+  } else if (typeof Toast !== 'undefined' && Toast.show) {
+    Toast.show(message, type);
+  } else {
+    console.warn('[Footer]', message);
+  }
   }
 
   /**

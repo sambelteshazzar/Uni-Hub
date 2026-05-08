@@ -160,7 +160,7 @@ Pages.handleLoginBB = async function (event) {
     // Redirect to landing page after login
     Pages.renderLanding();
   } else {
-    alert('Login failed: ' + result.error);
+    Toast.error('Login failed: ' + result.error);
   }
 };
 
@@ -354,7 +354,7 @@ Pages.handleLoginBB = async function (event) {
     // Redirect to landing page after registration
     Pages.renderLanding();
   } else {
-    alert('Registration failed: ' + result.error);
+    Toast.error('Registration failed: ' + result.error);
   }
 };
 
@@ -365,7 +365,7 @@ Pages.handleLoginBB = async function (event) {
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
     if (!currentUser) {
-      alert('Please login to view your dashboard.');
+      Toast.warning('Please login to view your dashboard.');
       Pages.renderLogin();
       return;
     }

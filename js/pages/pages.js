@@ -1686,9 +1686,7 @@ static showOriginalNavFooter () {
     StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verificationData);
 
     // Show success message
-    alert(
-      `✓ Verification Successful!\n\nWelcome, ${verificationData.fullName}!\nYou are now verified as a student of ${university ? university.name : 'your university'}.\n\nYou can now browse and trade on Uni-Hub.`,
-    );
+  Toast.success(`Verification Successful! Welcome, ${verificationData.fullName}! You are now verified as a student of ${university ? university.name : 'your university'}. You can now browse and trade on Uni-Hub.`);
 
     // Redirect to browse page
     this.renderBrowse();
@@ -1705,14 +1703,14 @@ static showOriginalNavFooter () {
 
     // Validate files
     if (files.length === 0) {
-      alert('Please upload at least one document (admission letter or student ID)');
+      Toast.warning('Please upload at least one document (admission letter or student ID)');
       return;
     }
 
     // Validate file sizes (max 5MB each)
     for (const file of files) {
       if (file.size > 5 * 1024 * 1024) {
-        alert(`File "${file.name}" is too large. Maximum size is 5MB.`);
+        Toast.warning(`File "${file.name}" is too large. Maximum size is 5MB.`);
         return;
       }
     }
@@ -1739,9 +1737,7 @@ static showOriginalNavFooter () {
     console.log('Documents to upload:', files);
 
     // Show success message
-    alert(
-      `✓ Verification Submitted!\n\nThank you, ${verificationData.fullName}!\n\nYour documents have been submitted for verification.\n\nYou will receive an email at ${verificationData.personalEmail} within 24-48 hours once your student status is confirmed.\n\nYou can browse Uni-Hub while waiting for verification.`,
-    );
+  Toast.success(`Verification Submitted! Thank you, ${verificationData.fullName}! Your documents have been submitted for verification. You will receive an email at ${verificationData.personalEmail} within 24-48 hours once your student status is confirmed. You can browse Uni-Hub while waiting for verification.`);
 
     // Redirect to browse page (allow browsing while pending)
     this.renderBrowse();
@@ -2190,7 +2186,7 @@ static showOriginalNavFooter () {
       window.location.hash = '#/browse';
       this.renderBrowse();
     } else {
-      alert('Login failed: ' + result.error);
+      Toast.error('Login failed: ' + result.error);
       }
     }
 
@@ -2481,7 +2477,7 @@ static showOriginalNavFooter () {
         this.renderBrowse();
       }
     } else {
-      alert('Registration failed: ' + result.error);
+      Toast.error('Registration failed: ' + result.error);
     }
   }
 
@@ -3291,7 +3287,7 @@ static renderProductDetail (productId) {
 const product = productsManager.getById(productId);
 
 if (!product) {
-alert('Product not found');
+Toast.warning('Product not found');
 return;
 }
 
@@ -4062,7 +4058,7 @@ prompt('Copy this link:', url);
     const product = productsManager.getById(productId);
 
     if (!product) {
-      alert('Product not found');
+      Toast.warning('Product not found');
       return;
     }
 
@@ -4070,7 +4066,7 @@ prompt('Copy this link:', url);
 
     if (result.success) {
       this.updateCartBadge();
-      alert(result.message);
+      Toast.error(result.message);
     }
   }
 
@@ -4108,13 +4104,13 @@ prompt('Copy this link:', url);
     // Verify required managers are loaded
     if (typeof cartManager === 'undefined' || !cartManager) {
       console.error('Cart manager not loaded');
-      alert('Cart is loading. Please try again in a moment.');
+      Toast.warning('Cart is loading. Please try again in a moment.');
       return;
     }
 
     if (typeof checkoutManager === 'undefined' || !checkoutManager) {
       console.error('Checkout manager not loaded');
-      alert('Checkout is loading. Please try again in a moment.');
+      Toast.warning('Checkout is loading. Please try again in a moment.');
       return;
     }
 
@@ -4122,7 +4118,7 @@ prompt('Copy this link:', url);
 
     // Check if cart is empty
     if (!cartItems || cartItems.length === 0) {
-      alert('Your cart is empty. Add items before checkout.');
+      Toast.warning('Your cart is empty. Add items before checkout.');
       return;
     }
 
@@ -4130,7 +4126,7 @@ prompt('Copy this link:', url);
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
     if (!currentUser) {
-      alert('Please login to complete your order.');
+      Toast.warning('Please login to complete your order.');
       this.renderLogin();
       return;
     }
@@ -4146,7 +4142,7 @@ prompt('Copy this link:', url);
     // Verify checkoutManager is loaded
     if (typeof checkoutManager === 'undefined' || !checkoutManager) {
       console.error('Checkout manager not loaded yet');
-      alert('Please wait, checkout is loading...');
+      Toast.info('Please wait, checkout is loading...');
       return;
     }
 
@@ -4156,7 +4152,7 @@ prompt('Copy this link:', url);
 
     // Validate cart
     if (cartItems.length === 0) {
-      alert('Your cart is empty. Add items before checkout.');
+      Toast.warning('Your cart is empty. Add items before checkout.');
       this.renderBrowse();
       return;
     }
@@ -4165,7 +4161,7 @@ prompt('Copy this link:', url);
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
     if (!currentUser) {
-      alert('Please login to complete your order.');
+      Toast.warning('Please login to complete your order.');
       this.renderLogin();
       return;
     }
@@ -4371,7 +4367,7 @@ prompt('Copy this link:', url);
 
     // Validate
     if (!deliveryMode) {
-      alert('Please select a delivery method');
+      Toast.warning('Please select a delivery method');
       if (submitButton) {
         submitButton.disabled = false;
         submitButton.textContent = 'Place Order';
@@ -4380,7 +4376,7 @@ prompt('Copy this link:', url);
     }
 
     if (!paymentMode) {
-      alert('Please select a payment method');
+      Toast.warning('Please select a payment method');
       if (submitButton) {
         submitButton.disabled = false;
         submitButton.textContent = 'Place Order';
@@ -4389,7 +4385,7 @@ prompt('Copy this link:', url);
     }
 
     if (!deliveryAddress) {
-      alert('Please enter a delivery address');
+      Toast.warning('Please enter a delivery address');
       if (submitButton) {
         submitButton.disabled = false;
         submitButton.textContent = 'Place Order';
@@ -4428,14 +4424,14 @@ prompt('Copy this link:', url);
           // Render confirmation page
           this.renderOrderConfirmation(result.order);
         } else {
-          alert('Payment failed: ' + paymentResult.error);
+          Toast.error('Payment failed: ' + paymentResult.error);
           if (submitButton) {
             submitButton.disabled = false;
             submitButton.textContent = 'Place Order';
           }
         }
       } else {
-        alert('Order failed: ' + result.error);
+        Toast.error('Order failed: ' + result.error);
         if (submitButton) {
           submitButton.disabled = false;
           submitButton.textContent = 'Place Order';
@@ -4443,7 +4439,7 @@ prompt('Copy this link:', url);
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      alert('An error occurred during checkout. Please try again.');
+      Toast.error('An error occurred during checkout. Please try again.');
       if (submitButton) {
         submitButton.disabled = false;
         submitButton.textContent = 'Place Order';
@@ -4527,7 +4523,7 @@ prompt('Copy this link:', url);
     const currentUser = session?.user || null;
 
     if (!currentUser) {
-      alert('Please login to view your orders.');
+      Toast.warning('Please login to view your orders.');
       this.renderLogin();
       return;
     }
@@ -5022,7 +5018,7 @@ window.scrollTo(0, 0);
     const currentUser = session?.user || null;
 
     if (!currentUser) {
-      alert('Please login to view your dashboard.');
+      Toast.warning('Please login to view your dashboard.');
       this.renderLogin();
       return;
     }
@@ -5389,7 +5385,7 @@ window.scrollTo(0, 0);
     const currentUser = session?.user || null;
 
     if (!currentUser) {
-      alert('Please login to view your profile.');
+      Toast.warning('Please login to view your profile.');
       this.renderLogin();
       return;
     }
@@ -5510,7 +5506,7 @@ window.scrollTo(0, 0);
     const currentUser = session?.user || null;
 
     if (!currentUser) {
-      alert('Please login to access seller dashboard.');
+      Toast.warning('Please login to access seller dashboard.');
       this.renderLogin();
       return;
     }
@@ -5581,7 +5577,7 @@ window.scrollTo(0, 0);
     const currentUser = session?.user || null;
 
     if (!currentUser) {
-      alert('Please login to list products.');
+      Toast.warning('Please login to list products.');
       this.renderLogin();
       return;
     }

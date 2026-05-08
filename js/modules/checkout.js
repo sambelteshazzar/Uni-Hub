@@ -674,7 +674,7 @@ class CheckoutFlow {
       const session = _StorageManager.get(_STORAGE_KEYS.CURRENT_USER, true) || _StorageManager.get(_STORAGE_KEYS.SESSION, true);
       const currentUser = session?.user || session;
       if (!currentUser) {
-        alert('You must be logged in to place an order');
+        Toast.warning('You must be logged in to place an order');
         return;
       }
 
@@ -763,7 +763,7 @@ class CheckoutFlow {
         notificationManager.success('Order Confirmed', `Your order #${order.orderNumber || order.id} has been placed!`);
       }
     } catch (error) {
-      alert('An error occurred while placing your order. Please try again.');
+      Toast.error('An error occurred while placing your order. Please try again.');
     } finally {
       this.isSubmitting = false;
       if (overlay) overlay.classList.remove('active');

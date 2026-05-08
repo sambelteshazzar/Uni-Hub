@@ -89,14 +89,14 @@ class _LandingPageLoader {
         const email = input?.value?.trim();
 
         if (!email || !this.isValidEmail(email)) {
-          alert('Please enter a valid email address.');
+          Toast.warning('Please enter a valid email address.');
           return;
         }
 
         // In production, this would POST to your mailing list API
         // Newsletter signup logged
         input.value = '';
-        alert('Thanks for signing up! 🎉');
+        Toast.success('Thanks for signing up!');
       });
     }
   }

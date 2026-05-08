@@ -1,4 +1,4 @@
-const Toast = {
+window.Toast = {
   _container: null,
 
   _getContainer () {

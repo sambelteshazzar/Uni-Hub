@@ -335,9 +335,7 @@ const AuthPageMethods = {
     StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verificationData);
 
     // Show success message
-    alert(
-      `✓ Verification Successful!\n\nWelcome, ${verificationData.fullName}!\nYou are now verified as a student of ${university ? university.name : 'your university'}.\n\nYou can now browse and trade on Uni-Hub.`,
-    );
+  Toast.success(`Verification Successful! Welcome, ${verificationData.fullName}! You are now verified as a student of ${university ? university.name : 'your university'}. You can now browse and trade on Uni-Hub.`);
 
     // Redirect to browse page
     Pages.renderBrowse();
@@ -351,14 +349,14 @@ const AuthPageMethods = {
 
     // Validate files
     if (files.length === 0) {
-      alert('Please upload at least one document (admission letter or student ID)');
+      Toast.warning('Please upload at least one document (admission letter or student ID)');
       return;
     }
 
     // Validate file sizes (max 5MB each)
     for (const file of files) {
       if (file.size > 5 * 1024 * 1024) {
-        alert(`File "${file.name}" is too large. Maximum size is 5MB.`);
+        Toast.warning(`File "${file.name}" is too large. Maximum size is 5MB.`);
         return;
       }
     }
@@ -385,9 +383,7 @@ const AuthPageMethods = {
     console.log('Documents to upload:', files);
 
     // Show success message
-    alert(
-      `✓ Verification Submitted!\n\nThank you, ${verificationData.fullName}!\n\nYour documents have been submitted for verification.\n\nYou will receive an email at ${verificationData.personalEmail} within 24-48 hours once your student status is confirmed.\n\nYou can browse Uni-Hub while waiting for verification.`,
-    );
+  Toast.success(`Verification Submitted! Thank you, ${verificationData.fullName}! Your documents have been submitted for verification. You will receive an email at ${verificationData.personalEmail} within 24-48 hours once your student status is confirmed. You can browse Uni-Hub while waiting for verification.`);
 
     // Redirect to browse page (allow browsing while pending)
     Pages.renderBrowse();
@@ -793,7 +789,7 @@ const AuthPageMethods = {
         window.location.hash = '#/browse';
         Pages.renderBrowse();
       } else {
-        alert('Login failed: ' + result.error);
+        Toast.error('Login failed: ' + result.error);
       }
     }
   },
@@ -1079,7 +1075,7 @@ const AuthPageMethods = {
         Pages.renderBrowse();
       }
     } else {
-      alert('Registration failed: ' + result.error);
+      Toast.error('Registration failed: ' + result.error);
     }
   },
 
