@@ -141,12 +141,10 @@ class API {
 
       console.error('API Error:', error);
 
-      if (error.status === 401) {
-        localStorage.removeItem('unihub_session');
-        if (window.location.hash && !window.location.hash.includes('login')) {
-          window.location.hash = '/login';
-        }
-      }
+    if (error.status === 401) {
+      localStorage.removeItem('unihub_session');
+      console.warn('API 401: Session expired or not authenticated');
+    }
 
       throw error;
     }

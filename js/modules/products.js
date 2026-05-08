@@ -385,6 +385,105 @@ class ProductsManager {
       return null;
     }
   }
+
+  getWishlist () {
+    try {
+      return StorageManager.get(this.wishlistKey, true) || [];
+    } catch (error) {
+      console.error('getWishlist error:', error);
+      return [];
+    }
+  }
+
+  isInWishlist (productId) {
+    const wishlist = this.getWishlist();
+    return wishlist.some(item => (item.id || item) === productId);
+  }
+
+  addToWishlist (productId) {
+    const wishlist = this.getWishlist();
+    if (!this.isInWishlist(productId)) {
+      const product = this.getById(productId);
+      if (product) {
+        wishlist.push(product);
+      } else {
+        wishlist.push({ id: productId });
+      }
+      StorageManager.set(this.wishlistKey, wishlist);
+    }
+    return wishlist;
+  }
+
+  removeFromWishlist (productId) {
+    let wishlist = this.getWishlist();
+    wishlist = wishlist.filter(item => (item.id || item) !== productId);
+    StorageManager.set(this.wishlistKey, wishlist);
+    return wishlist;
+  }
+
+  addToRecentlyViewed (productId) {
+    try {
+      const key = `${STORAGE_KEY_PREFIX}recently_viewed`;
+      let viewed = StorageManager.get(key, true) || [];
+      viewed = viewed.filter(id => id !== productId);
+      viewed.unshift(productId);
+      viewed = viewed.slice(0, 20);
+      StorageManager.set(key, viewed);
+    } catch (error) {
+      console.error('addToRecentlyViewed error:', error);
+    }
+  }
+
+  getRecentlyViewed () {
+    try {
+      const key = `${STORAGE_KEY_PREFIX}recently_viewed`;
+      const ids = StorageManager.get(key, true) || [];
+      return ids.map(id => this.getById(id)).filter(Boolean);
+    } catch (error) {
+      console.error('getRecentlyViewed error:', error);
+    return [];
+    }
+  }
+
+  trackWishlistPrices () {
+    try {
+      const wishlist = this.getWishlist();
+      const priceDrops = [];
+      const key = `${STORAGE_KEY_PREFIX}price_history`;
+      const history = StorageManager.get(key, true) || {};
+
+      wishlist.forEach(item => {
+        const productId = item.id || item;
+        const product = this.getById(productId);
+        if (!product) { return; }
+        const currentPrice = product.price;
+        const previous = history[productId];
+        if (previous && currentPrice < previous.price) {
+          priceDrops.push({ product, previousPrice: previous.price, currentPrice });
+        }
+        history[productId] = { price: currentPrice, updatedAt: Date.now() };
+      });
+
+      StorageManager.set(key, history);
+      return priceDrops;
+    } catch (error) {
+      console.error('trackWishlistPrices error:', error);
+      return [];
+    }
+  }
+
+  getBySeller (sellerId) {
+    return this.products.filter(p => p.seller && (p.seller.id === sellerId || p.sellerId === sellerId));
+  }
+
+  clearRecentlyViewed () {
+    try {
+      const key = `${STORAGE_KEY_PREFIX}recently_viewed`;
+      StorageManager.set(key, []);
+    } catch (error) {
+      console.error('clearRecentlyViewed error:', error);
+    }
+  }
 }
 
 // Create singleton instance

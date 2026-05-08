@@ -184,17 +184,18 @@ class ModuleLoader {
     // Register routes
     if (window.Pages && window.Pages.registerRoutes) {
       window.Pages.registerRoutes();
-      window.Pages.initDarkMode();
-      window.Pages.updateWishlistBadge();
+      try { window.Pages.initDarkMode(); } catch (e) { console.warn('initDarkMode error:', e); }
+      try { window.Pages.updateWishlistBadge(); } catch (e) { console.warn('updateWishlistBadge error:', e); }
       console.log('✓ Routes registered');
     } else {
       console.error('✗ Pages class not found on window - routes NOT registered');
     }
 
-    // Start router
-    if (window.router && window.router.start) {
-      window.router.start();
-      console.log('✓ Router started');
+    // Initialize and start router
+    if (window.router) {
+      if (window.router.init) { window.router.init(); }
+      if (window.router.start) { window.router.start(); }
+      console.log('✓ Router initialized and started');
     } else {
       console.error('✗ Router not found on window - router NOT started');
     }

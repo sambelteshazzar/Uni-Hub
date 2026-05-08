@@ -154,19 +154,20 @@ return labels[condition] || (condition ? condition.charAt(0).toUpperCase() + con
   /**
    * Show original navbar and footer for other pages
    */
-  static showOriginalNavFooter () {
-    const navbar = document.getElementById('navbar');
-    const footer = document.getElementById('footer');
-    if (navbar && navbar.getAttribute('data-hidden') === 'true') {
-      navbar.style.display = '';
-      navbar.removeAttribute('data-hidden');
-    }
-    if (footer && footer.getAttribute('data-hidden') === 'true') {
-      footer.style.display = 'block';
-      footer.removeAttribute('data-hidden');
-    }
-    this.updateNavbar();
+static showOriginalNavFooter () {
+  const navbar = document.getElementById('navbar');
+  const footer = document.getElementById('footer');
+  if (navbar && navbar.getAttribute('data-hidden') === 'true') {
+    navbar.style.display = '';
+    navbar.removeAttribute('data-hidden');
   }
+  if (footer && footer.getAttribute('data-hidden') === 'true') {
+    footer.style.display = 'block';
+    footer.removeAttribute('data-hidden');
+  }
+  document.body.style.background = '';
+  this.updateNavbar();
+}
 
   /**
    * Render Landing Page with University Selection - Modern Dark Theme
@@ -4751,17 +4752,21 @@ badge.style.display = 'none';
 * Update wishlist badge in navbar
 */
 static updateWishlistBadge () {
-const badge = document.getElementById('wishlist-badge');
-if (badge) {
-const count = productsManager.getWishlist().length;
-if (count > 0) {
-badge.textContent = count;
-badge.style.display = 'flex';
-} else {
-badge.style.display = 'none';
-}
-}
-}
+    try {
+      const badge = document.getElementById('wishlist-badge');
+      if (badge && productsManager && typeof productsManager.getWishlist === 'function') {
+        const count = productsManager.getWishlist().length;
+        if (count > 0) {
+          badge.textContent = count;
+          badge.style.display = 'flex';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+    } catch (error) {
+      console.warn('updateWishlistBadge error:', error);
+    }
+  }
 
 /**
 * Initialize dark mode from saved preference
@@ -6119,13 +6124,16 @@ window.scrollTo(0, 0);
   /**
   * Render Admin Dashboard
    */
-  static async renderAdminDashboard () {
+static async renderAdminDashboard () {
   const adminUser = adminAuthManager.getCurrentUser();
 
   if (!adminAuthManager.isLoggedIn()) {
-  this.renderAdminLogin();
-  return;
+    this.renderAdminLogin();
+    return;
   }
+
+  this.hideOriginalNavFooter();
+  document.body.style.background = '#111827';
 
   const mainContent = document.getElementById('main-content');
 
@@ -6286,29 +6294,35 @@ window.scrollTo(0, 0);
   /**
   * Render Admin Login
    */
-  static renderAdminLogin () {
-    const mainContent = document.getElementById('main-content');
-    mainContent.innerHTML = `
-      <div class="auth-container">
-        <div class="auth-card">
-          <h2>Admin Login</h2>
-          <form onsubmit="Pages.handleAdminLogin(event)">
-            <div class="form-group">
-              <label for="admin-email" class="required">Email</label>
-              <input type="email" id="admin-email" name="email" class="form-control" required />
-            </div>
-            <div class="form-group">
-              <label for="admin-password" class="required">Password</label>
-              <input type="password" id="admin-password" name="password" class="form-control" required />
-            </div>
-            <button type="submit" class="btn btn-primary btn-block">Login as Admin</button>
-          </form>
-          <div class="auth-links">
-            <p><a href="#/">Back to Home</a></p>
-          </div>
-        </div>
+static renderAdminLogin () {
+  this.hideOriginalNavFooter();
+  document.body.style.background = '#111827';
+  const mainContent = document.getElementById('main-content');
+  mainContent.innerHTML = `
+  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#111827;padding:2rem;">
+    <div style="background:#1f2937;border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius-xl,1rem);padding:var(--space-2xl,2rem);width:100%;max-width:400px;">
+      <div style="text-align:center;margin-bottom:2rem;">
+        <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:white;display:inline-flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.25rem;margin-bottom:1rem;">U</div>
+        <h2 style="color:#f9fafb;margin:0;">Admin Login</h2>
+        <p style="color:#9ca3af;margin:0.5rem 0 0;font-size:0.875rem;">Sign in to access the admin panel</p>
       </div>
-    `;
+      <form onsubmit="Pages.handleAdminLogin(event)">
+        <div class="form-group">
+          <label for="admin-email" class="required" style="color:#d1d5db;">Email</label>
+          <input type="email" id="admin-email" name="email" class="form-control" required style="background:#111827;border-color:rgba(255,255,255,0.1);color:#f9fafb;" />
+        </div>
+        <div class="form-group">
+          <label for="admin-password" class="required" style="color:#d1d5db;">Password</label>
+          <input type="password" id="admin-password" name="password" class="form-control" required style="background:#111827;border-color:rgba(255,255,255,0.1);color:#f9fafb;" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" style="background:#7c3aed;border-color:#7c3aed;">Login as Admin</button>
+      </form>
+      <div style="text-align:center;margin-top:1.5rem;">
+        <a href="#/" style="color:#9ca3af;font-size:0.875rem;">Back to Home</a>
+      </div>
+    </div>
+  </div>
+  `;
   }
 
   /**
@@ -6331,6 +6345,8 @@ window.scrollTo(0, 0);
    * Render Admin Users Page
    */
   static async renderAdminUsers () {
+  this.hideOriginalNavFooter();
+  document.body.style.background = '#111827';
   const mainContent = document.getElementById('main-content');
 
   mainContent.innerHTML = `
@@ -6405,6 +6421,8 @@ window.scrollTo(0, 0);
    */
   static renderAdminProducts () {
   const products = adminProductsManager.getAllProducts();
+  this.hideOriginalNavFooter();
+  document.body.style.background = '#111827';
   const mainContent = document.getElementById('main-content');
 
   mainContent.innerHTML = `
@@ -6472,6 +6490,8 @@ window.scrollTo(0, 0);
    * Render Admin Orders Page
    */
   static async renderAdminOrders () {
+  this.hideOriginalNavFooter();
+  document.body.style.background = '#111827';
   const mainContent = document.getElementById('main-content');
 
   mainContent.innerHTML = `
@@ -6531,9 +6551,11 @@ window.scrollTo(0, 0);
   /**
    * Render Admin Regions Page
    */
-  static renderAdminRegions () {
-    const regions = regionManager.getAllRegions();
-    const mainContent = document.getElementById('main-content');
+static renderAdminRegions () {
+  const regions = regionManager.getAllRegions();
+  this.hideOriginalNavFooter();
+  document.body.style.background = '#111827';
+  const mainContent = document.getElementById('main-content');
 
   mainContent.innerHTML = `
   <div class="admin-container">
@@ -6581,6 +6603,8 @@ window.scrollTo(0, 0);
    * Render Admin Reports Page
    */
   static async renderAdminReports () {
+  this.hideOriginalNavFooter();
+  document.body.style.background = '#111827';
   const mainContent = document.getElementById('main-content');
 
   mainContent.innerHTML = `
@@ -6691,8 +6715,10 @@ window.scrollTo(0, 0);
     }
   }
 
-  static async renderAdminActivity () {
-    const mainContent = document.getElementById('main-content');
+static async renderAdminActivity () {
+  this.hideOriginalNavFooter();
+  document.body.style.background = '#111827';
+  const mainContent = document.getElementById('main-content');
 
   mainContent.innerHTML = `
   <div class="admin-container">
@@ -6875,8 +6901,10 @@ window.scrollTo(0, 0);
     }
   }
 
-  static renderAdminProductCreate () {
-    const mainContent = document.getElementById('main-content');
+static renderAdminProductCreate () {
+  this.hideOriginalNavFooter();
+  document.body.style.background = '#111827';
+  const mainContent = document.getElementById('main-content');
     const categories = ['electronics', 'textbooks', 'appliances', 'hostel-items', 'fashion', 'accessories', 'thrifts'];
     const conditions = ['new', 'like-new', 'good', 'fair', 'excellent'];
 
