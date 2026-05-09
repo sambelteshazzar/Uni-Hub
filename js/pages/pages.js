@@ -2937,9 +2937,9 @@ ${Pages.renderRecentlyViewedSection()}
    */
   static renderProductCardModern (product) {
     const isInWishlist = productsManager.isInWishlist?.(product.id) || false;
-    const initials = product.seller?.name
-      ? product.seller.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-      : 'UN';
+    const _sn = product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
+    const initials = _sn
+      .split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 const conditionClass = product.condition || 'good';
 const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
     const categoryLabel = product.category
@@ -2969,7 +2969,7 @@ const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
 ${product.seller?.rating ? `
 <div class="seller-rating">
 ${Icons.star}
-<span>${product.seller.rating}</span>
+<span>${product.seller?.rating || product.sellerRating || '4.5'}</span>
 </div>
 ` : ''}
 ${product.seller?.rating >= 4.5 ? '<span class="trust-badge trust-badge-top-seller"><svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Top Seller</span>' : ''}
@@ -3063,12 +3063,12 @@ productsManager.filter({ minRating: rating });
 <div class="store-product-seller-row">
 <div class="store-seller-info">
 <div class="store-seller-avatar">${initials}</div>
-<span class="store-seller-name">${product.seller.name}</span>
+<span class="store-seller-name">${product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller'}</span>
 ${product.seller?.rating >= 4.5 ? '<span class="trust-badge trust-badge-top-seller"><svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Top</span>' : ''}
 </div>
 <div class="store-seller-rating">
 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-${product.seller.rating || '4.5'}
+${product.seller?.rating || product.sellerRating || '4.5'}
 </div>
 </div>
         </div>
@@ -3087,9 +3087,9 @@ ${product.seller.rating || '4.5'}
    */
   static renderBBProductCard (product) {
     const isInWishlist = productsManager.isInWishlist(product.id);
-    const initials = product.seller?.name
-      ? product.seller.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-      : 'UN';
+    const _bsn = product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
+    const initials = _bsn
+      .split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
     const categoryLabel = product.category
       ? product.category.charAt(0).toUpperCase() + product.category.slice(1).replace('-', ' ')
@@ -3124,7 +3124,7 @@ ${product.seller.rating || '4.5'}
       '<div class="bb-browse-rating">' +
       '<span class="bb-browse-rating-stars">' + Icons.star + Icons.star + Icons.star + Icons.star + Icons.starOutline + '</span>' +
       '<span class="bb-browse-rating-count">(' +
-      (product.seller.rating || '4.5') +
+      (product.seller?.rating || product.sellerRating || '4.5') +
       ')</span>' +
       '</div>' +
       '<div class="bb-browse-pricing">' +
@@ -3155,7 +3155,7 @@ ${product.seller.rating || '4.5'}
       initials +
       '</div>' +
       '<span class="bb-browse-seller-name">' +
-      product.seller.name +
+      (product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller') +
       '</span>' +
       '</div>' +
       '</div>' +
@@ -3295,7 +3295,8 @@ productsManager.addToRecentlyViewed(productId);
 
     const mainContent = document.getElementById('main-content');
     const isInWishlist = productsManager.isInWishlist(productId);
-    const initials = product.seller.name
+    const sellerName = product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
+    const initials = sellerName
       .split(' ')
       .map(n => n[0])
       .join('')
@@ -3406,10 +3407,10 @@ const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
             <div class="pd-seller-card">
               <div class="pd-seller-avatar">${initials}</div>
               <div>
-                <div class="pd-seller-name">${product.seller.name}</div>
+                <div class="pd-seller-name">${sellerName}</div>
                 <div class="pd-seller-rating">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                  ${product.seller.rating || '4.5'} rating
+                  ${product.seller?.rating || product.sellerRating || '4.5'} rating
                 </div>
               </div>
             </div>
@@ -3999,7 +4000,7 @@ prompt('Copy this link:', url);
                 
   <div class="cart-item-details">
   <h4 class="cart-item-title">${item.product.title}</h4>
-  <p class="cart-item-seller">Sold by ${item.product.seller.name}</p>
+  <p class="cart-item-seller">Sold by ${item.product.seller?.fullName || item.product.sellerName || item.product.seller?.name || 'Seller'}</p>
   ${item.variant ? `<span class="cart-item-variant">${item.variant.label}: ${item.variant.value}${item.variant.price > 0 ? ` (+GHS ${item.variant.price})` : ''}</span>` : ''}
   <div class="cart-item-price">${Formatter.formatPrice(item.product.price + (item.variant ? item.variant.price || 0 : 0))}</div>
   </div>
@@ -4894,9 +4895,9 @@ ${Icons.trash} Clear All
 </div>
 <div class="wishlist-grid">
 ${wishlistProducts.map(product => {
-const initials = product.seller?.name
-? product.seller.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-: 'UN';
+const _wsn = product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
+      const initials = _wsn
+        .split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
 const conditionClass = product.condition || 'good';
 return `
@@ -6067,7 +6068,7 @@ window.scrollTo(0, 0);
       <div class="container" style="padding: 2rem 1rem; text-align: center;">
         <div class="confirmation-icon">${Icons.checkCircle}</div>
         <h1>Payment Successful!</h1>
-        <p style="color: var(--neutral-600); margin-bottom: 2rem;">Your payment has been processed successfully.</p>
+        <p style="color: #9ca3af; margin-bottom: 2rem;">Your payment has been processed successfully.</p>
         <button class="btn btn-primary" onclick="Pages.renderBrowse()">Continue Shopping</button>
       </div>
     `;
@@ -6140,10 +6141,10 @@ static async renderAdminDashboard () {
   <div class="admin-header">
   <div>
   <h1 class="admin-title">Dashboard</h1>
-  <p style="margin:0;color:var(--neutral-500);font-size:0.85rem;">Welcome back, ${adminUser.fullName || 'Admin'}</p>
+  <p style="margin:0;color:#9ca3af;font-size:0.85rem;">Welcome back, ${adminUser.fullName || 'Admin'}</p>
   </div>
   <div class="admin-actions">
-  <span style="color:var(--neutral-500);font-size:0.8rem;">${Formatter.formatDate(new Date().toISOString())}</span>
+  <span style="color:#9ca3af;font-size:0.8rem;">${Formatter.formatDate(new Date().toISOString())}</span>
   </div>
   </div>
 
@@ -6202,89 +6203,83 @@ static async renderAdminDashboard () {
   <td>${o.customer?.name || 'N/A'}</td>
   <td><span class="admin-status-badge ${o.status}">${Formatter.capitalize((o.status || 'placed').replace('-', ' '))}</span></td>
   <td style="font-weight:600;">${Formatter.formatPrice(o.pricing?.grandTotal || 0)}</td>
-  <td style="color:var(--neutral-500);font-size:0.8rem;">${Formatter.formatTimeAgo(o.createdAt)}</td>
+  <td style="color:#9ca3af;font-size:0.8rem;">${Formatter.formatTimeAgo(o.createdAt)}</td>
   </tr>
-  `).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--neutral-400);padding:2rem;">No orders yet</td></tr>';
+  `).join('') || '<tr><td colspan="5" style="text-align:center;color:#6b7280;padding:2rem;">No orders yet</td></tr>';
 
   const recentUsersHtml = (stats.recentUsers || []).map(u => `
   <div class="admin-user-row">
   <div class="admin-user-avatar-sm">${(u.fullName || 'U').charAt(0).toUpperCase()}</div>
   <div style="flex:1;">
   <div style="font-weight:500;">${u.fullName || 'Unknown'}</div>
-  <div style="color:var(--neutral-500);font-size:0.8rem;">${u.email || ''}</div>
+  <div style="color:#9ca3af;font-size:0.8rem;">${u.email || ''}</div>
   </div>
   <span class="admin-role-badge ${u.role || 'buyer'}">${Formatter.capitalize(u.role || 'buyer')}</span>
   </div>
-  `).join('') || '<div style="text-align:center;color:var(--neutral-400);padding:2rem;">No users yet</div>';
+  `).join('') || '<div style="text-align:center;color:#6b7280;padding:2rem;">No users yet</div>';
 
   document.getElementById('admin-dashboard-content').innerHTML = `
   <div class="admin-dashboard-grid">
-  <div class="admin-card admin-card-2col">
-  <div class="admin-card-header">
-  <h3>Recent Orders</h3>
-  <button class="btn btn-ghost btn-sm" onclick="Pages.renderAdminOrders()">View All</button>
-  </div>
-  <div class="admin-table-container" style="box-shadow:none;border-radius:0;">
-  <table class="admin-table">
-  <thead>
-  <tr><th>Order</th><th>Customer</th><th>Status</th><th>Amount</th><th>Date</th></tr>
-  </thead>
-  <tbody>${recentOrdersHtml}</tbody>
-  </table>
-  </div>
-  </div>
+    <div class="admin-card" style="grid-row: 1 / 4;">
+      <div class="admin-card-header">
+        <h3>Recent Orders</h3>
+        <button class="btn btn-ghost btn-sm" onclick="Pages.renderAdminOrders()">View All</button>
+      </div>
+      <div class="admin-table-container" style="box-shadow:none;border-radius:0;">
+        <table class="admin-table">
+          <thead>
+            <tr><th>Order</th><th>Customer</th><th>Status</th><th>Amount</th><th>Date</th></tr>
+          </thead>
+          <tbody>${recentOrdersHtml}</tbody>
+        </table>
+      </div>
+      <div style="padding:var(--space-md);border-top:1px solid rgba(255,255,255,0.06);">
+        <h4 style="font-size:0.8rem;font-weight:600;color:#f9fafb;margin-bottom:0.75rem;">Recent Users</h4>
+        ${recentUsersHtml}
+      </div>
+    </div>
 
-  <div class="admin-card">
-  <div class="admin-card-header">
-  <h3>Recent Users</h3>
-  <button class="btn btn-ghost btn-sm" onclick="Pages.renderAdminUsers()">View All</button>
-  </div>
-  <div style="padding:var(--space-md);">
-  ${recentUsersHtml}
-  </div>
-  </div>
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <h3>Quick Actions</h3>
+      </div>
+      <div style="padding:var(--space-md);display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+        <button class="btn btn-outline btn-sm" onclick="Pages.renderAdminProductCreate()">${Icons.plus || '+'} Add Product</button>
+        <button class="btn btn-outline btn-sm" onclick="Pages.renderAdminProducts()">${Icons.package} Products</button>
+        <button class="btn btn-outline btn-sm" onclick="Pages.renderAdminOrders()">${Icons.clipboard} Orders</button>
+        <button class="btn btn-outline btn-sm" onclick="Pages.renderAdminReports()">${Icons.chart} Reports</button>
+      </div>
+    </div>
 
-  <div class="admin-card">
-  <div class="admin-card-header">
-  <h3>Quick Actions</h3>
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <h3>Platform Health</h3>
+      </div>
+      <div style="padding:var(--space-md);">
+        <div class="admin-health-row">
+          <span>Pending Products</span>
+          <span class="admin-health-val ${stats.summary.pendingProducts > 0 ? 'warning' : 'good'}">${stats.summary.pendingProducts}</span>
+        </div>
+        <div class="admin-health-row">
+          <span>Active Orders</span>
+          <span class="admin-health-val good">${stats.summary.activeOrders}</span>
+        </div>
+        <div class="admin-health-row">
+          <span>Today Revenue</span>
+          <span class="admin-health-val good">GHS ${stats.today.revenue.toLocaleString()}</span>
+        </div>
+        <div class="admin-health-row">
+          <span>Week Revenue</span>
+          <span class="admin-health-val good">GHS ${stats.thisWeek.revenue.toLocaleString()}</span>
+        </div>
+        <div class="admin-health-row">
+          <span>Month Revenue</span>
+          <span class="admin-health-val good">GHS ${stats.thisMonth.revenue.toLocaleString()}</span>
+        </div>
+      </div>
+    </div>
   </div>
-  <div style="padding:var(--space-md);display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
-  <button class="btn btn-outline btn-sm" onclick="Pages.renderAdminProductCreate()">${Icons.plus || '+'} Add Product</button>
-  <button class="btn btn-outline btn-sm" onclick="Pages.renderAdminProducts()">${Icons.package} Products</button>
-  <button class="btn btn-outline btn-sm" onclick="Pages.renderAdminOrders()">${Icons.clipboard} Orders</button>
-  <button class="btn btn-outline btn-sm" onclick="Pages.renderAdminReports()">${Icons.chart} Reports</button>
-  </div>
-  </div>
-
-  <div class="admin-card">
-  <div class="admin-card-header">
-  <h3>Platform Health</h3>
-  </div>
-  <div style="padding:var(--space-md);">
-  <div class="admin-health-row">
-  <span>Pending Products</span>
-  <span class="admin-health-val ${stats.summary.pendingProducts > 0 ? 'warning' : 'good'}">${stats.summary.pendingProducts}</span>
-  </div>
-  <div class="admin-health-row">
-  <span>Active Orders</span>
-  <span class="admin-health-val good">${stats.summary.activeOrders}</span>
-  </div>
-  <div class="admin-health-row">
-  <span>Today Revenue</span>
-  <span class="admin-health-val good">GHS ${stats.today.revenue.toLocaleString()}</span>
-  </div>
-  <div class="admin-health-row">
-  <span>Week Revenue</span>
-  <span class="admin-health-val good">GHS ${stats.thisWeek.revenue.toLocaleString()}</span>
-  </div>
-  <div class="admin-health-row">
-  <span>Month Revenue</span>
-  <span class="admin-health-val good">GHS ${stats.thisMonth.revenue.toLocaleString()}</span>
-  </div>
-  </div>
-  </div>
-  </div>
-`;
+  `;
   }
 
   /**
@@ -6456,7 +6451,7 @@ static renderAdminLogin () {
   </td>
   <td>${Formatter.capitalize(product.category)}</td>
   <td>${Formatter.formatPrice(product.price)}</td>
-  <td>${product.seller.name || product.seller}</td>
+  <td>${product.seller?.fullName || product.sellerName || product.seller?.name || product.seller || 'Unknown'}</td>
   <td>
   <span class="admin-status-badge ${product.status === 'pending' ? 'placed' : 'delivered'}">
   ${product.status || 'active'}
@@ -6815,7 +6810,7 @@ static async renderAdminActivity () {
             <td>Admin</td>
             <td>${a.action}</td>
             <td>${JSON.stringify(a.details || {}).substring(0, 80)}</td>
-            <td><span style="padding:2px 8px;border-radius:4px;font-size:0.75rem;background:var(--color-primary-light);color:var(--color-primary);">info</span></td>
+            <td><span style="padding:2px 8px;border-radius:4px;font-size:0.75rem;background:rgba(124,58,237,0.15);color:#a78bfa;">info</span></td>
           </tr>
         `).join('');
         tbody.innerHTML = localRows || '<tr><td colspan="5" style="text-align:center;padding:2rem;">No activity records found.</td></tr>';
@@ -6848,11 +6843,11 @@ static async renderAdminActivity () {
   }
 
   static _renderActivityRows (logs, tbody, append = false) {
-    const severityColors = {
-      info: 'background:var(--color-primary-light);color:var(--color-primary);',
-      warning: 'background:#fef3c7;color:#92400e;',
-      critical: 'background:#fee2e2;color:#991b1b;',
-    };
+  const severityColors = {
+    info: 'background:rgba(124,58,237,0.15);color:#a78bfa;',
+    warning: 'background:rgba(245,158,11,0.15);color:#fbbf24;',
+    critical: 'background:rgba(239,68,68,0.15);color:#f87171;',
+  };
 
     const actionLabels = {
       login: 'Login',

@@ -40,8 +40,13 @@ class AdminAuthManager {
           };
         }
 
+        if (response.data.token) {
+          StorageManager.set(STORAGE_KEYS.CURRENT_USER, { token: response.data.token, user });
+        }
+
         const adminUser = {
           ...user,
+          token: response.data.token,
           loginAt: new Date().toISOString(),
         };
 
@@ -59,24 +64,46 @@ class AdminAuthManager {
       // Backend not available, try offline fallback
     }
 
-    // Offline fallback: use authManager session if user is admin
-    const currentUser = typeof authManager !== 'undefined' ? authManager.getCurrentUser() : null;
-    if (currentUser && currentUser.role === 'admin' && currentUser.email === email) {
-      const adminUser = {
-        ...currentUser,
-        loginAt: new Date().toISOString(),
-      };
+      // Offline fallback: use authManager session if user is admin
+      const currentUser = typeof authManager !== 'undefined' ? authManager.getCurrentUser() : null;
+      if (currentUser && currentUser.role === 'admin' && currentUser.email === email) {
+        const adminUser = {
+          ...currentUser,
+          loginAt: new Date().toISOString(),
+        };
 
-      this.adminUser = adminUser;
-      StorageManager.set(this.ADMIN_STORAGE_KEY, adminUser);
-      this.logActivity('Admin login (offline)', { email });
+        this.adminUser = adminUser;
+        StorageManager.set(this.ADMIN_STORAGE_KEY, adminUser);
+        this.logActivity('Admin login (offline)', { email });
 
-      return {
-        success: true,
-        message: 'Login successful (offline)',
-        user: adminUser,
-      };
-    }
+        return {
+          success: true,
+          message: 'Login successful (offline)',
+          user: adminUser,
+        };
+      }
+
+      // Hardcoded offline fallback for development/demo
+      if (email === 'admin@unihub.local' && password === 'Admin123!') {
+        const adminUser = {
+          id: 'admin-offline',
+          fullName: 'Admin User',
+          email: 'admin@unihub.local',
+          role: 'admin',
+          isVerified: true,
+          loginAt: new Date().toISOString(),
+        };
+
+        this.adminUser = adminUser;
+        StorageManager.set(this.ADMIN_STORAGE_KEY, adminUser);
+        this.logActivity('Admin login (offline hardcoded)', { email });
+
+        return {
+          success: true,
+          message: 'Login successful (offline)',
+          user: adminUser,
+        };
+      }
 
     return {
       success: false,

@@ -333,7 +333,7 @@ class AdminDashboard {
   _renderError () {
     const grid = document.getElementById('admin-stats-grid');
     if (grid) {
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--color-danger);">Failed to load dashboard data. Please try again.</div>';
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#f87171;">Failed to load dashboard data. Please try again.</div>';
     }
   }
 

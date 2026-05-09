@@ -354,7 +354,7 @@ class AdminProductsManager {
       'ID', 'Title', 'Price', 'Category', 'Condition', 'Seller', 'University', 'Created',
     ];
     const rows = products.map(p => [
-      p.id, p.title, p.price, p.category, p.condition, p.seller.name, p.university, p.createdAt,
+      p.id, p.title, p.price, p.category, p.condition, p.seller?.fullName || p.sellerName || p.seller?.name || 'Unknown', p.university, p.createdAt,
     ]);
 
     const csvContent = [headers, ...rows].map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');

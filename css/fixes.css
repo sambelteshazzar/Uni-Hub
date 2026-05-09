@@ -127,24 +127,6 @@
   }
 }
 
-/* Fix admin container layout */
-.admin-container {
-  display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: 2rem;
-  min-height: calc(100vh - 64px);
-}
-
-@media (max-width: 992px) {
-  .admin-container {
-    grid-template-columns: 1fr;
-  }
-
-  .admin-sidebar {
-    display: none;
-  }
-}
-
 /* Fix empty state centering */
 .empty-cart,
 .empty-state {

@@ -539,7 +539,8 @@ class ModalManager {
 
     const sellerDiv = document.createElement('div');
     sellerDiv.className = 'quick-view-seller';
-    sellerDiv.textContent = `Seller: ${product.seller.name} (${product.seller.rating}⭐)`;
+    const _sName = product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
+    sellerDiv.textContent = `Seller: ${_sName} (${product.seller?.rating || product.sellerRating || 0}⭐)`;
 
     detailsDiv.appendChild(h3);
     detailsDiv.appendChild(priceDiv);

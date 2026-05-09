@@ -1,6 +1,4 @@
 .admin-container {
-  display: grid;
-  grid-template-columns: 240px 1fr;
   min-height: 100vh;
   background: #111827;
   color: #e5e7eb;
@@ -581,7 +579,9 @@
 .admin-dashboard-grid {
   display: grid;
   grid-template-columns: 1fr 340px;
+  grid-auto-rows: auto;
   gap: 20px;
+  align-items: start;
 }
 
 .admin-card {
@@ -1531,10 +1531,6 @@
 }
 
 @media (max-width: 768px) {
-  .admin-container {
-    grid-template-columns: 1fr;
-  }
-
   .admin-mobile-toggle {
     display: block;
   }

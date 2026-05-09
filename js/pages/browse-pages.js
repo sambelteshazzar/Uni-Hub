@@ -345,9 +345,9 @@ class BrowsePage {
 
   renderProductCard(product) {
     const isInWishlist = productsManager.isInWishlist?.(product.id) || false;
-    const initials = product.seller?.name
-      ? product.seller.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-      : 'UN';
+    const _bsn2 = product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
+    const initials = _bsn2
+      .split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
     const categoryLabel = product.category
       ? product.category.charAt(0).toUpperCase() + product.category.slice(1).replace(/-/g, ' ')
@@ -370,8 +370,8 @@ class BrowsePage {
           <div class="browse-product-price">GHS ${product.price?.toLocaleString() || '0'}</div>
           <div class="browse-product-seller">
             <div class="browse-product-seller-avatar">${initials}</div>
-            <span class="browse-product-seller-name">${product.seller?.name || 'Unknown'}</span>
-            ${product.seller?.rating ? `<span style="font-size:var(--text-xs);color:var(--secondary);margin-left:auto;">${Icons.star || ''} ${product.seller.rating}</span>` : ''}
+<span class="browse-product-seller-name">${product.seller?.fullName || product.sellerName || product.seller?.name || 'Unknown'}</span>
+      ${product.seller?.rating ? `<span style="font-size:var(--text-xs);color:var(--secondary);margin-left:auto;">${Icons.star || ''} ${product.seller.rating}</span>` : product.sellerRating ? `<span style="font-size:var(--text-xs);color:var(--secondary);margin-left:auto;">${Icons.star || ''} ${product.sellerRating}</span>` : ''}
           </div>
           <button class="browse-product-add-cart-btn" onclick="event.stopPropagation(); cartManager?.add(${JSON.stringify(product).replace(/"/g, '&quot;')}); Pages.updateCartBadge();">Add to Cart</button>
         </div>
