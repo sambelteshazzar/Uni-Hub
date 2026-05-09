@@ -725,6 +725,49 @@
   cursor: pointer;
 }
 
+.admin-select-filter {
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: #1f2937;
+  color: #f9fafb;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  min-width: 140px;
+}
+
+.admin-select-filter:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 2px rgba(124,58,237,0.25);
+}
+
+.admin-form-input,
+.admin-form-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  background: #1f2937;
+  color: #f9fafb;
+  font-size: var(--text-base);
+}
+
+.admin-form-input:focus,
+.admin-form-select:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 2px rgba(124,58,237,0.25);
+}
+
+.admin-form-select {
+  cursor: pointer;
+}
+
+.admin-form-input::placeholder {
+  color: #6b7280;
+}
+
 .admin-table-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;

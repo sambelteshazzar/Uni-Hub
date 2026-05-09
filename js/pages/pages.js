@@ -6718,7 +6718,7 @@ static async renderAdminActivity () {
           <div class="admin-header">
             <h1 class="admin-title">Activity Monitor</h1>
             <div class="admin-actions">
-              <select id="activity-filter-action" onchange="Pages._loadActivityLogs()" style="padding:0.5rem;border-radius:6px;border:1px solid var(--border-color);">
+              <select id="activity-filter-action" onchange="Pages._loadActivityLogs()" class="admin-select-filter">
                 <option value="">All Actions</option>
                 <option value="login">Login</option>
                 <option value="signup">Signup</option>
@@ -6731,7 +6731,7 @@ static async renderAdminActivity () {
                 <option value="admin_reject">Product Rejected</option>
                 <option value="password_change">Password Change</option>
               </select>
-              <select id="activity-filter-severity" onchange="Pages._loadActivityLogs()" style="padding:0.5rem;border-radius:6px;border:1px solid var(--border-color);">
+              <select id="activity-filter-severity" onchange="Pages._loadActivityLogs()" class="admin-select-filter">
                 <option value="">All Severity</option>
                 <option value="info">Info</option>
                 <option value="warning">Warning</option>
@@ -6911,20 +6911,20 @@ static renderAdminProductCreate () {
             <div style="display:grid;gap:1rem;">
               <div>
                 <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Title *</label>
-                <input type="text" name="title" required style="width:100%;padding:0.75rem;border:1px solid var(--border-color);border-radius:8px;" placeholder="e.g. MacBook Pro 2021">
+                <input type="text" name="title" required class="admin-form-input" placeholder="e.g. MacBook Pro 2021">
               </div>
               <div>
                 <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Description *</label>
-                <textarea name="description" required rows="4" style="width:100%;padding:0.75rem;border:1px solid var(--border-color);border-radius:8px;" placeholder="Describe the item..."></textarea>
+                <textarea name="description" required rows="4" class="admin-form-input" placeholder="Describe the item..."></textarea>
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
                 <div>
                   <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Price (GHS) *</label>
-                  <input type="number" name="price" required min="1" style="width:100%;padding:0.75rem;border:1px solid var(--border-color);border-radius:8px;" placeholder="0">
+                  <input type="number" name="price" required min="1" class="admin-form-input" placeholder="0">
                 </div>
                 <div>
                   <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Category *</label>
-                  <select name="category" required style="width:100%;padding:0.75rem;border:1px solid var(--border-color);border-radius:8px;">
+                  <select name="category" required class="admin-form-select">
                     ${categories.map(c => '<option value="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>').join('')}
                   </select>
                 </div>
@@ -6932,18 +6932,18 @@ static renderAdminProductCreate () {
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
                 <div>
                   <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Condition *</label>
-                  <select name="condition" required style="width:100%;padding:0.75rem;border:1px solid var(--border-color);border-radius:8px;">
+                  <select name="condition" required class="admin-form-select">
                     ${conditions.map(c => '<option value="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>').join('')}
                   </select>
                 </div>
                 <div>
                   <label style="display:block;margin-bottom:0.25rem;font-weight:600;">University</label>
-                  <input type="text" name="university" style="width:100%;padding:0.75rem;border:1px solid var(--border-color);border-radius:8px;" placeholder="Leave blank for your university">
+                  <input type="text" name="university" class="admin-form-input" placeholder="Leave blank for your university">
                 </div>
               </div>
               <div>
                 <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Image URLs (one per line)</label>
-                <textarea name="images" rows="3" style="width:100%;padding:0.75rem;border:1px solid var(--border-color);border-radius:8px;" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"></textarea>
+                <textarea name="images" rows="3" class="admin-form-input" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"></textarea>
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
                 <div>
