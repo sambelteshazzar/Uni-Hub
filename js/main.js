@@ -68,11 +68,15 @@ document.addEventListener('DOMContentLoaded', async function () {
     mainContent.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#050505;">
         <div style="text-align:center;">
-          <div style="width:48px;height:48px;border:3px solid rgba(99,102,241,0.2);border-top-color:#6366f1;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 1rem;"></div>
+          <div style="display:flex;gap:0.5rem;align-items:center;justify-content:center;margin:0 auto 1rem;">
+            <span style="width:0.75rem;height:0.75rem;border-radius:50%;background:#6366f1;animation:bounce 1s infinite;"></span>
+            <span style="width:0.75rem;height:0.75rem;border-radius:50%;background:#6366f1;animation:bounce 1s infinite 0.2s;"></span>
+            <span style="width:0.75rem;height:0.75rem;border-radius:50%;background:#6366f1;animation:bounce 1s infinite 0.4s;"></span>
+          </div>
           <p style="color:#a1a1aa;font-family:system-ui,sans-serif;">Loading Uni-Hub...</p>
         </div>
       </div>
-      <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+      <style>@keyframes bounce{0%,100%{transform:translateY(-25%);animation-timing-function:cubic-bezier(0.8,0,1,1);}50%{transform:translateY(0);animation-timing-function:cubic-bezier(0,0,0.2,1);}}</style>
     `;
   }
 

@@ -127,7 +127,7 @@ class BrowsePage {
   renderSkeleton() {
     return `
       <div class="browse-page">
-        <div class="browse-breadcrumb"><div class="browse-breadcrumb-inner"><div class="browse-skeleton" style="height:14px;width:200px;"></div></div></div>
+        <div class="browse-breadcrumb"><div class="browse-breadcrumb-inner"><div class="browse-skeleton" style="height:2.5rem;width:220px;border-radius:0.375rem;"></div></div></div>
         <div class="browse-page-inner">
           <aside class="browse-sidebar">
             ${Array(4).fill('').map(() => `<div class="browse-filter-group"><div class="browse-skeleton" style="height:16px;width:80px;margin-bottom:12px;"></div>${Array(4).fill('').map(() => '<div class="browse-skeleton" style="height:24px;width:90%;margin-bottom:8px;"></div>').join('')}</div>`).join('')}
@@ -170,14 +170,26 @@ class BrowsePage {
       ? this.state.selectedCategories[0].charAt(0).toUpperCase() + this.state.selectedCategories[0].slice(1).replace(/-/g, ' ')
       : '';
     return `
-      <nav class="browse-breadcrumb">
-        <div class="browse-breadcrumb-inner">
-          <a href="#/" class="browse-breadcrumb-link">Home</a>
-          <span class="browse-breadcrumb-sep">/</span>
-          <a href="#/browse" class="browse-breadcrumb-link">Browse</a>
-          ${categoryLabel ? `<span class="browse-breadcrumb-sep">/</span><span class="browse-breadcrumb-current">${categoryLabel}</span>` : '<span class="browse-breadcrumb-current">All Products</span>'}
-        </div>
-      </nav>`;
+    <nav class="browse-breadcrumb" aria-label="Breadcrumb">
+      <div class="browse-breadcrumb-inner">
+        <ol class="browse-breadcrumb-list">
+          <li class="browse-breadcrumb-item browse-breadcrumb-item--first">
+            <a href="#/" class="browse-breadcrumb-link">Home</a>
+          </li>
+          <li class="browse-breadcrumb-item">
+            <span class="browse-breadcrumb-arrow"></span>
+            <a href="#/browse" class="browse-breadcrumb-link">Browse</a>
+          </li>
+          ${categoryLabel ? `<li class="browse-breadcrumb-item">
+            <span class="browse-breadcrumb-arrow"></span>
+            <span class="browse-breadcrumb-current">${categoryLabel}</span>
+          </li>` : `<li class="browse-breadcrumb-item">
+            <span class="browse-breadcrumb-arrow"></span>
+            <span class="browse-breadcrumb-current">All Products</span>
+          </li>`}
+        </ol>
+      </div>
+    </nav>`;
   }
 
   renderSidebar(maxPrice) {
