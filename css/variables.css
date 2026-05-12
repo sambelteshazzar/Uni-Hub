@@ -63,12 +63,12 @@
   --color-info: var(--info);
   --color-info-light: var(--info-light);
 
-/* Product Condition Colors */
---condition-new: #5b21b6; /* Purple */
---condition-like-new: #3730a3; /* Indigo */
---condition-fair: #d27500; /* Amber */
---condition-good: #1a8917; /* Green */
---condition-excellent: #0046be; /* Blue */
+  /* Product Condition Colors - Blue/Yellow theme */
+  --condition-new: #0046be; /* Blue */
+  --condition-like-new: #003399; /* Dark Blue */
+  --condition-fair: #d27500; /* Amber */
+  --condition-good: #1a8917; /* Green */
+  --condition-excellent: #ffce00; /* Yellow */
 
   /* Price Color - Best Buy blue for prices */
   --price-color: #0046be; /* Blue for prices */

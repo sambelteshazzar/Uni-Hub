@@ -1008,22 +1008,23 @@ static showOriginalNavFooter () {
               </a>
             </div>
             
-            <div class="universities-grid">
-              ${config.universities
-    .slice(0, 5)
-    .map(
-      (uni, i) => `
-                <div onclick="Pages.selectUniversity('${uni.id}'); return false;" class="university-card-modern">
-                  <img src="https://images.unsplash.com/photo-${['1541339907198-e08756dedf3f', '1592280771190-3e2e4d571952', '1523050854058-8df90110c9f1', '1562774053-701939374585', '1509062522246-3755977927d7'][i]}?w=800&auto=format&fit=crop" alt="${uni.name}">
-                  <div class="university-card-overlay"></div>
-                  <div class="university-card-content">
-                    <h3 class="university-card-name">${uni.name}</h3>
-                    <p class="university-card-meta">${Icons.locationPin} ${uni.campus} • ${100 + i * 50}+ items</p>
-                  </div>
-                </div>
-              `,
-    )
-    .join('')}
+<div class="universities-grid">
+${config.universities
+.slice(0, 5)
+.map(
+(uni, i) => `
+<div onclick="${uni.active !== false ? `Pages.selectUniversity('${uni.id}'); return false;` : `Pages.showUniversityComingSoon('${uni.name}'); return false;`}" class="university-card-modern" style="position:relative;${uni.active === false ? 'opacity:0.7;cursor:default;' : ''}">
+<img src="https://images.unsplash.com/photo-${['1541339907198-e08756dedf3f', '1592280771190-3e2e4d571952', '1523050854058-8df90110c9f1', '1562774053-701939374585', '1509062522246-3755977927d7'][i]}?w=800&auto=format&fit=crop" alt="${uni.name}">
+<div class="university-card-overlay"></div>
+${uni.active === false ? '<div style="position:absolute;top:0.75rem;right:0.75rem;background:rgba(234,179,8,0.9);color:#000;font-size:0.7rem;font-weight:600;padding:0.25rem 0.5rem;border-radius:0.375rem;text-transform:uppercase;letter-spacing:0.05em;z-index:2;">Coming Soon</div>' : ''}
+<div class="university-card-content">
+<h3 class="university-card-name">${uni.name}</h3>
+<p class="university-card-meta">${Icons.locationPin} ${uni.campus}${uni.active !== false ? ` • ${100 + i * 50}+ items` : ''}</p>
+</div>
+</div>
+`,
+)
+.join('')}
               
               <div onclick="Pages.renderBrowse(); return false;" class="university-card-modern glass-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem; transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'">
                 <div style="width: 4rem; height: 4rem; border-radius: 50%; background: rgba(99,102,241,0.1); display: flex; align-items: center; justify-content: center; color: #6366f1; margin-bottom: 1rem; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
@@ -1323,8 +1324,15 @@ static showOriginalNavFooter () {
    */
   static selectUniversity (universityId) {
     StorageManager.set(STORAGE_KEYS.SELECTED_UNIVERSITY, universityId);
-    // Redirect to student verification
     this.renderStudentVerification();
+  }
+
+  static showUniversityComingSoon (universityName) {
+    if (typeof Toast !== 'undefined') {
+      Toast.info(`${universityName} is coming soon! We're currently available at Accra Technical University (ATU).`);
+    } else {
+      alert(`${universityName} is coming soon! We're currently available at Accra Technical University (ATU).`);
+    }
   }
 
   /**

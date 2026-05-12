@@ -26,31 +26,36 @@
     // Build universities HTML
     let universitiesHTML = '';
     if (config.universities && config.universities.length > 0) {
-      universitiesHTML = config.universities
-        .map(function (uni, i) {
-          const images = [
-            '1541339907198-e08756dedf3f',
-            '1592280771190-3e2e4d571952',
-            '1523050854058-8df90110c9f1',
-            '1562774053-701939374585',
-            '1509062522246-3755977927d7',
-          ];
-          const _img = images[i % images.length];
-          return (
-            '<div class="bb-category-card" onclick="Pages.selectUniversity(\'' +
-            uni.id +
-            '\'); return false;">' +
-            '<div class="bb-category-icon"><svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg></div>' +
-            '<p class="bb-category-name">' +
-            uni.name +
-            '</p>' +
-            '<p class="bb-category-count">' +
-            (100 + i * 50) +
-            '+ items</p>' +
-            '</div>'
-          );
-        })
-        .join('');
+  universitiesHTML = config.universities
+    .map(function (uni, i) {
+      const images = [
+        '1541339907198-e08756dedf3f',
+        '1592280771190-3e2e4d571952',
+        '1523050854058-8df90110c9f1',
+        '1562774053-701939374585',
+        '1509062522246-3755977927d7',
+      ];
+      const _img = images[i % images.length];
+      const isActive = uni.active !== false;
+      const clickHandler = isActive
+        ? "Pages.selectUniversity('" + uni.id + "'); return false;"
+        : "Pages.showUniversityComingSoon('" + uni.name + "'); return false;";
+      const comingSoonBadge = isActive ? '' : '<span style="position:absolute;top:0.5rem;right:0.5rem;background:#eab308;color:#000;font-size:0.65rem;font-weight:600;padding:0.2rem 0.4rem;border-radius:0.25rem;text-transform:uppercase;letter-spacing:0.05em;">Coming Soon</span>';
+      const countText = isActive ? (100 + i * 50) + '+ items' : 'Not yet available';
+      return (
+        '<div class="bb-category-card" style="position:relative;' + (isActive ? '' : 'opacity:0.7;cursor:default;') + '" onclick="' + clickHandler + '">' +
+        comingSoonBadge +
+        '<div class="bb-category-icon"><svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg></div>' +
+        '<p class="bb-category-name">' +
+        uni.name +
+        '</p>' +
+        '<p class="bb-category-count">' +
+        countText +
+        '</p>' +
+        '</div>'
+      );
+    })
+    .join('');
     }
 
     // Build categories HTML

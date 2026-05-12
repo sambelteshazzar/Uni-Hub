@@ -35,7 +35,6 @@ class FooterUtils {
     const form = document.querySelector('.footer-newsletter-form');
     if (!form) return;
 
-    // Remove the inline onsubmit handler and add proper event listener
     form.removeAttribute('onsubmit');
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -51,16 +50,17 @@ class FooterUtils {
     const email = input?.value?.trim();
 
     if (!email) {
+      this.showFormMessage(form, 'Please enter your email address.', 'error');
       this.showNotification('Please enter your email address', 'error');
       return;
     }
 
     if (!this.isValidEmail(email)) {
+      this.showFormMessage(form, 'Please enter a valid email address.', 'error');
       this.showNotification('Please enter a valid email address', 'error');
       return;
     }
 
-    // Show loading state
     const submitBtn = form.querySelector('.footer-newsletter-btn');
     const originalText = submitBtn?.textContent;
     if (submitBtn) {
@@ -69,14 +69,13 @@ class FooterUtils {
     }
 
     try {
-      // In production, this would POST to your backend API
-      // Simulating API call
       await this.simulateApiCall();
 
-      // Success
       input.value = '';
+      this.showFormMessage(form, 'Thanks for subscribing! Check your email for confirmation.', 'success');
       this.showNotification('Thanks for subscribing! 🎉 Check your email for confirmation.', 'success');
     } catch (error) {
+      this.showFormMessage(form, 'Something went wrong. Please try again.', 'error');
       this.showNotification('Something went wrong. Please try again.', 'error');
     } finally {
       if (submitBtn) {
@@ -108,11 +107,27 @@ class FooterUtils {
   showNotification(message, type = 'info') {
     if (typeof notificationManager !== 'undefined' && notificationManager[type]) {
       notificationManager[type](type === 'error' ? 'Error' : 'Success', message);
-  } else if (typeof Toast !== 'undefined' && Toast.show) {
-    Toast.show(message, type);
-  } else {
-    console.warn('[Footer]', message);
+    } else if (typeof Toast !== 'undefined' && Toast.show) {
+      Toast.show(message, type);
+    } else {
+      console.warn('[Footer]', message);
+    }
   }
+
+  /**
+   * Show inline message below a form
+   */
+  showFormMessage(form, message, type = 'info') {
+    let msgEl = form.querySelector('.footer-form-message');
+    if (!msgEl) {
+      msgEl = document.createElement('p');
+      msgEl.className = 'footer-form-message';
+      msgEl.style.cssText = 'margin:0.5rem 0 0;font-size:0.8rem;';
+      form.appendChild(msgEl);
+    }
+    msgEl.textContent = message;
+    msgEl.style.color = type === 'error' ? '#dc2626' : '#16a34a';
+    setTimeout(() => { if (msgEl.parentNode) msgEl.remove(); }, 5000);
   }
 
   /**

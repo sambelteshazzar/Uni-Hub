@@ -99,7 +99,7 @@
 
 .footer-newsletter-input {
   flex: 1;
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-sm) var(--space-md) var(--space-sm) 3rem;
   border: 1px solid #d4d4d4;
   border-radius: var(--radius-sm);
   font-size: var(--text-sm);

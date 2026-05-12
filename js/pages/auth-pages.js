@@ -17,19 +17,27 @@ const AuthPageMethods = {
     const selectedUniversity = StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
     const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true);
 
-    // Get university name
+    // Get university name and check active status
     let universityName = 'your university';
     api
-      .loadJSON('data/config.json')
-      .then(config => {
-        const uni = config.universities.find(u => u.id === selectedUniversity);
-        if (uni) {
-          universityName = uni.name;
-          // Re-render with university name
-          mainContent.querySelector('.verification-university-name').textContent = universityName;
+    .loadJSON('data/config.json')
+    .then(config => {
+      const uni = config.universities.find(u => u.id === selectedUniversity);
+      if (uni) {
+        if (uni.active === false) {
+          StorageManager.remove(STORAGE_KEYS.SELECTED_UNIVERSITY);
+          Pages.renderLanding();
+          if (typeof Toast !== 'undefined') {
+            Toast.info(`${uni.name} is coming soon! We're currently available at Accra Technical University (ATU).`);
+          }
+          return;
         }
-      })
-      .catch(() => {});
+        universityName = uni.name;
+        const nameEl = mainContent.querySelector('.verification-university-name');
+        if (nameEl) nameEl.textContent = universityName;
+      }
+    })
+    .catch(() => {});
 
     // Check if already verified
     if (

@@ -80,25 +80,26 @@ class _LandingPageLoader {
     // Testimonial carousel
     this.initTestimonialCarousel();
 
-    // Newsletter form
-    const form = document.getElementById('newsletter-form');
-    if (form) {
-      form.addEventListener('submit', e => {
-        e.preventDefault();
-        const input = form.querySelector('.lp-newsletter-input');
-        const email = input?.value?.trim();
+  // Newsletter form
+  const form = document.getElementById('lp-newsletter-form');
+  if (form) {
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const input = form.querySelector('.lp-newsletter-input');
+      const email = input?.value?.trim();
 
-        if (!email || !this.isValidEmail(email)) {
-          Toast.warning('Please enter a valid email address.');
-          return;
-        }
+      if (!email || !this.isValidEmail(email)) {
+        this.showFormMessage(form, 'Please enter a valid email address.', 'error');
+        Toast.warning('Please enter a valid email address.');
+        return;
+      }
 
-        // In production, this would POST to your mailing list API
-        // Newsletter signup logged
-        input.value = '';
-        Toast.success('Thanks for signing up!');
-      });
-    }
+      // In production, this would POST to your mailing list API
+      input.value = '';
+      this.showFormMessage(form, 'Thanks for signing up!', 'success');
+      Toast.success('Thanks for signing up!');
+    });
+  }
   }
 
   /**
@@ -164,5 +165,21 @@ class _LandingPageLoader {
    */
   static isValidEmail (email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  /**
+   * Show inline message below a form
+   */
+  showFormMessage (form, message, type = 'info') {
+    let msgEl = form.querySelector('.lp-form-message');
+    if (!msgEl) {
+      msgEl = document.createElement('p');
+      msgEl.className = 'lp-form-message';
+      msgEl.style.cssText = 'margin:0.5rem 0 0;font-size:0.875rem;';
+      form.appendChild(msgEl);
+    }
+    msgEl.textContent = message;
+    msgEl.style.color = type === 'error' ? '#dc2626' : '#16a34a';
+    setTimeout(() => { if (msgEl.parentNode) msgEl.remove(); }, 5000);
   }
 }
