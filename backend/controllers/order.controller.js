@@ -84,6 +84,14 @@ exports.createOrder = async (req, res) => {
     const grandTotal = subtotal + deliveryFee;
 
     const createOrderTransaction = db('orders').db.transaction(() => {
+      const now = new Date();
+      const yy = now.getFullYear().toString().slice(-2);
+      const mm = (now.getMonth() + 1).toString().padStart(2, '0');
+      const dd = now.getDate().toString().padStart(2, '0');
+      const datePart = `${yy}${mm}${dd}`;
+      const orderNum = `UH-${datePart}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+      const trackNum = `UHT-${datePart}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+
       const order = db('orders').create({
         userId: req.user.id,
         customer_name: req.user.fullName,
@@ -103,7 +111,8 @@ exports.createOrder = async (req, res) => {
         payment_transactionId: '',
         payment_paidAt: '',
         status: 'pending',
-        orderNumber: `ORD-${Date.now()}`,
+        orderNumber: orderNum,
+        trackingNumber: trackNum,
       });
 
       for (const vItem of verifiedItems) {
@@ -461,5 +470,32 @@ exports.cancelOrder = async (req, res) => {
       success: false,
       error: error.message || 'Failed to cancel order',
     });
+  }
+};
+
+exports.trackByTrackingNumber = async (req, res) => {
+  try {
+    const { trackingNumber } = req.params;
+    if (!trackingNumber) {
+      return res.status(400).json({ success: false, error: 'Tracking number is required' });
+    }
+
+    const order = db('orders').find({ trackingNumber }).find(o => o.trackingNumber === trackingNumber);
+    if (!order) {
+      return res.status(404).json({ success: false, error: 'No order found with this tracking number' });
+    }
+
+    const items = db('order_items').find({ orderId: order.id });
+    order._items = items;
+
+    const statusHistory = db('order_status_history').find({ orderId: order.id });
+
+    const publicOrder = getPublicOrder(order);
+    publicOrder.statusHistory = statusHistory;
+
+    res.json({ success: true, data: publicOrder });
+  } catch (error) {
+    console.error('Track order error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Failed to track order' });
   }
 };

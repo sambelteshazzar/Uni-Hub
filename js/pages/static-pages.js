@@ -30,7 +30,7 @@ const StaticPageMethods = {
 
         <section style="margin-bottom: 2rem;">
           <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem;">5. Payments and Refunds</h2>
-          <p style="line-height: 1.7; color: var(--text-secondary);">Payments are processed through our supported payment methods (MTN MoMo, Telecel Cash, Bank Transfer, Cash on Delivery). Refund policies vary by seller and are subject to our dispute resolution process. Uni-Hub is not liable for payment disputes between users.</p>
+          <p style="line-height: 1.7; color: var(--text-secondary);">Payments are processed through our supported payment methods (MTN MoMo, Telecel Cash, Bank Transfer). Refund policies vary by seller and are subject to our dispute resolution process. Uni-Hub is not liable for payment disputes between users.</p>
         </section>
 
         <section style="margin-bottom: 2rem;">

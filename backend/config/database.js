@@ -101,30 +101,31 @@ createdAt TEXT DEFAULT (datetime('now')),
 updatedAt TEXT DEFAULT (datetime('now'))
 );
 
-    CREATE TABLE IF NOT EXISTS orders (
-      id TEXT PRIMARY KEY,
-      orderNumber TEXT UNIQUE,
-      userId TEXT NOT NULL REFERENCES users(id),
-      customer_name TEXT NOT NULL,
-      customer_email TEXT NOT NULL,
-      customer_phone TEXT NOT NULL,
-      customer_university TEXT NOT NULL,
-      pricing_subtotal REAL NOT NULL,
-      pricing_deliveryFee REAL DEFAULT 0,
-      pricing_grandTotal REAL NOT NULL,
-      pricing_currency TEXT DEFAULT 'GHS',
-      delivery_mode TEXT NOT NULL CHECK(delivery_mode IN ('bolt','yango','inperson')),
-      delivery_address TEXT NOT NULL,
-      delivery_instructions TEXT,
-      delivery_status TEXT DEFAULT 'pending' CHECK(delivery_status IN ('pending','processing','in-transit','delivered','cancelled')),
-      payment_mode TEXT NOT NULL CHECK(payment_mode IN ('momo','telecel','bank','cash')),
-      payment_status TEXT DEFAULT 'pending' CHECK(payment_status IN ('pending','completed','failed','refunded')),
-      payment_transactionId TEXT,
-      payment_paidAt TEXT,
-      status TEXT DEFAULT 'placed' CHECK(status IN ('placed','confirmed','in-transit','delivered','cancelled')),
-      createdAt TEXT DEFAULT (datetime('now')),
-      updatedAt TEXT DEFAULT (datetime('now'))
-    );
+CREATE TABLE IF NOT EXISTS orders (
+            id TEXT PRIMARY KEY,
+            orderNumber TEXT UNIQUE,
+            trackingNumber TEXT UNIQUE,
+            userId TEXT NOT NULL REFERENCES users(id),
+            customer_name TEXT NOT NULL,
+            customer_email TEXT NOT NULL,
+            customer_phone TEXT NOT NULL,
+            customer_university TEXT NOT NULL,
+            pricing_subtotal REAL NOT NULL,
+            pricing_deliveryFee REAL DEFAULT 0,
+            pricing_grandTotal REAL NOT NULL,
+            pricing_currency TEXT DEFAULT 'GHS',
+            delivery_mode TEXT NOT NULL CHECK(delivery_mode IN ('bolt','yango','inperson')),
+            delivery_address TEXT NOT NULL,
+            delivery_instructions TEXT,
+            delivery_status TEXT DEFAULT 'pending' CHECK(delivery_status IN ('pending','processing','in-transit','delivered','cancelled')),
+            payment_mode TEXT NOT NULL CHECK(payment_mode IN ('momo','telecel','bank','cash')),
+            payment_status TEXT DEFAULT 'pending' CHECK(payment_status IN ('pending','completed','failed','refunded')),
+            payment_transactionId TEXT,
+            payment_paidAt TEXT,
+            status TEXT DEFAULT 'placed' CHECK(status IN ('placed','confirmed','in-transit','delivered','cancelled')),
+            createdAt TEXT DEFAULT (datetime('now')),
+            updatedAt TEXT DEFAULT (datetime('now'))
+        );
 
   CREATE TABLE IF NOT EXISTS product_colors (
   id TEXT PRIMARY KEY,

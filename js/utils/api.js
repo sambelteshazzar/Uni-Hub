@@ -242,6 +242,7 @@ class API {
     create: data => this.post('/orders', data),
     getMyOrders: () => this.get('/orders/my-orders'),
     getById: id => this.get(`/orders/${id}`),
+    track: trackingNumber => this.get(`/orders/track/${trackingNumber}`),
     completePayment: (id, transactionId) => this.post(`/orders/${id}/payment`, { transactionId }),
     cancel: id => this.put(`/orders/${id}/cancel`),
   };

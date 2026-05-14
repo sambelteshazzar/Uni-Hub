@@ -59,6 +59,8 @@ function mapOrderRow (row) {
   if (!row) return null;
   return {
     ...row,
+    orderNumber: row.orderNumber,
+    trackingNumber: row.trackingNumber,
     customer: {
       name: row.customer_name,
       email: row.customer_email,

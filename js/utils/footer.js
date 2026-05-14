@@ -167,13 +167,19 @@ class FooterUtils {
           this.showNotification(`${linkText} page coming soon!`, 'info');
         });
       } else if (isSocialLink) {
-        // Social links - show coming soon for now
-        link.setAttribute('data-has-handler', 'true');
-        link.addEventListener('click', (e) => {
-          e.preventDefault();
-          const platform = link.getAttribute('aria-label') || 'Social';
-          this.showNotification(`Follow us on ${platform} - Coming soon!`, 'info');
-        });
+        const href = link.getAttribute('href');
+        if (href && href !== '#' && href.startsWith('http')) {
+          link.setAttribute('data-has-handler', 'true');
+          link.setAttribute('target', '_blank');
+          link.setAttribute('rel', 'noopener noreferrer');
+        } else {
+          link.setAttribute('data-has-handler', 'true');
+          link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const platform = link.getAttribute('aria-label') || 'Social';
+            this.showNotification(`Follow us on ${platform} - Coming soon!`, 'info');
+          });
+        }
       }
     });
 

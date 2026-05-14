@@ -14,13 +14,16 @@ const {
   updateOrderStatus,
   completePayment,
   cancelOrder,
+  trackByTrackingNumber,
 } = require('../controllers/order.controller');
 
-// All routes are protected
+router.get('/track/:trackingNumber', trackByTrackingNumber);
+
 router.use(protect);
 
 router.post('/', createOrder);
 router.get('/my-orders', getMyOrders);
+router.get('/track/:trackingNumber', trackByTrackingNumber);
 router.get('/:id', getOrder);
 router.put('/:id/status', authorize('admin', 'seller'), updateOrderStatus);
 router.post('/:id/payment', completePayment);

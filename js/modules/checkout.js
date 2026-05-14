@@ -340,10 +340,14 @@ class CheckoutFlow {
           </div>
           <h1>Order Placed Successfully!</h1>
           <p class="subtitle">Thank you for your purchase</p>
-          <div class="checkout-order-number-box">
-            <div class="checkout-order-number-label">Order Number</div>
-            <div class="checkout-order-number">${order.orderNumber || order.id || ''}</div>
-          </div>
+<div class="checkout-order-number-box">
+      <div class="checkout-order-number-label">Order Number</div>
+      <div class="checkout-order-number">${order.orderNumber || order.id || ''}</div>
+    </div>
+    ${order.trackingNumber ? `<div class="checkout-order-number-box" style="margin-top:0.75rem;">
+      <div class="checkout-order-number-label">Tracking Number</div>
+      <div class="checkout-order-number" style="color:#0046be;font-family:monospace;letter-spacing:0.05em;">${order.trackingNumber}</div>
+    </div>` : ''}
           <div class="checkout-estimated-delivery">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             <div>
@@ -710,11 +714,12 @@ class CheckoutFlow {
         } catch (e) {}
       }
 
-      if (!order) {
-        order = {
-          id: `order_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
-          orderNumber: this._generateOrderNumber(),
-          userId: currentUser.id,
+if (!order) {
+      order = {
+        id: `order_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+        orderNumber: this._generateOrderNumber(),
+        trackingNumber: this._generateTrackingNumber(),
+        userId: currentUser.id,
           customer: {
             name: this.shippingData.fullName,
             email: currentUser.email,
@@ -777,6 +782,15 @@ class CheckoutFlow {
     const day = date.getDate().toString().padStart(2, '0');
     const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
     return `UH-${year}${month}${day}-${random}`;
+  }
+
+  _generateTrackingNumber() {
+    const date = new Date();
+    const year = date.getFullYear().toString().slice(-2);
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const alpha = Math.random().toString(36).substring(2, 6).toUpperCase();
+    return `UHT-${year}${month}${day}-${alpha}`;
   }
 
   _saveOrderLocal(order) {
@@ -869,6 +883,7 @@ class CheckoutManager {
     const order = {
       id: this.generateOrderId(),
       orderNumber: this.generateOrderNumber(),
+      trackingNumber: this.generateTrackingNumber(),
       userId: currentUser.id,
       customer: {
         name: currentUser.fullName,
@@ -935,13 +950,22 @@ class CheckoutManager {
     return `order_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
-  generateOrderNumber() {
+generateOrderNumber() {
     const date = new Date();
     const year = date.getFullYear().toString().slice(-2);
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
     const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
     return `UH-${year}${month}${day}-${random}`;
+  }
+
+  generateTrackingNumber() {
+    const date = new Date();
+    const year = date.getFullYear().toString().slice(-2);
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const alpha = Math.random().toString(36).substring(2, 6).toUpperCase();
+    return `UHT-${year}${month}${day}-${alpha}`;
   }
 
   saveOrder(order) {
@@ -1018,9 +1042,8 @@ class CheckoutManager {
     ];
   }
 
-  getPaymentModeOptions() {
+    getPaymentModeOptions() {
     return [
-      { value: _PAYMENT_MODES.CASH, label: 'Cash on Delivery', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><line x1="6" y1="12" x2="6.01" y2="12"/><line x1="18" y1="12" x2="18.01" y2="12"/></svg>' },
       { value: _PAYMENT_MODES.MOMO, label: 'MTN Mobile Money', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>' },
       { value: _PAYMENT_MODES.TELECEL, label: 'Telecel Cash', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 6h.01"/><path d="M8 10h8"/><path d="M8 14h8"/><path d="M8 18h4"/></svg>' },
       { value: _PAYMENT_MODES.BANK, label: 'Bank Transfer', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M12 3l9 7H3l9-7z"/><path d="M5 10v11"/><path d="M10 10v11"/><path d="M14 10v11"/><path d="M19 10v11"/></svg>' },

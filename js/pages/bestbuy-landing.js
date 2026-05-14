@@ -8,7 +8,7 @@
   console.log('🔧 bestbuy-landing.js module loaded');
 
   // Define the Best Buy landing page renderer function
-  const renderBestBuyLanding = async function () {
+  window.renderBestBuyLanding = async function () {
     // eslint-disable-next-line no-console
     console.log('🎨 Best Buy renderLanding called');
     // DON'T hide navbar - we need the Sign In/Sign Up buttons visible
@@ -109,14 +109,14 @@
       '<span style="font-size: 0.875rem; font-weight: 600; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em;">Global University Marketplace</span>' +
       '</div>' +
       '<h1 id="hero-animated-text" style="font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; color: #ffffff; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 1.5rem;">' +
-      'Buy & sell with <span style="color: #ffce00;">students like you.</span>' +
+      'MADE FOR <span style="color: #ffce00;">CAMPUS LIFE</span>' +
       '</h1>' +
       '<p style="font-size: 1.125rem; line-height: 1.8; color: rgba(255,255,255,0.9); max-width: 42rem; margin-bottom: 2rem;">' +
       'Uni-Hub is a global university marketplace app that connects students to easily buy and sell essential academic items. Textbooks, electronics, accommodation listings, and other campus essentials — all within your university community and beyond.' +
       '</p>' +
       '<div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 3rem;">' +
       '<button onclick="Pages.renderBrowse(); return false;" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem 2rem; font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: #ffce00; color: #1a1a1a; border: none; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background=\'#e6b800\'; this.style.transform=\'translateY(-2px)\'; this.style.boxShadow=\'0 8px 20px rgba(255, 206, 0, 0.3)\'" onmouseout="this.style.background=\'#ffce00\'; this.style.transform=\'translateY(0)\'; this.style.boxShadow=\'none\'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:inline-block;vertical-align:middle;margin-right:0.25rem;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Browse Items</button>' +
-      '<button onclick="Pages.renderRegister(); return false;" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem 2rem; font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: transparent; color: #ffffff; border: 2px solid rgba(255,255,255,0.3); border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor=\'#ffffff\'; this.style.background=\'rgba(255,255,255,0.1)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,0.3)\'; this.style.background=\'transparent\'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:inline-block;vertical-align:middle;margin-right:0.25rem;"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Start Selling</button>' +
+      
       '</div>' +
       '<div style="display: flex; flex-wrap: wrap; gap: 2.5rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.15);">' +
       '<div style="text-align: left;"><div style="font-size: 1.75rem; font-weight: 800; color: #ffce00; margin-bottom: 0.25rem;">7+</div><div style="color: rgba(255,255,255,0.7); font-size: 0.875rem;">Universities</div></div>' +
@@ -295,35 +295,10 @@
     }, 100);
   };
 
-  // Try to immediately override Pages.renderLanding
-  // eslint-disable-next-line no-console
-  console.log('📋 Checking if Pages is available...');
-  if (typeof window.Pages !== 'undefined') {
-    // eslint-disable-next-line no-console
-    console.log('✅ Pages found immediately, overriding renderLanding');
-    // eslint-disable-next-line no-console
-    console.log('Original renderLanding:', typeof window.Pages.renderLanding);
-    window.Pages.renderLanding = renderBestBuyLanding;
-    console.log('✅ Best Buy landing page renderer loaded (immediate)');
-    console.log('New renderLanding:', typeof window.Pages.renderLanding);
-    // Signal that best buy landing is ready
-    window._bestBuyLandingReady = true;
-    window.dispatchEvent(new CustomEvent('module-loaded', { detail: 'BestBuyLandingReady' }));
-  } else {
-    console.log('⏳ Pages not found, waiting...');
-    // Fallback: wait for Pages to be available
-    const waitForPages = setInterval(function () {
-      if (typeof window.Pages !== 'undefined') {
-        clearInterval(waitForPages);
-        console.log('✅ Pages found after waiting, overriding renderLanding');
-        window.Pages.renderLanding = renderBestBuyLanding;
-        console.log('✅ Best Buy landing page renderer loaded (deferred)');
-        // Signal that best buy landing is ready
-        window._bestBuyLandingReady = true;
-        window.dispatchEvent(new CustomEvent('module-loaded', { detail: 'BestBuyLandingReady' }));
-      }
-    }, 50); // Check every 50ms
-  }
+// Signal that BestBuy landing renderer is ready
+// Pages.renderLanding() now delegates to window.renderBestBuyLanding automatically
+window._bestBuyLandingReady = true;
+window.dispatchEvent(new CustomEvent('module-loaded', { detail: 'BestBuyLandingReady' }));
 })();
 
 /**
@@ -343,8 +318,8 @@ function initTextAnimation() {
   console.log('Current HTML:', heroText.innerHTML.substring(0, 100));
 
   // The exact text we want to animate
-  const textBefore = 'Buy & sell with ';
-  const textYellow = 'students like you.';
+  const textBefore = 'MADE FOR ';
+  const textYellow = 'CAMPUS LIFE';
 
   let html = '';
   let delay = 0;

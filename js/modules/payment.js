@@ -296,13 +296,7 @@ class PaymentManager {
         description: 'Direct bank transfer',
         providers: ['GCB', 'Absa', 'Stanbic'],
       },
-      {
-        id: PAYMENT_MODES.CASH,
-        name: 'Cash on Delivery',
-        icon: '💵',
-        description: 'Pay when you receive',
-        providers: ['In-Person'],
-      },
+
     ];
   }
 }

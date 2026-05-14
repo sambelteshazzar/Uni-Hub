@@ -488,7 +488,7 @@ Pages.handleLoginBB = async function (event) {
     '</div>' +
     '<div class="bb-quick-actions">' +
     '<a href="#/browse" class="bb-quick-action" onclick="Pages.renderBrowse(); return false;"><span class="bb-quick-action-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><span class="bb-quick-action-label">Browse Items</span></a>' +
-    '<a href="#/sell" class="bb-quick-action" onclick="Pages.renderSell(); return false;"><span class="bb-quick-action-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span><span class="bb-quick-action-label">Start Selling</span></a>' +
+    
     '<a href="#/cart" class="bb-quick-action" onclick="Pages.renderCart(); return false;"><span class="bb-quick-action-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg></span><span class="bb-quick-action-label">View Cart</span></a>' +
     '</div>' +
     '</div>' +
