@@ -437,8 +437,8 @@ const AuthPageMethods = {
       padding: 2.5rem;
       background: linear-gradient(145deg, #0f0f0f, #1a1a1a);
       border-radius: 1.25rem;
-      border: 1px solid rgba(99, 102, 241, 0.3);
-      box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.8), 0 0 40px rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(0, 70, 190, 0.3);
+      box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 70, 190, 0.1);
       animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .auth-close-btn {
@@ -558,8 +558,8 @@ const AuthPageMethods = {
     }
     .form-input:focus {
       outline: none;
-      border-color: rgba(99, 102, 241, 0.5);
-      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+      border-color: rgba(0, 70, 190, 0.5);
+      box-shadow: 0 0 0 2px rgba(0, 70, 190, 0.2);
     }
     .form-input::placeholder {
       color: #52525b;
@@ -605,12 +605,12 @@ const AuthPageMethods = {
       border-color: rgba(63, 63, 70, 1);
     }
     .submit-btn-primary {
-      background: #6366f1;
+      background: #0046be;
       color: #ffffff;
       border: none;
     }
     .submit-btn-primary:hover {
-      background: #4f46e5;
+      background: #003399;
     }
     .auth-footer-links {
       text-align: center;
@@ -625,7 +625,7 @@ const AuthPageMethods = {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
     .auth-link {
-      color: #6366f1;
+      color: #0046be;
       text-decoration: none;
       font-weight: 500;
       transition: color 0.2s;
@@ -633,7 +633,7 @@ const AuthPageMethods = {
       display: inline-block;
     }
     .auth-link:hover {
-      color: #4f46e5;
+      color: #003399;
       text-decoration: underline;
     }
     </style>
@@ -703,7 +703,7 @@ const AuthPageMethods = {
     <a onclick="Pages.renderForgotPassword(); Pages.closeAuthOverlay(); return false;"
     class="auth-link"
     style="font-size: 0.875rem; color: #71717a; transition: color 0.2s; cursor: pointer;"
-    onmouseover="this.style.color='#6366f1'"
+    onmouseover="this.style.color='#0046be'"
     onmouseout="this.style.color='#71717a'">
     Forgot password?
     </a>
@@ -818,8 +818,8 @@ const AuthPageMethods = {
       justify-content: center;
       padding: 2rem;
       background: #050505;
-      background-image: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08), transparent 25%),
-      radial-gradient(circle at 85% 30%, rgba(99, 102, 241, 0.05), transparent 25%);
+      background-image: radial-gradient(circle at 15% 50%, rgba(0, 70, 190, 0.08), transparent 25%),
+      radial-gradient(circle at 85% 30%, rgba(0, 70, 190, 0.05), transparent 25%);
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
     .auth-card-modern {
@@ -882,8 +882,8 @@ const AuthPageMethods = {
     }
     .form-input:focus {
       outline: none;
-      border-color: rgba(99, 102, 241, 0.5);
-      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+      border-color: rgba(0, 70, 190, 0.5);
+      box-shadow: 0 0 0 2px rgba(0, 70, 190, 0.2);
     }
     .form-input::placeholder {
       color: #52525b;
@@ -914,7 +914,7 @@ const AuthPageMethods = {
     }
     .form-check-modern input[type="checkbox"] {
       margin-top: 0.125rem;
-      accent-color: #6366f1;
+      accent-color: #0046be;
     }
     .form-check-modern label {
       font-size: 0.875rem;
@@ -943,12 +943,12 @@ const AuthPageMethods = {
       border-color: rgba(63, 63, 70, 1);
     }
     .submit-btn-primary {
-      background: #6366f1;
+      background: #0046be;
       color: #ffffff;
       border: none;
     }
     .submit-btn-primary:hover {
-      background: #4f46e5;
+      background: #003399;
     }
     .auth-footer-links {
       text-align: center;

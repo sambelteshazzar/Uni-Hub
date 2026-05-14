@@ -80,8 +80,8 @@
       '</form>' +
       '<div class="bb-auth-footer">' +
       '<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">' +
-      '<a href="#" onclick="Pages.renderForgotPassword(); return false;" style="color: #a5b4fc; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color=\'#fff\'" onmouseout="this.style.color=\'#a5b4fc\'">Forgot Password?</a>' +
-      '<p style="margin: 0; font-size: 0.85rem; color: #a1a1aa;">Don\'t have an account? <a href="#" onclick="Pages.renderRegister(); return false;" style="color: #a5b4fc; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color=\'#fff\'" onmouseout="this.style.color=\'#a5b4fc\'">Create an account</a></p>' +
+      '<a href="#" onclick="Pages.renderForgotPassword(); return false;" style="color: #93c5fd; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color=\'#fff\'" onmouseout="this.style.color=\'#93c5fd\'">Forgot Password?</a>' +
+      '<p style="margin: 0; font-size: 0.85rem; color: #a1a1aa;">Don\'t have an account? <a href="#" onclick="Pages.renderRegister(); return false;" style="color: #93c5fd; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color=\'#fff\'" onmouseout="this.style.color=\'#93c5fd\'">Create an account</a></p>' +
       '</div>' +
       '</div>' +
       '</div>' +

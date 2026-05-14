@@ -11,7 +11,7 @@ Professional design inspired by top e-commerce platforms
 
 /* Hero Banner */
 .browse-hero {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+  background: linear-gradient(135deg, #0046be 0%, #3b82f6 50%, #60a5fa 100%);
   padding: 3rem 1.5rem;
   position: relative;
   overflow: hidden;
@@ -120,9 +120,9 @@ Professional design inspired by top e-commerce platforms
 }
 
 .category-pill.active {
-  background: #6366f1;
+  background: #0046be;
   color: white;
-  border-color: #6366f1;
+  border-color: #0046be;
 }
 
 .category-pill .pill-count {
@@ -228,8 +228,8 @@ Professional design inspired by top e-commerce platforms
 }
 
 .filter-dropdown summary:hover {
-  border-color: #6366f1;
-  color: #4f46e5;
+  border-color: #0046be;
+  color: #003399;
 }
 
 .filter-dropdown summary .chevron {
@@ -244,8 +244,8 @@ Professional design inspired by top e-commerce platforms
 }
 
 .filter-dropdown[open] summary {
-  border-color: #6366f1;
-  color: #4f46e5;
+  border-color: #0046be;
+  color: #003399;
 }
 
 .filter-dropdown-content {
@@ -276,7 +276,7 @@ Professional design inspired by top e-commerce platforms
 
 .filter-dropdown-header .reset-link {
   font-size: 0.8125rem;
-  color: #6366f1;
+  color: #0046be;
   cursor: pointer;
   font-weight: 500;
   background: none;
@@ -302,7 +302,7 @@ Professional design inspired by top e-commerce platforms
 }
 
 .filter-option:hover {
-  color: #6366f1;
+  color: #0046be;
 }
 
 .filter-option input[type="checkbox"] {
@@ -311,7 +311,7 @@ Professional design inspired by top e-commerce platforms
   border: 2px solid #d1d5db;
   border-radius: 4px;
   cursor: pointer;
-  accent-color: #6366f1;
+  accent-color: #0046be;
   flex-shrink: 0;
 }
 
@@ -378,7 +378,7 @@ Professional design inspired by top e-commerce platforms
 }
 
 .filter-rating-option.active {
-  background: #ede9fe;
+  background: #dbeafe;
 }
 
 /* Sort Dropdown */
@@ -562,7 +562,7 @@ Professional design inspired by top e-commerce platforms
 
 .product-card-category {
   font-size: 0.75rem;
-  color: #6366f1;
+  color: #0046be;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -637,7 +637,7 @@ Professional design inspired by top e-commerce platforms
 .seller-avatar {
   width: 28px;
   height: 28px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #0046be, #3b82f6);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -668,14 +668,14 @@ Professional design inspired by top e-commerce platforms
   right: 1rem;
   width: 44px;
   height: 44px;
-  background: #6366f1;
+  background: #0046be;
   border: none;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 70, 190, 0.4);
   transition: all 0.2s;
   opacity: 0;
   transform: translateY(10px);
@@ -687,7 +687,7 @@ Professional design inspired by top e-commerce platforms
 }
 
 .quick-add-btn:hover {
-  background: #4f46e5;
+  background: #003399;
   transform: translateY(0) scale(1.1);
 }
 
@@ -788,13 +788,13 @@ Professional design inspired by top e-commerce platforms
 }
 
 .page-btn:hover {
-  border-color: #6366f1;
-  color: #6366f1;
+  border-color: #0046be;
+  color: #0046be;
 }
 
 .page-btn.active {
-  background: #6366f1;
-  border-color: #6366f1;
+  background: #0046be;
+  border-color: #0046be;
   color: white;
 }
 

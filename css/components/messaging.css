@@ -86,9 +86,9 @@
 
 .messaging-search-input:focus {
   outline: none;
-  border-color: var(--primary, #6366f1);
+  border-color: var(--primary, #0046be);
   background-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 3px rgba(0, 70, 190, 0.1);
 }
 
 .messaging-search-icon {
@@ -123,12 +123,12 @@
 }
 
 .conversation-item.active {
-  background-color: rgba(99, 102, 241, 0.08);
-  border-left: 3px solid var(--primary, #6366f1);
+  background-color: rgba(0, 70, 190, 0.08);
+  border-left: 3px solid var(--primary, #0046be);
 }
 
 .conversation-item.unread {
-  background-color: rgba(99, 102, 241, 0.04);
+  background-color: rgba(0, 70, 190, 0.04);
 }
 
 .conversation-item .online-indicator {
@@ -152,7 +152,7 @@
   justify-content: center;
   font-size: 20px;
   font-weight: 600;
-  color: var(--primary, #6366f1);
+  color: var(--primary, #0046be);
 }
 
 .conversation-avatar img {
@@ -223,7 +223,7 @@
   min-width: 20px;
   height: 20px;
   padding: 0 6px;
-  background-color: var(--primary, #6366f1);
+  background-color: var(--primary, #0046be);
   color: #ffffff;
   font-size: 11px;
   font-weight: 600;
@@ -346,7 +346,7 @@
   justify-content: center;
   font-size: 16px;
   font-weight: 600;
-  color: var(--primary, #6366f1);
+  color: var(--primary, #0046be);
   flex-shrink: 0;
 }
 
@@ -428,7 +428,7 @@
 }
 
 .message-group.sent .message-bubble {
-  background-color: var(--primary, #6366f1);
+  background-color: var(--primary, #0046be);
   color: #ffffff;
   border-bottom-right-radius: 4px;
 }
@@ -570,9 +570,9 @@
 }
 
 .message-input-wrapper:focus-within {
-  border-color: var(--primary, #6366f1);
+  border-color: var(--primary, #0046be);
   background-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 3px rgba(0, 70, 190, 0.1);
 }
 
 .message-input {
@@ -617,7 +617,7 @@
 }
 
 .message-send-btn {
-  background-color: var(--primary, #6366f1);
+  background-color: var(--primary, #0046be);
   color: #ffffff;
   width: 36px;
   height: 36px;
@@ -629,7 +629,7 @@
 }
 
 .message-send-btn:hover {
-  background-color: var(--primary-dark, #4f46e5);
+  background-color: var(--primary-dark, #003399);
   color: #ffffff;
   transform: scale(1.05);
 }
@@ -647,7 +647,7 @@
   justify-content: center;
   gap: var(--space-sm, 8px);
   padding: 12px 24px;
-  background-color: var(--primary, #6366f1);
+  background-color: var(--primary, #0046be);
   color: #ffffff;
   border: none;
   border-radius: var(--radius-lg, 8px);
@@ -659,9 +659,9 @@
 }
 
 .message-seller-btn:hover {
-  background-color: var(--primary-dark, #4f46e5);
+  background-color: var(--primary-dark, #003399);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 70, 190, 0.3);
 }
 
 .message-seller-btn:active {
@@ -676,12 +676,12 @@
 
 .message-seller-btn--outline {
   background-color: transparent;
-  border: 2px solid var(--primary, #6366f1);
-  color: var(--primary, #6366f1);
+  border: 2px solid var(--primary, #0046be);
+  color: var(--primary, #0046be);
 }
 
 .message-seller-btn--outline:hover {
-  background-color: var(--primary, #6366f1);
+  background-color: var(--primary, #0046be);
   color: #ffffff;
 }
 
@@ -698,7 +698,7 @@
 }
 
 .navbar-message-btn:hover {
-  color: var(--primary, #6366f1);
+  color: var(--primary, #0046be);
 }
 
 /* --- Loading State --- */
@@ -712,8 +712,8 @@
 .message-loading-spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid rgba(99, 102, 241, 0.2);
-  border-top-color: var(--primary, #6366f1);
+  border: 3px solid rgba(0, 70, 190, 0.2);
+  border-top-color: var(--primary, #0046be);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }

@@ -62,28 +62,28 @@ border-radius: 999px;
 }
 
 .condition-badge.new {
-background: #ede9fe;
-color: #5b21b6;
+  background: #dbeafe;
+  color: #0046be;
 }
 
 .condition-badge.like-new {
-background: #e0e7ff;
-color: #3730a3;
+  background: #e0e7ff;
+  color: #003399;
 }
 
 .condition-badge.fair {
-background: #fef3c7;
-color: #92400e;
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .condition-badge.good {
-background: #dbeafe;
-color: #1e40af;
+  background: #dbeafe;
+  color: #1e40af;
 }
 
 .condition-badge.excellent {
-background: #d1fae5;
-color: #065f46;
+  background: #fff8e1;
+  color: #b89200;
 }
 
 /* Product Card Condition Badge */
@@ -99,28 +99,28 @@ text-transform: capitalize;
 }
 
 .product-card-badge.new {
-background: rgba(237, 233, 254, 0.95);
-color: #5b21b6;
+  background: rgba(219, 234, 254, 0.95);
+  color: #0046be;
 }
 
 .product-card-badge.like-new {
-background: rgba(224, 231, 254, 0.95);
-color: #3730a3;
+  background: rgba(224, 231, 254, 0.95);
+  color: #003399;
 }
 
 .product-card-badge.fair {
-background: rgba(254, 243, 199, 0.95);
-color: #92400e;
+  background: rgba(254, 243, 199, 0.95);
+  color: #92400e;
 }
 
 .product-card-badge.good {
-background: rgba(219, 234, 254, 0.95);
-color: #1e40af;
+  background: rgba(219, 234, 254, 0.95);
+  color: #1e40af;
 }
 
 .product-card-badge.excellent {
-background: rgba(209, 250, 229, 0.95);
-color: #065f46;
+  background: rgba(255, 248, 225, 0.95);
+  color: #b89200;
 }
 
 /* Status Badges */
@@ -143,8 +143,8 @@ color: #065f46;
 }
 
 .status-badge.placed {
-  background: #e0e7ff;
-  color: #4338ca;
+  background: #dbeafe;
+  color: #0046be;
 }
 
 .status-badge.confirmed {
@@ -180,8 +180,8 @@ color: #065f46;
 }
 
 .role-badge.buyer {
-  background: #e0e7ff;
-  color: #4338ca;
+  background: #dbeafe;
+  color: #0046be;
 }
 
 .role-badge.seller {
@@ -235,8 +235,8 @@ color: #1e40af;
 }
 
 .trust-badge-buyer-protect {
-background: #ede9fe;
-color: #5b21b6;
+  background: #dbeafe;
+  color: #0046be;
 }
 
 .trust-badge svg {
@@ -313,8 +313,8 @@ flex-shrink: 0;
 }
 
 .delivery-badge.yango {
-  background: #e0e7ff;
-  color: #4338ca;
+  background: #dbeafe;
+  color: #0046be;
 }
 
 .delivery-badge.inperson {

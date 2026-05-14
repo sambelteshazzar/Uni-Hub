@@ -106,7 +106,7 @@ class AdminDashboard {
         </div>
         <div class="admin-css-chart-legend">
           <div class="admin-css-chart-legend-item">
-            <span class="admin-css-chart-legend-dot" style="background:#7c3aed"></span>
+            <span class="admin-css-chart-legend-dot" style="background:#0046be"></span>
             Revenue
           </div>
         </div>

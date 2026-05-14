@@ -223,7 +223,7 @@ class PaymentManager {
       { value: 'processing', label: 'Processing', color: '#3b82f6' },
       { value: 'completed', label: 'Completed', color: '#10b981' },
       { value: 'failed', label: 'Failed', color: '#ef4444' },
-      { value: 'refunded', label: 'Refunded', color: '#8b5cf6' },
+      { value: 'refunded', label: 'Refunded', color: '#3b82f6' },
     ];
   }
 

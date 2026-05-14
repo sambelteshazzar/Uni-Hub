@@ -180,7 +180,7 @@ class DeliveryManager {
     return [
       { value: 'pending', label: 'Pending', color: '#f59e0b' },
       { value: 'confirmed', label: 'Confirmed', color: '#3b82f6' },
-      { value: 'picked-up', label: 'Picked Up', color: '#8b5cf6' },
+      { value: 'picked-up', label: 'Picked Up', color: '#3b82f6' },
       { value: 'in-transit', label: 'In Transit', color: '#f59e0b' },
       { value: 'delivered', label: 'Delivered', color: '#10b981' },
       { value: 'failed', label: 'Failed', color: '#ef4444' },
@@ -261,7 +261,7 @@ class DeliveryManager {
         name: 'Bolt Delivery',
         shortName: 'Bolt',
         icon: '🚙',
-        color: '#8b5cf6',
+        color: '#3b82f6',
         description: 'Fast & convenient',
       },
     ];

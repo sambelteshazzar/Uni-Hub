@@ -240,11 +240,11 @@ DARK MODE THEME
 --color-info: var(--info);
 --color-info-light: var(--info-light);
 
---condition-new: #a78bfa;
---condition-like-new: #818cf8;
---condition-fair: #ffb74d;
---condition-good: #66bb6a;
---condition-excellent: #6d9eff;
+  --condition-new: #6d9eff;
+  --condition-like-new: #4d7fdb;
+  --condition-fair: #ffb74d;
+  --condition-good: #66bb6a;
+  --condition-excellent: #ffce00;
 
 --price-color: #6d9eff;
 --price-deal: #ef5350;

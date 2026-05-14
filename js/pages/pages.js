@@ -192,8 +192,8 @@ static showOriginalNavFooter () {
       <style>
         .modern-landing {
           background-color: #050505;
-          background-image: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08), transparent 25%),
-                            radial-gradient(circle at 85% 30%, rgba(99, 102, 241, 0.05), transparent 25%);
+          background-image: radial-gradient(circle at 15% 50%, rgba(0, 70, 190, 0.08), transparent 25%),
+                            radial-gradient(circle at 85% 30%, rgba(0, 70, 190, 0.05), transparent 25%);
           font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
         .modern-landing * {
@@ -206,11 +206,11 @@ static showOriginalNavFooter () {
         }
         .glass-card-hover:hover {
           background: rgba(30, 30, 30, 0.8);
-          border-color: rgba(99, 102, 241, 0.2);
+          border-color: rgba(0, 70, 190, 0.2);
         }
-        .text-indigo { color: #6366f1; }
-        .bg-indigo { background-color: #6366f1; }
-        .gradient-indigo { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+        .text-indigo { color: #0046be; }
+        .bg-indigo { background-color: #0046be; }
+        .gradient-indigo { background: linear-gradient(135deg, #0046be, #003399); }
         .modern-nav {
           position: fixed;
           top: 0;
@@ -267,7 +267,7 @@ static showOriginalNavFooter () {
           margin-bottom: 1.5rem;
         }
         .hero-title-gradient {
-          background: linear-gradient(135deg, #6366f1, #a5a6a6);
+          background: linear-gradient(135deg, #0046be, #a5a6a6);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
@@ -293,16 +293,16 @@ static showOriginalNavFooter () {
           padding: 0 2rem;
           border-radius: 1rem;
           font-weight: 500;
-          background: linear-gradient(135deg, #6366f1, #4f46e5);
+          background: linear-gradient(135deg, #0046be, #003399);
           color: white;
           border: none;
           cursor: pointer;
           transition: all 0.3s;
-          box-shadow: 0 0 20px rgba(99,102,241,0.3);
+          box-shadow: 0 0 20px rgba(0,70,190,0.3);
         }
         .btn-modern-primary:hover {
           transform: translateY(-2px);
-          box-shadow: 0 0 30px rgba(99,102,241,0.5);
+          box-shadow: 0 0 30px rgba(0,70,190,0.5);
         }
         .btn-modern-secondary {
           display: flex;
@@ -319,7 +319,7 @@ static showOriginalNavFooter () {
           transition: all 0.3s;
         }
         .btn-modern-secondary:hover {
-          border-color: #6366f1;
+          border-color: #0046be;
           background: rgba(30,30,30,0.8);
         }
         .hero-social-proof {
@@ -467,7 +467,7 @@ static showOriginalNavFooter () {
         }
         .section-label {
           display: block;
-          color: #818cf8;
+          color: #60a5fa;
           font-size: 0.875rem;
           font-weight: 500;
           text-transform: uppercase;
@@ -579,7 +579,7 @@ static showOriginalNavFooter () {
         }
         .feature-card-modern:hover {
           background: rgba(30,30,30,0.8);
-          border-color: rgba(99,102,241,0.2);
+          border-color: rgba(0,70,190,0.2);
         }
         .feature-icon-wrapper {
           width: 3rem;
@@ -619,13 +619,13 @@ static showOriginalNavFooter () {
           height: 4rem;
           margin: 0 auto 1.5rem;
           border-radius: 50%;
-          background: rgba(99,102,241,0.1);
+          background: rgba(0,70,190,0.1);
           display: flex;
           align-items: center;
           justify-content: center;
           font-size: 1.5rem;
           font-weight: 700;
-          color: #6366f1;
+          color: #0046be;
         }
         .step-title {
           font-size: 1.125rem;
@@ -651,7 +651,7 @@ static showOriginalNavFooter () {
           transform: translateX(-50%);
           width: 50rem;
           height: 25rem;
-          background: rgba(99,102,241,0.1);
+          background: rgba(0,70,190,0.1);
           filter: blur(8rem);
           border-radius: 50%;
           pointer-events: none;
@@ -746,7 +746,7 @@ static showOriginalNavFooter () {
           transition: color 0.2s;
         }
         .footer-links a:hover {
-          color: #6366f1;
+          color: #0046be;
         }
         .footer-bottom {
           max-width: 80rem;
@@ -781,9 +781,9 @@ static showOriginalNavFooter () {
           display: inline-block;
           width: 1rem;
           height: 1rem;
-          border: 2px solid rgba(99,102,241,0.3);
+          border: 2px solid rgba(0,70,190,0.3);
           border-radius: 50%;
-          border-top-color: #6366f1;
+          border-top-color: #0046be;
           animation: spin 1s linear infinite;
         }
         @keyframes spin {
@@ -798,9 +798,9 @@ static showOriginalNavFooter () {
       `
       <div class="modern-landing">
         <!-- Top Notification Bar -->
-        <div class="top-notification-bar" style="background: linear-gradient(90deg, rgba(99,102,241,0.2), rgba(79,70,229,0.2)); border-bottom: 1px solid rgba(99,102,241,0.3); padding: 0.75rem 1rem; text-align: center;">
+        <div class="top-notification-bar" style="background: linear-gradient(90deg, rgba(0,70,190,0.2), rgba(0,51,153,0.2)); border-bottom: 1px solid rgba(0,70,190,0.3); padding: 0.75rem 1rem; text-align: center;">
           <div style="max-width: 80rem; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #a5b4fc;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #93c5fd;">
               <path d="M12 2v4"></path>
               <path d="m16.2 7.8 2.9-2.9"></path>
               <path d="M18 12h4"></path>
@@ -812,7 +812,7 @@ static showOriginalNavFooter () {
             </svg>
             <span style="color: #e0e7ff; font-size: 0.875rem; font-weight: 500;">
               ${Icons.party} New: <strong>Free delivery</strong> for first-time buyers at University of Ghana! &nbsp;&nbsp;|&nbsp;&nbsp; 
-              <a href="#/register" onclick="return false;" style="color: #6366f1; text-decoration: underline; text-underline-offset: 2px;">Sign up now</a>
+              <a href="#/register" onclick="return false;" style="color: #0046be; text-decoration: underline; text-underline-offset: 2px;">Sign up now</a>
             </span>
           </div>
         </div>
@@ -899,7 +899,7 @@ static showOriginalNavFooter () {
                   <div class="hero-avatar-count" style="margin-left: -0.75rem;">+2k</div>
                 </div>
                 <div>
-                  <div style="display: flex; align-items: center; gap: 0.25rem; color: #6366f1;">
+                  <div style="display: flex; align-items: center; gap: 0.25rem; color: #0046be;">
                     <svg style="width: 1rem; height: 1rem; fill: currentColor;" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
                     <svg style="width: 1rem; height: 1rem; fill: currentColor;" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
                     <svg style="width: 1rem; height: 1rem; fill: currentColor;" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
@@ -926,7 +926,7 @@ static showOriginalNavFooter () {
                   <img src="https://images.unsplash.com/photo-1544816155-12df9643f363?w=800&auto=format&fit=crop" alt="Textbooks">
                   <div class="visual-overlay"></div>
                   <div style="position: absolute; top: 1rem; right: 1rem; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); padding: 0.375rem 0.75rem; border-radius: 9999px; display: flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.1);">
-                    <span style="width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #818cf8;"></span>
+                    <span style="width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #60a5fa;"></span>
                     <span style="font-size: 0.75rem; font-weight: 500; color: white;">Popular</span>
                   </div>
                 </div>
@@ -944,7 +944,7 @@ static showOriginalNavFooter () {
                         <textPath xlink:href="#curve">• Buy & Sell • Verified Students • Safe Trading</textPath>
                       </text>
                     </svg>
-                    <button onclick="document.querySelector('#universities').scrollIntoView({behavior: 'smooth'}); return false;" class="bg-indigo" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 4rem; height: 4rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px -5px rgba(99,102,241,0.4); transition: transform 0.3s;" onmouseover="this.style.transform='translate(-50%, -50%) scale(1.1)'" onmouseout="this.style.transform='translate(-50%, -50%)'">
+                    <button onclick="document.querySelector('#universities').scrollIntoView({behavior: 'smooth'}); return false;" class="bg-indigo" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 4rem; height: 4rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px -5px rgba(0,70,190,0.4); transition: transform 0.3s;" onmouseover="this.style.transform='translate(-50%, -50%) scale(1.1)'" onmouseout="this.style.transform='translate(-50%, -50%)'">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: black;">
                         <path d="M7 7h10v10"></path>
                         <path d="M7 17 17 7"></path>
@@ -965,7 +965,7 @@ static showOriginalNavFooter () {
                   </svg>
                 </div>
                 <div class="floating-card-item">
-                  <div style="width: 2.5rem; height: 2.5rem; border-radius: 0.75rem; background: rgba(99,102,241,0.1); display: flex; align-items: center; justify-content: center; color: #6366f1;">
+                  <div style="width: 2.5rem; height: 2.5rem; border-radius: 0.75rem; background: rgba(0,70,190,0.1); display: flex; align-items: center; justify-content: center; color: #0046be;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.61a1 1 0 0 1-.9-1.45L4 16"></path>
                     </svg>
@@ -977,9 +977,9 @@ static showOriginalNavFooter () {
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.05);">
                   <span style="font-size: 0.75rem; color: #a3a3a3;">Sold For</span>
-                  <span style="font-size: 0.875rem; font-weight: 600; color: #6366f1;">GHS 2,100</span>
+                  <span style="font-size: 0.875rem; font-weight: 600; color: #0046be;">GHS 2,100</span>
                 </div>
-                <div style="margin-top: 0.75rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 500; padding: 0.25rem 0.5rem; border-radius: 0.25rem; background: rgba(99,102,241,0.1); color: #a5b4fc; width: fit-content;">
+                <div style="margin-top: 0.75rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 500; padding: 0.25rem 0.5rem; border-radius: 0.25rem; background: rgba(0,70,190,0.1); color: #93c5fd; width: fit-content;">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
                     <path d="m9 12 2 2 4-4"></path>
@@ -1027,7 +1027,7 @@ ${uni.active === false ? '<div style="position:absolute;top:0.75rem;right:0.75re
 .join('')}
               
               <div onclick="Pages.renderBrowse(); return false;" class="university-card-modern glass-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem; transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'">
-                <div style="width: 4rem; height: 4rem; border-radius: 50%; background: rgba(99,102,241,0.1); display: flex; align-items: center; justify-content: center; color: #6366f1; margin-bottom: 1rem; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                <div style="width: 4rem; height: 4rem; border-radius: 50%; background: rgba(0,70,190,0.1); display: flex; align-items: center; justify-content: center; color: #0046be; margin-bottom: 1rem; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path>
                     <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
@@ -1054,7 +1054,7 @@ ${uni.active === false ? '<div style="position:absolute;top:0.75rem;right:0.75re
             
             <!-- Tabbed Category Navigation -->
             <div class="category-tabs" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin-bottom: 2rem;">
-              <button class="category-tab active" data-category="all" onclick="Pages.filterCategoryTab('all', this)" style="padding: 0.625rem 1.25rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); cursor: pointer; transition: all 0.2s;">All</button>
+              <button class="category-tab active" data-category="all" onclick="Pages.filterCategoryTab('all', this)" style="padding: 0.625rem 1.25rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: rgba(0,70,190,0.2); color: #93c5fd; border: 1px solid rgba(0,70,190,0.3); cursor: pointer; transition: all 0.2s;">All</button>
               <button class="category-tab" data-category="textbooks" onclick="Pages.filterCategoryTab('textbooks', this)" style="padding: 0.625rem 1.25rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: transparent; color: #a3a3a3; border: 1px solid rgba(63,63,70,1); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.25rem;">${Icons.textbooks} Textbooks</button>
               <button class="category-tab" data-category="electronics" onclick="Pages.filterCategoryTab('electronics', this)" style="padding: 0.625rem 1.25rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: transparent; color: #a3a3a3; border: 1px solid rgba(63,63,70,1); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.25rem;">${Icons.monitor} Electronics</button>
               <button class="category-tab" data-category="hostel-items" onclick="Pages.filterCategoryTab('hostel-items', this)" style="padding: 0.625rem 1.25rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: transparent; color: #a3a3a3; border: 1px solid rgba(63,63,70,1); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.25rem;">${Icons.hostel} Hostel</button>
@@ -1067,7 +1067,7 @@ ${uni.active === false ? '<div style="position:absolute;top:0.75rem;right:0.75re
     .map(
       cat => `
                 <div onclick="Pages.renderBrowse({category: '${cat.id}'}); return false;" class="category-card-modern glass-card glass-card-hover">
-                  <div class="category-icon-wrapper" style="background: linear-gradient(135deg, ${cat.id === 'textbooks' ? 'rgba(59,130,246,0.4), rgba(99,102,241,0.4)' : cat.id === 'electronics' ? 'rgba(168,85,247,0.4), rgba(236,72,153,0.4)' : cat.id === 'hostel-items' ? 'rgba(16,185,129,0.4), rgba(20,184,166,0.4)' : 'rgba(249,115,22,0.4), rgba(239,68,68,0.4)'});">
+                  <div class="category-icon-wrapper" style="background: linear-gradient(135deg, ${cat.id === 'textbooks' ? 'rgba(59,130,246,0.4), rgba(0,70,190,0.4)' : cat.id === 'electronics' ? 'rgba(168,85,247,0.4), rgba(236,72,153,0.4)' : cat.id === 'hostel-items' ? 'rgba(16,185,129,0.4), rgba(20,184,166,0.4)' : 'rgba(249,115,22,0.4), rgba(239,68,68,0.4)'});">
                     ${cat.icon}
                   </div>
                   <h3 class="category-name">${cat.name}</h3>
@@ -1090,10 +1090,10 @@ ${uni.active === false ? '<div style="position:absolute;top:0.75rem;right:0.75re
 
             <div style="max-width: 56rem; margin: 0 auto;">
               <p style="color: #a3a3a3; font-size: 1.125rem; line-height: 1.8; margin-bottom: 1.5rem;">
-                <span style="color: #6366f1; font-weight: 600;">Uni-Hub</span> is a global university marketplace app that connects students to easily buy and sell essential academic items. It provides a convenient platform where students can access school-related needs such as textbooks, electronics, accommodation listings, and other campus essentials, all within their university community and beyond.
+                <span style="color: #0046be; font-weight: 600;">Uni-Hub</span> is a global university marketplace app that connects students to easily buy and sell essential academic items. It provides a convenient platform where students can access school-related needs such as textbooks, electronics, accommodation listings, and other campus essentials, all within their university community and beyond.
               </p>
 
-              <p style="color: #a3a3a3; font-size: 1.125rem; line-height: 1.8; padding: 1.5rem; background: rgba(99,102,241,0.05); border-left: 3px solid #6366f1; border-radius: 0 0.5rem 0.5rem 0;">
+              <p style="color: #a3a3a3; font-size: 1.125rem; line-height: 1.8; padding: 1.5rem; background: rgba(0,70,190,0.05); border-left: 3px solid #0046be; border-radius: 0 0.5rem 0.5rem 0;">
                 <span style="color: white; font-weight: 600;">Our Mission:</span> At Uni-Hub, our mission is to make student essentials affordable and accessible, ensuring that every student can get what they need without financial stress.
               </p>
             </div>
@@ -1101,19 +1101,19 @@ ${uni.active === false ? '<div style="position:absolute;top:0.75rem;right:0.75re
             <!-- Key Stats -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-top: 4rem; padding-top: 3rem; border-top: 1px solid rgba(255,255,255,0.05);">
               <div style="text-align: center;">
-                <div style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 0.5rem;">7+</div>
+                <div style="font-size: 2.5rem; font-weight: 700; color: #0046be; margin-bottom: 0.5rem;">7+</div>
                 <div style="color: #737373; font-size: 0.875rem;">Universities Connected</div>
               </div>
               <div style="text-align: center;">
-                <div style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 0.5rem;">2,000+</div>
+                <div style="font-size: 2.5rem; font-weight: 700; color: #0046be; margin-bottom: 0.5rem;">2,000+</div>
                 <div style="color: #737373; font-size: 0.875rem;">Verified Students</div>
               </div>
               <div style="text-align: center;">
-                <div style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 0.5rem;">5,000+</div>
+                <div style="font-size: 2.5rem; font-weight: 700; color: #0046be; margin-bottom: 0.5rem;">5,000+</div>
                 <div style="color: #737373; font-size: 0.875rem;">Items Listed</div>
               </div>
               <div style="text-align: center;">
-                <div style="font-size: 2.5rem; font-weight: 700; color: #6366f1; margin-bottom: 0.5rem;">GHS 500K+</div>
+                <div style="font-size: 2.5rem; font-weight: 700; color: #0046be; margin-bottom: 0.5rem;">GHS 500K+</div>
                 <div style="color: #737373; font-size: 0.875rem;">In Student Sales</div>
               </div>
             </div>
@@ -1130,7 +1130,7 @@ ${uni.active === false ? '<div style="position:absolute;top:0.75rem;right:0.75re
             
             <div class="features-grid">
               <div class="feature-card-modern glass-card glass-card-hover">
-                <div class="feature-icon-wrapper" style="background: linear-gradient(135deg, rgba(99,102,241,0.4), rgba(59,130,246,0.4));">
+                <div class="feature-icon-wrapper" style="background: linear-gradient(135deg, rgba(0,70,190,0.4), rgba(59,130,246,0.4));">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"></path>
                     <path d="m9 12 2 2 4-4"></path>
@@ -1214,7 +1214,7 @@ ${uni.active === false ? '<div style="position:absolute;top:0.75rem;right:0.75re
                 </svg>
                 Select University
               </button>
-              <button onclick="Pages.renderRegister(); return false;" style="height: 3.5rem; padding: 0 2rem; border-radius: 1rem; font-weight: 500; color: white; border: 1px solid #404040; background: transparent; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 0.5rem;" onmouseover="this.style.borderColor='#6366f1'; this.style.background='rgba(30,30,30,0.8)'">
+              <button onclick="Pages.renderRegister(); return false;" style="height: 3.5rem; padding: 0 2rem; border-radius: 1rem; font-weight: 500; color: white; border: 1px solid #404040; background: transparent; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 0.5rem;" onmouseover="this.style.borderColor='#0046be'; this.style.background='rgba(30,30,30,0.8)'">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                   <circle cx="9" cy="7" r="4"></circle>
@@ -1232,8 +1232,8 @@ ${uni.active === false ? '<div style="position:absolute;top:0.75rem;right:0.75re
           <div class="footer-grid">
             <div style="grid-column: span 2;">
               <div class="footer-brand">
-                <div class="footer-brand-icon" style="background: rgba(99,102,241,0.2);">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: #6366f1;">
+                <div class="footer-brand-icon" style="background: rgba(0,70,190,0.2);">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: #0046be;">
                     <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"></path>
                     <path d="M22 10v6"></path>
                     <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path>
@@ -1347,9 +1347,9 @@ ${uni.active === false ? '<div style="position:absolute;top:0.75rem;right:0.75re
     });
 
     // Update clicked button
-    button.style.background = 'rgba(99,102,241,0.2)';
-    button.style.color = '#a5b4fc';
-    button.style.borderColor = 'rgba(99,102,241,0.3)';
+    button.style.background = 'rgba(0,70,190,0.2)';
+    button.style.color = '#93c5fd';
+    button.style.borderColor = 'rgba(0,70,190,0.3)';
 
     // Navigate to browse with category filter
     if (category === 'all') {
@@ -1794,8 +1794,8 @@ ${uni.active === false ? '<div style="position:absolute;top:0.75rem;right:0.75re
           padding: 2.5rem;
           background: linear-gradient(145deg, #0f0f0f, #1a1a1a);
           border-radius: 1.25rem;
-          border: 1px solid rgba(99, 102, 241, 0.3);
-          box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.8), 0 0 40px rgba(99, 102, 241, 0.1);
+          border: 1px solid rgba(0, 70, 190, 0.3);
+          box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 70, 190, 0.1);
           animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .auth-close-btn {
@@ -1915,8 +1915,8 @@ ${uni.active === false ? '<div style="position:absolute;top:0.75rem;right:0.75re
         }
         .form-input:focus {
           outline: none;
-          border-color: rgba(99, 102, 241, 0.5);
-          box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+          border-color: rgba(0, 70, 190, 0.5);
+          box-shadow: 0 0 0 2px rgba(0, 70, 190, 0.2);
         }
         .form-input::placeholder {
           color: #52525b;
@@ -1962,12 +1962,12 @@ ${uni.active === false ? '<div style="position:absolute;top:0.75rem;right:0.75re
           border-color: rgba(63, 63, 70, 1);
         }
         .submit-btn-primary {
-          background: #6366f1;
+          background: #0046be;
           color: #ffffff;
           border: none;
         }
         .submit-btn-primary:hover {
-          background: #4f46e5;
+          background: #003399;
         }
         .auth-footer-links {
           text-align: center;
@@ -1982,7 +1982,7 @@ ${uni.active === false ? '<div style="position:absolute;top:0.75rem;right:0.75re
           font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
 .auth-link {
-      color: #6366f1;
+      color: #0046be;
       text-decoration: none;
       font-weight: 500;
       transition: color 0.2s;
@@ -1990,7 +1990,7 @@ ${uni.active === false ? '<div style="position:absolute;top:0.75rem;right:0.75re
       display: inline-block;
     }
     .auth-link:hover {
-      color: #4f46e5;
+      color: #003399;
       text-decoration: underline;
     }
       </style>
@@ -2060,7 +2060,7 @@ ${uni.active === false ? '<div style="position:absolute;top:0.75rem;right:0.75re
         <a onclick="Pages.renderForgotPassword(); Pages.closeAuthOverlay(); return false;" 
            class="auth-link" 
            style="font-size: 0.875rem; color: #71717a; transition: color 0.2s; cursor: pointer;"
-           onmouseover="this.style.color='#6366f1'" 
+           onmouseover="this.style.color='#0046be'" 
            onmouseout="this.style.color='#71717a'">
           Forgot password?
         </a>
@@ -2217,8 +2217,8 @@ ${uni.active === false ? '<div style="position:absolute;top:0.75rem;right:0.75re
           justify-content: center;
           padding: 2rem;
           background: #050505;
-          background-image: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08), transparent 25%),
-                            radial-gradient(circle at 85% 30%, rgba(99, 102, 241, 0.05), transparent 25%);
+          background-image: radial-gradient(circle at 15% 50%, rgba(0, 70, 190, 0.08), transparent 25%),
+                            radial-gradient(circle at 85% 30%, rgba(0, 70, 190, 0.05), transparent 25%);
           font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
         .auth-card-modern {
@@ -2281,8 +2281,8 @@ ${uni.active === false ? '<div style="position:absolute;top:0.75rem;right:0.75re
         }
         .form-input:focus {
           outline: none;
-          border-color: rgba(99, 102, 241, 0.5);
-          box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+          border-color: rgba(0, 70, 190, 0.5);
+          box-shadow: 0 0 0 2px rgba(0, 70, 190, 0.2);
         }
         .form-input::placeholder {
           color: #52525b;
@@ -2313,7 +2313,7 @@ ${uni.active === false ? '<div style="position:absolute;top:0.75rem;right:0.75re
         }
         .form-check-modern input[type="checkbox"] {
           margin-top: 0.125rem;
-          accent-color: #6366f1;
+          accent-color: #0046be;
         }
         .form-check-modern label {
           font-size: 0.875rem;
@@ -2342,12 +2342,12 @@ ${uni.active === false ? '<div style="position:absolute;top:0.75rem;right:0.75re
           border-color: rgba(63, 63, 70, 1);
         }
         .submit-btn-primary {
-          background: #6366f1;
+          background: #0046be;
           color: #ffffff;
           border: none;
         }
         .submit-btn-primary:hover {
-          background: #4f46e5;
+          background: #003399;
         }
         .auth-footer-links {
           text-align: center;
@@ -2861,7 +2861,7 @@ ${uni.active === false ? '<div style="position:absolute;top:0.75rem;right:0.75re
  <span style="font-size:0.875rem;color:#6b7280;">GHS</span>
  <input type="number" class="price-input" placeholder="To" id="price-max" value="${productsManager.currentFilters.priceRange?.max < Infinity ? productsManager.currentFilters.priceRange.max : ''}">
  </div>
- <button style="margin-top:0.75rem;width:100%;padding:0.5rem;background:#6366f1;color:white;border:none;border-radius:8px;font-size:0.8125rem;font-weight:500;cursor:pointer;" onclick="BrowsePageMethods.applyPriceFilter()">Apply</button>
+ <button style="margin-top:0.75rem;width:100%;padding:0.5rem;background:#0046be;color:white;border:none;border-radius:8px;font-size:0.8125rem;font-weight:500;cursor:pointer;" onclick="BrowsePageMethods.applyPriceFilter()">Apply</button>
  </div>
  </div>
  </details>
@@ -3320,12 +3320,12 @@ const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
         .pd-page { min-height: 100vh; background: #0a0a0a; }
         .pd-breadcrumb { padding: 1rem 2rem; max-width: 1400px; margin: 0 auto; }
         .pd-back-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: #a1a1aa; font-size: 0.875rem; cursor: pointer; transition: all 0.2s; }
-        .pd-back-btn:hover { border-color: #6366f1; color: #a5b4fc; }
+        .pd-back-btn:hover { border-color: #0046be; color: #93c5fd; }
         .pd-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; max-width: 1400px; margin: 0 auto; padding: 1rem 2rem 4rem; }
         .pd-image-section { position: sticky; top: 2rem; height: fit-content; }
         .pd-main-image { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.06); background: #141414; }
         .pd-info-card { background: #141414; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.06); padding: 2rem; }
-        .pd-category-tag { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(99,102,241,0.15); color: #a5b4fc; margin-bottom: 0.75rem; }
+        .pd-category-tag { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(0,70,190,0.15); color: #93c5fd; margin-bottom: 0.75rem; }
         .pd-title { font-size: 1.75rem; font-weight: 700; color: #fafafa; letter-spacing: -0.025em; margin-bottom: 1rem; line-height: 1.3; }
         .pd-meta { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
         .pd-condition { padding: 0.375rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
@@ -3337,7 +3337,7 @@ const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
         .pd-price { font-size: 2.5rem; font-weight: 800; color: #fafafa; letter-spacing: -0.03em; }
         .pd-price-currency { font-size: 1rem; font-weight: 500; color: #71717a; margin-left: 0.25rem; }
         .pd-seller-card { background: #18181b; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
-        .pd-seller-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; color: #fff; flex-shrink: 0; }
+        .pd-seller-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #0046be, #3b82f6); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; color: #fff; flex-shrink: 0; }
         .pd-seller-name { font-size: 0.95rem; font-weight: 600; color: #fafafa; }
         .pd-seller-rating { font-size: 0.85rem; color: #fcd34d; display: flex; align-items: center; gap: 0.25rem; margin-top: 0.125rem; }
         .pd-desc-card { background: #18181b; border-radius: 0.75rem; padding: 1.25rem; margin-bottom: 1.5rem; }
@@ -3354,10 +3354,10 @@ const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
         .pd-method-tag { padding: 0.375rem 0.75rem; border-radius: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); font-size: 0.8rem; color: #d4d4d8; }
         .pd-actions { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.5rem; }
         .pd-btn { display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.875rem 1.5rem; border-radius: 0.75rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.25s; border: none; }
-        .pd-btn-primary { background: #6366f1; color: #fff; }
-        .pd-btn-primary:hover { background: #4f46e5; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(99,102,241,0.3); }
+        .pd-btn-primary { background: #0046be; color: #fff; }
+        .pd-btn-primary:hover { background: #003399; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,70,190,0.3); }
         .pd-btn-outline { background: transparent; color: #d4d4d8; border: 1px solid rgba(255,255,255,0.1); }
-        .pd-btn-outline:hover { border-color: rgba(99,102,241,0.4); color: #a5b4fc; }
+        .pd-btn-outline:hover { border-color: rgba(0,70,190,0.4); color: #93c5fd; }
         .pd-btn-outline.active { border-color: rgba(239,68,68,0.4); color: #fca5a5; background: rgba(239,68,68,0.05); }
         .pd-secondary-actions { display: flex; gap: 0.5rem; }
         .pd-secondary-actions .pd-btn { flex: 1; padding: 0.625rem; font-size: 0.85rem; }
@@ -3366,7 +3366,7 @@ const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
 .color-swatch-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
 .color-swatch { width: 40px; height: 40px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s; position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .color-swatch:hover { transform: scale(1.15); border-color: rgba(255,255,255,0.3); }
-.color-swatch.selected { border-color: #6366f1; border-width: 3px; box-shadow: 0 0 0 2px #0a0a0a, 0 0 0 4px #6366f1; }
+.color-swatch.selected { border-color: #0046be; border-width: 3px; box-shadow: 0 0 0 2px #0a0a0a, 0 0 0 4px #0046be; }
 .color-swatch.selected::after { content: '✓'; font-size: 14px; font-weight: 700; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
 .color-swatch.out-of-stock { opacity: 0.4; cursor: not-allowed; }
 .color-swatch.out-of-stock::before { content: ''; position: absolute; width: 140%; height: 2px; background: #ef4444; transform: rotate(-45deg); }
@@ -3535,7 +3535,7 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
           <div style="background: #141414; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.06); padding: 2rem;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
               <h2 style="font-size: 1.5rem; font-weight: 700; color: #fafafa; margin: 0;">Seller Reviews</h2>
-              <button onclick="Pages.writeReview('${product.seller?.id || product.seller}')" style="padding: 0.5rem 1rem; background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer;">Write Review</button>
+              <button onclick="Pages.writeReview('${product.seller?.id || product.seller}')" style="padding: 0.5rem 1rem; background: rgba(0,70,190,0.2); color: #93c5fd; border: 1px solid rgba(0,70,190,0.3); border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer;">Write Review</button>
             </div>
             <div id="product-reviews-container">
               <div style="text-align: center; padding: 2rem; color: #71717a;">
@@ -3710,7 +3710,7 @@ notificationManager?.info('Wishlist Cleared', 'All items removed from your wishl
     return `
       <div style="padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-          <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; color: #fff;">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0046be, #3b82f6); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; color: #fff;">
             ${(review.reviewer?.fullName || 'U').charAt(0)}
           </div>
           <div>
@@ -3878,8 +3878,8 @@ Copy Link
   <title>Receipt - ${order.orderNumber}</title>
   <style>
   body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1a1a1a;max-width:700px;margin:0 auto;padding:40px 20px;}
-  .header{text-align:center;border-bottom:2px solid #6366f1;padding-bottom:20px;margin-bottom:20px;}
-  .header h1{color:#6366f1;margin:0;font-size:1.5rem;}
+  .header{text-align:center;border-bottom:2px solid #0046be;padding-bottom:20px;margin-bottom:20px;}
+  .header h1{color:#0046be;margin:0;font-size:1.5rem;}
   .header p{color:#666;margin:4px 0 0;font-size:0.85rem;}
   .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;}
   .info-block h4{margin:0 0 4px;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;color:#888;}
@@ -4622,13 +4622,13 @@ ${Pages.renderOrderTimeline(order.status)}
 */
 static getStatusColor (status) {
 const colors = {
-[ORDER_STATUS.PLACED]: '#6366f1',
+[ORDER_STATUS.PLACED]: '#0046be',
 [ORDER_STATUS.CONFIRMED]: '#10b981',
 [ORDER_STATUS.IN_TRANSIT]: '#f59e0b',
 [ORDER_STATUS.DELIVERED]: '#10b981',
 [ORDER_STATUS.CANCELLED]: '#ef4444',
 };
-return colors[status] || '#6366f1';
+return colors[status] || '#0046be';
 }
 
 /**
@@ -5672,8 +5672,8 @@ window.scrollTo(0, 0);
           transition: all 0.2s;
         }
         .image-drop-zone:hover, .image-drop-zone.drag-over {
-          border-color: #6366f1;
-          background: rgba(99, 102, 241, 0.05);
+          border-color: #0046be;
+          background: rgba(0, 70, 190, 0.05);
         }
         .image-drop-zone svg { color: #9ca3af; margin-bottom: 1rem; }
         .upload-text { font-weight: 600; color: #374151; margin-bottom: 0.25rem; }
@@ -6301,7 +6301,7 @@ static renderAdminLogin () {
   <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#111827;padding:2rem;">
     <div style="background:#1f2937;border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius-xl,1rem);padding:var(--space-2xl,2rem);width:100%;max-width:400px;">
       <div style="text-align:center;margin-bottom:2rem;">
-        <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:white;display:inline-flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.25rem;margin-bottom:1rem;">U</div>
+        <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#0046be,#003399);color:white;display:inline-flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.25rem;margin-bottom:1rem;">U</div>
         <h2 style="color:#f9fafb;margin:0;">Admin Login</h2>
         <p style="color:#9ca3af;margin:0.5rem 0 0;font-size:0.875rem;">Sign in to access the admin panel</p>
       </div>
@@ -6314,7 +6314,7 @@ static renderAdminLogin () {
           <label for="admin-password" class="required" style="color:#d1d5db;">Password</label>
           <input type="password" id="admin-password" name="password" class="form-control" required style="background:#111827;border-color:rgba(255,255,255,0.1);color:#f9fafb;" />
         </div>
-        <button type="submit" class="btn btn-primary btn-block" style="background:#7c3aed;border-color:#7c3aed;">Login as Admin</button>
+        <button type="submit" class="btn btn-primary btn-block" style="background:#0046be;border-color:#0046be;">Login as Admin</button>
       </form>
       <div style="text-align:center;margin-top:1.5rem;">
         <a href="#/" style="color:#9ca3af;font-size:0.875rem;">Back to Home</a>
@@ -6818,7 +6818,7 @@ static async renderAdminActivity () {
             <td>Admin</td>
             <td>${a.action}</td>
             <td>${JSON.stringify(a.details || {}).substring(0, 80)}</td>
-            <td><span style="padding:2px 8px;border-radius:4px;font-size:0.75rem;background:rgba(124,58,237,0.15);color:#a78bfa;">info</span></td>
+            <td><span style="padding:2px 8px;border-radius:4px;font-size:0.75rem;background:rgba(0,70,190,0.15);color:#93c5fd;">info</span></td>
           </tr>
         `).join('');
         tbody.innerHTML = localRows || '<tr><td colspan="5" style="text-align:center;padding:2rem;">No activity records found.</td></tr>';
@@ -6852,7 +6852,7 @@ static async renderAdminActivity () {
 
   static _renderActivityRows (logs, tbody, append = false) {
   const severityColors = {
-    info: 'background:rgba(124,58,237,0.15);color:#a78bfa;',
+    info: 'background:rgba(0,70,190,0.15);color:#93c5fd;',
     warning: 'background:rgba(245,158,11,0.15);color:#fbbf24;',
     critical: 'background:rgba(239,68,68,0.15);color:#f87171;',
   };

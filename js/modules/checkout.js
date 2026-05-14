@@ -987,7 +987,7 @@ class CheckoutManager {
 
   getStatusOptions() {
     return [
-      { value: _ORDER_STATUS.PLACED, label: 'Order Placed', color: '#6366f1' },
+      { value: _ORDER_STATUS.PLACED, label: 'Order Placed', color: '#0046be' },
       { value: _ORDER_STATUS.CONFIRMED, label: 'Confirmed', color: '#10b981' },
       { value: _ORDER_STATUS.IN_TRANSIT, label: 'In Transit', color: '#f59e0b' },
       { value: _ORDER_STATUS.DELIVERED, label: 'Delivered', color: '#10b981' },

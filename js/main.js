@@ -69,9 +69,9 @@ document.addEventListener('DOMContentLoaded', async function () {
       <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#050505;">
         <div style="text-align:center;">
           <div style="display:flex;gap:0.5rem;align-items:center;justify-content:center;margin:0 auto 1rem;">
-            <span style="width:0.75rem;height:0.75rem;border-radius:50%;background:#6366f1;animation:bounce 1s infinite;"></span>
-            <span style="width:0.75rem;height:0.75rem;border-radius:50%;background:#6366f1;animation:bounce 1s infinite 0.2s;"></span>
-            <span style="width:0.75rem;height:0.75rem;border-radius:50%;background:#6366f1;animation:bounce 1s infinite 0.4s;"></span>
+            <span style="width:0.75rem;height:0.75rem;border-radius:50%;background:#0046be;animation:bounce 1s infinite;"></span>
+            <span style="width:0.75rem;height:0.75rem;border-radius:50%;background:#0046be;animation:bounce 1s infinite 0.2s;"></span>
+            <span style="width:0.75rem;height:0.75rem;border-radius:50%;background:#0046be;animation:bounce 1s infinite 0.4s;"></span>
           </div>
           <p style="color:#a1a1aa;font-family:system-ui,sans-serif;">Loading Uni-Hub...</p>
         </div>
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', async function () {
               <div>
                 <h2>⚠️ Something went wrong</h2>
                 <p>Please refresh the page.</p>
-                <button onclick="location.reload()" style="margin-top:1rem;padding:0.75rem 1.5rem;background:#6366f1;color:#fff;border:none;border-radius:0.5rem;cursor:pointer;font-weight:600;">
+                <button onclick="location.reload()" style="margin-top:1rem;padding:0.75rem 1.5rem;background:#0046be;color:#fff;border:none;border-radius:0.5rem;cursor:pointer;font-weight:600;">
                   Refresh
                 </button>
               </div>

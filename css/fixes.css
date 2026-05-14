@@ -159,8 +159,8 @@
 .form-control:focus,
 .form-input:focus {
   outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  border-color: #0046be;
+  box-shadow: 0 0 0 3px rgba(0, 70, 190, 0.1);
 }
 
 /* Fix button disabled state */
@@ -294,8 +294,8 @@ html {
 }
 
 .option-card.selected {
-  border-color: #6366f1;
-  background: rgba(99, 102, 241, 0.05);
+  border-color: #0046be;
+  background: rgba(0, 70, 190, 0.05);
 }
 
 .option-card input[type='radio'] {
@@ -320,8 +320,8 @@ html {
 
 /* Fix status badge colors */
 .status-badge.placed {
-  background: rgba(99, 102, 241, 0.1);
-  color: #6366f1;
+  background: rgba(0, 70, 190, 0.1);
+  color: #0046be;
 }
 
 .status-badge.confirmed {
@@ -364,8 +364,8 @@ html {
 }
 
 .role-badge.buyer {
-  background: rgba(99, 102, 241, 0.1);
-  color: #6366f1;
+  background: rgba(0, 70, 190, 0.1);
+  color: #0046be;
 }
 
 /* Fix pagination */
@@ -392,8 +392,8 @@ html {
 
 .search-bar input:focus {
   outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  border-color: #0046be;
+  box-shadow: 0 0 0 3px rgba(0, 70, 190, 0.1);
 }
 
 /* Fix filter group */
@@ -626,7 +626,7 @@ html {
 }
 
 .dashboard-section-link {
-  color: #6366f1;
+  color: #0046be;
   text-decoration: none;
   font-size: 0.875rem;
   font-weight: 500;
@@ -647,8 +647,8 @@ html {
 }
 
 .file-upload-area:hover {
-  border-color: #6366f1;
-  background: rgba(99, 102, 241, 0.05);
+  border-color: #0046be;
+  background: rgba(0, 70, 190, 0.05);
 }
 
 .upload-icon {
@@ -703,8 +703,8 @@ html {
 }
 
 .verification-tab.active {
-  border-color: #6366f1;
-  background: rgba(99, 102, 241, 0.05);
+  border-color: #0046be;
+  background: rgba(0, 70, 190, 0.05);
 }
 
 .tab-icon {
@@ -737,8 +737,8 @@ html {
 }
 
 .verification-info {
-  background: rgba(99, 102, 241, 0.1);
-  border-left: 4px solid #6366f1;
+  background: rgba(0, 70, 190, 0.1);
+  border-left: 4px solid #0046be;
   padding: 1rem;
   margin-bottom: 1.5rem;
   border-radius: var(--radius-sm);
@@ -796,7 +796,7 @@ html {
 }
 
 .auth-links a {
-  color: #6366f1;
+  color: #0046be;
   text-decoration: none;
   font-weight: 500;
 }
@@ -841,7 +841,7 @@ html {
 .quick-view-price {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #6366f1;
+  color: #0046be;
   margin-bottom: 1rem;
 }
 
@@ -878,8 +878,8 @@ html {
 }
 
 .condition-option.selected {
-  border-color: #6366f1;
-  background: rgba(99, 102, 241, 0.05);
+  border-color: #0046be;
+  background: rgba(0, 70, 190, 0.05);
 }
 
 .condition-option input[type='radio'] {
@@ -908,9 +908,9 @@ html {
 .payment-spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid rgba(99, 102, 241, 0.3);
+  border: 4px solid rgba(0, 70, 190, 0.3);
   border-radius: 50%;
-  border-top-color: #6366f1;
+  border-top-color: #0046be;
   animation: spin 1s linear infinite;
   margin: 0 auto 1.5rem;
 }
@@ -946,7 +946,7 @@ html {
 }
 
 .admin-stat-icon.primary {
-  color: #6366f1;
+  color: #0046be;
 }
 
 .admin-stat-icon.success {
@@ -1128,7 +1128,7 @@ html {
 
 .order-item-price {
   font-weight: 600;
-  color: #6366f1;
+  color: #0046be;
 }
 
 /* Fix seller product grid */
@@ -1188,7 +1188,7 @@ html {
 .seller-product-price {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #6366f1;
+  color: #0046be;
   margin-bottom: 1rem;
 }
 
@@ -1258,8 +1258,8 @@ html {
 }
 
 .image-upload:hover {
-  border-color: #6366f1;
-  background: rgba(99, 102, 241, 0.05);
+  border-color: #0046be;
+  background: rgba(0, 70, 190, 0.05);
 }
 
 .image-upload-icon {
@@ -1330,8 +1330,8 @@ html {
 .dashboard-menu-link.active,
 .seller-nav-link.active,
 .admin-menu-link.active {
-  background: rgba(99, 102, 241, 0.1);
-  color: #6366f1;
+  background: rgba(0, 70, 190, 0.1);
+  color: #0046be;
 }
 
 .dashboard-menu-icon,
@@ -1354,7 +1354,7 @@ html {
 .admin-brand-icon {
   width: 40px;
   height: 40px;
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(0, 70, 190, 0.1);
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
@@ -1479,7 +1479,7 @@ html {
   display: block;
   text-align: center;
   margin-top: 1rem;
-  color: #6366f1;
+  color: #0046be;
   text-decoration: none;
   font-size: 0.875rem;
 }
@@ -1554,23 +1554,23 @@ html {
 }
 
 .commerce-btn-default {
-  background: #6366f1;
+  background: #0046be;
   color: white;
 }
 
 .commerce-btn-default:hover {
-  background: #4f46e5;
+  background: #003399;
 }
 
 .commerce-btn-outline {
   background: white;
-  color: #6366f1;
-  border-color: #6366f1;
+  color: #0046be;
+  border-color: #0046be;
 }
 
 .commerce-btn-outline:hover,
 .commerce-btn-outline.active {
-  background: #6366f1;
+  background: #0046be;
   color: white;
 }
 

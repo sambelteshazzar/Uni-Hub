@@ -317,7 +317,7 @@ class AdminReportsManager {
   <title>Uni-Hub Report — ${type}</title>
   <style>
   body { font-family: Arial, sans-serif; padding: 40px; color: #1f2937; }
-  h1 { color: #7c3aed; border-bottom: 2px solid #7c3aed; padding-bottom: 8px; }
+  h1 { color: #0046be; border-bottom: 2px solid #0046be; padding-bottom: 8px; }
   h2 { color: #374151; margin-top: 24px; }
   table { width: 100%; border-collapse: collapse; margin: 16px 0; }
   th, td { border: 1px solid #e5e7eb; padding: 8px 12px; text-align: left; }
