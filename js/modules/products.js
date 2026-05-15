@@ -20,19 +20,22 @@ class ProductsManager {
     this.pageSize = PAGINATION.DEFAULT_PAGE_SIZE;
     this.PRODUCTS_STORAGE_KEY = `${STORAGE_KEY_PREFIX}products`;
     this.wishlistKey = `${STORAGE_KEY_PREFIX}wishlist`;
-    this.useBackend = true; // Backend API enabled
+    this.useBackend = true;
+    this._backendAvailable = false;
+    this._totalFromServer = 0;
+    this._totalPagesFromServer = 0;
+    this._lastServerPage = null;
   }
 
   /**
-   * Initialize products
-   */
+  * Initialize products
+  */
   async init () {
     try {
       if (this.useBackend) {
-        // Try to load from backend with short timeout
         try {
           const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 3000); // 3s timeout
+          const timeout = setTimeout(() => controller.abort(), 3000);
           const response = await fetch(`${window.API_URL}/products?limit=100`, {
             signal: controller.signal,
           });
@@ -42,6 +45,11 @@ class ProductsManager {
             if (data.success && data.data.products) {
               this.products = data.data.products;
               this.filteredProducts = [...this.products];
+              this._backendAvailable = true;
+              if (data.data.pagination) {
+                this._totalFromServer = data.data.pagination.total;
+                this._totalPagesFromServer = data.data.pagination.pages;
+              }
               return;
             }
           }
@@ -59,6 +67,62 @@ class ProductsManager {
       this.products = [];
       this.filteredProducts = [];
     }
+  }
+
+  /**
+  * Fetch a specific page from the backend API (server-side pagination)
+  */
+  async fetchPage (page = 1, pageSize = null) {
+    const size = pageSize || this.pageSize;
+    const params = new URLSearchParams({ page, limit: size });
+
+    if (this.currentFilters.category) params.set('category', this.currentFilters.category);
+    if (this.currentFilters.condition) {
+      const conditions = Array.isArray(this.currentFilters.condition)
+        ? this.currentFilters.condition.join(',')
+        : this.currentFilters.condition;
+      params.set('condition', conditions);
+    }
+    if (this.currentFilters.university) params.set('university', this.currentFilters.university);
+    if (this.currentFilters.searchQuery) params.set('search', this.currentFilters.searchQuery);
+    if (this.currentFilters.priceRange && (this.currentFilters.priceRange.min > 0 || this.currentFilters.priceRange.max < Infinity)) {
+      if (this.currentFilters.priceRange.min > 0) params.set('minPrice', this.currentFilters.priceRange.min);
+      if (this.currentFilters.priceRange.max < Infinity) params.set('maxPrice', this.currentFilters.priceRange.max);
+    }
+    if (this.currentFilters.sortBy && this.currentFilters.sortBy !== 'newest') {
+      params.set('sortBy', this.currentFilters.sortBy);
+    }
+
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      const response = await fetch(`${window.API_URL}/products?${params.toString()}`, {
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          this._backendAvailable = true;
+          this._lastServerPage = page;
+          if (data.data.pagination) {
+            this._totalFromServer = data.data.pagination.total;
+            this._totalPagesFromServer = data.data.pagination.pages;
+          }
+          return {
+            products: data.data.products || [],
+            currentPage: data.data.pagination?.page || page,
+            totalPages: data.data.pagination?.pages || 1,
+            totalProducts: data.data.pagination?.total || 0,
+          };
+        }
+      }
+    } catch (_error) {
+      // Fall through to client-side
+    }
+
+    this._backendAvailable = false;
+    return null;
   }
 
   /**
@@ -176,19 +240,26 @@ class ProductsManager {
   }
 
   /**
-   * Get paginated products
-   */
+  * Get paginated products
+  * When backend is available, returns a promise for server-side pagination.
+  * Falls back to client-side pagination otherwise.
+  */
   getPaginated (page = 1) {
     this.currentPage = page;
     const start = (page - 1) * this.pageSize;
     const end = start + this.pageSize;
     const paginatedProducts = this.filteredProducts.slice(start, end);
+    const totalPages = Math.max(1, Math.ceil(
+      (this._backendAvailable && this._totalFromServer > 0 ? this._totalFromServer : this.filteredProducts.length) / this.pageSize
+    ));
+    const totalProducts = this._backendAvailable && this._totalFromServer > 0
+      ? this._totalFromServer : this.filteredProducts.length;
 
     return {
       products: paginatedProducts,
       currentPage: page,
-      totalPages: Math.ceil(this.filteredProducts.length / this.pageSize),
-      totalProducts: this.filteredProducts.length,
+      totalPages,
+      totalProducts,
     };
   }
 

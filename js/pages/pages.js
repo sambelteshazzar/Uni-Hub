@@ -222,8 +222,8 @@ static showOriginalNavFooter () {
       productsManager.filter({ university: selectedUniversity });
     }
 
-    const paginatedData = productsManager.getPaginated(1);
-    const totalProducts = paginatedData.total || paginatedData.products.length;
+    const paginatedData = await this._fetchPaginatedData(1);
+    const totalProducts = paginatedData.totalProducts || paginatedData.total || productsManager.filteredProducts.length;
 
     // Render the modern browse page
     mainContent.innerHTML = this.renderBrowseModernHTML(paginatedData, totalProducts);
@@ -481,15 +481,16 @@ static showOriginalNavFooter () {
  `}
  </div>
 
- ${paginatedData.totalPages > 1 ? `
- <div class="pagination">
- ${Array.from({ length: paginatedData.totalPages }, (_, i) => `
- <button class="page-btn ${i + 1 === paginatedData.currentPage ? 'active' : ''}" onclick="Pages.goToBrowsePage(${i + 1})">
- ${i + 1}
- </button>
- `).join('')}
- </div>
- ` : ''}
+${paginatedData.totalPages > 1 ? `
+        <div class="pagination">
+          <button class="page-btn" onclick="Pages.goToBrowsePage(${paginatedData.currentPage - 1})" ${paginatedData.currentPage <= 1 ? 'disabled style="opacity:0.4;pointer-events:none;"' : ''}>&laquo;</button>
+          ${this._renderPageNumbers(paginatedData.currentPage, paginatedData.totalPages).map(p => p === '...'
+            ? '<span style="padding:0 4px;color:var(--neutral-400);">...</span>'
+            : `<button class="page-btn ${p === paginatedData.currentPage ? 'active' : ''}" onclick="Pages.goToBrowsePage(${p})">${p}</button>`
+          ).join('')}
+          <button class="page-btn" onclick="Pages.goToBrowsePage(${paginatedData.currentPage + 1})" ${paginatedData.currentPage >= paginatedData.totalPages ? 'disabled style="opacity:0.4;pointer-events:none;"' : ''}>&raquo;</button>
+        </div>
+      ` : ''}
  </div>
 </div>
 
@@ -831,19 +832,34 @@ return `
 `;
 }
 
-  /**
-   * Go to Browse Page (pagination)
-   */
-  static goToBrowsePage (page) {
-    const paginatedData = productsManager.getPaginated(page);
-    const productsGrid = document.querySelector('.products-grid');
-
-    if (productsGrid) {
-      productsGrid.innerHTML = paginatedData.products
-        .map(product => this.renderProductCard(product))
-        .join('');
-      window.scrollTo(0, 200);
+  static _renderPageNumbers (current, total) {
+    const pages = [];
+    pages.push(1);
+    if (current > 3) pages.push('...');
+    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+      pages.push(i);
     }
+    if (current < total - 2) pages.push('...');
+    if (total > 1) pages.push(total);
+    return pages;
+  }
+
+  static async goToBrowsePage (page) {
+    const paginatedData = await this._fetchPaginatedData(page);
+    const totalProducts = paginatedData.totalProducts || paginatedData.total || productsManager.filteredProducts.length;
+    const mainContent = document.getElementById('main-content');
+    if (mainContent) {
+      mainContent.innerHTML = this.renderBrowseModernHTML(paginatedData, totalProducts);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  static async _fetchPaginatedData (page) {
+    if (productsManager._backendAvailable) {
+      const serverData = await productsManager.fetchPage(page);
+      if (serverData) return serverData;
+    }
+    return productsManager.getPaginated(page);
   }
 
   /**

@@ -75,7 +75,7 @@ class BrowsePage {
     this._buildFilterCounts();
     this._syncFiltersFromManager();
 
-    const paginatedData = productsManager.getPaginated(1);
+    const paginatedData = await this._fetchPaginatedData(1);
     this.state.totalProducts = paginatedData.totalProducts || paginatedData.total || this._filteredProducts.length;
 
     mainContent.innerHTML = this.renderHTML(paginatedData);
@@ -104,6 +104,16 @@ class BrowsePage {
       this.state.searchQuery = cf.searchQuery;
     }
     this._filteredProducts = productsManager.filteredProducts || [...this._allProducts];
+  }
+
+  async _fetchPaginatedData(page) {
+    if (productsManager._backendAvailable) {
+      const serverData = await productsManager.fetchPage(page);
+      if (serverData) {
+        return serverData;
+      }
+    }
+    return productsManager.getPaginated(page);
   }
 
   _buildFilterCounts() {
@@ -463,7 +473,7 @@ class BrowsePage {
     this.applyFilters();
   }
 
-  applyFilters() {
+  async applyFilters() {
     if (this.state.selectedCategories.length > 0) {
       productsManager.filter({ category: this.state.selectedCategories[0] });
     } else {
@@ -488,14 +498,15 @@ class BrowsePage {
     this._filteredProducts = productsManager.filteredProducts || [];
     this.state.totalProducts = this._filteredProducts.length;
 
-    const paginatedData = productsManager.getPaginated(1);
+    const paginatedData = await this._fetchPaginatedData(1);
+    this.state.totalProducts = paginatedData.totalProducts || this.state.totalProducts;
     const mainContent = document.getElementById('main-content');
     if (mainContent) {
       mainContent.innerHTML = this.renderHTML(paginatedData);
     }
   }
 
-  clearFilters() {
+  async clearFilters() {
     this.state.selectedCategories = [];
     this.state.selectedConditions = [];
     this.state.selectedUniversities = [];
@@ -506,19 +517,21 @@ class BrowsePage {
     productsManager.resetFilters();
     this._filteredProducts = productsManager.filteredProducts || [...this._allProducts];
     this.state.totalProducts = this._filteredProducts.length;
-    const paginatedData = productsManager.getPaginated(1);
+    const paginatedData = await this._fetchPaginatedData(1);
+    this.state.totalProducts = paginatedData.totalProducts || this.state.totalProducts;
     const mainContent = document.getElementById('main-content');
     if (mainContent) {
       mainContent.innerHTML = this.renderHTML(paginatedData);
     }
   }
 
-  sortBy(field) {
+  async sortBy(field) {
     this.state.sortBy = field;
     productsManager.filter({ sortBy: field });
     this._filteredProducts = productsManager.filteredProducts || [];
     this.state.totalProducts = this._filteredProducts.length;
-    const paginatedData = productsManager.getPaginated(1);
+    const paginatedData = await this._fetchPaginatedData(1);
+    this.state.totalProducts = paginatedData.totalProducts || this.state.totalProducts;
     const mainContent = document.getElementById('main-content');
     if (mainContent) {
       mainContent.innerHTML = this.renderHTML(paginatedData);
@@ -536,9 +549,9 @@ class BrowsePage {
     if (activeBtn) activeBtn.classList.add('active');
   }
 
-  loadMore() {
+  async loadMore() {
     this.state.currentPage += 1;
-    const paginatedData = productsManager.getPaginated(this.state.currentPage);
+    const paginatedData = await this._fetchPaginatedData(this.state.currentPage);
     const grid = document.getElementById('browse-product-grid');
     if (grid && paginatedData.products.length > 0) {
       const newCards = paginatedData.products.map(p => this.renderProductCard(p)).join('');
@@ -554,10 +567,11 @@ class BrowsePage {
     }
   }
 
-  goToPage(page) {
-    const paginatedData = productsManager.getPaginated(page);
-    if (paginatedData.products.length === 0) return;
+  async goToPage(page) {
+    const paginatedData = await this._fetchPaginatedData(page);
+    if (paginatedData.products.length === 0 && page > 1) return;
     this.state.currentPage = page;
+    this.state.totalProducts = paginatedData.totalProducts || this.state.totalProducts;
     const mainContent = document.getElementById('main-content');
     if (mainContent) {
       mainContent.innerHTML = this.renderHTML(paginatedData);
@@ -572,12 +586,13 @@ class BrowsePage {
     }
   }
 
-  searchProducts(query) {
+  async searchProducts(query) {
     this.state.searchQuery = query;
     productsManager.filter({ searchQuery: query });
     this._filteredProducts = productsManager.filteredProducts || [];
     this.state.totalProducts = this._filteredProducts.length;
-    const paginatedData = productsManager.getPaginated(1);
+    const paginatedData = await this._fetchPaginatedData(1);
+    this.state.totalProducts = paginatedData.totalProducts || this.state.totalProducts;
     const mainContent = document.getElementById('main-content');
     if (mainContent) {
       mainContent.innerHTML = this.renderHTML(paginatedData);
