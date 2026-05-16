@@ -1,0 +1,418 @@
+/* ============================================
+WE'VE GOT YOU COVERED SECTION
+Blue-and-white editorial warmth with overlapping student photography
+DM Serif Display headline, animated reveals, blue marquee ticker
+============================================ */
+
+.bb-covered {
+  --covered-bg: #ffffff;
+  --covered-bg-subtle: #f0f5ff;
+  --covered-text: #1a1a1a;
+  --covered-muted: #4a5568;
+  --covered-blue: #0046be;
+  --covered-blue-hover: #003399;
+  --covered-blue-light: #e8f0fe;
+  --covered-blue-glow: rgba(0, 70, 190, 0.12);
+  --covered-yellow: #ffce00;
+  --covered-yellow-glow: rgba(255, 206, 0, 0.18);
+  --covered-border: #d6e4f7;
+  --covered-card: #ffffff;
+  --covered-photo-radius: 1.25rem;
+  padding: 0;
+  background: var(--covered-bg);
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  overflow: hidden;
+}
+
+.bb-covered-inner {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 5rem 2rem 4rem;
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+/* ---- Text Column ---- */
+
+.bb-covered-text-col {
+  padding-right: 1rem;
+}
+
+.bb-covered-eyebrow {
+  display: inline-block;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--covered-blue);
+  background: var(--covered-blue-light);
+  padding: 0.4rem 1rem;
+  border-radius: 9999px;
+  margin-bottom: 2rem;
+  animation: bbCoveredFadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.bb-covered-headline {
+  font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif;
+  font-size: clamp(3rem, 5.5vw, 4.75rem);
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  color: var(--covered-text);
+  margin: 0 0 1.75rem;
+  animation: bbCoveredFadeUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+}
+
+.bb-covered-accent {
+  font-style: italic;
+  color: var(--covered-blue);
+  position: relative;
+  display: inline-block;
+}
+
+.bb-covered-accent::after {
+  content: '';
+  position: absolute;
+  bottom: 0.1em;
+  left: -0.04em;
+  right: -0.04em;
+  height: 0.18em;
+  background: var(--covered-yellow-glow);
+  border-radius: 0.1em;
+  z-index: -1;
+}
+
+.bb-covered-body {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: var(--covered-muted);
+  max-width: 28rem;
+  margin: 0 0 2rem;
+  animation: bbCoveredFadeUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+}
+
+/* ---- Pills ---- */
+
+.bb-covered-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 2.25rem;
+  animation: bbCoveredFadeUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+}
+
+.bb-covered-pill {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--covered-text);
+  background: var(--covered-card);
+  border: 1px solid var(--covered-border);
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  transition: all 0.25s ease;
+  cursor: default;
+}
+
+.bb-covered-pill:hover {
+  background: var(--covered-blue);
+  color: #ffffff;
+  border-color: var(--covered-blue);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--covered-blue-glow);
+}
+
+/* ---- CTA Link ---- */
+
+.bb-covered-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--covered-blue);
+  text-decoration: none;
+  letter-spacing: 0.01em;
+  transition: all 0.3s ease;
+  animation: bbCoveredFadeUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.4s both;
+}
+
+.bb-covered-cta svg {
+  transition: transform 0.3s ease;
+}
+
+.bb-covered-cta:hover {
+  color: var(--covered-blue-hover);
+  gap: 0.75rem;
+}
+
+.bb-covered-cta:hover svg {
+  transform: translateX(4px);
+}
+
+/* ---- Photo Gallery ---- */
+
+.bb-covered-gallery {
+  position: relative;
+  height: 520px;
+  animation: bbCoveredFadeUp 1s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+}
+
+.bb-covered-photo {
+  position: absolute;
+  border-radius: var(--covered-photo-radius);
+  overflow: hidden;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 70, 190, 0.06),
+    0 12px 24px -4px rgba(0, 70, 190, 0.08),
+    0 0 0 1px rgba(0, 70, 190, 0.04);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.5s ease;
+}
+
+.bb-covered-photo:hover {
+  transform: scale(1.03) rotate(0deg) !important;
+  box-shadow:
+    0 8px 16px -2px rgba(0, 70, 190, 0.1),
+    0 20px 40px -8px rgba(0, 70, 190, 0.14),
+    0 0 0 1px rgba(0, 70, 190, 0.06);
+  z-index: 10;
+}
+
+.bb-covered-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bb-covered-photo:hover img {
+  transform: scale(1.06);
+}
+
+.bb-covered-photo--main {
+  width: 58%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  transform: rotate(-1.5deg);
+}
+
+.bb-covered-photo--top {
+  width: 42%;
+  height: 52%;
+  top: 0;
+  right: 0;
+  z-index: 3;
+  transform: rotate(2.5deg);
+  border: 4px solid var(--covered-card);
+}
+
+.bb-covered-photo--bottom {
+  width: 42%;
+  height: 46%;
+  bottom: 0;
+  right: 4%;
+  z-index: 1;
+  transform: rotate(-1deg);
+  border: 4px solid var(--covered-card);
+}
+
+/* ---- Photo Labels ---- */
+
+.bb-covered-photo-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem 1.25rem 0.9rem;
+  background: linear-gradient(to top, rgba(0, 70, 190, 0.8) 0%, rgba(0, 70, 190, 0.3) 55%, transparent 100%);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #ffffff;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.4s ease;
+}
+
+.bb-covered-photo:hover .bb-covered-photo-label {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---- Marquee Ticker ---- */
+
+.bb-covered-marquee {
+  overflow: hidden;
+  background: var(--covered-blue);
+  padding: 0.85rem 0;
+  margin-top: 0;
+}
+
+.bb-covered-marquee-track {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: max-content;
+  animation: bbCoveredMarqueeScroll 30s linear infinite;
+}
+
+.bb-covered-marquee-track span {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.75);
+  white-space: nowrap;
+  padding: 0 0.5rem;
+}
+
+.bb-covered-marquee-dot {
+  color: var(--covered-yellow) !important;
+  font-size: 0.5rem !important;
+  padding: 0 1rem !important;
+}
+
+/* ---- Keyframes ---- */
+
+@keyframes bbCoveredFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bbCoveredMarqueeScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* ---- Responsive ---- */
+
+@media (max-width: 1024px) {
+  .bb-covered-inner {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    padding: 4rem 2rem 3rem;
+  }
+
+  .bb-covered-text-col {
+    padding-right: 0;
+    text-align: center;
+  }
+
+  .bb-covered-body {
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .bb-covered-pills {
+    justify-content: center;
+  }
+
+  .bb-covered-cta {
+    justify-content: center;
+    display: inline-flex;
+  }
+
+  .bb-covered-gallery {
+    height: 380px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .bb-covered-photo--main {
+    width: 55%;
+  }
+
+  .bb-covered-photo--top {
+    width: 45%;
+  }
+
+  .bb-covered-photo--bottom {
+    width: 45%;
+    right: 2%;
+  }
+}
+
+@media (max-width: 768px) {
+  .bb-covered-inner {
+    padding: 3rem 1.25rem 2.5rem;
+    gap: 2.5rem;
+  }
+
+  .bb-covered-headline {
+    font-size: clamp(2.25rem, 8vw, 3rem);
+  }
+
+  .bb-covered-gallery {
+    height: 300px;
+    max-width: 100%;
+  }
+
+  .bb-covered-photo--main {
+    width: 60%;
+    transform: rotate(-1deg);
+  }
+
+  .bb-covered-photo--top {
+    width: 42%;
+    height: 48%;
+    transform: rotate(1.5deg);
+  }
+
+  .bb-covered-photo--bottom {
+    width: 42%;
+    height: 44%;
+    right: 2%;
+    transform: rotate(-0.5deg);
+  }
+
+  .bb-covered-pills {
+    gap: 0.35rem;
+  }
+
+  .bb-covered-pill {
+    font-size: 0.65rem;
+    padding: 0.25rem 0.65rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .bb-covered-inner {
+    padding: 2.5rem 1rem 2rem;
+  }
+
+  .bb-covered-gallery {
+    height: 240px;
+  }
+
+  .bb-covered-headline {
+    font-size: 2rem;
+  }
+
+  .bb-covered-body {
+    font-size: 0.95rem;
+  }
+}

@@ -98,119 +98,56 @@
   </div>
 </section>
 
-<!-- Featured Products -->
-<section class="bb-featured">
-  <div class="bb-container">
-    <div class="bb-section-header" style="display: flex; justify-content: space-between; align-items: center;">
-      <div>
-        <h2 class="bb-section-title">Top Deals Right Now</h2>
-        <p class="bb-section-subtitle">Hand-picked deals from students near you</p>
+<!-- We've Got You Covered -->
+<section class="bb-covered" id="bb-covered-section">
+  <div class="bb-covered-inner">
+    <div class="bb-covered-text-col">
+      <span class="bb-covered-eyebrow">Community First</span>
+      <h2 class="bb-covered-headline">WE'VE GOT<br>YOU<br><em class="bb-covered-accent">COVERED</em></h2>
+      <p class="bb-covered-body">From textbooks to accommodation, electronics to everyday essentials — Uni-Hub connects you with students who've got exactly what you need. Buy, sell, and thrive together on campus.</p>
+      <div class="bb-covered-pills">
+        <span class="bb-covered-pill">Textbooks</span>
+        <span class="bb-covered-pill">Electronics</span>
+        <span class="bb-covered-pill">Accommodation</span>
+        <span class="bb-covered-pill">Furniture</span>
+        <span class="bb-covered-pill">Clothing</span>
+        <span class="bb-covered-pill">Sports Gear</span>
       </div>
-      <a href="#/browse" onclick="Pages.renderBrowse(); return false;" style="font-size: var(--text-sm); font-weight: 600; color: #0046be; text-decoration: none;">
-        View All →
-      </a>
+      <a href="#/browse" onclick="Pages.renderBrowse(); return false;" class="bb-covered-cta">Explore the marketplace <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg></a>
     </div>
-    <div class="bb-carousel" id="bb-featured-products">
-      <!-- Products will be injected here by JS -->
-      <div class="product-card" style="min-height: 350px;">
-        <div class="product-card-image">
-          <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop" alt="Watch">
-          <div class="product-card-badges">
-            <span class="product-card-badge">Deal</span>
-          </div>
-        </div>
-        <div class="product-card-body">
-          <p class="product-card-category">Electronics</p>
-          <h3 class="product-card-title">Smart Watch - Excellent Condition</h3>
-          <div class="product-card-rating">
-            <span class="product-card-rating-stars"><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></span>
-            <span class="product-card-rating-count">(24)</span>
-          </div>
-          <p class="product-card-price">
-            $49.99
-            <span class="product-card-price-original">$129.99</span>
-          </p>
-          <p class="product-card-savings">Save $80 (62% off)</p>
-        </div>
+    <div class="bb-covered-gallery">
+      <div class="bb-covered-photo bb-covered-photo--main">
+        <img src="https://images.unsplash.com/photo-1523240795612-9a054b0c1b70?w=600&h=750&fit=crop&crop=faces&crop=top" alt="Students meeting and collaborating on campus" loading="lazy">
+        <div class="bb-covered-photo-label">Connect on campus</div>
       </div>
-
-      <div class="product-card" style="min-height: 350px;">
-        <div class="product-card-image">
-          <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400&h=400&fit=crop" alt="Books">
-        </div>
-        <div class="product-card-body">
-          <p class="product-card-category">Textbooks</p>
-          <h3 class="product-card-title">Calculus Textbook 8th Edition</h3>
-          <div class="product-card-rating">
-            <span class="product-card-rating-stars"><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></span>
-            <span class="product-card-rating-count">(12)</span>
-          </div>
-          <p class="product-card-price">
-            $35.00
-            <span class="product-card-price-original">$89.99</span>
-          </p>
-          <p class="product-card-savings">Save $55 (61% off)</p>
-        </div>
+      <div class="bb-covered-photo bb-covered-photo--top">
+        <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=400&fit=crop&crop=faces&crop=top" alt="Students studying together and laughing" loading="lazy">
+        <div class="bb-covered-photo-label">Study together</div>
       </div>
-
-      <div class="product-card" style="min-height: 350px;">
-        <div class="product-card-image">
-          <img src="https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=400&h=400&fit=crop" alt="Desk Lamp">
-          <div class="product-card-badges">
-            <span class="product-card-badge">Deal</span>
-          </div>
-        </div>
-        <div class="product-card-body">
-          <p class="product-card-category">Dorm & Room</p>
-          <h3 class="product-card-title">LED Desk Lamp with USB Port</h3>
-          <div class="product-card-rating">
-            <span class="product-card-rating-stars"><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></span>
-            <span class="product-card-rating-count">(8)</span>
-          </div>
-          <p class="product-card-price">$15.00</p>
-        </div>
+      <div class="bb-covered-photo bb-covered-photo--bottom">
+        <img src="https://images.unsplash.com/photo-1529156069898-4996e398f3d6?w=400&h=400&fit=crop&crop=faces" alt="Friends high-fiving after a successful deal" loading="lazy">
+        <div class="bb-covered-photo-label">Deal done!</div>
       </div>
-
-      <div class="product-card" style="min-height: 350px;">
-        <div class="product-card-image">
-          <img src="https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=400&h=400&fit=crop" alt="Chair">
-        </div>
-        <div class="product-card-body">
-          <p class="product-card-category">Furniture</p>
-          <h3 class="product-card-title">Gaming Chair - Barely Used</h3>
-          <div class="product-card-rating">
-            <span class="product-card-rating-stars"><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></span>
-            <span class="product-card-rating-count">(31)</span>
-          </div>
-          <p class="product-card-price">
-            $75.00
-            <span class="product-card-price-original">$199.99</span>
-          </p>
-          <p class="product-card-savings">Save $125 (63% off)</p>
-        </div>
-      </div>
-
-      <div class="product-card" style="min-height: 350px;">
-        <div class="product-card-image">
-          <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop" alt="Headphones">
-          <div class="product-card-badges">
-            <span class="product-card-badge">Deal</span>
-          </div>
-        </div>
-        <div class="product-card-body">
-          <p class="product-card-category">Electronics</p>
-          <h3 class="product-card-title">Wireless Headphones - Noise Cancelling</h3>
-          <div class="product-card-rating">
-            <span class="product-card-rating-stars"><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></span>
-            <span class="product-card-rating-count">(45)</span>
-          </div>
-          <p class="product-card-price">
-            $29.99
-            <span class="product-card-price-original">$79.99</span>
-          </p>
-          <p class="product-card-savings">Save $50 (63% off)</p>
-        </div>
-      </div>
+    </div>
+  </div>
+  <div class="bb-covered-marquee">
+    <div class="bb-covered-marquee-track">
+      <span>Textbooks</span><span class="bb-covered-marquee-dot">&#10038;</span>
+      <span>Electronics</span><span class="bb-covered-marquee-dot">&#10038;</span>
+      <span>Accommodation</span><span class="bb-covered-marquee-dot">&#10038;</span>
+      <span>Furniture</span><span class="bb-covered-marquee-dot">&#10038;</span>
+      <span>Clothing</span><span class="bb-covered-marquee-dot">&#10038;</span>
+      <span>Sports Gear</span><span class="bb-covered-marquee-dot">&#10038;</span>
+      <span>Kitchen Essentials</span><span class="bb-covered-marquee-dot">&#10038;</span>
+      <span>Stationery</span><span class="bb-covered-marquee-dot">&#10038;</span>
+      <span>Textbooks</span><span class="bb-covered-marquee-dot">&#10038;</span>
+      <span>Electronics</span><span class="bb-covered-marquee-dot">&#10038;</span>
+      <span>Accommodation</span><span class="bb-covered-marquee-dot">&#10038;</span>
+      <span>Furniture</span><span class="bb-covered-marquee-dot">&#10038;</span>
+      <span>Clothing</span><span class="bb-covered-marquee-dot">&#10038;</span>
+      <span>Sports Gear</span><span class="bb-covered-marquee-dot">&#10038;</span>
+      <span>Kitchen Essentials</span><span class="bb-covered-marquee-dot">&#10038;</span>
+      <span>Stationery</span><span class="bb-covered-marquee-dot">&#10038;</span>
     </div>
   </div>
 </section>
