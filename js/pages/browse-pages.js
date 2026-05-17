@@ -134,75 +134,98 @@ class BrowsePage {
       .map(id => ({ id, name: id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, ' '), count: uniCounts[id] }));
   }
 
-  renderSkeleton() {
-    return `
-      <div class="browse-page">
-        <div class="browse-breadcrumb"><div class="browse-breadcrumb-inner"><div class="browse-skeleton" style="height:2.5rem;width:220px;border-radius:0.375rem;"></div></div></div>
-        <div class="browse-page-inner">
-          <aside class="browse-sidebar">
-            ${Array(4).fill('').map(() => `<div class="browse-filter-group"><div class="browse-skeleton" style="height:16px;width:80px;margin-bottom:12px;"></div>${Array(4).fill('').map(() => '<div class="browse-skeleton" style="height:24px;width:90%;margin-bottom:8px;"></div>').join('')}</div>`).join('')}
-          </aside>
-          <div class="browse-main">
-            <div class="browse-toolbar"><div class="browse-skeleton" style="height:42px;width:100%;max-width:400px;"></div></div>
-            <div class="browse-product-grid">
-              ${Array(6).fill('').map(() => `<div class="browse-product-card"><div class="browse-product-image-wrap"><div class="browse-skeleton" style="width:100%;height:100%;aspect-ratio:1;"></div></div><div class="browse-product-info"><div class="browse-skeleton" style="height:12px;width:40%;margin-bottom:8px;"></div><div class="browse-skeleton" style="height:16px;width:100%;margin-bottom:8px;"></div><div class="browse-skeleton" style="height:20px;width:60%;"></div></div></div>`).join('')}
-            </div>
-          </div>
-        </div>
-      </div>`;
+renderSkeleton() {
+return `
+<div class="browse-page">
+<div class="browse-breadcrumb"><div class="browse-breadcrumb-inner"><div class="browse-skeleton" style="height:2rem;width:180px;border-radius:4px;"></div></div></div>
+<div class="browse-categories"><div class="browse-categories-scroll">${Array(6).fill('').map(() => '<div class="browse-skeleton" style="height:2.25rem;width:90px;border-radius:0;flex-shrink:0;"></div>').join('')}</div></div>
+<div class="browse-page-inner">
+<aside class="browse-sidebar">
+${Array(3).fill('').map(() => `<div class="browse-filter-group"><div class="browse-skeleton" style="height:14px;width:80px;margin-bottom:12px;"></div>${Array(4).fill('').map(() => '<div class="browse-skeleton" style="height:20px;width:90%;margin-bottom:6px;"></div>').join('')}</div>`).join('')}
+</aside>
+<div class="browse-main">
+<div class="browse-toolbar"><div class="browse-skeleton" style="height:40px;width:100%;max-width:420px;border-radius:6px;"></div></div>
+<div class="browse-product-grid" style="grid-template-columns:repeat(3,1fr);gap:1px;background:#e5e5e5;border-radius:8px;overflow:hidden;">
+${Array(6).fill('').map(() => `<div style="background:#fff;"><div class="browse-skeleton" style="aspect-ratio:1;border-radius:0;"></div><div style="padding:12px 16px 16px;"><div class="browse-skeleton" style="height:10px;width:40%;margin-bottom:6px;"></div><div class="browse-skeleton" style="height:14px;width:100%;margin-bottom:6px;"></div><div class="browse-skeleton" style="height:20px;width:50%;margin-bottom:8px;"></div><div class="browse-skeleton" style="height:34px;width:100%;"></div></div></div>`).join('')}
+</div>
+</div>
+</div>
+</div>`;
   }
 
-  renderHTML(paginatedData) {
-    const products = paginatedData.products || [];
-    const totalProducts = this.state.totalProducts;
-    const maxPrice = this._allProducts.length > 0 ? Math.max(...this._allProducts.map(p => p.price)) : 0;
+renderHTML(paginatedData) {
+const products = paginatedData.products || [];
+const totalProducts = this.state.totalProducts;
+const maxPrice = this._allProducts.length > 0 ? Math.max(...this._allProducts.map(p => p.price)) : 0;
+const categoryLabel = this.state.selectedCategories.length === 1
+? this.state.selectedCategories[0].charAt(0).toUpperCase() + this.state.selectedCategories[0].slice(1).replace(/-/g, ' ')
+: '';
 
-    return `
-      <div class="browse-page">
-        ${this.renderBreadcrumb()}
-        <div class="browse-page-inner">
-          ${this.renderSidebar(maxPrice)}
-          ${this.renderMobileDrawer(maxPrice)}
-          <div class="browse-mobile-overlay" id="browse-mobile-overlay" onclick="BrowsePage.closeMobileDrawer()"></div>
-          <main class="browse-main">
-            ${this.renderToolbar(products.length, totalProducts)}
-            ${this.renderActiveFilters()}
-            ${this.renderProductGrid(products)}
-            ${this.renderLoadMore(paginatedData)}
-            ${this.renderPagination(paginatedData)}
-          </main>
-        </div>
-      </div>`;
+return `
+<div class="browse-page">
+${this.renderBreadcrumb()}
+${this.renderCategoryBar()}
+<div class="browse-page-inner">
+${this.renderSidebar(maxPrice)}
+${this.renderMobileDrawer(maxPrice)}
+<div class="browse-mobile-overlay" id="browse-mobile-overlay" onclick="BrowsePage.closeMobileDrawer()"></div>
+<main class="browse-main">
+${this.renderToolbar(products.length, totalProducts)}
+${this.renderActiveFilters()}
+${this.renderProductGrid(products)}
+${this.renderLoadMore(paginatedData)}
+${this.renderPagination(paginatedData)}
+</main>
+</div>
+</div>`;
   }
 
-  renderBreadcrumb() {
-    const categoryLabel = this.state.selectedCategories.length === 1
-      ? this.state.selectedCategories[0].charAt(0).toUpperCase() + this.state.selectedCategories[0].slice(1).replace(/-/g, ' ')
-      : '';
-    return `
-    <nav class="browse-breadcrumb" aria-label="Breadcrumb">
-      <div class="browse-breadcrumb-inner">
-        <ol class="browse-breadcrumb-list">
-          <li class="browse-breadcrumb-item browse-breadcrumb-item--first">
-            <a href="#/" class="browse-breadcrumb-link">Home</a>
-          </li>
-          <li class="browse-breadcrumb-item">
-            <span class="browse-breadcrumb-arrow"></span>
-            <a href="#/browse" class="browse-breadcrumb-link">Browse</a>
-          </li>
-          ${categoryLabel ? `<li class="browse-breadcrumb-item">
-            <span class="browse-breadcrumb-arrow"></span>
-            <span class="browse-breadcrumb-current">${categoryLabel}</span>
-          </li>` : `<li class="browse-breadcrumb-item">
-            <span class="browse-breadcrumb-arrow"></span>
-            <span class="browse-breadcrumb-current">All Products</span>
-          </li>`}
-        </ol>
-      </div>
-    </nav>`;
-  }
+renderBreadcrumb() {
+const categoryLabel = this.state.selectedCategories.length === 1
+? this.state.selectedCategories[0].charAt(0).toUpperCase() + this.state.selectedCategories[0].slice(1).replace(/-/g, ' ')
+: '';
+return `
+<nav class="browse-breadcrumb" aria-label="Breadcrumb">
+<div class="browse-breadcrumb-inner">
+<ol class="browse-breadcrumb-list">
+<li class="browse-breadcrumb-item browse-breadcrumb-item--first">
+<a href="#/" class="browse-breadcrumb-link">Home</a>
+</li>
+<li class="browse-breadcrumb-item">
+<span class="browse-breadcrumb-arrow"></span>
+<a href="#/browse" class="browse-breadcrumb-link">Browse</a>
+</li>
+${categoryLabel ? `<li class="browse-breadcrumb-item">
+<span class="browse-breadcrumb-arrow"></span>
+<span class="browse-breadcrumb-current">${categoryLabel}</span>
+</li>` : `<li class="browse-breadcrumb-item">
+<span class="browse-breadcrumb-arrow"></span>
+<span class="browse-breadcrumb-current">All Products</span>
+</li>`}
+</ol>
+</div>
+</nav>`;
+}
 
-  renderSidebar(maxPrice) {
+renderCategoryBar() {
+const allActive = this.state.selectedCategories.length === 0;
+return `
+<div class="browse-categories">
+<div class="browse-categories-scroll">
+<button class="category-pill ${allActive ? 'active' : ''}" onclick="BrowsePage.clearCategoryFilters()">All<span class="pill-count">${this._allProducts.length}</span></button>
+${this.state.categories.map(cat => `
+<button class="category-pill ${this.state.selectedCategories.includes(cat.id) ? 'active' : ''}" onclick="BrowsePage.toggleCategory('${cat.id}')">${cat.name}<span class="pill-count">${cat.count}</span></button>
+`).join('')}
+</div>
+</div>`;
+}
+
+clearCategoryFilters() {
+this.state.selectedCategories = [];
+this.applyFilters();
+}
+
+renderSidebar(maxPrice) {
     const priceMin = this.state.priceRange.min > 0 ? this.state.priceRange.min : '';
     const priceMax = this.state.priceRange.max < Infinity ? this.state.priceRange.max : '';
     const sliderLeft = maxPrice > 0 ? (this.state.priceRange.min / maxPrice) * 100 : 0;
@@ -279,35 +302,35 @@ class BrowsePage {
       </div>`;
   }
 
-  renderToolbar(showing, total) {
-    return `
-      <div class="browse-toolbar">
-        <button class="browse-mobile-filter-btn" onclick="BrowsePage.openMobileDrawer()">
-          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 4h18M6 12h12M9 20h6"/></svg>
-          Filters
-        </button>
-        <div class="browse-search">
-          <svg class="browse-search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input type="text" class="browse-search-input" id="browse-search-input" placeholder="Search products..." value="${this.state.searchQuery}" onkeyup="BrowsePage.handleSearchKeyup(event)">
-        </div>
-        <span class="browse-results-count">Showing <strong>${showing}</strong> of <strong>${total}</strong> products</span>
-        <div class="browse-toolbar-right">
-          <div class="browse-sort">
-            <span class="browse-sort-label">Sort:</span>
-            <select class="browse-sort-select" id="browse-sort-select" onchange="BrowsePage.sortBy(this.value)">
-              ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
-            </select>
-          </div>
-          <div class="browse-view-toggle">
-            <button class="browse-view-btn ${this.state.viewMode === 'grid' ? 'active' : ''}" onclick="BrowsePage.toggleView('grid')" title="Grid view">
-              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-            </button>
-            <button class="browse-view-btn ${this.state.viewMode === 'list' ? 'active' : ''}" onclick="BrowsePage.toggleView('list')" title="List view">
-              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-            </button>
-          </div>
-        </div>
-      </div>`;
+renderToolbar(showing, total) {
+return `
+<div class="browse-toolbar">
+<button class="browse-mobile-filter-btn" onclick="BrowsePage.openMobileDrawer()">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16" height="16"><path d="M3 4h18M6 12h12M9 20h6"/></svg>
+Filters
+</button>
+<div class="browse-search">
+<svg class="browse-search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="18" height="18"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+<input type="text" class="browse-search-input" id="browse-search-input" placeholder="Search products..." value="${this.state.searchQuery}" onkeyup="BrowsePage.handleSearchKeyup(event)">
+</div>
+<span class="browse-results-count"><strong>${showing}</strong> of <strong>${total}</strong> results</span>
+<div class="browse-toolbar-right">
+<div class="browse-sort">
+<span class="browse-sort-label">Sort by</span>
+<select class="browse-sort-select" id="browse-sort-select" onchange="BrowsePage.sortBy(this.value)">
+${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
+</select>
+</div>
+<div class="browse-view-toggle">
+<button class="browse-view-btn ${this.state.viewMode === 'grid' ? 'active' : ''}" onclick="BrowsePage.toggleView('grid')" title="Grid view">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16" height="16"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+</button>
+<button class="browse-view-btn ${this.state.viewMode === 'list' ? 'active' : ''}" onclick="BrowsePage.toggleView('list')" title="List view">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16" height="16"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+</div>
+</div>
+</div>`;
   }
 
   renderActiveFilters() {
@@ -374,30 +397,31 @@ class BrowsePage {
     const categoryLabel = product.category
       ? product.category.charAt(0).toUpperCase() + product.category.slice(1).replace(/-/g, ' ')
       : 'Item';
+    const sellerRating = product.seller?.rating || product.sellerRating || null;
 
     return `
-      <div class="browse-product-card" onclick="Pages.renderProductDetail('${product.id}')">
-        <div class="browse-product-image-wrap">
-          <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy">
-          <div class="browse-product-badges">
-            <span class="browse-product-badge ${product.condition || 'good'}">${conditionLabel}</span>
-          </div>
-          <button class="browse-product-wishlist-btn ${isInWishlist ? 'active' : ''}" onclick="event.stopPropagation(); Pages.toggleWishlist(event, '${product.id}')">
-            ${isInWishlist ? (Icons.heart || '') : (Icons.heartOutline || '')}
-          </button>
+    <div class="browse-product-card" onclick="Pages.renderProductDetail('${product.id}')">
+      <div class="browse-product-image-wrap">
+        <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy">
+        <div class="browse-product-badges">
+          <span class="browse-product-badge ${product.condition || 'good'}">${conditionLabel}</span>
         </div>
-        <div class="browse-product-info">
-          <div class="browse-product-category">${categoryLabel}</div>
-          <h3 class="browse-product-title">${product.title}</h3>
-          <div class="browse-product-price">GHS ${product.price?.toLocaleString() || '0'}</div>
-          <div class="browse-product-seller">
-            <div class="browse-product-seller-avatar">${initials}</div>
-<span class="browse-product-seller-name">${product.seller?.fullName || product.sellerName || product.seller?.name || 'Unknown'}</span>
-      ${product.seller?.rating ? `<span style="font-size:var(--text-xs);color:var(--secondary);margin-left:auto;">${Icons.star || ''} ${product.seller.rating}</span>` : product.sellerRating ? `<span style="font-size:var(--text-xs);color:var(--secondary);margin-left:auto;">${Icons.star || ''} ${product.sellerRating}</span>` : ''}
-          </div>
-          <button class="browse-product-add-cart-btn" onclick="event.stopPropagation(); cartManager?.add(${JSON.stringify(product).replace(/"/g, '&quot;')}); Pages.updateCartBadge();">Add to Cart</button>
+        <button class="browse-product-wishlist-btn ${isInWishlist ? 'active' : ''}" onclick="event.stopPropagation(); Pages.toggleWishlist(event, '${product.id}')">
+          ${isInWishlist ? (Icons.heart || '') : (Icons.heartOutline || '')}
+        </button>
+      </div>
+      <div class="browse-product-info">
+        <div class="browse-product-category">${categoryLabel}</div>
+        <h3 class="browse-product-title">${product.title}</h3>
+        <div class="browse-product-price">GH₵ ${product.price?.toLocaleString() || '0'}</div>
+        <div class="browse-product-seller">
+          <div class="browse-product-seller-avatar">${initials}</div>
+          <span class="browse-product-seller-name">${product.seller?.fullName || product.sellerName || product.seller?.name || 'Unknown'}</span>
+          ${sellerRating ? `<span class="browse-product-seller-rating">${Icons.star || ''} ${sellerRating}</span>` : ''}
         </div>
-      </div>`;
+        <button class="browse-product-add-cart-btn" onclick="event.stopPropagation(); cartManager?.add(${JSON.stringify(product).replace(/"/g, '&quot;')}); Pages.updateCartBadge();">Add to Cart</button>
+      </div>
+    </div>`;
   }
 
   renderLoadMore(paginatedData) {
@@ -647,20 +671,21 @@ class BrowsePage {
 const browsePage = new BrowsePage();
 
 const BrowsePageMethods = {
-  renderBrowse(filters) { return browsePage.render(filters); },
-  filterByCategory(catId) { return browsePage.toggleCategory(catId); },
-  applyBrowseFilters() { return browsePage.applyFilters(); },
-  applyPriceFilter() { return browsePage.applyPriceFilter(); },
-  resetConditionFilter() { browsePage.state.selectedConditions = []; return browsePage.applyFilters(); },
-  resetPriceFilter() { browsePage.state.priceRange = { min: 0, max: Infinity }; return browsePage.applyFilters(); },
-  toggleMobileFilters() { return browsePage.state.mobileDrawerOpen ? browsePage.closeMobileDrawer() : browsePage.openMobileDrawer(); },
-  setRatingFilter(rating) { productsManager.filter({ minRating: rating }); return browsePage.render(); },
-  renderProductCardModern(product) { return browsePage.renderProductCard(product); },
-  renderBBProductCard(product) { return browsePage.renderProductCard(product); },
-  renderProductCard(product) { return browsePage.renderProductCard(product); },
-  renderProductDetail(productId) { return Pages.renderProductDetail(productId); },
-  renderBrowseProducts() { return browsePage.applyFilters(); },
-  renderRecentlyViewedSection() { return ''; },
+renderBrowse(filters) { return browsePage.render(filters); },
+filterByCategory(catId) { return browsePage.toggleCategory(catId); },
+applyBrowseFilters() { return browsePage.applyFilters(); },
+applyPriceFilter() { return browsePage.applyPriceFilter(); },
+clearCategoryFilters() { return browsePage.clearCategoryFilters(); },
+resetConditionFilter() { browsePage.state.selectedConditions = []; return browsePage.applyFilters(); },
+resetPriceFilter() { browsePage.state.priceRange = { min: 0, max: Infinity }; return browsePage.applyFilters(); },
+toggleMobileFilters() { return browsePage.state.mobileDrawerOpen ? browsePage.closeMobileDrawer() : browsePage.openMobileDrawer(); },
+setRatingFilter(rating) { productsManager.filter({ minRating: rating }); return browsePage.render(); },
+renderProductCardModern(product) { return browsePage.renderProductCard(product); },
+renderBBProductCard(product) { return browsePage.renderProductCard(product); },
+renderProductCard(product) { return browsePage.renderProductCard(product); },
+renderProductDetail(productId) { return Pages.renderProductDetail(productId); },
+renderBrowseProducts() { return browsePage.applyFilters(); },
+renderRecentlyViewedSection() { return ''; },
 };
 
 window.BrowsePageMethods = BrowsePageMethods;

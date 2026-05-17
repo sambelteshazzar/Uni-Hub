@@ -32,10 +32,17 @@
             : 'Pages.showUniversityComingSoon(\'' + uni.name + '\'); return false;';
           const comingSoonBadge = isActive ? '' : '<span style="position:absolute;top:0.5rem;right:0.5rem;background:#eab308;color:#000;font-size:0.65rem;font-weight:600;padding:0.2rem 0.4rem;border-radius:0.25rem;text-transform:uppercase;letter-spacing:0.05em;">Coming Soon</span>';
           const countText = isActive ? (100 + i * 50) + '+ items' : 'Not yet available';
-          return (
-            '<div class="bb-category-card" style="position:relative;' + (isActive ? '' : 'opacity:0.7;cursor:default;') + '" onclick="' + clickHandler + '">' +
-            comingSoonBadge +
-            '<div class="bb-category-icon"><svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg></div>' +
+const uniColors = ['#0046be', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899', '#ef4444', '#6b7280'];
+const uniColor = uniColors[i % uniColors.length];
+const uniIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="' + uniColor + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>';
+const uniBg = uniColor.replace('#', '');
+const r = parseInt(uniBg.substring(0,2),16);
+const g = parseInt(uniBg.substring(2,4),16);
+const b = parseInt(uniBg.substring(4,6),16);
+return (
+'<div class="bb-category-card" style="position:relative;' + (isActive ? '' : 'opacity:0.7;cursor:default;') + '" onclick="' + clickHandler + '">' +
+comingSoonBadge +
+'<div class="bb-category-icon" style="background:rgba(' + r + ',' + g + ',' + b + ',0.1)">' + uniIcon + '</div>' +
             '<p class="bb-category-name">' +
             uni.name +
             '</p>' +
@@ -51,35 +58,45 @@
     // Build categories HTML
     let categoriesHTML = '';
     if (config.categories && config.categories.length > 0) {
-      const icons = {
-        textbooks: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M4 6h16"/><path d="M4 10h16"/></svg>',
-        electronics: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
-        dorm: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>',
-        clothing: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>',
-        sports: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><circle cx="12" cy="12" r="10"/><path d="M12 2v20"/><path d="M2 12h20"/><path d="M4.93 4.93l14.14 14.14"/><path d="M19.07 4.93L4.93 19.07"/></svg>',
-        furniture: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/><path d="M3 11v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v2H7v-2a2 2 0 0 0-4 0z"/><path d="M5 18v2"/><path d="M19 18v2"/></svg>',
-        other: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27,6.96 12,12.01 20.73,6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
-      };
-      categoriesHTML = config.categories
-        .map(function (cat) {
-          const icon = icons[cat.id] || '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27,6.96 12,12.01 20.73,6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
-          return (
-            '<a href="#/browse?category=' +
-            cat.id +
-            '" class="bb-category-card">' +
-            '<div class="bb-category-icon">' +
-            icon +
-            '</div>' +
-            '<p class="bb-category-name">' +
-            cat.name +
-            '</p>' +
-            '<p class="bb-category-count">' +
-            (cat.count || '50+') +
-            ' items</p>' +
-            '</a>'
-          );
-        })
-        .join('');
+const icons = {
+textbooks: '<svg viewBox="0 0 24 24" fill="none" stroke="#0046be" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+electronics: '<svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+dorm: '<svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>',
+clothing: '<svg viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>',
+sports: '<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>',
+furniture: '<svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/><path d="M3 11v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v2H7v-2a2 2 0 0 0-4 0z"/><path d="M5 18v2"/><path d="M19 18v2"/></svg>',
+other: '<svg viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27,6.96 12,12.01 20.73,6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>'
+};
+categoriesHTML = config.categories
+.map(function (cat) {
+const icon = icons[cat.id] || icons.other;
+const iconBgs = {
+textbooks: 'rgba(0,70,190,0.1)',
+electronics: 'rgba(139,92,246,0.1)',
+dorm: 'rgba(245,158,11,0.1)',
+clothing: 'rgba(236,72,153,0.1)',
+sports: 'rgba(239,68,68,0.1)',
+furniture: 'rgba(16,185,129,0.1)',
+other: 'rgba(107,114,128,0.1)'
+};
+const iconBg = iconBgs[cat.id] || iconBgs.other;
+return (
+'<a href="#/browse?category=' +
+cat.id +
+'" class="bb-category-card">' +
+'<div class="bb-category-icon" style="background:' + iconBg + '">' +
+icon +
+'</div>' +
+'<p class="bb-category-name">' +
+cat.name +
+'</p>' +
+'<p class="bb-category-count">' +
+(cat.count || '50+') +
+' items</p>' +
+'</a>'
+);
+})
+.join('');
     }
 
     mainContent.innerHTML =
@@ -138,13 +155,13 @@
       '<p class="bb-section-subtitle">Find exactly what you need for campus life</p>' +
       '</div>' +
       '<div class="bb-categories-grid">' +
-      (categoriesHTML ||
-        '<a href="#/browse?category=textbooks" class="bb-category-card"><div class="bb-category-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M4 6h16"/><path d="M4 10h16"/></svg></div><p class="bb-category-name">Textbooks</p><p class="bb-category-count">120+ items</p></a>' +
-        '<a href="#/browse?category=electronics" class="bb-category-card"><div class="bb-category-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><p class="bb-category-name">Electronics</p><p class="bb-category-count">85+ items</p></a>' +
-        '<a href="#/browse?category=dorm" class="bb-category-card"><div class="bb-category-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg></div><p class="bb-category-name">Dorm &amp; Room</p><p class="bb-category-count">95+ items</p></a>' +
-        '<a href="#/browse?category=furniture" class="bb-category-card"><div class="bb-category-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/><path d="M3 11v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v2H7v-2a2 2 0 0 0-4 0z"/><path d="M5 18v2"/><path d="M19 18v2"/></svg></div><p class="bb-category-name">Furniture</p><p class="bb-category-count">45+ items</p></a>' +
-        '<a href="#/browse?category=clothing" class="bb-category-card"><div class="bb-category-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg></div><p class="bb-category-name">Clothing</p><p class="bb-category-count">60+ items</p></a>' +
-        '<a href="#/browse?category=sports" class="bb-category-card"><div class="bb-category-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><circle cx="12" cy="12" r="10"/><path d="M12 2v20"/><path d="M2 12h20"/><path d="M4.93 4.93l14.14 14.14"/><path d="M19.07 4.93L4.93 19.07"/></svg></div><p class="bb-category-name">Sports</p><p class="bb-category-count">35+ items</p></a>') +
+(categoriesHTML ||
+'<a href="#/browse?category=textbooks" class="bb-category-card"><div class="bb-category-icon" style="background:rgba(0,70,190,0.1)"><svg viewBox="0 0 24 24" fill="none" stroke="#0046be" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div><p class="bb-category-name">Textbooks</p><p class="bb-category-count">120+ items</p></a>' +
+'<a href="#/browse?category=electronics" class="bb-category-card"><div class="bb-category-icon" style="background:rgba(139,92,246,0.1)"><svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><p class="bb-category-name">Electronics</p><p class="bb-category-count">85+ items</p></a>' +
+'<a href="#/browse?category=dorm" class="bb-category-card"><div class="bb-category-icon" style="background:rgba(245,158,11,0.1)"><svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg></div><p class="bb-category-name">Dorm &amp; Room</p><p class="bb-category-count">95+ items</p></a>' +
+'<a href="#/browse?category=furniture" class="bb-category-card"><div class="bb-category-icon" style="background:rgba(16,185,129,0.1)"><svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/><path d="M3 11v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v2H7v-2a2 2 0 0 0-4 0z"/><path d="M5 18v2"/><path d="M19 18v2"/></svg></div><p class="bb-category-name">Furniture</p><p class="bb-category-count">45+ items</p></a>' +
+'<a href="#/browse?category=clothing" class="bb-category-card"><div class="bb-category-icon" style="background:rgba(236,72,153,0.1)"><svg viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg></div><p class="bb-category-name">Clothing</p><p class="bb-category-count">60+ items</p></a>' +
+'<a href="#/browse?category=sports" class="bb-category-card"><div class="bb-category-icon" style="background:rgba(239,68,68,0.1)"><svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></div><p class="bb-category-name">Sports</p><p class="bb-category-count">35+ items</p></a>') +
       '</div>' +
       '</div>' +
       '</section>' +
@@ -167,15 +184,15 @@
       '</div>' +
       '<div class="bb-covered-gallery">' +
       '<div class="bb-covered-photo bb-covered-photo--main">' +
-      '<img src="https://images.unsplash.com/photo-1523240795612-9a054b0c1b70?w=600&h=750&fit=crop&crop=faces&crop=top" alt="Students meeting and collaborating on campus" loading="lazy">' +
+      '<img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?w=600&h=750&fit=crop" alt="Students meeting and collaborating on campus" loading="lazy">' +
       '<div class="bb-covered-photo-label">Connect on campus</div>' +
       '</div>' +
       '<div class="bb-covered-photo bb-covered-photo--top">' +
-      '<img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=400&fit=crop&crop=faces&crop=top" alt="Students studying together and laughing" loading="lazy">' +
+      '<img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=400&fit=crop" alt="Students studying together and laughing" loading="lazy">' +
       '<div class="bb-covered-photo-label">Study together</div>' +
       '</div>' +
       '<div class="bb-covered-photo bb-covered-photo--bottom">' +
-      '<img src="https://images.unsplash.com/photo-1529156069898-4996e398f3d6?w=400&h=400&fit=crop&crop=faces" alt="Friends high-fiving after a successful deal" loading="lazy">' +
+      '<img src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=400&h=400&fit=crop" alt="Friends teaming up after a successful deal" loading="lazy">' +
       '<div class="bb-covered-photo-label">Deal done!</div>' +
       '</div>' +
       '</div>' +
@@ -209,13 +226,13 @@
       '<p class="bb-section-subtitle">Browse items from verified students at your campus</p>' +
       '</div>' +
       '<div class="bb-categories-grid">' +
-      (universitiesHTML ||
-        '<div class="bb-category-card" onclick="Pages.renderBrowse(); return false;"><div class="bb-category-icon"><svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg></div><p class="bb-category-name">University of Ghana</p><p class="bb-category-count">350+ items</p></div>' +
-        '<div class="bb-category-card" onclick="Pages.renderBrowse(); return false;"><div class="bb-category-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 21v-6h6v6"/><path d="M10 9h4"/><path d="M10 13h4"/></svg></div><p class="bb-category-name">KNUST</p><p class="bb-category-count">220+ items</p></div>' +
-        '<div class="bb-category-card" onclick="Pages.renderBrowse(); return false;"><div class="bb-category-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div><p class="bb-category-name">University of Cape Coast</p><p class="bb-category-count">180+ items</p></div>' +
-        '<div class="bb-category-card" onclick="Pages.renderBrowse(); return false;"><div class="bb-category-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 21v-6h6v6"/><path d="M10 9h4"/><path d="M10 13h4"/></svg></div><p class="bb-category-name">Ashesi University</p><p class="bb-category-count">95+ items</p></div>') +
-      '<div class="bb-category-card" onclick="Pages.renderBrowse(); return false;" style="border: 2px dashed #0046be;">' +
-      '<div class="bb-category-icon" style="font-size: var(--text-2xl);">+</div>' +
+(universitiesHTML ||
+'<div class="bb-category-card" onclick="Pages.renderBrowse(); return false;"><div class="bb-category-icon" style="background:rgba(0,70,190,0.1)"><svg viewBox="0 0 24 24" fill="none" stroke="#0046be" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg></div><p class="bb-category-name">University of Ghana</p><p class="bb-category-count">350+ items</p></div>' +
+'<div class="bb-category-card" onclick="Pages.renderBrowse(); return false;"><div class="bb-category-icon" style="background:rgba(139,92,246,0.1)"><svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 21v-6h6v6"/><path d="M10 9h4"/><path d="M10 13h4"/></svg></div><p class="bb-category-name">KNUST</p><p class="bb-category-count">220+ items</p></div>' +
+'<div class="bb-category-card" onclick="Pages.renderBrowse(); return false;"><div class="bb-category-icon" style="background:rgba(16,185,129,0.1)"><svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div><p class="bb-category-name">University of Cape Coast</p><p class="bb-category-count">180+ items</p></div>' +
+'<div class="bb-category-card" onclick="Pages.renderBrowse(); return false;"><div class="bb-category-icon" style="background:rgba(245,158,11,0.1)"><svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M12 2L2 8l10 6 10-6-10-6z"/><path d="M2 17l10 6 10-6"/><path d="M2 12l10 6 10-6"/></svg></div><p class="bb-category-name">Ashesi University</p><p class="bb-category-count">95+ items</p></div>') +
+'<div class="bb-category-card" onclick="Pages.renderBrowse(); return false;" style="border: 2px dashed #0046be;">' +
+'<div class="bb-category-icon" style="background:rgba(0,70,190,0.08);font-size:var(--text-xl);color:#0046be;font-weight:700;">+</div>' +
       '<p class="bb-category-name" style="color: #0046be;">View All Universities</p>' +
       '<p class="bb-category-count">7 total</p>' +
       '</div>' +
