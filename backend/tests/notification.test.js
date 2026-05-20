@@ -42,14 +42,14 @@ describe('Notification API', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data).toHaveProperty('count');
+      expect(res.body.data).toHaveProperty('unreadCount');
     });
   });
 
-  describe('PUT /api/notifications/mark-all-read', () => {
+  describe('PUT /api/notifications/read-all', () => {
     it('should mark all notifications as read', async () => {
       const res = await request(app)
-        .put('/api/notifications/mark-all-read')
+        .put('/api/notifications/read-all')
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(200);
@@ -57,10 +57,10 @@ describe('Notification API', () => {
     });
   });
 
-  describe('DELETE /api/notifications', () => {
+  describe('DELETE /api/notifications/all', () => {
     it('should delete all notifications', async () => {
       const res = await request(app)
-        .delete('/api/notifications')
+        .delete('/api/notifications/all')
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(200);

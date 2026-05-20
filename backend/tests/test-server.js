@@ -126,11 +126,11 @@ const createTestApp = () => {
       });
     }
 
-    // Default error
-    res.status(err.status || 500).json({
-      success: false,
-      error: err.message || 'Internal server error',
-    });
+  // Default error
+  res.status(err.statusCode || err.status || 500).json({
+    success: false,
+    error: err.message || 'Internal server error',
+  });
   });
 
   return app;

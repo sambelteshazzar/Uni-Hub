@@ -81,6 +81,8 @@ const optionalAuth = async (req, res, next) => {
           delete mapped.password;
           delete mapped.resetToken;
           delete mapped.resetTokenExpiry;
+          delete mapped.passwordChangedAt;
+          delete mapped.bannedBy;
           mapped._id = mapped.id;
           req.user = mapped;
         } else {
