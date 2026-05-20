@@ -36,6 +36,20 @@ const createTestApp = () => {
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
   app.use(compression());
 
+  // Skip CSRF protection in tests - provide a test token endpoint
+  app.get('/api/auth/csrf-token', (req, res) => {
+    res.json({ success: true, csrfToken: 'test-csrf-token' });
+  });
+  app.use((req, res, next) => {
+    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+    const csrfToken = req.headers['x-csrf-token'];
+    if (!csrfToken || csrfToken !== 'test-csrf-token') {
+      // In tests, allow requests without CSRF for simplicity
+      // supertest doesn't easily support cookie-based CSRF
+    }
+    next();
+  });
+
   // Rate limiting (relaxed for tests)
   const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,

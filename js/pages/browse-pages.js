@@ -134,50 +134,105 @@ class BrowsePage {
       .map(id => ({ id, name: id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, ' '), count: uniCounts[id] }));
   }
 
-renderSkeleton() {
-return `
-<div class="browse-page">
-<div class="browse-breadcrumb"><div class="browse-breadcrumb-inner"><div class="browse-skeleton" style="height:2rem;width:180px;border-radius:4px;"></div></div></div>
-<div class="browse-categories"><div class="browse-categories-scroll">${Array(6).fill('').map(() => '<div class="browse-skeleton" style="height:2.25rem;width:90px;border-radius:0;flex-shrink:0;"></div>').join('')}</div></div>
-<div class="browse-page-inner">
-<aside class="browse-sidebar">
-${Array(3).fill('').map(() => `<div class="browse-filter-group"><div class="browse-skeleton" style="height:14px;width:80px;margin-bottom:12px;"></div>${Array(4).fill('').map(() => '<div class="browse-skeleton" style="height:20px;width:90%;margin-bottom:6px;"></div>').join('')}</div>`).join('')}
-</aside>
-<div class="browse-main">
-<div class="browse-toolbar"><div class="browse-skeleton" style="height:40px;width:100%;max-width:420px;border-radius:6px;"></div></div>
-<div class="browse-product-grid" style="grid-template-columns:repeat(3,1fr);gap:1px;background:#e5e5e5;border-radius:8px;overflow:hidden;">
-${Array(6).fill('').map(() => `<div style="background:#fff;"><div class="browse-skeleton" style="aspect-ratio:1;border-radius:0;"></div><div style="padding:12px 16px 16px;"><div class="browse-skeleton" style="height:10px;width:40%;margin-bottom:6px;"></div><div class="browse-skeleton" style="height:14px;width:100%;margin-bottom:6px;"></div><div class="browse-skeleton" style="height:20px;width:50%;margin-bottom:8px;"></div><div class="browse-skeleton" style="height:34px;width:100%;"></div></div></div>`).join('')}
-</div>
-</div>
-</div>
-</div>`;
+  renderSkeleton() {
+    return `
+    <div class="browse-page">
+      <div class="browse-hero" style="min-height:180px;">
+        <div class="browse-hero-content" style="max-width:var(--max-content-width);margin:0 auto;width:100%;padding:0 var(--space-xl);">
+          <div class="browse-hero-text" style="opacity:0.6;">
+            <div class="skeleton" style="height:12px;width:120px;background:rgba(255,255,255,0.15);border-radius:100px;margin-bottom:1rem;"></div>
+            <div class="skeleton" style="height:36px;width:320px;background:rgba(255,255,255,0.15);border-radius:8px;margin-bottom:0.75rem;"></div>
+            <div class="skeleton" style="height:18px;width:260px;background:rgba(255,255,255,0.1);border-radius:4px;margin-bottom:1.5rem;"></div>
+            <div style="display:flex;gap:0.75rem;">
+              <div class="skeleton" style="height:40px;width:140px;background:rgba(255,206,0,0.15);border-radius:10px;"></div>
+              <div class="skeleton" style="height:40px;width:120px;background:rgba(255,255,255,0.1);border-radius:10px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="browse-categories"><div class="browse-categories-scroll">${Array(6).fill('').map(() => '<div class="browse-skeleton" style="height:2.25rem;width:90px;flex-shrink:0;"></div>').join('')}</div></div>
+      <div class="browse-breadcrumb"><div class="browse-breadcrumb-inner"><div class="browse-skeleton" style="height:16px;width:180px;border-radius:4px;"></div></div></div>
+      <div class="browse-page-inner">
+        <aside class="browse-sidebar">
+          ${Array(3).fill('').map(() => `<div class="browse-filter-group"><div class="browse-skeleton" style="height:14px;width:80px;margin-bottom:12px;"></div>${Array(4).fill('').map(() => '<div class="browse-skeleton" style="height:20px;width:90%;margin-bottom:6px;"></div>').join('')}</div>`).join('')}
+        </aside>
+        <div class="browse-main">
+          <div class="browse-toolbar"><div class="browse-skeleton" style="height:40px;width:100%;max-width:420px;border-radius:6px;"></div></div>
+          <div class="browse-product-grid" style="grid-template-columns:repeat(3,1fr);gap:1px;background:#e5e5e5;border-radius:8px;overflow:hidden;">
+            ${Array(6).fill('').map(() => `<div style="background:#fff;"><div class="browse-skeleton" style="aspect-ratio:1;border-radius:0;"></div><div style="padding:12px 16px 16px;"><div class="browse-skeleton" style="height:10px;width:40%;margin-bottom:6px;"></div><div class="browse-skeleton" style="height:14px;width:100%;margin-bottom:6px;"></div><div class="browse-skeleton" style="height:20px;width:50%;margin-bottom:8px;"></div><div class="browse-skeleton" style="height:34px;width:100%;"></div></div></div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>`;
   }
 
-renderHTML(paginatedData) {
-const products = paginatedData.products || [];
-const totalProducts = this.state.totalProducts;
-const maxPrice = this._allProducts.length > 0 ? Math.max(...this._allProducts.map(p => p.price)) : 0;
-const categoryLabel = this.state.selectedCategories.length === 1
-? this.state.selectedCategories[0].charAt(0).toUpperCase() + this.state.selectedCategories[0].slice(1).replace(/-/g, ' ')
-: '';
+  renderHTML(paginatedData) {
+    const products = paginatedData.products || [];
+    const totalProducts = this.state.totalProducts;
+    const maxPrice = this._allProducts.length > 0 ? Math.max(...this._allProducts.map(p => p.price)) : 0;
 
-return `
-<div class="browse-page">
-${this.renderBreadcrumb()}
-${this.renderCategoryBar()}
-<div class="browse-page-inner">
-${this.renderSidebar(maxPrice)}
-${this.renderMobileDrawer(maxPrice)}
-<div class="browse-mobile-overlay" id="browse-mobile-overlay" onclick="BrowsePage.closeMobileDrawer()"></div>
-<main class="browse-main">
-${this.renderToolbar(products.length, totalProducts)}
-${this.renderActiveFilters()}
-${this.renderProductGrid(products)}
-${this.renderLoadMore(paginatedData)}
-${this.renderPagination(paginatedData)}
-</main>
-</div>
-</div>`;
+    return `
+    <div class="browse-page">
+      ${this.renderHero()}
+      ${this.renderCategoryBar()}
+      ${this.renderBreadcrumb()}
+      <div class="browse-page-inner">
+        ${this.renderSidebar(maxPrice)}
+        ${this.renderMobileDrawer(maxPrice)}
+        <div class="browse-mobile-overlay" id="browse-mobile-overlay" onclick="BrowsePage.closeMobileDrawer()"></div>
+        <main class="browse-main">
+          ${this.renderToolbar(products.length, totalProducts)}
+          ${this.renderActiveFilters()}
+          ${this.renderProductGrid(products)}
+          ${this.renderLoadMore(paginatedData)}
+          ${this.renderPagination(paginatedData)}
+        </main>
+      </div>
+    </div>`;
+  }
+
+  renderHero() {
+    const totalProducts = this.state.totalProducts || this._allProducts.length;
+    const featured = this._allProducts.slice(0, 6);
+    return `
+    <div class="browse-hero">
+      <div class="browse-hero-content">
+        <div class="browse-hero-text">
+          <div class="browse-hero-badge">
+            ${Icons.graduation || ''}
+            Student Marketplace
+          </div>
+          <h1 class="browse-hero-title">Discover <span class="browse-hero-title-accent">Student</span> Deals</h1>
+          <p class="browse-hero-subtitle">Get amazing items for students — from textbooks and electronics to fashion and hostel essentials, all at unbeatable campus prices.</p>
+
+          <div class="browse-hero-stats">
+            <div class="browse-hero-stat">
+              <div class="browse-hero-stat-icon">${Icons.package || ''}</div>
+              <span><span class="browse-hero-stat-strong">${totalProducts}+</span> Items listed</span>
+            </div>
+            <div class="browse-hero-stat">
+              <div class="browse-hero-stat-icon">${Icons.graduation || ''}</div>
+              <span><span class="browse-hero-stat-strong">Verified</span> Students only</span>
+            </div>
+            <div class="browse-hero-stat">
+              <div class="browse-hero-stat-icon">${Icons.truck || ''}</div>
+              <span><span class="browse-hero-stat-strong">Campus</span> Delivery available</span>
+            </div>
+          </div>
+        </div>
+        ${featured.length >= 3 ? `
+        <div class="browse-hero-visual">
+          <div class="browse-hero-visual-grid">
+            ${featured.slice(0, 6).map((p, i) => `
+            <div class="browse-hero-visual-item">
+              <img src="${p.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${p.title}" loading="lazy">
+            </div>
+            `).join('')}
+          </div>
+        </div>
+        ` : ''}
+      </div>
+    </div>`;
   }
 
 renderBreadcrumb() {

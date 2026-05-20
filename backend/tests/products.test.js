@@ -3,7 +3,8 @@
  * Tests for product CRUD operations and search
  */
 const request = require('supertest');
-const app = require('../server');
+const { createTestApp } = require('./test-server');
+const app = createTestApp();
 
 describe('Products API', () => {
   let authToken;

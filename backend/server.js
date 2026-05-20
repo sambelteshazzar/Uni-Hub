@@ -309,7 +309,7 @@ app.use((err, _req, res, _next) => {
   }
 
   // Default error
-  res.status(err.status || 500).json({
+  res.status(err.statusCode || err.status || 500).json({
     success: false,
     error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error',
   });

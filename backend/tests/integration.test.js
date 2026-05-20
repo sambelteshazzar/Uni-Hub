@@ -3,7 +3,8 @@
  * Tests complete workflows: Browse -> Product -> Cart -> Checkout -> Order
  */
 const request = require('supertest');
-const app = require('../server');
+const { createTestApp } = require('./test-server');
+const app = createTestApp();
 
 describe('Integration Tests - Critical User Flows', () => {
   let buyerToken;

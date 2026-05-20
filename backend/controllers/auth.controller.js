@@ -7,7 +7,7 @@ const { sendPasswordResetEmail } = require('../utils/emailService');
 const logActivity = require('../utils/logActivity');
 
 function getPublicProfile(user) {
-  const { password: _, resetToken: __, resetTokenExpiry: ___, ...profile } = user;
+  const { password: _, resetToken: __, resetTokenExpiry: ___, passwordChangedAt: ____, bannedBy: _____, ...profile } = user;
   profile._id = profile.id;
   return profile;
 }

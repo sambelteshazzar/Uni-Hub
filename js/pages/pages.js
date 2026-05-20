@@ -240,13 +240,22 @@ static showOriginalNavFooter () {
   /**
    * Render Browse Page Loading Skeleton
    */
- static renderBrowseSkeleton () {
- return `
- <div class="browse-modern">
- <div class="browse-hero" style="padding: 2rem;">
- <div class="skeleton" style="height: 40px; width: 300px; background: rgba(255,255,255,0.2); border-radius: 8px; margin-bottom: 1rem;"></div>
- <div class="skeleton" style="height: 20px; width: 200px; background: rgba(255,255,255,0.2); border-radius: 4px;"></div>
- </div>
+  static renderBrowseSkeleton () {
+  return `
+  <div class="browse-modern">
+  <div class="browse-hero" style="min-height:180px;">
+  <div class="browse-hero-content" style="max-width:var(--max-content-width);margin:0 auto;width:100%;padding:0 var(--space-xl);">
+  <div class="browse-hero-text" style="opacity:0.6;">
+  <div class="skeleton" style="height:12px;width:120px;background:rgba(255,255,255,0.15);border-radius:100px;margin-bottom:1rem;"></div>
+  <div class="skeleton" style="height:36px;width:320px;background:rgba(255,255,255,0.15);border-radius:8px;margin-bottom:0.75rem;"></div>
+  <div class="skeleton" style="height:18px;width:280px;background:rgba(255,255,255,0.1);border-radius:4px;margin-bottom:1.5rem;"></div>
+  <div style="display:flex;gap:0.75rem;">
+  <div class="skeleton" style="height:40px;width:140px;background:rgba(255,206,0,0.15);border-radius:10px;"></div>
+  <div class="skeleton" style="height:40px;width:120px;background:rgba(255,255,255,0.1);border-radius:10px;"></div>
+  </div>
+  </div>
+  </div>
+  </div>
  <div class="browse-container">
  <div class="products-grid-modern">
             ${Array(6).fill().map(() => `
@@ -322,29 +331,36 @@ static showOriginalNavFooter () {
 
  const selectedCondCount = selectedConditions.length;
 
- return `
- <div class="browse-modern">
- <!-- Hero Banner -->
- <div class="browse-hero">
- <div class="browse-hero-content">
- <h1 class="browse-hero-title">Discover Student Deals</h1>
- <p class="browse-hero-subtitle">Find amazing items from students at your university</p>
- <div class="browse-hero-stats">
- <div class="browse-hero-stat">
- <div class="browse-hero-stat-icon">${Icons.package}</div>
- <span>${totalProducts}+ items listed</span>
- </div>
- <div class="browse-hero-stat">
- <div class="browse-hero-stat-icon">${Icons.graduation}</div>
- <span>Verified students only</span>
- </div>
- <div class="browse-hero-stat">
- <div class="browse-hero-stat-icon">${Icons.truck}</div>
- <span>Campus delivery available</span>
- </div>
- </div>
- </div>
- </div>
+  return `
+  <div class="browse-modern">
+  <!-- Hero Banner -->
+  <div class="browse-hero">
+  <div class="browse-hero-content">
+  <div class="browse-hero-text">
+  <div class="browse-hero-badge">
+  ${Icons.graduation || ''}
+  Student Marketplace
+  </div>
+  <h1 class="browse-hero-title">Discover <span class="browse-hero-title-accent">Student</span> Deals</h1>
+  <p class="browse-hero-subtitle">Get amazing items for students — from textbooks and electronics to fashion and hostel essentials, all at unbeatable campus prices.</p>
+
+  <div class="browse-hero-stats">
+  <div class="browse-hero-stat">
+  <div class="browse-hero-stat-icon">${Icons.package}</div>
+  <span><span class="browse-hero-stat-strong">${totalProducts}+</span> Items listed</span>
+  </div>
+  <div class="browse-hero-stat">
+  <div class="browse-hero-stat-icon">${Icons.graduation}</div>
+  <span><span class="browse-hero-stat-strong">Verified</span> Students only</span>
+  </div>
+  <div class="browse-hero-stat">
+  <div class="browse-hero-stat-icon">${Icons.truck}</div>
+  <span><span class="browse-hero-stat-strong">Campus</span> Delivery available</span>
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
 
  <!-- Category Pills -->
  <div class="browse-categories">

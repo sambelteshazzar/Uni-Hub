@@ -49,7 +49,14 @@ function csrfProtection (req, res, next) {
     });
   }
 
-  csrfTokens.delete(csrfToken);
+  // Token is valid but NOT consumed - allows reuse within expiry window
+  // This prevents 403 errors from concurrent/rapid sequential requests
+  tokenData.useCount = (tokenData.useCount || 0) + 1;
+
+  // Invalidate after excessive use (possible token theft)
+  if (tokenData.useCount > 100) {
+    csrfTokens.delete(csrfToken);
+  }
 
   next();
 }

@@ -17,7 +17,6 @@ function initSentry () {
     integrations: [
       Sentry.httpIntegration(),
       Sentry.expressIntegration(),
-      Sentry.mongoIntegration(),
     ],
   });
 
