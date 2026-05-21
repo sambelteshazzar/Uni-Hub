@@ -43,7 +43,7 @@ describe('Authentication API', () => {
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
-      expect(res.body.error).toContain('already exists');
+      expect(res.body.error).toContain('already registered');
     });
 
     it('should reject registration with invalid email', async () => {

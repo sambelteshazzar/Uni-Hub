@@ -3566,55 +3566,7 @@ window.scrollTo(0, 0);
   }
 
   /**
-   * Render Track Order Page
-   */
-  static renderTrackOrder (orderId) {
-    const delivery = deliveryManager.getDeliveryByOrderId(orderId);
-    const mainContent = document.getElementById('main-content');
-
-    mainContent.innerHTML = `
-      <div class="container" style="padding: 2rem 1rem; max-width: 800px;">
-        <h1 style="margin-bottom: 1.5rem;">Track Order</h1>
-        ${
-  delivery
-    ? `
-          <div class="order-confirmation-container">
-            <div class="confirmation-icon">${Icons.truck}</div>
-            <h2>Order #${delivery.orderNumber}</h2>
-            <div class="status-badge ${delivery.status}" style="display: inline-block; margin: 1rem 0;">
-              ${Formatter.capitalize(delivery.status)}
-            </div>
-            <div class="confirmation-details">
-              <div class="detail-row">
-                <span>Delivery Mode</span>
-                <span>${Formatter.capitalize(delivery.mode)}</span>
-              </div>
-              <div class="detail-row">
-                <span>Address</span>
-                <span>${delivery.address}</span>
-              </div>
-              <div class="detail-row">
-                <span>Estimated Time</span>
-                <span>${delivery.estimatedTime}</span>
-              </div>
-            </div>
-          </div>
-        `
-    : `
-          <div class="empty-cart">
-<div class="empty-cart-icon">${Icons.package}</div>
-        <h3>Order not found</h3>
-        <p>Unable to track this order.</p>
-            <button class="btn btn-primary" onclick="Pages.renderOrders()">View My Orders</button>
-          </div>
-        `
-}
-      </div>
-    `;
-  }
-
-  /**
-   * Render Payment Page
+  * Render Payment Page
    */
   static renderPayment (orderId) {
     const order = checkoutManager.getOrderById(orderId);

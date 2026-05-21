@@ -59,7 +59,7 @@ exports.register = asyncHandler(async (req, res) => {
     university,
     level,
     hall,
-    role: 'buyer',
+    role: ['seller', 'buyer'].includes(req.body.role) ? req.body.role : 'buyer',
     isVerified: 0,
   });
 

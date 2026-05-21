@@ -8,6 +8,8 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
+const { sanitizeQuery, sanitizeXss } = require('../middleware/sanitize.middleware');
+const { errorHandler } = require('../utils/errorHandler');
 
 // Import routes
 const authRoutes = require('../routes/auth.routes');
@@ -34,6 +36,8 @@ const createTestApp = () => {
   app.use(cors());
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+  app.use(sanitizeQuery);
+  app.use(sanitizeXss);
   app.use(compression());
 
   // Skip CSRF protection in tests - provide a test token endpoint
@@ -88,50 +92,8 @@ const createTestApp = () => {
     res.status(404).json({ success: false, error: 'Route not found' });
   });
 
-  // Global error handler
-  app.use((err, _req, res, _next) => {
-    console.error('Test Error:', err.message);
-
-    // Mongoose validation error
-    if (err.name === 'ValidationError') {
-      const errors = Object.values(err.errors).map(e => e.message);
-      return res.status(400).json({
-        success: false,
-        error: 'Validation Error',
-        details: errors,
-      });
-    }
-
-    // Mongoose duplicate key error
-    if (err.code === 11000) {
-      const field = Object.keys(err.keyPattern)[0];
-      return res.status(400).json({
-        success: false,
-        error: `${field} already exists`,
-      });
-    }
-
-    // JWT errors
-    if (err.name === 'JsonWebTokenError') {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid token',
-      });
-    }
-
-    if (err.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        success: false,
-        error: 'Token expired',
-      });
-    }
-
-  // Default error
-  res.status(err.statusCode || err.status || 500).json({
-    success: false,
-    error: err.message || 'Internal server error',
-  });
-  });
+  // Global error handler (centralized, handles SQLite + JWT + ApiError)
+  app.use(errorHandler);
 
   return app;
 };

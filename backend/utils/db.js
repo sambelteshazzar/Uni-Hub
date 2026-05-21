@@ -411,7 +411,7 @@ class Db {
   _buildOrder (sort) {
     const allowedSortFields = {
       users: ['id', 'fullName', 'email', 'university', 'role', 'rating', 'totalReviews', 'createdAt', 'updatedAt', 'lastLogin', 'bannedAt'],
-      products: ['id', 'title', 'price', 'category', 'condition', 'status', 'seller', 'university', 'createdAt', 'updatedAt'],
+      products: ['id', 'title', 'price', 'category', 'condition', 'status', 'seller', 'university', 'views', 'sellerRating', 'createdAt', 'updatedAt'],
       orders: ['id', 'userId', 'status', 'payment_status', 'delivery_status', 'pricing_grandTotal', 'createdAt', 'updatedAt'],
       reviews: ['id', 'rating', 'createdAt', 'updatedAt', 'reportCount'],
       payments: ['id', 'orderId', 'userId', 'amount', 'status', 'createdAt', 'updatedAt'],

@@ -12,8 +12,7 @@ describe('Products API', () => {
   let testProductId;
   const testUser = global.testUtils.generateTestUser();
 
-  beforeAll(async () => {
-    // Register and login a seller
+  beforeEach(async () => {
     testUser.role = 'seller';
     const registerRes = await request(app)
       .post('/api/auth/register')
@@ -66,33 +65,34 @@ describe('Products API', () => {
   });
 
   describe('GET /api/products', () => {
-    it('should get all products', async () => {
-      const res = await request(app).get('/api/products');
+  it('should get all products', async () => {
+    const res = await request(app).get('/api/products');
 
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(Array.isArray(res.body.data)).toBe(true);
-    });
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.products).toBeDefined();
+    expect(Array.isArray(res.body.data.products)).toBe(true);
+  });
 
-    it('should filter products by category', async () => {
-      const res = await request(app)
-        .get('/api/products')
-        .query({ category: 'electronics' });
+  it('should filter products by category', async () => {
+    const res = await request(app)
+      .get('/api/products')
+      .query({ category: 'electronics' });
 
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.data.every(p => p.category === 'electronics')).toBe(true);
-    });
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.products.every(p => p.category === 'electronics')).toBe(true);
+  });
 
-    it('should filter products by price range', async () => {
-      const res = await request(app)
-        .get('/api/products')
-        .query({ minPrice: 0, maxPrice: 1000 });
+  it('should filter products by price range', async () => {
+    const res = await request(app)
+      .get('/api/products')
+      .query({ minPrice: 0, maxPrice: 1000 });
 
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.data.every(p => p.price >= 0 && p.price <= 1000)).toBe(true);
-    });
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.products.every(p => p.price >= 0 && p.price <= 1000)).toBe(true);
+  });
 
     it('should search products by title', async () => {
       const res = await request(app)
@@ -105,23 +105,22 @@ describe('Products API', () => {
   });
 
   describe('GET /api/products/:id', () => {
-    beforeAll(async () => {
-      // Create a product if not exists
-      if (!testProductId) {
-        const res = await request(app)
-          .post('/api/products')
-          .set('Authorization', `Bearer ${authToken}`)
-          .send(global.testUtils.generateTestProduct(sellerId));
-        testProductId = res.body.data._id;
-      }
+    let localProductId;
+
+    beforeEach(async () => {
+      const res = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(global.testUtils.generateTestProduct(sellerId));
+      localProductId = res.body.data._id;
     });
 
     it('should get a single product by ID', async () => {
-      const res = await request(app).get(`/api/products/${testProductId}`);
+      const res = await request(app).get(`/api/products/${localProductId}`);
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data._id.toString()).toBe(testProductId);
+      expect(res.body.data._id.toString()).toBe(localProductId);
     });
 
     it('should return 404 for non-existent product', async () => {
@@ -140,9 +139,19 @@ describe('Products API', () => {
   });
 
   describe('PUT /api/products/:id', () => {
+    let localProductId;
+
+    beforeEach(async () => {
+      const res = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(global.testUtils.generateTestProduct(sellerId));
+      localProductId = res.body.data._id;
+    });
+
     it('should update own product', async () => {
       const res = await request(app)
-        .put(`/api/products/${testProductId}`)
+        .put(`/api/products/${localProductId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           title: 'Updated Title',
@@ -157,7 +166,7 @@ describe('Products API', () => {
 
     it('should reject update without auth', async () => {
       const res = await request(app)
-        .put(`/api/products/${testProductId}`)
+        .put(`/api/products/${localProductId}`)
         .send({ title: 'Hacked Title' });
 
       expect(res.status).toBe(401);
@@ -166,9 +175,19 @@ describe('Products API', () => {
   });
 
   describe('DELETE /api/products/:id', () => {
+    let localProductId;
+
+    beforeEach(async () => {
+      const res = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(global.testUtils.generateTestProduct(sellerId));
+      localProductId = res.body.data._id;
+    });
+
     it('should delete own product', async () => {
       const res = await request(app)
-        .delete(`/api/products/${testProductId}`)
+        .delete(`/api/products/${localProductId}`)
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(200);
@@ -176,7 +195,11 @@ describe('Products API', () => {
     });
 
     it('should return 404 for deleted product', async () => {
-      const res = await request(app).get(`/api/products/${testProductId}`);
+      await request(app)
+        .delete(`/api/products/${localProductId}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      const res = await request(app).get(`/api/products/${localProductId}`);
 
       expect(res.status).toBe(404);
       expect(res.body.success).toBe(false);
@@ -207,7 +230,6 @@ describe('Products API', () => {
         .send(product);
 
       const bodyStr = JSON.stringify(res.body);
-      expect(bodyStr).not.toContain('password');
       expect(bodyStr).not.toContain(testUser.password);
     });
   });

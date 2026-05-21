@@ -45,12 +45,11 @@ describe('Wishlist API', () => {
     });
   });
 
-  describe('POST /api/wishlist', () => {
+  describe('POST /api/wishlist/:productId', () => {
     it('should add a product to wishlist', async () => {
       const res = await request(app)
-        .post('/api/wishlist')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({ productId });
+        .post(`/api/wishlist/${productId}`)
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
@@ -58,28 +57,25 @@ describe('Wishlist API', () => {
 
     it('should require authentication', async () => {
       const res = await request(app)
-        .post('/api/wishlist')
-        .send({ productId });
+        .post(`/api/wishlist/${productId}`);
 
       expect(res.status).toBe(401);
     });
 
-    it('should return 400 without productId', async () => {
+    it('should return 404 for non-existent product', async () => {
       const res = await request(app)
-        .post('/api/wishlist')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({});
+        .post('/api/wishlist/non-existent-id')
+        .set('Authorization', `Bearer ${authToken}`);
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(404);
     });
   });
 
   describe('DELETE /api/wishlist/:productId', () => {
     it('should remove a product from wishlist', async () => {
       await request(app)
-        .post('/api/wishlist')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({ productId });
+        .post(`/api/wishlist/${productId}`)
+        .set('Authorization', `Bearer ${authToken}`);
 
       const res = await request(app)
         .delete(`/api/wishlist/${productId}`)
@@ -98,9 +94,8 @@ describe('Wishlist API', () => {
   describe('DELETE /api/wishlist', () => {
     it('should clear the entire wishlist', async () => {
       await request(app)
-        .post('/api/wishlist')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({ productId });
+        .post(`/api/wishlist/${productId}`)
+        .set('Authorization', `Bearer ${authToken}`);
 
       const res = await request(app)
         .delete('/api/wishlist')

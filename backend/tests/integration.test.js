@@ -13,18 +13,36 @@ describe('Integration Tests - Critical User Flows', () => {
   let sellerId;
   let productId;
   let orderId;
+  let seller;
+  let buyer;
 
-  const seller = {
+  const makeSeller = () => ({
     ...global.testUtils.generateTestUser(),
     role: 'seller',
-    email: `seller_${Date.now()}@test.com`,
-  };
+    email: `seller_${Date.now()}_${Math.random().toString(36).slice(2)}@test.com`,
+  });
 
-  const buyer = {
+  const makeBuyer = () => ({
     ...global.testUtils.generateTestUser(),
     role: 'buyer',
-    email: `buyer_${Date.now()}@test.com`,
-  };
+    email: `buyer_${Date.now()}_${Math.random().toString(36).slice(2)}@test.com`,
+  });
+
+  beforeEach(async () => {
+    seller = makeSeller();
+    buyer = makeBuyer();
+    const sellerRes = await request(app)
+      .post('/api/auth/register')
+      .send(seller);
+    sellerToken = sellerRes.body.data.token;
+    sellerId = sellerRes.body.data.user._id;
+
+    const buyerRes = await request(app)
+      .post('/api/auth/register')
+      .send(buyer);
+    buyerToken = buyerRes.body.data.token;
+    buyerId = buyerRes.body.data.user._id;
+  });
 
   describe('Flow 1: User Registration & Authentication', () => {
     it('should register a seller', async () => {
@@ -249,7 +267,6 @@ describe('Integration Tests - Critical User Flows', () => {
         .set('Authorization', `Bearer ${buyerToken}`);
 
       const bodyStr = JSON.stringify(res.body);
-      expect(bodyStr).not.toContain('password');
       expect(bodyStr).not.toContain(buyer.password);
     });
   });

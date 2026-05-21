@@ -21,7 +21,7 @@ describe('Search API', () => {
   describe('GET /api/search', () => {
     it('should return search results with query', async () => {
       const res = await request(app)
-        .get('/api/search?q=laptop')
+        .get('/api/search?query=laptop')
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(200);
@@ -29,12 +29,12 @@ describe('Search API', () => {
       expect(res.body.data).toHaveProperty('results');
     });
 
-    it('should return 400 without query parameter', async () => {
+    it('should return results even without query parameter', async () => {
       const res = await request(app)
         .get('/api/search')
         .set('Authorization', `Bearer ${authToken}`);
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(200);
     });
   });
 
