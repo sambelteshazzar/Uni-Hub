@@ -19,7 +19,7 @@ A **complete, fully-functional Uni-Hub marketplace** with all features including
 ### Step 1: Prerequisites Check
 Make sure you have:
 - Node.js v18+ (check: `node --version`)
-- MongoDB available (check: `mongod` or `docker ps`)
+- SQLite (embedded — no separate server needed)
 
 ### Step 2: Run This Command
 ```bash
@@ -103,8 +103,8 @@ Password: Admin123!
 
 **Health Check:** `curl http://localhost:5000/api/health`
 
-### Database (Port 27017)
-- MongoDB with all collections
+### Database (SQLite — embedded)
+- SQLite with all tables
 - User accounts
 - Products
 - Orders
@@ -117,12 +117,9 @@ Password: Admin123!
 
 ## 🔧 Troubleshooting Quick Fixes
 
-### Issue: "MongoDB Connection Failed"
+### Issue: "Database Connection Error"
 **Fix:**
-```bash
-mongod  # or
-docker run -d --name uni-hub-mongo -p 27017:27017 mongo:latest
-```
+SQLite requires no separate server — it runs as an embedded database in the Node.js process. Check that the `SQLITE_PATH` in `.env` points to a valid file path.
 
 ### Issue: "Port already in use"
 **Fix:**
@@ -295,13 +292,13 @@ curl http://localhost:5000/api/products
 After running `./start-uni-hub.sh`:
 
 ```
-✅ MongoDB                Connected
+✅ SQLite Connected
 ✅ Backend Server         Running on port 5000
 ✅ Frontend Server        Running on port 8000
 ✅ API Health             http://localhost:5000/api/health
 ✅ Marketplace            http://localhost:8000
 ✅ 58 Endpoints           All functional
-✅ Database Collections   All ready
+✅ Database Tables All ready
 ✅ Authentication         Working
 ✅ Verification System    Ready
 ```
@@ -320,7 +317,7 @@ A: `cd backend && npm run dev`
 A: `npm start`
 
 **Q: How do I reset the database?**  
-A: Delete MongoDB database and run seed data again:
+A: Delete the SQLite database file and run seed data again:
 ```bash
 cd backend
 npm run seed

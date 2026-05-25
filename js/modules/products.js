@@ -541,13 +541,9 @@ class ProductsManager {
       console.error('trackWishlistPrices error:', error);
       return [];
     }
-  }
+}
 
-  getBySeller (sellerId) {
-    return this.products.filter(p => p.seller && (p.seller.id === sellerId || p.sellerId === sellerId));
-  }
-
-  clearRecentlyViewed () {
+clearRecentlyViewed () {
     try {
       const key = `${STORAGE_KEY_PREFIX}recently_viewed`;
       StorageManager.set(key, []);

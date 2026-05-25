@@ -102,4 +102,25 @@ const optionalAuth = async (req, res, next) => {
   }
 };
 
-module.exports = { protect, authorize, optionalAuth };
+const requireVerified = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ success: false, error: 'Not authorized to access this route' });
+  }
+  if (req.user.role === 'admin') {
+    return next();
+  }
+  if (!req.user.isVerified) {
+    return res.status(403).json({
+      success: false,
+      error: 'Student verification required',
+      code: 'VERIFICATION_REQUIRED',
+      data: {
+        isVerified: false,
+        verificationStatus: req.user.isVerified ? 'approved' : 'not_verified',
+      },
+    });
+  }
+  next();
+};
+
+module.exports = { protect, authorize, optionalAuth, requireVerified };

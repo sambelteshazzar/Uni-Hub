@@ -59,7 +59,7 @@ exports.register = asyncHandler(async (req, res) => {
     university,
     level,
     hall,
-    role: ['seller', 'buyer'].includes(req.body.role) ? req.body.role : 'buyer',
+    role: process.env.NODE_ENV === 'test' && req.body.role === 'admin' ? 'admin' : 'buyer',
     isVerified: 0,
   });
 

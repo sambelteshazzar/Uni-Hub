@@ -6,7 +6,7 @@ Backend API for the Uni-Hub Student Marketplace platform.
 
 ### Prerequisites
 - Node.js 18+ installed
-- MongoDB running locally or MongoDB Atlas account
+- better-sqlite3 (installed via npm — no separate database server needed)
 
 ### Installation
 
@@ -23,7 +23,7 @@ cp .env.example .env
 
 # Edit .env with your settings
 # At minimum, set:
-# - MONGODB_URI
+# - SQLITE_PATH
 # - JWT_SECRET (use a random string)
 ```
 
@@ -48,7 +48,7 @@ The API will be available at `http://localhost:5000`
 ```
 backend/
 ├── config/
-│   └── database.js          # MongoDB connection
+│ └── database.js # SQLite connection
 ├── controllers/
 │   ├── auth.controller.js   # Authentication logic
 │   ├── product.controller.js # Product CRUD
@@ -216,14 +216,14 @@ npm run lint
 ```env
 NODE_ENV=production
 PORT=5000
-MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/uni-hub
+SQLITE_PATH=./data/uni-hub.db
 JWT_SECRET=your-super-secret-key-min-32-chars
 FRONTEND_URL=https://your-domain.com
 ```
 
 ### Recommended Hosting
 - **Backend:** Heroku, Railway, Render, or DigitalOcean
-- **Database:** MongoDB Atlas (free tier available)
+- **Database:** SQLite (embedded, no separate server needed)
 - **Images:** Cloudinary (free tier available)
 
 ## 📄 License

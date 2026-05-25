@@ -6,7 +6,7 @@ A web-based student marketplace for buying and selling used items on university 
 
 ### Prerequisites
 - Node.js v18+
-- MongoDB (local or Docker)
+- SQLite (embedded, no separate install needed)
 
 ### Start the Application
 
@@ -34,7 +34,7 @@ Uni-Hub/
 │   ├── server.js           # Main entry point (port 5000)
 │   ├── config/             # Database configuration
 │   ├── controllers/        # Business logic
-│   ├── models/             # MongoDB schemas
+│   ├── models/ # Database schemas
 │   ├── routes/             # API endpoints
 │   ├── middleware/         # Authentication middleware
 │   └── utils/              # Utilities and seed data
@@ -73,7 +73,7 @@ Uni-Hub/
 
 ### Tech Stack
 - **Frontend**: HTML5, CSS3, Vanilla JavaScript (SPA with hash-based routing)
-- **Backend**: Node.js, Express.js, Mongoose (MongoDB)
+- **Backend**: Node.js, Express.js, better-sqlite3 (SQLite)
 - **Security**: JWT authentication, bcrypt password hashing, Helmet, CORS, rate limiting
 - **Build**: Vite (optional), http-server for production
 
@@ -86,13 +86,13 @@ Uni-Hub/
 └────────┬────────┘
          │ HTTP API (CORS)
 ┌────────▼────────┐
-│  Backend API    │  (Port 5000)
-│  Express Server │
+│ Backend API │ (Port 5000)
+│ Express Server │
 └────────┬────────┘
-         │ MongoDB Queries
+        │ SQLite Queries
 ┌────────▼────────┐
-│   MongoDB       │  (Port 27017)
-│   Database      │
+│ SQLite │ (Embedded)
+│ Database │
 └─────────────────┘
 ```
 
@@ -136,7 +136,7 @@ For production deployment:
 1. Change `JWT_SECRET` in `backend/.env` to a strong random key
 2. Change `ADMIN_PASSWORD` to a strong password
 3. Set `NODE_ENV=production`
-4. Use MongoDB Atlas instead of local MongoDB
+4. SQLite database file is created automatically — no external DB server needed
 5. Configure proper CORS origins
 6. Set up SSL certificates
 

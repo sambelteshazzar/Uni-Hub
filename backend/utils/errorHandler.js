@@ -109,8 +109,13 @@ const errorHandler = (err, req, res, _next) => {
     message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error',
   };
 
-  // Handle known error types
-  if (err.name === 'ValidationError') {
+  if (err.name === 'ApiError') {
+    errorResponse = {
+      statusCode: err.statusCode,
+      message: err.message,
+      ...(err.details && { details: err.details }),
+    };
+  } else if (err.name === 'ValidationError') {
     errorResponse = handleValidationError(err);
   } else if (err.code === 11000) {
     errorResponse = handleDuplicateKeyError(err);

@@ -26,6 +26,7 @@ router.put('/users/:id/ban', asyncHandler(adminController.banUser));
 router.get('/users/banned', asyncHandler(adminController.getBannedUsers));
 router.get('/activity', asyncHandler(adminController.getActivityLogs));
 router.get('/activity/stats', asyncHandler(adminController.getActivityStats));
+router.get('/analytics', asyncHandler(adminController.getAnalytics));
 router.get('/online-users', asyncHandler(adminController.getOnlineUsers));
 
 module.exports = router;

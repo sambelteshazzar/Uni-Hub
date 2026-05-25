@@ -12,7 +12,7 @@ This document tracks the ongoing refactoring efforts for the Uni-Hub codebase.
 - ✅ Created centralized error handling utility (`backend/utils/errorHandler.js`)
   - `ApiError` class for consistent error throwing
   - `asyncHandler` wrapper to eliminate try-catch boilerplate
-  - Centralized error handlers for Mongoose validation, duplicate keys, and JWT errors
+  - Centralized error handlers for SQLite constraints, duplicate keys, and JWT errors
   - `errorHandler` middleware for consistent error responses
   - `notFoundHandler` for 404 responses
 - ✅ Refactored `backend/server.js` to import error handlers

@@ -13,10 +13,12 @@ const {
   approveVerification,
   rejectVerification,
   getVerificationStatus,
+  getMyVerificationStatus,
 } = require('../controllers/verification.controller');
 
 // Authenticated routes
 router.post('/', protect, submitVerification);
+router.get('/me', protect, getMyVerificationStatus);
 router.get('/status/:studentId/:university', getVerificationStatus);
 
 // Admin routes

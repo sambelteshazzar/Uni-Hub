@@ -20,10 +20,14 @@ describe('Wishlist API', () => {
     authToken = registerRes.body.data.token;
     userId = registerRes.body.data.user._id || registerRes.body.data.user.id;
 
+    const adminUser = { ...global.testUtils.generateTestUser(), role: 'admin', email: `admin_${Date.now()}_${Math.random().toString(36).slice(2)}@test.com` };
+    const adminRes = await request(app).post('/api/auth/register').send(adminUser);
+    const adminToken = adminRes.body.data.token;
+
     const testProduct = global.testUtils.generateTestProduct(userId);
     const productRes = await request(app)
-      .post('/api/products')
-      .set('Authorization', `Bearer ${authToken}`)
+      .post('/api/admin/products')
+      .set('Authorization', `Bearer ${adminToken}`)
       .send(testProduct);
     productId = productRes.body.data?._id || productRes.body.data?.id;
   });

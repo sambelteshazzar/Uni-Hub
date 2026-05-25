@@ -33,6 +33,7 @@ exports.submitVerification = async (req, res) => {
 
     const verificationData = {
       id: generateId(),
+      userId: req.user.id,
       studentId,
       fullName,
       email,
@@ -124,12 +125,16 @@ exports.approveVerification = async (req, res) => {
       reviewNotes: notes || '',
     });
 
-    if (verification.userId) {
-      db('users').findByIdAndUpdate(verification.userId, {
-        isVerified: toBool(true),
-        verificationMethod: 'document',
-        studentId: verification.studentId,
-      });
+    const userId = verification.userId || verification.studentId;
+    if (userId) {
+      const userLookup = db('users').findById(userId) || db('users').findOne({ studentId: verification.studentId, university: verification.university });
+      if (userLookup) {
+        db('users').updateById(userLookup.id, {
+          isVerified: toBool(true),
+          verificationMethod: verification.verificationMethod,
+          studentId: verification.studentId,
+        });
+      }
     }
 
     res.json({
@@ -216,6 +221,47 @@ exports.getVerificationStatus = async (req, res) => {
     });
   } catch (error) {
     console.error('Get verification status error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to get verification status',
+    });
+  }
+};
+
+exports.getMyVerificationStatus = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const latestVerification = db('student_verifications').find(
+      { userId },
+      { sort: { createdAt: -1 }, limit: 1 },
+    )[0];
+
+    if (!latestVerification) {
+      return res.json({
+        success: true,
+        data: {
+          isVerified: false,
+          status: 'not_submitted',
+        },
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        isVerified: latestVerification.status === 'approved',
+        status: latestVerification.status,
+        verificationMethod: latestVerification.verificationMethod,
+        university: latestVerification.university,
+        studentId: latestVerification.studentId,
+        submittedAt: latestVerification.createdAt,
+        reviewedAt: latestVerification.reviewedAt,
+        reviewNotes: latestVerification.reviewNotes,
+      },
+    });
+  } catch (error) {
+    console.error('Get my verification status error:', error);
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to get verification status',

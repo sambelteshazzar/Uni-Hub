@@ -254,6 +254,7 @@ class API {
     submit: data => this.post('/verification', data),
     getStatus: (studentId, university) =>
       this.get(`/verification/status/${studentId}/${university}`),
+    getMyStatus: () => this.get('/verification/me'),
   };
 
   /**
@@ -275,6 +276,7 @@ class API {
     getProducts: params => this.get('/admin/products', params),
     createProduct: data => this.post('/admin/products', data),
     updateProduct: (id, data) => this.put(`/admin/products/${id}`, data),
+    getAnalytics: () => this.get('/admin/analytics'),
     deleteProduct: id => this.delete(`/admin/products/${id}`),
     getOrders: params => this.get('/admin/orders', params),
     getActivity: params => this.get('/admin/activity', params),
@@ -312,6 +314,29 @@ class API {
     addHistory: query => this.post('/search/history', { query }),
     clearHistory: () => this.delete('/search/history'),
     removeHistoryItem: query => this.delete(`/search/history/${encodeURIComponent(query)}`),
+  };
+
+  upload = {
+    images: async (files) => {
+      const formData = new FormData();
+      files.forEach(file => formData.append('images', file));
+      const token = this.getToken();
+      const csrfToken = await this.fetchCsrfToken();
+      const headers = {};
+      if (token) { headers['Authorization'] = `Bearer ${token}`; }
+      if (csrfToken) { headers['X-CSRF-Token'] = csrfToken; }
+      const response = await fetch(`${this.baseURL}/products/upload`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: formData,
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Upload failed');
+      }
+      return data;
+    },
   };
 }
 

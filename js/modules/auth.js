@@ -14,6 +14,9 @@ class AuthManager {
     this.isOfflineMode = false;
     this._offlineUsers = {};
     this.loadSession();
+    if (this.isAuthenticated && !this.isOfflineMode) {
+      this.syncVerificationStatus();
+    }
   }
 
   /**
@@ -82,10 +85,16 @@ class AuthManager {
     return this.token;
   }
 
-  /**
-   * Get offline demo users for when backend is down
-   */
+  _isDevMode () {
+    return (
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.protocol === 'file:'
+    );
+  }
+
   _getOfflineUsers () {
+    if (!this._isDevMode()) return {};
     return {
       'admin@unihub.local': {
         id: 'admin_001',
@@ -98,7 +107,6 @@ class AuthManager {
         rating: 5.0,
         isVerified: true,
         joinedDate: '2025-01-01T00:00:00Z',
-        _password: 'Admin123!',
       },
       'kwame.mensah@ug.edu.gh': {
         id: 'user_001',
@@ -111,7 +119,6 @@ class AuthManager {
         rating: 4.5,
         isVerified: true,
         joinedDate: '2025-09-15T10:30:00Z',
-        _password: 'Kwame123!',
       },
       'ama.osei@knust.edu.gh': {
         id: 'user_002',
@@ -119,13 +126,11 @@ class AuthManager {
         email: 'ama.osei@knust.edu.gh',
         phone: '+233 24 987 6543',
         university: 'knust',
-        role: 'seller',
+        role: 'buyer',
         avatar: 'assets/images/avatars/user_002.jpg',
         rating: 4.8,
-        totalSales: 45,
         isVerified: true,
         joinedDate: '2025-08-20T14:15:00Z',
-        _password: 'Ama123!',
       },
       'kofi.asante@ucc.edu.gh': {
         id: 'user_003',
@@ -138,7 +143,6 @@ class AuthManager {
         rating: 4.2,
         isVerified: true,
         joinedDate: '2025-10-05T09:00:00Z',
-        _password: 'Kofi123!',
       },
       'abena.darko@uew.edu.gh': {
         id: 'user_004',
@@ -146,44 +150,38 @@ class AuthManager {
         email: 'abena.darko@uew.edu.gh',
         phone: '+233 20 555 1234',
         university: 'uew',
-        role: 'seller',
+        role: 'buyer',
         avatar: 'assets/images/avatars/user_004.jpg',
         rating: 4.9,
-        totalSales: 67,
         isVerified: true,
         joinedDate: '2025-07-10T11:45:00Z',
-        _password: 'Abena123!',
       },
     };
   }
 
-  /**
-   * Try offline login with local demo users
-   */
-  _tryOfflineLogin (email, password) {
+  _tryOfflineLogin (email, _password) {
+    if (!this._isDevMode()) {
+      return { success: false, error: 'Server is unreachable. Please check your connection and try again.' };
+    }
+
     const users = this._getOfflineUsers();
     const user = users[email];
 
     if (!user) {
       return {
         success: false,
-        error: 'Server is offline. Demo accounts available:\n\n• admin@unihub.local / Admin123!\n• kwame.mensah@ug.edu.gh / Kwame123!\n• ama.osei@knust.edu.gh / Ama123!\n• kofi.asante@ucc.edu.gh / Kofi123!\n• abena.darko@uew.edu.gh / Abena123!',
+        error: 'Server is offline (dev mode). Available demo accounts:\n\n• admin@unihub.local\n• kwame.mensah@ug.edu.gh\n• ama.osei@knust.edu.gh\n• kofi.asante@ucc.edu.gh\n• abena.darko@uew.edu.gh\n\nAny password works in dev offline mode.',
       };
     }
 
-    if (user._password !== password) {
-      return { success: false, error: 'Invalid credentials (offline mode)' };
-    }
-
     const offlineUser = { ...user };
-    delete offlineUser._password;
 
     const fakeToken = 'offline_' + btoa(email) + '_' + Date.now();
     this.saveSession(fakeToken, offlineUser, true);
 
     return {
       success: true,
-      message: 'Login successful! (Offline Mode)',
+      message: 'Login successful! (Offline Dev Mode)',
       user: offlineUser,
       isOffline: true,
     };
@@ -242,36 +240,39 @@ class AuthManager {
 
       return { success: false, error: data.error || 'Registration failed' };
     } catch (error) {
-      console.warn('Backend unavailable for registration, using offline fallback');
-      const existing = this._getOfflineUsers()[userData.email];
-      if (existing) {
-        return { success: false, error: 'Email already registered (offline mode)' };
-      }
-
-      const newUser = {
-        id: 'user_' + Date.now(),
-        fullName: userData.fullName || userData.name || 'New User',
-        email: userData.email,
-        phone: userData.phone || '',
-        university: userData.university || 'ug',
-        role: 'buyer',
-        avatar: '',
-        rating: 0,
-        isVerified: false,
-        joinedDate: new Date().toISOString(),
-      };
-
-      this._offlineUsers[userData.email] = { ...newUser, _password: userData.password };
-      const fakeToken = 'offline_' + btoa(userData.email) + '_' + Date.now();
-      this.saveSession(fakeToken, newUser, true);
-
-      return {
-        success: true,
-        message: 'Registration successful! (Offline Mode)',
-        user: newUser,
-        isOffline: true,
-      };
+    if (!this._isDevMode()) {
+      return { success: false, error: 'Server is unreachable. Registration requires an active server connection.' };
     }
+    console.warn('Backend unavailable for registration, using offline fallback (dev only)');
+    const existing = this._getOfflineUsers()[userData.email];
+    if (existing) {
+      return { success: false, error: 'Email already registered (offline mode)' };
+    }
+
+    const newUser = {
+      id: 'user_' + Date.now(),
+      fullName: userData.fullName || userData.name || 'New User',
+      email: userData.email,
+      phone: userData.phone || '',
+      university: userData.university || 'ug',
+      role: 'buyer',
+      avatar: '',
+      rating: 0,
+      isVerified: false,
+      joinedDate: new Date().toISOString(),
+    };
+
+    this._offlineUsers[userData.email] = { ...newUser };
+    const fakeToken = 'offline_' + btoa(userData.email) + '_' + Date.now();
+    this.saveSession(fakeToken, newUser, true);
+
+    return {
+      success: true,
+      message: 'Registration successful! (Offline Dev Mode)',
+      user: newUser,
+      isOffline: true,
+    };
+  }
   }
 
   /**
@@ -298,6 +299,7 @@ class AuthManager {
 
       if (data.success) {
         this.saveSession(data.data.token, data.data.user);
+        this.syncVerificationStatus();
         return { success: true, message: 'Login successful!', user: data.data.user };
       }
 
@@ -455,6 +457,35 @@ class AuthManager {
    */
   isAdmin () {
     return this.currentUser?.role === 'admin';
+  }
+
+  async syncVerificationStatus () {
+    if (!this.isLoggedIn() || this.isOfflineMode) return;
+    try {
+      const response = await fetch('http://localhost:5000/api/verification/me', {
+        headers: { Authorization: `Bearer ${this.token}` },
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.success && data.data) {
+        const isNowVerified = data.data.isVerified || false;
+        if (this.currentUser.isVerified !== isNowVerified) {
+          this.currentUser.isVerified = isNowVerified;
+          const session = JSON.parse(localStorage.getItem('unihub_session'));
+          if (session && session.user) {
+            session.user.isVerified = isNowVerified;
+            localStorage.setItem('unihub_session', JSON.stringify(session));
+          }
+        }
+        if (typeof StorageManager !== 'undefined' && typeof STORAGE_KEYS !== 'undefined') {
+          const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true) || {};
+          verification.isVerified = isNowVerified;
+          verification.isPending = data.data.status === 'pending';
+          verification.status = data.data.status;
+          StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verification);
+        }
+      }
+    } catch (e) {}
   }
 }
 

@@ -6,7 +6,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { protect, authorize } = require('../middleware/auth.middleware');
+const { protect, authorize, requireVerified } = require('../middleware/auth.middleware');
 const {
   createOrder,
   getMyOrders,
@@ -21,11 +21,11 @@ router.get('/track/:trackingNumber', trackByTrackingNumber);
 
 router.use(protect);
 
-router.post('/', createOrder);
+router.post('/', requireVerified, createOrder);
 router.get('/my-orders', getMyOrders);
 router.get('/track/:trackingNumber', trackByTrackingNumber);
 router.get('/:id', getOrder);
-router.put('/:id/status', authorize('admin', 'seller'), updateOrderStatus);
+router.put('/:id/status', authorize('admin'), updateOrderStatus);
 router.post('/:id/payment', completePayment);
 router.put('/:id/cancel', cancelOrder);
 

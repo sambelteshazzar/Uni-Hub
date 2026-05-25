@@ -7,61 +7,69 @@ const { createTestApp } = require('./test-server');
 const app = createTestApp();
 
 describe('Integration Tests - Critical User Flows', () => {
-  let buyerToken;
-  let sellerToken;
-  let buyerId;
-  let sellerId;
-  let productId;
-  let orderId;
-  let seller;
-  let buyer;
+let buyerToken;
+let adminToken;
+let buyerId;
+let adminId;
+let productId;
+let orderId;
+let admin;
+let buyer;
 
-  const makeSeller = () => ({
-    ...global.testUtils.generateTestUser(),
-    role: 'seller',
-    email: `seller_${Date.now()}_${Math.random().toString(36).slice(2)}@test.com`,
-  });
+const makeAdmin = () => ({
+...global.testUtils.generateTestUser(),
+role: 'admin',
+email: `admin_${Date.now()}_${Math.random().toString(36).slice(2)}@test.com`,
+});
 
-  const makeBuyer = () => ({
-    ...global.testUtils.generateTestUser(),
-    role: 'buyer',
-    email: `buyer_${Date.now()}_${Math.random().toString(36).slice(2)}@test.com`,
-  });
+const makeBuyer = () => ({
+...global.testUtils.generateTestUser(),
+role: 'buyer',
+email: `buyer_${Date.now()}_${Math.random().toString(36).slice(2)}@test.com`,
+});
 
-  beforeEach(async () => {
-    seller = makeSeller();
-    buyer = makeBuyer();
-    const sellerRes = await request(app)
-      .post('/api/auth/register')
-      .send(seller);
-    sellerToken = sellerRes.body.data.token;
-    sellerId = sellerRes.body.data.user._id;
+beforeEach(async () => {
+admin = makeAdmin();
+buyer = makeBuyer();
+const adminRes = await request(app)
+.post('/api/auth/register')
+.send(admin);
+adminToken = adminRes.body.data.token;
+adminId = adminRes.body.data.user._id;
 
     const buyerRes = await request(app)
       .post('/api/auth/register')
       .send(buyer);
     buyerToken = buyerRes.body.data.token;
     buyerId = buyerRes.body.data.user._id;
-  });
 
-  describe('Flow 1: User Registration & Authentication', () => {
-    it('should register a seller', async () => {
+    try {
+      const { getDb } = require('../config/database');
+      const database = getDb();
+      database.prepare('UPDATE users SET isVerified = 1 WHERE id = ?').run(buyerId);
+    } catch (e) {}
+});
+
+describe('Flow 1: User Registration & Authentication', () => {
+  it('should register an admin', async () => {
+      const freshAdmin = makeAdmin();
       const res = await request(app)
         .post('/api/auth/register')
-        .send(seller);
+        .send(freshAdmin);
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.user.role).toBe('seller');
+      expect(res.body.data.user.role).toBe('admin');
 
-      sellerToken = res.body.data.token;
-      sellerId = res.body.data.user._id;
+      adminToken = res.body.data.token;
+      adminId = res.body.data.user._id;
     });
 
     it('should register a buyer', async () => {
+      const freshBuyer = makeBuyer();
       const res = await request(app)
         .post('/api/auth/register')
-        .send(buyer);
+        .send(freshBuyer);
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
@@ -71,22 +79,48 @@ describe('Integration Tests - Critical User Flows', () => {
       buyerId = res.body.data.user._id;
     });
 
-    it('should login with registered credentials', async () => {
-      const res = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: buyer.email,
-          password: buyer.password,
-        });
+it('should login with registered credentials', async () => {
+const res = await request(app)
+.post('/api/auth/login')
+.send({
+email: buyer.email,
+password: buyer.password,
+});
 
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.data.token).toBeDefined();
-    });
-  });
+expect(res.status).toBe(200);
+expect(res.body.success).toBe(true);
+expect(res.body.data.token).toBeDefined();
+});
+});
 
-  describe('Flow 2: Product Management (Seller)', () => {
-    it('should create a product as seller', async () => {
+describe('Flow 2: Product Management (Admin)', () => {
+it('should create a product as admin', async () => {
+const productData = {
+title: 'Test Laptop for Sale',
+description: 'A great laptop for students. Intel i5, 8GB RAM, 256GB SSD.',
+price: 2500,
+category: 'electronics',
+condition: 'good',
+images: ['https://example.com/laptop.jpg'],
+university: admin.university,
+deliveryModes: ['inperson', 'bolt'],
+paymentModes: ['momo', 'cash'],
+};
+
+const res = await request(app)
+.post('/api/admin/products')
+.set('Authorization', `Bearer ${adminToken}`)
+.send(productData);
+
+expect(res.status).toBe(201);
+expect(res.body.success).toBe(true);
+
+productId = res.body.data._id;
+});
+});
+
+  describe('Flow 3: Product Discovery (Buyer)', () => {
+    beforeEach(async () => {
       const productData = {
         title: 'Test Laptop for Sale',
         description: 'A great laptop for students. Intel i5, 8GB RAM, 256GB SSD.',
@@ -94,41 +128,25 @@ describe('Integration Tests - Critical User Flows', () => {
         category: 'electronics',
         condition: 'good',
         images: ['https://example.com/laptop.jpg'],
-        university: seller.university,
+        university: admin.university,
         deliveryModes: ['inperson', 'bolt'],
         paymentModes: ['momo', 'cash'],
       };
 
       const res = await request(app)
-        .post('/api/products')
-        .set('Authorization', `Bearer ${sellerToken}`)
+        .post('/api/admin/products')
+        .set('Authorization', `Bearer ${adminToken}`)
         .send(productData);
-
-      expect(res.status).toBe(201);
-      expect(res.body.success).toBe(true);
-      expect(res.body.data.status).toBe('pending'); // Products need approval
 
       productId = res.body.data._id;
     });
 
-    it('should get seller\'s products', async () => {
-      const res = await request(app)
-        .get('/api/products/seller/my-products')
-        .set('Authorization', `Bearer ${sellerToken}`);
-
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.data.length).toBeGreaterThan(0);
-    });
-  });
-
-  describe('Flow 3: Product Discovery (Buyer)', () => {
     it('should browse all products', async () => {
       const res = await request(app).get('/api/products');
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(Array.isArray(res.body.data)).toBe(true);
+      expect(Array.isArray(res.body.data.products)).toBe(true);
     });
 
     it('should search products', async () => {
@@ -159,28 +177,39 @@ describe('Integration Tests - Critical User Flows', () => {
   });
 
   describe('Flow 4: Order Creation & Management', () => {
-    beforeAll(async () => {
-      // Approve product first (admin action - simplified for test)
-      // In real flow, admin would approve via admin routes
+    beforeEach(async () => {
+      const productData = {
+        title: 'Test Laptop for Sale',
+        description: 'A great laptop for students. Intel i5, 8GB RAM, 256GB SSD.',
+        price: 2500,
+        category: 'electronics',
+        condition: 'good',
+        images: ['https://example.com/laptop.jpg'],
+        university: admin.university,
+        deliveryModes: ['inperson', 'bolt'],
+        paymentModes: ['momo', 'cash'],
+      };
+
+      const prodRes = await request(app)
+        .post('/api/admin/products')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send(productData);
+
+      productId = prodRes.body.data._id;
     });
 
     it('should create an order', async () => {
       const orderData = {
         items: [
           {
-            product: productId,
+            productId: productId,
             quantity: 1,
             price: 2500,
           },
         ],
         totalAmount: 2500,
-        deliveryMode: 'inperson',
-        paymentMode: 'momo',
-        deliveryAddress: {
-          street: 'Legon Campus',
-          city: 'Accra',
-          region: 'Greater Accra',
-        },
+        delivery: { mode: 'inperson', address: { street: 'Legon Campus', city: 'Accra', region: 'Greater Accra' } },
+        payment: { mode: 'momo' },
         notes: 'Please contact me on WhatsApp',
       };
 
@@ -197,16 +226,42 @@ describe('Integration Tests - Critical User Flows', () => {
     });
 
     it('should get buyer orders', async () => {
+      const orderData = {
+        items: [{ productId: productId, quantity: 1, price: 2500 }],
+        totalAmount: 2500,
+        delivery: { mode: 'inperson', address: { street: 'Legon Campus', city: 'Accra', region: 'Greater Accra' } },
+        payment: { mode: 'momo' },
+      };
+
+      await request(app)
+        .post('/api/orders')
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send(orderData);
+
       const res = await request(app)
         .get('/api/orders/my-orders')
         .set('Authorization', `Bearer ${buyerToken}`);
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.length).toBeGreaterThan(0);
+      expect(res.body.data.orders.length).toBeGreaterThan(0);
     });
 
     it('should get order details', async () => {
+      const orderData = {
+        items: [{ productId: productId, quantity: 1, price: 2500 }],
+        totalAmount: 2500,
+        delivery: { mode: 'inperson', address: { street: 'Legon Campus', city: 'Accra', region: 'Greater Accra' } },
+        payment: { mode: 'momo' },
+      };
+
+      const orderRes = await request(app)
+        .post('/api/orders')
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send(orderData);
+
+      orderId = orderRes.body.data._id;
+
       const res = await request(app)
         .get(`/api/orders/${orderId}`)
         .set('Authorization', `Bearer ${buyerToken}`);
@@ -234,15 +289,14 @@ describe('Integration Tests - Critical User Flows', () => {
   });
 
   describe('Flow 6: Security - Unauthorized Access', () => {
-    it('should not allow buyer to create products', async () => {
-      // Buyers can create products in this system, but let's test with no auth
-      const res = await request(app)
-        .post('/api/products')
-        .send(global.testUtils.generateTestProduct());
+it('should not allow unauthenticated product creation', async () => {
+const res = await request(app)
+.post('/api/admin/products')
+.send(global.testUtils.generateTestProduct());
 
-      expect(res.status).toBe(401);
-      expect(res.body.success).toBe(false);
-    });
+expect(res.status).toBe(401);
+expect(res.body.success).toBe(false);
+});
 
     it('should not allow accessing other user orders', async () => {
       // Create a new user
@@ -272,28 +326,65 @@ describe('Integration Tests - Critical User Flows', () => {
   });
 
   describe('Flow 7: Data Consistency', () => {
+    let flow7ProductId;
+    let flow7OrderId;
+
+    beforeEach(async () => {
+      const productData = {
+        title: 'Test Laptop for Sale',
+        description: 'A great laptop for students. Intel i5, 8GB RAM, 256GB SSD.',
+        price: 2500,
+        category: 'electronics',
+        condition: 'good',
+        images: ['https://example.com/laptop.jpg'],
+        university: admin.university,
+        deliveryModes: ['inperson', 'bolt'],
+        paymentModes: ['momo', 'cash'],
+      };
+
+      const prodRes = await request(app)
+        .post('/api/admin/products')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send(productData);
+
+      flow7ProductId = prodRes.body.data._id;
+
+      const orderData = {
+        items: [{ productId: flow7ProductId, quantity: 1, price: 2500 }],
+        totalAmount: 2500,
+        delivery: { mode: 'inperson', address: { street: 'Legon Campus', city: 'Accra', region: 'Greater Accra' } },
+        payment: { mode: 'momo' },
+        notes: 'Please contact me on WhatsApp',
+      };
+
+      const orderRes = await request(app)
+        .post('/api/orders')
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send(orderData);
+
+      flow7OrderId = orderRes.body.data?._id;
+    });
+
     it('should maintain data relationships', async () => {
       const res = await request(app)
-        .get(`/api/orders/${orderId}`)
+        .get(`/api/orders/${flow7OrderId}`)
         .set('Authorization', `Bearer ${buyerToken}`);
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
 
       const order = res.body.data;
-      expect(order.buyer._id.toString() || order.buyer.toString()).toBe(buyerId);
+      expect(order.userId.id || order.userId).toBe(buyerId);
 
-      // Check items exist
       expect(order.items.length).toBeGreaterThan(0);
     });
 
     it('should track product status correctly', async () => {
-      const res = await request(app).get(`/api/products/${productId}`);
+      const res = await request(app).get(`/api/products/${flow7ProductId}`);
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
 
-      // Product should have status
       expect(res.body.data.status).toBeDefined();
     });
   });

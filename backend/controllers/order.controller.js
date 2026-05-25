@@ -110,7 +110,7 @@ exports.createOrder = async (req, res) => {
         payment_status: 'pending',
         payment_transactionId: '',
         payment_paidAt: '',
-        status: 'pending',
+        status: 'placed',
         orderNumber: orderNum,
         trackingNumber: trackNum,
       });

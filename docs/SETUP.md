@@ -324,7 +324,7 @@ await Pages.handleRegister(event);
 - Implement proper routing (React Router)
 - Add state management (Redux/Context API)
 - Backend API integration (Node.js + Express)
-- Database (MongoDB)
+- Database (SQLite via better-sqlite3)
 
 ## 🐛 Known Issues
 - None currently - test and report any issues!

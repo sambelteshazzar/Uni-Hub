@@ -77,7 +77,7 @@ localStorage.setItem('unihub_session', JSON.stringify({
 **Created:** `backend/utils/seedData.js`
 
 **Features:**
-- Automatic MongoDB connection
+- Automatic SQLite connection
 - Sample users (buyers, sellers, admin)
 - Sample products with real-world data
 - Sample orders
@@ -102,7 +102,7 @@ npm run seed
 | Passwords in localStorage | ✅ FIXED | Now uses JWT tokens only |
 | XSS Protection | ✅ IMPLEMENTED | CSP headers + sanitization |
 | CSRF Protection | ⚠️ PARTIAL | Requires backend sessions |
-| SQL/NoSQL Injection | ✅ PROTECTED | Mongoose sanitizes inputs |
+| SQL/NoSQL Injection | ✅ PROTECTED | better-sqlite3 parameterized queries |
 | HTTPS Enforcement | ⚠️ REQUIRED | Must enable in production |
 | Rate Limiting | ✅ IMPLEMENTED | Backend has rate limiting |
 | Input Validation | ✅ IMPLEMENTED | Express-validator + custom |

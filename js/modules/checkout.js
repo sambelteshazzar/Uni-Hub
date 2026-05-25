@@ -682,6 +682,17 @@ class CheckoutFlow {
         return;
       }
 
+      // Check student verification status
+      const verification = _StorageManager.get(_STORAGE_KEYS.STUDENT_VERIFICATION, true);
+      const isVerified = currentUser.isVerified || (verification && verification.isVerified);
+      if (!isVerified) {
+        Toast.warning('You must be verified as a student to make purchases. Please complete student verification first.');
+        if (typeof Pages !== 'undefined' && Pages.renderStudentVerification) {
+          Pages.renderStudentVerification();
+        }
+        return;
+      }
+
       const summary = _cartManager ? _cartManager.getSummary() : { subtotal: 0 };
       const deliveryFee = this._calculateDeliveryFee(this.shippingData.deliveryMode);
       const grandTotal = summary.subtotal + deliveryFee;
@@ -707,11 +718,25 @@ class CheckoutFlow {
             quantity: item.quantity,
             variant: item.variant || null,
           }));
-          const response = await _api.orders.create(orderData);
-          if (response.success) {
-            order = response.data;
+      const response = await _api.orders.create(orderData);
+        if (response.success) {
+          order = response.data;
+        } else if (response.code === 'VERIFICATION_REQUIRED' || response.error === 'Student verification required') {
+          Toast.warning('You must be verified as a student to make purchases. Please complete student verification first.');
+          if (typeof Pages !== 'undefined' && Pages.renderStudentVerification) {
+            setTimeout(() => Pages.renderStudentVerification(), 1500);
           }
-        } catch (e) {}
+          return;
+        }
+      } catch (e) {
+        if (e?.response?.data?.code === 'VERIFICATION_REQUIRED' || e?.response?.data?.error === 'Student verification required') {
+          Toast.warning('You must be verified as a student to make purchases. Please complete student verification first.');
+          if (typeof Pages !== 'undefined' && Pages.renderStudentVerification) {
+            setTimeout(() => Pages.renderStudentVerification(), 1500);
+          }
+          return;
+        }
+      }
       }
 
 if (!order) {

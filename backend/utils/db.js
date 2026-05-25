@@ -411,7 +411,7 @@ class Db {
   _buildOrder (sort) {
     const allowedSortFields = {
       users: ['id', 'fullName', 'email', 'university', 'role', 'rating', 'totalReviews', 'createdAt', 'updatedAt', 'lastLogin', 'bannedAt'],
-      products: ['id', 'title', 'price', 'category', 'condition', 'status', 'seller', 'university', 'views', 'sellerRating', 'createdAt', 'updatedAt'],
+      products: ['id', 'title', 'price', 'category', 'condition', 'status', 'university', 'views', 'sellerRating', 'createdAt', 'updatedAt'],
       orders: ['id', 'userId', 'status', 'payment_status', 'delivery_status', 'pricing_grandTotal', 'createdAt', 'updatedAt'],
       reviews: ['id', 'rating', 'createdAt', 'updatedAt', 'reportCount'],
       payments: ['id', 'orderId', 'userId', 'amount', 'status', 'createdAt', 'updatedAt'],
@@ -423,7 +423,7 @@ class Db {
       search_history: ['id', 'userId', 'createdAt'],
       activity_logs: ['id', 'action', 'severity', 'user', 'createdAt'],
       student_verifications: ['id', 'userId', 'status', 'createdAt', 'updatedAt'],
-      order_items: ['id', 'orderId', 'productId', 'price', 'quantity', 'seller'],
+      order_items: ['id', 'orderId', 'productId', 'price', 'quantity'],
     };
 
     const allowedFields = allowedSortFields[this.table] || [];

@@ -1,39 +1,8 @@
 # 🚀 Uni-Hub Backend Quick Start Guide
 
-## Step 1: Install MongoDB
+## Step 1: Database Setup
 
-### Option A: Local MongoDB (Recommended for Development)
-
-**Windows:**
-1. Download MongoDB Community Server from https://www.mongodb.com/try/download/community
-2. Run the installer and follow the prompts
-3. MongoDB will run as a Windows service automatically
-
-**macOS:**
-```bash
-# Using Homebrew
-brew tap mongodb/brew
-brew install mongodb-community
-brew services start mongodb-community
-```
-
-**Linux (Ubuntu/Debian):**
-```bash
-wget -qO - https://www.mongodb.org/static/pgp/server-7.0.asc | sudo apt-key add -
-echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
-sudo apt-get update
-sudo apt-get install -y mongodb-org
-sudo systemctl start mongod
-sudo systemctl enable mongod
-```
-
-### Option B: MongoDB Atlas (Cloud - Free Tier)
-
-1. Go to https://www.mongodb.com/cloud/atlas
-2. Create a free account
-3. Create a new cluster (free tier M0)
-4. Get your connection string
-5. Update `.env` with your connection string
+SQLite requires no separate server — it runs as an embedded database in the Node.js process. No installation or startup is needed beyond the `better-sqlite3` npm package (installed automatically with `npm install`).
 
 ## Step 2: Install Node.js Dependencies
 
@@ -49,7 +18,7 @@ The `.env` file is already created with development defaults. You can modify if 
 ```bash
 # Default settings (already in .env):
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/uni-hub
+SQLITE_PATH=./data/uni-hub.db
 JWT_SECRET=uni-hub-dev-secret-key-change-in-production-2026
 ```
 
@@ -141,21 +110,11 @@ Then open `http://localhost:8000` in your browser.
 
 ## 🔧 Troubleshooting
 
-### MongoDB Connection Error
+### Database Connection Error
 ```
-MongoServerError: connect ECONNREFUSED 127.0.0.1:27017
+Error: Cannot open database at SQLITE_PATH
 ```
-**Solution:** Start MongoDB service
-```bash
-# Windows: Check Services or run:
-net start MongoDB
-
-# macOS:
-brew services start mongodb-community
-
-# Linux:
-sudo systemctl start mongod
-```
+**Solution:** Ensure the directory for the SQLite file exists and `SQLITE_PATH` in `.env` is set to a valid path.
 
 ### Port Already in Use
 ```

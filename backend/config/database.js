@@ -61,7 +61,7 @@ function initializeSchema () {
       totalOrders INTEGER DEFAULT 0,
       totalSales INTEGER DEFAULT 0,
       totalReviews INTEGER DEFAULT 0,
-      role TEXT NOT NULL DEFAULT 'buyer' CHECK(role IN ('buyer','seller','admin')),
+      role TEXT NOT NULL DEFAULT 'buyer' CHECK(role IN ('buyer','admin')),
       isActive INTEGER DEFAULT 1,
       isSuspended INTEGER DEFAULT 0,
       banReason TEXT,
@@ -307,7 +307,7 @@ variant TEXT
       user TEXT REFERENCES users(id),
       userEmail TEXT,
       userName TEXT,
-      userRole TEXT CHECK(userRole IN ('buyer','seller','admin')),
+      userRole TEXT CHECK(userRole IN ('buyer','admin')),
       action TEXT NOT NULL CHECK(action IN ('login','logout','signup','purchase','product_create','product_update','product_delete','review_create','message_send','wishlist_add','profile_update','password_change','admin_ban','admin_approve','admin_reject','search')),
       details TEXT,
       ipAddress TEXT,
@@ -318,25 +318,26 @@ variant TEXT
       updatedAt TEXT DEFAULT (datetime('now'))
     );
 
-    CREATE TABLE IF NOT EXISTS student_verifications (
-      id TEXT PRIMARY KEY,
-      studentId TEXT NOT NULL,
-      fullName TEXT NOT NULL,
-      email TEXT NOT NULL,
-      phone TEXT NOT NULL,
-      university TEXT NOT NULL,
-      level TEXT NOT NULL CHECK(level IN ('100','200','300','400','500','postgrad','phd')),
-      hall TEXT,
-      verificationMethod TEXT NOT NULL CHECK(verificationMethod IN ('email','document')),
-      universityEmail TEXT,
-      verificationCode TEXT,
-      status TEXT DEFAULT 'pending' CHECK(status IN ('pending','approved','rejected')),
-      reviewedBy TEXT REFERENCES users(id),
-      reviewedAt TEXT,
-      reviewNotes TEXT,
-      createdAt TEXT DEFAULT (datetime('now')),
-      updatedAt TEXT DEFAULT (datetime('now'))
-    );
+CREATE TABLE IF NOT EXISTS student_verifications (
+  id TEXT PRIMARY KEY,
+  userId TEXT NOT NULL REFERENCES users(id),
+  studentId TEXT NOT NULL,
+  fullName TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  university TEXT NOT NULL,
+  level TEXT NOT NULL CHECK(level IN ('100','200','300','400','500','postgrad','phd')),
+  hall TEXT,
+  verificationMethod TEXT NOT NULL CHECK(verificationMethod IN ('email','document')),
+  universityEmail TEXT,
+  verificationCode TEXT,
+  status TEXT DEFAULT 'pending' CHECK(status IN ('pending','approved','rejected')),
+  reviewedBy TEXT REFERENCES users(id),
+  reviewedAt TEXT,
+  reviewNotes TEXT,
+  createdAt TEXT DEFAULT (datetime('now')),
+  updatedAt TEXT DEFAULT (datetime('now'))
+);
 
     CREATE TABLE IF NOT EXISTS verification_documents (
       id TEXT PRIMARY KEY,
@@ -397,23 +398,28 @@ variant TEXT
     CREATE INDEX IF NOT EXISTS idx_activity_logs_severity ON activity_logs(severity);
     CREATE INDEX IF NOT EXISTS idx_activity_logs_user_created ON activity_logs(user, createdAt DESC);
 
-    CREATE INDEX IF NOT EXISTS idx_verifications_studentId ON student_verifications(studentId, university);
-    CREATE INDEX IF NOT EXISTS idx_verifications_email ON student_verifications(email);
-  CREATE INDEX IF NOT EXISTS idx_verifications_status ON student_verifications(status, createdAt DESC);
+CREATE INDEX IF NOT EXISTS idx_verifications_studentId ON student_verifications(studentId, university);
+CREATE INDEX IF NOT EXISTS idx_verifications_email ON student_verifications(email);
+CREATE INDEX IF NOT EXISTS idx_verifications_status ON student_verifications(status, createdAt DESC);
+CREATE INDEX IF NOT EXISTS idx_verifications_userId ON student_verifications(userId);
 
   CREATE INDEX IF NOT EXISTS idx_product_colors_product_id ON product_colors(product_id);
  `);
 
-  try {
-    const productCols = db.prepare("PRAGMA table_info(products)").all();
-    if (!productCols.find(c => c.name === 'variants')) {
-      db.prepare('ALTER TABLE products ADD COLUMN variants TEXT DEFAULT \'[]\'').run();
-    }
-    const orderItemCols = db.prepare("PRAGMA table_info(order_items)").all();
-    if (!orderItemCols.find(c => c.name === 'variant')) {
-      db.prepare('ALTER TABLE order_items ADD COLUMN variant TEXT').run();
-    }
-  } catch (migrationErr) {
+try {
+      const productCols = db.prepare("PRAGMA table_info(products)").all();
+      if (!productCols.find(c => c.name === 'variants')) {
+        db.prepare('ALTER TABLE products ADD COLUMN variants TEXT DEFAULT \'[]\'').run();
+      }
+      const orderItemCols = db.prepare("PRAGMA table_info(order_items)").all();
+      if (!orderItemCols.find(c => c.name === 'variant')) {
+        db.prepare('ALTER TABLE order_items ADD COLUMN variant TEXT').run();
+      }
+      const verificationCols = db.prepare("PRAGMA table_info(student_verifications)").all();
+      if (!verificationCols.find(c => c.name === 'userId')) {
+        db.prepare('ALTER TABLE student_verifications ADD COLUMN userId TEXT REFERENCES users(id)').run();
+      }
+    } catch (migrationErr) {
     console.warn('Migration warning:', migrationErr.message);
   }
 }

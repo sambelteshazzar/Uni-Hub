@@ -330,8 +330,6 @@ const AuthPageMethods = {
       phone: form.phone.value,
       level: form.level.value,
       hall: form.hall.value || null,
-      isVerified: true,
-      verifiedAt: new Date().toISOString(),
     };
 
     // Validate student email domain (basic validation)
@@ -339,13 +337,43 @@ const AuthPageMethods = {
     const config = await api.loadJSON('data/config.json').catch(() => ({ universities: [] }));
     const university = config.universities.find(u => u.id === selectedUniversity);
 
-    // Store verification data
+    // Submit to backend API for proper verification
+    try {
+      const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
+      if (api && session?.token) {
+        const response = await api.verification.submit({
+          studentId: verificationData.studentId,
+          fullName: verificationData.fullName,
+          email: verificationData.studentEmail,
+          phone: verificationData.phone,
+          university: selectedUniversity,
+          level: verificationData.level,
+          hall: verificationData.hall,
+          verificationMethod: 'email',
+          universityEmail: verificationData.studentEmail,
+        });
+
+        if (response.success) {
+          // Email verification is pending code confirmation
+          verificationData.isVerified = false;
+          verificationData.isPending = true;
+          verificationData.submittedAt = new Date().toISOString();
+          StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verificationData);
+          Toast.info(`Verification Submitted! A verification code has been sent to ${verificationData.studentEmail}. Your account will be verified once confirmed.`);
+          Pages.renderBrowse();
+          return;
+        }
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn('Backend verification unavailable, using local fallback:', e.message);
+    }
+
+    // Fallback: store locally (offline mode)
+    verificationData.isVerified = true;
+    verificationData.verifiedAt = new Date().toISOString();
     StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verificationData);
-
-    // Show success message
-  Toast.success(`Verification Successful! Welcome, ${verificationData.fullName}! You are now verified as a student of ${university ? university.name : 'your university'}. You can now browse and trade on Uni-Hub.`);
-
-    // Redirect to browse page
+    Toast.success(`Verification Successful! Welcome, ${verificationData.fullName}! You are now verified as a student of ${university ? university.name : 'your university'}. You can now browse and trade on Uni-Hub.`);
     Pages.renderBrowse();
   },
 
@@ -378,22 +406,43 @@ const AuthPageMethods = {
       phone: form.docPhone.value,
       level: form.docLevel.value,
       documents: Array.from(files).map(f => ({ name: f.name, size: f.size })),
-      isVerified: false, // Pending manual verification
+      isVerified: false,
       isPending: true,
       submittedAt: new Date().toISOString(),
     };
 
-    // Store pending verification
-    StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verificationData);
+    // Submit to backend API for proper verification
+    try {
+      const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
+      if (api && session?.token) {
+        const response = await api.verification.submit({
+          studentId: verificationData.studentId,
+          fullName: verificationData.fullName,
+          email: verificationData.personalEmail,
+          phone: verificationData.phone,
+          university: selectedUniversity,
+          level: verificationData.level,
+          verificationMethod: 'document',
+          documents: verificationData.documents,
+        });
 
-    // In production, this would upload files to a server
+        if (response.success) {
+          StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verificationData);
+          Toast.success(`Verification Submitted! Thank you, ${verificationData.fullName}! Your documents have been submitted for verification. You will be notified within 24-48 hours once your student status is confirmed. You must be verified before making any purchases.`);
+          Pages.renderBrowse();
+          return;
+        }
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn('Backend verification unavailable, using local fallback:', e.message);
+    }
+
+    // Fallback: store locally (offline mode)
     // eslint-disable-next-line no-console
     console.log('Documents to upload:', files);
-
-    // Show success message
-  Toast.success(`Verification Submitted! Thank you, ${verificationData.fullName}! Your documents have been submitted for verification. You will receive an email at ${verificationData.personalEmail} within 24-48 hours once your student status is confirmed. You can browse Uni-Hub while waiting for verification.`);
-
-    // Redirect to browse page (allow browsing while pending)
+    StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verificationData);
+    Toast.success(`Verification Submitted! Thank you, ${verificationData.fullName}! Your documents have been submitted for verification. You must be verified before making any purchases.`);
     Pages.renderBrowse();
   },
 

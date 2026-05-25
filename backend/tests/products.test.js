@@ -7,52 +7,51 @@ const { createTestApp } = require('./test-server');
 const app = createTestApp();
 
 describe('Products API', () => {
-  let authToken;
-  let sellerId;
-  let testProductId;
-  const testUser = global.testUtils.generateTestUser();
+let authToken;
+let creatorId;
+let testProductId;
+const testUser = global.testUtils.generateTestUser();
+const adminUser = { ...global.testUtils.generateTestUser(), role: 'admin', email: `admin_${Date.now()}_${Math.random().toString(36).slice(2)}@test.com` };
 
-  beforeEach(async () => {
-    testUser.role = 'seller';
-    const registerRes = await request(app)
-      .post('/api/auth/register')
-      .send(testUser);
+beforeEach(async () => {
+const adminRes = await request(app)
+.post('/api/auth/register')
+.send(adminUser);
 
-    authToken = registerRes.body.data.token;
-    sellerId = registerRes.body.data.user._id;
-  });
+authToken = adminRes.body.data.token;
+creatorId = adminRes.body.data.user._id;
+});
 
   describe('POST /api/products', () => {
-    it('should create a new product', async () => {
-      const productData = global.testUtils.generateTestProduct(sellerId);
+it('should create a new product', async () => {
+const productData = global.testUtils.generateTestProduct(creatorId);
 
-      const res = await request(app)
-        .post('/api/products')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(productData);
+const res = await request(app)
+.post('/api/admin/products')
+.set('Authorization', `Bearer ${authToken}`)
+.send(productData);
 
-      expect(res.status).toBe(201);
-      expect(res.body.success).toBe(true);
-      expect(res.body.data.title).toBe(productData.title);
-      expect(res.body.data.seller.toString()).toBe(sellerId);
+expect(res.status).toBe(201);
+expect(res.body.success).toBe(true);
+expect(res.body.data.title).toBe(productData.title);
 
-      testProductId = res.body.data._id;
-    });
+testProductId = res.body.data._id;
+});
 
-    it('should reject product creation without auth', async () => {
-      const productData = global.testUtils.generateTestProduct();
+it('should reject product creation without auth', async () => {
+const productData = global.testUtils.generateTestProduct();
 
-      const res = await request(app)
-        .post('/api/products')
-        .send(productData);
+const res = await request(app)
+.post('/api/admin/products')
+.send(productData);
 
-      expect(res.status).toBe(401);
-      expect(res.body.success).toBe(false);
-    });
+expect(res.status).toBe(401);
+expect(res.body.success).toBe(false);
+});
 
-    it('should validate required fields', async () => {
-      const res = await request(app)
-        .post('/api/products')
+it('should validate required fields', async () => {
+const res = await request(app)
+.post('/api/admin/products')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           title: 'Short',
@@ -107,15 +106,15 @@ describe('Products API', () => {
   describe('GET /api/products/:id', () => {
     let localProductId;
 
-    beforeEach(async () => {
-      const res = await request(app)
-        .post('/api/products')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(global.testUtils.generateTestProduct(sellerId));
-      localProductId = res.body.data._id;
-    });
+beforeEach(async () => {
+const res = await request(app)
+.post('/api/admin/products')
+.set('Authorization', `Bearer ${authToken}`)
+.send(global.testUtils.generateTestProduct(creatorId));
+localProductId = res.body.data._id;
+});
 
-    it('should get a single product by ID', async () => {
+it('should get a single product by ID', async () => {
       const res = await request(app).get(`/api/products/${localProductId}`);
 
       expect(res.status).toBe(200);
@@ -141,17 +140,17 @@ describe('Products API', () => {
   describe('PUT /api/products/:id', () => {
     let localProductId;
 
-    beforeEach(async () => {
-      const res = await request(app)
-        .post('/api/products')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(global.testUtils.generateTestProduct(sellerId));
-      localProductId = res.body.data._id;
-    });
+beforeEach(async () => {
+const res = await request(app)
+.post('/api/admin/products')
+.set('Authorization', `Bearer ${authToken}`)
+.send(global.testUtils.generateTestProduct(creatorId));
+localProductId = res.body.data._id;
+});
 
-    it('should update own product', async () => {
-      const res = await request(app)
-        .put(`/api/products/${localProductId}`)
+it('should update own product', async () => {
+const res = await request(app)
+.put(`/api/admin/products/${localProductId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           title: 'Updated Title',
@@ -164,9 +163,9 @@ describe('Products API', () => {
       expect(res.body.data.price).toBe(999);
     });
 
-    it('should reject update without auth', async () => {
-      const res = await request(app)
-        .put(`/api/products/${localProductId}`)
+it('should reject update without auth', async () => {
+const res = await request(app)
+.put(`/api/admin/products/${localProductId}`)
         .send({ title: 'Hacked Title' });
 
       expect(res.status).toBe(401);
@@ -174,63 +173,63 @@ describe('Products API', () => {
     });
   });
 
-  describe('DELETE /api/products/:id', () => {
-    let localProductId;
+describe('DELETE /api/admin/products/:id', () => {
+let localProductId;
 
-    beforeEach(async () => {
-      const res = await request(app)
-        .post('/api/products')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(global.testUtils.generateTestProduct(sellerId));
-      localProductId = res.body.data._id;
-    });
+beforeEach(async () => {
+const res = await request(app)
+.post('/api/admin/products')
+.set('Authorization', `Bearer ${authToken}`)
+.send(global.testUtils.generateTestProduct(creatorId));
+localProductId = res.body.data._id;
+});
 
-    it('should delete own product', async () => {
-      const res = await request(app)
-        .delete(`/api/products/${localProductId}`)
-        .set('Authorization', `Bearer ${authToken}`);
+it('should delete product as admin', async () => {
+const res = await request(app)
+.delete(`/api/admin/products/${localProductId}`)
+.set('Authorization', `Bearer ${authToken}`);
 
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-    });
+expect(res.status).toBe(200);
+expect(res.body.success).toBe(true);
+});
 
-    it('should return 404 for deleted product', async () => {
-      await request(app)
-        .delete(`/api/products/${localProductId}`)
-        .set('Authorization', `Bearer ${authToken}`);
+it('should return 404 for deleted product', async () => {
+await request(app)
+.delete(`/api/admin/products/${localProductId}`)
+.set('Authorization', `Bearer ${authToken}`);
 
-      const res = await request(app).get(`/api/products/${localProductId}`);
+const res = await request(app).get(`/api/products/${localProductId}`);
 
-      expect(res.status).toBe(404);
-      expect(res.body.success).toBe(false);
-    });
-  });
+expect(res.status).toBe(404);
+expect(res.body.success).toBe(false);
+});
+});
 
-  describe('Security Tests', () => {
-    it('should sanitize XSS in product title', async () => {
-      const xssProduct = {
-        ...global.testUtils.generateTestProduct(sellerId),
-        title: '<script>alert("xss")</script>Laptop',
-      };
+describe('Security Tests', () => {
+it('should sanitize XSS in product title', async () => {
+const xssProduct = {
+...global.testUtils.generateTestProduct(creatorId),
+title: '<script>alert("xss")</script>Laptop',
+};
 
-      const res = await request(app)
-        .post('/api/products')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(xssProduct);
+const res = await request(app)
+.post('/api/admin/products')
+.set('Authorization', `Bearer ${authToken}`)
+.send(xssProduct);
 
-      expect(res.status).toBe(201);
-      expect(res.body.data.title).not.toContain('<script>');
-    });
+expect(res.status).toBe(201);
+expect(res.body.data.title).not.toContain('<script>');
+});
 
-    it('should not expose seller password', async () => {
-      const product = global.testUtils.generateTestProduct(sellerId);
-      const res = await request(app)
-        .post('/api/products')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(product);
+it('should not expose creator password', async () => {
+const product = global.testUtils.generateTestProduct(creatorId);
+const res = await request(app)
+.post('/api/admin/products')
+.set('Authorization', `Bearer ${authToken}`)
+.send(product);
 
-      const bodyStr = JSON.stringify(res.body);
-      expect(bodyStr).not.toContain(testUser.password);
-    });
-  });
+const bodyStr = JSON.stringify(res.body);
+expect(bodyStr).not.toContain(adminUser.password);
+});
+});
 });

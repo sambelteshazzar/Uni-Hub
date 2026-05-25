@@ -2,33 +2,33 @@ const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { db, mapProductRow } = require('../utils/db');
 const logActivity = require('../utils/logActivity');
 
-function populateSeller(product) {
-  const seller = db('users').findById(product.seller);
-  if (seller) {
+function populateCreator(product) {
+  const creator = db('users').findById(product.seller);
+  if (creator) {
     product.seller = {
-      _id: seller.id,
-      id: seller.id,
-      fullName: seller.fullName,
-      rating: seller.rating,
-      avatar: seller.avatar,
+      _id: creator.id,
+      id: creator.id,
+      fullName: creator.fullName,
+      rating: creator.rating,
+      avatar: creator.avatar,
     };
   }
   product._id = product.id;
   return product;
 }
 
-function populateSellerDetail(product) {
-  const seller = db('users').findById(product.seller);
-  if (seller) {
+function populateCreatorDetail(product) {
+  const creator = db('users').findById(product.seller);
+  if (creator) {
     product.seller = {
-      _id: seller.id,
-      id: seller.id,
-      fullName: seller.fullName,
-      email: seller.email,
-      phone: seller.phone,
-      rating: seller.rating,
-      avatar: seller.avatar,
-      university: seller.university,
+      _id: creator.id,
+      id: creator.id,
+      fullName: creator.fullName,
+      email: creator.email,
+      phone: creator.phone,
+      rating: creator.rating,
+      avatar: creator.avatar,
+      university: creator.university,
     };
   }
   product._id = product.id;
@@ -101,7 +101,7 @@ exports.getProducts = async (req, res) => {
     // Execute query
     const products = db('products').find(query, { sort: sortOptions, limit: Number(limit), skip });
 
-    const populated = products.map(p => populateSeller(p));
+    const populated = products.map(p => populateCreator(p));
 
     res.json({
       success: true,
@@ -143,7 +143,7 @@ exports.getProduct = async (req, res) => {
     // Increment view count
     db('products').updateById(product.id, { views: (product.views || 0) + 1 });
 
-    const populated = populateSellerDetail(product);
+    const populated = populateCreatorDetail(product);
 
     res.json({
       success: true,
@@ -269,7 +269,7 @@ exports.updateProduct = async (req, res) => {
     }
 
     // Check ownership
-    if (product.seller !== req.user.id && req.user.role !== 'admin') {
+    if (req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
         error: 'Not authorized to update this product',
@@ -322,7 +322,7 @@ exports.deleteProduct = async (req, res) => {
     }
 
     // Check ownership
-    if (product.seller !== req.user.id && req.user.role !== 'admin') {
+    if (req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
         error: 'Not authorized to delete this product',
@@ -346,41 +346,6 @@ exports.deleteProduct = async (req, res) => {
   }
 };
 
-/**
- * @desc Get products by seller
- * @route GET /api/products/seller/my-products
- * @access Private
- */
-exports.getMyProducts = async (req, res) => {
-  try {
-    const { status = 'active' } = req.query;
-
-    const products = db('products').find({
-      seller: req.user.id,
-      status,
-    }, { sort: { createdAt: -1 } });
-
-    res.json({
-      success: true,
-      data: {
-        products,
-        total: products.length,
-      },
-    });
-  } catch (error) {
-    console.error('Get my products error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Failed to fetch products',
-    });
-  }
-};
-
-/**
- * @desc Upload product images to Cloudinary
- * @route POST /api/products/:id/images
- * @access Private (Seller only)
- */
 exports.uploadProductImages = asyncHandler(async (req, res) => {
   const product = db('products').findById(req.params.id);
 
@@ -388,8 +353,7 @@ exports.uploadProductImages = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'Product not found');
   }
 
-  // Check ownership
-  if (product.seller !== req.user.id) {
+  if (req.user.role !== 'admin') {
     throw new ApiError(403, 'Not authorized to update this product');
   }
 
@@ -397,7 +361,6 @@ exports.uploadProductImages = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'No images uploaded');
   }
 
-  // Upload each image to Cloudinary
   const { uploadImage } = require('../utils/cloudinary.util');
   const uploadedUrls = [];
 
@@ -417,7 +380,6 @@ exports.uploadProductImages = asyncHandler(async (req, res) => {
     throw new ApiError(500, 'Failed to upload any images');
   }
 
-  // Enforce max 5 images per product
   const maxImages = 5;
   const currentCount = (product.images || []).length;
   let newImages;
@@ -428,15 +390,15 @@ exports.uploadProductImages = asyncHandler(async (req, res) => {
   }
   db('products').updateById(product.id, { images: newImages });
 
-    res.json({
-      success: true,
-      message: `${uploadedUrls.length} image(s) uploaded successfully`,
-      data: {
-        images: uploadedUrls,
-        totalImages: newImages.length,
-      },
-    });
+  res.json({
+    success: true,
+    message: `${uploadedUrls.length} image(s) uploaded successfully`,
+    data: {
+      images: uploadedUrls,
+      totalImages: newImages.length,
+    },
   });
+});
 
 exports.getProductColors = async (req, res) => {
   try {
@@ -458,7 +420,7 @@ exports.addProductColor = async (req, res) => {
     if (!product) {
       return res.status(404).json({ success: false, error: 'Product not found' });
     }
-    if (product.seller !== req.user.id && req.user.role !== 'admin') {
+    if (req.user.role !== 'admin') {
       return res.status(403).json({ success: false, error: 'Not authorized' });
     }
     const { color_name, color_hex, image_url, stock } = req.body;
@@ -487,11 +449,11 @@ exports.updateProductColor = async (req, res) => {
     if (!color || color.product_id !== req.params.id) {
       return res.status(404).json({ success: false, error: 'Color not found' });
     }
-    const product = db('products').findById(req.params.id);
-    if (product.seller !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({ success: false, error: 'Not authorized' });
-    }
-    const allowed = ['color_name', 'color_hex', 'image_url', 'stock'];
+const product = db('products').findById(req.params.id);
+  if (product && req.user.role !== 'admin') {
+    return res.status(403).json({ success: false, error: 'Not authorized' });
+  }
+  const allowed = ['color_name', 'color_hex', 'image_url', 'stock'];
     const updates = {};
     allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
     db('product_colors').updateById(req.params.colorId, updates);
@@ -509,14 +471,45 @@ exports.deleteProductColor = async (req, res) => {
     if (!color || color.product_id !== req.params.id) {
       return res.status(404).json({ success: false, error: 'Color not found' });
     }
-    const product = db('products').findById(req.params.id);
-    if (product.seller !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({ success: false, error: 'Not authorized' });
-    }
-    db('product_colors').deleteById(req.params.colorId);
-    res.json({ success: true, message: 'Color deleted' });
-  } catch (error) {
-    console.error('Delete product color error:', error);
-    res.status(500).json({ success: false, error: error.message || 'Failed to delete product color' });
+const product = db('products').findById(req.params.id);
+  if (product && req.user.role !== 'admin') {
+    return res.status(403).json({ success: false, error: 'Not authorized' });
   }
+db('product_colors').deleteById(req.params.colorId);
+  res.json({ success: true, message: 'Color deleted' });
+} catch (error) {
+  console.error('Delete product color error:', error);
+  res.status(500).json({ success: false, error: error.message || 'Failed to delete product color' });
+}
 };
+
+exports.uploadImages = asyncHandler(async (req, res) => {
+if (!req.files || req.files.length === 0) {
+throw new ApiError(400, 'No images uploaded');
+}
+
+const { uploadImage } = require('../utils/cloudinary.util');
+const uploadedUrls = [];
+
+for (const file of req.files) {
+  try {
+    const result = await uploadImage(file.path);
+    uploadedUrls.push(result.secure_url);
+  } catch (error) {
+    console.error(`Failed to upload ${file.originalname}:`, error.message);
+  } finally {
+    const fs = require('fs');
+    try { fs.unlinkSync(file.path); } catch (e) { /* ignore */ }
+  }
+}
+
+if (uploadedUrls.length === 0) {
+  throw new ApiError(500, 'Failed to upload any images');
+}
+
+res.json({
+  success: true,
+  message: `${uploadedUrls.length} image(s) uploaded successfully`,
+  urls: uploadedUrls,
+});
+});

@@ -12,7 +12,9 @@
     "format": "prettier --write \"js/**/*.js\" \"css/**/*.css\"",
     "format:check": "prettier --check \"js/**/*.js\" \"css/**/*.css\"",
     "start": "http-server -p 8000 -c-1 --cors",
-    "test": "echo 'Tests not configured yet'"
+    "test": "echo 'Tests not configured yet'",
+    "test:e2e": "npx playwright test",
+    "test:e2e:headed": "npx playwright test --headed"
   },
   "keywords": [
     "marketplace",
@@ -23,6 +25,7 @@
   "author": "Uni-Hub Team",
   "license": "MIT",
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "eslint": "^8.56.0",
     "http-server": "^14.1.1",
     "prettier": "^3.1.1",
@@ -32,5 +35,16 @@
     "@sentry/browser": "^10.50.0",
     "socket.io-client": "^4.8.3",
     "ws": "^8.20.0"
-  }
+  },
+  "directories": {
+    "doc": "docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sambelteshazzar/Uni-Hub.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sambelteshazzar/Uni-Hub/issues"
+  },
+  "homepage": "https://github.com/sambelteshazzar/Uni-Hub#readme"
 }

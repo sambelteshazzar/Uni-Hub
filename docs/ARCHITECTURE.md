@@ -40,7 +40,7 @@
 │ LocalStorage     │ │  JSON Files      │ │  (Future)        │
 │                  │ │                  │ │ Backend API      │
 │ - User Session   │ │ - products.json  │ │ Node.js/Express  │
-│ - Cart           │ │ - config.json    │ │ MongoDB          │
+│ - Cart           │ │ - config.json    │ │ SQLite │
 │ - Wishlist       │ │                  │ │ Authentication   │
 │ - Preferences    │ │ - regions.json   │ │ Payment Gateway  │
 └──────────────────┘ └──────────────────┘ └──────────────────┘
@@ -498,9 +498,9 @@ POST   /api/payments/verify
 └──────────────┬──────────────────────────┘
                │
 ┌──────────────▼──────────────────────────┐
-│  Database (MongoDB Atlas/AWS)           │
+│ Database (SQLite) │
 │  - Collections for users, products etc  │
-│  - Backups and replication              │
+│ - Tables for users, products etc │
 └──────────────────────────────────────────┘
 ```
 

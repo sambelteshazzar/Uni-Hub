@@ -12,15 +12,6 @@ This checklist will walk you through setting up Uni-Hub from scratch to fully fu
   npm --version   # Should be v9+
   ```
 
-- [ ] **MongoDB installed or Docker available**
-  ```bash
-  # Check if MongoDB installed locally
-  mongod --version
-  
-  # OR check Docker
-  docker --version
-  ```
-
 - [ ] **Git repository initialized** (if starting fresh)
   ```bash
   git status  # Should see your repo
@@ -30,43 +21,7 @@ This checklist will walk you through setting up Uni-Hub from scratch to fully fu
 
 ## Phase 1: Database Setup
 
-### Option A: Local MongoDB (Easier for Dev)
-
-- [ ] **Install MongoDB Community**
-  - Start MongoDB service:
-    ```bash
-    # macOS with Homebrew
-    brew services start mongodb-community
-    
-    # Linux (systemctl)
-    sudo systemctl start mongod
-    
-    # Or manually in new terminal
-    mongod
-    ```
-
-- [ ] **Verify MongoDB is running**
-  ```bash
-  mongosh  # or 'mongo' for older versions
-  # You should see a prompt like: test>
-  # Type: exit
-  ```
-
-### Option B: Docker (Recommended)
-
-- [ ] **Pull MongoDB Docker image**
-  ```bash
-  docker run -d --name uni-hub-mongo \
-    -p 27017:27017 \
-    -e MONGO_INITDB_ROOT_USERNAME=admin \
-    -e MONGO_INITDB_ROOT_PASSWORD=admin \
-    mongo:latest
-  ```
-
-- [ ] **Verify Docker container is running**
-  ```bash
-  docker ps | grep uni-hub-mongo
-  ```
+SQLite requires no separate server — it runs as an embedded database in the Node.js process. The database file is created automatically on first run.
 
 ---
 
@@ -84,20 +39,20 @@ This checklist will walk you through setting up Uni-Hub from scratch to fully fu
 
 - [ ] **.env file is configured** (already done)
   - Check file exists: `backend/.env`
-  - Contains: `MONGODB_URI`, `JWT_SECRET`, `ADMIN_EMAIL`, etc.
+  - Contains: `SQLITE_PATH`, `JWT_SECRET`, `ADMIN_EMAIL`, etc.
 
 - [ ] **Run database seed (optional, adds test data)**
   ```bash
-  npm run seed
-  # This populates MongoDB with sample users, products, regions
+npm run seed
+# This populates SQLite with sample users, products, regions
   ```
 
 - [ ] **Start backend server**
   ```bash
   npm run dev
-  # Should see:
-  # ✅ MongoDB Connected: localhost
-  # 🎓 Uni-Hub Backend API
+# Should see:
+# ✅ SQLite Connected
+# 🎓 Uni-Hub Backend API
   # Server running on port 5000
   ```
 
@@ -162,7 +117,7 @@ This checklist will walk you through setting up Uni-Hub from scratch to fully fu
 
 - [ ] **Submit signup**
   - Should see success message
-  - Account created in MongoDB
+  - Account created in SQLite
 
 ### Test Verification Feature
 
@@ -235,19 +190,12 @@ This checklist will walk you through setting up Uni-Hub from scratch to fully fu
 
 ## Phase 6: Troubleshooting
 
-### Issue: MongoDB Connection Error
+### Issue: Database Connection Error
 
-**Symptoms:** Backend shows "MongoDB Connection Error"
+**Symptoms:** Backend shows "Database Connection Error"
 
 **Fix:**
-```bash
-# Make sure MongoDB is running
-mongosh  # Opens connection
-
-# If Docker:
-docker ps  # Check if container running
-docker start uni-hub-mongo  # Start if stopped
-```
+SQLite runs as an embedded database — no separate server needed. Ensure the backend has write permissions to create the .db file in the configured `SQLITE_PATH`.
 
 ### Issue: Port Already in Use
 
@@ -307,7 +255,7 @@ When ready to move to production:
 - [ ] Change `JWT_SECRET` in `.env` to strong random key
 - [ ] Change `ADMIN_PASSWORD` to strong password
 - [ ] Set `NODE_ENV=production` in `.env`
-- [ ] Use MongoDB Atlas (cloud) instead of local
+- [ ] Set `SQLITE_PATH` to a persistent directory for the database file
 - [ ] Set `FRONTEND_URL` to your production domain
 - [ ] Add SSL certificate
 - [ ] Configure email service (Gmail, SendGrid, etc.)
@@ -336,10 +284,8 @@ npm run dev          # Start Vite dev server
 npm start            # Start with http-server
 npm run build        # Build for production
 
-# MongoDB
-mongod               # Start MongoDB locally
-mongosh              # Open MongoDB shell (connection test)
-docker run -d --name uni-hub-mongo -p 27017:27017 mongo:latest  # Docker
+# SQLite
+# No separate server needed — embedded in Node.js process
 
 # Testing APIs
 curl http://localhost:5000/api/health  # Check backend
@@ -352,10 +298,10 @@ curl http://localhost:8000             # Check frontend
 
 ```
 localhost:8000 (Frontend)
-    ↓ (HTTP Requests)
+↓ (HTTP Requests)
 localhost:5000 (Backend API)
-    ↓ (Queries/Updates)
-localhost:27017 (MongoDB)
+↓ (Queries/Updates)
+SQLite (Embedded Database)
 ```
 
 ---

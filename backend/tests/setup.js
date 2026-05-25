@@ -1,12 +1,12 @@
-/**
+/** 
  * Test Setup File
  * Configure test environment with in-memory SQLite
  */
-const { connectDatabase, getDb } = require('../config/database');
-
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test-secret-key-for-jwt-testing-only';
 process.env.SQLITE_PATH = ':memory:';
+
+const { connectDatabase, getDb } = require('../config/database');
 
 global.testUtils = {
   generateTestUser: () => ({
@@ -19,14 +19,14 @@ global.testUtils = {
     role: 'buyer',
   }),
 
-  generateTestProduct: (sellerId) => ({
-    title: `Test Product ${Date.now()}`,
-    description: 'A test product for automated testing',
-    price: 100,
-    category: 'electronics',
-    condition: 'good',
-    university: 'University of Ghana',
-    seller: sellerId || 'test-seller-id',
+generateTestProduct: (creatorId) => ({
+title: `Test Product ${Date.now()}`,
+description: 'A test product for automated testing',
+price: 100,
+category: 'electronics',
+condition: 'good',
+university: 'University of Ghana',
+seller: creatorId || 'test-creator-id',
     images: ['https://example.com/test-image.jpg'],
   }),
 };

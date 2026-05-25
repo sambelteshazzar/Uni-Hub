@@ -57,15 +57,15 @@ You asked for: **"Remove old localhost:3000 and replace with new localhost with 
 ✅ Reports (5 endpoints)  
 ✅ Admin (8 endpoints)  
 
-### Database (MongoDB)
-✅ Users collection  
-✅ Products collection  
-✅ Orders collection  
-✅ Payments collection  
-✅ Verifications collection  
-✅ Deliveries collection  
-✅ Reports collection  
-✅ Regions collection  
+### Database (SQLite)
+✅ Users table
+✅ Products table
+✅ Orders table
+✅ Payments table
+✅ Verifications table
+✅ Deliveries table
+✅ Reports table
+✅ Regions table
 
 ### Security
 ✅ JWT authentication  
@@ -333,10 +333,10 @@ Before considering setup complete:
 ### Problem: Script won't run
 **Solution:** Check READ_ME_FIRST.md or START_UNI_HUB.md troubleshooting section
 
-### Problem: MongoDB connection error
-**Solution:** 
-- Run: `mongod` OR
-- Run: `docker run -d -p 27017:27017 mongo:latest`
+### Problem: Database connection error
+**Solution:**
+- SQLite runs as an embedded database — no separate server needed
+- Ensure the backend has write permissions to create the .db file
 
 ### Problem: Port already in use
 **Solution:** 
@@ -424,11 +424,11 @@ lsof -ti:8000 | xargs kill -9  # For port 8000
 └──────────────┬──────────────┘
                │ Database Queries
 ┌──────────────▼──────────────┐
-│   MongoDB Database          │
-│   localhost:27017           │
-│   - All data                │
-│   - 8 collections           │
-│   - Persistent storage      │
+│ SQLite Database │
+│ (Embedded) │
+│ - All data │
+│ - 8 tables │
+│ - Persistent storage │
 └─────────────────────────────┘
 ```
 

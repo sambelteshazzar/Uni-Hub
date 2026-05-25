@@ -18,8 +18,8 @@ This new utility provides:
 - **`ApiError` class**: Custom error class with status codes for consistent error throwing
 - **`asyncHandler` wrapper**: Eliminates repetitive try-catch boilerplate in controllers
 - **Centralized error handlers**:
-  - Mongoose validation errors
-  - Duplicate key errors  
+- SQLite constraint errors
+    - Duplicate key errors
   - JWT authentication errors
 - **`errorHandler` middleware**: Consistent error response format across all endpoints
 - **`notFoundHandler`**: Standardized 404 responses

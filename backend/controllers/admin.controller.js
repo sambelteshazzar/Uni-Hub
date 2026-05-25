@@ -397,10 +397,48 @@ throw new ApiError(404, 'Product not found');
 
 await db('products').deleteById(req.params.id);
 
-await logActivity('product_delete', req.user, { productId: req.params.id, title: product.title, adminDeleted: true }, 'warning', req);
+  await logActivity('product_delete', req.user, { productId: req.params.id, title: product.title, adminDeleted: true }, 'warning', req);
 
-res.json({
-success: true,
-message: 'Product deleted by admin',
-});
+  res.json({
+    success: true,
+    message: 'Product deleted by admin',
+  });
+};
+
+exports.getAnalytics = async (req, res) => {
+  const rawDb = db('orders').db;
+
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const revenueRows = rawDb.prepare(
+    "SELECT date(createdAt) as date, SUM(pricing_grandTotal) as revenue FROM orders WHERE payment_status = 'completed' AND createdAt >= ? GROUP BY date(createdAt) ORDER BY date ASC"
+  ).all(thirtyDaysAgo);
+
+  const orderStatusRows = rawDb.prepare(
+    "SELECT status, COUNT(*) as count FROM orders GROUP BY status"
+  ).all();
+
+  const categoryRows = rawDb.prepare(
+    "SELECT category, COUNT(*) as count FROM products GROUP BY category"
+  ).all();
+
+  const userRows = rawDb.prepare(
+    "SELECT date(createdAt) as date, COUNT(*) as count FROM users WHERE createdAt >= ? GROUP BY date(createdAt) ORDER BY date ASC"
+  ).all(thirtyDaysAgo);
+
+  const topProducts = rawDb.prepare(
+    "SELECT productId, title, SUM(quantity) as sold FROM order_items GROUP BY productId ORDER BY sold DESC LIMIT 5"
+  ).all();
+
+  res.json({
+    success: true,
+    data: {
+      revenue: revenueRows.map(r => ({ date: r.date, revenue: r.revenue || 0 })),
+      orderStatus: orderStatusRows.map(r => ({ status: r.status, count: r.count })),
+      categories: categoryRows.map(r => ({ category: r.category, count: r.count })),
+      users: userRows.map(r => ({ date: r.date, count: r.count })),
+      topProducts: topProducts.map(r => ({ productId: r.productId, title: r.title, sold: r.sold })),
+    },
+  });
 };

@@ -3,7 +3,6 @@
 ## Prerequisites Check
 Before starting, ensure you have:
 - ✅ Node.js v18+ installed
-- ✅ MongoDB installed and available
 - ✅ npm or yarn package manager
 
 ---
@@ -24,33 +23,9 @@ npm install
 
 ---
 
-## Step 2: Start MongoDB
+## Step 2: Database Setup
 
-**Option A: Local MongoDB Service**
-```bash
-# macOS (with Homebrew)
-brew services start mongodb-community
-
-# Linux (systemctl)
-sudo systemctl start mongod
-
-# Or manually
-mongod
-```
-
-**Option B: Docker (Recommended)**
-```bash
-docker run -d --name uni-hub-mongo -p 27017:27017 mongo:latest
-```
-
-**Verify MongoDB is running:**
-```bash
-mongo
-# or
-mongosh
-```
-
-You should see a connection prompt. Type `exit` to quit.
+SQLite requires no separate server — it runs as an embedded database in the Node.js process. No installation or startup is needed beyond the `better-sqlite3` npm package (installed automatically with `npm install`).
 
 ---
 
@@ -62,7 +37,7 @@ npm run seed
 cd ..
 ```
 
-This will populate MongoDB with:
+This will populate SQLite with:
 - Sample students/users
 - Sample products
 - Sample categories
@@ -221,13 +196,8 @@ Visit: `http://localhost:8000`
 
 ## Troubleshooting
 
-### ❌ "MongoDB Connection Failed"
-**Solution:** Make sure MongoDB is running
-```bash
-# Check if MongoDB is running
-mongo --version  # Shows MongoDB version
-ps aux | grep mongod  # Check running process
-```
+### ❌ "Database Connection Error"
+**Solution:** SQLite requires no separate server — it runs as an embedded database in the Node.js process. Check that the `SQLITE_PATH` in `.env` points to a valid file path.
 
 ### ❌ "Port 5000 already in use"
 **Solution:** Change PORT in `.env` to another value (e.g., 5001)
@@ -255,7 +225,7 @@ When deploying to production:
 1. **Change JWT_SECRET** to a strong random key
 2. **Change ADMIN_PASSWORD** to a strong password
 3. **Set NODE_ENV=production**
-4. **Use MongoDB Atlas** instead of local MongoDB
+4. **Use a managed SQLite host or migrate to PostgreSQL** instead of local SQLite for multi-process production
 5. **Configure proper CORS origins**
 6. **Set up SSL certificates**
 7. **Use environment variables** (not hardcoded values)
@@ -287,15 +257,15 @@ Uni-Hub (Complete Student Marketplace)
 │  ├─ Admin Dashboard
 │  └─ Reports System
 │
-└─ Database (MongoDB)
-   └─ Collections: Users, Products, Orders, Payments, etc.
+└─ Database (SQLite)
+   └─ Tables: Users, Products, Orders, Payments, etc.
 ```
 
 ---
 
 ## Next Steps
 
-1. ✅ Start MongoDB
+1. ✅ Database ready (SQLite — no separate server needed)
 2. ✅ Start Backend Server
 3. ✅ Start Frontend Server
 4. ✅ Visit http://localhost:8000
