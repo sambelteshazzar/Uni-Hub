@@ -489,8 +489,50 @@ class AuthManager {
   }
 }
 
-// Create singleton instance
-const authManager = new AuthManager();
+  async sendPhoneOtp (phone) {
+    try {
+      const csrfToken = await this._fetchCsrfToken();
+      const baseURL = (typeof window !== 'undefined' && window.API_URL) || 'http://localhost:5000/api';
+      const response = await fetch(`${baseURL.replace('/api', '')}/api/auth/send-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+        },
+        credentials: 'include',
+        body: JSON.stringify({ phone }),
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      return { success: false, error: 'Failed to send OTP. Check your connection.' };
+    }
+  }
+
+  async verifyPhoneOtp (phone, code) {
+    try {
+      const csrfToken = await this._fetchCsrfToken();
+      const baseURL = (typeof window !== 'undefined' && window.API_URL) || 'http://localhost:5000/api';
+      const response = await fetch(`${baseURL.replace('/api', '')}/api/auth/verify-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+        },
+        credentials: 'include',
+        body: JSON.stringify({ phone, code }),
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      return { success: false, error: 'Failed to verify OTP. Check your connection.' };
+    }
+  }
+
+  // Create singleton instance
+  const authManager = new AuthManager();
 
 // Export for ES6 modules
 export { AuthManager, authManager };

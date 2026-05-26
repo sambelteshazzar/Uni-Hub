@@ -41,6 +41,7 @@ function mapUserRow (row) {
     isVerified: fromBool(row.isVerified),
     isPending: fromBool(row.isPending),
     isOnline: fromBool(row.isOnline),
+    phoneVerified: fromBool(row.phoneVerified),
   };
 }
 

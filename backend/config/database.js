@@ -406,20 +406,24 @@ CREATE INDEX IF NOT EXISTS idx_verifications_userId ON student_verifications(use
   CREATE INDEX IF NOT EXISTS idx_product_colors_product_id ON product_colors(product_id);
  `);
 
-try {
-      const productCols = db.prepare("PRAGMA table_info(products)").all();
-      if (!productCols.find(c => c.name === 'variants')) {
-        db.prepare('ALTER TABLE products ADD COLUMN variants TEXT DEFAULT \'[]\'').run();
-      }
-      const orderItemCols = db.prepare("PRAGMA table_info(order_items)").all();
-      if (!orderItemCols.find(c => c.name === 'variant')) {
-        db.prepare('ALTER TABLE order_items ADD COLUMN variant TEXT').run();
-      }
-      const verificationCols = db.prepare("PRAGMA table_info(student_verifications)").all();
-      if (!verificationCols.find(c => c.name === 'userId')) {
-        db.prepare('ALTER TABLE student_verifications ADD COLUMN userId TEXT REFERENCES users(id)').run();
-      }
-    } catch (migrationErr) {
+  try {
+    const productCols = db.prepare("PRAGMA table_info(products)").all();
+    if (!productCols.find(c => c.name === 'variants')) {
+      db.prepare('ALTER TABLE products ADD COLUMN variants TEXT DEFAULT \'[]\'').run();
+    }
+    const orderItemCols = db.prepare("PRAGMA table_info(order_items)").all();
+    if (!orderItemCols.find(c => c.name === 'variant')) {
+      db.prepare('ALTER TABLE order_items ADD COLUMN variant TEXT').run();
+    }
+    const verificationCols = db.prepare("PRAGMA table_info(student_verifications)").all();
+    if (!verificationCols.find(c => c.name === 'userId')) {
+      db.prepare('ALTER TABLE student_verifications ADD COLUMN userId TEXT REFERENCES users(id)').run();
+    }
+    const userCols = db.prepare("PRAGMA table_info(users)").all();
+    if (!userCols.find(c => c.name === 'phoneVerified')) {
+      db.prepare('ALTER TABLE users ADD COLUMN phoneVerified INTEGER DEFAULT 0').run();
+    }
+  } catch (migrationErr) {
     console.warn('Migration warning:', migrationErr.message);
   }
 }

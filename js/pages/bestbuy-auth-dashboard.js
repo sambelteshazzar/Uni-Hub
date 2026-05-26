@@ -243,10 +243,22 @@ Pages.handleLoginBB = async function (event) {
       '</button>' +
       '</div>' +
       '</div>' +
-      '<div class="bb-form-group">' +
-      '<label for="reg-phone" class="bb-form-label">Phone Number <span class="required-star">*</span></label>' +
-      '<input type="tel" id="reg-phone" name="phone" class="bb-form-input" placeholder="+233 50 123 4567" required />' +
-      '</div>' +
+'<div class="bb-form-group">' +
+'<label for="reg-phone" class="bb-form-label">Phone Number <span class="required-star">*</span></label>' +
+'<div style="display: flex; gap: 8px;">' +
+'<input type="tel" id="reg-phone" name="phone" class="bb-form-input" placeholder="+233 50 123 4567" required style="flex: 1;" />' +
+'<button type="button" id="send-otp-btn-bb" class="bb-submit-btn" style="white-space: nowrap; padding: 10px 16px; font-size: 13px; min-width: auto; margin: 0;" onclick="Pages.sendOtp(\'reg-phone\', \'send-otp-btn-bb\', \'otp-section-bb\')">Send Code</button>' +
+'</div>' +
+'<div id="otp-section-bb" style="display: none; margin-top: 12px;">' +
+'<label for="otp-code-bb" class="bb-form-label">Verification Code</label>' +
+'<div style="display: flex; gap: 8px;">' +
+'<input type="text" id="otp-code-bb" placeholder="Enter 6-digit code" class="bb-form-input" maxlength="6" style="flex: 1;" />' +
+'<button type="button" id="verify-otp-btn-bb" class="bb-submit-btn" style="white-space: nowrap; padding: 10px 16px; font-size: 13px; min-width: auto; margin: 0;" onclick="Pages.verifyOtpAndProceed(\'reg-phone\', \'otp-code-bb\', \'verify-otp-btn-bb\', \'otp-section-bb\', \'phone-verified-msg-bb\')">Verify</button>' +
+'</div>' +
+'<div id="otp-timer-bb" style="font-size: 12px; color: #6b7280; margin-top: 4px;"></div>' +
+'<div id="phone-verified-msg-bb" style="display: none; color: #10b981; font-size: 13px; margin-top: 6px; font-weight: 600;">&#10003; Phone number verified</div>' +
+'</div>' +
+'</div>' +
       '<div class="bb-university-select">' +
       '<label for="reg-university" class="bb-form-label">University <span class="required-star">*</span></label>' +
       '<select id="reg-university" name="university" class="bb-form-input" required>' +
@@ -329,29 +341,33 @@ Pages.handleLoginBB = async function (event) {
       })();
     };
 
-    Pages.handleRegisterBB = async function (event) {
-      event.preventDefault();
-      const firstName = document.getElementById('reg-firstName').value;
-      const lastName = document.getElementById('reg-lastName').value;
-      const email = document.getElementById('reg-email').value;
-      const phone = document.getElementById('reg-phone').value;
-      const password = document.getElementById('reg-password').value;
-      const university = document.getElementById('reg-university').value;
-      const fullName = firstName + ' ' + lastName;
+Pages.handleRegisterBB = async function (event) {
+  event.preventDefault();
+  const verifiedMsg = document.getElementById('phone-verified-msg-bb');
+  if (!verifiedMsg || verifiedMsg.style.display === 'none') {
+    Toast.error('Please verify your phone number with OTP before creating an account.');
+    return;
+  }
+  const firstName = document.getElementById('reg-firstName').value;
+  const lastName = document.getElementById('reg-lastName').value;
+  const email = document.getElementById('reg-email').value;
+  const phone = document.getElementById('reg-phone').value;
+  const password = document.getElementById('reg-password').value;
+  const university = document.getElementById('reg-university').value;
+  const fullName = firstName + ' ' + lastName;
 
-      const userData = {
-        fullName: fullName,
-        email: email,
-        phone: phone,
-        password: password,
-        university: university,
-      };
+  const userData = {
+    fullName: fullName,
+    email: email,
+    phone: phone,
+    password: password,
+    university: university,
+  };
 
   const result = await authManager.register(userData);
   if (result.success) {
     Pages.updateNavbar();
     Pages.updateCartBadge();
-    // Redirect to landing page after registration
     Pages.renderLanding();
   } else {
     Toast.error('Registration failed: ' + result.error);
@@ -750,5 +766,16 @@ Pages.updateNavbar = function () {
     };
 
     console.log('✓ Best Buy auth & dashboard renderers loaded');
+
+  Pages.sendOtp = async function (phoneInputId, btnId, otpSectionId) {
+    if (typeof AuthPageMethods !== 'undefined' && AuthPageMethods.sendOtp) {
+      return AuthPageMethods.sendOtp(phoneInputId, btnId, otpSectionId);
+    }
+  };
+  Pages.verifyOtpAndProceed = async function (phoneInputId, codeInputId, btnId, otpSectionId, verifiedMsgId) {
+    if (typeof AuthPageMethods !== 'undefined' && AuthPageMethods.verifyOtpAndProceed) {
+      return AuthPageMethods.verifyOtpAndProceed(phoneInputId, codeInputId, btnId, otpSectionId, verifiedMsgId);
+    }
+  };
   }, 50); // Check every 50ms
 })();

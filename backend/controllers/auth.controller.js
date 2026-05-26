@@ -4,6 +4,8 @@ const { db, mapUserRow } = require('../utils/db');
 const { generateToken, generateResetToken } = require('../utils/token.util');
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { sendPasswordResetEmail } = require('../utils/emailService');
+const { sendOtpSms } = require('../utils/smsService');
+const { createOtp, verifyOtp, isPhoneVerified, clearOtp } = require('../utils/otpService');
 const logActivity = require('../utils/logActivity');
 
 function getPublicProfile(user) {
@@ -13,7 +15,72 @@ function getPublicProfile(user) {
 }
 
 /**
- * @desc Register new user
+ * @desc Send phone OTP for signup verification
+ * @route POST /api/auth/send-otp
+ * @access Public
+ */
+exports.sendOtp = asyncHandler(async (req, res) => {
+  const { phone } = req.body;
+
+  if (!phone || typeof phone !== 'string' || !/^[\d\s+\-()]{7,15}$/.test(phone)) {
+    throw new ApiError(400, 'A valid phone number is required');
+  }
+
+  const existingUser = await db('users').findOne({ phone });
+  if (existingUser) {
+    throw new ApiError(400, 'This phone number is already registered');
+  }
+
+  const otpResult = createOtp(phone);
+
+  if (!otpResult.success) {
+    throw new ApiError(429, otpResult.error);
+  }
+
+  const smsResult = await sendOtpSms(phone, otpResult.code);
+
+  if (!smsResult.success && !smsResult.fallback) {
+    throw new ApiError(500, 'Failed to send OTP. Please try again.');
+  }
+
+  const isDev = process.env.NODE_ENV !== 'production' && smsResult.fallback;
+
+  res.json({
+    success: true,
+    message: smsResult.fallback
+      ? 'OTP generated (check server console in development)'
+      : 'OTP sent to your phone number',
+    ...(isDev ? { code: otpResult.code } : {}),
+    expiresAt: otpResult.expiresAt,
+  });
+});
+
+/**
+ * @desc Verify phone OTP
+ * @route POST /api/auth/verify-otp
+ * @access Public
+ */
+exports.verifyOtp = asyncHandler(async (req, res) => {
+  const { phone, code } = req.body;
+
+  if (!phone || !code) {
+    throw new ApiError(400, 'Phone number and verification code are required');
+  }
+
+  const result = verifyOtp(phone, code);
+
+  if (!result.success) {
+    throw new ApiError(400, result.error);
+  }
+
+  res.json({
+    success: true,
+    message: 'Phone number verified successfully',
+  });
+});
+
+/**
+ * @desc Register new user (phone must be OTP-verified first)
  * @route POST /api/auth/register
  * @access Public
  */
@@ -40,13 +107,22 @@ exports.register = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'University is required');
   }
 
-  if (phone && typeof phone === 'string' && !/^[\d\s+\-()]{7,15}$/.test(phone)) {
-    throw new ApiError(400, 'Invalid phone number format');
+  if (!phone || typeof phone !== 'string' || !/^[\d\s+\-()]{7,15}$/.test(phone)) {
+    throw new ApiError(400, 'A valid phone number is required');
+  }
+
+  if (!isPhoneVerified(phone)) {
+    throw new ApiError(400, 'Phone number must be verified with OTP before registering');
   }
 
   const existingUser = await db('users').findOne({ email });
   if (existingUser) {
     throw new ApiError(400, 'Email already registered');
+  }
+
+  const existingPhone = await db('users').findOne({ phone });
+  if (existingPhone) {
+    throw new ApiError(400, 'This phone number is already registered');
   }
 
   const hashedPassword = await bcrypt.hash(password, 12);
@@ -61,7 +137,10 @@ exports.register = asyncHandler(async (req, res) => {
     hall,
     role: process.env.NODE_ENV === 'test' && req.body.role === 'admin' ? 'admin' : 'buyer',
     isVerified: 0,
+    phoneVerified: 1,
   });
+
+  clearOtp(phone);
 
   const mappedUser = mapUserRow(user);
 
