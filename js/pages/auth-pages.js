@@ -1044,19 +1044,7 @@ const AuthPageMethods = {
 
   <div class="form-group-modern">
   <label for="phone" class="form-label">Phone Number</label>
-  <div class="otp-phone-row">
   <input type="tel" id="phone" name="phone" placeholder="+233 50 123 4567" class="form-input" required />
-  <button type="button" id="send-otp-btn" class="submit-btn submit-btn-primary" style="white-space: nowrap; padding: 10px 16px; font-size: 13px; min-width: auto;" onclick="Pages.sendOtp('phone', 'send-otp-btn', 'otp-section')">Send Code</button>
-  </div>
-  <div id="otp-section" style="display: none; margin-top: 12px;">
-  <label for="otp-code" class="form-label">Verification Code</label>
-  <div class="otp-phone-row">
-  <input type="text" id="otp-code" name="otp-code" placeholder="Enter 6-digit code" class="form-input" maxlength="6" pattern="\\d{6}" />
-  <button type="button" id="verify-otp-btn" class="submit-btn submit-btn-primary" style="white-space: nowrap; padding: 10px 16px; font-size: 13px; min-width: auto;" onclick="Pages.verifyOtpAndProceed('phone', 'otp-code', 'verify-otp-btn', 'otp-section', 'phone-verified-msg')">Verify</button>
-  </div>
-    <div id="otp-timer" style="font-size: 12px; color: #6b7280; margin-top: 4px;"></div>
-    <div id="phone-verified-msg" style="display: none; color: #10b981; font-size: 13px; margin-top: 6px; font-weight: 600;">&#10003; Phone number verified</div>
-  </div>
   </div>
 
     <div class="form-group-modern">
@@ -1109,12 +1097,6 @@ const AuthPageMethods = {
   const form = document.getElementById('register-form');
   const selectedUniversity = StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
 
-  const phoneVerified = document.getElementById('phone-verified-msg');
-  if (phoneVerified && phoneVerified.style.display === 'none') {
-    Toast.error('Please verify your phone number with OTP before creating an account.');
-    return;
-  }
-
   const userData = {
     fullName: form.fullName.value,
     email: form.email.value,
@@ -1145,89 +1127,6 @@ const AuthPageMethods = {
     }
   } else {
     Toast.error('Registration failed: ' + result.error);
-  }
-  },
-
-  _otpCooldowns: {},
-
-  async sendOtp (phoneInputId, btnId, otpSectionId) {
-  const phoneInput = document.getElementById(phoneInputId);
-  const btn = document.getElementById(btnId);
-  const phone = phoneInput ? phoneInput.value.trim() : '';
-
-  if (!phone || !/^[\d\s+\-()]{7,15}$/.test(phone)) {
-    Toast.error('Please enter a valid phone number first.');
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'Sending...';
-
-  const result = await authManager.sendPhoneOtp(phone);
-
-  if (result.success) {
-    const otpSection = document.getElementById(otpSectionId);
-    if (otpSection) otpSection.style.display = 'block';
-    const timerEl = document.getElementById('otp-timer');
-    let cooldown = 60;
-    btn.textContent = cooldown + 's';
-    Pages._otpCooldowns[phoneInputId] = setInterval(() => {
-      cooldown--;
-      if (cooldown <= 0) {
-      clearInterval(Pages._otpCooldowns[phoneInputId]);
-      btn.disabled = false;
-      btn.textContent = 'Resend';
-      if (timerEl) timerEl.textContent = '';
-      } else {
-      btn.textContent = cooldown + 's';
-      if (timerEl) timerEl.textContent = 'You can resend in ' + cooldown + 's';
-      }
-    }, 1000);
-    if (result.code) {
-      const otpInput = otpSection ? otpSection.querySelector('#otp-code') : null;
-      if (otpInput) otpInput.value = result.code;
-      Toast.success('Dev mode: OTP auto-filled. In production, check your phone.');
-    } else {
-      Toast.success('Verification code sent to your phone.');
-    }
-  } else {
-    btn.disabled = false;
-    btn.textContent = 'Send Code';
-    Toast.error(result.error || 'Failed to send OTP.');
-  }
-  },
-
-  async verifyOtpAndProceed (phoneInputId, codeInputId, btnId, otpSectionId, verifiedMsgId) {
-  const phoneInput = document.getElementById(phoneInputId);
-  const codeInput = document.getElementById(codeInputId);
-  const btn = document.getElementById(btnId);
-  const phone = phoneInput ? phoneInput.value.trim() : '';
-  const code = codeInput ? codeInput.value.trim() : '';
-
-  if (!code || code.length !== 6) {
-    Toast.error('Please enter the 6-digit verification code.');
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'Verifying...';
-
-  const result = await authManager.verifyPhoneOtp(phone, code);
-
-  if (result.success) {
-    Toast.success('Phone number verified!');
-    const verifiedMsg = document.getElementById(verifiedMsgId);
-    if (verifiedMsg) verifiedMsg.style.display = 'block';
-    if (codeInput) codeInput.disabled = true;
-    btn.textContent = 'Verified';
-    btn.disabled = true;
-    if (phoneInput) phoneInput.readOnly = true;
-    const sendBtn = document.getElementById('send-otp-btn');
-    if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = 'Verified'; }
-  } else {
-    btn.disabled = false;
-    btn.textContent = 'Verify';
-    Toast.error(result.error || 'Verification failed.');
   }
   },
 
@@ -1369,8 +1268,6 @@ const AuthPageMethods = {
 window.AuthPageMethods = AuthPageMethods;
 
 if (typeof Pages !== 'undefined') {
-  Pages.sendOtp = AuthPageMethods.sendOtp;
-  Pages.verifyOtpAndProceed = AuthPageMethods.verifyOtpAndProceed;
   Pages.handleRegister = AuthPageMethods.handleRegister;
   Pages.handleLogin = AuthPageMethods.handleLogin;
   Pages.handleForgotPassword = AuthPageMethods.handleForgotPassword;

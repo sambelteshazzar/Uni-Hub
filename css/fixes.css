@@ -1602,19 +1602,3 @@ html {
   justify-content: center;
 }
 }
-
-.otp-phone-row {
-  display: flex;
-  gap: 8px;
-  align-items: stretch;
-}
-
-.otp-phone-row .form-input {
-  width: auto;
-  flex: 1;
-  min-width: 0;
-}
-
-.otp-phone-row .form-input[type="text"] {
-  max-width: 200px;
-}

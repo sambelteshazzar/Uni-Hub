@@ -418,12 +418,8 @@ CREATE INDEX IF NOT EXISTS idx_verifications_userId ON student_verifications(use
     const verificationCols = db.prepare("PRAGMA table_info(student_verifications)").all();
     if (!verificationCols.find(c => c.name === 'userId')) {
       db.prepare('ALTER TABLE student_verifications ADD COLUMN userId TEXT REFERENCES users(id)').run();
-    }
-    const userCols = db.prepare("PRAGMA table_info(users)").all();
-    if (!userCols.find(c => c.name === 'phoneVerified')) {
-      db.prepare('ALTER TABLE users ADD COLUMN phoneVerified INTEGER DEFAULT 0').run();
-    }
-  } catch (migrationErr) {
+  }
+} catch (migrationErr) {
     console.warn('Migration warning:', migrationErr.message);
   }
 }

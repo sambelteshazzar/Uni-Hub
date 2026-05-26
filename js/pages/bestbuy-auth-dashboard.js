@@ -245,16 +245,8 @@ Pages.handleLoginBB = async function (event) {
       '</div>' +
 '<div class="bb-form-group">' +
 '<label for="reg-phone" class="bb-form-label">Phone Number <span class="required-star">*</span></label>' +
-'<div class="bb-phone-row">' +
-  '<input type="tel" id="reg-phone" name="phone" class="bb-form-input" placeholder="+233 50 123 4567" required />' +
-  '<button type="button" id="send-otp-btn-bb" class="bb-submit-btn" style="white-space: nowrap; padding: 10px 16px; font-size: 13px; min-width: auto; margin: 0;" onclick="Pages.sendOtp(\'reg-phone\', \'send-otp-btn-bb\', \'otp-section-bb\')">Send Code</button>' +
-  '</div>' +
-  '<div id="otp-section-bb" style="display: none; margin-top: 12px;">' +
-  '<label for="otp-code-bb" class="bb-form-label">Verification Code</label>' +
-  '<div class="bb-phone-row">' +
-  '<input type="text" id="otp-code-bb" placeholder="Enter 6-digit code" class="bb-form-input" maxlength="6" />' +
-  '<button type="button" id="verify-otp-btn-bb" class="bb-submit-btn" style="white-space: nowrap; padding: 10px 16px; font-size: 13px; min-width: auto; margin: 0;" onclick="Pages.verifyOtpAndProceed(\'reg-phone\', \'otp-code-bb\', \'verify-otp-btn-bb\', \'otp-section-bb\', \'phone-verified-msg-bb\')">Verify</button>' +
-  '</div>'
+'<input type="tel" id="reg-phone" name="phone" class="bb-form-input" placeholder="+233 50 123 4567" required />' +
+'</div>' +
     );
     })
     .join('')
@@ -523,17 +515,6 @@ Pages.updateNavbar = function () {
   }
     };
 
-    console.log('✓ Best Buy auth & dashboard renderers loaded');
-
-  Pages.sendOtp = async function (phoneInputId, btnId, otpSectionId) {
-    if (typeof AuthPageMethods !== 'undefined' && AuthPageMethods.sendOtp) {
-      return AuthPageMethods.sendOtp(phoneInputId, btnId, otpSectionId);
-    }
-  };
-  Pages.verifyOtpAndProceed = async function (phoneInputId, codeInputId, btnId, otpSectionId, verifiedMsgId) {
-    if (typeof AuthPageMethods !== 'undefined' && AuthPageMethods.verifyOtpAndProceed) {
-      return AuthPageMethods.verifyOtpAndProceed(phoneInputId, codeInputId, btnId, otpSectionId, verifiedMsgId);
-    }
-  };
-  }, 50); // Check every 50ms
+console.log('✓ Best Buy auth & dashboard renderers loaded');
+}, 50); // Check every 50ms
 })();
