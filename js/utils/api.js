@@ -6,7 +6,7 @@
 class API {
   constructor (baseURL = null) {
     this.baseURL =
-      baseURL || (typeof window !== 'undefined' && window.API_URL) || 'http://localhost:5000/api';
+      baseURL || (typeof window !== 'undefined' && window.API_URL) || (typeof import !== 'undefined' && import.meta && import.meta.env && import.meta.env.VITE_API_URL) || 'http://localhost:5000/api';
     this.timeout = 30000;
     this._csrfToken = null;
     this._csrfPromise = null;
