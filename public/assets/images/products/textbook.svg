@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#faf8f5"/>
+  <rect x="100" y="70" width="200" height="160" rx="5" fill="#2c5282" stroke="#1a365d" stroke-width="2"/>
+  <rect x="110" y="85" width="180" height="120" fill="#fff" opacity="0.9"/>
+  <text x="200" y="120" text-anchor="middle" font-family="Georgia, serif" font-size="24" fill="#2c5282" font-weight="bold">ECONOMICS</text>
+  <text x="200" y="145" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#666">Introductory Economics</text>
+  <text x="200" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#666">Samuelson - 10th Edition</text>
+  <rect x="100" y="75" width="10" height="150" fill="#1a365d"/>
+  <text x="200" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#333">Textbook</text>
+  <text x="200" y="270" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#666">Perfect for ECON 101</text>
+</svg>

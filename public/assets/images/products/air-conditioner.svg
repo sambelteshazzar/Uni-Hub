@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#f0f0f0"/>
+  <rect x="50" y="80" width="300" height="140" rx="10" fill="#e0e0e0" stroke="#999" stroke-width="2"/>
+  <rect x="70" y="100" width="260" height="80" rx="5" fill="#fff"/>
+  <line x1="70" y1="140" x2="330" y2="140" stroke="#ccc" stroke-width="1"/>
+  <line x1="70" y1="160" x2="330" y2="160" stroke="#ccc" stroke-width="1"/>
+  <circle cx="350" cy="200" r="15" fill="#666"/>
+  <text x="200" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#333">Air Conditioner</text>
+  <text x="200" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#666">NASCO 1.5HP Split</text>
+</svg>

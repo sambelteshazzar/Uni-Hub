@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#f8f9fa"/>
+  <path d="M140 60 L260 60 L280 220 L120 220 Z" fill="#ffffff" stroke="#cbd5e0" stroke-width="2"/>
+  <path d="M140 60 L130 140 L150 140 L160 60" fill="#e2e8f0"/>
+  <path d="M260 60 L270 140 L250 140 L240 60" fill="#e2e8f0"/>
+  <line x1="200" y1="60" x2="200" y2="220" stroke="#e2e8f0" stroke-width="1"/>
+  <circle cx="185" cy="100" r="4" fill="#cbd5e0"/>
+  <circle cx="185" cy="140" r="4" fill="#cbd5e0"/>
+  <circle cx="185" cy="180" r="4" fill="#cbd5e0"/>
+  <rect x="155" y="110" width="30" height="25" rx="2" fill="#fff" stroke="#e2e8f0"/>
+  <rect x="215" y="110" width="30" height="25" rx="2" fill="#fff" stroke="#e2e8f0"/>
+  <ellipse cx="230" cy="180" rx="15" ry="8" fill="#f6ad55" opacity="0.5"/>
+  <text x="200" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#333">Lab Coat</text>
+  <text x="200" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#666">Size M - Clean & Ready</text>
+</svg>

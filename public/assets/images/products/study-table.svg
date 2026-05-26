@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#faf8f5"/>
+  <rect x="80" y="100" width="240" height="15" fill="#8b7355"/>
+  <rect x="90" y="115" width="220" height="80" fill="#a08060"/>
+  <rect x="100" y="125" width="80" height="25" fill="#8b7355" stroke="#6b5340" stroke-width="1"/>
+  <rect x="105" y="130" width="70" height="3" fill="#6b5340"/>
+  <rect x="105" y="140" width="70" height="3" fill="#6b5340"/>
+  <rect x="105" y="150" width="70" height="3" fill="#6b5340"/>
+  <rect x="200" y="125" width="100" height="60" fill="#a08060" stroke="#6b5340" stroke-width="1"/>
+  <rect x="210" y="145" width="80" height="3" fill="#6b5340"/>
+  <rect x="100" y="195" width="20" height="45" fill="#6b5340"/>
+  <rect x="280" y="195" width="20" height="45" fill="#6b5340"/>
+  <text x="200" y="50" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#333">Study Table</text>
+  <text x="200" y="270" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#666">Wooden with Drawer & Shelf</text>
+</svg>

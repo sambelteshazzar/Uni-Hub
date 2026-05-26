@@ -1,4 +1,4 @@
-window.Toast = {
+const Toast = {
   _container: null,
 
   _getContainer () {
@@ -44,3 +44,7 @@ window.Toast = {
   warning (message) { this.show(message, 'warning'); },
   info (message) { this.show(message, 'info'); }
 };
+
+window.Toast = Toast;
+
+export { Toast };
