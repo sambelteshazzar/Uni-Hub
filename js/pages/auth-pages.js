@@ -1044,16 +1044,16 @@ const AuthPageMethods = {
 
   <div class="form-group-modern">
   <label for="phone" class="form-label">Phone Number</label>
-  <div style="display: flex; gap: 8px; align-items: flex-start;">
-    <input type="tel" id="phone" name="phone" placeholder="+233 50 123 4567" class="form-input" required style="flex: 1;" />
-    <button type="button" id="send-otp-btn" class="submit-btn submit-btn-primary" style="white-space: nowrap; padding: 10px 16px; font-size: 13px; min-width: auto;" onclick="Pages.sendOtp('phone', 'send-otp-btn', 'otp-section')">Send Code</button>
+  <div class="otp-phone-row">
+  <input type="tel" id="phone" name="phone" placeholder="+233 50 123 4567" class="form-input" required />
+  <button type="button" id="send-otp-btn" class="submit-btn submit-btn-primary" style="white-space: nowrap; padding: 10px 16px; font-size: 13px; min-width: auto;" onclick="Pages.sendOtp('phone', 'send-otp-btn', 'otp-section')">Send Code</button>
   </div>
   <div id="otp-section" style="display: none; margin-top: 12px;">
-    <label for="otp-code" class="form-label">Verification Code</label>
-    <div style="display: flex; gap: 8px; align-items: flex-start;">
-      <input type="text" id="otp-code" name="otp-code" placeholder="Enter 6-digit code" class="form-input" maxlength="6" pattern="\\d{6}" style="flex: 1;" />
-      <button type="button" id="verify-otp-btn" class="submit-btn submit-btn-primary" style="white-space: nowrap; padding: 10px 16px; font-size: 13px; min-width: auto;" onclick="Pages.verifyOtpAndProceed('phone', 'otp-code', 'verify-otp-btn', 'otp-section', 'phone-verified-msg')">Verify</button>
-    </div>
+  <label for="otp-code" class="form-label">Verification Code</label>
+  <div class="otp-phone-row">
+  <input type="text" id="otp-code" name="otp-code" placeholder="Enter 6-digit code" class="form-input" maxlength="6" pattern="\\d{6}" />
+  <button type="button" id="verify-otp-btn" class="submit-btn submit-btn-primary" style="white-space: nowrap; padding: 10px 16px; font-size: 13px; min-width: auto;" onclick="Pages.verifyOtpAndProceed('phone', 'otp-code', 'verify-otp-btn', 'otp-section', 'phone-verified-msg')">Verify</button>
+  </div>
     <div id="otp-timer" style="font-size: 12px; color: #6b7280; margin-top: 4px;"></div>
     <div id="phone-verified-msg" style="display: none; color: #10b981; font-size: 13px; margin-top: 6px; font-weight: 600;">&#10003; Phone number verified</div>
   </div>

@@ -213,6 +213,22 @@
   color: #666666;
 }
 
+.bb-phone-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.bb-phone-row .bb-form-input {
+  width: auto;
+  flex: 1;
+  min-width: 0;
+}
+
+.bb-phone-row .bb-form-input[type="text"] {
+  max-width: 200px;
+}
+
 /* Password Input */
 .bb-password-wrapper {
   position: relative;
