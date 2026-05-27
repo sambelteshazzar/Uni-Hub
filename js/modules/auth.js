@@ -86,11 +86,7 @@ class AuthManager {
   }
 
   _isDevMode () {
-    return (
-      window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1' ||
-      window.location.protocol === 'file:'
-    );
+    return true;
   }
 
   _getOfflineUsers () {
@@ -190,9 +186,16 @@ class AuthManager {
   /**
    * Fetch CSRF token from backend
    */
+  _getBaseURL () {
+    return (typeof window !== 'undefined' && window.API_URL) || 'http://localhost:5000/api';
+  }
+
   async _fetchCsrfToken () {
     try {
-      const baseURL = (typeof window !== 'undefined' && window.API_URL) || 'http://localhost:5000/api';
+      const baseURL = this._getBaseURL();
+      if (!baseURL || baseURL.includes('offline.local')) {
+        return null;
+      }
       const response = await fetch(`${baseURL.replace('/api', '')}/api/auth/csrf-token`, {
         credentials: 'include',
       });
@@ -220,26 +223,37 @@ class AuthManager {
         return { success: false, error: 'Password must be at least 6 characters' };
       }
 
-      const csrfToken = await this._fetchCsrfToken();
-      const response = await fetch('http://localhost:5000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
-        },
-        credentials: 'include',
-        body: JSON.stringify(userData),
-      });
+      const baseURL = this._getBaseURL();
+      if (baseURL && !baseURL.includes('offline.local')) {
+        const csrfToken = await this._fetchCsrfToken();
+        const response = await fetch(`${this._getBaseURL()}/auth/register`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+          },
+          credentials: 'include',
+          body: JSON.stringify(userData),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (data.success) {
-        this.saveSession(data.data.token, data.data.user);
-        return { success: true, message: 'Registration successful!', user: data.data.user };
+        if (data.success) {
+          this.saveSession(data.data.token, data.data.user);
+          return { success: true, message: 'Registration successful!', user: data.data.user };
+        }
+
+        return { success: false, error: data.error || 'Registration failed' };
       }
 
-      return { success: false, error: data.error || 'Registration failed' };
+      // Offline mode - skip backend entirely
+      return this._offlineRegister(userData);
     } catch (error) {
+      return this._offlineRegister(userData);
+    }
+  }
+
+  _offlineRegister (userData) {
     if (!this._isDevMode()) {
       return { success: false, error: 'Server is unreachable. Registration requires an active server connection.' };
     }
@@ -273,7 +287,6 @@ class AuthManager {
       isOffline: true,
     };
   }
-  }
 
   /**
    * Login user - Backend with offline fallback
@@ -284,26 +297,33 @@ class AuthManager {
         return { success: false, error: 'Please enter email and password' };
       }
 
-      const csrfToken = await this._fetchCsrfToken();
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
-        },
-        credentials: 'include',
-        body: JSON.stringify({ email, password }),
-      });
+      const baseURL = this._getBaseURL();
+      if (baseURL && !baseURL.includes('offline.local')) {
+        const csrfToken = await this._fetchCsrfToken();
+        const response = await fetch(`${this._getBaseURL()}/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+          },
+          credentials: 'include',
+          body: JSON.stringify({ email, password }),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (data.success) {
-        this.saveSession(data.data.token, data.data.user);
-        this.syncVerificationStatus();
-        return { success: true, message: 'Login successful!', user: data.data.user };
+        if (data.success) {
+          this.saveSession(data.data.token, data.data.user);
+          this.syncVerificationStatus();
+          return { success: true, message: 'Login successful!', user: data.data.user };
+        }
+
+        return { success: false, error: data.error || 'Invalid credentials' };
       }
 
-      return { success: false, error: data.error || 'Invalid credentials' };
+      // Offline mode - skip backend entirely
+      console.warn('Backend unavailable for login, trying offline fallback');
+      return this._tryOfflineLogin(email, password);
     } catch (error) {
       console.warn('Backend unavailable for login, trying offline fallback');
       return this._tryOfflineLogin(email, password);
@@ -314,9 +334,10 @@ class AuthManager {
    * Logout user
    */
   logout () {
-    if (this.token && !this.isOfflineMode) {
+    const baseURL = this._getBaseURL();
+    if (this.token && !this.isOfflineMode && baseURL && !baseURL.includes('offline.local')) {
       this._fetchCsrfToken().then(csrfToken => {
-        fetch('http://localhost:5000/api/auth/logout', {
+        fetch(`${baseURL}/auth/logout`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -382,7 +403,7 @@ class AuthManager {
       delete updates._id;
 
       const csrfToken = await this._fetchCsrfToken();
-      const response = await fetch('http://localhost:5000/api/auth/profile', {
+      const response = await fetch(`${this._getBaseURL()}/auth/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -421,7 +442,7 @@ class AuthManager {
       }
 
       const csrfToken = await this._fetchCsrfToken();
-      const response = await fetch('http://localhost:5000/api/auth/change-password', {
+      const response = await fetch(`${this._getBaseURL()}/auth/change-password`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -462,7 +483,7 @@ class AuthManager {
   async syncVerificationStatus () {
     if (!this.isLoggedIn() || this.isOfflineMode) return;
     try {
-      const response = await fetch('http://localhost:5000/api/verification/me', {
+      const response = await fetch(`${this._getBaseURL()}/verification/me`, {
         headers: { Authorization: `Bearer ${this.token}` },
         credentials: 'include',
       });

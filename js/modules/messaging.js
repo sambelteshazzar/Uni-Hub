@@ -28,6 +28,10 @@ class MessageManager {
   }
 
   async _fetchWithCsrf (url, options = {}) {
+    if (window.API_URL && window.API_URL.includes('offline.local')) {
+      const offlineBody = JSON.stringify({ success: false, error: 'Not available in offline mode' });
+      return new Response(offlineBody, { status: 503, statusText: 'Offline' });
+    }
     const token = typeof StorageManager !== 'undefined' ? StorageManager.getAuthToken() : null;
     const isMutating = options.method && !['GET', 'HEAD', 'OPTIONS'].includes(options.method.toUpperCase());
     let csrfHeaders = {};
@@ -85,17 +89,22 @@ class MessageManager {
         console.log('✓ Socket.IO loaded from CDN');
         resolve();
       };
-      script.onerror = () => {
-        // If CDN fails, try loading from backend
-        const backendScript = document.createElement('script');
-        backendScript.src = `${window.API_URL?.replace('/api', '') || 'http://localhost:5000'}/socket.io/socket.io.js`;
-        backendScript.onload = resolve;
-        backendScript.onerror = () => {
-          console.log('⚠ Socket.IO not available - messaging will use polling mode');
-          resolve(); // Don't reject, just continue
-        };
-        document.head.appendChild(backendScript);
-      };
+  script.onerror = () => {
+    if (window.API_URL && window.API_URL.includes('offline.local')) {
+      console.log('⚠ Socket.IO not available - offline mode, messaging disabled');
+      resolve();
+      return;
+    }
+    // If CDN fails, try loading from backend
+    const backendScript = document.createElement('script');
+    backendScript.src = `${window.API_URL?.replace('/api', '') || 'http://localhost:5000'}/socket.io/socket.io.js`;
+    backendScript.onload = resolve;
+    backendScript.onerror = () => {
+      console.log('⚠ Socket.IO not available - messaging will use polling mode');
+      resolve(); // Don't reject, just continue
+    };
+    document.head.appendChild(backendScript);
+  };
       document.head.appendChild(script);
     });
   }
@@ -104,6 +113,10 @@ class MessageManager {
    * Connect to Socket.IO server
    */
   connect () {
+    if (window.API_URL && window.API_URL.includes('offline.local')) {
+      console.warn('Offline mode - Socket.IO messaging not available');
+      return;
+    }
     // Get auth token from session (authManager storage format)
     let token;
     try {

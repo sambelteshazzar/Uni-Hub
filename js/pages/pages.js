@@ -1071,10 +1071,11 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
 
 <div id="color-picker-section"></div>
 
-<script>
-(function() {
+  <script>
+  (function() {
   var productId = '${productId}';
   var apiUrl = window.API_URL || 'http://localhost:5000/api';
+  if (apiUrl.includes('offline.local')) return;
   fetch(apiUrl + '/products/' + productId + '/colors')
     .then(function(r) { return r.json(); })
     .then(function(res) {

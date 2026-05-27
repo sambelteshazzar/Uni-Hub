@@ -32,7 +32,8 @@ class ProductsManager {
   */
   async init () {
     try {
-      if (this.useBackend) {
+      const isOffline = window.API_URL && window.API_URL.includes('offline.local');
+      if (this.useBackend && !isOffline) {
         try {
           const controller = new AbortController();
           const timeout = setTimeout(() => controller.abort(), 3000);
@@ -73,6 +74,7 @@ class ProductsManager {
   * Fetch a specific page from the backend API (server-side pagination)
   */
   async fetchPage (page = 1, pageSize = null) {
+    const isOffline = window.API_URL && window.API_URL.includes('offline.local');
     const size = pageSize || this.pageSize;
     const params = new URLSearchParams({ page, limit: size });
 
@@ -94,6 +96,7 @@ class ProductsManager {
     }
 
     try {
+      if (isOffline) throw new Error('Offline');
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5000);
       const response = await fetch(`${window.API_URL}/products?${params.toString()}`, {
@@ -271,7 +274,8 @@ class ProductsManager {
    */
   async addProduct (productData) {
     try {
-      if (this.useBackend) {
+      const isOffline = window.API_URL && window.API_URL.includes('offline.local');
+      if (this.useBackend && !isOffline) {
         try {
           const controller = new AbortController();
           const timeout = setTimeout(() => controller.abort(), 3000);
@@ -333,7 +337,8 @@ class ProductsManager {
    */
   async updateProduct (productId, updates) {
     try {
-      if (this.useBackend) {
+      const isOffline = window.API_URL && window.API_URL.includes('offline.local');
+      if (this.useBackend && !isOffline) {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 3000);
         const token = typeof StorageManager !== 'undefined' ? StorageManager.getAuthToken() : null;
@@ -380,7 +385,8 @@ class ProductsManager {
    */
   async deleteProduct (productId) {
     try {
-      if (this.useBackend) {
+      const isOffline = window.API_URL && window.API_URL.includes('offline.local');
+      if (this.useBackend && !isOffline) {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 3000);
         const token = typeof StorageManager !== 'undefined' ? StorageManager.getAuthToken() : null;

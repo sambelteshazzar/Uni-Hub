@@ -1,6 +1,8 @@
 # Dependencies
 node_modules/
 backend/node_modules/
+
+# Build output
 dist/
 build/
 
@@ -31,7 +33,12 @@ Thumbs.db
 
 # AI agent artifacts
 .kilo/
+.qwen/
+.openclaude-profile.json
 .playwright-cli/
+
+# Vercel CLI state
+.vercel/
 
 # Testing
 coverage/
@@ -39,6 +46,9 @@ coverage/
 # Database
 *.sqlite
 *.db
+backend/data/*.db
+backend/data/*.db-shm
+backend/data/*.db-wal
 
 # Uploads
 uploads/

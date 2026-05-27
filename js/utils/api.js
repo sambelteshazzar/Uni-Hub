@@ -9,12 +9,16 @@ class API {
     try { envAPI = import.meta.env.VITE_API_URL || ''; } catch (e) {}
     this.baseURL =
       baseURL || (typeof window !== 'undefined' && window.API_URL) || envAPI || 'http://localhost:5000/api';
+    this.isStaticDeploy = !this.baseURL || this.baseURL.includes('offline.local');
     this.timeout = 30000;
     this._csrfToken = null;
     this._csrfPromise = null;
   }
 
   async fetchCsrfToken () {
+    if (this.isStaticDeploy) {
+      return null;
+    }
     if (this._csrfToken) return this._csrfToken;
     if (this._csrfPromise) return this._csrfPromise;
 
@@ -65,6 +69,10 @@ class API {
    * @returns {Promise}
    */
   async request (url, options = {}) {
+    if (this.isStaticDeploy) {
+      console.warn('Static deployment - no backend available, returning offline response for:', url);
+      return { success: false, data: null, isOffline: true };
+    }
     try {
       const fullUrl = url.startsWith('http') ? url : this.baseURL + url;
 
@@ -320,6 +328,9 @@ class API {
 
   upload = {
     images: async (files) => {
+      if (this.isStaticDeploy) {
+        return { success: false, error: 'Image upload not available in offline mode', urls: [] };
+      }
       const formData = new FormData();
       files.forEach(file => formData.append('images', file));
       const token = this.getToken();

@@ -4,6 +4,16 @@
 // Single entry point that loads all modules in dependency order
 // Replaces the fragile polling-based module loader in index.html
 
+// Set API_URL for deployed environments (no backend)
+// On localhost, keep the default so backend calls work
+if (typeof window !== 'undefined' && !window.API_URL) {
+  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' && window.location.protocol !== 'file:') {
+    window.API_URL = 'https://offline.local/api';
+  } else {
+    window.API_URL = window.API_URL || 'http://localhost:5000/api';
+  }
+}
+
 /**
  * Module dependency graph - defines loading order
  */

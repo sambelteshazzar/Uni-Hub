@@ -27,7 +27,7 @@ const STORAGE_KEYS = {
 
 // API endpoints (will be used when backend is ready)
 const API_ENDPOINTS = {
-  BASE_URL: 'http://localhost:5000/api',
+  BASE_URL: (typeof window !== 'undefined' && window.API_URL) || 'http://localhost:5000/api',
   AUTH: {
     LOGIN: '/auth/login',
     REGISTER: '/auth/register',

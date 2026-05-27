@@ -11,6 +11,10 @@ class ReviewManager {
   }
 
   async _fetchWithCsrf (url, options = {}) {
+    if (window.API_URL && window.API_URL.includes('offline.local')) {
+      const offlineBody = JSON.stringify({ success: false, error: 'Not available in offline mode' });
+      return new Response(offlineBody, { status: 503, statusText: 'Offline' });
+    }
     const token = typeof StorageManager !== 'undefined' ? StorageManager.getAuthToken() : null;
     const isMutating = options.method && !['GET', 'HEAD', 'OPTIONS'].includes(options.method.toUpperCase());
     let csrfHeaders = {};
