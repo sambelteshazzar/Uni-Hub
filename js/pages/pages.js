@@ -50,7 +50,8 @@ router.register('/product/:id', (params) => this.renderProductDetail(params.id))
 router.register('/messages', (params) => messagesPage.render(params));
 
 // Admin
-  router.register('/admin', () => this.renderAdminDashboard());
+    router.register('/admin', () => this.renderAdminDashboard());
+    router.register('/admin/verifications', () => this.renderAdminVerifications());
     router.register('/admin/products', () => this.renderAdminProducts());
       router.register('/admin/products/edit/:id', (params) => this.renderAdminProductEdit(params.id));
       router.register('/admin/analytics', () => this.renderAdminAnalytics());
@@ -3330,16 +3331,17 @@ window.scrollTo(0, 0);
 
   static getAdminSidebar (activeItem) {
   const adminUser = adminAuthManager.getCurrentUser();
-  const items = [
-  { key: 'dashboard', label: 'Dashboard', icon: Icons.chart, action: 'Pages.renderAdminDashboard()' },
-  { key: 'users', label: 'Users', icon: Icons.users, action: 'Pages.renderAdminUsers()' },
-  { key: 'products', label: 'Products', icon: Icons.package, action: 'Pages.renderAdminProducts()' },
-  { key: 'orders', label: 'Orders', icon: Icons.clipboard, action: 'Pages.renderAdminOrders()' },
+    const items = [
+      { key: 'dashboard', label: 'Dashboard', icon: Icons.chart, action: 'Pages.renderAdminDashboard()' },
+      { key: 'verifications', label: 'Verifications', icon: Icons.shield || Icons.verification, action: 'Pages.renderAdminVerifications()' },
+      { key: 'users', label: 'Users', icon: Icons.users, action: 'Pages.renderAdminUsers()' },
+      { key: 'products', label: 'Products', icon: Icons.package, action: 'Pages.renderAdminProducts()' },
+      { key: 'orders', label: 'Orders', icon: Icons.clipboard, action: 'Pages.renderAdminOrders()' },
       { key: 'reports', label: 'Reports', icon: Icons.chart, action: 'Pages.renderAdminReports()' },
       { key: 'analytics', label: 'Analytics', icon: Icons.chart, action: 'Pages.renderAdminAnalytics()' },
       { key: 'activity', label: 'Activity', icon: Icons.clock || Icons.chart, action: 'Pages.renderAdminActivity()' },
-  { key: 'regions', label: 'Regions', icon: Icons.globe || Icons.chart, action: 'Pages.renderAdminRegions()' },
-  ];
+      { key: 'regions', label: 'Regions', icon: Icons.globe || Icons.chart, action: 'Pages.renderAdminRegions()' },
+    ];
   return `
   <button class="admin-mobile-toggle" onclick="document.querySelector('.admin-sidebar').classList.toggle('open')">&#9776;</button>
   <aside class="admin-sidebar">
@@ -3450,6 +3452,14 @@ static async renderAdminDashboard () {
   <div class="admin-stat-value">${Formatter.formatPrice(stats.summary.totalRevenue)}</div>
   <div class="admin-stat-label">Total Revenue</div>
   </div>
+  <div class="admin-stat-card" style="cursor:pointer;" onclick="Pages.renderAdminVerifications()">
+    <div class="admin-stat-header">
+      <div class="admin-stat-icon" style="background:rgba(245,158,11,0.15);color:#f59e0b;">${Icons.shield || Icons.verification || '🛡️'}</div>
+      ${stats.summary.pendingVerifications > 0 ? `<span class="admin-stat-change warning">${stats.summary.pendingVerifications} pending</span>` : ''}
+    </div>
+    <div class="admin-stat-value">${stats.summary.pendingVerifications || 0}</div>
+    <div class="admin-stat-label">Pending Verifications</div>
+  </div>
   `;
 
   const recentOrdersHtml = (stats.recentOrders || []).map(o => `
@@ -3535,12 +3545,225 @@ static async renderAdminDashboard () {
       </div>
     </div>
   </div>
-  `;
+`;
+}
+
+static async renderAdminVerifications (filter = 'pending') {
+    const adminUser = adminAuthManager.getCurrentUser();
+    if (!adminAuthManager.isLoggedIn()) { this.renderAdminLogin(); return; }
+
+    this.hideOriginalNavFooter();
+    document.body.style.background = '#111827';
+
+    const mainContent = document.getElementById('main-content');
+    const stats = adminVerificationsManager.getStats();
+    const allItems = filter === 'all' ? adminVerificationsManager.getAll()
+      : filter === 'approved' ? adminVerificationsManager.getApproved()
+      : filter === 'rejected' ? adminVerificationsManager.getRejected()
+      : adminVerificationsManager.getPending();
+
+    mainContent.innerHTML = `
+    <div class="admin-container">
+      ${this.getAdminSidebar('verifications')}
+      <main class="admin-main">
+        <div class="admin-header">
+          <div>
+            <h1 class="admin-title">Student Verifications</h1>
+            <p style="margin:0;color:#9ca3af;font-size:0.85rem;">Review and manage student verification requests</p>
+          </div>
+        </div>
+
+        <div class="admin-stats" style="grid-template-columns:repeat(4,1fr);">
+          <div class="admin-stat-card" style="cursor:pointer;" onclick="Pages.renderAdminVerifications('pending')">
+            <div class="admin-stat-value" style="color:#f59e0b;">${stats.pending}</div>
+            <div class="admin-stat-label">Pending</div>
+          </div>
+          <div class="admin-stat-card" style="cursor:pointer;" onclick="Pages.renderAdminVerifications('approved')">
+            <div class="admin-stat-value" style="color:#10b981;">${stats.approved}</div>
+            <div class="admin-stat-label">Approved</div>
+          </div>
+          <div class="admin-stat-card" style="cursor:pointer;" onclick="Pages.renderAdminVerifications('rejected')">
+            <div class="admin-stat-value" style="color:#ef4444;">${stats.rejected}</div>
+            <div class="admin-stat-label">Rejected</div>
+          </div>
+          <div class="admin-stat-card" style="cursor:pointer;" onclick="Pages.renderAdminVerifications('all')">
+            <div class="admin-stat-value">${stats.total}</div>
+            <div class="admin-stat-label">Total</div>
+          </div>
+        </div>
+
+        <div class="admin-card" style="margin-top:1.5rem;">
+          <div class="admin-card-header">
+            <h3>${filter === 'all' ? 'All Verifications' : filter === 'approved' ? 'Approved Verifications' : filter === 'rejected' ? 'Rejected Verifications' : 'Pending Verifications'}</h3>
+            <div style="display:flex;gap:0.5rem;">
+              <button class="btn btn-sm ${filter === 'pending' ? 'btn-primary' : 'btn-ghost'}" onclick="Pages.renderAdminVerifications('pending')" style="font-size:0.75rem;">Pending (${stats.pending})</button>
+              <button class="btn btn-sm ${filter === 'approved' ? 'btn-primary' : 'btn-ghost'}" onclick="Pages.renderAdminVerifications('approved')" style="font-size:0.75rem;">Approved</button>
+              <button class="btn btn-sm ${filter === 'rejected' ? 'btn-primary' : 'btn-ghost'}" onclick="Pages.renderAdminVerifications('rejected')" style="font-size:0.75rem;">Rejected</button>
+              <button class="btn btn-sm ${filter === 'all' ? 'btn-primary' : 'btn-ghost'}" onclick="Pages.renderAdminVerifications('all')" style="font-size:0.75rem;">All</button>
+            </div>
+          </div>
+          <div class="admin-table-container" style="box-shadow:none;border-radius:0;">
+            ${allItems.length === 0 ? `
+              <div style="text-align:center;padding:3rem;color:#6b7280;">
+                <div style="font-size:2.5rem;margin-bottom:1rem;">📋</div>
+                <p style="margin:0;font-size:1rem;">No ${filter} verifications found</p>
+              </div>
+            ` : `
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Student</th>
+                    <th>Student ID</th>
+                    <th>Method</th>
+                    <th>Submitted</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${allItems.map(v => `
+                  <tr id="vrf-row-${v.id}">
+                    <td>
+                      <div style="font-weight:600;color:#f9fafb;">${v.fullName || 'N/A'}</div>
+                      <div style="font-size:0.75rem;color:#9ca3af;">${v.personalEmail || v.universityEmail || v.email || ''}</div>
+                      <div style="font-size:0.75rem;color:#6b7280;">${v.phone || ''}</div>
+                    </td>
+                    <td style="font-family:monospace;color:#60a5fa;">${v.studentId || 'N/A'}</td>
+                    <td>
+                      <span style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.25rem 0.5rem;border-radius:9999px;font-size:0.7rem;font-weight:600;
+                        ${v.verificationMethod === 'email'
+                          ? 'background:rgba(59,130,246,0.15);color:#60a5fa;'
+                          : 'background:rgba(245,158,11,0.15);color:#f59e0b;'}">
+                        ${v.verificationMethod === 'email' ? '📧 Email' : '📄 Document'}
+                      </span>
+                      <div style="font-size:0.7rem;color:#6b7280;margin-top:0.25rem;">Level ${v.level || 'N/A'}${v.hall ? ' · ' + v.hall : ''}</div>
+                    </td>
+                    <td style="font-size:0.8rem;color:#9ca3af;">${Formatter.formatTimeAgo(v.submittedAt)}</td>
+                    <td>
+                      <span class="admin-status-badge ${v.status === 'approved' ? 'delivered' : v.status === 'rejected' ? 'cancelled' : 'placed'}"
+                        style="text-transform:capitalize;">${v.status}</span>
+                      ${v.reviewNotes ? `<div style="font-size:0.7rem;color:#9ca3af;margin-top:0.25rem;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${v.reviewNotes.replace(/"/g, '&quot;')}">💬 ${v.reviewNotes}</div>` : ''}
+                    </td>
+                    <td>
+                      <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
+                        <button class="btn btn-sm" onclick="Pages.viewVerificationDetail('${v.id}')" style="padding:3px 8px;font-size:11px;background:#374151;color:#e5e7eb;border:none;cursor:pointer;">👁 View</button>
+                        ${v.status === 'pending' ? `
+                          <button class="btn btn-sm" onclick="Pages.approveVerification('${v.id}')" style="padding:3px 8px;font-size:11px;background:#059669;color:#fff;border:none;cursor:pointer;">✓ Approve</button>
+                          <button class="btn btn-sm" onclick="Pages.rejectVerification('${v.id}')" style="padding:3px 8px;font-size:11px;background:#dc2626;color:#fff;border:none;cursor:pointer;">✕ Reject</button>
+                        ` : ''}
+                      </div>
+                    </td>
+                  </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            `}
+          </div>
+        </div>
+      </main>
+    </div>`;
   }
 
-  /**
-  * Render Admin Login
-   */
+  static viewVerificationDetail (id) {
+    const v = adminVerificationsManager.getById(id);
+    if (!v) { Toast.error('Verification not found'); return; }
+
+    const overlay = document.createElement('div');
+    overlay.id = 'vrf-detail-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:2000;padding:2rem;';
+    overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+
+    const docsHtml = (v.documents && v.documents.length > 0)
+      ? v.documents.map(d => d.dataUrl
+        ? `<div style="border:1px solid rgba(255,255,255,0.1);border-radius:0.5rem;overflow:hidden;">
+            <div style="padding:0.5rem 0.75rem;background:#111827;font-size:0.75rem;color:#9ca3af;border-bottom:1px solid rgba(255,255,255,0.1);">${d.name} (${(d.size / 1024).toFixed(1)} KB)</div>
+            ${d.type && d.type.startsWith('image/')
+              ? `<img src="${d.dataUrl}" style="max-width:100%;max-height:300px;display:block;margin:0.5rem auto;" alt="${d.name}" />`
+              : `<div style="padding:1rem;text-align:center;color:#6b7280;">📄 ${d.name}</div>`}
+          </div>`
+        : `<div style="padding:0.5rem 0.75rem;background:#111827;border-radius:0.5rem;font-size:0.75rem;color:#9ca3af;border:1px solid rgba(255,255,255,0.1);">${d.name} (${(d.size / 1024).toFixed(1)} KB)</div>`
+      ).join('')
+      : '<div style="color:#6b7280;font-size:0.85rem;">No documents uploaded</div>';
+
+    overlay.innerHTML = `
+    <div style="background:#1f2937;border:1px solid rgba(255,255,255,0.1);border-radius:1rem;width:100%;max-width:600px;max-height:85vh;overflow-y:auto;padding:2rem;">
+      <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:1.5rem;">
+        <div>
+          <h2 style="color:#f9fafb;margin:0 0 0.25rem;font-size:1.25rem;">Verification Details</h2>
+          <span class="admin-status-badge ${v.status === 'approved' ? 'delivered' : v.status === 'rejected' ? 'cancelled' : 'placed'}" style="text-transform:capitalize;">${v.status}</span>
+        </div>
+        <button onclick="document.getElementById('vrf-detail-overlay').remove()" style="background:transparent;border:none;color:#9ca3af;cursor:pointer;font-size:1.25rem;padding:0.25rem;">✕</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
+        <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Full Name</div><div style="color:#f9fafb;font-weight:500;">${v.fullName || 'N/A'}</div></div>
+        <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Student ID</div><div style="color:#60a5fa;font-family:monospace;font-weight:500;">${v.studentId || 'N/A'}</div></div>
+        <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Email</div><div style="color:#f9fafb;">${v.personalEmail || v.universityEmail || v.email || 'N/A'}</div></div>
+        <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Phone</div><div style="color:#f9fafb;">${v.phone || 'N/A'}</div></div>
+        <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Level</div><div style="color:#f9fafb;">Level ${v.level || 'N/A'}</div></div>
+        <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Hall</div><div style="color:#f9fafb;">${v.hall || 'N/A'}</div></div>
+        <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Method</div><div style="color:#f9fafb;">${v.verificationMethod === 'email' ? '📧 University Email' : '📄 Document Upload'}</div></div>
+        <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Submitted</div><div style="color:#f9fafb;font-size:0.85rem;">${Formatter.formatDate(v.submittedAt)}</div></div>
+        ${v.reviewedBy ? `<div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Reviewed By</div><div style="color:#f9fafb;">${v.reviewedBy}</div></div>` : ''}
+        ${v.reviewedAt ? `<div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Reviewed At</div><div style="color:#f9fafb;font-size:0.85rem;">${Formatter.formatDate(v.reviewedAt)}</div></div>` : ''}
+        ${v.reviewNotes ? `<div style="grid-column:1/-1;"><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Review Notes</div><div style="color:#f9fafb;background:#111827;padding:0.75rem;border-radius:0.5rem;font-size:0.85rem;">${v.reviewNotes}</div></div>` : ''}
+      </div>
+
+      <div style="margin-bottom:1.5rem;">
+        <div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">Uploaded Documents</div>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;">${docsHtml}</div>
+      </div>
+
+      ${v.status === 'pending' ? `
+      <div style="border-top:1px solid rgba(255,255,255,0.1);padding-top:1.5rem;">
+        <div style="margin-bottom:1rem;">
+          <label style="font-size:0.8rem;color:#9ca3af;display:block;margin-bottom:0.35rem;">Review Notes (optional)</label>
+          <textarea id="vrf-review-notes-${v.id}" rows="3" placeholder="Add notes about this verification..." style="width:100%;background:#111827;border:1px solid rgba(255,255,255,0.1);border-radius:0.5rem;color:#f9fafb;padding:0.75rem;font-size:0.85rem;resize:vertical;font-family:inherit;"></textarea>
+        </div>
+        <div style="display:flex;gap:0.75rem;">
+          <button onclick="Pages.approveVerification('${v.id}'); document.getElementById('vrf-detail-overlay').remove();" style="flex:1;padding:0.75rem;background:#059669;color:#fff;border:none;border-radius:0.5rem;cursor:pointer;font-weight:600;font-size:0.9rem;">✓ Approve Verification</button>
+          <button onclick="Pages.rejectVerification('${v.id}'); document.getElementById('vrf-detail-overlay').remove();" style="flex:1;padding:0.75rem;background:#dc2626;color:#fff;border:none;border-radius:0.5rem;cursor:pointer;font-weight:600;font-size:0.9rem;">✕ Reject Verification</button>
+        </div>
+      </div>` : ''}
+    </div>`;
+
+    document.body.appendChild(overlay);
+  }
+
+  static approveVerification (id) {
+    const notesEl = document.getElementById(`vrf-review-notes-${id}`);
+    const notes = notesEl ? notesEl.value.trim() : '';
+    const result = adminVerificationsManager.approve(id, notes);
+    if (result.success) {
+      Toast.success(`Student ${result.data.fullName} has been verified successfully!`);
+      this.renderAdminVerifications();
+    } else {
+      Toast.error(result.error || 'Failed to approve verification');
+    }
+  }
+
+  static rejectVerification (id) {
+    const notesEl = document.getElementById(`vrf-review-notes-${id}`);
+    let notes = notesEl ? notesEl.value.trim() : '';
+
+    if (!notes) {
+      const reason = prompt('Please provide a reason for rejection (this will be visible to the student):');
+      if (reason === null) return;
+      notes = reason;
+    }
+
+    const result = adminVerificationsManager.reject(id, notes);
+    if (result.success) {
+      Toast.info(`Verification for ${result.data.fullName} has been rejected.`);
+      this.renderAdminVerifications();
+    } else {
+      Toast.error(result.error || 'Failed to reject verification');
+    }
+  }
+
+/**
+* Render Admin Login
+*/
 static renderAdminLogin () {
   this.hideOriginalNavFooter();
   document.body.style.background = '#111827';

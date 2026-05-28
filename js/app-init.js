@@ -60,8 +60,9 @@ const MODULE_DEPENDENCIES = {
     { name: 'admin-products', file: 'js/admin/admin-products.js', exposes: ['adminProductsManager'] },
     { name: 'admin-users', file: 'js/admin/admin-users.js', exposes: ['adminUsersManager'] },
     { name: 'admin-orders', file: 'js/admin/admin-orders.js', exposes: ['adminOrdersManager'] },
-    { name: 'admin-reports', file: 'js/admin/admin-reports.js', exposes: ['adminReportsManager'] },
-  ],
+  { name: 'admin-reports', file: 'js/admin/admin-reports.js', exposes: ['adminReportsManager'] },
+  { name: 'admin-verifications', file: 'js/admin/admin-verifications.js', exposes: ['adminVerificationsManager'] },
+],
 
   // Level 5: Pages (depends on everything)
   pages: [

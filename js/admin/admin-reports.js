@@ -84,18 +84,22 @@ class AdminReportsManager {
   .filter(o => o.payment?.status === 'completed')
   .reduce((sum, o) => sum + (o.pricing?.grandTotal || 0), 0);
 
-  const pendingProducts = products.filter(p => p.status === 'pending').length;
-  const activeOrders = orders.filter(o => ['placed', 'confirmed', 'in_transit'].includes(o.status)).length;
+    const pendingProducts = products.filter(p => p.status === 'pending').length;
+    const activeOrders = orders.filter(o => ['placed', 'confirmed', 'in_transit'].includes(o.status)).length;
 
-  return {
-  summary: {
-  totalUsers: backendStats?.totalUsers || users.length,
-  totalProducts: backendStats?.totalProducts || products.length,
-  totalOrders: backendStats?.totalOrders || orders.length,
-  totalRevenue: totalRevenue,
-  pendingProducts: pendingProducts,
-  activeOrders: activeOrders,
-  },
+    let pendingVerifications = 0;
+    try { pendingVerifications = adminVerificationsManager.getStats().pending; } catch (_) {}
+
+    return {
+      summary: {
+        totalUsers: backendStats?.totalUsers || users.length,
+        totalProducts: backendStats?.totalProducts || products.length,
+        totalOrders: backendStats?.totalOrders || orders.length,
+        totalRevenue: totalRevenue,
+        pendingProducts: pendingProducts,
+        activeOrders: activeOrders,
+        pendingVerifications: pendingVerifications,
+      },
   today: {
   orders: todayOrders.length,
   revenue: todayRevenue,
