@@ -348,3 +348,95 @@ exports.resetPassword = asyncHandler(async (req, res) => {
     message: 'Password reset successfully. You can now log in with your new password.',
   });
 });
+
+/**
+ * @desc Google OAuth token login (frontend sends access_token from GIS SDK)
+ * @route POST /api/auth/google/token
+ * @access Public
+ */
+exports.googleTokenLogin = asyncHandler(async (req, res) => {
+  const { access_token } = req.body;
+
+  if (!access_token) {
+    throw new ApiError(400, 'Google access token is required');
+  }
+
+  const fetch = (await import('node-fetch')).default;
+
+  const userinfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+    headers: { Authorization: `Bearer ${access_token}` },
+  });
+
+  if (!userinfoRes.ok) {
+    throw new ApiError(401, 'Invalid Google access token');
+  }
+
+  const googleUser = await userinfoRes.json();
+
+  const email = googleUser.email;
+  const googleId = googleUser.sub;
+  const fullName = googleUser.name || googleUser.given_name || 'Google User';
+  const avatar = googleUser.picture || null;
+
+  if (!email) {
+    throw new ApiError(400, 'Google account has no email address');
+  }
+
+  let user = await db('users').findOne({ email });
+
+  if (!user) {
+    const hashedPassword = await bcrypt.hash(Math.random().toString(36).slice(2) + '!Aa1', 12);
+
+    user = await db('users').create({
+      fullName,
+      email,
+      phone: `google_${googleId}`,
+      password: hashedPassword,
+      university: 'Not Set',
+      role: 'buyer',
+      isVerified: googleUser.email_verified ? 1 : 0,
+      avatar,
+      googleId,
+    });
+
+    await logActivity('signup', mapUserRow(user), { email, method: 'google' }, 'info', req);
+  } else {
+    const mapped = mapUserRow(user);
+    if (mapped.isSuspended) {
+      throw new ApiError(403, mapped.banReason || 'Account suspended');
+    }
+    if (!mapped.isActive) {
+      throw new ApiError(401, 'Account is deactivated');
+    }
+
+    if (!user.googleId) {
+      await db('users').updateById(user.id, { googleId });
+    }
+
+    await db('users').updateById(user.id, { lastLogin: new Date().toISOString() });
+  }
+
+  const mappedUser = mapUserRow(user);
+  const token = generateToken(mappedUser.id);
+
+  await logActivity('login', mappedUser, { email, method: 'google' }, 'info', req);
+
+  res.json({
+    success: true,
+    message: 'Google login successful',
+    user: getPublicProfile(mappedUser),
+    token,
+  });
+});
+
+/**
+ * @desc Google OAuth redirect login (Passport-based, for redirect flow)
+ * @route GET /api/auth/google
+ * @access Public
+ */
+exports.googleRedirect = (req, res) => {
+  const mappedUser = mapUserRow(req.user);
+  const token = generateToken(mappedUser.id);
+  const frontendUrl = process.env.FRONTEND_URL?.split(',')[0] || 'http://localhost:8000';
+  res.redirect(`${frontendUrl}/#browse?google_token=${token}&google_user=${encodeURIComponent(JSON.stringify(getPublicProfile(mappedUser)))}`);
+};

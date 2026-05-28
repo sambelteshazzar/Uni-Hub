@@ -14,6 +14,10 @@ if (typeof window !== 'undefined' && !window.API_URL) {
   }
 }
 
+if (typeof window !== 'undefined' && !window.GOOGLE_CLIENT_ID) {
+  window.GOOGLE_CLIENT_ID = '';
+}
+
 /**
  * Module dependency graph - defines loading order
  */

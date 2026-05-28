@@ -424,6 +424,10 @@ CREATE INDEX IF NOT EXISTS idx_verifications_userId ON student_verifications(use
   if (!statusHistCols.find(c => c.name === 'updatedBy')) {
     db.prepare('ALTER TABLE order_status_history ADD COLUMN updatedBy TEXT REFERENCES users(id)').run();
   }
+  const userCols = db.prepare("PRAGMA table_info(users)").all();
+  if (!userCols.find(c => c.name === 'googleId')) {
+    db.prepare('ALTER TABLE users ADD COLUMN googleId TEXT').run();
+  }
 } catch (migrationErr) {
     console.warn('Migration warning:', migrationErr.message);
   }
