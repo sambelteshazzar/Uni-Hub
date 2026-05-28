@@ -121,7 +121,7 @@ class NotificationManager {
   }
 
   async syncFromBackend () {
-    if (typeof api === 'undefined' || !api.notifications) return;
+    if (typeof api === 'undefined' || !api.notifications || api.isStaticDeploy) return;
 
     try {
       const response = await api.notifications.getAll({ read: 'false' });
@@ -161,6 +161,7 @@ class NotificationManager {
   }
 
   startPeriodicSync () {
+    if (typeof api !== 'undefined' && api.isStaticDeploy) return;
     this.syncFromBackend();
     this._syncInterval = setInterval(() => {
       this.syncFromBackend();

@@ -57,6 +57,9 @@ class MessageManager {
    * Initialize the messaging system
    */
   async init () {
+    if (typeof api !== 'undefined' && api.isStaticDeploy) {
+      return;
+    }
     try {
       // Load Socket.IO client
       if (typeof io === 'undefined') {
