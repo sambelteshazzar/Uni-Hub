@@ -53,3 +53,7 @@ backend/data/*.db-wal
 # Uploads
 uploads/
 temp/
+# Dev symlinks (point to public/ for http-server compatibility)
+/assets
+/favicon.png
+/data

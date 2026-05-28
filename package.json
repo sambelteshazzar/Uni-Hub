@@ -11,7 +11,7 @@
     "lint:check": "eslint js/**/*.js",
     "format": "prettier --write \"js/**/*.js\" \"css/**/*.css\"",
     "format:check": "prettier --check \"js/**/*.js\" \"css/**/*.css\"",
-    "start": "http-server -p 8000 -c-1 --cors",
+    "start": "http-server . -p 8000 -c-1 --cors",
     "test": "echo 'Tests not configured yet'",
     "test:e2e": "npx playwright test",
     "test:e2e:headed": "npx playwright test --headed"

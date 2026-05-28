@@ -91,6 +91,7 @@ class AuthManager {
 
   _getOfflineUsers () {
     if (!this._isDevMode()) return {};
+    const _defaultAvatar = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><rect fill="%232563eb" width="40" height="40" rx="20"/><text x="20" y="26" text-anchor="middle" fill="white" font-size="16" font-family="sans-serif">U</text></svg>');
     return {
       'admin@unihub.local': {
         id: 'admin_001',
@@ -99,7 +100,7 @@ class AuthManager {
         phone: '+233 50 000 0000',
         university: 'all',
         role: 'admin',
-        avatar: 'assets/images/avatars/admin.jpg',
+        avatar: _defaultAvatar,
         rating: 5.0,
         isVerified: true,
         joinedDate: '2025-01-01T00:00:00Z',
@@ -111,7 +112,7 @@ class AuthManager {
         phone: '+233 50 123 4567',
         university: 'ug',
         role: 'buyer',
-        avatar: 'assets/images/avatars/user_001.jpg',
+        avatar: _defaultAvatar,
         rating: 4.5,
         isVerified: true,
         joinedDate: '2025-09-15T10:30:00Z',
@@ -123,7 +124,7 @@ class AuthManager {
         phone: '+233 24 987 6543',
         university: 'knust',
         role: 'buyer',
-        avatar: 'assets/images/avatars/user_002.jpg',
+        avatar: _defaultAvatar,
         rating: 4.8,
         isVerified: true,
         joinedDate: '2025-08-20T14:15:00Z',
@@ -135,7 +136,7 @@ class AuthManager {
         phone: '+233 54 321 7654',
         university: 'ucc',
         role: 'buyer',
-        avatar: 'assets/images/avatars/user_003.jpg',
+        avatar: _defaultAvatar,
         rating: 4.2,
         isVerified: true,
         joinedDate: '2025-10-05T09:00:00Z',
@@ -147,7 +148,7 @@ class AuthManager {
         phone: '+233 20 555 1234',
         university: 'uew',
         role: 'buyer',
-        avatar: 'assets/images/avatars/user_004.jpg',
+        avatar: _defaultAvatar,
         rating: 4.9,
         isVerified: true,
         joinedDate: '2025-07-10T11:45:00Z',
@@ -263,16 +264,18 @@ class AuthManager {
       return { success: false, error: 'Email already registered (offline mode)' };
     }
 
-    const newUser = {
-      id: 'user_' + Date.now(),
-      fullName: userData.fullName || userData.name || 'New User',
-      email: userData.email,
-      phone: userData.phone || '',
-      university: userData.university || 'ug',
-      role: 'buyer',
-      avatar: '',
-      rating: 0,
-      isVerified: false,
+  const newUser = {
+    id: 'user_' + Date.now(),
+    fullName: userData.fullName || ((userData.firstName && userData.lastName) ? userData.firstName + ' ' + userData.lastName : userData.name || 'New User'),
+    firstName: userData.firstName || '',
+    lastName: userData.lastName || '',
+    email: userData.email,
+    phone: userData.phone || '',
+    university: userData.university || 'ug',
+    role: 'buyer',
+    avatar: '',
+    rating: 0,
+    isVerified: false,
       joinedDate: new Date().toISOString(),
     };
 

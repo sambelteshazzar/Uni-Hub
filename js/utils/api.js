@@ -204,14 +204,32 @@ class API {
    * Load JSON file from local storage (fallback for mock data)
    * @param {string} filePath
    */
+  _jsonFallbacks = {
+    'data/config.json': { universities: [], categories: [], conditions: [], deliveryModes: [], paymentModes: [] },
+    'data/products.json': { products: [] },
+    'data/regions.json': { regions: [] },
+    'data/users.json': { users: [] },
+    'data/categories.json': { categories: [] },
+  };
+
   async loadJSON (filePath) {
     try {
       const response = await fetch(filePath);
       if (!response.ok) {
+        const fallback = this._jsonFallbacks[filePath];
+        if (fallback) {
+          console.warn(`JSON ${filePath} not found (${response.status}), using fallback`);
+          return fallback;
+        }
         throw new Error(`Failed to load ${filePath}`);
       }
       return await response.json();
     } catch (error) {
+      const fallback = this._jsonFallbacks[filePath];
+      if (fallback) {
+        console.warn(`JSON ${filePath} load error, using fallback:`, error.message);
+        return fallback;
+      }
       console.error('Error loading JSON:', error);
       throw error;
     }

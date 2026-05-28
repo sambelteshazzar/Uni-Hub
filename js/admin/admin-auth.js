@@ -84,15 +84,16 @@ class AdminAuthManager {
       }
 
       // Hardcoded offline fallback for development/demo
-      if (email === 'admin@unihub.local' && password === 'Admin123!') {
-        const adminUser = {
-          id: 'admin-offline',
-          fullName: 'Admin User',
-          email: 'admin@unihub.local',
-          role: 'admin',
-          isVerified: true,
-          loginAt: new Date().toISOString(),
-        };
+  if (email === 'admin@unihub.local' && password === 'Admin123!') {
+    const adminUser = {
+      id: 'admin-offline',
+      fullName: 'Admin User',
+      email: 'admin@unihub.local',
+      role: 'admin',
+      isVerified: true,
+      permissions: ['view_dashboard', 'manage_users', 'manage_products', 'manage_orders', 'manage_regions', 'view_reports', 'manage_settings', 'delete_users', 'delete_products', 'delete_orders'],
+      loginAt: new Date().toISOString(),
+    };
 
         this.adminUser = adminUser;
         StorageManager.set(this.ADMIN_STORAGE_KEY, adminUser);
@@ -156,9 +157,8 @@ class AdminAuthManager {
    * @returns {boolean}
    */
   hasPermission (permission) {
-    if (!this.adminUser) {
-      return false;
-    }
+    if (!this.adminUser) { return false; }
+    if (!this.adminUser.permissions) { return true; }
     return this.adminUser.permissions.includes(permission);
   }
 

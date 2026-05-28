@@ -4331,7 +4331,7 @@ static async renderAdminActivity () {
       price: Number(formData.get('price')),
       category: formData.get('category'),
       condition: formData.get('condition'),
-      images: images.length > 0 ? images : ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800'],
+      images: images.length > 0 ? images : ['/assets/images/products/no-image.svg'],
       deliveryModes,
       paymentModes,
     };
@@ -4490,7 +4490,7 @@ static async renderAdminActivity () {
       price: Number(formData.get('price')),
       category: formData.get('category'),
       condition: formData.get('condition'),
-      images: images.length > 0 ? images : ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800'],
+      images: images.length > 0 ? images : ['/assets/images/products/no-image.svg'],
       deliveryModes,
       paymentModes,
     };

@@ -157,8 +157,13 @@ Pages.handleLoginBB = async function (event) {
   if (result.success) {
     Pages.updateNavbar();
     Pages.updateCartBadge();
-    // Redirect to landing page after login
-    Pages.renderLanding();
+    Toast.success('Welcome back, ' + (result.user.fullName || email) + '!');
+    window.location.hash = '#/browse';
+    Pages.renderBrowse();
+  } else if (result.isOffline) {
+    Toast.info('You are in offline mode. Browse with demo data.');
+    window.location.hash = '#/browse';
+    Pages.renderBrowse();
   } else {
     Toast.error('Login failed: ' + result.error);
   }
@@ -167,255 +172,182 @@ Pages.handleLoginBB = async function (event) {
     // ============================================
     // REGISTER - Best Buy Style
     // ============================================
-    Pages.renderRegister = async function () {
-      Pages.showOriginalNavFooter();
+Pages.renderRegister = async function () {
+  Pages.showOriginalNavFooter();
 
-      const mainContent = document.getElementById('main-content');
-      let config = { universities: [] };
-      try {
-        config = await api.loadJSON('data/config.json');
-      } catch (e) {
-        console.error('Error loading config:', e);
-      }
+  const mainContent = document.getElementById('main-content');
+  let config = { universities: [] };
+  try {
+    config = await api.loadJSON('data/config.json');
+  } catch (e) {
+    console.error('Error loading config:', e);
+  }
 
-      const uniOptions = config.universities
-        .map(function (u) {
-          return '<option value="' + u.id + '">' + u.name + '</option>';
-        })
-        .join('');
+  const uniOptions = config.universities
+    .map(function (u) {
+      return '<option value="' + u.id + '">' + u.name + '</option>';
+    })
+    .join('');
 
-      mainContent.innerHTML =
-      '<div class="bb-auth-page">' +
-      '<div class="bb-auth-branding">' +
-      '<style>' +
-      '@keyframes bb-cursor-blink {' +
-      '0%, 100% { opacity: 1; }' +
-      '50% { opacity: 0; }' +
-      '}' +
-      '.bb-typewriter-cursor {' +
-      'display: inline-block;' +
-      'width: 3px;' +
-      'height: 1.2em;' +
-      'background: #ffce00;' +
-      'margin-left: 4px;' +
-      'vertical-align: text-bottom;' +
-      'animation: bb-cursor-blink 0.8s infinite;' +
-      '}' +
-      '</style>' +
-      '<div class="bb-auth-brand-content">' +
-      '<div class="bb-auth-brand-logo">' +
-      '<img src="/favicon.png" alt="Uni-Hub" width="40" height="40" style="border-radius: 8px;" />' +
-      '</div>' +
-      '<h2 class="bb-auth-brand-title"><span id="bb-typewriter-text"></span><span class="bb-typewriter-cursor" id="bb-typewriter-cursor"></span></h2>' +
-      '<p class="bb-auth-brand-desc">Create your free account and start buying and selling with verified students at your university.</p>' +
-      '</div>' +
-      '</div>' +
-      '<div class="bb-auth-form-section">' +
-      '<div class="bb-auth-form-container">' +
-      '<div class="bb-auth-logo">' +
-      '<img src="/favicon.png" alt="Uni-Hub" width="36" height="36" style="border-radius: 6px;" />' +
-      '</div>' +
-      '<div class="bb-auth-form-header">' +
-      '<h1 class="bb-auth-form-title">Create Account</h1>' +
-      '<p class="bb-auth-form-subtitle">Fill in your details to get started</p>' +
-      '</div>' +
-      '<form id="register-form-bb" onsubmit="Pages.handleRegisterBB(event)">' +
-      '<div class="bb-name-row">' +
-      '<div class="bb-form-group">' +
-      '<label for="reg-firstName" class="bb-form-label">First Name <span class="required-star">*</span></label>' +
-      '<input type="text" id="reg-firstName" name="firstName" class="bb-form-input" placeholder="John" required />' +
-      '</div>' +
-      '<div class="bb-form-group">' +
-      '<label for="reg-lastName" class="bb-form-label">Last Name <span class="required-star">*</span></label>' +
-      '<input type="text" id="reg-lastName" name="lastName" class="bb-form-input" placeholder="Doe" required />' +
-      '</div>' +
-      '</div>' +
-      '<div class="bb-form-group">' +
-      '<label for="reg-email" class="bb-form-label">Email Address <span class="required-star">*</span></label>' +
-      '<input type="email" id="reg-email" name="email" class="bb-form-input" placeholder="name@university.edu" required />' +
-      '</div>' +
-      '<div class="bb-form-group">' +
-      '<label for="reg-password" class="bb-form-label">Password <span class="required-star">*</span></label>' +
-      '<div class="bb-password-wrapper">' +
-      '<input type="password" id="reg-password" name="password" class="bb-form-input" placeholder="At least 8 characters" required minlength="8" />' +
-      '<button type="button" class="bb-password-toggle" onclick="Pages.togglePassword(\'reg-password\', this)">' +
-      '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>' +
-      '</button>' +
-      '</div>' +
-      '</div>' +
-'<div class="bb-form-group">' +
-'<label for="reg-phone" class="bb-form-label">Phone Number <span class="required-star">*</span></label>' +
-'<input type="tel" id="reg-phone" name="phone" class="bb-form-input" placeholder="+233 50 123 4567" required />' +
-'</div>' +
-    );
-    })
-    .join('')
-    : '<div class="bb-empty"><div class="bb-empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg></div><h3 class="bb-empty-title">No orders yet</h3><p class="bb-empty-desc">Start shopping to see your orders here!</p></div>') +
+  mainContent.innerHTML =
+    '<div class="bb-auth-page">' +
+    '<div class="bb-auth-branding">' +
+    '<style>' +
+    '@keyframes bb-cursor-blink {' +
+    '0%, 100% { opacity: 1; }' +
+    '50% { opacity: 0; }' +
+    '}' +
+    '.bb-typewriter-cursor {' +
+    'display: inline-block;' +
+    'width: 3px;' +
+    'height: 1.2em;' +
+    'background: #ffce00;' +
+    'margin-left: 4px;' +
+    'vertical-align: text-bottom;' +
+    'animation: bb-cursor-blink 0.8s infinite;' +
+    '}' +
+    '</style>' +
+    '<div class="bb-auth-brand-content">' +
+    '<div class="bb-auth-brand-logo">' +
+    '<img src="/favicon.png" alt="Uni-Hub" width="40" height="40" style="border-radius: 8px;" />' +
     '</div>' +
-    '<div class="bb-quick-actions">' +
-    '<a href="#/browse" class="bb-quick-action" onclick="Pages.renderBrowse(); return false;"><span class="bb-quick-action-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><span class="bb-quick-action-label">Browse Items</span></a>' +
-    
-    '<a href="#/cart" class="bb-quick-action" onclick="Pages.renderCart(); return false;"><span class="bb-quick-action-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg></span><span class="bb-quick-action-label">View Cart</span></a>' +
+    '<h2 class="bb-auth-brand-title"><span id="bb-typewriter-text"></span><span class="bb-typewriter-cursor" id="bb-typewriter-cursor"></span></h2>' +
+    '<p class="bb-auth-brand-desc">Create your free account and start buying and selling with verified students at your university.</p>' +
     '</div>' +
     '</div>' +
-    // ORDERS PANEL
-    '<div class="bb-panel" id="bb-panel-orders">' +
-    '<div class="bb-panel-header">' +
-    '<h2 class="bb-panel-title">My Orders</h2>' +
-    '<p class="bb-panel-subtitle">Track and manage all your orders.</p>' +
+    '<div class="bb-auth-form-section">' +
+    '<div class="bb-auth-form-container">' +
+    '<div class="bb-auth-logo">' +
+    '<img src="/favicon.png" alt="Uni-Hub" width="36" height="36" style="border-radius: 6px;" />' +
     '</div>' +
-    '<div class="bb-orders-list">' +
-    (orders.length > 0
-    ? orders
-    .map(function (order) {
-    var safeOrderNumber = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ? SecurityUtils.escapeHtml(order.orderNumber) : order.orderNumber;
-    return (
-    '<div class="bb-order-card">' +
-    '<div class="bb-order-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg></div>' +
-    '<div class="bb-order-info"><div class="bb-order-number">Order #' +
-    safeOrderNumber +
-    '</div><div class="bb-order-details">' +
-    order.items.length +
-    ' item(s) \u2022 ' +
-    Formatter.formatPrice(order.pricing.grandTotal) +
-    '</div></div>' +
-    '<div class="bb-order-amount">' +
-    Formatter.formatTimeAgo(order.createdAt) +
+    '<div class="bb-auth-form-header">' +
+    '<h1 class="bb-auth-form-title">Create Account</h1>' +
+    '<p class="bb-auth-form-subtitle">Fill in your details to get started</p>' +
     '</div>' +
-    '<span class="bb-order-status ' +
-    (order.status ? order.status.toLowerCase() : 'placed') +
-    '">' +
-    (order.status
-    ? order.status.charAt(0).toUpperCase() + order.status.slice(1)
-    : 'Placed') +
-    '</span>' +
-    '</div>'
-    );
-    })
-    .join('')
-    : '<div class="bb-empty"><div class="bb-empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg></div><h3 class="bb-empty-title">No orders yet</h3><p class="bb-empty-desc">Browse products and make your first purchase!</p></div>') +
+    '<form id="register-form-bb" onsubmit="Pages.handleRegisterBB(event)">' +
+    '<div class="bb-name-row">' +
+    '<div class="bb-form-group">' +
+    '<label for="reg-firstName" class="bb-form-label">First Name <span class="required-star">*</span></label>' +
+    '<input type="text" id="reg-firstName" name="firstName" class="bb-form-input" placeholder="John" required />' +
+    '</div>' +
+    '<div class="bb-form-group">' +
+    '<label for="reg-lastName" class="bb-form-label">Last Name <span class="required-star">*</span></label>' +
+    '<input type="text" id="reg-lastName" name="lastName" class="bb-form-input" placeholder="Doe" required />' +
     '</div>' +
     '</div>' +
-    // WISHLIST PANEL
-    '<div class="bb-panel" id="bb-panel-wishlist">' +
-    '<div class="bb-panel-header">' +
-    '<h2 class="bb-panel-title">My Wishlist</h2>' +
-    '<p class="bb-panel-subtitle">Items you\'ve saved for later.</p>' +
+    '<div class="bb-form-group">' +
+    '<label for="reg-email" class="bb-form-label">Email Address <span class="required-star">*</span></label>' +
+    '<input type="email" id="reg-email" name="email" class="bb-form-input" placeholder="name@university.edu" required />' +
     '</div>' +
-    (wishlist.length > 0
-    ? '<div class="bb-wishlist-grid">' +
-    wishlist
-    .map(function (product) {
-    var safeId = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ? SecurityUtils.escapeHtml(product.id) : product.id;
-    var safeTitle = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ? SecurityUtils.escapeHtml(product.title) : product.title;
-    var safeImage = product.images && product.images[0] ? ((typeof SecurityUtils !== 'undefined' && SecurityUtils.sanitizeUrl) ? (SecurityUtils.sanitizeUrl(product.images[0]) || '') : product.images[0]) : '';
-    return (
-    '<div class="bb-wishlist-card" onclick="Pages.renderProductDetail(\'' +
-    safeId.replace(/'/g, "\\'") +
-    '\')">' +
-    '<img src="' +
-    safeImage +
-    '" alt="' +
-    safeTitle +
-    '" class="bb-wishlist-image" />' +
-    '<div class="bb-wishlist-info">' +
-    '<h4 class="bb-wishlist-title">' +
-    safeTitle +
-    '</h4>' +
-    '<div class="bb-wishlist-price">' +
-    product.price.toLocaleString() +
-    ' GHS</div>' +
+    '<div class="bb-form-group">' +
+    '<label for="reg-password" class="bb-form-label">Password <span class="required-star">*</span></label>' +
+    '<div class="bb-password-wrapper">' +
+    '<input type="password" id="reg-password" name="password" class="bb-form-input" placeholder="At least 8 characters" required minlength="8" />' +
+    '<button type="button" class="bb-password-toggle" onclick="Pages.togglePassword(\'reg-password\', this)">' +
+    '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>' +
+    '</button>' +
     '</div>' +
-    '</div>'
-    );
-    })
-    .join('') +
-    '</div>'
-    : '<div class="bb-empty"><div class="bb-empty-icon">' + Icons.heartOutline + '</div><h3 class="bb-empty-title">Your wishlist is empty</h3><p class="bb-empty-desc">Save items you love to find them later!</p></div>') +
     '</div>' +
-    // CART PANEL
-    '<div class="bb-panel" id="bb-panel-cart">' +
-    '<div class="bb-panel-header">' +
-    '<h2 class="bb-panel-title">Shopping Cart</h2>' +
-    '<p class="bb-panel-subtitle">Review items before checkout.</p>' +
+    '<div class="bb-form-group">' +
+    '<label for="reg-phone" class="bb-form-label">Phone Number <span class="required-star">*</span></label>' +
+    '<input type="tel" id="reg-phone" name="phone" class="bb-form-input" placeholder="+233 50 123 4567" required />' +
     '</div>' +
-    (cartCount > 0
-    ? '<div class="bb-orders-list">' +
-    cartManager
-    .getItems()
-    .map(function (item) {
-    var safeItemTitle = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ? SecurityUtils.escapeHtml(item.product.title) : item.product.title;
-    return (
-    '<div class="bb-order-card">' +
-    '<div class="bb-order-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg></div>' +
-    '<div class="bb-order-info"><div class="bb-order-number">' +
-    safeItemTitle +
-    '</div><div class="bb-order-details">Qty: ' +
-    item.quantity +
-    ' \u00d7 ' +
-    item.product.price.toLocaleString() +
-    ' GHS</div></div>' +
-    '</div>'
-    );
-    })
-    .join('') +
+    '<div class="bb-form-group">' +
+    '<label for="reg-university" class="bb-form-label">University <span class="required-star">*</span></label>' +
+    '<select id="reg-university" name="university" class="bb-form-input" required>' +
+    '<option value="" disabled selected>Select your university</option>' +
+    uniOptions +
+    '</select>' +
     '</div>' +
-    '<div style="margin-top:1.5rem;display:flex;gap:var(--space-md);">' +
-    '<button onclick="cartManager.clear(); Pages.renderDashboard();" style="padding:var(--space-md) var(--space-xl);border:1px solid #d4d4d4;border-radius:var(--radius-md);background:#fff;font-size:var(--text-sm);font-weight:600;cursor:pointer;">Clear Cart</button>' +
-    '<button onclick="event.preventDefault(); Pages.handleProceedToCheckout();" style="padding:var(--space-md) var(--space-xl);background:#0046be;color:#fff;border:none;border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:700;cursor:pointer;">Proceed to Checkout \u2192</button>' +
-    '</div>'
-    : '<div class="bb-empty"><div class="bb-empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg></div><h3 class="bb-empty-title">Your cart is empty</h3><p class="bb-empty-desc">Add items to get started!</p></div>') +
+    '<div class="bb-form-group">' +
+    '<label class="bb-checkbox-label">' +
+    '<input type="checkbox" id="reg-terms" name="terms" required />' +
+    '<span>I agree to the <a href="#" style="color: #93c5fd; text-decoration: underline;">Terms of Service</a> and <a href="#" style="color: #93c5fd; text-decoration: underline;">Privacy Policy</a></span>' +
+    '</label>' +
     '</div>' +
-    // PROFILE PANEL
-    '<div class="bb-panel" id="bb-panel-profile">' +
-    '<div class="bb-panel-header">' +
-    '<h2 class="bb-panel-title">Edit Profile</h2>' +
-    '<p class="bb-panel-subtitle">Update your personal information.</p>' +
-    '</div>' +
-    '<div class="bb-profile-form">' +
-    '<form id="profile-form-bb" onsubmit="Pages.handleProfileUpdate(event)">' +
-    '<div class="bb-form-group"><label class="bb-form-label">Full Name</label><input type="text" id="fullName" name="fullName" class="bb-form-input" value="' +
-    safeFullName +
-    '" required /></div>' +
-    '<div class="bb-form-group"><label class="bb-form-label">Email</label><input type="email" id="email" name="email" class="bb-form-input" value="' +
-    safeEmail +
-    '" required /></div>' +
-    '<div class="bb-form-group"><label class="bb-form-label">Phone</label><input type="tel" id="phone" name="phone" class="bb-form-input" value="' +
-    safePhone +
-    '" /></div>' +
-    '<div class="bb-form-group"><label class="bb-form-label">University</label><input type="text" class="bb-form-input" value="' +
-    (safeUniversity || 'Not set') +
-    '" disabled /></div>' +
-    '<button type="submit" class="bb-save-btn">Save Changes</button>' +
+    '<button type="submit" class="bb-submit-btn">Create Account</button>' +
     '</form>' +
+    '<div class="bb-auth-footer">' +
+    '<p style="margin: 0; font-size: 0.85rem; color: #a1a1aa;">Already have an account? <a href="#" onclick="Pages.renderLogin(); return false;" style="color: #93c5fd; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color=\'#fff\'" onmouseout="this.style.color=\'#93c5fd\'">Sign in</a></p>' +
     '</div>' +
     '</div>' +
-    // SETTINGS PANEL
-    '<div class="bb-panel" id="bb-panel-settings">' +
-    '<div class="bb-panel-header">' +
-    '<h2 class="bb-panel-title">Settings</h2>' +
-    '<p class="bb-panel-subtitle">Manage your account preferences.</p>' +
-    '</div>' +
-    '<div class="bb-profile-form">' +
-    '<div class="bb-form-group"><label class="bb-form-label">Account Status</label><input type="text" class="bb-form-input" value="' +
-    (currentUser.isVerified ? 'Verified' : 'Pending Verification') +
-    '" disabled /></div>' +
-    '<div class="bb-form-group"><label class="bb-form-label">Role</label><input type="text" class="bb-form-input" value="' +
-    (currentUser.role
-    ? currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)
-    : 'Buyer') +
-    '" disabled /></div>' +
-    '<div style="margin-top:var(--space-xl);">' +
-    '<button onclick="Pages.handleLogout();" style="width:100%;height:48px;padding:0 var(--space-xl);border:1px solid #d4d4d4;border-radius:var(--radius-md);background:#fff;font-size:var(--text-sm);font-weight:600;cursor:pointer;color:#1a1a1a;">' + Icons.logout + ' Log Out</button>' +
-    '</div>' +
-    '</div>' +
-    '</div>' +
-    '</main>' +
     '</div>' +
     '</div>';
 
-      window.scrollTo({ top: 0 });
-    };
+  window.scrollTo({ top: 0 });
+
+  // Typewriter animation for Register page
+  (function initTypewriter () {
+    const phrases = [
+      'Join Uni-Hub',
+      'Your Campus Marketplace',
+      'Buy & Sell with Students',
+      'Create Your Account',
+    ];
+    const speed = 80;
+    const deleteSpeed = 40;
+    const pauseDuration = 2000;
+    let phraseIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+    let isPaused = false;
+    const textEl = document.getElementById('bb-typewriter-text');
+    const cursorEl = document.getElementById('bb-typewriter-cursor');
+    if (!textEl || !cursorEl) { return; }
+
+    function type () {
+      const currentPhrase = phrases[phraseIndex];
+      if (isPaused) {
+        setTimeout(function () { isPaused = false; isDeleting = true; type(); }, pauseDuration);
+        return;
+      }
+      if (isDeleting) {
+        charIndex--;
+        textEl.textContent = currentPhrase.substring(0, charIndex);
+        if (charIndex <= 0) { isDeleting = false; phraseIndex = (phraseIndex + 1) % phrases.length; setTimeout(type, 300); }
+        else { setTimeout(type, deleteSpeed); }
+      } else {
+        charIndex++;
+        textEl.textContent = currentPhrase.substring(0, charIndex);
+        if (charIndex >= currentPhrase.length) { isPaused = true; setTimeout(type, pauseDuration); }
+        else { setTimeout(type, speed); }
+      }
+    }
+    type();
+  })();
+};
+
+Pages.handleRegisterBB = async function (event) {
+  event.preventDefault();
+  const firstName = document.getElementById('reg-firstName').value;
+  const lastName = document.getElementById('reg-lastName').value;
+  const email = document.getElementById('reg-email').value;
+  const password = document.getElementById('reg-password').value;
+  const phone = document.getElementById('reg-phone').value;
+  const university = document.getElementById('reg-university').value;
+
+  const result = await authManager.register({
+    firstName,
+    lastName,
+    email,
+    password,
+    phone,
+    university,
+  });
+
+  if (result.success) {
+    Pages.updateNavbar();
+    Toast.success('Account created! Welcome, ' + firstName + '!');
+    window.location.hash = '#/browse';
+    Pages.renderBrowse();
+  } else if (result.isOffline) {
+    Toast.info('Registered in offline mode. You can now browse with demo data.');
+    window.location.hash = '#/browse';
+    Pages.renderBrowse();
+  } else {
+    Toast.error('Registration failed: ' + result.error);
+  }
+};
 
     // Best Buy dashboard tab switcher
     Pages.switchDashboardTabBB = function (tabId) {
