@@ -137,10 +137,9 @@ class MessageManager {
       return;
     }
 
-    if (!token) {
-      console.warn('No authentication token found - cannot connect to real-time messaging');
-      return;
-    }
+      if (!token) {
+        return;
+      }
 
     try {
       const serverUrl = (window.API_URL || 'http://localhost:5000/api').replace('/api', '');
