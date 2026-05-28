@@ -122,6 +122,7 @@ class NotificationManager {
 
   async syncFromBackend () {
     if (typeof api === 'undefined' || !api.notifications || api.isStaticDeploy) return;
+    if (typeof StorageManager !== 'undefined' && !StorageManager.getAuthToken()) return;
 
     try {
       const response = await api.notifications.getAll({ read: 'false' });
