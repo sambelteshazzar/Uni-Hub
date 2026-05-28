@@ -274,12 +274,12 @@ exports.updateOrderStatus = async (req, res) => {
       status,
     });
 
-    db('order_status_history').create({
-      orderId: order.id,
-      status,
-      note: note || '',
-      updatedBy: req.user.id,
-    });
+  db('order_status_history').create({
+    orderId: order.id,
+    status,
+    note: note || '',
+    updatedBy: req.user.id,
+  });
 
     const updatedOrder = db('orders').findById(order.id);
     const items = db('order_items').find({ orderId: order.id });
@@ -444,12 +444,12 @@ exports.cancelOrder = async (req, res) => {
       status: 'cancelled',
     });
 
-    db('order_status_history').create({
-      orderId: order.id,
-      status: 'cancelled',
-      note: 'Order cancelled by user',
-      updatedBy: req.user.id,
-    });
+  db('order_status_history').create({
+    orderId: order.id,
+    status: 'cancelled',
+    note: 'Order cancelled by user',
+    updatedBy: req.user.id,
+  });
 
   const orderItems = db('order_items').find({ orderId: order.id });
   for (const item of orderItems) {

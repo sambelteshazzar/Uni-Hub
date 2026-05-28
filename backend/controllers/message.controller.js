@@ -8,10 +8,10 @@ function escapeRegex (str) {
 async function findOrCreateConversation (userId1, userId2, productId) {
   const existing = db('conversations').db.prepare(
     `SELECT c.* FROM conversations c
-     JOIN conversation_participants cp1 ON cp1.conversationId = c.id AND cp1.userId = ?
-     JOIN conversation_participants cp2 ON cp2.conversationId = c.id AND cp2.userId = ?
-     WHERE c.productId ${productId ? '= ?' : 'IS NULL'}
-     LIMIT 1`
+  JOIN conversation_participants cp1 ON cp1.conversationId = c.id AND cp1.userId = ?
+  JOIN conversation_participants cp2 ON cp2.conversationId = c.id AND cp2.userId = ?
+  WHERE c.product ${productId ? '= ?' : 'IS NULL'}
+  LIMIT 1`
   ).get(userId1, userId2, ...(productId ? [productId] : []));
 
   if (existing) {
@@ -19,10 +19,11 @@ async function findOrCreateConversation (userId1, userId2, productId) {
   }
 
   const conversation = db('conversations').create({
-    productId: productId || null,
+    product: productId || null,
     lastMessage: null,
     lastActivity: new Date().toISOString(),
     status: 'active',
+    createdBy: userId1,
   });
 
   db('conversation_participants').create({

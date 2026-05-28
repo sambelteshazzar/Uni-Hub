@@ -31,21 +31,20 @@ exports.submitVerification = async (req, res) => {
       });
     }
 
-    const verificationData = {
-      id: generateId(),
-      userId: req.user.id,
-      studentId,
-      fullName,
-      email,
-      phone,
-      university,
-      level,
-      hall,
-      verificationMethod,
-      universityEmail,
-      documents: JSON.stringify(documents),
-      status: 'pending',
-    };
+  const verificationData = {
+    id: generateId(),
+    userId: req.user.id,
+    studentId,
+    fullName,
+    email,
+    phone,
+    university,
+    level,
+    hall,
+    verificationMethod,
+    universityEmail,
+    status: 'pending',
+  };
 
     if (verificationMethod === 'email' && universityEmail) {
       const verificationCode = crypto.randomBytes(3).toString('hex').toUpperCase();
@@ -58,9 +57,20 @@ exports.submitVerification = async (req, res) => {
       }
     }
 
-    const verification = db('student_verifications').create(verificationData);
+  const verification = db('student_verifications').create(verificationData);
 
-    res.status(201).json({
+  if (documents && Array.isArray(documents)) {
+    for (const doc of documents) {
+      db('verification_documents').create({
+        verificationId: verification.id,
+        fileName: doc.name || doc.fileName || 'document',
+        fileUrl: doc.url || doc.fileUrl || '',
+        fileType: doc.type || doc.fileType || 'image',
+      });
+    }
+  }
+
+  res.status(201).json({
       success: true,
       message: 'Verification submitted for review',
       data: verification,

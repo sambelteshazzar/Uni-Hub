@@ -127,15 +127,14 @@ const initializeSocket = (io) => {
           product: productId || null,
         });
 
-        db('conversations').updateById(conversationId, {
-          lastMessage: message.id,
-          lastActivity: new Date().toISOString(),
-        });
+  db('conversations').updateById(conversationId, {
+    lastMessage: message.id,
+    lastActivity: new Date().toISOString(),
+  });
 
-        db('conversation_participants').updateMany(
-          { conversationId, userId: receiverId },
-          { unreadCount: (receiverParticipant.unreadCount || 0) + 1 },
-        );
+  db('conversation_participants').db.prepare(
+    `UPDATE conversation_participants SET unreadCount = unreadCount + 1 WHERE conversationId = ? AND userId = ?`
+  ).run(conversationId, receiverId);
 
         const senderUser = db('users').findById(socket.userId);
         const receiverUser = db('users').findById(receiverId);

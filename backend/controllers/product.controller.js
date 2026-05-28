@@ -193,15 +193,15 @@ exports.createProduct = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Price cannot exceed 100,000 GHS' });
     }
 
-    const allowedCategories = ['electronics', 'furniture', 'clothing', 'books', 'sports', 'kitchen', 'other'];
-    if (!category || !allowedCategories.includes(category)) {
-      return res.status(400).json({ success: false, error: 'Valid category is required' });
-    }
+  const allowedCategories = ['appliances', 'hostel-items', 'accessories', 'textbooks', 'electronics', 'fashion', 'thrifts'];
+  if (!category || !allowedCategories.includes(category)) {
+    return res.status(400).json({ success: false, error: 'Valid category is required' });
+  }
 
-    const allowedConditions = ['new', 'like-new', 'good', 'fair', 'poor'];
-    if (!condition || !allowedConditions.includes(condition)) {
-      return res.status(400).json({ success: false, error: 'Valid condition is required' });
-    }
+  const allowedConditions = ['new', 'like-new', 'good', 'fair', 'excellent'];
+  if (!condition || !allowedConditions.includes(condition)) {
+    return res.status(400).json({ success: false, error: 'Valid condition is required' });
+  }
 
     if (images && !Array.isArray(images)) {
       return res.status(400).json({ success: false, error: 'Images must be an array' });

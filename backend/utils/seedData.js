@@ -482,7 +482,11 @@ async function seedDatabase () {
     }
 
     console.log('📦 Creating sample products...');
-    const sellers = createdUsers.filter(u => u.role === 'seller');
+    const sellers = createdUsers.filter(u => u.role === 'buyer' && u.isVerified);
+  if (sellers.length === 0) {
+    console.log('⚠️  No verified buyer users found to assign as sellers, using all users');
+    sellers.push(...createdUsers);
+  }
     const insertProduct = database.prepare(`
       INSERT INTO products (id, title, description, price, currency, category, condition, images, seller, sellerName, sellerRating, university, deliveryModes, paymentModes, status)
       VALUES (?, ?, ?, ?, 'GHS', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)

@@ -150,13 +150,14 @@ image TEXT,
 variant TEXT
 );
 
-    CREATE TABLE IF NOT EXISTS order_status_history (
-      id TEXT PRIMARY KEY,
-      orderId TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-      status TEXT NOT NULL,
-      timestamp TEXT DEFAULT (datetime('now')),
-      note TEXT
-    );
+CREATE TABLE IF NOT EXISTS order_status_history (
+  id TEXT PRIMARY KEY,
+  orderId TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  status TEXT NOT NULL,
+  timestamp TEXT DEFAULT (datetime('now')),
+  note TEXT,
+  updatedBy TEXT REFERENCES users(id)
+);
 
     CREATE TABLE IF NOT EXISTS reviews (
       id TEXT PRIMARY KEY,
@@ -415,9 +416,13 @@ CREATE INDEX IF NOT EXISTS idx_verifications_userId ON student_verifications(use
     if (!orderItemCols.find(c => c.name === 'variant')) {
       db.prepare('ALTER TABLE order_items ADD COLUMN variant TEXT').run();
     }
-    const verificationCols = db.prepare("PRAGMA table_info(student_verifications)").all();
-    if (!verificationCols.find(c => c.name === 'userId')) {
-      db.prepare('ALTER TABLE student_verifications ADD COLUMN userId TEXT REFERENCES users(id)').run();
+  const verificationCols = db.prepare("PRAGMA table_info(student_verifications)").all();
+  if (!verificationCols.find(c => c.name === 'userId')) {
+    db.prepare('ALTER TABLE student_verifications ADD COLUMN userId TEXT REFERENCES users(id)').run();
+  }
+  const statusHistCols = db.prepare("PRAGMA table_info(order_status_history)").all();
+  if (!statusHistCols.find(c => c.name === 'updatedBy')) {
+    db.prepare('ALTER TABLE order_status_history ADD COLUMN updatedBy TEXT REFERENCES users(id)').run();
   }
 } catch (migrationErr) {
     console.warn('Migration warning:', migrationErr.message);
