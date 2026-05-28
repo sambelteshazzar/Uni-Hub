@@ -40,7 +40,8 @@ router.register('/wishlist', () => this.renderWishlist());
     router.register('/about', () => this.renderAbout());
     router.register('/contact', () => this.renderContact());
     router.register('/track', () => this.renderTrackOrder());
-    router.register('/notifications', () => this.renderNotifications());
+    router.register('/verification', () => this.renderStudentVerification());
+router.register('/notifications', () => this.renderNotifications());
     console.log('✓ Main routes registered');
 
 // Product detail
