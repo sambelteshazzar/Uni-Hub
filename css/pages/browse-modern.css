@@ -1059,6 +1059,42 @@ dropdown filters, and refined details
 /* ============================================
 RESPONSIVE
 ============================================ */
+@media (max-width: 768px) {
+  .browse-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .browse-filters-group {
+    display: none;
+  }
+
+  .mobile-filter-toggle {
+    display: inline-flex;
+    width: fit-content;
+  }
+
+  .browse-filters-group.open {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .browse-filters-group.open .filter-dropdown {
+    width: 100%;
+  }
+
+  .products-grid-modern {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .browse-container {
+    padding: var(--space-md) var(--space-md) var(--space-xl);
+  }
+}
+
 @media (max-width: 640px) {
   .products-grid-modern {
     grid-template-columns: repeat(2, 1fr);

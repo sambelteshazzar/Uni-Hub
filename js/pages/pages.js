@@ -4541,13 +4541,17 @@ static async renderAdminActivity () {
           this._uploadedImageUrls = images;
         }
       } catch (uploadErr) {
-        toastManager.show('Image upload failed: ' + uploadErr.message, 'error');
-        return;
+        if (!api.isStaticDeploy) {
+          toastManager.show('Image upload failed: ' + uploadErr.message, 'error');
+          return;
+        }
       }
     }
 
     const manualUrls = (document.getElementById('image-url-textarea')?.value || '').split('\n').map(u => u.trim()).filter(Boolean);
     images = [...images, ...manualUrls];
+
+    const currentUser = typeof authManager !== 'undefined' && authManager.getCurrentUser ? authManager.getCurrentUser() : null;
 
     const data = {
       title: formData.get('title'),
@@ -4558,10 +4562,12 @@ static async renderAdminActivity () {
       images: images.length > 0 ? images : ['/assets/images/products/no-image.svg'],
       deliveryModes,
       paymentModes,
+      seller: currentUser?.id || 'admin',
+      sellerName: currentUser?.fullName || currentUser?.name || 'Admin',
+      sellerRating: currentUser?.rating || 5,
+      university: formData.get('university')?.trim() || currentUser?.university || '',
+      status: 'approved',
     };
-
-    const university = formData.get('university')?.trim();
-    if (university) { data.university = university; }
 
     try {
       const result = await api.admin.createProduct(data);
@@ -4569,10 +4575,20 @@ static async renderAdminActivity () {
         toastManager.show('Product created successfully', 'success');
         this.renderAdminProducts();
       } else {
-        toastManager.show(result.error || 'Failed to create product', 'error');
+        throw new Error(result.error || 'Failed to create product');
       }
     } catch (error) {
-      toastManager.show(error.message || 'Failed to create product', 'error');
+      if (api.isStaticDeploy || (window.API_URL && window.API_URL.includes('offline.local'))) {
+        const fallbackResult = await productsManager.addProduct(data);
+        if (fallbackResult.success) {
+          toastManager.show('Product created locally', 'success');
+          this.renderAdminProducts();
+        } else {
+          toastManager.show(fallbackResult.error || 'Failed to create product', 'error');
+        }
+      } else {
+        toastManager.show(error.message || 'Failed to create product', 'error');
+      }
     }
   }
 
