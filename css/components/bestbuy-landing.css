@@ -464,7 +464,8 @@ Added background image for "Choose Your University" section
 
 @media (max-width: 768px) {
   .bb-hero {
-    padding: var(--space-3xl) 0;
+    padding: var(--space-2xl) 0;
+    min-height: auto !important;
   }
 
   .bb-hero-title {
@@ -494,6 +495,62 @@ Added background image for "Choose Your University" section
 
   .bb-steps-grid {
     grid-template-columns: 1fr;
+  }
+
+  #hero-animated-text {
+    white-space: normal !important;
+  }
+
+  #hero-animated-text .hero-char {
+    white-space: normal !important;
+  }
+
+  .bb-hero .bb-hero-container > div > div[style*="display: grid"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .bb-hero div[style*="gap: 2.5rem"] {
+    gap: 1.5rem !important;
+    flex-wrap: wrap !important;
+  }
+
+  .bb-hero div[style*="font-size: 1.75rem"] {
+    font-size: 1.25rem !important;
+  }
+
+  .bb-hero div[style*="font-size: 1.125rem"][style*="line-height: 1.8"] {
+    font-size: 1rem !important;
+    max-width: 100% !important;
+  }
+
+  section[style*="padding: 5rem 2rem"] {
+    padding: 3rem 1rem !important;
+  }
+
+  section[style*="padding: 5rem 2rem"] h2[style*="font-size: 1.875rem"] {
+    font-size: 1.5rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .bb-hero {
+    padding: var(--space-xl) 0;
+  }
+
+  .bb-hero-title {
+    font-size: 1.75rem;
+  }
+
+  .bb-categories-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bb-cta-title {
+    font-size: var(--text-2xl);
+  }
+
+  .bb-cta-desc {
+    font-size: var(--text-base);
   }
 }
 

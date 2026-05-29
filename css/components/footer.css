@@ -219,4 +219,18 @@
   .footer-newsletter-form {
     flex-direction: column;
   }
+
+  .footer-container {
+    padding: 0 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-container {
+    padding: 0 1rem;
+  }
+
+  .footer-brand-desc {
+    max-width: 100%;
+  }
 }

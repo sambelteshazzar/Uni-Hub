@@ -405,7 +405,32 @@ DM Serif Display headline, animated reveals, blue marquee ticker
   }
 
   .bb-covered-gallery {
-    height: 240px;
+    height: 280px;
+    position: relative;
+  }
+
+  .bb-covered-photo--main {
+    width: 55%;
+    height: 85%;
+    top: 8%;
+    left: 0;
+    transform: rotate(0deg);
+  }
+
+  .bb-covered-photo--top {
+    width: 48%;
+    height: 45%;
+    top: 0;
+    right: 0;
+    transform: rotate(1deg);
+  }
+
+  .bb-covered-photo--bottom {
+    width: 48%;
+    height: 42%;
+    bottom: 0;
+    right: 0;
+    transform: rotate(0deg);
   }
 
   .bb-covered-headline {
