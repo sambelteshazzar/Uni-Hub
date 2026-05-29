@@ -176,6 +176,21 @@ select.form-control {
 }
 
 /* Responsive */
+@media (max-width: 768px) {
+  .input-group {
+    flex-direction: column;
+  }
+
+  .input-group input,
+  .input-group select {
+    border-radius: var(--radius-md);
+  }
+
+  .input-group .btn {
+    border-radius: var(--radius-md);
+  }
+}
+
 @media (max-width: 576px) {
   .form-actions {
     flex-direction: column;

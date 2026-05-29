@@ -1597,8 +1597,67 @@ html {
     flex-direction: column;
   }
 
-.commerce-btn {
-  width: 100%;
-  justify-content: center;
+  .commerce-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
+
+@media (max-width: 768px) {
+  .detail-row {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .dashboard-header,
+  .seller-header,
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .dashboard-actions,
+  .seller-actions,
+  .admin-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .dashboard-actions .btn,
+  .seller-actions .btn,
+  .admin-actions .btn {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .dashboard-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .order-summary {
+    position: static;
+  }
+
+  .seller-product-actions {
+    flex-direction: column;
+  }
+
+  .seller-product-actions .btn {
+    width: 100%;
+  }
+
+  .option-card {
+    flex-wrap: wrap;
+  }
+
+  .reports-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .seller-products-grid {
+    grid-template-columns: 1fr;
+  }
 }

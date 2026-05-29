@@ -558,6 +558,20 @@ img {
     align-items: flex-start;
   }
 
+  .footer-newsletter-content,
+  .footer-newsletter-form-wrapper {
+    min-width: 0;
+  }
+
+  .footer-newsletter-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .footer-input-wrapper {
+    min-width: 0;
+  }
+
   .footer-links-section {
     flex-direction: column;
   }

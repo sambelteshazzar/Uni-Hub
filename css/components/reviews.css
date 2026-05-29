@@ -660,6 +660,22 @@
 }
 
 /* --- Responsive --- */
+@media (max-width: 768px) {
+  .review-form-footer {
+    flex-direction: column;
+  }
+
+  .review-form-footer .btn {
+    width: 100%;
+  }
+
+  .review-form-detailed-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+}
+
 @media (max-width: 640px) {
   .rating-average-number {
     font-size: 36px;

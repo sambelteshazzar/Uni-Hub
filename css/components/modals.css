@@ -290,6 +290,21 @@
   color: var(--color-primary);
 }
 
+@media (max-width: 768px) {
+  .modal-header {
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+  }
+}
+
 /* Responsive */
 @media (max-width: 576px) {
   .modal-container {
