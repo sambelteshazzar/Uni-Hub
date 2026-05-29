@@ -369,24 +369,30 @@ DM Serif Display headline, animated reveals, blue marquee ticker
   .bb-covered-gallery {
     height: 300px;
     max-width: 100%;
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .bb-covered-photo {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 
   .bb-covered-photo--main {
     width: 60%;
-    transform: rotate(-1deg);
   }
 
   .bb-covered-photo--top {
     width: 42%;
     height: 48%;
-    transform: rotate(1.5deg);
   }
 
   .bb-covered-photo--bottom {
     width: 42%;
     height: 44%;
     right: 2%;
-    transform: rotate(-0.5deg);
   }
 
   .bb-covered-pills {
@@ -405,32 +411,50 @@ DM Serif Display headline, animated reveals, blue marquee ticker
   }
 
   .bb-covered-gallery {
-    height: 280px;
+    height: auto;
     position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 0.5rem;
+  }
+
+  .bb-covered-photo {
+    position: relative;
+    animation: none;
+    opacity: 1;
+    transform: none;
+    width: 100%;
+    height: 100%;
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+  }
+
+  .bb-covered-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
 
   .bb-covered-photo--main {
-    width: 55%;
-    height: 85%;
-    top: 8%;
-    left: 0;
-    transform: rotate(0deg);
+    grid-column: 1 / -1;
+    grid-row: 1;
+    height: 200px;
   }
 
   .bb-covered-photo--top {
-    width: 48%;
-    height: 45%;
-    top: 0;
-    right: 0;
-    transform: rotate(1deg);
+    grid-column: 1;
+    grid-row: 2;
+    height: 150px;
   }
 
   .bb-covered-photo--bottom {
-    width: 48%;
-    height: 42%;
-    bottom: 0;
-    right: 0;
-    transform: rotate(0deg);
+    grid-column: 2;
+    grid-row: 2;
+    height: 150px;
   }
 
   .bb-covered-headline {
