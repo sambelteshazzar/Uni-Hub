@@ -4496,6 +4496,15 @@ static async renderAdminActivity () {
   static _pendingImageFiles = [];
   static _uploadedImageUrls = [];
 
+  static _filesToDataUris (files) {
+    return Promise.all(files.map(file => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    })));
+  }
+
   static _handleImageDrop (event) {
     const files = event.dataTransfer.files;
     this._handleImageFiles(files);
@@ -4552,10 +4561,14 @@ static async renderAdminActivity () {
           this._uploadedImageUrls = images;
         }
       } catch (uploadErr) {
-        if (!api.isStaticDeploy) {
+        if (!api.isStaticDeploy && !(window.API_URL && window.API_URL.includes('offline.local'))) {
           toastManager.show('Image upload failed: ' + uploadErr.message, 'error');
           return;
         }
+      }
+      if (images.length === 0 && this._pendingImageFiles.length > 0) {
+        images = await this._filesToDataUris(this._pendingImageFiles);
+        this._uploadedImageUrls = images;
       }
     }
 
@@ -4585,11 +4598,7 @@ static async renderAdminActivity () {
       if (result.success) {
         toastManager.show('Product created successfully', 'success');
         this.renderAdminProducts();
-      } else {
-        throw new Error(result.error || 'Failed to create product');
-      }
-    } catch (error) {
-      if (api.isStaticDeploy || (window.API_URL && window.API_URL.includes('offline.local'))) {
+      } else if (result.isOffline) {
         const fallbackResult = await productsManager.addProduct(data);
         if (fallbackResult.success) {
           toastManager.show('Product created locally', 'success');
@@ -4598,7 +4607,15 @@ static async renderAdminActivity () {
           toastManager.show(fallbackResult.error || 'Failed to create product', 'error');
         }
       } else {
-        toastManager.show(error.message || 'Failed to create product', 'error');
+        throw new Error(result.error || 'Failed to create product');
+      }
+    } catch (error) {
+      const fallbackResult = await productsManager.addProduct(data);
+      if (fallbackResult.success) {
+        toastManager.show('Product created locally', 'success');
+        this.renderAdminProducts();
+      } else {
+        toastManager.show(fallbackResult.error || 'Failed to create product', 'error');
       }
     }
   }
@@ -4726,8 +4743,13 @@ static async renderAdminActivity () {
         const uploadResult = await api.upload.images(this._pendingImageFiles);
         if (uploadResult.success && uploadResult.urls) { newUrls = uploadResult.urls; }
       } catch (uploadErr) {
-        toastManager.show('Image upload failed: ' + uploadErr.message, 'error');
-        return;
+        if (!api.isStaticDeploy && !(window.API_URL && window.API_URL.includes('offline.local'))) {
+          toastManager.show('Image upload failed: ' + uploadErr.message, 'error');
+          return;
+        }
+      }
+      if (newUrls.length === 0 && this._pendingImageFiles.length > 0) {
+        newUrls = await this._filesToDataUris(this._pendingImageFiles);
       }
     }
 
@@ -4754,11 +4776,31 @@ static async renderAdminActivity () {
       if (result.success) {
         toastManager.show('Product updated successfully', 'success');
         this.renderAdminProducts();
+      } else if (result.isOffline) {
+        const localProduct = productsManager.products.find(p => p.id === productId);
+        if (localProduct) {
+          Object.assign(localProduct, data, { updatedAt: new Date().toISOString() });
+          productsManager.filteredProducts = [...productsManager.products];
+          productsManager._persistLocalProducts();
+          toastManager.show('Product updated locally', 'success');
+          this.renderAdminProducts();
+        } else {
+          toastManager.show('Product not found for local update', 'error');
+        }
       } else {
         toastManager.show(result.error || 'Failed to update product', 'error');
       }
     } catch (error) {
-      toastManager.show(error.message || 'Failed to update product', 'error');
+      const localProduct = productsManager.products.find(p => p.id === productId);
+      if (localProduct) {
+        Object.assign(localProduct, data, { updatedAt: new Date().toISOString() });
+        productsManager.filteredProducts = [...productsManager.products];
+        productsManager._persistLocalProducts();
+        toastManager.show('Product updated locally', 'success');
+        this.renderAdminProducts();
+      } else {
+        toastManager.show(error.message || 'Failed to update product', 'error');
+      }
     }
   }
 

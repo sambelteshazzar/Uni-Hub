@@ -50,8 +50,9 @@ class ProductsManager {
               if (data.data.pagination) {
                 this._totalFromServer = data.data.pagination.total;
                 this._totalPagesFromServer = data.data.pagination.pages;
-              }
-              return;
+  }
+
+        return;
             }
           }
         } catch (_error) {
@@ -64,14 +65,36 @@ class ProductsManager {
       this.products = data.products || [];
       this.filteredProducts = [...this.products];
     } catch (_error) {
-      // Silent fail - products will be empty
       this.products = [];
       this.filteredProducts = [];
     }
+    this._mergeLocalProducts();
+  }
+
+  _persistLocalProducts () {
+    try {
+      const localProducts = this.products.filter(p => p.id && p.id.startsWith('prod-') && !p.id.match(/^prod-00[1-9]$/));
+      StorageManager.set(this.PRODUCTS_STORAGE_KEY + '_local', localProducts);
+    } catch (_e) {}
+  }
+
+  _mergeLocalProducts () {
+    try {
+      const localProducts = StorageManager.get(this.PRODUCTS_STORAGE_KEY + '_local') || [];
+      const existingIds = new Set(this.products.map(p => p.id));
+      for (const lp of localProducts) {
+        if (!existingIds.has(lp.id)) {
+          this.products.push(lp);
+        }
+      }
+      if (localProducts.length > 0) {
+        this.filteredProducts = [...this.products];
+      }
+    } catch (_e) {}
   }
 
   /**
-  * Fetch a specific page from the backend API (server-side pagination)
+   * Fetch a specific page from the backend API (server-side pagination)
   */
   async fetchPage (page = 1, pageSize = null) {
     const isOffline = window.API_URL && window.API_URL.includes('offline.local');
@@ -316,13 +339,14 @@ class ProductsManager {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      this.products.push(product);
-      this.filteredProducts = [...this.products];
+    this.products.push(product);
+    this.filteredProducts = [...this.products];
+    this._persistLocalProducts();
 
-      return {
-        success: true,
-        product,
-      };
+    return {
+      success: true,
+      product,
+    };
     } catch (error) {
       console.error('addProduct error:', error);
       return {
