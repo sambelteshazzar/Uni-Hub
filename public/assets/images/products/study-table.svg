@@ -11,5 +11,5 @@
   <rect x="100" y="195" width="20" height="45" fill="#6b5340"/>
   <rect x="280" y="195" width="20" height="45" fill="#6b5340"/>
   <text x="200" y="50" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#333">Study Table</text>
-  <text x="200" y="270" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#666">Wooden with Drawer & Shelf</text>
+  <text x="200" y="270" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#666">Wooden with Drawer &amp; Shelf</text>
 </svg>

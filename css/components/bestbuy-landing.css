@@ -466,6 +466,12 @@ Added background image for "Choose Your University" section
   .bb-hero {
     padding: var(--space-2xl) 0;
     min-height: auto !important;
+    overflow: hidden;
+  }
+
+  .bb-hero::before {
+    width: 300px;
+    height: 300px;
   }
 
   .bb-hero-title {
@@ -478,6 +484,10 @@ Added background image for "Choose Your University" section
 
   .bb-hero-buttons {
     flex-direction: column;
+  }
+
+  .bb-hero-container {
+    padding: 0 var(--space-md);
   }
 
   .bb-btn {

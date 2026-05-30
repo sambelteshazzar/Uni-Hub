@@ -10,6 +10,7 @@ class MessageManager {
   constructor () {
     this.socket = null;
     this.currentConversation = null;
+    this._isOffline = () => (typeof api !== 'undefined' && api.isStaticDeploy) || !window._backendAvailable;
     this.listeners = {
       newMessage: [],
       messageRead: [],
@@ -57,7 +58,7 @@ class MessageManager {
    * Initialize the messaging system
    */
   async init () {
-    if (typeof api !== 'undefined' && api.isStaticDeploy) {
+    if (this._isOffline()) {
       return;
     }
     try {
@@ -274,6 +275,10 @@ class MessageManager {
    */
   async sendMessageHTTP (data) {
     try {
+      if (this._isOffline()) {
+        return this._sendOfflineMessage(data);
+      }
+
       const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/messages`, {
         method: 'POST',
         body: JSON.stringify(data),
@@ -287,8 +292,27 @@ class MessageManager {
 
       return result;
     } catch (error) {
+      if (this._isOffline()) {
+        return this._sendOfflineMessage(data);
+      }
       throw error;
     }
+  }
+
+  _sendOfflineMessage (data) {
+    const msg = {
+      id: 'msg-' + Date.now(),
+      ...data,
+      senderId: authManager?.currentUser?.id || 'unknown',
+      createdAt: new Date().toISOString(),
+      read: false,
+    };
+    const stored = StorageManager.get('unihub_messages', true) || {};
+    const convId = data.conversationId || 'conv-new';
+    if (!stored[convId]) { stored[convId] = []; }
+    stored[convId].push(msg);
+    StorageManager.set('unihub_messages', stored);
+    return { success: true, data: msg };
   }
 
   /**
@@ -355,6 +379,10 @@ class MessageManager {
    */
   async getConversations (options = {}) {
     try {
+      if (this._isOffline()) {
+        return this._getOfflineConversations(options);
+      }
+
       const { page = 1, limit = 20, status = 'active' } = options;
       const params = new URLSearchParams({ page, limit, status });
 
@@ -368,12 +396,25 @@ class MessageManager {
 
       return result.data;
     } catch (error) {
+      if (this._isOffline()) {
+        return this._getOfflineConversations(options);
+      }
       throw error;
     }
   }
 
+  _getOfflineConversations (options = {}) {
+    const stored = StorageManager.get('unihub_conversations', true) || [];
+    return stored.filter(c => c.status !== 'archived');
+  }
+
   async getConversation (conversationId) {
     try {
+      if (this._isOffline()) {
+        const convs = this._getOfflineConversations();
+        return convs.find(c => c.id === conversationId) || null;
+      }
+
       const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/messages/conversation/${conversationId}`);
 
       const result = await response.json();
@@ -384,6 +425,10 @@ class MessageManager {
 
       return result.data;
     } catch (error) {
+      if (this._isOffline()) {
+        const convs = this._getOfflineConversations();
+        return convs.find(c => c.id === conversationId) || null;
+      }
       throw error;
     }
   }
@@ -396,6 +441,10 @@ class MessageManager {
    */
   async getMessages (conversationId, options = {}) {
     try {
+      if (this._isOffline()) {
+        return this._getOfflineMessages(conversationId, options);
+      }
+
       const { page = 1, limit = 50 } = options;
       const params = new URLSearchParams({ page, limit });
 
@@ -411,8 +460,16 @@ class MessageManager {
 
       return result.data;
     } catch (error) {
+      if (this._isOffline()) {
+        return this._getOfflineMessages(conversationId, options);
+      }
       throw error;
     }
+  }
+
+  _getOfflineMessages (conversationId, options = {}) {
+    const stored = StorageManager.get('unihub_messages', true) || {};
+    return stored[conversationId] || [];
   }
 
   /**
@@ -421,6 +478,10 @@ class MessageManager {
    */
   async getUnreadCount () {
     try {
+      if (this._isOffline()) {
+        return { count: 0 };
+      }
+
       const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/messages/unread-count`);
 
       const result = await response.json();
@@ -432,6 +493,9 @@ class MessageManager {
       this.unreadCount = result.data.count;
       return result.data;
     } catch (error) {
+      if (this._isOffline()) {
+        return { count: 0 };
+      }
       throw error;
     }
   }

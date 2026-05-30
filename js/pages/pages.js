@@ -885,8 +885,12 @@ return `
   /**
    * Render Product Detail Page - Modern Professional Design
    */
-static renderProductDetail (productId) {
-const product = productsManager.getById(productId);
+ static renderProductDetail (productId) {
+  if (!window.location.hash.includes('/product/' + productId)) {
+   window.location.hash = '#/product/' + productId;
+   return;
+  }
+  const product = productsManager.getById(productId);
 
 if (!product) {
 Toast.warning('Product not found');
@@ -912,7 +916,7 @@ const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
     mainContent.innerHTML = `
       <style>
         .pd-page { min-height: 100vh; background: #0a0a0a; }
-        .pd-breadcrumb { padding: 1rem 2rem; max-width: 1400px; margin: 0 auto; }
+        .pd-breadcrumb { padding: 1rem 2rem; max-width: 1400px; margin: 0 auto; display: flex; align-items: center; flex-wrap: wrap; gap: 0; }
         .pd-back-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: #a1a1aa; font-size: 0.875rem; cursor: pointer; transition: all 0.2s; }
         .pd-back-btn:hover { border-color: #0046be; color: #93c5fd; }
         .pd-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; max-width: 1400px; margin: 0 auto; padding: 1rem 2rem 4rem; }
@@ -970,18 +974,25 @@ const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
 .color-stock-indicator.low-stock { color: #f59e0b; }
 .color-stock-indicator.out-of-stock { color: #ef4444; }
         @media (max-width: 768px) {
-          .pd-layout { grid-template-columns: 1fr; padding: 1rem; }
-          .pd-image-section { position: static; }
-          .pd-title { font-size: 1.375rem; }
+.pd-layout { grid-template-columns: 1fr; padding: 1rem; }
+.pd-image-section { position: static; }
+.pd-title { font-size: 1.375rem; }
+.pd-breadcrumb { padding: 0.75rem 1rem; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
           .pd-price { font-size: 2rem; }
         }
       </style>
 
       <div class="pd-page">
         <!-- Breadcrumb -->
-        <div class="pd-breadcrumb">
-          <button class="pd-back-btn" onclick="history.back()">← Back to Browse</button>
-        </div>
+ <div class="pd-breadcrumb">
+  <a href="#/" style="color:#a1a1aa;text-decoration:none;font-size:0.8125rem;" onmouseover="this.style.color='#93c5fd'" onmouseout="this.style.color='#a1a1aa'">Home</a>
+  <span style="color:#52525b;margin:0 0.375rem;font-size:0.75rem;">›</span>
+  <a href="#/browse" style="color:#a1a1aa;text-decoration:none;font-size:0.8125rem;" onmouseover="this.style.color='#93c5fd'" onmouseout="this.style.color='#a1a1aa'">Browse</a>
+  <span style="color:#52525b;margin:0 0.375rem;font-size:0.75rem;">›</span>
+  <a href="#/browse?category=${product.category}" style="color:#a1a1aa;text-decoration:none;font-size:0.8125rem;" onmouseover="this.style.color='#93c5fd'" onmouseout="this.style.color='#a1a1aa'">${categoryLabel}</a>
+  <span style="color:#52525b;margin:0 0.375rem;font-size:0.75rem;">›</span>
+  <span style="color:#fafafa;font-size:0.8125rem;font-weight:500;">${product.title.length > 40 ? product.title.slice(0, 40) + '…' : product.title}</span>
+ </div>
 
         <!-- Layout -->
         <div class="pd-layout">
@@ -2246,7 +2257,7 @@ prompt('Copy this link:', url);
   /**
    * Render Orders Page
    */
-  static renderOrders () {
+  static async renderOrders () {
     const mainContent = document.getElementById('main-content');
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
@@ -2257,7 +2268,7 @@ prompt('Copy this link:', url);
       return;
     }
 
-    const orders = checkoutManager.getUserOrders(currentUser.id);
+    const orders = await checkoutManager.getUserOrders(currentUser.id);
 
     if (orders.length === 0) {
       mainContent.innerHTML = `
@@ -2402,13 +2413,13 @@ ${isCurrent ? '<div style="width:6px;height:6px;border-radius:50%;background:whi
 /**
 * View Order Details (expand in page)
 */
-static viewOrderDetails (orderId) {
+  static async viewOrderDetails (orderId) {
 const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
 const currentUser = session?.user || null;
 if (!currentUser) return;
 
-const orders = checkoutManager.getUserOrders(currentUser.id);
-const order = orders.find(o => o.id === orderId);
+  const orders = await checkoutManager.getUserOrders(currentUser.id);
+  const order = orders.find(o => o.id === orderId);
 if (!order) {
 notificationManager?.error('Not Found', 'Order not found');
 return;
@@ -2744,7 +2755,7 @@ window.scrollTo(0, 0);
   /**
    * Render User Dashboard - Vertical Tabs Modern Design
    */
-  static renderDashboard () {
+  static async renderDashboard () {
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
 
@@ -2757,7 +2768,7 @@ window.scrollTo(0, 0);
     this.showOriginalNavFooter();
 
     const mainContent = document.getElementById('main-content');
-    const orders = checkoutManager.getUserOrders(currentUser.id || '');
+    const orders = await checkoutManager.getUserOrders(currentUser.id || '');
     const wishlist = productsManager.getWishlist();
     const cartCount = cartManager.getCount();
     const initials = currentUser.fullName
@@ -3271,8 +3282,8 @@ window.scrollTo(0, 0);
   /**
   * Render Payment Page
    */
-  static renderPayment (orderId) {
-    const order = checkoutManager.getOrderById(orderId);
+  static async renderPayment (orderId) {
+    const order = await checkoutManager.getOrderById(orderId);
     const mainContent = document.getElementById('main-content');
 
     if (!order) {

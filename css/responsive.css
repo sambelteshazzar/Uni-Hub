@@ -1,6 +1,11 @@
 @media (max-width: 576px) {
   html {
     font-size: 14px;
+    overflow-x: hidden;
+  }
+
+  body {
+    overflow-x: hidden;
   }
 
   h1 {
@@ -596,6 +601,11 @@
 @media (min-width: 577px) and (max-width: 768px) {
   html {
     font-size: 15px;
+    overflow-x: hidden;
+  }
+
+  body {
+    overflow-x: hidden;
   }
 
   h1 {

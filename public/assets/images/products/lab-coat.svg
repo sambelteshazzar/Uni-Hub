@@ -11,5 +11,5 @@
   <rect x="215" y="110" width="30" height="25" rx="2" fill="#fff" stroke="#e2e8f0"/>
   <ellipse cx="230" cy="180" rx="15" ry="8" fill="#f6ad55" opacity="0.5"/>
   <text x="200" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#333">Lab Coat</text>
-  <text x="200" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#666">Size M - Clean & Ready</text>
+  <text x="200" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#666">Size M - Clean &amp; Ready</text>
 </svg>

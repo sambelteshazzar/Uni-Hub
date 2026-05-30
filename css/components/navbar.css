@@ -443,6 +443,29 @@
     height: 32px;
     font-size: var(--text-sm);
   }
+
+  .navbar-actions {
+    flex-shrink: 1;
+    min-width: 0;
+    gap: var(--space-xs);
+  }
+
+  .navbar-actions .btn,
+  .navbar-actions button {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--text-xs);
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-actions {
+    gap: 4px;
+  }
+
+  .navbar-actions .btn span.btn-label {
+    display: none;
+  }
 }
 
 @media (min-width: 769px) {

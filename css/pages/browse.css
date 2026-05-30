@@ -304,17 +304,20 @@ Blue & white theme, refined & professional
 }
 
 .browse-breadcrumb-list {
-  display: flex;
-  align-items: center;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  gap: 0;
-  font-size: 0.8125rem;
-  color: var(--neutral-600);
-  height: 44px;
-  font-weight: 500;
-  letter-spacing: 0.01em;
+ display: flex;
+ align-items: center;
+ list-style: none;
+ margin: 0;
+ padding: 0;
+ gap: 0;
+ font-size: 0.8125rem;
+ color: var(--neutral-600);
+ height: 44px;
+ font-weight: 500;
+ letter-spacing: 0.01em;
+ overflow: hidden;
+ white-space: nowrap;
+ text-overflow: ellipsis;
 }
 
 .browse-breadcrumb-item {
@@ -838,9 +841,17 @@ Blue & white theme, refined & professional
 PRODUCT GRID — Luxury Card Design
 =========================================== */
 .browse-product-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 18px;
+ display: grid;
+ grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+ gap: 18px;
+}
+
+.browse-skeleton-grid {
+ grid-template-columns: repeat(3, 1fr);
+ gap: 1px;
+ background: #e5e5e5;
+ border-radius: 8px;
+ overflow: hidden;
 }
 
 .browse-product-grid.list-view {
@@ -1435,10 +1446,14 @@ RESPONSIVE
     gap: var(--space-lg);
   }
 
-  .browse-product-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 14px;
-  }
+ .browse-product-grid {
+ grid-template-columns: repeat(2, 1fr);
+ gap: 14px;
+ }
+
+ .browse-skeleton-grid {
+ grid-template-columns: repeat(2, 1fr);
+ }
 
   .browse-hero-visual {
     display: none;
@@ -1559,10 +1574,14 @@ RESPONSIVE
     justify-content: space-between;
   }
 
-  .browse-product-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
+ .browse-product-grid {
+ grid-template-columns: repeat(2, 1fr);
+ gap: 12px;
+ }
+
+ .browse-skeleton-grid {
+ grid-template-columns: repeat(2, 1fr);
+ }
 
   .browse-product-card {
     border-radius: 10px;
@@ -1640,10 +1659,14 @@ RESPONSIVE
     height: 14px;
   }
 
-  .browse-product-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
+ .browse-product-grid {
+ grid-template-columns: repeat(2, 1fr);
+ gap: 8px;
+ }
+
+ .browse-skeleton-grid {
+ grid-template-columns: repeat(2, 1fr);
+ }
 
   .browse-product-grid.list-view {
     grid-template-columns: 1fr;
@@ -1697,9 +1720,14 @@ RESPONSIVE
     padding: 0.125rem 0.25rem;
   }
 
-  .browse-breadcrumb-arrow {
-    width: 16px;
-    height: 16px;
-    margin: 0 0.0625rem;
-  }
+.browse-breadcrumb-arrow {
+ width: 16px;
+ height: 16px;
+ margin: 0 0.0625rem;
+ }
+
+ .browse-pagination {
+ flex-wrap: wrap;
+ gap: 4px;
+ }
 }

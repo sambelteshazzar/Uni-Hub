@@ -158,7 +158,7 @@ class BrowsePage {
         </aside>
         <div class="browse-main">
           <div class="browse-toolbar"><div class="browse-skeleton" style="height:40px;width:100%;max-width:420px;border-radius:6px;"></div></div>
-          <div class="browse-product-grid" style="grid-template-columns:repeat(3,1fr);gap:1px;background:#e5e5e5;border-radius:8px;overflow:hidden;">
+          <div class="browse-product-grid browse-skeleton-grid">
             ${Array(6).fill('').map(() => `<div style="background:#fff;"><div class="browse-skeleton" style="aspect-ratio:1;border-radius:0;"></div><div style="padding:12px 16px 16px;"><div class="browse-skeleton" style="height:10px;width:40%;margin-bottom:6px;"></div><div class="browse-skeleton" style="height:14px;width:100%;margin-bottom:6px;"></div><div class="browse-skeleton" style="height:20px;width:50%;margin-bottom:8px;"></div><div class="browse-skeleton" style="height:34px;width:100%;"></div></div></div>`).join('')}
           </div>
         </div>
