@@ -143,7 +143,7 @@ const StaticPageMethods = {
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2.5rem;">
           <div style="padding: 1.5rem; border: 1px solid var(--border, #e5e7eb); border-radius: 0.75rem;">
             <h3 style="font-weight: 600; margin-bottom: 0.5rem;">Email</h3>
-            <p style="color: var(--text-secondary);">support@unihub.com.gh</p>
+            <p style="color: var(--text-secondary);"><a href="mailto:unihubsupport@gmail.com">unihubsupport@gmail.com</a></p>
           </div>
           <div style="padding: 1.5rem; border: 1px solid var(--border, #e5e7eb); border-radius: 0.75rem;">
             <h3 style="font-weight: 600; margin-bottom: 0.5rem;">Phone</h3>

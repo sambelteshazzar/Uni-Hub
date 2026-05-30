@@ -188,7 +188,7 @@ class FooterUtils {
     if (contactLink) {
       contactLink.addEventListener('click', (e) => {
         e.preventDefault();
-        this.showNotification('Contact page coming soon! For now, email us at support@uni-hub.local', 'info');
+        this.showNotification('Contact page coming soon! For now, email us at unihubsupport@gmail.com', 'info');
       });
     }
   }

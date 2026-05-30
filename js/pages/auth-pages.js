@@ -284,7 +284,7 @@ const AuthPageMethods = {
     <li><strong>Continuing students:</strong> Use your university email for instant verification</li>
     <li><strong>New students:</strong> Upload admission letter or student ID card</li>
     <li><strong>Not sure?</strong> Contact your university's IT support</li>
-    <li><strong>Need assistance?</strong> Email support@uni-hub.local</li>
+    <li><strong>Need assistance?</strong> Email <a href="mailto:unihubsupport@gmail.com">unihubsupport@gmail.com</a></li>
     </ul>
     </div>
     </div>
