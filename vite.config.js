@@ -3,10 +3,9 @@ import { resolve } from 'path';
 import { cpSync, readFileSync, writeFileSync } from 'fs';
 
 const appScripts = [
-  '<script type="module" src="/js/utils/icons.js?v=7"></script>',
-  '<script type="module" src="/js/utils/toast.js?v=8"></script>',
-  '<script type="module" src="/js/utils/sentry.js?v=7"></script>',
-  '<script type="module" src="/js/app-init.js?v=7"></script>',
+'<script type="module" src="/js/utils/icons.js?v=7"></script>',
+'<script type="module" src="/js/utils/toast.js?v=8"></script>',
+'<script type="module" src="/js/app-init.js?v=7"></script>',
 ];
 
 export default defineConfig({
