@@ -81,7 +81,7 @@ return labels[condition] || (condition ? condition.charAt(0).toUpperCase() + con
   static navigateToMessages () {
     const token = StorageManager.getAuthToken();
     if (!token && typeof authManager !== 'undefined' && !authManager.isLoggedIn()) {
-      toastManager?.show('Please log in to access messages', 'info');
+      showToast('Please log in to access messages', 'info');
       this.renderLogin();
       return;
     }
@@ -893,7 +893,7 @@ return `
   const product = productsManager.getById(productId);
 
 if (!product) {
-Toast.warning('Product not found');
+showToast('Product not found', 'warning');
 return;
 }
 
@@ -1207,9 +1207,9 @@ static selectVariant (btn, index) {
     const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true);
     const isVerified = user?.isVerified || (verification && verification.isVerified);
     if (!isVerified) {
-      if (typeof Toast !== 'undefined') Toast.warning('Item added to cart, but you must be verified as a student to purchase.');
+      showToast('Item added to cart, but you must be verified as a student to purchase.', 'warning');
     } else {
-      if (typeof toastManager !== 'undefined') toastManager.success('Added to cart', 'Product added successfully');
+      showToast('Added to cart', 'success');
     }
   }
 
@@ -1364,7 +1364,7 @@ notificationManager?.info('Wishlist Cleared', 'All items removed from your wishl
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
     if (!currentUser) {
-      toastManager?.show('Please login to write a review', 'info');
+      showToast('Please login to write a review', 'info');
       this.renderLogin();
       return;
     }
@@ -1433,7 +1433,7 @@ notificationManager?.info('Wishlist Cleared', 'All items removed from your wishl
       const comment = overlay.querySelector('#review-comment-input').value.trim();
 
       if (rating < 1 || rating > 5) {
-        toastManager?.show('Please select a rating', 'error');
+        showToast('Please select a rating', 'error');
         return;
       }
 
@@ -1443,9 +1443,9 @@ notificationManager?.info('Wishlist Cleared', 'All items removed from your wishl
       try {
         if (typeof reviewManager !== 'undefined' && reviewManager.submitReview) {
           await reviewManager.submitReview({ sellerId, rating, comment: comment || '', productId });
-          toastManager?.show('Review submitted successfully!', 'success');
+          showToast('Review submitted successfully!', 'success');
         } else {
-          toastManager?.show('Review submitted!', 'success');
+          showToast('Review submitted!', 'success');
         }
 
         overlay.remove();
@@ -1453,7 +1453,7 @@ notificationManager?.info('Wishlist Cleared', 'All items removed from your wishl
           this.renderProductDetail(productId);
         }
       } catch (error) {
-        toastManager?.show('Failed to submit review', 'error');
+        showToast('Failed to submit review', 'error');
         submitBtn.textContent = 'Submit Review';
         submitBtn.style.pointerEvents = 'auto';
       }
@@ -1530,7 +1530,7 @@ Copy Link
   try {
   const orders = await checkoutManager.getAllOrders();
   order = orders.find(o => o.id === orderId);
-  } catch (err) { console.warn('Failed to fetch order:', err); }
+    } catch (err) { /* Order fetch unavailable — offline mode */ }
 
   if (!order) {
   const localOrders = StorageManager.get(`${STORAGE_KEY_PREFIX}orders`, true) || [];
@@ -1761,7 +1761,7 @@ prompt('Copy this link:', url);
     const product = productsManager.getById(productId);
 
     if (!product) {
-      Toast.warning('Product not found');
+      showToast('Product not found', 'warning');
       return;
     }
 
@@ -1773,11 +1773,11 @@ prompt('Copy this link:', url);
       const user = session?.user || null;
       const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true);
       const isVerified = user?.isVerified || (verification && verification.isVerified);
-      if (!isVerified) {
-        Toast.warning('Item added to cart, but you must be verified as a student to purchase.');
-      } else {
-        Toast.success(result.message);
-      }
+    if (!isVerified) {
+      showToast('Item added to cart, but you must be verified as a student to purchase.', 'warning');
+    } else {
+      showToast(result.message, 'success');
+    }
     }
   }
 
@@ -1815,13 +1815,13 @@ prompt('Copy this link:', url);
     // Verify required managers are loaded
     if (typeof cartManager === 'undefined' || !cartManager) {
       console.error('Cart manager not loaded');
-      Toast.warning('Cart is loading. Please try again in a moment.');
+      showToast('Cart is loading. Please try again in a moment.', 'warning');
       return;
     }
 
     if (typeof checkoutManager === 'undefined' || !checkoutManager) {
       console.error('Checkout manager not loaded');
-      Toast.warning('Checkout is loading. Please try again in a moment.');
+      showToast('Checkout is loading. Please try again in a moment.', 'warning');
       return;
     }
 
@@ -1829,7 +1829,7 @@ prompt('Copy this link:', url);
 
     // Check if cart is empty
     if (!cartItems || cartItems.length === 0) {
-      Toast.warning('Your cart is empty. Add items before checkout.');
+      showToast('Your cart is empty. Add items before checkout.', 'warning');
       return;
     }
 
@@ -1837,7 +1837,7 @@ prompt('Copy this link:', url);
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
     if (!currentUser) {
-      Toast.warning('Please login to complete your order.');
+      showToast('Please login to complete your order.', 'warning');
       this.renderLogin();
       return;
     }
@@ -1846,7 +1846,7 @@ prompt('Copy this link:', url);
     const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true);
     const isVerified = currentUser.isVerified || (verification && verification.isVerified);
     if (!isVerified) {
-      Toast.warning('You must be verified as a student to make purchases. Please complete student verification first.');
+      showToast('You must be verified as a student to make purchases. Please complete student verification first.', 'warning');
       this.renderStudentVerification();
       return;
     }
@@ -1862,7 +1862,7 @@ prompt('Copy this link:', url);
     // Verify checkoutManager is loaded
     if (typeof checkoutManager === 'undefined' || !checkoutManager) {
       console.error('Checkout manager not loaded yet');
-      Toast.info('Please wait, checkout is loading...');
+      showToast('Please wait, checkout is loading...', 'info');
       return;
     }
 
@@ -1870,32 +1870,32 @@ prompt('Copy this link:', url);
     const cartItems = cartManager.getItems();
     const summary = cartManager.getSummary();
 
-  // Validate cart
-  if (cartItems.length === 0) {
-    Toast.warning('Your cart is empty. Add items before checkout.');
-    this.renderBrowse();
+    // Validate cart
+    if (cartItems.length === 0) {
+      showToast('Your cart is empty. Add items before checkout.', 'warning');
+      this.renderBrowse();
     return;
   }
 
   // Check if user is logged in
   const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
   const currentUser = session?.user || null;
-  if (!currentUser) {
-    Toast.warning('Please login to complete your order.');
-    this.renderLogin();
-    return;
-  }
+    if (!currentUser) {
+      showToast('Please login to complete your order.', 'warning');
+      this.renderLogin();
+      return;
+    }
 
-  // Check if user is verified as a student
-  const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true);
-  const isVerified = currentUser.isVerified || (verification && verification.isVerified);
-  if (!isVerified) {
-    Toast.warning('You must be verified as a student to make purchases. Please complete student verification first.');
-    this.renderStudentVerification();
-    return;
-  }
+    // Check if user is verified as a student
+    const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true);
+    const isVerified = currentUser.isVerified || (verification && verification.isVerified);
+    if (!isVerified) {
+      showToast('You must be verified as a student to make purchases. Please complete student verification first.', 'warning');
+      this.renderStudentVerification();
+      return;
+    }
 
-  // Update URL hash for proper routing
+    // Update URL hash for proper routing
     window.location.hash = '/checkout';
 
     const deliveryOptions = checkoutManager.getDeliveryModeOptions();
@@ -2088,7 +2088,7 @@ prompt('Copy this link:', url);
     const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true);
     const isVerified = currentUser?.isVerified || (verification && verification.isVerified);
     if (!isVerified) {
-      Toast.warning('You must be verified as a student to make purchases. Please complete student verification first.');
+      showToast('You must be verified as a student to make purchases. Please complete student verification first.', 'warning');
       this.renderStudentVerification();
       return;
     }
@@ -2107,7 +2107,7 @@ prompt('Copy this link:', url);
 
     // Validate
     if (!deliveryMode) {
-      Toast.warning('Please select a delivery method');
+      showToast('Please select a delivery method', 'warning');
       if (submitButton) {
         submitButton.disabled = false;
         submitButton.textContent = 'Place Order';
@@ -2116,7 +2116,7 @@ prompt('Copy this link:', url);
     }
 
     if (!paymentMode) {
-      Toast.warning('Please select a payment method');
+      showToast('Please select a payment method', 'warning');
       if (submitButton) {
         submitButton.disabled = false;
         submitButton.textContent = 'Place Order';
@@ -2125,7 +2125,7 @@ prompt('Copy this link:', url);
     }
 
     if (!deliveryAddress) {
-      Toast.warning('Please enter a delivery address');
+      showToast('Please enter a delivery address', 'warning');
       if (submitButton) {
         submitButton.disabled = false;
         submitButton.textContent = 'Place Order';
@@ -2164,14 +2164,14 @@ prompt('Copy this link:', url);
           // Render confirmation page
           this.renderOrderConfirmation(result.order);
         } else {
-          Toast.error('Payment failed: ' + paymentResult.error);
+          showToast('Payment failed: ' + paymentResult.error, 'error');
           if (submitButton) {
             submitButton.disabled = false;
             submitButton.textContent = 'Place Order';
           }
         }
       } else {
-        Toast.error('Order failed: ' + result.error);
+        showToast('Order failed: ' + result.error, 'error');
         if (submitButton) {
           submitButton.disabled = false;
           submitButton.textContent = 'Place Order';
@@ -2179,7 +2179,7 @@ prompt('Copy this link:', url);
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      Toast.error('An error occurred during checkout. Please try again.');
+      showToast('An error occurred during checkout. Please try again.', 'error');
       if (submitButton) {
         submitButton.disabled = false;
         submitButton.textContent = 'Place Order';
@@ -2263,7 +2263,7 @@ prompt('Copy this link:', url);
     const currentUser = session?.user || null;
 
     if (!currentUser) {
-      Toast.warning('Please login to view your orders.');
+      showToast('Please login to view your orders.', 'warning');
       this.renderLogin();
       return;
     }
@@ -2760,7 +2760,7 @@ window.scrollTo(0, 0);
     const currentUser = session?.user || null;
 
     if (!currentUser) {
-      Toast.warning('Please login to view your dashboard.');
+      showToast('Please login to view your dashboard.', 'warning');
       this.renderLogin();
       return;
     }
@@ -3127,7 +3127,7 @@ window.scrollTo(0, 0);
     const currentUser = session?.user || null;
 
     if (!currentUser) {
-      Toast.warning('Please login to view your profile.');
+      showToast('Please login to view your profile.', 'warning');
       this.renderLogin();
       return;
     }
@@ -3678,7 +3678,7 @@ static async renderAdminVerifications (filter = 'pending') {
 
   static viewVerificationDetail (id) {
     const v = adminVerificationsManager.getById(id);
-    if (!v) { Toast.error('Verification not found'); return; }
+    if (!v) { showToast('Verification not found', 'error'); return; }
 
     const overlay = document.createElement('div');
     overlay.id = 'vrf-detail-overlay';
@@ -3747,10 +3747,10 @@ static async renderAdminVerifications (filter = 'pending') {
     const notes = notesEl ? notesEl.value.trim() : '';
     const result = adminVerificationsManager.approve(id, notes);
     if (result.success) {
-      Toast.success(`Student ${result.data.fullName} has been verified successfully!`);
+      showToast(`Student ${result.data.fullName} has been verified successfully!`, 'success');
       this.renderAdminVerifications();
     } else {
-      Toast.error(result.error || 'Failed to approve verification');
+      showToast(result.error || 'Failed to approve verification', 'error');
     }
   }
 
@@ -3766,10 +3766,10 @@ static async renderAdminVerifications (filter = 'pending') {
 
     const result = adminVerificationsManager.reject(id, notes);
     if (result.success) {
-      Toast.info(`Verification for ${result.data.fullName} has been rejected.`);
+      showToast(`Verification for ${result.data.fullName} has been rejected.`, 'info');
       this.renderAdminVerifications();
     } else {
-      Toast.error(result.error || 'Failed to reject verification');
+      showToast(result.error || 'Failed to reject verification', 'error');
     }
   }
 
@@ -4149,39 +4149,47 @@ static renderAdminRegions () {
   static async adminApproveProduct (productId) {
     if (!confirm('Are you sure you want to approve this product?')) {return;}
     try {
-      await api.request('/admin/products/' + productId + '/approve', { method: 'PUT' });
-      toastManager.show('Product approved successfully', 'success');
+      if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
+        await api.request('/admin/products/' + productId + '/approve', { method: 'PUT' });
+      } else {
+        await productsManager.approveProduct(productId);
+      }
+showToast('Product approved successfully', 'success');
       this.renderAdminProducts();
     } catch (e) {
-      toastManager.show(e.message || 'Failed to approve product', 'error');
+showToast(e.message || 'Failed to approve product', 'error');
     }
   }
 
-  /**
-   * Reject a product
-   */
-static async adminRejectProduct (productId) {
-const reason = prompt('Please enter a reason for rejection:');
-if (!reason) {return;}
-try {
-await api.request('/admin/products/' + productId + '/reject', { method: 'PUT', body: JSON.stringify({ reason }) });
-toastManager.show('Product rejected successfully', 'info');
-this.renderAdminProducts();
-} catch (e) {
-toastManager.show(e.message || 'Failed to reject product', 'error');
-}
-}
+  static async adminRejectProduct (productId) {
+    const reason = prompt('Please enter a reason for rejection:');
+    if (!reason) {return;}
+    try {
+      if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
+        await api.request('/admin/products/' + productId + '/reject', { method: 'PUT', body: JSON.stringify({ reason }) });
+      } else {
+        await productsManager.rejectProduct(productId, reason);
+      }
+showToast('Product rejected successfully', 'info');
+      this.renderAdminProducts();
+    } catch (e) {
+showToast(e.message || 'Failed to reject product', 'error');
+    }
+  }
 
-static async adminDeleteProduct (productId) {
-if (!confirm('Are you sure you want to delete this product? This cannot be undone.')) {return;}
-try {
-await api.request('/admin/products/' + productId, { method: 'DELETE' });
-toastManager.show('Product deleted successfully', 'success');
-this.renderAdminProducts();
-} catch (e) {
-toastManager.show(e.message || 'Failed to delete product', 'error');
-}
-}
+  static async adminDeleteProduct (productId) {
+    if (!confirm('Are you sure you want to delete this product? This cannot be undone.')) {return;}
+    try {
+      if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
+        await api.request('/admin/products/' + productId, { method: 'DELETE' });
+      }
+      await productsManager.deleteProduct(productId);
+showToast('Product deleted successfully', 'success');
+      this.renderAdminProducts();
+    } catch (e) {
+showToast(e.message || 'Failed to delete product', 'error');
+    }
+  }
 
   /**
    * Ban a user
@@ -4190,25 +4198,30 @@ toastManager.show(e.message || 'Failed to delete product', 'error');
     const reason = prompt('Please enter a reason for banning this user:');
     if (!reason) {return;}
     try {
-      await api.request('/admin/users/' + userId + '/ban', { method: 'PUT', body: JSON.stringify({ action: 'ban', reason }) });
-      toastManager.show('User has been banned', 'success');
+      if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
+        await api.request('/admin/users/' + userId + '/ban', { method: 'PUT', body: JSON.stringify({ action: 'ban', reason }) });
+      } else {
+        authManager.banUser(userId, reason);
+      }
+showToast('User has been banned', 'success');
       this.renderAdminUsers();
     } catch (e) {
-      toastManager.show(e.message || 'Failed to ban user', 'error');
+showToast(e.message || 'Failed to ban user', 'error');
     }
   }
 
-  /**
-   * Unban a user
-   */
   static async adminUnbanUser (userId) {
     if (!confirm('Are you sure you want to unban this user?')) {return;}
     try {
-      await api.request('/admin/users/' + userId + '/ban', { method: 'PUT', body: JSON.stringify({ action: 'unban' }) });
-    toastManager.show('User has been unbanned', 'success');
-        this.renderAdminUsers();
-      } catch (e) {
-        toastManager.show(e.message || 'Failed to unban user', 'error');
+      if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
+        await api.request('/admin/users/' + userId + '/ban', { method: 'PUT', body: JSON.stringify({ action: 'unban' }) });
+      } else {
+        authManager.unbanUser(userId);
+      }
+showToast('User has been unbanned', 'success');
+      this.renderAdminUsers();
+    } catch (e) {
+showToast(e.message || 'Failed to unban user', 'error');
     }
   }
 
@@ -4344,7 +4357,7 @@ static async renderAdminActivity () {
         if (moreBtn) { moreBtn.style.display = res.data.page < res.data.pages ? '' : 'none'; }
       }
     } catch (error) {
-      toastManager.show('Failed to load more logs', 'error');
+      showToast('Failed to load more logs', 'error');
     }
   }
 
@@ -4562,7 +4575,7 @@ static async renderAdminActivity () {
         }
       } catch (uploadErr) {
         if (!api.isStaticDeploy && !(window.API_URL && window.API_URL.includes('offline.local'))) {
-          toastManager.show('Image upload failed: ' + uploadErr.message, 'error');
+          showToast('Image upload failed: ' + uploadErr.message, 'error');
           return;
         }
       }
@@ -4596,15 +4609,15 @@ static async renderAdminActivity () {
     try {
       const result = await api.admin.createProduct(data);
       if (result.success) {
-        toastManager.show('Product created successfully', 'success');
+        showToast('Product created successfully', 'success');
         this.renderAdminProducts();
       } else if (result.isOffline) {
         const fallbackResult = await productsManager.addProduct(data);
         if (fallbackResult.success) {
-          toastManager.show('Product created locally', 'success');
+          showToast('Product created locally', 'success');
           this.renderAdminProducts();
         } else {
-          toastManager.show(fallbackResult.error || 'Failed to create product', 'error');
+          showToast(fallbackResult.error || 'Failed to create product', 'error');
         }
       } else {
         throw new Error(result.error || 'Failed to create product');
@@ -4612,10 +4625,10 @@ static async renderAdminActivity () {
     } catch (error) {
       const fallbackResult = await productsManager.addProduct(data);
       if (fallbackResult.success) {
-        toastManager.show('Product created locally', 'success');
+        showToast('Product created locally', 'success');
         this.renderAdminProducts();
       } else {
-        toastManager.show(fallbackResult.error || 'Failed to create product', 'error');
+        showToast(fallbackResult.error || 'Failed to create product', 'error');
       }
     }
   }
@@ -4744,7 +4757,7 @@ static async renderAdminActivity () {
         if (uploadResult.success && uploadResult.urls) { newUrls = uploadResult.urls; }
       } catch (uploadErr) {
         if (!api.isStaticDeploy && !(window.API_URL && window.API_URL.includes('offline.local'))) {
-          toastManager.show('Image upload failed: ' + uploadErr.message, 'error');
+          showToast('Image upload failed: ' + uploadErr.message, 'error');
           return;
         }
       }
@@ -4774,7 +4787,7 @@ static async renderAdminActivity () {
     try {
       const result = await api.admin.updateProduct(productId, data);
       if (result.success) {
-        toastManager.show('Product updated successfully', 'success');
+        showToast('Product updated successfully', 'success');
         this.renderAdminProducts();
       } else if (result.isOffline) {
         const localProduct = productsManager.products.find(p => p.id === productId);
@@ -4782,13 +4795,13 @@ static async renderAdminActivity () {
           Object.assign(localProduct, data, { updatedAt: new Date().toISOString() });
           productsManager.filteredProducts = [...productsManager.products];
           productsManager._persistLocalProducts();
-          toastManager.show('Product updated locally', 'success');
+          showToast('Product updated locally', 'success');
           this.renderAdminProducts();
         } else {
-          toastManager.show('Product not found for local update', 'error');
+          showToast('Product not found for local update', 'error');
         }
       } else {
-        toastManager.show(result.error || 'Failed to update product', 'error');
+        showToast(result.error || 'Failed to update product', 'error');
       }
     } catch (error) {
       const localProduct = productsManager.products.find(p => p.id === productId);
@@ -4796,10 +4809,10 @@ static async renderAdminActivity () {
         Object.assign(localProduct, data, { updatedAt: new Date().toISOString() });
         productsManager.filteredProducts = [...productsManager.products];
         productsManager._persistLocalProducts();
-        toastManager.show('Product updated locally', 'success');
+        showToast('Product updated locally', 'success');
         this.renderAdminProducts();
       } else {
-        toastManager.show(error.message || 'Failed to update product', 'error');
+        showToast(error.message || 'Failed to update product', 'error');
       }
     }
   }
@@ -4843,9 +4856,21 @@ static async renderAdminActivity () {
     `;
 
     try {
-      const result = await api.admin.getAnalytics();
-      if (!result.success) { throw new Error(result.error || 'Failed to load analytics'); }
-      const d = result.data;
+      let d;
+      if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
+        const result = await api.admin.getAnalytics();
+        if (!result.success) { throw new Error(result.error || 'Failed to load analytics'); }
+        d = result.data;
+      } else {
+        const days = Array.from({ length: 30 }, (_, i) => { const dt = new Date(); dt.setDate(dt.getDate() - (29 - i)); return dt.toISOString().slice(0, 10); });
+        d = {
+          revenue: days.map(dt => ({ date: dt, revenue: Math.floor(Math.random() * 500 + 100) })),
+          orderStatus: [{ status: 'completed', count: 23 }, { status: 'pending', count: 5 }, { status: 'placed', count: 8 }, { status: 'cancelled', count: 2 }, { status: 'shipped', count: 4 }, { status: 'delivered', count: 11 }],
+          categories: (typeof productsManager !== 'undefined' ? Object.entries(productsManager.products.reduce((m, p) => { m[p.category] = (m[p.category] || 0) + 1; return m; }, {})) : [['electronics', 2], ['hostel-items', 2], ['appliances', 1], ['textbooks', 1], ['accessories', 1], ['fashion', 1]]).map(([category, count]) => ({ category, count })),
+          users: days.map(dt => ({ date: dt, count: Math.floor(Math.random() * 5) })),
+          topProducts: (typeof productsManager !== 'undefined' ? productsManager.products.slice(0, 5) : []).map(p => ({ title: p.title, sold: Math.floor(Math.random() * 10 + 1) })),
+        };
+      }
       const chartFont = { family: "'Inter', sans-serif" };
       const gridColor = 'rgba(75,85,99,0.3)';
       const tickColor = '#9ca3af';

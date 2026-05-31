@@ -100,8 +100,18 @@ class MessagesPage {
    * Get main messaging interface HTML
    */
   getMessagingHTML () {
+    const isOffline = (typeof messageManager !== 'undefined' && messageManager._isOffline && messageManager._isOffline()) ||
+                      (typeof api !== 'undefined' && api.isStaticDeploy) ||
+                      !window._backendAvailable;
+    const offlineBanner = isOffline ? `
+      <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:10px 16px;margin-bottom:8px;display:flex;align-items:center;gap:8px;font-size:0.85rem;color:#92400e;">
+        <span style="font-size:1.1rem;">&#9888;</span>
+        <span><strong>Offline Mode</strong> — Messages are saved locally only. The other party won't see them until the server is available.</span>
+      </div>
+    ` : '';
     return `
-      <div class="messaging-container">
+    ${offlineBanner}
+    <div class="messaging-container">
         <!-- Sidebar: Conversation List -->
         <aside class="messaging-sidebar" id="messaging-sidebar">
           <div class="messaging-sidebar-header">
@@ -339,7 +349,7 @@ class MessagesPage {
       // eslint-disable-next-line no-console
       console.error('Failed to load conversation:', error);
       if (toastManager) {
-        toastManager.show('Failed to load conversation', 'error');
+        showToast('Failed to load conversation', 'error');
       }
     }
   }
@@ -363,7 +373,7 @@ class MessagesPage {
       // eslint-disable-next-line no-console
       console.error('Failed to start conversation:', error);
       if (toastManager) {
-        toastManager.show('Failed to start conversation', 'error');
+        showToast('Failed to start conversation', 'error');
       }
     }
   }
@@ -509,7 +519,7 @@ class MessagesPage {
       // eslint-disable-next-line no-console
       console.error('Failed to send message:', error);
       if (toastManager) {
-        toastManager.show('Failed to send message', 'error');
+        showToast('Failed to send message', 'error');
       }
     } finally {
       sendBtn.disabled = false;

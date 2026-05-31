@@ -233,4 +233,15 @@ if (typeof messagesPage !== 'undefined') {
   window.messagesPage = messagesPage;
 }
 
+// ====================
+// GLOBAL HELPERS
+// ====================
+window.showToast = function (message, type, title, duration) {
+  if (typeof toastManager !== 'undefined' && toastManager && typeof toastManager.show === 'function') {
+    toastManager.show(message, type, title, duration);
+  } else if (typeof Toast !== 'undefined' && Toast && typeof Toast.show === 'function') {
+    Toast.show(message, type, duration);
+  }
+};
+
 console.log('✓ Global modules and constants initialized');

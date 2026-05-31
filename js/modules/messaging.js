@@ -72,12 +72,8 @@ class MessageManager {
 
       // Setup event listeners
       this.setupListeners();
-
-      // eslint-disable-next-line no-console
-      console.log('✓ Messaging system initialized');
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.warn('Messaging system init failed:', error);
+      // Messaging init failed — offline mode
     }
   }
 
@@ -89,13 +85,10 @@ class MessageManager {
       // Try CDN first as fallback
       const script = document.createElement('script');
       script.src = 'https://cdn.socket.io/4.7.2/socket.io.min.js';
-      script.onload = () => {
-        console.log('✓ Socket.IO loaded from CDN');
-        resolve();
-      };
+      script.onload = () => { resolve(); };
   script.onerror = () => {
     if (window.API_URL && window.API_URL.includes('offline.local')) {
-      console.log('⚠ Socket.IO not available - offline mode, messaging disabled');
+      // Offline mode — messaging disabled
       resolve();
       return;
     }
@@ -103,10 +96,9 @@ class MessageManager {
     const backendScript = document.createElement('script');
     backendScript.src = `${window.API_URL?.replace('/api', '') || 'http://localhost:5000'}/socket.io/socket.io.js`;
     backendScript.onload = resolve;
-    backendScript.onerror = () => {
-      console.log('⚠ Socket.IO not available - messaging will use polling mode');
-      resolve(); // Don't reject, just continue
-    };
+      backendScript.onerror = () => {
+          resolve();
+        };
     document.head.appendChild(backendScript);
   };
       document.head.appendChild(script);
@@ -118,7 +110,7 @@ class MessageManager {
    */
   connect () {
     if (window.API_URL && window.API_URL.includes('offline.local')) {
-      console.warn('Offline mode - Socket.IO messaging not available');
+      // Offline mode — Socket.IO not available
       return;
     }
     // Get auth token from session (authManager storage format)
@@ -190,7 +182,7 @@ class MessageManager {
 
         if (toastManager && typeof toastManager.show === 'function') {
           const senderName = data.message?.sender?.fullName || 'Someone';
-          toastManager.show(`New message from ${senderName}`, 'info', 3000);
+          showToast(`New message from ${senderName}`, 'info', '', 3000);
         }
       }
     });

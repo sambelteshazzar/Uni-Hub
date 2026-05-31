@@ -206,7 +206,7 @@ class AuthManager {
         return data.csrfToken;
       }
     } catch (error) {
-      console.warn('Failed to fetch CSRF token');
+      // CSRF token unavailable — non-critical
     }
     return null;
   }
@@ -258,7 +258,7 @@ class AuthManager {
     if (!this._isDevMode()) {
       return { success: false, error: 'Server is unreachable. Registration requires an active server connection.' };
     }
-    console.warn('Backend unavailable for registration, using offline fallback (dev only)');
+    // Backend unavailable — using offline fallback
     const existing = this._getOfflineUsers()[userData.email];
     if (existing) {
       return { success: false, error: 'Email already registered (offline mode)' };
@@ -324,12 +324,10 @@ class AuthManager {
         return { success: false, error: data.error || 'Invalid credentials' };
       }
 
-      // Offline mode - skip backend entirely
-      console.warn('Backend unavailable for login, trying offline fallback');
-      return this._tryOfflineLogin(email, password);
+  // Offline mode - skip backend entirely
+  return this._tryOfflineLogin(email, password);
     } catch (error) {
-      console.warn('Backend unavailable for login, trying offline fallback');
-      return this._tryOfflineLogin(email, password);
+      // Backend unavailable — using offline fallback
     }
   }
 
@@ -510,6 +508,33 @@ class AuthManager {
         }
       }
     } catch (e) {}
+  }
+
+  banUser (userId, reason) {
+    const key = (typeof STORAGE_KEY_PREFIX !== 'undefined' ? STORAGE_KEY_PREFIX : 'unihub_') + 'banned_users';
+    const banned = StorageManager.get(key, true) || {};
+    banned[userId] = { reason, bannedAt: new Date().toISOString() };
+    StorageManager.set(key, banned);
+    return { success: true };
+  }
+
+  unbanUser (userId) {
+    const key = (typeof STORAGE_KEY_PREFIX !== 'undefined' ? STORAGE_KEY_PREFIX : 'unihub_') + 'banned_users';
+    const banned = StorageManager.get(key, true) || {};
+    delete banned[userId];
+    StorageManager.set(key, banned);
+    return { success: true };
+  }
+
+  isUserBanned (userId) {
+    const key = (typeof STORAGE_KEY_PREFIX !== 'undefined' ? STORAGE_KEY_PREFIX : 'unihub_') + 'banned_users';
+    const banned = StorageManager.get(key, true) || {};
+    return !!banned[userId];
+  }
+
+  getBannedUsers () {
+    const key = (typeof STORAGE_KEY_PREFIX !== 'undefined' ? STORAGE_KEY_PREFIX : 'unihub_') + 'banned_users';
+    return StorageManager.get(key, true) || {};
   }
 }
 

@@ -126,6 +126,65 @@
   background: #003399;
 }
 
+.navbar-search-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #525252;
+  transition: background 0.2s ease;
+}
+
+.navbar-search-toggle:hover {
+  background: #f4f4f4;
+}
+
+.navbar-drawer-search {
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.navbar-drawer-search-input {
+  flex: 1;
+  height: 40px;
+  padding: 0 var(--space-md);
+  border: 1px solid #d4d4d4;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  background: #fff;
+}
+
+.navbar-drawer-search-input:focus {
+  outline: none;
+  border-color: #0046be;
+  box-shadow: 0 0 0 3px rgba(0, 70, 190, 0.1);
+}
+
+.navbar-drawer-search-btn {
+  width: 40px;
+  height: 40px;
+  background: #0046be;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.navbar-drawer-search-btn:hover {
+  background: #003399;
+}
+
 /* Right side actions */
 .navbar-cart-btn {
   background: transparent;
@@ -419,7 +478,40 @@
   }
 
   .navbar-search-always {
-    display: none;
+    display: flex;
+    max-width: none;
+    margin: 0 var(--space-xs);
+    position: absolute;
+    top: 56px;
+    left: 0;
+    right: 0;
+    background: #fff;
+    padding: var(--space-sm) var(--space-md);
+    border-bottom: 1px solid #e5e5e5;
+    z-index: 99;
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+
+  .navbar-search-always.active {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .navbar-search-toggle {
+    display: flex;
+  }
+
+  .navbar-search-input {
+    font-size: 16px;
+  }
+
+  .navbar-search-btn-submit {
+    padding: 0 var(--space-md);
+    white-space: nowrap;
   }
 
   #navbar-auth-buttons .btn-ghost {

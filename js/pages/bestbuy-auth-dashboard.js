@@ -95,11 +95,11 @@ var socialBtnStyle =
     // ============================================
   Pages.handleSocialLogin = function (provider) {
     if (isOffline()) {
-      Toast.info('Google Sign-In is not available in offline mode. Please use email and password.');
+      showToast('Google Sign-In is not available in offline mode. Please use email and password.', 'info');
       return;
     }
     if (provider !== 'google') {
-      Toast.info('Only Google Sign-In is supported at this time.');
+      showToast('Only Google Sign-In is supported at this time.', 'info');
       return;
     }
     if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
@@ -110,22 +110,22 @@ var socialBtnStyle =
           if (tokenResponse.access_token) {
             Pages._handleGoogleToken(tokenResponse.access_token);
           } else {
-            Toast.error('Google Sign-In was cancelled or failed.');
+            showToast('Google Sign-In was cancelled or failed.', 'error');
           }
         },
         error_callback: function () {
-          Toast.error('Google Sign-In failed. Please try again.');
+          showToast('Google Sign-In failed. Please try again.', 'error');
         }
       });
       tokenClient.requestAccessToken();
     } else {
-      Toast.info('Google Sign-In is loading. Please try again in a moment.');
+      showToast('Google Sign-In is loading. Please try again in a moment.', 'info');
     }
   };
 
   Pages._handleGoogleToken = async function (accessToken) {
     try {
-      Toast.info('Signing in with Google...');
+      showToast('Signing in with Google...', 'info');
       var res = await fetch('/api/auth/google/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -136,10 +136,10 @@ var socialBtnStyle =
       if (typeof authManager !== 'undefined') {
         authManager.setSession(data.user, data.token);
       }
-      Toast.success('Signed in with Google!');
+      showToast('Signed in with Google!', 'success');
       setTimeout(function () { window.location.hash = '#browse'; }, 500);
     } catch (err) {
-      Toast.error(err.message || 'Google Sign-In failed. Please try again.');
+      showToast(err.message || 'Google Sign-In failed. Please try again.', 'error');
     }
   };
 
@@ -219,17 +219,17 @@ var socialBtnStyle =
       if (result.success) {
         Pages.updateNavbar();
         Pages.updateCartBadge();
-        Toast.success('Welcome back, ' + (result.user.fullName || email) + '!');
+        showToast('Welcome back, ' + (result.user.fullName || email) + '!', 'success');
         window.location.hash = '#/browse';
         Pages.renderBrowse();
       } else if (result.isOffline) {
         Pages.updateNavbar();
         Pages.updateCartBadge();
-        Toast.info('You are in offline mode. Browse with demo data.');
+        showToast('You are in offline mode. Browse with demo data.', 'info');
         window.location.hash = '#/browse';
         Pages.renderBrowse();
       } else {
-        Toast.error('Login failed: ' + result.error);
+        showToast('Login failed: ' + result.error, 'error');
       }
     };
 
@@ -348,16 +348,16 @@ var socialBtnStyle =
 
       if (result.success) {
         Pages.updateNavbar();
-        Toast.success('Account created! Welcome, ' + firstName + '!');
+        showToast('Account created! Welcome, ' + firstName + '!', 'success');
         window.location.hash = '#/browse';
         Pages.renderBrowse();
       } else if (result.isOffline) {
         Pages.updateNavbar();
-        Toast.info('Registered in offline mode. You can now browse with demo data.');
+        showToast('Registered in offline mode. You can now browse with demo data.', 'info');
         window.location.hash = '#/browse';
         Pages.renderBrowse();
       } else {
-        Toast.error('Registration failed: ' + result.error);
+        showToast('Registration failed: ' + result.error, 'error');
       }
     };
 
@@ -414,7 +414,7 @@ var socialBtnStyle =
       try {
         var baseURL = (typeof window !== 'undefined' && window.API_URL) || 'http://localhost:5000/api';
         if (baseURL.includes('offline.local')) {
-          Toast.info('Password reset is not available in offline mode. Please log in with your existing credentials.');
+          showToast('Password reset is not available in offline mode. Please log in with your existing credentials.', 'info');
           setTimeout(function () { Pages.renderLogin(); }, 2000);
         } else {
           var response = await fetch(baseURL + '/auth/forgot-password', {
@@ -424,18 +424,18 @@ var socialBtnStyle =
           });
           var result = await response.json();
           if (result.success) {
-            Toast.success(result.message);
+            showToast(result.message, 'success');
             if (result.resetToken) {
               Pages.renderResetPassword(result.resetToken);
             } else {
               Pages.renderLogin();
             }
           } else {
-            Toast.error(result.error || 'Failed to send reset link');
+            showToast(result.error || 'Failed to send reset link', 'error');
           }
         }
       } catch (error) {
-        Toast.info('Running in offline mode. Please log in with your existing credentials.');
+        showToast('Running in offline mode. Please log in with your existing credentials.', 'info');
         setTimeout(function () { Pages.renderLogin(); }, 3000);
       } finally {
         submitBtn.disabled = false;
@@ -509,7 +509,7 @@ var socialBtnStyle =
       var submitBtn = form.querySelector('button[type="submit"]');
 
       if (newPassword !== confirmPassword) {
-        Toast.error('Passwords do not match');
+        showToast('Passwords do not match', 'error');
         return;
       }
 
@@ -519,7 +519,7 @@ var socialBtnStyle =
       try {
         var baseURL = (typeof window !== 'undefined' && window.API_URL) || 'http://localhost:5000/api';
         if (baseURL.includes('offline.local')) {
-          Toast.info('Password reset is not available in offline mode. Please log in with your existing credentials.');
+          showToast('Password reset is not available in offline mode. Please log in with your existing credentials.', 'info');
           setTimeout(function () { Pages.renderLogin(); }, 2000);
         } else {
           var response = await fetch(baseURL + '/auth/reset-password', {
@@ -529,14 +529,14 @@ var socialBtnStyle =
           });
           var result = await response.json();
           if (result.success) {
-            Toast.success(result.message);
+            showToast(result.message, 'success');
             setTimeout(function () { Pages.renderLogin(); }, 1500);
           } else {
-            Toast.error(result.error || 'Failed to reset password');
+            showToast(result.error || 'Failed to reset password', 'error');
           }
         }
       } catch (error) {
-        Toast.info('Running in offline mode. Password reset is not available offline. Please log in with your existing credentials.');
+        showToast('Running in offline mode. Password reset is not available offline. Please log in with your existing credentials.', 'info');
         setTimeout(function () { Pages.renderLogin(); }, 3000);
       } finally {
         submitBtn.disabled = false;
@@ -585,33 +585,34 @@ var socialBtnStyle =
     // ============================================
     // NAVBAR INTERACTIONS
     // ============================================
-    Pages.toggleSearch = function () {
-      var searchBar = document.getElementById('navbar-search');
-      if (searchBar) {
-        searchBar.classList.toggle('active');
-        if (searchBar.classList.contains('active')) {
-          var input = document.getElementById('navbar-search-input');
-          if (input) setTimeout(function () { input.focus(); }, 100);
-        }
-      }
-    };
-
-    Pages.handleSearch = function () {
+Pages.toggleSearch = function () {
+  var searchBar = document.querySelector('.navbar-search-always');
+  if (searchBar) {
+    searchBar.classList.toggle('active');
+    if (searchBar.classList.contains('active')) {
       var input = document.getElementById('navbar-search-input');
-      if (input && input.value.trim()) {
-        window.location.hash = '/browse?q=' + encodeURIComponent(input.value.trim());
-        Pages.toggleSearch();
-      }
-    };
+      if (input) setTimeout(function () { input.focus(); }, 100);
+    }
+  }
+};
 
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' && e.target.id === 'navbar-search-input') Pages.handleSearch();
-      if (e.key === 'Escape') {
-        var searchBar = document.getElementById('navbar-search');
-        if (searchBar && searchBar.classList.contains('active')) Pages.toggleSearch();
-        Pages.closeMobileMenu();
-      }
-    });
+Pages.handleSearch = function () {
+  var input = document.getElementById('navbar-search-input');
+  if (input && input.value.trim()) {
+    window.location.hash = '/browse?q=' + encodeURIComponent(input.value.trim());
+    var searchBar = document.querySelector('.navbar-search-always');
+    if (searchBar && searchBar.classList.contains('active')) searchBar.classList.remove('active');
+  }
+};
+
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Enter' && e.target.id === 'navbar-search-input') Pages.handleSearch();
+  if (e.key === 'Escape') {
+    var searchBar = document.querySelector('.navbar-search-always');
+    if (searchBar && searchBar.classList.contains('active')) searchBar.classList.remove('active');
+    Pages.closeMobileMenu();
+  }
+});
 
     Pages.toggleMobileMenu = function () {
       var drawer = document.getElementById('navbar-drawer');

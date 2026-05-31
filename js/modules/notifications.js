@@ -13,8 +13,11 @@ class NotificationManager {
     if (typeof StorageManager !== 'undefined' && typeof StorageManager.get === 'function') {
       this.load();
     }
-    this.setupSocketListeners();
-    this.startPeriodicSync();
+    const isOffline = (typeof api !== 'undefined' && api.isStaticDeploy) || (window.API_URL && window.API_URL.includes('offline.local'));
+    if (!isOffline) {
+      this.setupSocketListeners();
+      this.startPeriodicSync();
+    }
   }
 
   setupSocketListeners () {

@@ -54,7 +54,7 @@ const LandingPageMethods = {
 
   showUniversityComingSoon (universityName) {
     if (typeof Toast !== 'undefined') {
-      Toast.info(`${universityName} is coming soon! We're currently available at Accra Technical University (ATU).`);
+      showToast(`${universityName} is coming soon! We're currently available at Accra Technical University (ATU).`, 'info');
     } else {
       alert(`${universityName} is coming soon! We're currently available at Accra Technical University (ATU).`);
     }

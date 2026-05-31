@@ -1,68 +1,68 @@
 {
-  "users": [
-    {
-      "id": "user_001",
-      "fullName": "Kwame Mensah",
-      "email": "kwame.mensah@ug.edu.gh",
-      "phone": "+233 50 123 4567",
-      "university": "ug",
-      "role": "buyer",
-      "avatar": "assets/images/avatars/user_001.jpg",
-      "rating": 4.5,
-      "totalOrders": 12,
-      "joinedDate": "2025-09-15T10:30:00Z",
-      "isVerified": true
-    },
-    {
-      "id": "user_002",
-      "fullName": "Ama Osei",
-      "email": "ama.osei@knust.edu.gh",
-      "phone": "+233 24 987 6543",
-      "university": "knust",
-      "role": "seller",
-      "avatar": "assets/images/avatars/user_002.jpg",
-      "rating": 4.8,
-      "totalSales": 45,
-      "joinedDate": "2025-08-20T14:15:00Z",
-      "isVerified": true
-    },
-    {
-      "id": "user_003",
-      "fullName": "Kofi Asante",
-      "email": "kofi.asante@ucc.edu.gh",
-      "phone": "+233 54 321 7654",
-      "university": "ucc",
-      "role": "buyer",
-      "avatar": "assets/images/avatars/user_003.jpg",
-      "rating": 4.2,
-      "totalOrders": 8,
-      "joinedDate": "2025-10-05T09:00:00Z",
-      "isVerified": true
-    },
-    {
-      "id": "user_004",
-      "fullName": "Abena Darko",
-      "email": "abena.darko@uew.edu.gh",
-      "phone": "+233 20 555 1234",
-      "university": "uew",
-      "role": "seller",
-      "avatar": "assets/images/avatars/user_004.jpg",
-      "rating": 4.9,
-      "totalSales": 67,
-      "joinedDate": "2025-07-10T11:45:00Z",
-      "isVerified": true
-    },
-    {
-      "id": "admin_001",
-      "fullName": "Admin User",
-      "email": "admin@unihub.local",
-      "phone": "+233 50 000 0000",
-      "university": "all",
-      "role": "admin",
-      "avatar": "assets/images/avatars/admin.jpg",
-      "rating": 5.0,
-      "joinedDate": "2025-01-01T00:00:00Z",
-      "isVerified": true
-    }
-  ]
+"users": [
+{
+"id": "user_001",
+"fullName": "Kwame Mensah",
+"email": "kwame.mensah@ug.edu.gh",
+"phone": "+233 50 123 4567",
+"university": "ug",
+"role": "buyer",
+"avatar": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect fill='%232563eb' width='40' height='40' rx='20'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='white' font-size='16' font-family='sans-serif'%3EKM%3C/text%3E%3C/svg%3E",
+"rating": 4.5,
+"totalOrders": 12,
+"joinedDate": "2025-09-15T10:30:00Z",
+"isVerified": true
+},
+{
+"id": "user_002",
+"fullName": "Ama Osei",
+"email": "ama.osei@knust.edu.gh",
+"phone": "+233 24 987 6543",
+"university": "knust",
+"role": "seller",
+"avatar": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect fill='%237c3aed' width='40' height='40' rx='20'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='white' font-size='16' font-family='sans-serif'%3EAO%3C/text%3E%3C/svg%3E",
+"rating": 4.8,
+"totalSales": 45,
+"joinedDate": "2025-08-20T14:15:00Z",
+"isVerified": true
+},
+{
+"id": "user_003",
+"fullName": "Kofi Asante",
+"email": "kofi.asante@ucc.edu.gh",
+"phone": "+233 54 321 7654",
+"university": "ucc",
+"role": "buyer",
+"avatar": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect fill='%23059669' width='40' height='40' rx='20'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='white' font-size='16' font-family='sans-serif'%3EKA%3C/text%3E%3C/svg%3E",
+"rating": 4.2,
+"totalOrders": 8,
+"joinedDate": "2025-10-05T09:00:00Z",
+"isVerified": true
+},
+{
+"id": "user_004",
+"fullName": "Abena Darko",
+"email": "abena.darko@uew.edu.gh",
+"phone": "+233 20 555 1234",
+"university": "uew",
+"role": "seller",
+"avatar": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect fill='%23dc2626' width='40' height='40' rx='20'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='white' font-size='16' font-family='sans-serif'%3EAD%3C/text%3E%3C/svg%3E",
+"rating": 4.9,
+"totalSales": 67,
+"joinedDate": "2025-07-10T11:45:00Z",
+"isVerified": true
+},
+{
+"id": "admin_001",
+"fullName": "Admin User",
+"email": "admin@unihub.local",
+"phone": "+233 50 000 0000",
+"university": "all",
+"role": "admin",
+"avatar": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect fill='%231e40af' width='40' height='40' rx='20'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='white' font-size='16' font-family='sans-serif'%3EA%3C/text%3E%3C/svg%3E",
+"rating": 5.0,
+"joinedDate": "2025-01-01T00:00:00Z",
+"isVerified": true
+}
+]
 }

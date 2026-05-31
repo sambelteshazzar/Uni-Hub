@@ -27,9 +27,7 @@ const AuthPageMethods = {
         if (uni.active === false) {
           StorageManager.remove(STORAGE_KEYS.SELECTED_UNIVERSITY);
           Pages.renderLanding();
-          if (typeof Toast !== 'undefined') {
-            Toast.info(`${uni.name} is coming soon! We're currently available at Accra Technical University (ATU).`);
-          }
+        showToast(`${uni.name} is coming soon! We're currently available at Accra Technical University (ATU).`, 'info');
           return;
         }
         universityName = uni.name;
@@ -359,14 +357,13 @@ const AuthPageMethods = {
           verificationData.isPending = true;
           verificationData.submittedAt = new Date().toISOString();
           StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verificationData);
-          Toast.info(`Verification Submitted! A verification code has been sent to ${verificationData.studentEmail}. Your account will be verified once confirmed.`);
+          showToast(`Verification Submitted! A verification code has been sent to ${verificationData.studentEmail}. Your account will be verified once confirmed.`, 'info');
           Pages.renderBrowse();
           return;
         }
       }
     } catch (e) {
-      // eslint-disable-next-line no-console
-      console.warn('Backend verification unavailable, using local fallback:', e.message);
+      // Backend verification unavailable — offline mode
     }
 
   // Fallback: store locally (offline mode) — auto-verify email method since no mail server
@@ -391,7 +388,7 @@ const AuthPageMethods = {
   }
 
   StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verificationData);
-  Toast.success(`Verification Successful! Welcome, ${verificationData.fullName}! You are now verified as a student of ${university ? university.name : 'your university'}. You can now browse and trade on Uni-Hub.`);
+      showToast(`Verification Successful! Welcome, ${verificationData.fullName}! You are now verified as a student of ${university ? university.name : 'your university'}. You can now browse and trade on Uni-Hub.`, 'success');
   Pages.renderBrowse();
   },
 
@@ -403,14 +400,14 @@ const AuthPageMethods = {
 
     // Validate files
     if (files.length === 0) {
-      Toast.warning('Please upload at least one document (admission letter or student ID)');
+        showToast('Please upload at least one document (admission letter or student ID)', 'warning');
       return;
     }
 
     // Validate file sizes (max 5MB each)
     for (const file of files) {
       if (file.size > 5 * 1024 * 1024) {
-        Toast.warning(`File "${file.name}" is too large. Maximum size is 5MB.`);
+        showToast(`File "${file.name}" is too large. Maximum size is 5MB.`, 'warning');
         return;
       }
     }
@@ -446,14 +443,13 @@ const AuthPageMethods = {
 
         if (response.success) {
           StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verificationData);
-          Toast.success(`Verification Submitted! Thank you, ${verificationData.fullName}! Your documents have been submitted for verification. You will be notified within 24-48 hours once your student status is confirmed. You must be verified before making any purchases.`);
+          showToast(`Verification Submitted! Thank you, ${verificationData.fullName}! Your documents have been submitted for verification. You will be notified within 24-48 hours once your student status is confirmed. You must be verified before making any purchases.`, 'success');
           Pages.renderBrowse();
           return;
         }
       }
     } catch (e) {
-      // eslint-disable-next-line no-console
-      console.warn('Backend verification unavailable, using local fallback:', e.message);
+      // Backend verification unavailable — offline mode
     }
 
     // Fallback: store locally (offline mode) — read files as base64 and push to admin queue
@@ -479,7 +475,7 @@ const AuthPageMethods = {
     }
 
     StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verificationData);
-    Toast.success(`Verification Submitted! Thank you, ${verificationData.fullName}! Your documents have been submitted for admin review. You will be notified once your student status is confirmed. You must be verified before making any purchases.`);
+      showToast(`Verification Submitted! Thank you, ${verificationData.fullName}! Your documents have been submitted for admin review. You will be notified once your student status is confirmed. You must be verified before making any purchases.`, 'success');
     Pages.renderBrowse();
   },
 
@@ -741,7 +737,7 @@ const AuthPageMethods = {
     </div>
 
   <div class="social-buttons-grid">
-  <button class="social-btn" title="Sign in with Google" onclick="Toast.error('Social login is not available in offline mode')">
+  <button class="social-btn" title="Sign in with Google" onclick="showToast('Social login is not available in offline mode', 'error')">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem;">
   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
   <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
@@ -749,12 +745,12 @@ const AuthPageMethods = {
   <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
   </svg>
   </button>
-  <button class="social-btn" title="Sign in with Apple" onclick="Toast.error('Social login is not available in offline mode')">
+  <button class="social-btn" title="Sign in with Apple" onclick="showToast('Social login is not available in offline mode', 'error')">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; fill: #fafafa;">
   <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.09997 22C7.78997 22.05 6.79997 20.68 5.95997 19.47C4.24997 17 2.93997 12.45 4.69997 9.39C5.56997 7.87 7.12997 6.91 8.81997 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.09 16.67C20.06 16.74 19.67 18.11 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"></path>
   </svg>
   </button>
-  <button class="social-btn" title="Sign in with X" onclick="Toast.error('Social login is not available in offline mode')">
+  <button class="social-btn" title="Sign in with X" onclick="showToast('Social login is not available in offline mode', 'error')">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; fill: #fafafa;">
   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
   </svg>
@@ -883,7 +879,7 @@ const AuthPageMethods = {
         window.location.hash = '#/browse';
         Pages.renderBrowse();
       } else {
-        Toast.error('Login failed: ' + result.error);
+        showToast('Login failed: ' + result.error, 'error');
       }
     }
   },
@@ -1124,7 +1120,7 @@ const AuthPageMethods = {
       </div>
 
       <div class="social-buttons-grid">
-      <button class="social-btn" title="Sign up with Google" onclick="Toast.error('Social login is not available in offline mode')">
+      <button class="social-btn" title="Sign up with Google" onclick="showToast('Social login is not available in offline mode', 'error')">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem;">
           <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
           <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
@@ -1132,12 +1128,12 @@ const AuthPageMethods = {
           <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
         </svg>
       </button>
-      <button class="social-btn" title="Sign up with Apple" onclick="Toast.error('Social login is not available in offline mode')">
+      <button class="social-btn" title="Sign up with Apple" onclick="showToast('Social login is not available in offline mode', 'error')">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; fill: #fafafa;">
           <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.09997 21.18C7.78997 22.05 6.79997 20.68 5.95997 19.47C4.24997 17 2.93997 12.45 4.69997 9.39C5.56997 7.87 7.12997 6.91 8.81997 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.09 16.67C20.06 16.74 19.67 18.11 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"></path>
         </svg>
       </button>
-      <button class="social-btn" title="Sign up with X" onclick="Toast.error('Social login is not available in offline mode')">
+      <button class="social-btn" title="Sign up with X" onclick="showToast('Social login is not available in offline mode', 'error')">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; fill: #fafafa;">
           <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
         </svg>
@@ -1172,9 +1168,7 @@ const AuthPageMethods = {
   const result = await authManager.register(userData);
 
   if (result.success) {
-    if (typeof toastManager !== 'undefined') {
-    toastManager?.show(result.message, 'success');
-    }
+        showToast(result.message, 'success');
     try {
     if (typeof router !== 'undefined' && router.navigate) {
       router.navigate('/browse');
@@ -1189,7 +1183,7 @@ const AuthPageMethods = {
     Pages.renderBrowse();
     }
   } else {
-    Toast.error('Registration failed: ' + result.error);
+      showToast('Registration failed: ' + result.error, 'error');
   }
   },
 
@@ -1231,7 +1225,7 @@ const AuthPageMethods = {
     try {
       const baseURL = (typeof window !== 'undefined' && window.API_URL) || 'http://localhost:5000/api';
       if (baseURL.includes('offline.local')) {
-        toastManager?.show('Password reset is not available in offline mode. Please log in with your existing credentials.', 'info');
+        showToast('Password reset is not available in offline mode. Please log in with your existing credentials.', 'info');
         setTimeout(() => Pages.renderLogin(), 2000);
       } else {
       const response = await fetch(`${baseURL}/auth/forgot-password`, {
@@ -1243,7 +1237,7 @@ const AuthPageMethods = {
       const result = await response.json();
 
       if (result.success) {
-        toastManager?.show(result.message, 'success');
+        showToast(result.message, 'success');
 
         if (result.resetToken) {
           Pages.renderResetPassword(result.resetToken);
@@ -1251,11 +1245,11 @@ const AuthPageMethods = {
           Pages.renderLogin();
         }
       } else {
-        toastManager?.show(result.error || 'Failed to send reset link', 'error');
+        showToast(result.error || 'Failed to send reset link', 'error');
       }
       }
     } catch (error) {
-      toastManager?.show('Running in offline mode. In offline mode, you can log in with any demo account (e.g. kwame.mensah@ug.edu.gh) using any password.', 'info');
+      showToast('Running in offline mode. In offline mode, you can log in with any demo account (e.g. kwame.mensah@ug.edu.gh) using any password.', 'info');
       setTimeout(() => Pages.renderLogin(), 3000);
     } finally {
       submitBtn.disabled = false;
@@ -1303,7 +1297,7 @@ const AuthPageMethods = {
     const submitBtn = form.querySelector('button[type="submit"]');
 
     if (newPassword !== confirmPassword) {
-      toastManager?.show('Passwords do not match', 'error');
+      showToast('Passwords do not match', 'error');
       return;
     }
 
@@ -1313,7 +1307,7 @@ const AuthPageMethods = {
     try {
       const baseURL = (typeof window !== 'undefined' && window.API_URL) || 'http://localhost:5000/api';
       if (baseURL.includes('offline.local')) {
-        toastManager?.show('Password reset is not available in offline mode. Please log in with your existing credentials.', 'info');
+        showToast('Password reset is not available in offline mode. Please log in with your existing credentials.', 'info');
         setTimeout(() => Pages.renderLogin(), 2000);
       } else {
       const response = await fetch(`${baseURL}/auth/reset-password`, {
@@ -1325,14 +1319,14 @@ const AuthPageMethods = {
       const result = await response.json();
 
       if (result.success) {
-        toastManager?.show(result.message, 'success');
+        showToast(result.message, 'success');
         setTimeout(() => Pages.renderLogin(), 1500);
       } else {
-        toastManager?.show(result.error || 'Failed to reset password', 'error');
+        showToast(result.error || 'Failed to reset password', 'error');
       }
       }
     } catch (error) {
-      toastManager?.show('Running in offline mode. Password reset is not available offline. Please log in with your existing credentials.', 'info');
+      showToast('Running in offline mode. Password reset is not available offline. Please log in with your existing credentials.', 'info');
       setTimeout(() => Pages.renderLogin(), 3000);
     } finally {
       submitBtn.disabled = false;

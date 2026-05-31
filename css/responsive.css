@@ -34,29 +34,29 @@
     display: none;
   }
 
-  .navbar-search {
-    display: none;
-  }
+.navbar-search {
+  display: none;
+}
 
-  .navbar-mobile-toggle {
-    display: flex;
-    width: 48px;
-    height: 48px;
-  }
+.navbar-search-toggle {
+  display: flex;
+}
+
+.navbar-mobile-toggle {
+  display: flex;
+  width: 48px;
+  height: 48px;
+}
 
   .navbar {
     height: 56px;
   }
 
-  .navbar-menu {
-    display: none;
-  }
+.navbar-menu {
+  display: none;
+}
 
-  .navbar-search-always {
-    display: none;
-  }
-
-  .navbar-overlay.active {
+.navbar-overlay.active {
     opacity: 1;
     pointer-events: auto;
   }
@@ -632,14 +632,6 @@
 
   .navbar-menu {
     display: none;
-  }
-
-  .navbar-search-always {
-    display: none;
-  }
-
-  .navbar-mobile-toggle {
-    display: flex;
   }
 
   .navbar-overlay.active {

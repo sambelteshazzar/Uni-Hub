@@ -70,7 +70,6 @@ class API {
    */
   async request (url, options = {}) {
     if (this.isStaticDeploy) {
-      console.warn('Static deployment - no backend available, returning offline response for:', url);
       return { success: false, data: null, isOffline: true };
     }
     try {
@@ -140,12 +139,10 @@ class API {
       return data;
     } catch (error) {
       if (error instanceof TypeError && error.message === 'Failed to fetch') {
-        console.warn('Backend unavailable - using local fallback');
         return { success: false, data: null, isOffline: true };
       }
 
       if (error.message === 'Request timeout') {
-        console.warn('Request timed out - using local fallback');
         return { success: false, data: null, isOffline: true };
       }
 
@@ -153,7 +150,6 @@ class API {
 
     if (error.status === 401) {
       localStorage.removeItem('unihub_session');
-      console.warn('API 401: Session expired or not authenticated');
     }
 
       throw error;
@@ -216,22 +212,19 @@ class API {
     try {
       const response = await fetch(filePath);
       if (!response.ok) {
-        const fallback = this._jsonFallbacks[filePath];
-        if (fallback) {
-          console.warn(`JSON ${filePath} not found (${response.status}), using fallback`);
-          return fallback;
-        }
-        throw new Error(`Failed to load ${filePath}`);
-      }
-      return await response.json();
-    } catch (error) {
       const fallback = this._jsonFallbacks[filePath];
       if (fallback) {
-        console.warn(`JSON ${filePath} load error, using fallback:`, error.message);
         return fallback;
       }
-      console.error('Error loading JSON:', error);
-      throw error;
+      throw new Error(`Failed to load ${filePath}`);
+    }
+    return await response.json();
+  } catch (error) {
+    const fallback = this._jsonFallbacks[filePath];
+    if (fallback) {
+      return fallback;
+    }
+    throw error;
     }
   }
 

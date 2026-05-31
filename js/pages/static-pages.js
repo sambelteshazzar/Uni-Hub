@@ -194,7 +194,7 @@ const StaticPageMethods = {
   _handleContactForm (event) {
     event.preventDefault();
     if (typeof toastManager !== 'undefined') {
-      toastManager.show('Message sent! We will get back to you within 24 hours.', 'success');
+      showToast('Message sent! We will get back to you within 24 hours.', 'success');
     }
   },
 };

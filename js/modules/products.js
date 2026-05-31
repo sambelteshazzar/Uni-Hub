@@ -327,9 +327,9 @@ class ProductsManager {
             success: false,
             error: data.error || 'Failed to add product',
           };
-        } catch (error) {
-          console.warn('Backend addProduct failed, using local fallback:', error);
-        }
+    } catch (error) {
+      // Backend addProduct failed — using local fallback
+    }
       }
 
       // Local fallback
@@ -439,6 +439,27 @@ class ProductsManager {
       console.error('deleteProduct error:', error);
       return { success: false, error: error.message || 'Failed to delete product' };
     }
+  }
+
+  async approveProduct (productId) {
+    const index = this.products.findIndex(p => p.id === productId);
+    if (index === -1) return { success: false, error: 'Product not found' };
+    this.products[index].status = 'approved';
+    this.products[index].updatedAt = new Date().toISOString();
+    this.filteredProducts = [...this.products];
+    this._persistLocalProducts();
+    return { success: true, product: this.products[index] };
+  }
+
+  async rejectProduct (productId, reason) {
+    const index = this.products.findIndex(p => p.id === productId);
+    if (index === -1) return { success: false, error: 'Product not found' };
+    this.products[index].status = 'rejected';
+    this.products[index].rejectionReason = reason || '';
+    this.products[index].updatedAt = new Date().toISOString();
+    this.filteredProducts = [...this.products];
+    this._persistLocalProducts();
+    return { success: true, product: this.products[index] };
   }
 
   /**

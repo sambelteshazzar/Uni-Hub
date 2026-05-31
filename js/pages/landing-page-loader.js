@@ -90,14 +90,14 @@ class _LandingPageLoader {
 
       if (!email || !this.isValidEmail(email)) {
         this.showFormMessage(form, 'Please enter a valid email address.', 'error');
-        Toast.warning('Please enter a valid email address.');
+        showToast('Please enter a valid email address.', 'warning');
         return;
       }
 
       // In production, this would POST to your mailing list API
       input.value = '';
       this.showFormMessage(form, 'Thanks for signing up!', 'success');
-      Toast.success('Thanks for signing up!');
+      showToast('Thanks for signing up!', 'success');
     });
   }
   }

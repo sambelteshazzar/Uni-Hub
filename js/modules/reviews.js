@@ -2,12 +2,37 @@
  * ============================================
  * Reviews Module
  * Handles seller ratings and reviews
+ * Works offline via localStorage fallback
  * ============================================
  */
 
 class ReviewManager {
   constructor () {
     this.currentSellerId = null;
+    this._storageKey = (typeof STORAGE_KEY_PREFIX !== 'undefined' ? STORAGE_KEY_PREFIX : 'unihub_') + 'reviews';
+    this._myReviewsKey = (typeof STORAGE_KEY_PREFIX !== 'undefined' ? STORAGE_KEY_PREFIX : 'unihub_') + 'my_reviews';
+  }
+
+  _isOffline () {
+    return (typeof api !== 'undefined' && api.isStaticDeploy) ||
+           (window.API_URL && window.API_URL.includes('offline.local')) ||
+           !window._backendAvailable;
+  }
+
+  _getLocalReviews () {
+    try { return StorageManager.get(this._storageKey) || []; } catch (_e) { return []; }
+  }
+
+  _saveLocalReviews (reviews) {
+    try { StorageManager.set(this._storageKey, reviews); } catch (_e) {}
+  }
+
+  _getMyLocalReviews () {
+    try { return StorageManager.get(this._myReviewsKey) || []; } catch (_e) { return []; }
+  }
+
+  _saveMyLocalReviews (reviews) {
+    try { StorageManager.set(this._myReviewsKey, reviews); } catch (_e) {}
   }
 
   async _fetchWithCsrf (url, options = {}) {
@@ -20,9 +45,7 @@ class ReviewManager {
     let csrfHeaders = {};
     if (isMutating && typeof api !== 'undefined' && api.fetchCsrfToken) {
       const csrfToken = await api.fetchCsrfToken();
-      if (csrfToken) {
-        csrfHeaders = { 'X-CSRF-Token': csrfToken };
-      }
+      if (csrfToken) { csrfHeaders = { 'X-CSRF-Token': csrfToken }; }
     }
     return fetch(url, {
       ...options,
@@ -39,322 +62,286 @@ class ReviewManager {
   async submitReview (data) {
     try {
       const { sellerId, rating, comment, productId, orderId, detailedRatings } = data;
+      if (!sellerId || !rating) { throw new Error('Seller ID and rating are required'); }
 
-      if (!sellerId || !rating) {
-        throw new Error('Seller ID and rating are required');
+      if (this._isOffline()) {
+        const user = typeof authManager !== 'undefined' ? authManager.getCurrentUser() : null;
+        const review = {
+          id: `rev-${Date.now()}`,
+          sellerId, rating, comment: comment || '', productId, orderId,
+          detailedRatings: detailedRatings || {},
+          reviewerId: user?.id || 'offline-user',
+          reviewerName: user?.fullName || user?.name || 'Anonymous',
+          reviewerAvatar: user?.avatar || null,
+          helpful: 0,
+          reported: false,
+          sellerResponse: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        const reviews = this._getLocalReviews();
+        reviews.push(review);
+        this._saveLocalReviews(reviews);
+        const myReviews = this._getMyLocalReviews();
+        myReviews.push(review);
+        this._saveMyLocalReviews(myReviews);
+showToast('Review submitted locally!', 'success');
+        return review;
       }
 
       const response = await this._fetchWithCsrf(`${window.API_URL || ''}/api/reviews`, {
         method: 'POST',
-        body: JSON.stringify({
-          sellerId, rating, comment, productId, orderId, detailedRatings,
-        }),
+        body: JSON.stringify({ sellerId, rating, comment, productId, orderId, detailedRatings }),
       });
-
       const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to submit review');
-      }
-
-      if (toastManager) {
-        toastManager.show('Review submitted successfully!', 'success');
-      }
-
+      if (!response.ok) { throw new Error(result.error || 'Failed to submit review'); }
+      showToast('Review submitted successfully!', 'success');
       return result.data;
     } catch (error) {
+      if (this._isOffline()) {
+        return this.submitReview(data);
+      }
       throw error;
     }
   }
 
-  /**
-   * Get reviews for a seller
-   * @param {string} sellerId
-   * @param {Object} options - { page?, limit?, sortBy?, sortOrder? }
-   * @returns {Promise}
-   */
   async getSellerReviews (sellerId, options = {}) {
     try {
+      if (this._isOffline()) {
+        const reviews = this._getLocalReviews().filter(r => r.sellerId === sellerId);
+        const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = -1 } = options;
+        const sorted = [...reviews].sort((a, b) => {
+          const valA = a[sortBy], valB = b[sortBy];
+          if (typeof valA === 'string') return sortOrder * valA.localeCompare(valB);
+          return sortOrder * ((valA || 0) - (valB || 0));
+        });
+        const start = (page - 1) * limit;
+        return {
+          reviews: sorted.slice(start, start + limit),
+          pagination: { page, limit, total: reviews.length, pages: Math.ceil(reviews.length / limit) },
+        };
+      }
+
       const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = -1 } = options;
       const params = new URLSearchParams({ page, limit, sortBy, sortOrder });
-
       const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/seller/${sellerId}?${params}`);
       const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to fetch reviews');
-      }
-
+      if (!response.ok) { throw new Error(result.error || 'Failed to fetch reviews'); }
       return result.data;
     } catch (error) {
+      if (this._isOffline()) { return this.getSellerReviews(sellerId, options); }
       throw error;
     }
   }
 
-  /**
-   * Get seller rating summary
-   * @param {string} sellerId
-   * @returns {Promise}
-   */
   async getRatingSummary (sellerId) {
     try {
-    const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/seller/${sellerId}/summary`);
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.error || 'Failed to fetch rating summary');
-    }
-
-    return result.data;
-  } catch (error) {
-    throw error;
-  }
-}
-
-async getMyReviews (options = {}) {
-  try {
-    const { page = 1, limit = 10 } = options;
-    const params = new URLSearchParams({ page, limit });
-
-    const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/my-reviews?${params}`);
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to fetch reviews');
+      if (this._isOffline()) {
+        const reviews = this._getLocalReviews().filter(r => r.sellerId === sellerId);
+        const total = reviews.length;
+        const avgRating = total > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / total : 0;
+        const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+        reviews.forEach(r => { distribution[r.rating] = (distribution[r.rating] || 0) + 1; });
+        return { averageRating: Math.round(avgRating * 10) / 10, totalReviews: total, distribution };
       }
 
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/seller/${sellerId}/summary`);
+      const result = await response.json();
+      if (!response.ok) { throw new Error(result.error || 'Failed to fetch rating summary'); }
       return result.data;
     } catch (error) {
+      if (this._isOffline()) { return this.getRatingSummary(sellerId); }
       throw error;
     }
   }
 
-  /**
-   * Update a review
-   * @param {string} reviewId
-   * @param {Object} data
-   * @returns {Promise}
-   */
+  async getMyReviews (options = {}) {
+    try {
+      if (this._isOffline()) {
+        const reviews = this._getMyLocalReviews();
+        const { page = 1, limit = 10 } = options;
+        const start = (page - 1) * limit;
+        return {
+          reviews: reviews.slice(start, start + limit),
+          pagination: { page, limit, total: reviews.length, pages: Math.ceil(reviews.length / limit) },
+        };
+      }
+
+      const { page = 1, limit = 10 } = options;
+      const params = new URLSearchParams({ page, limit });
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/my-reviews?${params}`);
+      const result = await response.json();
+      if (!response.ok) { throw new Error(result.error || 'Failed to fetch reviews'); }
+      return result.data;
+    } catch (error) {
+      if (this._isOffline()) { return this.getMyReviews(options); }
+      throw error;
+    }
+  }
+
   async updateReview (reviewId, data) {
     try {
+      if (this._isOffline()) {
+        const reviews = this._getLocalReviews();
+        const idx = reviews.findIndex(r => r.id === reviewId);
+        if (idx === -1) throw new Error('Review not found');
+        Object.assign(reviews[idx], data, { updatedAt: new Date().toISOString() });
+        this._saveLocalReviews(reviews);
+        const myReviews = this._getMyLocalReviews();
+        const myIdx = myReviews.findIndex(r => r.id === reviewId);
+        if (myIdx !== -1) { Object.assign(myReviews[myIdx], data, { updatedAt: new Date().toISOString() }); this._saveMyLocalReviews(myReviews); }
+showToast('Review updated locally!', 'success');
+        return reviews[idx];
+      }
+
       const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/${reviewId}`, {
         method: 'PUT',
         body: JSON.stringify(data),
       });
-
       const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to update review');
-      }
-
-      if (toastManager) {
-        toastManager.show('Review updated successfully!', 'success');
-      }
-
+      if (!response.ok) { throw new Error(result.error || 'Failed to update review'); }
+      showToast('Review updated successfully!', 'success');
       return result.data;
     } catch (error) {
+      if (this._isOffline()) { return this.updateReview(reviewId, data); }
       throw error;
     }
   }
 
-  /**
-   * Delete a review
-   * @param {string} reviewId
-   * @returns {Promise}
-   */
   async deleteReview (reviewId) {
     try {
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/${reviewId}`, {
-        method: 'DELETE',
-      });
+      if (this._isOffline()) {
+        let reviews = this._getLocalReviews().filter(r => r.id !== reviewId);
+        this._saveLocalReviews(reviews);
+        let myReviews = this._getMyLocalReviews().filter(r => r.id !== reviewId);
+        this._saveMyLocalReviews(myReviews);
+showToast('Review deleted', 'info');
+        return { success: true };
+      }
 
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/${reviewId}`, { method: 'DELETE' });
       const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to delete review');
-      }
-
-      if (toastManager) {
-        toastManager.show('Review deleted', 'info');
-      }
-
+      if (!response.ok) { throw new Error(result.error || 'Failed to delete review'); }
+      showToast('Review deleted', 'info');
       return result;
     } catch (error) {
+      if (this._isOffline()) { return this.deleteReview(reviewId); }
       throw error;
     }
   }
 
-  /**
-   * Mark review as helpful
-   * @param {string} reviewId
-   * @returns {Promise}
-   */
   async markHelpful (reviewId) {
     try {
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/${reviewId}/helpful`, {
-        method: 'POST',
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to mark as helpful');
+      if (this._isOffline()) {
+        const reviews = this._getLocalReviews();
+        const review = reviews.find(r => r.id === reviewId);
+        if (review) { review.helpful = (review.helpful || 0) + 1; this._saveLocalReviews(reviews); }
+        return { helpful: review?.helpful || 0 };
       }
 
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/${reviewId}/helpful`, { method: 'POST' });
+      const result = await response.json();
+      if (!response.ok) { throw new Error(result.error || 'Failed to mark as helpful'); }
       return result.data;
     } catch (error) {
+      if (this._isOffline()) { return this.markHelpful(reviewId); }
       throw error;
     }
   }
 
-  /**
-   * Report a review
-   * @param {string} reviewId
-   * @returns {Promise}
-   */
   async reportReview (reviewId) {
     try {
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/${reviewId}/report`, {
-        method: 'POST',
-      });
+      if (this._isOffline()) {
+        const reviews = this._getLocalReviews();
+        const review = reviews.find(r => r.id === reviewId);
+        if (review) { review.reported = true; this._saveLocalReviews(reviews); }
+showToast('Review reported', 'info');
+        return { success: true };
+      }
 
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/${reviewId}/report`, { method: 'POST' });
       const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to report review');
-      }
-
-      if (toastManager) {
-        toastManager.show('Review reported', 'info');
-      }
-
+      if (!response.ok) { throw new Error(result.error || 'Failed to report review'); }
+      showToast('Review reported', 'info');
       return result;
     } catch (error) {
+      if (this._isOffline()) { return this.reportReview(reviewId); }
       throw error;
     }
   }
 
-  /**
-   * Seller respond to review
-   * @param {string} reviewId
-   * @param {string} comment
-   * @returns {Promise}
-   */
   async respondToReview (reviewId, comment) {
     try {
+      if (this._isOffline()) {
+        const reviews = this._getLocalReviews();
+        const review = reviews.find(r => r.id === reviewId);
+        if (review) {
+          review.sellerResponse = { comment, createdAt: new Date().toISOString() };
+          this._saveLocalReviews(reviews);
+        }
+showToast('Response added', 'success');
+        return review;
+      }
+
       const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/${reviewId}/respond`, {
         method: 'POST',
         body: JSON.stringify({ comment }),
       });
-
       const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to respond');
-      }
-
-      if (toastManager) {
-        toastManager.show('Response added', 'success');
-      }
-
+      if (!response.ok) { throw new Error(result.error || 'Failed to respond'); }
+      showToast('Response added', 'success');
       return result.data;
     } catch (error) {
+      if (this._isOffline()) { return this.respondToReview(reviewId, comment); }
       throw error;
     }
   }
 
-  /**
-   * Generate star rating HTML
-   * @param {number} rating - 0 to 5
-   * @param {number} size - Font size in px
-   * @returns {string}
-   */
   generateStars (rating, _size = 16) {
     const fullStars = Math.floor(rating);
     const hasHalf = rating % 1 >= 0.5;
     const emptyStars = 5 - fullStars - (hasHalf ? 1 : 0);
-
-    let html =
-      `<div class="star-rating" style="font-size: ${_size}px; display: inline-flex; gap: 2px;">`;
-
-    for (let i = 0; i < fullStars; i++) {
-      html += '<span class="star full">★</span>';
-    }
-
-    if (hasHalf) {
-      html += '<span class="star half">★</span>';
-    }
-
-    for (let i = 0; i < emptyStars; i++) {
-      html += '<span class="star empty">☆</span>';
-    }
-
+    let html = `<div class="star-rating" style="font-size: ${_size}px; display: inline-flex; gap: 2px;">`;
+    for (let i = 0; i < fullStars; i++) { html += '<span class="star full">★</span>'; }
+    if (hasHalf) { html += '<span class="star half">★</span>'; }
+    for (let i = 0; i < emptyStars; i++) { html += '<span class="star empty">☆</span>'; }
     html += '</div>';
     return html;
   }
 
-  /**
-   * Generate interactive star rating input
-   * @param {number} currentRating
-   * @param {Function} onChange
-   * @returns {string}
-   */
   generateStarInput (currentRating = 0, onChange) {
     const containerId = `star-input-${Date.now()}`;
-
     setTimeout(() => {
       const container = document.getElementById(containerId);
-      if (!container) {
-        return;
-      }
-
+      if (!container) return;
       const stars = container.querySelectorAll('.star-input');
       stars.forEach((star, index) => {
         star.addEventListener('click', () => {
           const rating = index + 1;
-          stars.forEach((s, i) => {
-            s.classList.toggle('active', i < rating);
-          });
-          if (onChange) {
-            onChange(rating);
-          }
+          stars.forEach((s, i) => { s.classList.toggle('active', i < rating); });
+          if (onChange) onChange(rating);
         });
-
         star.addEventListener('mouseenter', () => {
-          stars.forEach((s, i) => {
-            s.classList.toggle('hover', i <= index);
-          });
+          stars.forEach((s, i) => { s.classList.toggle('hover', i <= index); });
         });
       });
-
       container.addEventListener('mouseleave', () => {
-        stars.forEach((s, i) => {
-          s.classList.remove('hover');
-          s.classList.toggle('active', i < currentRating);
-        });
+        stars.forEach((s, i) => { s.classList.remove('hover'); s.classList.toggle('active', i < currentRating); });
       });
     }, 0);
-
     let html = `<div id="${containerId}" class="star-input-container" style="display: inline-flex; gap: 4px; font-size: 24px; cursor: pointer;">`;
-
     for (let i = 0; i < 5; i++) {
-      const isActive = i < currentRating;
-      html += `<span class="star-input ${isActive ? 'active' : ''}" data-rating="${i + 1}">★</span>`;
+      html += `<span class="star-input ${i < currentRating ? 'active' : ''}" data-rating="${i + 1}">★</span>`;
     }
-
     html += '</div>';
     return html;
   }
 }
 
-// Initialize and export
 const reviewManager = new ReviewManager();
 
 export { ReviewManager, reviewManager };
 
-// Export to window for cross-module access
 window.reviewManager = reviewManager;
 if (typeof dispatchEvent !== 'undefined') {
   dispatchEvent(new Event('module-loaded', { detail: 'ReviewManager' }));

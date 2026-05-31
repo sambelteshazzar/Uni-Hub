@@ -55,7 +55,7 @@ class AdminReportsManager {
   try {
   const resp = await api.admin.getStats();
   if (resp.success && resp.data) backendStats = resp.data;
-  } catch (err) { console.warn('Failed to fetch backend stats:', err); }
+  } catch (err) { /* Backend unavailable — offline mode */ }
 
   const today = new Date().toDateString();
   const thisWeek = this.getDateRange(7);

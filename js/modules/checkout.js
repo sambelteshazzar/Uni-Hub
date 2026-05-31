@@ -678,7 +678,7 @@ class CheckoutFlow {
       const session = _StorageManager.get(_STORAGE_KEYS.CURRENT_USER, true) || _StorageManager.get(_STORAGE_KEYS.SESSION, true);
       const currentUser = session?.user || session;
       if (!currentUser) {
-        Toast.warning('You must be logged in to place an order');
+        showToast('You must be logged in to place an order', 'warning');
         return;
       }
 
@@ -686,7 +686,7 @@ class CheckoutFlow {
       const verification = _StorageManager.get(_STORAGE_KEYS.STUDENT_VERIFICATION, true);
       const isVerified = currentUser.isVerified || (verification && verification.isVerified);
       if (!isVerified) {
-        Toast.warning('You must be verified as a student to make purchases. Please complete student verification first.');
+        showToast('You must be verified as a student to make purchases. Please complete student verification first.', 'warning');
         if (typeof Pages !== 'undefined' && Pages.renderStudentVerification) {
           Pages.renderStudentVerification();
         }
@@ -722,7 +722,7 @@ class CheckoutFlow {
         if (response.success) {
           order = response.data;
         } else if (response.code === 'VERIFICATION_REQUIRED' || response.error === 'Student verification required') {
-          Toast.warning('You must be verified as a student to make purchases. Please complete student verification first.');
+          showToast('You must be verified as a student to make purchases. Please complete student verification first.', 'warning');
           if (typeof Pages !== 'undefined' && Pages.renderStudentVerification) {
             setTimeout(() => Pages.renderStudentVerification(), 1500);
           }
@@ -730,7 +730,7 @@ class CheckoutFlow {
         }
       } catch (e) {
         if (e?.response?.data?.code === 'VERIFICATION_REQUIRED' || e?.response?.data?.error === 'Student verification required') {
-          Toast.warning('You must be verified as a student to make purchases. Please complete student verification first.');
+          showToast('You must be verified as a student to make purchases. Please complete student verification first.', 'warning');
           if (typeof Pages !== 'undefined' && Pages.renderStudentVerification) {
             setTimeout(() => Pages.renderStudentVerification(), 1500);
           }
@@ -793,7 +793,7 @@ if (!order) {
         notificationManager.success('Order Confirmed', `Your order #${order.orderNumber || order.id} has been placed!`);
       }
     } catch (error) {
-      Toast.error('An error occurred while placing your order. Please try again.');
+      showToast('An error occurred while placing your order. Please try again.', 'error');
     } finally {
       this.isSubmitting = false;
       if (overlay) overlay.classList.remove('active');
