@@ -24,6 +24,7 @@ router.register('/home', () => this.renderLanding());
 // Auth
 router.register('/login', () => this.renderLogin());
 router.register('/register', () => this.renderRegister());
+router.register('/auth', () => { window.location.hash = '#/login'; });
 console.log('✓ Auth routes registered');
 
 // Main pages

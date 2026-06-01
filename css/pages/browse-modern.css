@@ -240,8 +240,9 @@ dropdown filters, and refined details
 }
 
 .category-pill {
-  flex-shrink: 0;
-  padding: 0.5rem 1.125rem;
+flex-shrink: 0;
+padding: 0.625rem 1.125rem;
+min-height: 44px;
   background: #f8faff;
   border: 1px solid rgba(0, 70, 190, 0.08);
   border-bottom: none;
@@ -570,8 +571,9 @@ dropdown filters, and refined details
 }
 
 .mobile-filter-toggle {
-  display: none;
-  padding: 0.5rem 0.875rem;
+display: none;
+padding: 0.625rem 0.875rem;
+min-height: 44px;
   background: #ffffff;
   border: 1px solid rgba(0, 70, 190, 0.12);
   border-radius: 8px;
@@ -710,11 +712,11 @@ dropdown filters, and refined details
 
 /* ---- Wishlist Button Modern ---- */
 .wishlist-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 34px;
-  height: 34px;
+position: absolute;
+top: 8px;
+right: 8px;
+width: 44px;
+height: 44px;
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(8px);
   border: none;
@@ -872,11 +874,11 @@ dropdown filters, and refined details
 
 /* ---- Quick Add Button ---- */
 .quick-add-btn {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
-  width: 42px;
-  height: 42px;
+position: absolute;
+bottom: 10px;
+right: 10px;
+width: 44px;
+height: 44px;
   background: linear-gradient(135deg, var(--primary), #0052e0);
   border: none;
   border-radius: 12px;
@@ -1132,9 +1134,10 @@ RESPONSIVE
     border: 1px solid rgba(0, 70, 190, 0.1);
   }
 
-  .category-pill {
-    padding: 0.4375rem 0.75rem;
-    font-size: 0.75rem;
+.category-pill {
+padding: 0.5rem 0.75rem;
+min-height: 44px;
+font-size: 0.75rem;
     border-radius: 8px;
   }
 
@@ -1144,17 +1147,19 @@ RESPONSIVE
     padding-bottom: 6px;
   }
 
-  .quick-add-btn {
-    opacity: 1;
-    transform: translateY(0);
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-  }
+.quick-add-btn {
+opacity: 1;
+transform: translateY(0);
+width: 44px;
+height: 44px;
+border-radius: 10px;
+}
 
-  .wishlist-btn {
-    opacity: 1;
-    transform: translateY(0);
+.wishlist-btn {
+opacity: 1;
+transform: translateY(0);
+width: 44px;
+height: 44px;
   }
 
   .browse-modern .browse-hero {

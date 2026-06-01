@@ -93,8 +93,8 @@
 }
 
 .navbar-search-input {
-  flex: 1;
-  height: 40px;
+flex: 1;
+height: 44px;
   padding: 0 var(--space-md);
   border: 1px solid #d4d4d4;
   border-radius: var(--radius-md);
@@ -110,8 +110,8 @@
 }
 
 .navbar-search-btn-submit {
-  height: 40px;
-  padding: 0 var(--space-lg);
+height: 44px;
+padding: 0 var(--space-lg);
   background: #0046be;
   color: #ffffff;
   border: none;
@@ -127,11 +127,13 @@
 }
 
 .navbar-search-toggle {
-  display: none;
-  background: transparent;
-  border: none;
-  width: 40px;
-  height: 40px;
+display: none;
+background: transparent;
+border: none;
+width: 44px;
+min-width: 44px;
+height: 44px;
+flex-shrink: 0;
   border-radius: var(--radius-full);
   align-items: center;
   justify-content: center;
@@ -152,8 +154,8 @@
 }
 
 .navbar-drawer-search-input {
-  flex: 1;
-  height: 40px;
+flex: 1;
+height: 44px;
   padding: 0 var(--space-md);
   border: 1px solid #d4d4d4;
   border-radius: var(--radius-md);
@@ -168,8 +170,8 @@
 }
 
 .navbar-drawer-search-btn {
-  width: 40px;
-  height: 40px;
+width: 44px;
+height: 44px;
   background: #0046be;
   color: #fff;
   border: none;
@@ -187,11 +189,13 @@
 
 /* Right side actions */
 .navbar-cart-btn {
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-full);
-  width: 40px;
-  height: 40px;
+background: transparent;
+border: none;
+border-radius: var(--radius-full);
+width: 44px;
+min-width: 44px;
+height: 44px;
+flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -278,12 +282,14 @@
 
 /* Mobile Toggle */
 .navbar-mobile-toggle {
-  display: none;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-md);
-  width: 40px;
-  height: 40px;
+display: none;
+background: transparent;
+border: none;
+border-radius: var(--radius-md);
+width: 44px;
+min-width: 44px;
+height: 44px;
+flex-shrink: 0;
   align-items: center;
   justify-content: center;
   cursor: pointer;
@@ -411,11 +417,11 @@
 }
 
 .navbar-drawer-close {
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-md);
-  width: 36px;
-  height: 36px;
+background: transparent;
+border: none;
+border-radius: var(--radius-md);
+width: 44px;
+height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;

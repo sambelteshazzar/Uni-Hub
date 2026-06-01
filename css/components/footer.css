@@ -98,8 +98,9 @@
 }
 
 .footer-newsletter-input {
-  flex: 1;
-  padding: var(--space-sm) var(--space-md) var(--space-sm) 3rem;
+flex: 1;
+min-height: 44px;
+padding: var(--space-sm) var(--space-md) var(--space-sm) 3rem;
   border: 1px solid #d4d4d4;
   border-radius: var(--radius-sm);
   font-size: var(--text-sm);
@@ -112,7 +113,8 @@
 }
 
 .footer-newsletter-btn {
-  padding: var(--space-sm) var(--space-lg);
+padding: var(--space-sm) var(--space-lg);
+min-height: 44px;
   background: #0046be;
   color: #ffffff;
   border: none;

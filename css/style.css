@@ -401,8 +401,9 @@ img {
 }
 
 .footer-newsletter-input {
-  width: 100%;
-  padding: 0.625rem 1rem 0.625rem 3rem;
+width: 100%;
+min-height: 44px;
+padding: 0.625rem 1rem 0.625rem 3rem;
   color: #6b7280;
   background: #ffffff;
   outline: none;
@@ -412,7 +413,8 @@ img {
 }
 
 .footer-newsletter-btn {
-  padding: 0.625rem 1.25rem;
+padding: 0.625rem 1.25rem;
+min-height: 44px;
   font-weight: 600;
   font-size: 0.875rem;
   color: #ffffff;

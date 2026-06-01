@@ -249,12 +249,17 @@
 }
 
 .toast-close {
-  background: none;
-  border: none;
-  font-size: var(--text-lg);
-  color: var(--neutral-400);
-  cursor: pointer;
-  padding: var(--space-xs);
+background: none;
+border: none;
+font-size: var(--text-lg);
+color: var(--neutral-400);
+cursor: pointer;
+padding: var(--space-xs);
+min-width: 44px;
+min-height: 44px;
+display: flex;
+align-items: center;
+justify-content: center;
 }
 
 /* Toast Variants */

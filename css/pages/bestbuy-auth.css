@@ -223,16 +223,21 @@
 }
 
 .bb-password-toggle {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #666666;
-  padding: 4px;
-  transition: color 0.15s ease;
+position: absolute;
+right: 12px;
+top: 50%;
+transform: translateY(-50%);
+background: none;
+border: none;
+cursor: pointer;
+color: #666666;
+padding: 4px;
+min-width: 44px;
+min-height: 44px;
+display: flex;
+align-items: center;
+justify-content: center;
+transition: color 0.15s ease;
 }
 
 .bb-password-toggle:hover {
