@@ -118,7 +118,7 @@ cat.name +
       'MADE FOR <span style="color: #ffce00;">CAMPUS LIFE</span>' +
       '</h1>' +
       '<p style="font-size: 1.125rem; line-height: 1.8; color: rgba(255,255,255,0.9); max-width: 42rem; margin-bottom: 2rem;">' +
-      'Uni-Hub is a global university marketplace app that connects students to easily sell essential academic items. Textbooks, electronics, accommodation listings, and other campus essentials — all within your university community and beyond.' +
+      'Uni-Hub is a global university marketplace app that connects students to easily buy essential academic items. Textbooks, electronics, accommodation listings, and other campus essentials — all within your university community and beyond.' +
       '</p>' +
       '<div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 3rem;">' +
       '<button onclick="Pages.renderBrowse(); return false;" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem 2rem; font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: #ffce00; color: #1a1a1a; border: none; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background=\'#e6b800\'; this.style.transform=\'translateY(-2px)\'; this.style.boxShadow=\'0 8px 20px rgba(255, 206, 0, 0.3)\'" onmouseout="this.style.background=\'#ffce00\'; this.style.transform=\'translateY(0)\'; this.style.boxShadow=\'none\'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:inline-block;vertical-align:middle;margin-right:0.25rem;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Browse Items</button>' +
