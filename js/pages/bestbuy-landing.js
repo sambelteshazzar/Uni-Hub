@@ -184,15 +184,15 @@ cat.name +
       '</div>' +
       '<div class="bb-covered-gallery">' +
       '<div class="bb-covered-photo bb-covered-photo--main">' +
-      '<img src="/assets/images/covered/main.jpg" alt="Students meeting and collaborating on campus" loading="lazy">' +
+      '<img src="https://files.catbox.moe/xpkc3o.png" alt="Students meeting and collaborating on campus" loading="lazy">' +
       '<div class="bb-covered-photo-label">Connect on campus</div>' +
       '</div>' +
       '<div class="bb-covered-photo bb-covered-photo--top">' +
-      '<img src="/assets/images/covered/top.jpg" alt="Students studying together and laughing" loading="lazy">' +
+      '<img src="https://files.catbox.moe/pesd3z.jpg" alt="Students studying together and laughing" loading="lazy">' +
       '<div class="bb-covered-photo-label">Study together</div>' +
       '</div>' +
       '<div class="bb-covered-photo bb-covered-photo--bottom">' +
-      '<img src="/assets/images/covered/bottom.jpg" alt="Friends teaming up after a successful deal" loading="lazy">' +
+      '<img src="https://files.catbox.moe/dlg1s2.jpg" alt="Friends teaming up after a successful deal" loading="lazy">' +
       '<div class="bb-covered-photo-label">Deal done!</div>' +
       '</div>' +
       '</div>' +

@@ -101,7 +101,7 @@ content="Uni-Hub - Buy and sell items within your university community"
       </div>
 
   <!-- Search Bar (always visible) -->
-  <div class="navbar-search-always" style="position:relative;">
+  <div class="navbar-search-always">
   <input type="text" class="navbar-search-input" placeholder="Search for textbooks, electronics, dorm items..." id="navbar-search-input" name="search" aria-label="Search products" autocomplete="off" onkeypress="if(event.key==='Enter'&&typeof Pages!=='undefined')Pages.handleSearch()" oninput="if(typeof searchManager!=='undefined')searchManager.handleAutocomplete(this.value)" onfocus="if(typeof searchManager!=='undefined')searchManager.showAutocomplete()" onblur="setTimeout(function(){if(typeof searchManager!=='undefined')searchManager.hideAutocomplete()},200)" />
   <button class="navbar-search-btn-submit" onclick="typeof Pages!=='undefined'&&Pages.handleSearch()" aria-label="Search">Search</button>
   <div id="search-autocomplete" class="search-autocomplete" style="display:none;"></div>
@@ -197,8 +197,10 @@ content="Uni-Hub - Buy and sell items within your university community"
 
 <a href="#/messages" class="navbar-drawer-link" onclick="Pages?.closeMobileMenu()">Messages</a>
 <a href="#/cart" class="navbar-drawer-link" onclick="Pages?.closeMobileMenu()">Cart</a>
-<a href="#/wishlist" class="navbar-drawer-link" onclick="Pages?.closeMobileMenu()">Wishlist</a>
-<a href="#/faq" class="navbar-drawer-link" onclick="Pages?.closeMobileMenu()">FAQ</a>
+              <a href="#/wishlist" class="navbar-drawer-link" onclick="Pages?.closeMobileMenu()">Wishlist</a>
+              <a href="#/notifications" class="navbar-drawer-link" onclick="Pages?.closeMobileMenu()">Notifications</a>
+              <a href="#/faq" class="navbar-drawer-link" onclick="Pages?.closeMobileMenu()">FAQ</a>
+              <button class="navbar-drawer-link" onclick="document.documentElement.classList.toggle('dark'); Pages?.closeMobileMenu()" style="background:none;border:none;cursor:pointer;width:100%;text-align:left;color:inherit;font:inherit;">Toggle Dark Mode</button>
 </nav>
 <div class="navbar-drawer-footer" id="navbar-drawer-footer">
 <div id="navbar-drawer-auth">
