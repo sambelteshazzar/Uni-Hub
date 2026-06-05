@@ -171,7 +171,7 @@ cat.name +
       '<div class="bb-covered-text-col">' +
       '<span class="bb-covered-eyebrow">Community First</span>' +
       '<h2 class="bb-covered-headline">WE\'VE GOT<br>YOU<br><em class="bb-covered-accent">COVERED</em></h2>' +
-      '<p class="bb-covered-body">From textbooks to accommodation, electronics to everyday essentials — Uni-Hub connects you with students who\'ve got exactly what you need. Buy, sell, and thrive together on campus.</p>' +
+      '<p class="bb-covered-body">From textbooks to accommodation, electronics to everyday essentials — Uni-Hub connects you with suppliers who\'ve got exactly what you need. Buy and thrive together on campus.</p>' +
       '<div class="bb-covered-pills">' +
       '<span class="bb-covered-pill">Textbooks</span>' +
       '<span class="bb-covered-pill">Electronics</span>' +
