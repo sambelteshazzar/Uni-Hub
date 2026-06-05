@@ -244,7 +244,7 @@ cat.name +
       '<div class="bb-container">' +
       '<div class="bb-section-header" style="text-align: center;">' +
       '<h2 class="bb-section-title">How Uni-Hub Works</h2>' +
-      '<p class="bb-section-subtitle">Buy and sell in 3 simple steps</p>' +
+      '<p class="bb-section-subtitle">Buy in 3 simple steps</p>' +
       '</div>' +
       '<div class="bb-steps-grid">' +
       '<div class="bb-step"><div class="bb-step-number">1</div><h3 class="bb-step-title">Sign Up &amp; Verify</h3><p class="bb-step-desc">Create your account with your university email and get verified as a student. Only verified students can buy and sell.</p></div>' +
@@ -258,7 +258,7 @@ cat.name +
       '<div class="bb-container">' +
       '<div class="bb-cta-content">' +
       '<h2 class="bb-cta-title">Ready to Start Saving?</h2>' +
-      '<p class="bb-cta-desc">Join thousands of students already buying and selling on Uni-Hub. It\'s free to sign up.</p>' +
+      '<p class="bb-cta-desc">Join thousands of students already buying  on Uni-Hub. It\'s free to sign up.</p>' +
       '<div class="bb-hero-buttons" style="justify-content: center;">' +
       '<button onclick="Pages.renderRegister(); return false;" class="bb-btn bb-btn-primary" style="background: #ffce00; color: #1a1a1a;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:inline-block;vertical-align:middle;margin-right:0.25rem;"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg> Create Free Account</button>' +
       '<button onclick="Pages.renderBrowse(); return false;" class="bb-btn bb-btn-outline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:inline-block;vertical-align:middle;margin-right:0.25rem;"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Browse Items</button>' +
