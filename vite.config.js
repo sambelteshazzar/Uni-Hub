@@ -32,21 +32,28 @@ export default defineConfig({
     {
       name: 'static-app-build',
       closeBundle() {
-        cpSync(resolve(__dirname, 'js'), resolve(__dirname, 'dist/js'), { recursive: true });
+      cpSync(resolve(__dirname, 'js'), resolve(__dirname, 'dist/js'), { recursive: true });
+      cpSync(resolve(__dirname, 'css'), resolve(__dirname, 'dist/css'), { recursive: true });
 
-        const htmlPath = resolve(__dirname, 'dist/index.html');
-        let html = readFileSync(htmlPath, 'utf-8');
+      const htmlPath = resolve(__dirname, 'dist/index.html');
+      let html = readFileSync(htmlPath, 'utf-8');
+      const srcHtml = readFileSync(resolve(__dirname, 'index.html'), 'utf-8');
 
-        const viteBundleMatch = html.match(/<script[^>]*src="\/assets\/main-[^"]*\.js"[^>]*><\/script>/);
-        if (viteBundleMatch) {
-          html = html.replace(viteBundleMatch[0], '');
-        }
+      const viteBundleMatch = html.match(/<script[^>]*src="\/assets\/main-[^"]*\.js"[^>]*><\/script>/);
+      if (viteBundleMatch) {
+        html = html.replace(viteBundleMatch[0], '');
+      }
 
-        if (!html.includes('/js/app-init.js')) {
-          html = html.replace('</body>', appScripts.join('\n') + '\n</body>');
-        }
+      const cssLinks = srcHtml.match(/<link[^>]*href="css\/[^"]*"[^>]*\/?>/g);
+      if (cssLinks && !html.includes('css/variables.css')) {
+        html = html.replace('</head>', cssLinks.join('\n') + '\n</head>');
+      }
 
-        writeFileSync(htmlPath, html);
+      if (!html.includes('/js/app-init.js')) {
+        html = html.replace('</body>', appScripts.join('\n') + '\n</body>');
+      }
+
+      writeFileSync(htmlPath, html);
       },
     },
   ],
