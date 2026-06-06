@@ -58,45 +58,38 @@ comingSoonBadge +
     // Build categories HTML
     let categoriesHTML = '';
     if (config.categories && config.categories.length > 0) {
-const icons = {
-textbooks: '<svg viewBox="0 0 24 24" fill="none" stroke="#0046be" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
-electronics: '<svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
-dorm: '<svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>',
-clothing: '<svg viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>',
-sports: '<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>',
-furniture: '<svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/><path d="M3 11v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v2H7v-2a2 2 0 0 0-4 0z"/><path d="M5 18v2"/><path d="M19 18v2"/></svg>',
-other: '<svg viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27,6.96 12,12.01 20.73,6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>'
-};
-categoriesHTML = config.categories
-.map(function (cat) {
-const icon = icons[cat.id] || icons.other;
-const iconBgs = {
-textbooks: 'rgba(0,70,190,0.1)',
-electronics: 'rgba(139,92,246,0.1)',
-dorm: 'rgba(245,158,11,0.1)',
-clothing: 'rgba(236,72,153,0.1)',
-sports: 'rgba(239,68,68,0.1)',
-furniture: 'rgba(16,185,129,0.1)',
-other: 'rgba(107,114,128,0.1)'
-};
-const iconBg = iconBgs[cat.id] || iconBgs.other;
-return (
-'<a href="#/browse?category=' +
-cat.id +
-'" class="bb-category-card">' +
-'<div class="bb-category-icon" style="background:' + iconBg + '">' +
-icon +
-'</div>' +
-'<p class="bb-category-name">' +
-cat.name +
-'</p>' +
-'<p class="bb-category-count">' +
-(cat.count || '50+') +
-' items</p>' +
-'</a>'
-);
-})
-.join('');
+  const categoryImages = {
+      textbooks: 'https://files.catbox.moe/823h9l.jpg',
+      electronics: 'https://files.catbox.moe/1imqtj.jpg',
+      'hostel-items': 'https://files.catbox.moe/gckfc2.jpg',
+      accessories: 'https://files.catbox.moe/pbrhk5.jpg',
+      fashion: 'https://files.catbox.moe/33juh8.jpg',
+      appliances: 'https://files.catbox.moe/ov8039.jpg',
+      thrifts: 'https://files.catbox.moe/ov8039.jpg'
+    };
+    categoriesHTML = config.categories
+      .map(function (cat) {
+        var imgSrc = categoryImages[cat.id];
+        var iconContent = imgSrc
+          ? '<img src="' + imgSrc + '" alt="' + cat.name + '" loading="lazy">'
+          : '<svg viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><circle cx="12" cy="12" r="10"/></svg>';
+        return (
+          '<a href="#/browse?category=' +
+          cat.id +
+          '" class="bb-category-card">' +
+          '<div class="bb-category-icon">' +
+          iconContent +
+          '</div>' +
+          '<p class="bb-category-name">' +
+          cat.name +
+          '</p>' +
+          '<p class="bb-category-count">' +
+          (cat.count || '50+') +
+          ' items</p>' +
+          '</a>'
+        );
+      })
+      .join('');
     }
 
     mainContent.innerHTML =
