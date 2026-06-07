@@ -74,8 +74,57 @@ class ProductsManager {
   _persistLocalProducts () {
     try {
       const localProducts = this.products.filter(p => p.id && p.id.startsWith('prod-') && !p.id.match(/^prod-00[1-9]$/));
-      StorageManager.set(this.PRODUCTS_STORAGE_KEY + '_local', localProducts);
+      const stored = StorageManager.set(this.PRODUCTS_STORAGE_KEY + '_local', localProducts);
+      if (!stored) {
+        this._persistToIndexedDB(localProducts);
+      }
+    } catch (_e) {
+      this._persistToIndexedDB(this.products.filter(p => p.id && p.id.startsWith('prod-') && !p.id.match(/^prod-00[1-9]$/)));
+    }
+  }
+
+  async _persistToIndexedDB (products) {
+    try {
+      const request = indexedDB.open('unihub_products', 1);
+      request.onupgradeneeded = e => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('products')) {
+          db.createObjectStore('products', { keyPath: 'id' });
+        }
+      };
+      request.onsuccess = e => {
+        const db = e.target.result;
+        const tx = db.transaction('products', 'readwrite');
+        const store = tx.objectStore('products');
+        for (const p of products) {
+          store.put(p);
+        }
+      };
     } catch (_e) {}
+  }
+
+  async _loadFromIndexedDB () {
+    return new Promise(resolve => {
+      try {
+        const request = indexedDB.open('unihub_products', 1);
+        request.onupgradeneeded = e => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains('products')) {
+            db.createObjectStore('products', { keyPath: 'id' });
+          }
+        };
+        request.onsuccess = e => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains('products')) { resolve([]); return; }
+          const tx = db.transaction('products', 'readonly');
+          const store = tx.objectStore('products');
+          const getAll = store.getAll();
+          getAll.onsuccess = () => resolve(getAll.result || []);
+          getAll.onerror = () => resolve([]);
+        };
+        request.onerror = () => resolve([]);
+      } catch (_e) { resolve([]); }
+    });
   }
 
   _mergeLocalProducts () {
@@ -85,8 +134,20 @@ class ProductsManager {
       for (const lp of localProducts) {
         if (!existingIds.has(lp.id)) {
           this.products.push(lp);
+          existingIds.add(lp.id);
         }
       }
+      this._loadFromIndexedDB().then(idbProducts => {
+        for (const ip of idbProducts) {
+          if (!existingIds.has(ip.id)) {
+            this.products.push(ip);
+            existingIds.add(ip.id);
+          }
+        }
+        if (idbProducts.length > 0) {
+          this.filteredProducts = [...this.products];
+        }
+      });
       if (localProducts.length > 0) {
         this.filteredProducts = [...this.products];
       }

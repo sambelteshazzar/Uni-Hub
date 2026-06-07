@@ -9,10 +9,46 @@ class API {
     try { envAPI = import.meta.env.VITE_API_URL || ''; } catch (e) {}
     this.baseURL =
       baseURL || (typeof window !== 'undefined' && window.API_URL) || envAPI || 'http://localhost:5000/api';
-    this.isStaticDeploy = !this.baseURL || this.baseURL.includes('offline.local');
+    this._isStaticDeploy = !this.baseURL || this.baseURL.includes('offline.local');
+    this._backendProbed = false;
+    this._backendReachable = null;
+    if (typeof window !== 'undefined' && !this._isStaticDeploy && this.baseURL.includes('localhost')) {
+      this._probeBackend();
+    }
     this.timeout = 30000;
-    this._csrfToken = null;
-    this._csrfPromise = null;
+  }
+
+  get isStaticDeploy () {
+    if (this._isStaticDeploy) return true;
+    if (this._backendProbed && this._backendReachable === false) return true;
+    return false;
+  }
+
+  _probeBackend () {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+    fetch(`${this.baseURL.replace('/api', '')}/api/auth/csrf-token`, {
+      signal: controller.signal,
+      credentials: 'include',
+    })
+      .then(res => {
+        clearTimeout(timeout);
+        this._backendReachable = res.ok;
+        this._backendProbed = true;
+        if (!res.ok) this._markOffline();
+      })
+      .catch(() => {
+        clearTimeout(timeout);
+        this._markOffline();
+      });
+  }
+
+  _markOffline () {
+    this._backendReachable = false;
+    this._backendProbed = true;
+    if (typeof window !== 'undefined' && window.API_URL && window.API_URL.includes('localhost')) {
+      window.API_URL = 'https://offline.local/api';
+    }
   }
 
   async fetchCsrfToken () {
@@ -349,17 +385,27 @@ class API {
       const headers = {};
       if (token) { headers['Authorization'] = `Bearer ${token}`; }
       if (csrfToken) { headers['X-CSRF-Token'] = csrfToken; }
-      const response = await fetch(`${this.baseURL}/products/upload`, {
-        method: 'POST',
-        headers,
-        credentials: 'include',
-        body: formData,
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Upload failed');
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+      try {
+        const response = await fetch(`${this.baseURL}/products/upload`, {
+          method: 'POST',
+          headers,
+          credentials: 'include',
+          body: formData,
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Upload failed');
+        }
+        return data;
+      } catch (err) {
+        clearTimeout(timeout);
+        this._markOffline();
+        throw err;
       }
-      return data;
     },
   };
 }

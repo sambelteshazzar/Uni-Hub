@@ -629,7 +629,7 @@ productsManager.filter({ minRating: rating });
       <div class="store-product-card" onclick="Pages.renderProductDetail('${product.id}')">
         <!-- Image -->
         <div class="store-product-image">
-          <img src="${product.images[0]}" alt="${product.title}" loading="lazy" />
+          <img src="${(product.images && product.images[0]) || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
           <span class="store-condition-badge ${product.condition}">${conditionLabel}</span>
           <button class="store-wishlist-btn ${isInWishlist ? 'active' : ''}"
                   onclick="Pages.toggleWishlist(event, '${product.id}')"
@@ -697,11 +697,11 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
       '\');">' +
       (isInWishlist ? Icons.heart : Icons.heartOutline) +
       '</button>' +
-      '<img src="' +
-      product.images[0] +
-      '" alt="' +
-      product.title +
-      '" class="bb-browse-image" loading="lazy" />' +
+  '<img src="' +
+  ((product.images && product.images[0]) || '/assets/images/products/no-image.svg') +
+  '" alt="' +
+  product.title +
+  '" class="bb-browse-image" loading="lazy" onerror="this.src=\'/assets/images/products/no-image.svg\'" />' +
       '<div class="bb-browse-info">' +
       '<p class="bb-browse-category">' +
       categoryLabel +
@@ -999,7 +999,7 @@ const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
         <div class="pd-layout">
           <!-- Image Section -->
           <div class="pd-image-section">
-            <img src="${product.images[0]}" alt="${product.title}" class="pd-main-image" onerror="this.src='/assets/images/products/no-image.svg'" />
+            <img src="${(product.images && product.images[0]) || '/assets/images/products/no-image.svg'}" alt="${product.title}" class="pd-main-image" onerror="this.src='/assets/images/products/no-image.svg'" />
           </div>
 
           <!-- Info Section -->
@@ -1989,7 +1989,7 @@ prompt('Copy this link:', url);
       item => `
   <div class="order-item">
   <div class="order-item-image">
-  <img src="${item.product.images[0]}" alt="${item.product.title}" />
+        <img src="${(item.product.images && item.product.images[0]) || '/assets/images/products/no-image.svg'}" alt="${item.product.title}" onerror="this.src='/assets/images/products/no-image.svg'" />
   </div>
   <div class="order-item-details">
   <div class="order-item-title">${item.product.title}</div>
@@ -2983,7 +2983,7 @@ window.scrollTo(0, 0);
       product => `
                     <div class="store-product-card" onclick="Pages.renderProductDetail('${product.id}')">
                       <div class="store-product-image">
-                        <img src="${product.images[0]}" alt="${product.title}" loading="lazy" />
+                        <img src="${(product.images && product.images[0]) || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
                         <span class="store-condition-badge ${product.condition}">${product.condition.charAt(0).toUpperCase() + product.condition.slice(1)}</span>
                         <button class="store-wishlist-btn active" onclick="Pages.toggleWishlist(event, '${product.id}'); Pages.renderDashboard();">${Icons.heart}</button>
                       </div>
@@ -4513,7 +4513,27 @@ static async renderAdminActivity () {
   static _filesToDataUris (files) {
     return Promise.all(files.map(file => new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const MAX_DIM = 600;
+          let w = img.width;
+          let h = img.height;
+          if (w > MAX_DIM || h > MAX_DIM) {
+            const scale = MAX_DIM / Math.max(w, h);
+            w = Math.round(w * scale);
+            h = Math.round(h * scale);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', 0.6));
+        };
+        img.onerror = () => resolve(reader.result);
+        img.src = reader.result;
+      };
       reader.onerror = reject;
       reader.readAsDataURL(file);
     })));
@@ -4575,10 +4595,7 @@ static async renderAdminActivity () {
           this._uploadedImageUrls = images;
         }
       } catch (uploadErr) {
-        if (!api.isStaticDeploy && !(window.API_URL && window.API_URL.includes('offline.local'))) {
-          showToast('Image upload failed: ' + uploadErr.message, 'error');
-          return;
-        }
+        console.warn('Image upload failed, falling back to local storage:', uploadErr.message);
       }
       if (images.length === 0 && this._pendingImageFiles.length > 0) {
         images = await this._filesToDataUris(this._pendingImageFiles);
@@ -4757,10 +4774,7 @@ static async renderAdminActivity () {
         const uploadResult = await api.upload.images(this._pendingImageFiles);
         if (uploadResult.success && uploadResult.urls) { newUrls = uploadResult.urls; }
       } catch (uploadErr) {
-        if (!api.isStaticDeploy && !(window.API_URL && window.API_URL.includes('offline.local'))) {
-          showToast('Image upload failed: ' + uploadErr.message, 'error');
-          return;
-        }
+        console.warn('Image upload failed, falling back to local storage:', uploadErr.message);
       }
       if (newUrls.length === 0 && this._pendingImageFiles.length > 0) {
         newUrls = await this._filesToDataUris(this._pendingImageFiles);
