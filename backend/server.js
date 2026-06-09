@@ -364,7 +364,7 @@ const startServer = async () => {
   // Ensure admin user exists
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@unihub.local';
   const adminPassword = process.env.ADMIN_PASSWORD || 'Admin123!';
-  const bcrypt = require('bcrypt');
+  const bcrypt = require('bcryptjs');
   const { db } = require('./utils/db');
   const existingAdmin = await db('users').findOne({ email: adminEmail });
   if (!existingAdmin) {
