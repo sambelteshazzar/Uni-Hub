@@ -12,9 +12,9 @@ class API {
     this._isStaticDeploy = !this.baseURL || this.baseURL.includes('offline.local');
     this._backendProbed = false;
     this._backendReachable = null;
-    if (typeof window !== 'undefined' && !this._isStaticDeploy && this.baseURL.includes('localhost')) {
-      this._probeBackend();
-    }
+if (typeof window !== 'undefined' && !this._isStaticDeploy) {
+    this._probeBackend();
+  }
     this.timeout = 30000;
   }
 
