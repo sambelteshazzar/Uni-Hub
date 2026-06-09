@@ -4586,22 +4586,20 @@ static async renderAdminActivity () {
     const deliveryModes = formData.getAll('deliveryModes');
     const paymentModes = formData.getAll('paymentModes');
 
-    let images = [];
-    if (this._pendingImageFiles.length > 0) {
-      try {
-        const uploadResult = await api.upload.images(this._pendingImageFiles);
-        if (uploadResult.success && uploadResult.urls) {
-          images = uploadResult.urls;
-          this._uploadedImageUrls = images;
-        }
-      } catch (uploadErr) {
-        console.warn('Image upload failed, falling back to local storage:', uploadErr.message);
-      }
-      if (images.length === 0 && this._pendingImageFiles.length > 0) {
-        images = await this._filesToDataUris(this._pendingImageFiles);
-        this._uploadedImageUrls = images;
-      }
+let images = [];
+if (this._pendingImageFiles.length > 0) {
+  try {
+    const uploadResult = await api.upload.images(this._pendingImageFiles);
+    if (uploadResult.success && uploadResult.urls) {
+      images = uploadResult.urls;
+      this._uploadedImageUrls = images;
+    } else {
+      showToast('Image upload failed: ' + (uploadResult.error || 'Unknown error. Check your internet connection.'), 'error');
     }
+  } catch (uploadErr) {
+    showToast('Image upload failed: ' + uploadErr.message, 'error');
+  }
+}
 
     const manualUrls = (document.getElementById('image-url-textarea')?.value || '').split('\n').map(u => u.trim()).filter(Boolean);
     images = [...images, ...manualUrls];
@@ -4769,17 +4767,15 @@ static async renderAdminActivity () {
     const formData = new FormData(form);
 
     let newUrls = [];
-    if (this._pendingImageFiles.length > 0) {
-      try {
-        const uploadResult = await api.upload.images(this._pendingImageFiles);
-        if (uploadResult.success && uploadResult.urls) { newUrls = uploadResult.urls; }
-      } catch (uploadErr) {
-        console.warn('Image upload failed, falling back to local storage:', uploadErr.message);
-      }
-      if (newUrls.length === 0 && this._pendingImageFiles.length > 0) {
-        newUrls = await this._filesToDataUris(this._pendingImageFiles);
-      }
-    }
+if (this._pendingImageFiles.length > 0) {
+  try {
+    const uploadResult = await api.upload.images(this._pendingImageFiles);
+    if (uploadResult.success && uploadResult.urls) { newUrls = uploadResult.urls; }
+    else { showToast('Image upload failed: ' + (uploadResult.error || 'Unknown error'), 'error'); }
+  } catch (uploadErr) {
+    showToast('Image upload failed: ' + uploadErr.message, 'error');
+  }
+}
 
     const images = [...this._uploadedImageUrls, ...newUrls];
     const deliveryModes = formData.getAll('deliveryModes');

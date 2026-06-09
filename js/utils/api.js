@@ -373,52 +373,28 @@ if (typeof window !== 'undefined' && !this._isStaticDeploy) {
     removeHistoryItem: query => this.delete(`/search/history/${encodeURIComponent(query)}`),
   };
 
-  upload = {
-    CLOUDINARY_CLOUD: 'djc0uqkyy',
-    CLOUDINARY_PRESET: 'uni-hub products',
+upload = {
+  CLOUDINARY_CLOUD: 'djc0uqkyy',
+  CLOUDINARY_PRESET: 'uni-hub products',
 
-    images: async (files) => {
-      if (!this.isStaticDeploy) {
-        try {
-          const formData = new FormData();
-          files.forEach(file => formData.append('images', file));
-          const token = this.getToken();
-          const csrfToken = await this.fetchCsrfToken();
-          const headers = {};
-          if (token) { headers['Authorization'] = `Bearer ${token}`; }
-          if (csrfToken) { headers['X-CSRF-Token'] = csrfToken; }
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 8000);
-          const response = await fetch(`${this.baseURL}/products/upload`, {
-            method: 'POST',
-            headers,
-            credentials: 'include',
-            body: formData,
-            signal: controller.signal,
-          });
-          clearTimeout(timeout);
-          const data = await response.json();
-          if (!response.ok) { throw new Error(data.error || 'Upload failed'); }
-          return data;
-        } catch (err) {
-          this._markOffline();
-        }
-      }
-      return this.cloudinary(files);
-    },
+  images: async (files) => {
+    return this.cloudinary(files);
+  },
 
-    cloudinary: async (files) => {
-      const CLOUD_URL = `https://api.cloudinary.com/v1_1/${this.CLOUDINARY_CLOUD}/image/upload`;
-      const urls = [];
-      const errors = [];
-      for (const file of files) {
+  cloudinary: async (files) => {
+    const CLOUD_URL = `https://api.cloudinary.com/v1_1/${this.CLOUDINARY_CLOUD}/image/upload`;
+    const urls = [];
+    const errors = [];
+    for (const file of files) {
+      let lastErr = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
         try {
           const formData = new FormData();
           formData.append('file', file);
           formData.append('upload_preset', this.CLOUDINARY_PRESET);
           formData.append('folder', 'uni-hub/products');
           const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 15000);
+          const timeout = setTimeout(() => controller.abort(), 60000);
           const res = await fetch(CLOUD_URL, {
             method: 'POST',
             body: formData,
@@ -428,18 +404,28 @@ if (typeof window !== 'undefined' && !this._isStaticDeploy) {
           const data = await res.json();
           if (data.secure_url) {
             urls.push(data.secure_url);
+            lastErr = null;
+            break;
           } else {
-            errors.push(data.error?.message || 'Cloudinary upload failed');
+            lastErr = data.error?.message || 'Cloudinary upload failed';
+            break;
           }
         } catch (err) {
-          errors.push(err.message || 'Cloudinary upload error');
+          lastErr = err.message || 'Cloudinary upload error';
+          if (attempt < 2) {
+            await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+          }
         }
       }
-      if (urls.length > 0) {
-        return { success: true, urls };
+      if (lastErr) {
+        errors.push(lastErr);
       }
-      return { success: false, error: errors.join('; '), urls: [] };
-    },
+    }
+    if (urls.length > 0) {
+      return { success: true, urls };
+    }
+    return { success: false, error: errors.join('; '), urls: [] };
+  },
   };
 }
 
