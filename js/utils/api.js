@@ -374,59 +374,34 @@ if (typeof window !== 'undefined' && !this._isStaticDeploy) {
   };
 
 upload = {
-  CLOUDINARY_CLOUD: 'djc0uqkyy',
-  CLOUDINARY_PRESET: 'uni-hub products',
-
   images: async (files) => {
-    return this.cloudinary(files);
-  },
-
-  cloudinary: async (files) => {
-    const CLOUD_URL = `https://api.cloudinary.com/v1_1/${this.CLOUDINARY_CLOUD}/image/upload`;
-    const urls = [];
-    const errors = [];
+    const formData = new FormData();
     for (const file of files) {
-      let lastErr = null;
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('upload_preset', this.CLOUDINARY_PRESET);
-          formData.append('folder', 'uni-hub/products');
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 60000);
-          const res = await fetch(CLOUD_URL, {
-            method: 'POST',
-            body: formData,
-            signal: controller.signal,
-          });
-          clearTimeout(timeout);
-          const data = await res.json();
-          if (data.secure_url) {
-            urls.push(data.secure_url);
-            lastErr = null;
-            break;
-          } else {
-            lastErr = data.error?.message || 'Cloudinary upload failed';
-            break;
-          }
-        } catch (err) {
-          lastErr = err.message || 'Cloudinary upload error';
-          if (attempt < 2) {
-            await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
-          }
-        }
-      }
-      if (lastErr) {
-        errors.push(lastErr);
-      }
+      formData.append('images', file);
     }
-    if (urls.length > 0) {
-      return { success: true, urls };
+    try {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const headers = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 120000);
+      const res = await fetch(`${this.baseURL}/products/upload`, {
+        method: 'POST',
+        headers,
+        body: formData,
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      const data = await res.json();
+      if (data.success && data.urls && data.urls.length > 0) {
+        return { success: true, urls: data.urls };
+      }
+      return { success: false, error: data.error || data.message || 'Upload failed', urls: [] };
+    } catch (err) {
+      return { success: false, error: err.message || 'Upload error', urls: [] };
     }
-    return { success: false, error: errors.join('; '), urls: [] };
   },
-  };
+};
 }
 
 // Create singleton instance

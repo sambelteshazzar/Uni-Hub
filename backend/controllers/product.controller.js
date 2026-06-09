@@ -361,18 +361,15 @@ exports.uploadProductImages = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'No images uploaded');
   }
 
-  const { uploadImage } = require('../utils/cloudinary.util');
+  const { uploadStream } = require('../utils/cloudinary.util');
   const uploadedUrls = [];
 
   for (const file of req.files) {
     try {
-      const result = await uploadImage(file.path);
+      const result = await uploadStream(file.buffer);
       uploadedUrls.push(result.secure_url);
     } catch (error) {
       console.error(`Failed to upload ${file.originalname}:`, error.message);
-    } finally {
-      const fs = require('fs');
-      try { fs.unlinkSync(file.path); } catch (e) { /* ignore cleanup errors */ }
     }
   }
 
@@ -488,18 +485,15 @@ exports.uploadImages = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'No images uploaded');
   }
 
-  const { uploadImage } = require('../utils/cloudinary.util');
+  const { uploadStream } = require('../utils/cloudinary.util');
   const uploadedUrls = [];
 
   for (const file of req.files) {
     try {
-      const result = await uploadImage(file.path);
+      const result = await uploadStream(file.buffer);
       uploadedUrls.push(result.secure_url);
     } catch (error) {
       console.error(`Failed to upload ${file.originalname}:`, error.message);
-    } finally {
-      const fs = require('fs');
-      try { fs.unlinkSync(file.path); } catch (e) { /* ignore */ }
     }
   }
 

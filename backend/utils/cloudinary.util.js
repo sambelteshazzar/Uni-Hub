@@ -45,6 +45,37 @@ const uploadImage = async (filePath, options = {}) => {
   }
 };
 
+const uploadStream = (buffer, options = {}) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: 'uni-hub/products',
+        resource_type: 'auto',
+        transformation: [
+          { quality: 'auto', fetch_format: 'auto' },
+          ...(options.transformation || []),
+        ],
+        ...options,
+      },
+      (error, result) => {
+        if (error) {
+          console.error('Cloudinary stream upload error:', error);
+          reject(new Error('Failed to upload image'));
+        } else {
+          resolve({
+            secure_url: result.secure_url,
+            public_id: result.public_id,
+            width: result.width,
+            height: result.height,
+            format: result.format,
+          });
+        }
+      },
+    );
+    stream.end(buffer);
+  });
+};
+
 /**
  * Delete image from Cloudinary
  * @param {string} publicId - Cloudinary public ID
@@ -70,4 +101,4 @@ const getPublicIdFromUrl = (url) => {
   return `uni-hub/products/${filename.split('.')[0]}`;
 };
 
-module.exports = { uploadImage, deleteImage, getPublicIdFromUrl };
+module.exports = { uploadImage, uploadStream, deleteImage, getPublicIdFromUrl };
