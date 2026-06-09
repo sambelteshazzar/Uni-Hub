@@ -1,11 +1,13 @@
 /**
  * ============================================
- * SQLite DB Utility
- * Provides Mongoose-like API over better-sqlite3
+ * DB Utility — Mongoose-like API
+ * Supports both Turso (async @libsql/client)
+ * and local SQLite (better-sqlite3 sync)
+ * All methods return Promises for uniform usage
  * ============================================
  */
 
-const { getDb } = require('../config/database');
+const { getDb, getTursoClient, isTurso } = require('../config/database');
 
 function generateId () {
   const { randomUUID } = require('crypto');
@@ -47,11 +49,11 @@ function mapUserRow (row) {
 function mapProductRow (row) {
   if (!row) return null;
   return {
-  ...row,
-  images: parseJson(row.images) || [],
-  deliveryModes: parseJson(row.deliveryModes) || [],
-  paymentModes: parseJson(row.paymentModes) || [],
-  variants: parseJson(row.variants) || [],
+    ...row,
+    images: parseJson(row.images) || [],
+    deliveryModes: parseJson(row.deliveryModes) || [],
+    paymentModes: parseJson(row.paymentModes) || [],
+    variants: parseJson(row.variants) || [],
   };
 }
 
@@ -162,7 +164,6 @@ const MAPPER_MAP = {
 class Db {
   constructor (table) {
     this.table = table;
-    this.db = getDb();
   }
 
   _mapRow (row) {
@@ -179,18 +180,71 @@ class Db {
     return rows.map(r => this._mapRow(r));
   }
 
-  findById (id) {
-    const row = this.db.prepare(`SELECT * FROM ${this.table} WHERE id = ?`).get(id);
+  _turso () {
+    const client = getTursoClient();
+    if (!client) throw new Error('Turso client not initialized');
+    return client;
+  }
+
+  _local () {
+    return getDb();
+  }
+
+  async _run (sql, params = []) {
+    if (isTurso()) {
+      const result = await this._turso().execute({ sql, args: params });
+      return result;
+    }
+    const stmt = this._local().prepare(sql);
+    if (sql.trim().toUpperCase().startsWith('SELECT') || sql.trim().toUpperCase().startsWith('PRAGMA')) {
+      if (sql.includes('LIMIT 1') || sql.trim().toUpperCase().startsWith('PRAGMA')) {
+        return { rows: stmt.all(...params), changes: 0 };
+      }
+      return { rows: stmt.all(...params), changes: 0 };
+    }
+    const info = stmt.run(...params);
+    return { rows: [], changes: info.changes, lastInsertRowid: info.lastInsertRowid };
+  }
+
+  async _get (sql, params = []) {
+    if (isTurso()) {
+      const result = await this._turso().execute({ sql, args: params });
+      const row = result.rows[0] || null;
+      return { row, rows: result.rows, changes: 0 };
+    }
+    const row = this._local().prepare(sql).get(...params);
+    return { row, rows: row ? [row] : [], changes: 0 };
+  }
+
+  async _all (sql, params = []) {
+    if (isTurso()) {
+      const result = await this._turso().execute({ sql, args: params });
+      return result.rows;
+    }
+    return this._local().prepare(sql).all(...params);
+  }
+
+  async _runWrite (sql, params = []) {
+    if (isTurso()) {
+      const result = await this._turso().execute({ sql, args: params });
+      return { changes: result.rowsAffected || 0, lastInsertRowid: result.lastInsertRowid };
+    }
+    const info = this._local().prepare(sql).run(...params);
+    return { changes: info.changes, lastInsertRowid: info.lastInsertRowid };
+  }
+
+  async findById (id) {
+    const { row } = await this._get(`SELECT * FROM ${this.table} WHERE id = ?`, [id]);
     return this._mapRow(row);
   }
 
-  findOne (where) {
+  async findOne (where) {
     const { sql, params } = this._buildWhere(where);
-    const row = this.db.prepare(`SELECT * FROM ${this.table} ${sql} LIMIT 1`).get(...params);
+    const { row } = await this._get(`SELECT * FROM ${this.table} ${sql} LIMIT 1`, params);
     return this._mapRow(row);
   }
 
-  find (where = {}, opts = {}) {
+  async find (where = {}, opts = {}) {
     const { sql, params } = this._buildWhere(where);
     let query = `SELECT * FROM ${this.table} ${sql}`;
 
@@ -211,17 +265,17 @@ class Db {
       params.push(Number(opts.skip));
     }
 
-    const rows = this.db.prepare(query).all(...params);
+    const rows = await this._all(query, params);
     return this._mapRows(rows);
   }
 
-  countDocuments (where = {}) {
+  async countDocuments (where = {}) {
     const { sql, params } = this._buildWhere(where);
-    const row = this.db.prepare(`SELECT COUNT(*) as count FROM ${this.table} ${sql}`).get(...params);
-    return row.count;
+    const { row } = await this._get(`SELECT COUNT(*) as count FROM ${this.table} ${sql}`, params);
+    return (row && row.count) || 0;
   }
 
-  create (data) {
+  async create (data) {
     if (!data.id) {
       data.id = generateId();
     }
@@ -237,14 +291,15 @@ class Db {
       placeholders.push('?');
     }
 
-    this.db.prepare(
-      `INSERT INTO ${this.table} (${cols.join(', ')}) VALUES (${placeholders.join(', ')})`
-    ).run(...vals);
+    await this._runWrite(
+      `INSERT INTO ${this.table} (${cols.join(', ')}) VALUES (${placeholders.join(', ')})`,
+      vals,
+    );
 
     return this.findById(data.id);
   }
 
-  updateById (id, data) {
+  async updateById (id, data) {
     const sets = [];
     const vals = [];
 
@@ -260,34 +315,38 @@ class Db {
     sets.push("updatedAt = datetime('now')");
     vals.push(id);
 
-    this.db.prepare(
-      `UPDATE ${this.table} SET ${sets.join(', ')} WHERE id = ?`
-    ).run(...vals);
+    await this._runWrite(
+      `UPDATE ${this.table} SET ${sets.join(', ')} WHERE id = ?`,
+      vals,
+    );
 
     return this.findById(id);
   }
 
-  deleteById (id) {
-    const result = this.db.prepare(`DELETE FROM ${this.table} WHERE id = ?`).run(id);
-    return result.changes > 0;
+  async deleteById (id) {
+    const { changes } = await this._runWrite(`DELETE FROM ${this.table} WHERE id = ?`, [id]);
+    return changes > 0;
   }
 
-  deleteMany (where = {}) {
+  async deleteMany (where = {}) {
     const { sql, params } = this._buildWhere(where);
     if (!sql) {
-      return this.db.prepare(`DELETE FROM ${this.table}`).run().changes;
+      const { changes } = await this._runWrite(`DELETE FROM ${this.table}`);
+      return changes;
     }
-    return this.db.prepare(`DELETE FROM ${this.table} ${sql}`).run(...params).changes;
+    const { changes } = await this._runWrite(`DELETE FROM ${this.table} ${sql}`, params);
+    return changes;
   }
 
-  deleteOne (where) {
+  async deleteOne (where) {
     const { sql, params } = this._buildWhere(where);
-    const row = this.db.prepare(`SELECT id FROM ${this.table} ${sql} LIMIT 1`).get(...params);
+    const { row } = await this._get(`SELECT id FROM ${this.table} ${sql} LIMIT 1`, params);
     if (!row) return 0;
-    return this.deleteById(row.id) ? 1 : 0;
+    const deleted = await this.deleteById(row.id);
+    return deleted ? 1 : 0;
   }
 
-  updateMany (where, data) {
+  async updateMany (where, data) {
     const { sql, params: whereParams } = this._buildWhere(where);
     const sets = [];
     const vals = [];
@@ -303,22 +362,56 @@ class Db {
     sets.push("updatedAt = datetime('now')");
 
     const query = `UPDATE ${this.table} SET ${sets.join(', ')} ${sql}`;
-    return this.db.prepare(query).run(...vals, ...whereParams).changes;
+    const { changes } = await this._runWrite(query, [...vals, ...whereParams]);
+    return changes;
   }
 
-  findOneAndUpdate (where, data, _opts = {}) {
+  async findOneAndUpdate (where, data, _opts = {}) {
     const { sql, params } = this._buildWhere(where);
-    const row = this.db.prepare(`SELECT id FROM ${this.table} ${sql} LIMIT 1`).get(...params);
+    const { row } = await this._get(`SELECT id FROM ${this.table} ${sql} LIMIT 1`, params);
     if (!row) return null;
     return this.updateById(row.id, data);
   }
 
-  findByIdAndUpdate (id, data, _opts = {}) {
+  async findByIdAndUpdate (id, data, _opts = {}) {
     return this.updateById(id, data);
   }
 
-  aggregate (pipeline) {
+  async aggregate (pipeline) {
     return this._runAggregate(pipeline);
+  }
+
+  async rawAll (sql, params = []) {
+    return this._all(sql, params);
+  }
+
+  async rawGet (sql, params = []) {
+    const { row } = await this._get(sql, params);
+    return row;
+  }
+
+  async rawRun (sql, params = []) {
+    return this._runWrite(sql, params);
+  }
+
+  async transaction (fn) {
+    if (isTurso()) {
+      const client = this._turso();
+      await client.execute('BEGIN');
+      try {
+        const result = await fn(this);
+        await client.execute('COMMIT');
+        return result;
+      } catch (err) {
+        await client.execute('ROLLBACK');
+        throw err;
+      }
+    }
+    const localDb = this._local();
+    const result = localDb.transaction(() => {
+      return fn(this);
+    })();
+    return await result;
   }
 
   _serializeValue (key, value) {
@@ -437,7 +530,7 @@ class Db {
     }).filter(Boolean).join(', ');
   }
 
-  _runAggregate (pipeline) {
+  async _runAggregate (pipeline) {
     if (this.table === 'orders') {
       for (const stage of pipeline) {
         if (stage.$match && stage.$group) {
@@ -452,7 +545,7 @@ class Db {
               }
               return `COUNT(*) as ${alias}`;
             });
-            return this.db.prepare(`SELECT ${selectParts.join(', ')} FROM ${this.table} ${sql}`).all(...params);
+            return this._all(`SELECT ${selectParts.join(', ')} FROM ${this.table} ${sql}`, params);
           }
 
           const selectParts = [`${groupBy} as _id`, ...sums.map(([alias, expr]) => {
@@ -469,7 +562,7 @@ class Db {
             orderSql = ' ORDER BY ' + this._buildOrder(sortPart.$sort);
           }
 
-          return this.db.prepare(`SELECT ${selectParts.join(', ')} FROM ${this.table} ${sql} GROUP BY ${groupBy}${orderSql}`).all(...params);
+          return this._all(`SELECT ${selectParts.join(', ')} FROM ${this.table} ${sql} GROUP BY ${groupBy}${orderSql}`, params);
         }
 
         if (stage.$match && !stage.$group) {
@@ -512,7 +605,7 @@ class Db {
             orderSql = ' ORDER BY ' + this._buildOrder(sortStage.$sort);
           }
 
-          return this.db.prepare(`SELECT ${selectParts.join(', ')} FROM ${this.table} ${whereSql} GROUP BY ${groupExpr}${orderSql}`).all(...whereParams);
+          return this._all(`SELECT ${selectParts.join(', ')} FROM ${this.table} ${whereSql} GROUP BY ${groupExpr}${orderSql}`, whereParams);
         }
       }
     }
@@ -529,7 +622,7 @@ class Db {
             return `COUNT(*) as ${alias}`;
           })];
 
-          return this.db.prepare(`SELECT ${selectParts.join(', ')} FROM ${this.table} ${sql} GROUP BY ${groupBy}`).all(...params);
+          return this._all(`SELECT ${selectParts.join(', ')} FROM ${this.table} ${sql} GROUP BY ${groupBy}`, params);
         }
       }
     }

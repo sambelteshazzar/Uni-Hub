@@ -1,9 +1,9 @@
 /**
-* ============================================
-* Admin Controller
-* Handles dashboard stats and admin operations
-* ============================================
-*/
+ * ============================================
+ * Admin Controller
+ * Handles dashboard stats and admin operations
+ * ============================================
+ */
 
 const { db, mapUserRow, mapProductRow } = require('../utils/db');
 const { ApiError } = require('../utils/errorHandler');
@@ -16,8 +16,7 @@ const totalOrders = await db('orders').countDocuments();
 
 const pendingVerifications = await db('student_verifications').countDocuments({ status: 'pending' });
 
-const rawDb = db('orders').db;
-const revenueRow = rawDb.prepare("SELECT SUM(pricing_grandTotal) as totalRevenue FROM orders WHERE payment_status = 'completed'").get();
+const revenueRow = await db('orders').rawGet("SELECT SUM(pricing_grandTotal) as totalRevenue FROM orders WHERE payment_status = 'completed'");
 const totalRevenue = revenueRow.totalRevenue || 0;
 
 const recentOrders = await db('orders').find({}, { sort: { createdAt: -1 }, limit: 10 });
@@ -176,13 +175,13 @@ if (!user) {
 throw new ApiError(404, 'User not found');
 }
 
-  if (user.role === 'admin') {
-    throw new ApiError(403, 'Cannot ban another admin user');
-  }
+if (user.role === 'admin') {
+throw new ApiError(403, 'Cannot ban another admin user');
+}
 
-  if (user.id === req.user.id) {
-    throw new ApiError(403, 'Cannot ban your own account');
-  }
+if (user.id === req.user.id) {
+throw new ApiError(403, 'Cannot ban your own account');
+}
 
 let updated;
 if (action === 'ban') {
@@ -283,22 +282,24 @@ pages: Math.ceil(total / limit),
 };
 
 exports.getActivityStats = async (req, res) => {
-const rawDb = db('activity_logs').db;
 const today = new Date();
 today.setHours(0, 0, 0, 0);
 const weekAgo = new Date(today);
 weekAgo.setDate(weekAgo.getDate() - 7);
 
-const totalToday = rawDb.prepare("SELECT COUNT(*) as count FROM activity_logs WHERE createdAt >= ?").get(today.toISOString()).count;
-const totalThisWeek = rawDb.prepare("SELECT COUNT(*) as count FROM activity_logs WHERE createdAt >= ?").get(weekAgo.toISOString()).count;
+const todayRow = await db('activity_logs').rawGet("SELECT COUNT(*) as count FROM activity_logs WHERE createdAt >= ?", today.toISOString());
+const totalToday = todayRow.count;
 
-const byActionRows = rawDb.prepare("SELECT action, COUNT(*) as count FROM activity_logs WHERE createdAt >= ? GROUP BY action").all(weekAgo.toISOString());
+const weekRow = await db('activity_logs').rawGet("SELECT COUNT(*) as count FROM activity_logs WHERE createdAt >= ?", weekAgo.toISOString());
+const totalThisWeek = weekRow.count;
+
+const byActionRows = await db('activity_logs').rawAll("SELECT action, COUNT(*) as count FROM activity_logs WHERE createdAt >= ? GROUP BY action", weekAgo.toISOString());
 const byAction = {};
 for (const row of byActionRows) {
 byAction[row.action] = row.count;
 }
 
-const bySeverityRows = rawDb.prepare("SELECT severity, COUNT(*) as count FROM activity_logs WHERE createdAt >= ? GROUP BY severity").all(weekAgo.toISOString());
+const bySeverityRows = await db('activity_logs').rawAll("SELECT severity, COUNT(*) as count FROM activity_logs WHERE createdAt >= ? GROUP BY severity", weekAgo.toISOString());
 const bySeverity = {};
 for (const row of bySeverityRows) {
 bySeverity[row.severity] = row.count;
@@ -397,48 +398,47 @@ throw new ApiError(404, 'Product not found');
 
 await db('products').deleteById(req.params.id);
 
-  await logActivity('product_delete', req.user, { productId: req.params.id, title: product.title, adminDeleted: true }, 'warning', req);
+await logActivity('product_delete', req.user, { productId: req.params.id, title: product.title, adminDeleted: true }, 'warning', req);
 
-  res.json({
-    success: true,
-    message: 'Product deleted by admin',
-  });
+res.json({
+success: true,
+message: 'Product deleted by admin',
+});
 };
 
 exports.getAnalytics = async (req, res) => {
-  const rawDb = db('orders').db;
+const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+const revenueRows = await db('orders').rawAll(
+"SELECT date(createdAt) as date, SUM(pricing_grandTotal) as revenue FROM orders WHERE payment_status = 'completed' AND createdAt >= ? GROUP BY date(createdAt) ORDER BY date ASC",
+thirtyDaysAgo
+);
 
-  const revenueRows = rawDb.prepare(
-    "SELECT date(createdAt) as date, SUM(pricing_grandTotal) as revenue FROM orders WHERE payment_status = 'completed' AND createdAt >= ? GROUP BY date(createdAt) ORDER BY date ASC"
-  ).all(thirtyDaysAgo);
+const orderStatusRows = await db('orders').rawAll(
+"SELECT status, COUNT(*) as count FROM orders GROUP BY status"
+);
 
-  const orderStatusRows = rawDb.prepare(
-    "SELECT status, COUNT(*) as count FROM orders GROUP BY status"
-  ).all();
+const categoryRows = await db('products').rawAll(
+"SELECT category, COUNT(*) as count FROM products GROUP BY category"
+);
 
-  const categoryRows = rawDb.prepare(
-    "SELECT category, COUNT(*) as count FROM products GROUP BY category"
-  ).all();
+const userRows = await db('users').rawAll(
+"SELECT date(createdAt) as date, COUNT(*) as count FROM users WHERE createdAt >= ? GROUP BY date(createdAt) ORDER BY date ASC",
+thirtyDaysAgo
+);
 
-  const userRows = rawDb.prepare(
-    "SELECT date(createdAt) as date, COUNT(*) as count FROM users WHERE createdAt >= ? GROUP BY date(createdAt) ORDER BY date ASC"
-  ).all(thirtyDaysAgo);
+const topProducts = await db('order_items').rawAll(
+"SELECT productId, title, SUM(quantity) as sold FROM order_items GROUP BY productId ORDER BY sold DESC LIMIT 5"
+);
 
-  const topProducts = rawDb.prepare(
-    "SELECT productId, title, SUM(quantity) as sold FROM order_items GROUP BY productId ORDER BY sold DESC LIMIT 5"
-  ).all();
-
-  res.json({
-    success: true,
-    data: {
-      revenue: revenueRows.map(r => ({ date: r.date, revenue: r.revenue || 0 })),
-      orderStatus: orderStatusRows.map(r => ({ status: r.status, count: r.count })),
-      categories: categoryRows.map(r => ({ category: r.category, count: r.count })),
-      users: userRows.map(r => ({ date: r.date, count: r.count })),
-      topProducts: topProducts.map(r => ({ productId: r.productId, title: r.title, sold: r.sold })),
-    },
-  });
+res.json({
+success: true,
+data: {
+revenue: revenueRows.map(r => ({ date: r.date, revenue: r.revenue || 0 })),
+orderStatus: orderStatusRows.map(r => ({ status: r.status, count: r.count })),
+categories: categoryRows.map(r => ({ category: r.category, count: r.count })),
+users: userRows.map(r => ({ date: r.date, count: r.count })),
+topProducts: topProducts.map(r => ({ productId: r.productId, title: r.title, sold: r.sold })),
+},
+});
 };

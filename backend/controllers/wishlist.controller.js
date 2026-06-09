@@ -2,14 +2,14 @@ const { db, mapProductRow } = require('../utils/db');
 
 async function getWishlist (req, res) {
   try {
-    const wishlistItems = db('wishlists').find(
+    const wishlistItems = await db('wishlists').find(
       { user: req.user.id },
       { sort: { createdAt: -1 } },
     );
 
     const products = [];
     for (const item of wishlistItems) {
-      const product = db('products').findById(item.product);
+      const product = await db('products').findById(item.product);
       if (product) {
         products.push({
           ...product,
@@ -34,7 +34,7 @@ async function addToWishlist (req, res) {
   try {
     const { productId } = req.params;
 
-    const product = db('products').findById(productId);
+    const product = await db('products').findById(productId);
     if (!product) {
       return res.status(404).json({
         success: false,
@@ -42,7 +42,7 @@ async function addToWishlist (req, res) {
       });
     }
 
-    const existing = db('wishlists').findOne({
+    const existing = await db('wishlists').findOne({
       user: req.user.id,
       product: productId,
     });
@@ -54,7 +54,7 @@ async function addToWishlist (req, res) {
       });
     }
 
-    db('wishlists').create({
+    await db('wishlists').create({
       user: req.user.id,
       product: productId,
     });
@@ -75,7 +75,7 @@ async function removeFromWishlist (req, res) {
   try {
     const { productId } = req.params;
 
-    const result = db('wishlists').deleteOne({
+    const result = await db('wishlists').deleteOne({
       user: req.user.id,
       product: productId,
     });
@@ -101,7 +101,7 @@ async function removeFromWishlist (req, res) {
 
 async function clearWishlist (req, res) {
   try {
-    db('wishlists').deleteMany({ user: req.user.id });
+    await db('wishlists').deleteMany({ user: req.user.id });
 
     res.json({
       success: true,

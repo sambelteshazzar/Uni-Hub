@@ -31,9 +31,9 @@ seller: creatorId || 'test-creator-id',
   }),
 };
 
-beforeAll(() => {
+beforeAll(async () => {
   try {
-    connectDatabase();
+    await connectDatabase();
     console.log('✅ Connected to in-memory SQLite');
   } catch (error) {
     console.error('❌ Failed to connect to SQLite:', error);

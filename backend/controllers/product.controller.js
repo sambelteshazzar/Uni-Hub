@@ -2,8 +2,8 @@ const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { db, mapProductRow } = require('../utils/db');
 const logActivity = require('../utils/logActivity');
 
-function populateCreator(product) {
-  const creator = db('users').findById(product.seller);
+async function populateCreator(product) {
+  const creator = await db('users').findById(product.seller);
   if (creator) {
     product.seller = {
       _id: creator.id,
@@ -17,8 +17,8 @@ function populateCreator(product) {
   return product;
 }
 
-function populateCreatorDetail(product) {
-  const creator = db('users').findById(product.seller);
+async function populateCreatorDetail(product) {
+  const creator = await db('users').findById(product.seller);
   if (creator) {
     product.seller = {
       _id: creator.id,
@@ -95,13 +95,13 @@ exports.getProducts = async (req, res) => {
 
     // Pagination
     const skip = (page - 1) * limit;
-    const total = db('products').countDocuments(query);
+    const total = await db('products').countDocuments(query);
     const pages = Math.ceil(total / limit);
 
     // Execute query
-    const products = db('products').find(query, { sort: sortOptions, limit: Number(limit), skip });
+    const products = await db('products').find(query, { sort: sortOptions, limit: Number(limit), skip });
 
-    const populated = products.map(p => populateCreator(p));
+    const populated = await Promise.all(products.map(p => populateCreator(p)));
 
     res.json({
       success: true,
@@ -131,7 +131,7 @@ exports.getProducts = async (req, res) => {
  */
 exports.getProduct = async (req, res) => {
   try {
-    const product = db('products').findById(req.params.id);
+    const product = await db('products').findById(req.params.id);
 
     if (!product) {
       return res.status(404).json({
@@ -141,9 +141,9 @@ exports.getProduct = async (req, res) => {
     }
 
     // Increment view count
-    db('products').updateById(product.id, { views: (product.views || 0) + 1 });
+    await db('products').updateById(product.id, { views: (product.views || 0) + 1 });
 
-    const populated = populateCreatorDetail(product);
+    const populated = await populateCreatorDetail(product);
 
     res.json({
       success: true,
@@ -193,15 +193,15 @@ exports.createProduct = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Price cannot exceed 100,000 GHS' });
     }
 
-  const allowedCategories = ['appliances', 'hostel-items', 'accessories', 'textbooks', 'electronics', 'fashion', 'thrifts'];
-  if (!category || !allowedCategories.includes(category)) {
-    return res.status(400).json({ success: false, error: 'Valid category is required' });
-  }
+    const allowedCategories = ['appliances', 'hostel-items', 'accessories', 'textbooks', 'electronics', 'fashion', 'thrifts'];
+    if (!category || !allowedCategories.includes(category)) {
+      return res.status(400).json({ success: false, error: 'Valid category is required' });
+    }
 
-  const allowedConditions = ['new', 'like-new', 'good', 'fair', 'excellent'];
-  if (!condition || !allowedConditions.includes(condition)) {
-    return res.status(400).json({ success: false, error: 'Valid condition is required' });
-  }
+    const allowedConditions = ['new', 'like-new', 'good', 'fair', 'excellent'];
+    if (!condition || !allowedConditions.includes(condition)) {
+      return res.status(400).json({ success: false, error: 'Valid condition is required' });
+    }
 
     if (images && !Array.isArray(images)) {
       return res.status(400).json({ success: false, error: 'Images must be an array' });
@@ -220,16 +220,16 @@ exports.createProduct = async (req, res) => {
     }
 
     // Create product
-  const product = db('products').create({
-  title,
-  description,
-  price,
-  category,
-  condition,
-  variants,
-  images,
-  deliveryModes,
-  paymentModes,
+    const product = await db('products').create({
+      title,
+      description,
+      price,
+      category,
+      condition,
+      variants,
+      images,
+      deliveryModes,
+      paymentModes,
       seller: req.user.id,
       sellerName: req.user.fullName,
       sellerRating: req.user.rating,
@@ -259,7 +259,7 @@ exports.createProduct = async (req, res) => {
  */
 exports.updateProduct = async (req, res) => {
   try {
-    let product = db('products').findById(req.params.id);
+    let product = await db('products').findById(req.params.id);
 
     if (!product) {
       return res.status(404).json({
@@ -285,9 +285,9 @@ exports.updateProduct = async (req, res) => {
       }
     });
 
-    db('products').updateById(product.id, updates);
+    await db('products').updateById(product.id, updates);
 
-    product = db('products').findById(product.id);
+    product = await db('products').findById(product.id);
 
     await logActivity('product_update', req.user, { productId: product.id, title: product.title, updatedFields: Object.keys(req.body).filter(k => allowedFields.includes(k)) }, 'info', req);
 
@@ -312,7 +312,7 @@ exports.updateProduct = async (req, res) => {
  */
 exports.deleteProduct = async (req, res) => {
   try {
-    const product = db('products').findById(req.params.id);
+    const product = await db('products').findById(req.params.id);
 
     if (!product) {
       return res.status(404).json({
@@ -329,7 +329,7 @@ exports.deleteProduct = async (req, res) => {
       });
     }
 
-    db('products').deleteById(product.id);
+    await db('products').deleteById(product.id);
 
     await logActivity('product_delete', req.user, { productId: req.params.id, title: product.title }, 'warning', req);
 
@@ -347,7 +347,7 @@ exports.deleteProduct = async (req, res) => {
 };
 
 exports.uploadProductImages = asyncHandler(async (req, res) => {
-  const product = db('products').findById(req.params.id);
+  const product = await db('products').findById(req.params.id);
 
   if (!product) {
     throw new ApiError(404, 'Product not found');
@@ -388,7 +388,7 @@ exports.uploadProductImages = asyncHandler(async (req, res) => {
   } else {
     newImages = [...(product.images || []), ...uploadedUrls];
   }
-  db('products').updateById(product.id, { images: newImages });
+  await db('products').updateById(product.id, { images: newImages });
 
   res.json({
     success: true,
@@ -402,11 +402,11 @@ exports.uploadProductImages = asyncHandler(async (req, res) => {
 
 exports.getProductColors = async (req, res) => {
   try {
-    const product = db('products').findById(req.params.id);
+    const product = await db('products').findById(req.params.id);
     if (!product) {
       return res.status(404).json({ success: false, error: 'Product not found' });
     }
-    const colors = db('product_colors').find({ product_id: req.params.id });
+    const colors = await db('product_colors').find({ product_id: req.params.id });
     res.json({ success: true, data: { colors } });
   } catch (error) {
     console.error('Get product colors error:', error);
@@ -416,7 +416,7 @@ exports.getProductColors = async (req, res) => {
 
 exports.addProductColor = async (req, res) => {
   try {
-    const product = db('products').findById(req.params.id);
+    const product = await db('products').findById(req.params.id);
     if (!product) {
       return res.status(404).json({ success: false, error: 'Product not found' });
     }
@@ -428,7 +428,7 @@ exports.addProductColor = async (req, res) => {
       return res.status(400).json({ success: false, error: 'color_name and color_hex are required' });
     }
     const crypto = require('crypto');
-    const color = db('product_colors').create({
+    const color = await db('product_colors').create({
       id: crypto.randomUUID(),
       product_id: req.params.id,
       color_name,
@@ -445,19 +445,19 @@ exports.addProductColor = async (req, res) => {
 
 exports.updateProductColor = async (req, res) => {
   try {
-    const color = db('product_colors').findById(req.params.colorId);
+    const color = await db('product_colors').findById(req.params.colorId);
     if (!color || color.product_id !== req.params.id) {
       return res.status(404).json({ success: false, error: 'Color not found' });
     }
-const product = db('products').findById(req.params.id);
-  if (product && req.user.role !== 'admin') {
-    return res.status(403).json({ success: false, error: 'Not authorized' });
-  }
-  const allowed = ['color_name', 'color_hex', 'image_url', 'stock'];
+    const product = await db('products').findById(req.params.id);
+    if (product && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, error: 'Not authorized' });
+    }
+    const allowed = ['color_name', 'color_hex', 'image_url', 'stock'];
     const updates = {};
     allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
-    db('product_colors').updateById(req.params.colorId, updates);
-    const updated = db('product_colors').findById(req.params.colorId);
+    await db('product_colors').updateById(req.params.colorId, updates);
+    const updated = await db('product_colors').findById(req.params.colorId);
     res.json({ success: true, data: { color: updated } });
   } catch (error) {
     console.error('Update product color error:', error);
@@ -467,49 +467,49 @@ const product = db('products').findById(req.params.id);
 
 exports.deleteProductColor = async (req, res) => {
   try {
-    const color = db('product_colors').findById(req.params.colorId);
+    const color = await db('product_colors').findById(req.params.colorId);
     if (!color || color.product_id !== req.params.id) {
       return res.status(404).json({ success: false, error: 'Color not found' });
     }
-const product = db('products').findById(req.params.id);
-  if (product && req.user.role !== 'admin') {
-    return res.status(403).json({ success: false, error: 'Not authorized' });
+    const product = await db('products').findById(req.params.id);
+    if (product && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, error: 'Not authorized' });
+    }
+    await db('product_colors').deleteById(req.params.colorId);
+    res.json({ success: true, message: 'Color deleted' });
+  } catch (error) {
+    console.error('Delete product color error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Failed to delete product color' });
   }
-db('product_colors').deleteById(req.params.colorId);
-  res.json({ success: true, message: 'Color deleted' });
-} catch (error) {
-  console.error('Delete product color error:', error);
-  res.status(500).json({ success: false, error: error.message || 'Failed to delete product color' });
-}
 };
 
 exports.uploadImages = asyncHandler(async (req, res) => {
-if (!req.files || req.files.length === 0) {
-throw new ApiError(400, 'No images uploaded');
-}
-
-const { uploadImage } = require('../utils/cloudinary.util');
-const uploadedUrls = [];
-
-for (const file of req.files) {
-  try {
-    const result = await uploadImage(file.path);
-    uploadedUrls.push(result.secure_url);
-  } catch (error) {
-    console.error(`Failed to upload ${file.originalname}:`, error.message);
-  } finally {
-    const fs = require('fs');
-    try { fs.unlinkSync(file.path); } catch (e) { /* ignore */ }
+  if (!req.files || req.files.length === 0) {
+    throw new ApiError(400, 'No images uploaded');
   }
-}
 
-if (uploadedUrls.length === 0) {
-  throw new ApiError(500, 'Failed to upload any images');
-}
+  const { uploadImage } = require('../utils/cloudinary.util');
+  const uploadedUrls = [];
 
-res.json({
-  success: true,
-  message: `${uploadedUrls.length} image(s) uploaded successfully`,
-  urls: uploadedUrls,
-});
+  for (const file of req.files) {
+    try {
+      const result = await uploadImage(file.path);
+      uploadedUrls.push(result.secure_url);
+    } catch (error) {
+      console.error(`Failed to upload ${file.originalname}:`, error.message);
+    } finally {
+      const fs = require('fs');
+      try { fs.unlinkSync(file.path); } catch (e) { /* ignore */ }
+    }
+  }
+
+  if (uploadedUrls.length === 0) {
+    throw new ApiError(500, 'Failed to upload any images');
+  }
+
+  res.json({
+    success: true,
+    message: `${uploadedUrls.length} image(s) uploaded successfully`,
+    urls: uploadedUrls,
+  });
 });

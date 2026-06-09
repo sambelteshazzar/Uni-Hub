@@ -38,7 +38,7 @@ exports.createOrder = async (req, res) => {
     }
 
     const productIds = items.map(item => item.productId);
-    const dbProducts = db('products').find({ id: { $in: productIds } });
+    const dbProducts = await db('products').find({ id: { $in: productIds } });
 
     if (dbProducts.length !== items.length) {
       return res.status(400).json({
@@ -67,7 +67,7 @@ exports.createOrder = async (req, res) => {
       }
       const images = parseJson(dbProduct.images) || [];
       subtotal += dbProduct.price * item.quantity;
-      const sellerUser = db('users').findById(dbProduct.seller);
+      const sellerUser = await db('users').findById(dbProduct.seller);
       verifiedItems.push({
         productId: item.productId,
         title: dbProduct.title,
@@ -83,7 +83,7 @@ exports.createOrder = async (req, res) => {
     const deliveryFee = delivery.mode === 'inperson' ? 0 : delivery.mode === 'yango' ? 12 : 15;
     const grandTotal = subtotal + deliveryFee;
 
-    const createOrderTransaction = db('orders').db.transaction(() => {
+    const order = await db('orders').transaction(async (txDb) => {
       const now = new Date();
       const yy = now.getFullYear().toString().slice(-2);
       const mm = (now.getMonth() + 1).toString().padStart(2, '0');
@@ -92,7 +92,7 @@ exports.createOrder = async (req, res) => {
       const orderNum = `UH-${datePart}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
       const trackNum = `UHT-${datePart}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
-      const order = db('orders').create({
+      const createdOrder = await txDb('orders').create({
         userId: req.user.id,
         customer_name: req.user.fullName,
         customer_email: req.user.email,
@@ -116,8 +116,8 @@ exports.createOrder = async (req, res) => {
       });
 
       for (const vItem of verifiedItems) {
-        db('order_items').create({
-          orderId: order.id,
+        await txDb('order_items').create({
+          orderId: createdOrder.id,
           productId: vItem.productId,
           title: vItem.title,
           price: vItem.price,
@@ -130,20 +130,18 @@ exports.createOrder = async (req, res) => {
       }
 
       for (const pid of productIds) {
-        db('products').updateById(pid, { status: 'sold' });
+        await txDb('products').updateById(pid, { status: 'sold' });
       }
 
-      db('users').updateById(req.user.id, {
+      await txDb('users').updateById(req.user.id, {
         totalOrders: (req.user.totalOrders || 0) + 1,
       });
 
-      return order;
+      return createdOrder;
     });
 
-    const order = createOrderTransaction();
-
-    const createdOrder = db('orders').findById(order.id);
-    const orderItems = db('order_items').find({ orderId: order.id });
+    const createdOrder = await db('orders').findById(order.id);
+    const orderItems = await db('order_items').find({ orderId: order.id });
     createdOrder._items = orderItems;
 
     const io = req.app.get('io');
@@ -165,16 +163,17 @@ exports.createOrder = async (req, res) => {
 
 exports.getMyOrders = async (req, res) => {
   try {
-    const orders = db('orders').find(
+    const orders = await db('orders').find(
       { userId: req.user.id },
       { sort: { createdAt: -1 } },
     );
 
-    const populatedOrders = orders.map(order => {
-      const items = db('order_items').find({ orderId: order.id });
+    const populatedOrders = [];
+    for (const order of orders) {
+      const items = await db('order_items').find({ orderId: order.id });
       order._items = items;
-      return getPublicOrder(order);
-    });
+      populatedOrders.push(getPublicOrder(order));
+    }
 
     res.json({
       success: true,
@@ -194,7 +193,7 @@ exports.getMyOrders = async (req, res) => {
 
 exports.getOrder = async (req, res) => {
   try {
-    const order = db('orders').findById(req.params.id);
+    const order = await db('orders').findById(req.params.id);
 
     if (!order) {
       return res.status(404).json({
@@ -210,14 +209,14 @@ exports.getOrder = async (req, res) => {
       });
     }
 
-    const items = db('order_items').find({ orderId: order.id });
+    const items = await db('order_items').find({ orderId: order.id });
     order._items = items;
 
-    const user = db('users').findById(order.userId);
+    const user = await db('users').findById(order.userId);
     order.userId = user ? { id: user.id, fullName: user.fullName, email: user.email } : order.userId;
 
     for (const item of items) {
-      const seller = db('users').findById(item.seller);
+      const seller = await db('users').findById(item.seller);
       item.seller = seller ? { id: seller.id, fullName: seller.fullName, email: seller.email, phone: seller.phone } : item.seller;
     }
 
@@ -253,7 +252,7 @@ exports.updateOrderStatus = async (req, res) => {
       });
     }
 
-    const order = db('orders').findById(req.params.id);
+    const order = await db('orders').findById(req.params.id);
 
     if (!order) {
       return res.status(404).json({
@@ -262,7 +261,8 @@ exports.updateOrderStatus = async (req, res) => {
       });
     }
 
-    const isSeller = db('order_items').find({ orderId: order.id }).some(item => item.seller === req.user.id);
+    const orderItems = await db('order_items').find({ orderId: order.id });
+    const isSeller = orderItems.some(item => item.seller === req.user.id);
     if (order.userId !== req.user.id && req.user.role !== 'admin' && !isSeller) {
       return res.status(403).json({
         success: false,
@@ -270,19 +270,19 @@ exports.updateOrderStatus = async (req, res) => {
       });
     }
 
-    db('orders').updateById(order.id, {
+    await db('orders').updateById(order.id, {
       status,
     });
 
-  db('order_status_history').create({
-    orderId: order.id,
-    status,
-    note: note || '',
-    updatedBy: req.user.id,
-  });
+    await db('order_status_history').create({
+      orderId: order.id,
+      status,
+      note: note || '',
+      updatedBy: req.user.id,
+    });
 
-    const updatedOrder = db('orders').findById(order.id);
-    const items = db('order_items').find({ orderId: order.id });
+    const updatedOrder = await db('orders').findById(order.id);
+    const items = await db('order_items').find({ orderId: order.id });
     updatedOrder._items = items;
 
     const io = req.app.get('io');
@@ -313,7 +313,7 @@ exports.completePayment = async (req, res) => {
       });
     }
 
-    const order = db('orders').findById(req.params.id);
+    const order = await db('orders').findById(req.params.id);
 
     if (!order) {
       return res.status(404).json({
@@ -336,7 +336,8 @@ exports.completePayment = async (req, res) => {
       });
     }
 
-    const payment = db('payments').find({ orderId: order.id })[0];
+    const payments = await db('payments').find({ orderId: order.id });
+    const payment = payments[0];
     const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
     if (payment && (payment.mode === 'momo' || payment.mode === 'telecel' || payment.mode === 'bank') && PAYSTACK_SECRET_KEY) {
       try {
@@ -368,7 +369,7 @@ exports.completePayment = async (req, res) => {
     }
 
     if (payment && payment.mode === 'cash') {
-      db('orders').updateById(order.id, {
+      await db('orders').updateById(order.id, {
         payment_status: 'pending',
         payment_transactionId: transactionId,
         payment_paidAt: '',
@@ -376,26 +377,26 @@ exports.completePayment = async (req, res) => {
       return res.json({
         success: true,
         message: 'Cash payment will be confirmed upon delivery',
-        data: getPublicOrder(db('orders').findById(order.id)),
+        data: getPublicOrder(await db('orders').findById(order.id)),
       });
     }
 
-    db('orders').updateById(order.id, {
+    await db('orders').updateById(order.id, {
       payment_status: 'completed',
       payment_transactionId: transactionId,
       payment_paidAt: new Date().toISOString(),
     });
 
     if (payment) {
-      db('payments').updateById(payment.id, {
+      await db('payments').updateById(payment.id, {
         status: 'completed',
         transactionId: transactionId,
         verifiedAt: new Date().toISOString(),
       });
     }
 
-    const updatedOrder = db('orders').findById(order.id);
-    const items = db('order_items').find({ orderId: order.id });
+    const updatedOrder = await db('orders').findById(order.id);
+    const items = await db('order_items').find({ orderId: order.id });
     updatedOrder._items = items;
 
     const io = req.app.get('io');
@@ -417,7 +418,7 @@ exports.completePayment = async (req, res) => {
 
 exports.cancelOrder = async (req, res) => {
   try {
-    const order = db('orders').findById(req.params.id);
+    const order = await db('orders').findById(req.params.id);
 
     if (!order) {
       return res.status(404).json({
@@ -440,27 +441,27 @@ exports.cancelOrder = async (req, res) => {
       });
     }
 
-    db('orders').updateById(order.id, {
+    await db('orders').updateById(order.id, {
       status: 'cancelled',
     });
 
-  db('order_status_history').create({
-    orderId: order.id,
-    status: 'cancelled',
-    note: 'Order cancelled by user',
-    updatedBy: req.user.id,
-  });
+    await db('order_status_history').create({
+      orderId: order.id,
+      status: 'cancelled',
+      note: 'Order cancelled by user',
+      updatedBy: req.user.id,
+    });
 
-  const orderItems = db('order_items').find({ orderId: order.id });
-  for (const item of orderItems) {
-  db('products').updateById(item.productId, { status: 'active' });
-  }
+    const orderItems = await db('order_items').find({ orderId: order.id });
+    for (const item of orderItems) {
+      await db('products').updateById(item.productId, { status: 'active' });
+    }
 
-  const io = req.app.get('io');
-  const cancelledOrder = db('orders').findById(order.id);
-  notifyOrderCancelled(io, cancelledOrder);
+    const io = req.app.get('io');
+    const cancelledOrder = await db('orders').findById(order.id);
+    notifyOrderCancelled(io, cancelledOrder);
 
-  res.json({
+    res.json({
       success: true,
       message: 'Order cancelled successfully',
     });
@@ -480,15 +481,16 @@ exports.trackByTrackingNumber = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Tracking number is required' });
     }
 
-    const order = db('orders').find({ trackingNumber }).find(o => o.trackingNumber === trackingNumber);
+    const orders = await db('orders').find({ trackingNumber });
+    const order = orders.find(o => o.trackingNumber === trackingNumber);
     if (!order) {
       return res.status(404).json({ success: false, error: 'No order found with this tracking number' });
     }
 
-    const items = db('order_items').find({ orderId: order.id });
+    const items = await db('order_items').find({ orderId: order.id });
     order._items = items;
 
-    const statusHistory = db('order_status_history').find({ orderId: order.id });
+    const statusHistory = await db('order_status_history').find({ orderId: order.id });
 
     const publicOrder = getPublicOrder(order);
     publicOrder.statusHistory = statusHistory;

@@ -31,13 +31,13 @@ async function getUsers (req, res) {
     if (university) { where.university = university; }
     if (role) { where.role = role; }
 
-    const users = db('users').find(where, {
+    const users = await db('users').find(where, {
       sort: { createdAt: -1 },
       limit: Number(limit),
       skip: (page - 1) * limit,
     });
 
-    const total = db('users').countDocuments(where);
+    const total = await db('users').countDocuments(where);
 
     res.json({
       success: true,
@@ -58,7 +58,7 @@ async function getUsers (req, res) {
 
 async function getUser (req, res) {
   try {
-    const user = db('users').findById(req.params.id);
+    const user = await db('users').findById(req.params.id);
 
     if (!user) {
       return res.status(404).json({
@@ -84,7 +84,7 @@ async function updateUser (req, res) {
   try {
     const { isSuspended, role, isVerified } = req.body;
 
-    const user = db('users').findById(req.params.id);
+    const user = await db('users').findById(req.params.id);
 
     if (!user) {
       return res.status(404).json({
@@ -98,7 +98,7 @@ async function updateUser (req, res) {
     if (role !== undefined) { updates.role = role; }
     if (isVerified !== undefined) { updates.isVerified = isVerified; }
 
-    const updated = db('users').updateById(req.params.id, updates);
+    const updated = await db('users').updateById(req.params.id, updates);
 
     res.json({
       success: true,
@@ -116,7 +116,7 @@ async function updateUser (req, res) {
 
 async function deleteUser (req, res) {
   try {
-    const user = db('users').findById(req.params.id);
+    const user = await db('users').findById(req.params.id);
 
     if (!user) {
       return res.status(404).json({
@@ -125,7 +125,7 @@ async function deleteUser (req, res) {
       });
     }
 
-    db('users').updateById(req.params.id, { isActive: false });
+    await db('users').updateById(req.params.id, { isActive: false });
 
     res.json({
       success: true,

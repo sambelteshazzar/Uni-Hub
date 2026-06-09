@@ -359,7 +359,7 @@ const startServer = async () => {
     process.exit(1);
   }
 
-    connectDatabase();
+    await connectDatabase();
 
     // Create HTTP server
     const server = http.createServer(app);

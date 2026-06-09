@@ -9,13 +9,13 @@ function generateDeliveryNumber () {
   return `DEL-${dateStr}-${rand}`;
 }
 
-function populateDelivery (delivery) {
+async function populateDelivery (delivery) {
   if (!delivery) return null;
-  const order = db('orders').findById(delivery.orderId);
+  const order = await db('orders').findById(delivery.orderId);
   if (order) {
     delivery.orderId = { _id: order.id, id: order.id, orderNumber: order.orderNumber, status: order.status, customer: { name: order.customer_name } };
   }
-  const user = db('users').findById(delivery.userId);
+  const user = await db('users').findById(delivery.userId);
   if (user) {
     delivery.userId = { _id: user.id, id: user.id, fullName: user.fullName, email: user.email, phone: user.phone };
   }
@@ -31,7 +31,7 @@ exports.createDelivery = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Order ID and delivery mode are required' });
     }
 
-    const order = db('orders').findById(orderId);
+    const order = await db('orders').findById(orderId);
     if (!order) {
       return res.status(404).json({ success: false, error: 'Order not found' });
     }
@@ -40,7 +40,7 @@ exports.createDelivery = async (req, res) => {
       return res.status(403).json({ success: false, error: 'Not authorized' });
     }
 
-    const delivery = db('deliveries').create({
+    const delivery = await db('deliveries').create({
       id: generateId(),
       deliveryNumber: generateDeliveryNumber(),
       orderId: order.id,
@@ -51,17 +51,17 @@ exports.createDelivery = async (req, res) => {
       status: 'pending',
     });
 
-  db('delivery_status_history').create({
-  id: generateId(),
-  deliveryId: delivery.id,
-  status: 'pending',
-  note: 'Delivery record created',
-  });
+    await db('delivery_status_history').create({
+      id: generateId(),
+      deliveryId: delivery.id,
+      status: 'pending',
+      note: 'Delivery record created',
+    });
 
-  const io = req.app.get('io');
-  notifyDeliveryCreated(io, delivery);
+    const io = req.app.get('io');
+    notifyDeliveryCreated(io, delivery);
 
-  res.status(201).json({ success: true, message: 'Delivery record created', data: mapDeliveryRow(delivery) });
+    res.status(201).json({ success: true, message: 'Delivery record created', data: mapDeliveryRow(delivery) });
   } catch (error) {
     console.error('Create delivery error:', error);
     res.status(500).json({ success: false, error: error.message || 'Failed to create delivery' });
@@ -70,7 +70,7 @@ exports.createDelivery = async (req, res) => {
 
 exports.getDeliveryByOrder = async (req, res) => {
   try {
-    const delivery = db('deliveries').findOne({ orderId: req.params.orderId });
+    const delivery = await db('deliveries').findOne({ orderId: req.params.orderId });
     if (!delivery) {
       return res.status(404).json({ success: false, error: 'Delivery record not found' });
     }
@@ -80,7 +80,7 @@ exports.getDeliveryByOrder = async (req, res) => {
       return res.status(403).json({ success: false, error: 'Not authorized' });
     }
 
-    const populated = populateDelivery(mapDeliveryRow(delivery));
+    const populated = await populateDelivery(mapDeliveryRow(delivery));
     res.json({ success: true, data: populated });
   } catch (error) {
     console.error('Get delivery error:', error);
@@ -96,7 +96,7 @@ exports.updateDeliveryStatus = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Status is required' });
     }
 
-    const delivery = db('deliveries').findById(req.params.id);
+    const delivery = await db('deliveries').findById(req.params.id);
     if (!delivery) {
       return res.status(404).json({ success: false, error: 'Delivery not found' });
     }
@@ -111,9 +111,9 @@ exports.updateDeliveryStatus = async (req, res) => {
     if (status === 'picked-up') updates.pickedUpAt = new Date().toISOString();
     if (status === 'delivered') updates.deliveredAt = new Date().toISOString();
 
-    db('deliveries').updateById(delivery.id, updates);
+    await db('deliveries').updateById(delivery.id, updates);
 
-    db('delivery_status_history').create({
+    await db('delivery_status_history').create({
       id: generateId(),
       deliveryId: delivery.id,
       status,
@@ -122,12 +122,12 @@ exports.updateDeliveryStatus = async (req, res) => {
       location_longitude: location?.longitude || null,
     });
 
-  const updated = db('deliveries').findById(delivery.id);
+    const updated = await db('deliveries').findById(delivery.id);
 
-  const io = req.app.get('io');
-  notifyDeliveryStatusChanged(io, updated);
+    const io = req.app.get('io');
+    notifyDeliveryStatusChanged(io, updated);
 
-  res.json({ success: true, message: 'Delivery status updated', data: mapDeliveryRow(updated) });
+    res.json({ success: true, message: 'Delivery status updated', data: mapDeliveryRow(updated) });
   } catch (error) {
     console.error('Update delivery status error:', error);
     res.status(500).json({ success: false, error: error.message || 'Failed to update delivery' });
@@ -136,8 +136,11 @@ exports.updateDeliveryStatus = async (req, res) => {
 
 exports.getMyDeliveries = async (req, res) => {
   try {
-    const deliveries = db('deliveries').find({ userId: req.user.id }, { sort: { createdAt: -1 } });
-    const mapped = deliveries.map(d => populateDelivery(mapDeliveryRow(d)));
+    const deliveries = await db('deliveries').find({ userId: req.user.id }, { sort: { createdAt: -1 } });
+    const mapped = [];
+    for (const d of deliveries) {
+      mapped.push(await populateDelivery(mapDeliveryRow(d)));
+    }
 
     res.json({ success: true, data: { deliveries: mapped, total: mapped.length } });
   } catch (error) {
@@ -155,10 +158,13 @@ exports.getAllDeliveries = async (req, res) => {
     if (mode) query.mode = mode;
 
     const skip = (page - 1) * limit;
-    const deliveries = db('deliveries').find(query, { sort: { createdAt: -1 }, limit: Number(limit), skip });
-    const count = db('deliveries').countDocuments(query);
+    const deliveries = await db('deliveries').find(query, { sort: { createdAt: -1 }, limit: Number(limit), skip });
+    const count = await db('deliveries').countDocuments(query);
 
-    const mapped = deliveries.map(d => populateDelivery(mapDeliveryRow(d)));
+    const mapped = [];
+    for (const d of deliveries) {
+      mapped.push(await populateDelivery(mapDeliveryRow(d)));
+    }
 
     res.json({ success: true, data: { deliveries: mapped, total: count, pages: Math.ceil(count / limit), currentPage: page } });
   } catch (error) {

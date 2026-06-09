@@ -16,34 +16,34 @@ const protect = async (req, res, next) => {
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const user = db('users').findById(decoded.id);
+      const user = await db('users').findById(decoded.id);
 
       if (!user) {
         return res.status(401).json({ success: false, error: 'User not found' });
       }
 
-  const mapped = mapUserRow(user);
-  delete mapped.password;
-  delete mapped.resetToken;
-  delete mapped.resetTokenExpiry;
-  delete mapped.passwordChangedAt;
-  delete mapped.bannedBy;
-  mapped._id = mapped.id;
-  req.user = mapped;
+      const mapped = mapUserRow(user);
+      delete mapped.password;
+      delete mapped.resetToken;
+      delete mapped.resetTokenExpiry;
+      delete mapped.passwordChangedAt;
+      delete mapped.bannedBy;
+      mapped._id = mapped.id;
+      req.user = mapped;
 
-  setUserContext(req.user);
+      setUserContext(req.user);
 
-  if (!mapped.isActive) {
-    return res.status(401).json({ success: false, error: 'Account is deactivated' });
-  }
+      if (!mapped.isActive) {
+        return res.status(401).json({ success: false, error: 'Account is deactivated' });
+      }
 
-  if (mapped.isSuspended) {
-    return res.status(401).json({ success: false, error: 'Account is suspended' });
-  }
+      if (mapped.isSuspended) {
+        return res.status(401).json({ success: false, error: 'Account is suspended' });
+      }
 
       const fiveMinAgo = Date.now() - 5 * 60 * 1000;
       if (!mapped.lastLogin || new Date(mapped.lastLogin).getTime() < fiveMinAgo) {
-        db('users').updateById(mapped.id, { lastLogin: new Date().toISOString() });
+        await db('users').updateById(mapped.id, { lastLogin: new Date().toISOString() });
       }
 
       next();

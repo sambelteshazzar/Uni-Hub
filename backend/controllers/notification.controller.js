@@ -25,7 +25,7 @@ async function getNotifications (req, res) {
       { expiresAt: { $gt: new Date().toISOString() } },
     ];
 
-    const notifications = db('notifications').find(query, {
+    const notifications = await db('notifications').find(query, {
       sort: { createdAt: -1 },
       limit: 100,
     });
@@ -50,7 +50,7 @@ async function getNotifications (req, res) {
 
 async function getUnreadCount (req, res) {
   try {
-    const count = db('notifications').countDocuments({
+    const count = await db('notifications').countDocuments({
       user: req.user.id,
       read: 0,
       $or: [
@@ -82,7 +82,7 @@ async function createNotification (req, res) {
       });
     }
 
-    const notification = db('notifications').create({
+    const notification = await db('notifications').create({
       user: req.user.id,
       type: type || 'info',
       title,
@@ -109,7 +109,7 @@ async function createNotification (req, res) {
 
 async function markAsRead (req, res) {
   try {
-    const notification = db('notifications').findOneAndUpdate(
+    const notification = await db('notifications').findOneAndUpdate(
       { id: req.params.id, user: req.user.id },
       { read: toBool(true) },
     );
@@ -138,7 +138,7 @@ async function markAsRead (req, res) {
 
 async function markAllAsRead (req, res) {
   try {
-    db('notifications').updateMany(
+    await db('notifications').updateMany(
       { user: req.user.id, read: 0 },
       { read: toBool(true) },
     );
@@ -157,7 +157,7 @@ async function markAllAsRead (req, res) {
 
 async function deleteNotification (req, res) {
   try {
-    const result = db('notifications').deleteOne({
+    const result = await db('notifications').deleteOne({
       id: req.params.id,
       user: req.user.id,
     });
@@ -183,7 +183,7 @@ async function deleteNotification (req, res) {
 
 async function deleteAllNotifications (req, res) {
   try {
-    db('notifications').deleteMany({ user: req.user.id });
+    await db('notifications').deleteMany({ user: req.user.id });
 
     res.json({
       success: true,
@@ -199,7 +199,7 @@ async function deleteAllNotifications (req, res) {
 
 async function deleteReadNotifications (req, res) {
   try {
-    db('notifications').deleteMany({
+    await db('notifications').deleteMany({
       user: req.user.id,
       read: 1,
     });
