@@ -375,14 +375,20 @@ if (typeof window !== 'undefined' && !this._isStaticDeploy) {
 
 upload = {
   images: async (files) => {
+    if (this.isStaticDeploy) {
+      return { success: false, error: 'Offline mode - upload unavailable', urls: [] };
+    }
     const formData = new FormData();
     for (const file of files) {
       formData.append('images', file);
     }
     try {
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      const headers = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const token = this.getToken();
+      const csrfToken = await this.fetchCsrfToken();
+      const headers = {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+      };
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 120000);
       const res = await fetch(`${this.baseURL}/products/upload`, {
@@ -390,11 +396,32 @@ upload = {
         headers,
         body: formData,
         signal: controller.signal,
+        credentials: 'include',
       });
       clearTimeout(timeout);
       const data = await res.json();
       if (data.success && data.urls && data.urls.length > 0) {
         return { success: true, urls: data.urls };
+      }
+      if (res.status === 403 && data.error && data.error.toLowerCase().includes('csrf')) {
+        this._csrfToken = null;
+        const retryCsrf = await this.fetchCsrfToken();
+        if (retryCsrf) {
+          const retryRes = await fetch(`${this.baseURL}/products/upload`, {
+            method: 'POST',
+            headers: {
+              ...headers,
+              'X-CSRF-Token': retryCsrf,
+            },
+            body: formData,
+            credentials: 'include',
+          });
+          const retryData = await retryRes.json();
+          if (retryData.success && retryData.urls && retryData.urls.length > 0) {
+            return { success: true, urls: retryData.urls };
+          }
+          return { success: false, error: retryData.error || retryData.message || 'Upload failed', urls: [] };
+        }
       }
       return { success: false, error: data.error || data.message || 'Upload failed', urls: [] };
     } catch (err) {

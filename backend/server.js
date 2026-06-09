@@ -361,6 +361,28 @@ const startServer = async () => {
 
     await connectDatabase();
 
+  // Ensure admin user exists
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@unihub.local';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'Admin123!';
+  const bcrypt = require('bcrypt');
+  const { db } = require('./utils/db');
+  const existingAdmin = await db('users').findOne({ email: adminEmail });
+  if (!existingAdmin) {
+    const hashedPassword = await bcrypt.hash(adminPassword, 12);
+    await db('users').create({
+      fullName: 'Admin',
+      email: adminEmail,
+      phone: '+233000000000',
+      university: 'Uni-Hub',
+      level: 'Admin',
+      hall: 'System',
+      password: hashedPassword,
+      role: 'admin',
+      isVerified: 1,
+    });
+    console.log(`✅ Admin user created: ${adminEmail}`);
+  }
+
     // Create HTTP server
     const server = http.createServer(app);
 
