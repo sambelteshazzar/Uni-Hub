@@ -32,35 +32,24 @@ class ProductsManager {
   */
   async init () {
     try {
-      const isOffline = window.API_URL && window.API_URL.includes('offline.local');
-      if (this.useBackend && !isOffline) {
+      if (this.useBackend) {
         try {
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 3000);
-          const response = await fetch(`${window.API_URL}/products?limit=100`, {
-            signal: controller.signal,
-          });
-          clearTimeout(timeout);
-          if (response.ok) {
-            const data = await response.json();
-            if (data.success && data.data.products) {
-              this.products = data.data.products;
-              this.filteredProducts = [...this.products];
-              this._backendAvailable = true;
-              if (data.data.pagination) {
-                this._totalFromServer = data.data.pagination.total;
-                this._totalPagesFromServer = data.data.pagination.pages;
-  }
-
-        return;
+          const data = await api.products.getAll({ limit: 100 });
+          if (data.success && data.data && data.data.products) {
+            this.products = data.data.products;
+            this.filteredProducts = [...this.products];
+            this._backendAvailable = true;
+            if (data.data.pagination) {
+              this._totalFromServer = data.data.pagination.total;
+              this._totalPagesFromServer = data.data.pagination.pages;
             }
+            return;
           }
         } catch (_error) {
-          // Backend unavailable or slow - use local fallback
+          // Backend unavailable - use local fallback
         }
       }
 
-      // Fallback to local JSON
       const data = await api.loadJSON('data/products.json');
       this.products = data.products || [];
       this.filteredProducts = [...this.products];
@@ -158,51 +147,41 @@ class ProductsManager {
    * Fetch a specific page from the backend API (server-side pagination)
   */
   async fetchPage (page = 1, pageSize = null) {
-    const isOffline = window.API_URL && window.API_URL.includes('offline.local');
     const size = pageSize || this.pageSize;
-    const params = new URLSearchParams({ page, limit: size });
+    const params = { page, limit: size };
 
-    if (this.currentFilters.category) params.set('category', this.currentFilters.category);
+    if (this.currentFilters.category) params.category = this.currentFilters.category;
     if (this.currentFilters.condition) {
       const conditions = Array.isArray(this.currentFilters.condition)
         ? this.currentFilters.condition.join(',')
         : this.currentFilters.condition;
-      params.set('condition', conditions);
+      params.condition = conditions;
     }
-    if (this.currentFilters.university) params.set('university', this.currentFilters.university);
-    if (this.currentFilters.searchQuery) params.set('search', this.currentFilters.searchQuery);
+    if (this.currentFilters.university) params.university = this.currentFilters.university;
+    if (this.currentFilters.searchQuery) params.search = this.currentFilters.searchQuery;
     if (this.currentFilters.priceRange && (this.currentFilters.priceRange.min > 0 || this.currentFilters.priceRange.max < Infinity)) {
-      if (this.currentFilters.priceRange.min > 0) params.set('minPrice', this.currentFilters.priceRange.min);
-      if (this.currentFilters.priceRange.max < Infinity) params.set('maxPrice', this.currentFilters.priceRange.max);
+      if (this.currentFilters.priceRange.min > 0) params.minPrice = this.currentFilters.priceRange.min;
+      if (this.currentFilters.priceRange.max < Infinity) params.maxPrice = this.currentFilters.priceRange.max;
     }
     if (this.currentFilters.sortBy && this.currentFilters.sortBy !== 'newest') {
-      params.set('sortBy', this.currentFilters.sortBy);
+      params.sortBy = this.currentFilters.sortBy;
     }
 
     try {
-      if (isOffline) throw new Error('Offline');
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000);
-      const response = await fetch(`${window.API_URL}/products?${params.toString()}`, {
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.data) {
-          this._backendAvailable = true;
-          this._lastServerPage = page;
-          if (data.data.pagination) {
-            this._totalFromServer = data.data.pagination.total;
-            this._totalPagesFromServer = data.data.pagination.pages;
-          }
-          return {
-            products: data.data.products || [],
-            currentPage: data.data.pagination?.page || page,
-            totalPages: data.data.pagination?.pages || 1,
-            totalProducts: data.data.pagination?.total || 0,
-          };
+      const data = await api.products.getAll(params);
+      if (data.success && data.data) {
+        this._backendAvailable = true;
+        this._lastServerPage = page;
+        if (data.data.pagination) {
+          this._totalFromServer = data.data.pagination.total;
+          this._totalPagesFromServer = data.data.pagination.pages;
         }
+        return {
+          products: data.data.products || [],
+          currentPage: data.data.pagination?.page || page,
+          totalPages: data.data.pagination?.pages || 1,
+          totalProducts: data.data.pagination?.total || 0,
+        };
       }
     } catch (_error) {
       // Fall through to client-side
@@ -358,27 +337,10 @@ class ProductsManager {
    */
   async addProduct (productData) {
     try {
-      const isOffline = window.API_URL && window.API_URL.includes('offline.local');
-      if (this.useBackend && !isOffline) {
+      if (this.useBackend) {
         try {
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 3000);
-          const token = typeof StorageManager !== 'undefined' ? StorageManager.getAuthToken() : null;
-          const headers = {};
-          if (token) { headers.Authorization = `Bearer ${token}`; }
-          const response = await fetch(`${window.API_URL || 'http://localhost:5000/api'}/products`, {
-            signal: controller.signal,
-            headers: {
-              'Content-Type': 'application/json',
-              ...headers,
-            },
-            method: 'POST',
-            body: JSON.stringify(productData),
-          });
-          clearTimeout(timeout);
-
-          const data = await response.json();
-          if (response.ok && data.success) {
+          const data = await api.products.create(productData);
+          if (data.success) {
             return {
               success: true,
               product: data.data,
@@ -388,26 +350,25 @@ class ProductsManager {
             success: false,
             error: data.error || 'Failed to add product',
           };
-    } catch (error) {
-      // Backend addProduct failed — using local fallback
-    }
+        } catch (_error) {
+          // Backend unavailable — local fallback
+        }
       }
 
-      // Local fallback
       const product = {
         id: `prod-${Date.now()}`,
         ...productData,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-    this.products.push(product);
-    this.filteredProducts = [...this.products];
-    this._persistLocalProducts();
+      this.products.push(product);
+      this.filteredProducts = [...this.products];
+      this._persistLocalProducts();
 
-    return {
-      success: true,
-      product,
-    };
+      return {
+        success: true,
+        product,
+      };
     } catch (error) {
       console.error('addProduct error:', error);
       return {
@@ -422,32 +383,14 @@ class ProductsManager {
    */
   async updateProduct (productId, updates) {
     try {
-      const isOffline = window.API_URL && window.API_URL.includes('offline.local');
-      if (this.useBackend && !isOffline) {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 3000);
-        const token = typeof StorageManager !== 'undefined' ? StorageManager.getAuthToken() : null;
-        const headers = {};
-        if (token) { headers.Authorization = `Bearer ${token}`; }
-        const response = await fetch(`${window.API_URL || 'http://localhost:5000/api'}/products/${productId}`, {
-          signal: controller.signal,
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            ...headers,
-          },
-          body: JSON.stringify(updates),
-        });
-        clearTimeout(timeout);
-
-        const data = await response.json();
-        if (response.ok && data.success) {
+      if (this.useBackend) {
+        const data = await api.products.update(productId, updates);
+        if (data.success) {
           return { success: true, product: data.data };
         }
         return { success: false, error: data.error || 'Failed to update product' };
       }
 
-      // Local fallback
       const index = this.products.findIndex(p => p.id === productId);
       if (index === -1) {
         return { success: false, error: 'Product not found' };
@@ -470,29 +413,16 @@ class ProductsManager {
    */
   async deleteProduct (productId) {
     try {
-      const isOffline = window.API_URL && window.API_URL.includes('offline.local');
-      if (this.useBackend && !isOffline) {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 3000);
-        const token = typeof StorageManager !== 'undefined' ? StorageManager.getAuthToken() : null;
-        const headers = {};
-        if (token) { headers.Authorization = `Bearer ${token}`; }
-        const response = await fetch(`${window.API_URL || 'http://localhost:5000/api'}/products/${productId}`, {
-          signal: controller.signal,
-          method: 'DELETE',
-          headers,
-        });
-        clearTimeout(timeout);
-
-        if (response.ok) {
+      if (this.useBackend) {
+        const data = await api.products.delete(productId);
+        if (data.success || data.isOffline === undefined) {
           this.products = this.products.filter(p => p.id !== productId);
           this.filteredProducts = this.filteredProducts.filter(p => p.id !== productId);
           return { success: true };
         }
-        return { success: false, error: 'Failed to delete product' };
+        return { success: false, error: data.error || 'Failed to delete product' };
       }
 
-      // Local fallback
       this.products = this.products.filter(p => p.id !== productId);
       this.filteredProducts = this.filteredProducts.filter(p => p.id !== productId);
       return { success: true };

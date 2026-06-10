@@ -20,13 +20,14 @@ if (typeof window !== 'undefined' && !this._isStaticDeploy) {
 
   get isStaticDeploy () {
     if (this._isStaticDeploy) return true;
-    if (this._backendProbed && this._backendReachable === false) return true;
     return false;
   }
 
-  _probeBackend () {
+  _probeBackend (attempt = 1) {
+    const maxAttempts = 3;
+    const timeoutMs = attempt === 1 ? 8000 : 10000;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 4000);
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
     fetch(`${this.baseURL.replace('/api', '')}/api/auth/csrf-token`, {
       signal: controller.signal,
       credentials: 'include',
@@ -35,20 +36,16 @@ if (typeof window !== 'undefined' && !this._isStaticDeploy) {
         clearTimeout(timeout);
         this._backendReachable = res.ok;
         this._backendProbed = true;
-        if (!res.ok) this._markOffline();
       })
       .catch(() => {
         clearTimeout(timeout);
-        this._markOffline();
+        if (attempt < maxAttempts) {
+          setTimeout(() => this._probeBackend(attempt + 1), 2000);
+        } else {
+          this._backendReachable = false;
+          this._backendProbed = true;
+        }
       });
-  }
-
-  _markOffline () {
-    this._backendReachable = false;
-    this._backendProbed = true;
-    if (typeof window !== 'undefined' && window.API_URL && window.API_URL.includes('localhost')) {
-      window.API_URL = 'https://offline.local/api';
-    }
   }
 
   async fetchCsrfToken () {
