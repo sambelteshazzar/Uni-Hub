@@ -99,10 +99,7 @@ const handleJwtError = (error) => {
  * @param {Function} next - Express next function
  */
 const errorHandler = (err, req, res, _next) => {
-  // Log error in development
-  if (process.env.NODE_ENV === 'development') {
-    console.error('Error:', err);
-  }
+  console.error('Error:', err.message || err);
 
   let errorResponse = {
     statusCode: err.statusCode || 500,
