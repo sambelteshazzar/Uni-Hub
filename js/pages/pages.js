@@ -4619,7 +4619,7 @@ if (this._pendingImageFiles.length > 0) {
       sellerName: currentUser?.fullName || currentUser?.name || 'Admin',
       sellerRating: currentUser?.rating || 5,
       university: formData.get('university')?.trim() || currentUser?.university || '',
-      status: 'approved',
+      status: 'active',
     };
 
     try {

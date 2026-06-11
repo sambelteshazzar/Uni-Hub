@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS products (
   university TEXT NOT NULL,
   deliveryModes TEXT DEFAULT '[]',
   paymentModes TEXT DEFAULT '[]',
-  status TEXT DEFAULT 'pending' CHECK(status IN ('active','pending','sold','inactive','reserved','rejected')),
+  status TEXT DEFAULT 'pending' CHECK(status IN ('active','pending','sold','inactive','reserved','rejected','approved')),
   approvedBy TEXT REFERENCES users(id),
   moderationNote TEXT,
   views INTEGER DEFAULT 0,
@@ -440,17 +440,73 @@ async function runTursoMigrations () {
       find: 'googleId',
       alter: 'ALTER TABLE users ADD COLUMN googleId TEXT',
     },
-  ];
+    {
+    check: "SELECT 1 FROM sqlite_master WHERE name='products' AND sql LIKE '%approved%'",
+    find: '__status_check_has_approved__',
+    alter: null,
+  },
+];
 
   for (const m of migrations) {
     try {
+      if (m.alter === null) continue;
       const result = await tursoClient.execute(m.check);
-      const has = result.rows.some(r => r.name === m.find);
+      const has = result.rows.some(r => {
+        const vals = Object.values(r);
+        return vals.some(v => String(v) === m.find);
+      });
       if (!has) {
         await tursoClient.execute(m.alter);
       }
     } catch (err) {
       console.warn('Migration warning:', err.message);
+    }
+  }
+
+  try {
+    const checkResult = await tursoClient.execute("SELECT sql FROM sqlite_master WHERE name='products'");
+    const schemaSql = checkResult.rows[0]?.sql || '';
+    if (schemaSql && !schemaSql.includes("'approved'")) {
+      console.log('Migrating products table to add approved status...');
+      await tursoClient.execute('ALTER TABLE products RENAME TO products_old');
+      await tursoClient.execute(`CREATE TABLE products (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  price REAL NOT NULL CHECK(price >= 0),
+  currency TEXT DEFAULT 'GHS',
+  category TEXT NOT NULL CHECK(category IN ('appliances','hostel-items','accessories','textbooks','electronics','fashion','thrifts')),
+  condition TEXT NOT NULL CHECK(condition IN ('new','like-new','fair','good','excellent')),
+  variants TEXT DEFAULT '[]',
+  images TEXT DEFAULT '[]',
+  seller TEXT NOT NULL REFERENCES users(id),
+  sellerName TEXT NOT NULL,
+  sellerRating REAL DEFAULT 0,
+  university TEXT NOT NULL,
+  deliveryModes TEXT DEFAULT '[]',
+  paymentModes TEXT DEFAULT '[]',
+  status TEXT DEFAULT 'pending' CHECK(status IN ('active','pending','sold','inactive','reserved','rejected','approved')),
+  approvedBy TEXT REFERENCES users(id),
+  moderationNote TEXT,
+  views INTEGER DEFAULT 0,
+  likes INTEGER DEFAULT 0,
+  createdAt TEXT DEFAULT (datetime('now')),
+  updatedAt TEXT DEFAULT (datetime('now'))
+)`);
+      await tursoClient.execute('INSERT INTO products SELECT * FROM products_old');
+      await tursoClient.execute('DROP TABLE products_old');
+      console.log('Products table migration complete.');
+    }
+  } catch (err) {
+    console.warn('Products status migration warning:', err.message);
+    try {
+      const hasOld = await tursoClient.execute("SELECT name FROM sqlite_master WHERE name='products_old'");
+      if (hasOld.rows.length > 0) {
+        await tursoClient.execute('ALTER TABLE products_old RENAME TO products');
+        console.log('Rolled back products table rename.');
+      }
+    } catch (rollbackErr) {
+      console.error('Products migration rollback failed:', rollbackErr.message);
     }
   }
 }
