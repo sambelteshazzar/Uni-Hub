@@ -73,7 +73,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
     const orderNum = `UH-${datePart}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
     const trackNum = `UHT-${datePart}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
-    const createdOrder = await txDb('orders').create({
+    const createdOrder = await db('orders').create({
       userId: req.user.id,
       customer_name: req.user.fullName,
       customer_email: req.user.email,
@@ -97,7 +97,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
     });
 
     for (const vItem of verifiedItems) {
-      await txDb('order_items').create({
+      await db('order_items').create({
         orderId: createdOrder.id,
         productId: vItem.productId,
         title: vItem.title,
@@ -111,10 +111,10 @@ exports.createOrder = asyncHandler(async (req, res) => {
     }
 
     for (const pid of productIds) {
-      await txDb('products').updateById(pid, { status: 'sold' });
+      await db('products').updateById(pid, { status: 'sold' });
     }
 
-    await txDb('users').updateById(req.user.id, {
+    await db('users').updateById(req.user.id, {
       totalOrders: (req.user.totalOrders || 0) + 1,
     });
 

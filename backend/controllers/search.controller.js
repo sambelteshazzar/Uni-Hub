@@ -143,7 +143,7 @@ data: suggestions.slice(0, 8),
 exports.getTrending = asyncHandler(async (req, res) => {
 const trending = await db('products').rawAll(
 `SELECT category as _id, SUM(views) as count FROM products WHERE status = ? GROUP BY category ORDER BY count DESC LIMIT 5`,
-'active'
+['active']
 );
 
 const data = trending.map(t => t._id);

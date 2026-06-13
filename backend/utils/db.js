@@ -407,11 +407,8 @@ class Db {
         throw err;
       }
     }
-    const localDb = this._local();
-    const result = localDb.transaction(() => {
-      return fn(this);
-    })();
-    return await result;
+    const result = await fn(this);
+    return result;
   }
 
   _serializeValue (key, value) {

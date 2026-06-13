@@ -13,7 +13,7 @@ global.testUtils = {
     fullName: `Test User ${Date.now()}`,
     email: `test_${Date.now()}@example.com`,
     password: 'TestPass123!',
-    phone: `+23350${String(Date.now()).slice(-8)}`,
+    phone: `+233${String(Math.floor(Math.random() * 900000000) + 100000000)}`,
     university: 'University of Ghana',
     level: '300',
     role: 'buyer',
