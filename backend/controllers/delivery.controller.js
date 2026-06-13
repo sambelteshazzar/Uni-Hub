@@ -23,152 +23,127 @@ async function populateDelivery (delivery) {
   return delivery;
 }
 
-exports.createDelivery = async (req, res) => {
-  try {
-    const { orderId, mode, address, instructions } = req.body;
+exports.createDelivery = asyncHandler(async (req, res) => {
+  const { orderId, mode, address, instructions } = req.body;
 
-    if (!orderId || !mode) {
-      return res.status(400).json({ success: false, error: 'Order ID and delivery mode are required' });
-    }
-
-    const order = await db('orders').findById(orderId);
-    if (!order) {
-      return res.status(404).json({ success: false, error: 'Order not found' });
-    }
-
-    if (order.userId !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({ success: false, error: 'Not authorized' });
-    }
-
-    const delivery = await db('deliveries').create({
-      id: generateId(),
-      deliveryNumber: generateDeliveryNumber(),
-      orderId: order.id,
-      userId: req.user.id,
-      mode,
-      address,
-      instructions,
-      status: 'pending',
-    });
-
-    await db('delivery_status_history').create({
-      id: generateId(),
-      deliveryId: delivery.id,
-      status: 'pending',
-      note: 'Delivery record created',
-    });
-
-    const io = req.app.get('io');
-    notifyDeliveryCreated(io, delivery);
-
-    res.status(201).json({ success: true, message: 'Delivery record created', data: mapDeliveryRow(delivery) });
-  } catch (error) {
-    console.error('Create delivery error:', error);
-    res.status(500).json({ success: false, error: error.message || 'Failed to create delivery' });
+  if (!orderId || !mode) {
+    throw new ApiError(400, 'Order ID and delivery mode are required');
   }
-};
 
-exports.getDeliveryByOrder = async (req, res) => {
-  try {
-    const delivery = await db('deliveries').findOne({ orderId: req.params.orderId });
-    if (!delivery) {
-      return res.status(404).json({ success: false, error: 'Delivery record not found' });
-    }
-
-    const userId = typeof delivery.userId === 'string' ? delivery.userId : delivery.userId?.id || delivery.userId?._id;
-    if (userId !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({ success: false, error: 'Not authorized' });
-    }
-
-    const populated = await populateDelivery(mapDeliveryRow(delivery));
-    res.json({ success: true, data: populated });
-  } catch (error) {
-    console.error('Get delivery error:', error);
-    res.status(500).json({ success: false, error: error.message || 'Failed to fetch delivery' });
+  const order = await db('orders').findById(orderId);
+  if (!order) {
+    throw new ApiError(404, 'Order not found');
   }
-};
 
-exports.updateDeliveryStatus = async (req, res) => {
-  try {
-    const { status, location, note } = req.body;
-
-    if (!status) {
-      return res.status(400).json({ success: false, error: 'Status is required' });
-    }
-
-    const delivery = await db('deliveries').findById(req.params.id);
-    if (!delivery) {
-      return res.status(404).json({ success: false, error: 'Delivery not found' });
-    }
-
-    const updates = { status };
-    if (location) {
-      updates.location_latitude = location.latitude;
-      updates.location_longitude = location.longitude;
-      updates.location_lastUpdated = new Date().toISOString();
-    }
-
-    if (status === 'picked-up') updates.pickedUpAt = new Date().toISOString();
-    if (status === 'delivered') updates.deliveredAt = new Date().toISOString();
-
-    await db('deliveries').updateById(delivery.id, updates);
-
-    await db('delivery_status_history').create({
-      id: generateId(),
-      deliveryId: delivery.id,
-      status,
-      note: note || null,
-      location_latitude: location?.latitude || null,
-      location_longitude: location?.longitude || null,
-    });
-
-    const updated = await db('deliveries').findById(delivery.id);
-
-    const io = req.app.get('io');
-    notifyDeliveryStatusChanged(io, updated);
-
-    res.json({ success: true, message: 'Delivery status updated', data: mapDeliveryRow(updated) });
-  } catch (error) {
-    console.error('Update delivery status error:', error);
-    res.status(500).json({ success: false, error: error.message || 'Failed to update delivery' });
+  if (order.userId !== req.user.id && req.user.role !== 'admin') {
+    throw new ApiError(403, 'Not authorized');
   }
-};
 
-exports.getMyDeliveries = async (req, res) => {
-  try {
-    const deliveries = await db('deliveries').find({ userId: req.user.id }, { sort: { createdAt: -1 } });
-    const mapped = [];
-    for (const d of deliveries) {
-      mapped.push(await populateDelivery(mapDeliveryRow(d)));
-    }
+  const delivery = await db('deliveries').create({
+    id: generateId(),
+    deliveryNumber: generateDeliveryNumber(),
+    orderId: order.id,
+    userId: req.user.id,
+    mode,
+    address,
+    instructions,
+    status: 'pending',
+  });
 
-    res.json({ success: true, data: { deliveries: mapped, total: mapped.length } });
-  } catch (error) {
-    console.error('Get deliveries error:', error);
-    res.status(500).json({ success: false, error: error.message || 'Failed to fetch deliveries' });
+  await db('delivery_status_history').create({
+    id: generateId(),
+    deliveryId: delivery.id,
+    status: 'pending',
+    note: 'Delivery record created',
+  });
+
+  const io = req.app.get('io');
+  notifyDeliveryCreated(io, delivery);
+
+  res.status(201).json({ success: true, message: 'Delivery record created', data: mapDeliveryRow(delivery) });
+});
+
+exports.getDeliveryByOrder = asyncHandler(async (req, res) => {
+  const delivery = await db('deliveries').findOne({ orderId: req.params.orderId });
+  if (!delivery) {
+    throw new ApiError(404, 'Delivery record not found');
   }
-};
 
-exports.getAllDeliveries = async (req, res) => {
-  try {
-    const { status, mode, page = 1, limit = 20 } = req.query;
-
-    const query = {};
-    if (status) query.status = status;
-    if (mode) query.mode = mode;
-
-    const skip = (page - 1) * limit;
-    const deliveries = await db('deliveries').find(query, { sort: { createdAt: -1 }, limit: Number(limit), skip });
-    const count = await db('deliveries').countDocuments(query);
-
-    const mapped = [];
-    for (const d of deliveries) {
-      mapped.push(await populateDelivery(mapDeliveryRow(d)));
-    }
-
-    res.json({ success: true, data: { deliveries: mapped, total: count, pages: Math.ceil(count / limit), currentPage: page } });
-  } catch (error) {
-    console.error('Get all deliveries error:', error);
-    res.status(500).json({ success: false, error: error.message || 'Failed to fetch deliveries' });
+  const userId = typeof delivery.userId === 'string' ? delivery.userId : delivery.userId?.id || delivery.userId?._id;
+  if (userId !== req.user.id && req.user.role !== 'admin') {
+    throw new ApiError(403, 'Not authorized');
   }
-};
+
+  const populated = await populateDelivery(mapDeliveryRow(delivery));
+  res.json({ success: true, data: populated });
+});
+
+exports.updateDeliveryStatus = asyncHandler(async (req, res) => {
+  const { status, location, note } = req.body;
+
+  if (!status) {
+    throw new ApiError(400, 'Status is required');
+  }
+
+  const delivery = await db('deliveries').findById(req.params.id);
+  if (!delivery) {
+    throw new ApiError(404, 'Delivery not found');
+  }
+
+  const updates = { status };
+  if (location) {
+    updates.location_latitude = location.latitude;
+    updates.location_longitude = location.longitude;
+    updates.location_lastUpdated = new Date().toISOString();
+  }
+
+  if (status === 'picked-up') updates.pickedUpAt = new Date().toISOString();
+  if (status === 'delivered') updates.deliveredAt = new Date().toISOString();
+
+  await db('deliveries').updateById(delivery.id, updates);
+
+  await db('delivery_status_history').create({
+    id: generateId(),
+    deliveryId: delivery.id,
+    status,
+    note: note || null,
+    location_latitude: location?.latitude || null,
+    location_longitude: location?.longitude || null,
+  });
+
+  const updated = await db('deliveries').findById(delivery.id);
+
+  const io = req.app.get('io');
+  notifyDeliveryStatusChanged(io, updated);
+
+  res.json({ success: true, message: 'Delivery status updated', data: mapDeliveryRow(updated) });
+});
+
+exports.getMyDeliveries = asyncHandler(async (req, res) => {
+  const deliveries = await db('deliveries').find({ userId: req.user.id }, { sort: { createdAt: -1 } });
+  const mapped = [];
+  for (const d of deliveries) {
+    mapped.push(await populateDelivery(mapDeliveryRow(d)));
+  }
+
+  res.json({ success: true, data: { deliveries: mapped, total: mapped.length } });
+});
+
+exports.getAllDeliveries = asyncHandler(async (req, res) => {
+  const { status, mode, page = 1, limit = 20 } = req.query;
+
+  const query = {};
+  if (status) query.status = status;
+  if (mode) query.mode = mode;
+
+  const skip = (page - 1) * limit;
+  const deliveries = await db('deliveries').find(query, { sort: { createdAt: -1 }, limit: Number(limit), skip });
+  const count = await db('deliveries').countDocuments(query);
+
+  const mapped = [];
+  for (const d of deliveries) {
+    mapped.push(await populateDelivery(mapDeliveryRow(d)));
+  }
+
+  res.json({ success: true, data: { deliveries: mapped, total: count, pages: Math.ceil(count / limit), currentPage: page } });
+});

@@ -75,7 +75,7 @@ const optionalAuth = async (req, res, next) => {
     if (token) {
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = db('users').findById(decoded.id);
+        const user = await db('users').findById(decoded.id);
         if (user) {
           const mapped = mapUserRow(user);
           delete mapped.password;

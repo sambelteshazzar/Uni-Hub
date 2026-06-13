@@ -1,123 +1,80 @@
+const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { db, mapProductRow } = require('../utils/db');
 
-async function getWishlist (req, res) {
-  try {
-    const wishlistItems = await db('wishlists').find(
-      { user: req.user.id },
-      { sort: { createdAt: -1 } },
-    );
+exports.getWishlist = asyncHandler(async (req, res) => {
+  const wishlistItems = await db('wishlists').find(
+    { user: req.user.id },
+    { sort: { createdAt: -1 } },
+  );
 
-    const products = [];
-    for (const item of wishlistItems) {
-      const product = await db('products').findById(item.product);
-      if (product) {
-        products.push({
-          ...product,
-          id: product.id || product._id,
-        });
-      }
-    }
-
-    res.json({
-      success: true,
-      data: products,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch wishlist',
-    });
-  }
-}
-
-async function addToWishlist (req, res) {
-  try {
-    const { productId } = req.params;
-
-    const product = await db('products').findById(productId);
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        error: 'Product not found',
+  const products = [];
+  for (const item of wishlistItems) {
+    const product = await db('products').findById(item.product);
+    if (product) {
+      products.push({
+        ...product,
+        id: product.id || product._id,
       });
     }
-
-    const existing = await db('wishlists').findOne({
-      user: req.user.id,
-      product: productId,
-    });
-
-    if (existing) {
-      return res.status(409).json({
-        success: false,
-        error: 'Product already in wishlist',
-      });
-    }
-
-    await db('wishlists').create({
-      user: req.user.id,
-      product: productId,
-    });
-
-    res.status(201).json({
-      success: true,
-      message: 'Product added to wishlist',
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: 'Failed to add to wishlist',
-    });
   }
-}
 
-async function removeFromWishlist (req, res) {
-  try {
-    const { productId } = req.params;
+  res.json({
+    success: true,
+    data: products,
+  });
+});
 
-    const result = await db('wishlists').deleteOne({
-      user: req.user.id,
-      product: productId,
-    });
+exports.addToWishlist = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
 
-    if (result === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'Product not found in wishlist',
-      });
-    }
-
-    res.json({
-      success: true,
-      message: 'Product removed from wishlist',
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: 'Failed to remove from wishlist',
-    });
+  const product = await db('products').findById(productId);
+  if (!product) {
+    throw new ApiError(404, 'Product not found');
   }
-}
 
-async function clearWishlist (req, res) {
-  try {
-    await db('wishlists').deleteMany({ user: req.user.id });
+  const existing = await db('wishlists').findOne({
+    user: req.user.id,
+    product: productId,
+  });
 
-    res.json({
-      success: true,
-      message: 'Wishlist cleared',
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: 'Failed to clear wishlist',
-    });
+  if (existing) {
+    throw new ApiError(409, 'Product already in wishlist');
   }
-}
 
-module.exports = {
-  getWishlist,
-  addToWishlist,
-  removeFromWishlist,
-  clearWishlist,
-};
+  await db('wishlists').create({
+    user: req.user.id,
+    product: productId,
+  });
+
+  res.status(201).json({
+    success: true,
+    message: 'Product added to wishlist',
+  });
+});
+
+exports.removeFromWishlist = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+
+  const result = await db('wishlists').deleteOne({
+    user: req.user.id,
+    product: productId,
+  });
+
+  if (result === 0) {
+    throw new ApiError(404, 'Product not found in wishlist');
+  }
+
+  res.json({
+    success: true,
+    message: 'Product removed from wishlist',
+  });
+});
+
+exports.clearWishlist = asyncHandler(async (req, res) => {
+  await db('wishlists').deleteMany({ user: req.user.id });
+
+  res.json({
+    success: true,
+    message: 'Wishlist cleared',
+  });
+});

@@ -3,8 +3,7 @@ const { db, generateId, toBool, fromBool } = require('../utils/db');
 const { sendVerificationEmail } = require('../utils/emailService');
 const crypto = require('crypto');
 
-exports.submitVerification = async (req, res) => {
-try {
+exports.submitVerification = asyncHandler(async (req, res) => {
 const {
 studentId,
 fullName,
@@ -25,10 +24,7 @@ status: 'approved',
 });
 
 if (existing) {
-return res.status(400).json({
-success: false,
-error: 'This student ID is already verified',
-});
+throw new ApiError(400, 'This student ID is already verified');
 }
 
 const verificationData = {
@@ -75,17 +71,9 @@ success: true,
 message: 'Verification submitted for review',
 data: verification,
 });
-} catch (error) {
-console.error('Submit verification error:', error);
-res.status(500).json({
-success: false,
-error: error.message || 'Failed to submit verification',
 });
-}
-};
 
-exports.getPendingVerifications = async (req, res) => {
-try {
+exports.getPendingVerifications = asyncHandler(async (req, res) => {
 const verifications = await db('student_verifications').find(
 { status: 'pending' },
 { sort: { createdAt: -1 } },
@@ -107,26 +95,15 @@ verifications: populatedVerifications,
 total: populatedVerifications.length,
 },
 });
-} catch (error) {
-console.error('Get pending verifications error:', error);
-res.status(500).json({
-success: false,
-error: error.message || 'Failed to fetch verifications',
 });
-}
-};
 
-exports.approveVerification = async (req, res) => {
-try {
+exports.approveVerification = asyncHandler(async (req, res) => {
 const { notes } = req.body;
 
 const verification = await db('student_verifications').findById(req.params.id);
 
 if (!verification) {
-return res.status(404).json({
-success: false,
-error: 'Verification request not found',
-});
+throw new ApiError(404, 'Verification request not found');
 }
 
 await db('student_verifications').updateById(verification.id, {
@@ -153,26 +130,15 @@ success: true,
 message: 'Verification approved',
 data: await db('student_verifications').findById(verification.id),
 });
-} catch (error) {
-console.error('Approve verification error:', error);
-res.status(500).json({
-success: false,
-error: error.message || 'Failed to approve verification',
 });
-}
-};
 
-exports.rejectVerification = async (req, res) => {
-try {
+exports.rejectVerification = asyncHandler(async (req, res) => {
 const { notes } = req.body;
 
 const verification = await db('student_verifications').findById(req.params.id);
 
 if (!verification) {
-return res.status(404).json({
-success: false,
-error: 'Verification request not found',
-});
+throw new ApiError(404, 'Verification request not found');
 }
 
 await db('student_verifications').updateById(verification.id, {
@@ -187,17 +153,9 @@ success: true,
 message: 'Verification rejected',
 data: await db('student_verifications').findById(verification.id),
 });
-} catch (error) {
-console.error('Reject verification error:', error);
-res.status(500).json({
-success: false,
-error: error.message || 'Failed to reject verification',
 });
-}
-};
 
-exports.getVerificationStatus = async (req, res) => {
-try {
+exports.getVerificationStatus = asyncHandler(async (req, res) => {
 const { studentId, university } = req.params;
 
 const verification = await db('student_verifications').findOne({
@@ -231,17 +189,9 @@ reviewedAt: latestVerification.reviewedAt,
 reviewNotes: latestVerification.reviewNotes,
 },
 });
-} catch (error) {
-console.error('Get verification status error:', error);
-res.status(500).json({
-success: false,
-error: error.message || 'Failed to get verification status',
 });
-}
-};
 
-exports.getMyVerificationStatus = async (req, res) => {
-try {
+exports.getMyVerificationStatus = asyncHandler(async (req, res) => {
 const userId = req.user.id;
 
 const latestVerifications = await db('student_verifications').find(
@@ -273,11 +223,4 @@ reviewedAt: latestVerification.reviewedAt,
 reviewNotes: latestVerification.reviewNotes,
 },
 });
-} catch (error) {
-console.error('Get my verification status error:', error);
-res.status(500).json({
-success: false,
-error: error.message || 'Failed to get verification status',
 });
-}
-};

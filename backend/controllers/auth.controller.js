@@ -144,114 +144,81 @@ exports.login = asyncHandler(async (req, res) => {
  * @route GET /api/auth/me
  * @access Private
  */
-exports.getMe = async (req, res) => {
-  try {
-    const user = await db('users').findById(req.user.id);
-    const mappedUser = mapUserRow(user);
+exports.getMe = asyncHandler(async (req, res) => {
+  const user = await db('users').findById(req.user.id);
+  const mappedUser = mapUserRow(user);
 
-    res.json({
-      success: true,
-      data: getPublicProfile(mappedUser),
-    });
-  } catch (error) {
-    console.error('Get profile error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Failed to get profile',
-    });
-  }
-};
+  if (!user) throw new ApiError(404, 'User not found');
+
+  res.json({
+    success: true,
+    data: getPublicProfile(mappedUser),
+  });
+});
 
 /**
  * @desc Update user profile
  * @route PUT /api/auth/profile
  * @access Private
  */
-exports.updateProfile = async (req, res) => {
-  try {
-    const { fullName, phone, bio, hall, level } = req.body;
+exports.updateProfile = asyncHandler(async (req, res) => {
+  const { fullName, phone, bio, hall, level } = req.body;
 
-    const user = await db('users').findById(req.user.id);
+  const user = await db('users').findById(req.user.id);
 
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        error: 'User not found',
-      });
-    }
+  if (!user) throw new ApiError(404, 'User not found');
 
-    const updates = {};
-    if (fullName) updates.fullName = fullName;
-    if (phone) updates.phone = phone;
-    if (bio) updates.bio = bio;
-    if (hall) updates.hall = hall;
-    if (level) updates.level = level;
+  const updates = {};
+  if (fullName) updates.fullName = fullName;
+  if (phone) updates.phone = phone;
+  if (bio) updates.bio = bio;
+  if (hall) updates.hall = hall;
+  if (level) updates.level = level;
 
-    const updatedUser = await db('users').updateById(user.id, updates);
-    const mappedUser = mapUserRow(updatedUser);
+  const updatedUser = await db('users').updateById(user.id, updates);
+  const mappedUser = mapUserRow(updatedUser);
 
-    res.json({
-      success: true,
-      message: 'Profile updated successfully',
-      data: getPublicProfile(mappedUser),
-    });
-  } catch (error) {
-    console.error('Update profile error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Failed to update profile',
-    });
-  }
-};
+  res.json({
+    success: true,
+    message: 'Profile updated successfully',
+    data: getPublicProfile(mappedUser),
+  });
+});
 
 /**
  * @desc Change password
  * @route PUT /api/auth/change-password
  * @access Private
  */
-exports.changePassword = async (req, res) => {
-  try {
-    const { currentPassword, newPassword } = req.body;
+exports.changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
 
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({
-        success: false,
-        error: 'Please provide current and new password',
-      });
-    }
-
-    const user = await db('users').findById(req.user.id);
-
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
-
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        error: 'Current password is incorrect',
-      });
-    }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
-    await db('users').updateById(user.id, {
-      password: hashedPassword,
-      passwordChangedAt: new Date().toISOString(),
-    });
-
-    const mappedUser = mapUserRow(user);
-    await logActivity('password_change', mappedUser, { email: mappedUser.email }, 'warning', req);
-
-    res.json({
-      success: true,
-      message: 'Password changed successfully',
-    });
-  } catch (error) {
-    console.error('Change password error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Failed to change password',
-    });
+  if (!currentPassword || !newPassword) {
+    throw new ApiError(400, 'Please provide current and new password');
   }
-};
+
+  const user = await db('users').findById(req.user.id);
+
+  const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+  if (!isMatch) {
+    throw new ApiError(401, 'Current password is incorrect');
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 12);
+  await db('users').updateById(user.id, {
+    password: hashedPassword,
+    passwordChangedAt: new Date().toISOString(),
+  });
+
+  const mappedUser = mapUserRow(user);
+  await logActivity('password_change', mappedUser, { email: mappedUser.email }, 'warning', req);
+
+  res.json({
+    success: true,
+    message: 'Password changed successfully',
+  });
+});
 
 /**
  * @desc Request password reset (sends email with reset link)

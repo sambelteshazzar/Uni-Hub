@@ -6,10 +6,10 @@
  */
 
 const { db, mapUserRow, mapProductRow } = require('../utils/db');
-const { ApiError } = require('../utils/errorHandler');
+const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const logActivity = require('../utils/logActivity');
 
-exports.getDashboardStats = async (req, res) => {
+exports.getDashboardStats = asyncHandler(async (req, res) => {
 const totalUsers = await db('users').countDocuments();
 const totalProducts = await db('products').countDocuments();
 const totalOrders = await db('orders').countDocuments();
@@ -42,9 +42,9 @@ pendingVerifications,
 recentOrders: ordersWithUser,
 },
 });
-};
+});
 
-exports.getAdminProducts = async (req, res) => {
+exports.getAdminProducts = asyncHandler(async (req, res) => {
 const { status, university, page = 1, limit = 20 } = req.query;
 
 const query = {};
@@ -75,9 +75,9 @@ total,
 page: Number(page),
 },
 });
-};
+});
 
-exports.getAdminOrders = async (req, res) => {
+exports.getAdminOrders = asyncHandler(async (req, res) => {
 const { status, page = 1, limit = 20 } = req.query;
 
 const query = {};
@@ -107,9 +107,9 @@ total,
 page: Number(page),
 },
 });
-};
+});
 
-exports.approveProduct = async (req, res) => {
+exports.approveProduct = asyncHandler(async (req, res) => {
 const product = await db('products').findById(req.params.id);
 
 if (!product) {
@@ -129,9 +129,9 @@ success: true,
 message: 'Product approved successfully',
 data: { ...updated, _id: updated.id },
 });
-};
+});
 
-exports.rejectProduct = async (req, res) => {
+exports.rejectProduct = asyncHandler(async (req, res) => {
 const product = await db('products').findById(req.params.id);
 
 if (!product) {
@@ -156,9 +156,9 @@ success: true,
 message: 'Product rejected successfully',
 data: { ...updated, _id: updated.id },
 });
-};
+});
 
-exports.banUser = async (req, res) => {
+exports.banUser = asyncHandler(async (req, res) => {
 const { reason, action } = req.body;
 
 if (!action || !['ban', 'unban'].includes(action)) {
@@ -217,9 +217,9 @@ banReason: updated.banReason,
 bannedAt: updated.bannedAt,
 },
 });
-};
+});
 
-exports.getBannedUsers = async (req, res) => {
+exports.getBannedUsers = asyncHandler(async (req, res) => {
 const { page = 1, limit = 20 } = req.query;
 
 const bannedUsers = await db('users').find({ isSuspended: 1 }, {
@@ -247,9 +247,9 @@ page: Number(page),
 pages: Math.ceil(total / limit),
 },
 });
-};
+});
 
-exports.getActivityLogs = async (req, res) => {
+exports.getActivityLogs = asyncHandler(async (req, res) => {
 const { action, severity, userId, startDate, endDate, page = 1, limit = 50 } = req.query;
 
 const query = {};
@@ -279,9 +279,9 @@ page: Number(page),
 pages: Math.ceil(total / limit),
 },
 });
-};
+});
 
-exports.getActivityStats = async (req, res) => {
+exports.getActivityStats = asyncHandler(async (req, res) => {
 const today = new Date();
 today.setHours(0, 0, 0, 0);
 const weekAgo = new Date(today);
@@ -309,9 +309,9 @@ res.json({
 success: true,
 data: { totalToday, totalThisWeek, byAction, bySeverity },
 });
-};
+});
 
-exports.getOnlineUsers = async (req, res) => {
+exports.getOnlineUsers = asyncHandler(async (req, res) => {
 const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
 const recentLogins = await db('activity_logs').find(
 { action: 'login', createdAt: { $gte: fiveMinAgo.toISOString() } },
@@ -332,9 +332,9 @@ onlineCount: onlineUsers.length,
 users: onlineUsers,
 },
 });
-};
+});
 
-exports.adminCreateProduct = async (req, res) => {
+exports.adminCreateProduct = asyncHandler(async (req, res) => {
 const { title, description, price, category, condition, images, deliveryModes, paymentModes, university } = req.body;
 
 const product = await db('products').create({
@@ -361,9 +361,9 @@ success: true,
 message: 'Product created by admin',
 data: { ...product, _id: product.id },
 });
-};
+});
 
-exports.adminUpdateProduct = async (req, res) => {
+exports.adminUpdateProduct = asyncHandler(async (req, res) => {
 const product = await db('products').findById(req.params.id);
 
 if (!product) {
@@ -387,9 +387,9 @@ success: true,
 message: 'Product updated by admin',
 data: { ...updated, _id: updated.id },
 });
-};
+});
 
-exports.adminDeleteProduct = async (req, res) => {
+exports.adminDeleteProduct = asyncHandler(async (req, res) => {
 const product = await db('products').findById(req.params.id);
 
 if (!product) {
@@ -404,9 +404,9 @@ res.json({
 success: true,
 message: 'Product deleted by admin',
 });
-};
+});
 
-exports.getAnalytics = async (req, res) => {
+exports.getAnalytics = asyncHandler(async (req, res) => {
 const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
 const revenueRows = await db('orders').rawAll(
@@ -441,4 +441,4 @@ users: userRows.map(r => ({ date: r.date, count: r.count })),
 topProducts: topProducts.map(r => ({ productId: r.productId, title: r.title, sold: r.sold })),
 },
 });
-};
+});

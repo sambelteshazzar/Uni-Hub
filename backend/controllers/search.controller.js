@@ -1,11 +1,11 @@
+const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { db, mapProductRow, parseJson } = require('../utils/db');
 
 function escapeRegex (str) {
 return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-async function advancedSearch (req, res) {
-try {
+exports.advancedSearch = asyncHandler(async (req, res) => {
 const {
 query,
 university,
@@ -98,16 +98,9 @@ hasPrevPage: pageNum > 1,
 filters: { query, university, category, conditions, priceMin, priceMax, sortBy },
 },
 });
-} catch (error) {
-res.status(500).json({
-success: false,
-error: 'Search failed',
 });
-}
-}
 
-async function getSuggestions (req, res) {
-try {
+exports.getSuggestions = asyncHandler(async (req, res) => {
 const { q } = req.query;
 
 if (!q || q.length < 2) {
@@ -145,16 +138,9 @@ res.json({
 success: true,
 data: suggestions.slice(0, 8),
 });
-} catch (error) {
-res.status(500).json({
-success: false,
-error: 'Failed to get suggestions',
 });
-}
-}
 
-async function getTrending (req, res) {
-try {
+exports.getTrending = asyncHandler(async (req, res) => {
 const trending = await db('products').rawAll(
 `SELECT category as _id, SUM(views) as count FROM products WHERE status = ? GROUP BY category ORDER BY count DESC LIMIT 5`,
 'active'
@@ -166,16 +152,9 @@ res.json({
 success: true,
 data: data.length > 0 ? data : ['electronics', 'textbooks', 'appliances', 'fashion', 'accessories'],
 });
-} catch (error) {
-res.json({
-success: true,
-data: ['electronics', 'textbooks', 'appliances', 'fashion', 'accessories'],
 });
-}
-}
 
-async function getSearchHistory (req, res) {
-try {
+exports.getSearchHistory = asyncHandler(async (req, res) => {
 const history = await db('search_history').find(
 { user: req.user.id },
 { sort: { createdAt: -1 }, limit: 10 },
@@ -187,23 +166,13 @@ res.json({
 success: true,
 data,
 });
-} catch (error) {
-res.status(500).json({
-success: false,
-error: 'Failed to get search history',
 });
-}
-}
 
-async function addSearchHistory (req, res) {
-try {
+exports.addSearchHistory = asyncHandler(async (req, res) => {
 const { query } = req.body;
 
 if (!query || !query.trim()) {
-return res.status(400).json({
-success: false,
-error: 'Query is required',
-});
+throw new ApiError(400, 'Query is required');
 }
 
 const trimmed = query.trim();
@@ -233,32 +202,18 @@ res.status(201).json({
 success: true,
 message: 'Search added to history',
 });
-} catch (error) {
-res.status(500).json({
-success: false,
-error: 'Failed to add search history',
 });
-}
-}
 
-async function clearSearchHistory (req, res) {
-try {
+exports.clearSearchHistory = asyncHandler(async (req, res) => {
 await db('search_history').deleteMany({ user: req.user.id });
 
 res.json({
 success: true,
 message: 'Search history cleared',
 });
-} catch (error) {
-res.status(500).json({
-success: false,
-error: 'Failed to clear search history',
 });
-}
-}
 
-async function removeSearchHistoryItem (req, res) {
-try {
+exports.removeSearchHistoryItem = asyncHandler(async (req, res) => {
 const { query } = req.params;
 
 await db('search_history').deleteOne({
@@ -270,20 +225,4 @@ res.json({
 success: true,
 message: 'Search removed from history',
 });
-} catch (error) {
-res.status(500).json({
-success: false,
-error: 'Failed to remove search from history',
 });
-}
-}
-
-module.exports = {
-advancedSearch,
-getSuggestions,
-getTrending,
-getSearchHistory,
-addSearchHistory,
-clearSearchHistory,
-removeSearchHistoryItem,
-};

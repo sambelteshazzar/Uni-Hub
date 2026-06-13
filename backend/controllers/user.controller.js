@@ -1,3 +1,4 @@
+const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { db } = require('../utils/db');
 
 function getPublicProfile (user) {
@@ -23,121 +24,78 @@ function getPublicProfile (user) {
   };
 }
 
-async function getUsers (req, res) {
-  try {
-    const { university, role, page = 1, limit = 20 } = req.query;
+exports.getUsers = asyncHandler(async (req, res) => {
+  const { university, role, page = 1, limit = 20 } = req.query;
 
-    const where = {};
-    if (university) { where.university = university; }
-    if (role) { where.role = role; }
+  const where = {};
+  if (university) { where.university = university; }
+  if (role) { where.role = role; }
 
-    const users = await db('users').find(where, {
-      sort: { createdAt: -1 },
-      limit: Number(limit),
-      skip: (page - 1) * limit,
-    });
+  const users = await db('users').find(where, {
+    sort: { createdAt: -1 },
+    limit: Number(limit),
+    skip: (page - 1) * limit,
+  });
 
-    const total = await db('users').countDocuments(where);
+  const total = await db('users').countDocuments(where);
 
-    res.json({
-      success: true,
-      data: {
-        users: users.map(u => getPublicProfile(u)),
-        total,
-        page: Number(page),
-      },
-    });
-  } catch (error) {
-    console.error('Get users error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Failed to fetch users',
-    });
+  res.json({
+    success: true,
+    data: {
+      users: users.map(u => getPublicProfile(u)),
+      total,
+      page: Number(page),
+    },
+  });
+});
+
+exports.getUser = asyncHandler(async (req, res) => {
+  const user = await db('users').findById(req.params.id);
+
+  if (!user) {
+    throw new ApiError(404, 'User not found');
   }
-}
 
-async function getUser (req, res) {
-  try {
-    const user = await db('users').findById(req.params.id);
+  res.json({
+    success: true,
+    data: getPublicProfile(user),
+  });
+});
 
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        error: 'User not found',
-      });
-    }
+exports.updateUser = asyncHandler(async (req, res) => {
+  const { isSuspended, role, isVerified } = req.body;
 
-    res.json({
-      success: true,
-      data: getPublicProfile(user),
-    });
-  } catch (error) {
-    console.error('Get user error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Failed to fetch user',
-    });
+  const user = await db('users').findById(req.params.id);
+
+  if (!user) {
+    throw new ApiError(404, 'User not found');
   }
-}
 
-async function updateUser (req, res) {
-  try {
-    const { isSuspended, role, isVerified } = req.body;
+  const updates = {};
+  if (isSuspended !== undefined) { updates.isSuspended = isSuspended; }
+  if (role !== undefined) { updates.role = role; }
+  if (isVerified !== undefined) { updates.isVerified = isVerified; }
 
-    const user = await db('users').findById(req.params.id);
+  const updated = await db('users').updateById(req.params.id, updates);
 
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        error: 'User not found',
-      });
-    }
+  res.json({
+    success: true,
+    message: 'User updated',
+    data: getPublicProfile(updated),
+  });
+});
 
-    const updates = {};
-    if (isSuspended !== undefined) { updates.isSuspended = isSuspended; }
-    if (role !== undefined) { updates.role = role; }
-    if (isVerified !== undefined) { updates.isVerified = isVerified; }
+exports.deleteUser = asyncHandler(async (req, res) => {
+  const user = await db('users').findById(req.params.id);
 
-    const updated = await db('users').updateById(req.params.id, updates);
-
-    res.json({
-      success: true,
-      message: 'User updated',
-      data: getPublicProfile(updated),
-    });
-  } catch (error) {
-    console.error('Update user error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Failed to update user',
-    });
+  if (!user) {
+    throw new ApiError(404, 'User not found');
   }
-}
 
-async function deleteUser (req, res) {
-  try {
-    const user = await db('users').findById(req.params.id);
+  await db('users').updateById(req.params.id, { isActive: false });
 
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        error: 'User not found',
-      });
-    }
-
-    await db('users').updateById(req.params.id, { isActive: false });
-
-    res.json({
-      success: true,
-      message: 'User deactivated',
-    });
-  } catch (error) {
-    console.error('Delete user error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Failed to delete user',
-    });
-  }
-}
-
-module.exports = { getUsers, getUser, updateUser, deleteUser };
+  res.json({
+    success: true,
+    message: 'User deactivated',
+  });
+});

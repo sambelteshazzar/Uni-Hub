@@ -40,46 +40,30 @@ console.error('Failed to update seller rating:', error);
 }
 }
 
-exports.createReview = async (req, res) => {
-try {
+exports.createReview = asyncHandler(async (req, res) => {
 const { sellerId, productId, orderId, rating, comment, detailedRatings } = req.body;
 
 if (!sellerId || !rating) {
-return res.status(400).json({
-success: false,
-error: 'Seller ID and rating are required',
-});
+throw new ApiError(400, 'Seller ID and rating are required');
 }
 
 if (rating < 1 || rating > 5) {
-return res.status(400).json({
-success: false,
-error: 'Rating must be between 1 and 5',
-});
+throw new ApiError(400, 'Rating must be between 1 and 5');
 }
 
 if (sellerId === req.user.id) {
-return res.status(400).json({
-success: false,
-error: 'You cannot review yourself',
-});
+throw new ApiError(400, 'You cannot review yourself');
 }
 
 const seller = await db('users').findById(sellerId);
 if (!seller) {
-return res.status(404).json({
-success: false,
-error: 'Seller not found',
-});
+throw new ApiError(404, 'Seller not found');
 }
 
 if (orderId) {
 const order = await db('orders').findById(orderId);
 if (!order) {
-return res.status(404).json({
-success: false,
-error: 'Order not found',
-});
+throw new ApiError(404, 'Order not found');
 }
 
 const isCustomer = order.userId === req.user.id;
@@ -87,10 +71,7 @@ const orderItems = await db('order_items').find({ orderId });
 const isSeller = orderItems.some(item => item.seller === req.user.id);
 
 if (!isCustomer && !isSeller) {
-return res.status(403).json({
-success: false,
-error: 'You were not involved in this transaction',
-});
+throw new ApiError(403, 'You were not involved in this transaction');
 }
 
 const existingReview = await db('reviews').findOne({
@@ -100,10 +81,7 @@ order: orderId,
 });
 
 if (existingReview) {
-return res.status(400).json({
-success: false,
-error: 'You have already reviewed this transaction',
-});
+throw new ApiError(400, 'You have already reviewed this transaction');
 }
 }
 
@@ -142,17 +120,9 @@ success: true,
 message: 'Review submitted successfully',
 data: populatedReview,
 });
-} catch (error) {
-console.error('Create review error:', error);
-res.status(500).json({
-success: false,
-error: error.message || 'Failed to submit review',
 });
-}
-};
 
-exports.getSellerReviews = async (req, res) => {
-try {
+exports.getSellerReviews = asyncHandler(async (req, res) => {
 const { sellerId } = req.params;
 const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = -1 } = req.query;
 
@@ -161,10 +131,7 @@ const safeSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
 
 const seller = await db('users').findById(sellerId);
 if (!seller) {
-return res.status(404).json({
-success: false,
-error: 'Seller not found',
-});
+throw new ApiError(404, 'Seller not found');
 }
 
 const pageNum = parseInt(page);
@@ -202,17 +169,9 @@ totalReviews: averageRating.totalReviews,
 ratingBreakdown: averageRating.ratingBreakdown,
 },
 });
-} catch (error) {
-console.error('Get seller reviews error:', error);
-res.status(500).json({
-success: false,
-error: error.message || 'Failed to get reviews',
 });
-}
-};
 
-exports.getSellerRatingSummary = async (req, res) => {
-try {
+exports.getSellerRatingSummary = asyncHandler(async (req, res) => {
 const { sellerId } = req.params;
 
 const summary = await calculateAverageRating(sellerId);
@@ -221,17 +180,9 @@ res.json({
 success: true,
 data: summary,
 });
-} catch (error) {
-console.error('Get rating summary error:', error);
-res.status(500).json({
-success: false,
-error: error.message || 'Failed to get rating summary',
 });
-}
-};
 
-exports.getMyReviews = async (req, res) => {
-try {
+exports.getMyReviews = asyncHandler(async (req, res) => {
 const { page = 1, limit = 10 } = req.query;
 
 const pageNum = parseInt(page);
@@ -264,42 +215,25 @@ pages: Math.ceil(count / limitNum),
 currentPage: pageNum,
 },
 });
-} catch (error) {
-console.error('Get my reviews error:', error);
-res.status(500).json({
-success: false,
-error: error.message || 'Failed to get reviews',
 });
-}
-};
 
-exports.updateReview = async (req, res) => {
-try {
+exports.updateReview = asyncHandler(async (req, res) => {
 const { rating, comment, detailedRatings } = req.body;
 
 const review = await db('reviews').findById(req.params.id);
 
 if (!review) {
-return res.status(404).json({
-success: false,
-error: 'Review not found',
-});
+throw new ApiError(404, 'Review not found');
 }
 
 if (review.reviewer !== req.user.id) {
-return res.status(403).json({
-success: false,
-error: 'Not authorized to update this review',
-});
+throw new ApiError(403, 'Not authorized to update this review');
 }
 
 const updateData = {};
 if (rating) {
 if (rating < 1 || rating > 5) {
-return res.status(400).json({
-success: false,
-error: 'Rating must be between 1 and 5',
-});
+throw new ApiError(400, 'Rating must be between 1 and 5');
 }
 updateData.rating = rating;
 }
@@ -334,34 +268,20 @@ reviewer: reviewer ? { id: reviewer.id, fullName: reviewer.fullName, avatar: rev
 product: product ? { id: product.id, title: product.title, images: parseJson(product.images) } : null,
 },
 });
-} catch (error) {
-console.error('Update review error:', error);
-res.status(500).json({
-success: false,
-error: error.message || 'Failed to update review',
 });
-}
-};
 
-exports.deleteReview = async (req, res) => {
-try {
+exports.deleteReview = asyncHandler(async (req, res) => {
 const review = await db('reviews').findById(req.params.id);
 
 if (!review) {
-return res.status(404).json({
-success: false,
-error: 'Review not found',
-});
+throw new ApiError(404, 'Review not found');
 }
 
 const isAdmin = req.user.role === 'admin';
 const isOwner = review.reviewer === req.user.id;
 
 if (!isOwner && !isAdmin) {
-return res.status(403).json({
-success: false,
-error: 'Not authorized to delete this review',
-});
+throw new ApiError(403, 'Not authorized to delete this review');
 }
 
 const sellerId = review.seller;
@@ -373,24 +293,13 @@ res.json({
 success: true,
 message: 'Review deleted successfully',
 });
-} catch (error) {
-console.error('Delete review error:', error);
-res.status(500).json({
-success: false,
-error: error.message || 'Failed to delete review',
 });
-}
-};
 
-exports.markHelpful = async (req, res) => {
-try {
+exports.markHelpful = asyncHandler(async (req, res) => {
 const review = await db('reviews').findById(req.params.id);
 
 if (!review) {
-return res.status(404).json({
-success: false,
-error: 'Review not found',
-});
+throw new ApiError(404, 'Review not found');
 }
 
 const votes = parseJson(review.helpfulVotes) || [];
@@ -406,24 +315,13 @@ success: true,
 message: 'Review marked as helpful',
 data: { helpfulCount: votes.length },
 });
-} catch (error) {
-console.error('Mark helpful error:', error);
-res.status(500).json({
-success: false,
-error: error.message || 'Failed to mark review as helpful',
 });
-}
-};
 
-exports.reportReview = async (req, res) => {
-try {
+exports.reportReview = asyncHandler(async (req, res) => {
 const review = await db('reviews').findById(req.params.id);
 
 if (!review) {
-return res.status(404).json({
-success: false,
-error: 'Review not found',
-});
+throw new ApiError(404, 'Review not found');
 }
 
 await db('reviews').updateById(review.id, {
@@ -434,40 +332,23 @@ res.json({
 success: true,
 message: 'Review reported successfully',
 });
-} catch (error) {
-console.error('Report review error:', error);
-res.status(500).json({
-success: false,
-error: error.message || 'Failed to report review',
 });
-}
-};
 
-exports.respondToReview = async (req, res) => {
-try {
+exports.respondToReview = asyncHandler(async (req, res) => {
 const { comment } = req.body;
 
 if (!comment) {
-return res.status(400).json({
-success: false,
-error: 'Response comment is required',
-});
+throw new ApiError(400, 'Response comment is required');
 }
 
 const review = await db('reviews').findById(req.params.id);
 
 if (!review) {
-return res.status(404).json({
-success: false,
-error: 'Review not found',
-});
+throw new ApiError(404, 'Review not found');
 }
 
 if (review.seller !== req.user.id) {
-return res.status(403).json({
-success: false,
-error: 'Only the seller can respond to this review',
-});
+throw new ApiError(403, 'Only the seller can respond to this review');
 }
 
 await db('reviews').updateById(review.id, {
@@ -482,11 +363,4 @@ success: true,
 message: 'Response added successfully',
 data: mapReviewRow(updatedReview),
 });
-} catch (error) {
-console.error('Respond to review error:', error);
-res.status(500).json({
-success: false,
-error: error.message || 'Failed to respond to review',
 });
-}
-};

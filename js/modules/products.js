@@ -39,6 +39,7 @@ class ProductsManager {
             this.products = data.data.products;
             this.filteredProducts = [...this.products];
             this._backendAvailable = true;
+            window._backendAvailable = true;
             if (data.data.pagination) {
               this._totalFromServer = data.data.pagination.total;
               this._totalPagesFromServer = data.data.pagination.pages;
@@ -171,6 +172,7 @@ class ProductsManager {
       const data = await api.products.getAll(params);
       if (data.success && data.data) {
         this._backendAvailable = true;
+        window._backendAvailable = true;
         this._lastServerPage = page;
         if (data.data.pagination) {
           this._totalFromServer = data.data.pagination.total;
@@ -188,6 +190,7 @@ class ProductsManager {
     }
 
     this._backendAvailable = false;
+    window._backendAvailable = false;
     return null;
   }
 

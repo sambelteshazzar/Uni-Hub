@@ -886,12 +886,22 @@ return `
   /**
    * Render Product Detail Page - Modern Professional Design
    */
- static renderProductDetail (productId) {
+ static async renderProductDetail (productId) {
   if (!window.location.hash.includes('/product/' + productId)) {
    window.location.hash = '#/product/' + productId;
    return;
   }
-  const product = productsManager.getById(productId);
+  let product = productsManager.getById(productId);
+
+if (!product && typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
+  try {
+    const resp = await api.products.getById(productId);
+    if (resp.success && resp.data) {
+      product = resp.data;
+      productsManager.products.unshift(product);
+    }
+  } catch (_) {}
+}
 
 if (!product) {
 showToast('Product not found', 'warning');
@@ -3902,8 +3912,16 @@ static renderAdminLogin () {
   /**
    * Render Admin Products Page
    */
-  static renderAdminProducts () {
-  const products = adminProductsManager.getAllProducts();
+  static async renderAdminProducts () {
+  let products = adminProductsManager.getAllProducts();
+  if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
+    try {
+      const resp = await api.admin.getProducts({ limit: 100 });
+      if (resp.success && resp.data && resp.data.products) {
+        products = resp.data.products;
+      }
+    } catch (_) {}
+  }
   this.hideOriginalNavFooter();
   document.body.style.background = '#111827';
   const mainContent = document.getElementById('main-content');
@@ -4182,9 +4200,9 @@ showToast(e.message || 'Failed to reject product', 'error');
     if (!confirm('Are you sure you want to delete this product? This cannot be undone.')) {return;}
     try {
       if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
-        await api.request('/admin/products/' + productId, { method: 'DELETE' });
+        try { await api.admin.deleteProduct(productId); } catch (_) {}
       }
-      await productsManager.deleteProduct(productId);
+      await productsManager.deleteProduct(productId).catch(() => {});
 showToast('Product deleted successfully', 'success');
       this.renderAdminProducts();
     } catch (e) {
@@ -4625,6 +4643,15 @@ if (this._pendingImageFiles.length > 0) {
     try {
       const result = await api.admin.createProduct(data);
       if (result.success) {
+        if (result.data) {
+          const p = result.data;
+          p._id = p._id || p.id;
+          if (!productsManager.products.find(x => x.id === p.id || x._id === p._id)) {
+            productsManager.products.unshift(p);
+            productsManager.filteredProducts = [...productsManager.products];
+            productsManager._persistLocalProducts();
+          }
+        }
         showToast('Product created successfully', 'success');
         this.renderAdminProducts();
       } else if (result.isOffline) {
@@ -4798,6 +4825,12 @@ if (this._pendingImageFiles.length > 0) {
     try {
       const result = await api.admin.updateProduct(productId, data);
       if (result.success) {
+        const localProduct = productsManager.products.find(p => p.id === productId || p._id === productId);
+        if (localProduct && result.data) {
+          Object.assign(localProduct, result.data, { updatedAt: new Date().toISOString() });
+          productsManager.filteredProducts = [...productsManager.products];
+          productsManager._persistLocalProducts();
+        }
         showToast('Product updated successfully', 'success');
         this.renderAdminProducts();
       } else if (result.isOffline) {

@@ -2,31 +2,21 @@ const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { db, mapOrderRow, toBool, fromBool } = require('../utils/db');
 const { notifyPaymentVerified } = require('../utils/notificationHelper');
 
-exports.initializePayment = async (req, res) => {
-try {
+exports.initializePayment = asyncHandler(async (req, res) => {
 const { orderId, paymentMode } = req.body;
 
 if (!orderId || !paymentMode) {
-return res.status(400).json({
-success: false,
-error: 'Order ID and payment mode are required',
-});
+throw new ApiError(400, 'Order ID and payment mode are required');
 }
 
 const order = await db('orders').findById(orderId);
 
 if (!order) {
-return res.status(404).json({
-success: false,
-error: 'Order not found',
-});
+throw new ApiError(404, 'Order not found');
 }
 
 if (order.userId !== req.user.id) {
-return res.status(403).json({
-success: false,
-error: 'Not authorized to pay for this order',
-});
+throw new ApiError(403, 'Not authorized to pay for this order');
 }
 
 const mappedOrder = mapOrderRow(order);
@@ -50,62 +40,36 @@ mode: payment.mode,
 instructions: getPaymentInstructions(paymentMode, order),
 },
 });
-} catch (error) {
-console.error('Initialize payment error:', error);
-res.status(500).json({
-success: false,
-error: error.message || 'Failed to initialize payment',
 });
-}
-};
 
-exports.verifyPayment = async (req, res) => {
-try {
+exports.verifyPayment = asyncHandler(async (req, res) => {
 const { paymentId, transactionId } = req.body;
 
 if (!paymentId) {
-return res.status(400).json({
-success: false,
-error: 'Payment ID is required',
-});
+throw new ApiError(400, 'Payment ID is required');
 }
 
 if (!transactionId) {
-return res.status(400).json({
-success: false,
-error: 'Transaction ID is required for verification',
-});
+throw new ApiError(400, 'Transaction ID is required for verification');
 }
 
 const payment = await db('payments').findById(paymentId);
 
 if (!payment) {
-return res.status(404).json({
-success: false,
-error: 'Payment not found',
-});
+throw new ApiError(404, 'Payment not found');
 }
 
 if (payment.userId !== req.user.id) {
-return res.status(403).json({
-success: false,
-error: 'Not authorized',
-});
+throw new ApiError(403, 'Not authorized');
 }
 
 if (payment.status === 'completed') {
-return res.status(400).json({
-success: false,
-error: 'Payment has already been verified',
-});
+throw new ApiError(400, 'Payment has already been verified');
 }
 
 const verified = await verifyTransactionWithProvider(payment, transactionId);
 if (!verified) {
-return res.status(400).json({
-success: false,
-error: 'Transaction could not be verified with the payment provider',
-});
+throw new ApiError(400, 'Transaction could not be verified with the payment provider');
 }
 
 await db('payments').updateById(paymentId, {
@@ -132,17 +96,9 @@ success: true,
 message: 'Payment verified successfully',
 data: updatedPayment,
 });
-} catch (error) {
-console.error('Verify payment error:', error);
-res.status(500).json({
-success: false,
-error: error.message || 'Failed to verify payment',
 });
-}
-};
 
-exports.getPaymentHistory = async (req, res) => {
-try {
+exports.getPaymentHistory = asyncHandler(async (req, res) => {
 const payments = await db('payments').find(
 { userId: req.user.id },
 { sort: { createdAt: -1 } },
@@ -164,31 +120,17 @@ payments: populatedPayments,
 total: populatedPayments.length,
 },
 });
-} catch (error) {
-console.error('Get payment history error:', error);
-res.status(500).json({
-success: false,
-error: error.message || 'Failed to fetch payment history',
 });
-}
-};
 
-exports.getPayment = async (req, res) => {
-try {
+exports.getPayment = asyncHandler(async (req, res) => {
 const payment = await db('payments').findById(req.params.id);
 
 if (!payment) {
-return res.status(404).json({
-success: false,
-error: 'Payment not found',
-});
+throw new ApiError(404, 'Payment not found');
 }
 
 if (payment.userId !== req.user.id && req.user.role !== 'admin') {
-return res.status(403).json({
-success: false,
-error: 'Not authorized',
-});
+throw new ApiError(403, 'Not authorized');
 }
 
 const order = await db('orders').findById(payment.orderId);
@@ -204,14 +146,7 @@ res.json({
 success: true,
 data: populatedPayment,
 });
-} catch (error) {
-console.error('Get payment error:', error);
-res.status(500).json({
-success: false,
-error: error.message || 'Failed to fetch payment',
 });
-}
-};
 
 function getPaymentInstructions (paymentMode, order) {
 switch (paymentMode) {

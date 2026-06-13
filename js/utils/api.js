@@ -119,16 +119,17 @@ if (typeof window !== 'undefined' && !this._isStaticDeploy) {
         }
       }
 
+      const { headers: _optHeaders, ...safeOptions } = options;
       const response = await Promise.race([
         fetch(fullUrl, {
           headers: {
             'Content-Type': 'application/json',
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
             ...csrfHeaders,
-            ...options.headers,
+            ..._optHeaders,
           },
           ...(isMutating ? { credentials: 'include' } : {}),
-          ...options,
+          ...safeOptions,
         }),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Request timeout')), this.timeout),
@@ -150,7 +151,7 @@ if (typeof window !== 'undefined' && !this._isStaticDeploy) {
                 ...options.headers,
               },
               credentials: 'include',
-              ...options,
+              ...safeOptions,
             });
             const retryData = await retryResponse.json().catch(() => ({}));
             if (!retryResponse.ok) {
@@ -180,10 +181,6 @@ if (typeof window !== 'undefined' && !this._isStaticDeploy) {
       }
 
       console.error('API Error:', error);
-
-    if (error.status === 401) {
-      localStorage.removeItem('unihub_session');
-    }
 
       throw error;
     }
