@@ -370,6 +370,10 @@ if (typeof window !== 'undefined' && !this._isStaticDeploy) {
   _compressImage (file, maxDim = 1200, quality = 0.7) {
     return new Promise((resolve) => {
       if (!file.type.startsWith('image/')) { resolve(file); return; }
+      const heicExts = ['.heic', '.heif', '.hif'];
+      const isHeic = heicExts.some(ext => file.name.toLowerCase().endsWith(ext)) ||
+        ['image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence'].includes(file.type);
+      if (isHeic) { resolve(file); return; }
       const img = new Image();
       const url = URL.createObjectURL(file);
       img.onload = () => {

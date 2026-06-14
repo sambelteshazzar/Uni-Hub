@@ -62,8 +62,12 @@ const uploadStream = (buffer, options = {}) => {
           console.error('Cloudinary stream upload error:', error);
           reject(new Error('Failed to upload image'));
         } else {
+          let secure_url = result.secure_url;
+          if (secure_url.includes('/raw/upload/')) {
+            secure_url = secure_url.replace('/raw/upload/', '/image/upload/');
+          }
           resolve({
-            secure_url: result.secure_url,
+            secure_url,
             public_id: result.public_id,
             width: result.width,
             height: result.height,

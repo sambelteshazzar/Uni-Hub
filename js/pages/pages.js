@@ -4199,14 +4199,27 @@ showToast(e.message || 'Failed to reject product', 'error');
   static async adminDeleteProduct (productId) {
     if (!confirm('Are you sure you want to delete this product? This cannot be undone.')) {return;}
     try {
+      let apiDeleted = false;
       if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
-        try { await api.admin.deleteProduct(productId); } catch (_) {}
+        try {
+          await api.admin.deleteProduct(productId);
+          apiDeleted = true;
+        } catch (apiErr) {
+          console.warn('API delete failed, falling back to local:', apiErr.message);
+        }
       }
-      await productsManager.deleteProduct(productId).catch(() => {});
-showToast('Product deleted successfully', 'success');
+      try {
+        await productsManager.deleteProduct(productId);
+      } catch (localErr) {
+        if (!apiDeleted) {
+          showToast('Failed to delete product: ' + (localErr.message || 'Local delete failed'), 'error');
+          return;
+        }
+      }
+      showToast('Product deleted successfully', 'success');
       this.renderAdminProducts();
     } catch (e) {
-showToast(e.message || 'Failed to delete product', 'error');
+      showToast(e.message || 'Failed to delete product', 'error');
     }
   }
 
@@ -4563,7 +4576,10 @@ static async renderAdminActivity () {
   }
 
   static _handleImageFiles (fileList) {
-    const files = Array.from(fileList).filter(f => f.type.startsWith('image/')).slice(0, 5 - this._pendingImageFiles.length);
+    const heicExts = ['.heic', '.heif', '.hif'];
+    const isImageLike = f => f.type.startsWith('image/') ||
+      heicExts.some(ext => f.name.toLowerCase().endsWith(ext));
+    const files = Array.from(fileList).filter(isImageLike).slice(0, 5 - this._pendingImageFiles.length);
     if (files.length === 0) { return; }
     this._pendingImageFiles.push(...files);
     const grid = document.getElementById('image-preview-grid');
@@ -4605,6 +4621,7 @@ static async renderAdminActivity () {
     const paymentModes = formData.getAll('paymentModes');
 
 let images = [];
+let uploadAborted = false;
 if (this._pendingImageFiles.length > 0) {
   try {
     const uploadResult = await api.upload.images(this._pendingImageFiles);
@@ -4613,9 +4630,11 @@ if (this._pendingImageFiles.length > 0) {
       this._uploadedImageUrls = images;
     } else {
       showToast('Image upload failed: ' + (uploadResult.error || 'Unknown error. Check your internet connection.'), 'error');
+      uploadAborted = true;
     }
   } catch (uploadErr) {
     showToast('Image upload failed: ' + uploadErr.message, 'error');
+    uploadAborted = true;
   }
 }
 
@@ -4630,7 +4649,7 @@ if (this._pendingImageFiles.length > 0) {
       price: Number(formData.get('price')),
       category: formData.get('category'),
       condition: formData.get('condition'),
-      images: images.length > 0 ? images : ['/assets/images/products/no-image.svg'],
+      images: uploadAborted && this._pendingImageFiles.length > 0 ? [] : (images.length > 0 ? images : ['/assets/images/products/no-image.svg']),
       deliveryModes,
       paymentModes,
       seller: currentUser?.id || 'admin',
@@ -4639,6 +4658,11 @@ if (this._pendingImageFiles.length > 0) {
       university: formData.get('university')?.trim() || currentUser?.university || '',
       status: 'active',
     };
+
+    if (uploadAborted && this._pendingImageFiles.length > 0 && manualUrls.length === 0) {
+      if (!confirm('Image upload failed. Create product without images?')) { return; }
+      data.images = ['/assets/images/products/no-image.svg'];
+    }
 
     try {
       const result = await api.admin.createProduct(data);
