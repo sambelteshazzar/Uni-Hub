@@ -367,54 +367,100 @@ if (typeof window !== 'undefined' && !this._isStaticDeploy) {
     removeHistoryItem: query => this.delete(`/search/history/${encodeURIComponent(query)}`),
   };
 
+  _compressImage (file, maxDim = 1200, quality = 0.7) {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith('image/')) { resolve(file); return; }
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        let w = img.width, h = img.height;
+        if (w > maxDim || h > maxDim) {
+          const s = maxDim / Math.max(w, h);
+          w = Math.round(w * s); h = Math.round(h * s);
+        }
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        c.toBlob((blob) => {
+          if (!blob) { resolve(file); return; }
+          const name = file.name.replace(/\.[^.]+$/, '.jpg');
+          resolve(new File([blob], name, { type: 'image/jpeg' }));
+        }, 'image/jpeg', quality);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
+    });
+  }
+
 upload = {
   images: async (files) => {
     if (this.isStaticDeploy) {
       return { success: false, error: 'Offline mode - upload unavailable', urls: [] };
     }
+    const compressed = [];
+    for (const f of files) {
+      const c = await this._compressImage(f);
+      compressed.push(c);
+    }
     const formData = new FormData();
-    for (const file of files) {
+    for (const file of compressed) {
       formData.append('images', file);
     }
-    try {
+    const doUpload = async (csrfToken) => {
       const token = this.getToken();
-      const csrfToken = await this.fetchCsrfToken();
       const headers = {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
       };
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 120000);
-      const res = await fetch(`${this.baseURL}/products/upload`, {
-        method: 'POST',
-        headers,
-        body: formData,
-        signal: controller.signal,
-        credentials: 'include',
-      });
-      clearTimeout(timeout);
-      const data = await res.json();
+      const timeout = setTimeout(() => controller.abort(), 60000);
+      try {
+        const res = await fetch(`${this.baseURL}/products/upload`, {
+          method: 'POST',
+          headers,
+          body: formData,
+          signal: controller.signal,
+          credentials: 'include',
+        });
+        clearTimeout(timeout);
+        return { response: res, csrfInvalid: false };
+      } catch (err) {
+        clearTimeout(timeout);
+        if (err.name === 'AbortError') {
+          return { error: 'Upload timed out — try a smaller image or better connection' };
+        }
+        return { error: err.message || 'Network error during upload' };
+      }
+    };
+    try {
+      let csrfToken = await this.fetchCsrfToken();
+      const first = await doUpload(csrfToken);
+      if (first.error) {
+        const retry = await doUpload(csrfToken);
+        if (retry.error) return { success: false, error: retry.error, urls: [] };
+        if (retry.response) {
+          const data = await retry.response.json();
+          if (data.success && data.urls && data.urls.length > 0) return { success: true, urls: data.urls };
+          return { success: false, error: data.error || data.message || 'Upload failed', urls: [] };
+        }
+      }
+      if (!first.response) return { success: false, error: first.error || 'Upload failed', urls: [] };
+      const data = await first.response.json();
       if (data.success && data.urls && data.urls.length > 0) {
         return { success: true, urls: data.urls };
       }
-      if (res.status === 403 && data.error && data.error.toLowerCase().includes('csrf')) {
+      if (first.response.status === 403 && data.error && data.error.toLowerCase().includes('csrf')) {
         this._csrfToken = null;
         const retryCsrf = await this.fetchCsrfToken();
         if (retryCsrf) {
-          const retryRes = await fetch(`${this.baseURL}/products/upload`, {
-            method: 'POST',
-            headers: {
-              ...headers,
-              'X-CSRF-Token': retryCsrf,
-            },
-            body: formData,
-            credentials: 'include',
-          });
-          const retryData = await retryRes.json();
-          if (retryData.success && retryData.urls && retryData.urls.length > 0) {
-            return { success: true, urls: retryData.urls };
+          const retry = await doUpload(retryCsrf);
+          if (retry.error) return { success: false, error: retry.error, urls: [] };
+          if (retry.response) {
+            const retryData = await retry.response.json();
+            if (retryData.success && retryData.urls && retryData.urls.length > 0) return { success: true, urls: retryData.urls };
+            return { success: false, error: retryData.error || retryData.message || 'Upload failed', urls: [] };
           }
-          return { success: false, error: retryData.error || retryData.message || 'Upload failed', urls: [] };
         }
       }
       return { success: false, error: data.error || data.message || 'Upload failed', urls: [] };
