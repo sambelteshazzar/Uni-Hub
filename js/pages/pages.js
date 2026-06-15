@@ -4199,25 +4199,32 @@ showToast(e.message || 'Failed to reject product', 'error');
   static async adminDeleteProduct (productId) {
     if (!confirm('Are you sure you want to delete this product? This cannot be undone.')) {return;}
     try {
-      let apiDeleted = false;
+      let deleted = false;
       if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
         try {
           await api.admin.deleteProduct(productId);
-          apiDeleted = true;
+          deleted = true;
+          productsManager.products = productsManager.products.filter(p => p.id !== productId);
+          productsManager.filteredProducts = productsManager.filteredProducts.filter(p => p.id !== productId);
         } catch (apiErr) {
-          console.warn('API delete failed, falling back to local:', apiErr.message);
+          console.warn('API admin delete failed:', apiErr.message);
+          try {
+            const localResult = await productsManager.deleteProduct(productId);
+            if (localResult.success) deleted = true;
+          } catch (_) {}
         }
+      } else {
+        try {
+          const localResult = await productsManager.deleteProduct(productId);
+          if (localResult.success) deleted = true;
+        } catch (_) {}
       }
-      try {
-        await productsManager.deleteProduct(productId);
-      } catch (localErr) {
-        if (!apiDeleted) {
-          showToast('Failed to delete product: ' + (localErr.message || 'Local delete failed'), 'error');
-          return;
-        }
+      if (deleted) {
+        showToast('Product deleted successfully', 'success');
+        this.renderAdminProducts();
+      } else {
+        showToast('Failed to delete product', 'error');
       }
-      showToast('Product deleted successfully', 'success');
-      this.renderAdminProducts();
     } catch (e) {
       showToast(e.message || 'Failed to delete product', 'error');
     }
