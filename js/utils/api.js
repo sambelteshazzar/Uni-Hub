@@ -394,6 +394,11 @@ if (typeof window !== 'undefined' && !this._isStaticDeploy) {
       };
       img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
       img.src = url;
+    }).then(compressed => {
+      if (compressed.size > 9 * 1024 * 1024) {
+        throw new Error(`Image too large (${(compressed.size / 1024 / 1024).toFixed(1)}MB) — max 9MB. Try a smaller photo.`);
+      }
+      return compressed;
     });
   }
 
@@ -404,8 +409,13 @@ upload = {
     }
     const compressed = [];
     for (const f of files) {
-      const c = await this._compressImage(f);
-      compressed.push(c);
+      try {
+        const c = await this._compressImage(f);
+        compressed.push(c);
+      } catch (compErr) {
+        console.error('Compression error for', f.name, ':', compErr.message);
+        return { success: false, error: compErr.message, urls: [] };
+      }
     }
     const formData = new FormData();
     for (const file of compressed) {
@@ -441,16 +451,20 @@ upload = {
       let csrfToken = await this.fetchCsrfToken();
       const first = await doUpload(csrfToken);
       if (first.error) {
-        const retry = await doUpload(csrfToken);
+        this._csrfToken = null;
+        const freshCsrf = await this.fetchCsrfToken();
+        const retry = await doUpload(freshCsrf);
         if (retry.error) return { success: false, error: retry.error, urls: [] };
         if (retry.response) {
-          const data = await retry.response.json();
+          const data = await retry.response.json().catch(() => ({}));
+          console.warn('Upload retry response:', retry.response.status, data);
           if (data.success && data.urls && data.urls.length > 0) return { success: true, urls: data.urls };
           return { success: false, error: data.error || data.message || 'Upload failed', urls: [] };
         }
       }
       if (!first.response) return { success: false, error: first.error || 'Upload failed', urls: [] };
-      const data = await first.response.json();
+      const data = await first.response.json().catch(() => ({}));
+      console.warn('Upload response:', first.response.status, data);
       if (data.success && data.urls && data.urls.length > 0) {
         return { success: true, urls: data.urls };
       }
@@ -461,13 +475,13 @@ upload = {
           const retry = await doUpload(retryCsrf);
           if (retry.error) return { success: false, error: retry.error, urls: [] };
           if (retry.response) {
-            const retryData = await retry.response.json();
+            const retryData = await retry.response.json().catch(() => ({}));
             if (retryData.success && retryData.urls && retryData.urls.length > 0) return { success: true, urls: retryData.urls };
             return { success: false, error: retryData.error || retryData.message || 'Upload failed', urls: [] };
           }
         }
       }
-      return { success: false, error: data.error || data.message || 'Upload failed', urls: [] };
+      return { success: false, error: data.error || data.message || `Upload failed (HTTP ${first.response.status})`, urls: [] };
     } catch (err) {
       return { success: false, error: err.message || 'Upload error', urls: [] };
     }

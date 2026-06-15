@@ -415,6 +415,7 @@ exports.uploadImages = asyncHandler(async (req, res) => {
 
   for (const file of req.files) {
     try {
+      console.log(`Uploading ${file.originalname} (${(file.size / 1024).toFixed(0)}KB, ${file.mimetype})`);
       const result = await uploadStream(file.buffer);
       uploadedUrls.push(result.secure_url);
     } catch (error) {
@@ -423,7 +424,7 @@ exports.uploadImages = asyncHandler(async (req, res) => {
   }
 
   if (uploadedUrls.length === 0) {
-    throw new ApiError(500, 'Failed to upload any images');
+    throw new ApiError(500, 'Failed to upload any images to Cloudinary');
   }
 
   res.json({

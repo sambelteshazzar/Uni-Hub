@@ -331,10 +331,30 @@ app.use((err, _req, res, _next) => {
     });
   }
 
+  if (err.name === 'MulterError') {
+    const multerMessages = {
+      LIMIT_FILE_SIZE: 'File too large (max 10MB per image)',
+      LIMIT_FILE_COUNT: 'Too many files (max 5)',
+      LIMIT_UNEXPECTED_FILE: 'Unexpected field name in upload',
+    };
+    return res.status(413).json({
+      success: false,
+      error: multerMessages[err.code] || 'Upload error: ' + err.code,
+    });
+  }
+
   // Default error
+  const safeErrors = [
+    'Only image files',
+    'Failed to upload',
+    'No images uploaded',
+    'CSRF',
+    'rate limit',
+  ];
+  const isSafeError = safeErrors.some(k => (err.message || '').toLowerCase().includes(k.toLowerCase()));
   res.status(err.statusCode || err.status || 500).json({
     success: false,
-    error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error',
+    error: (process.env.NODE_ENV === 'development' || isSafeError) ? err.message : 'Internal server error',
   });
 });
 
