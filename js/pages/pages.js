@@ -537,7 +537,7 @@ const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
     return `
       <div class="product-card-modern" onclick="Pages.renderProductDetail('${product.id}')">
         <div class="product-card-image-wrap">
-          <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" class="product-card-image" loading="lazy">
+          <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" class="product-card-image" onerror="this.src='/assets/images/products/no-image.svg'">
           <div class="product-badges">
             <span class="product-badge badge-condition ${conditionClass}">${conditionLabel}</span>
           </div>

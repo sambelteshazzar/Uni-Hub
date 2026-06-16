@@ -27,14 +27,14 @@
   top: 70px !important;
 }
 
-/* Fix product card image aspect ratio */
-.product-card-image {
+/* Fix product card image aspect ratio (old card only — div wrapper) */
+.product-card:not(.product-card-modern) .product-card-image {
   aspect-ratio: 4/3;
   overflow: hidden;
   position: relative;
 }
 
-.product-card-image img {
+.product-card:not(.product-card-modern) .product-card-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
