@@ -63,13 +63,14 @@ class ProductsManager {
 
   _persistLocalProducts () {
     try {
-      const localProducts = this.products.filter(p => p.id && p.id.startsWith('prod-') && !p.id.match(/^prod-00[1-9]$/));
+      const seedId = /^prod-00[1-9]$/;
+      const localProducts = this.products.filter(p => p.id && !seedId.test(p.id));
       const stored = StorageManager.set(this.PRODUCTS_STORAGE_KEY + '_local', localProducts);
       if (!stored) {
         this._persistToIndexedDB(localProducts);
       }
     } catch (_e) {
-      this._persistToIndexedDB(this.products.filter(p => p.id && p.id.startsWith('prod-') && !p.id.match(/^prod-00[1-9]$/)));
+      this._persistToIndexedDB(this.products.filter(p => p.id && !/^prod-00[1-9]$/.test(p.id)));
     }
   }
 

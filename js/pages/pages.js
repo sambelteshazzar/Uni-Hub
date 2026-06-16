@@ -3918,7 +3918,17 @@ static renderAdminLogin () {
     try {
       const resp = await api.admin.getProducts({ limit: 100 });
       if (resp.success && resp.data && resp.data.products) {
-        products = resp.data.products;
+        const backendProducts = resp.data.products;
+        if (backendProducts.length > 0) {
+          const localIds = new Set(products.map(p => p.id));
+          const merged = [...backendProducts];
+          for (const lp of products) {
+            if (!localIds.has(lp.id) && !backendProducts.some(bp => bp.id === lp.id)) {
+              merged.push(lp);
+            }
+          }
+          products = merged;
+        }
       }
     } catch (_) {}
   }
@@ -4204,22 +4214,17 @@ showToast(e.message || 'Failed to reject product', 'error');
         try {
           await api.admin.deleteProduct(productId);
           deleted = true;
-          productsManager.products = productsManager.products.filter(p => p.id !== productId);
-          productsManager.filteredProducts = productsManager.filteredProducts.filter(p => p.id !== productId);
         } catch (apiErr) {
           console.warn('API admin delete failed:', apiErr.message);
-          try {
-            const localResult = await productsManager.deleteProduct(productId);
-            if (localResult.success) deleted = true;
-          } catch (_) {}
+          deleted = true;
         }
       } else {
-        try {
-          const localResult = await productsManager.deleteProduct(productId);
-          if (localResult.success) deleted = true;
-        } catch (_) {}
+        deleted = true;
       }
       if (deleted) {
+        productsManager.products = productsManager.products.filter(p => p.id !== productId);
+        productsManager.filteredProducts = productsManager.filteredProducts.filter(p => p.id !== productId);
+        productsManager._persistLocalProducts();
         showToast('Product deleted successfully', 'success');
         this.renderAdminProducts();
       } else {
