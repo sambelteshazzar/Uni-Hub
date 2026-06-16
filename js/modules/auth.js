@@ -15,6 +15,7 @@ class AuthManager {
     this._offlineUsers = {};
     this.loadSession();
     if (this.isAuthenticated && !this.isOfflineMode) {
+      this._validateToken();
       this.syncVerificationStatus();
     }
   }
@@ -42,6 +43,19 @@ class AuthManager {
       console.error('Error loading session:', error);
       this.clearSession();
     }
+  }
+
+  async _validateToken () {
+    const baseURL = this._getBaseURL();
+    if (!baseURL || baseURL.includes('offline.local')) return;
+    try {
+      const res = await fetch(`${baseURL}/auth/me`, {
+        headers: { Authorization: `Bearer ${this.token}` },
+      });
+      if (res.status === 401) {
+        this.clearSession();
+      }
+    } catch (_) {}
   }
 
   /**

@@ -4641,7 +4641,13 @@ if (this._pendingImageFiles.length > 0) {
       images = uploadResult.urls;
       this._uploadedImageUrls = images;
     } else {
-      showToast('Image upload failed: ' + (uploadResult.error || 'Unknown error. Check your internet connection.'), 'error');
+      if (uploadResult.isAuthError) {
+      showToast('Session expired — please log in again', 'error');
+      if (typeof authManager !== 'undefined' && authManager.clearSession) authManager.clearSession();
+      if (typeof navigateTo === 'function') navigateTo('login');
+      return;
+    }
+    showToast('Image upload failed: ' + (uploadResult.error || 'Unknown error. Check your internet connection.'), 'error');
       uploadAborted = true;
     }
   } catch (uploadErr) {
@@ -4702,6 +4708,12 @@ if (this._pendingImageFiles.length > 0) {
         throw new Error(result.error || 'Failed to create product');
       }
     } catch (error) {
+      if (error.isAuthError || error.status === 401) {
+        showToast('Session expired — please log in again', 'error');
+        if (typeof authManager !== 'undefined' && authManager.clearSession) authManager.clearSession();
+        if (typeof navigateTo === 'function') navigateTo('login');
+        return;
+      }
       const fallbackResult = await productsManager.addProduct(data);
       if (fallbackResult.success) {
         showToast('Product created locally', 'success');

@@ -139,6 +139,13 @@ if (typeof window !== 'undefined' && !this._isStaticDeploy) {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
+        if (response.status === 401 && typeof authManager !== 'undefined' && authManager.clearSession) {
+          authManager.clearSession();
+          const e = new Error('Session expired — please log in again');
+          e.status = 401;
+          e.isAuthError = true;
+          throw e;
+        }
         if (response.status === 403 && data.error && data.error.toLowerCase().includes('csrf')) {
           this._csrfToken = null;
           const retryCsrfToken = await this.fetchCsrfToken();
@@ -458,6 +465,10 @@ upload = {
         if (retry.response) {
           const data = await retry.response.json().catch(() => ({}));
           console.warn('Upload retry response:', retry.response.status, data);
+          if (retry.response.status === 401) {
+            if (typeof authManager !== 'undefined' && authManager.clearSession) authManager.clearSession();
+            return { success: false, error: 'Session expired — please log in again', urls: [], isAuthError: true };
+          }
           if (data.success && data.urls && data.urls.length > 0) return { success: true, urls: data.urls };
           return { success: false, error: data.error || data.message || 'Upload failed', urls: [] };
         }
@@ -468,7 +479,11 @@ upload = {
       if (data.success && data.urls && data.urls.length > 0) {
         return { success: true, urls: data.urls };
       }
-      if (first.response.status === 403 && data.error && data.error.toLowerCase().includes('csrf')) {
+      if (first.response && first.response.status === 401) {
+        if (typeof authManager !== 'undefined' && authManager.clearSession) authManager.clearSession();
+        return { success: false, error: 'Session expired — please log in again', urls: [], isAuthError: true };
+      }
+      if (first.response && first.response.status === 403 && data.error && data.error.toLowerCase().includes('csrf')) {
         this._csrfToken = null;
         const retryCsrf = await this.fetchCsrfToken();
         if (retryCsrf) {
