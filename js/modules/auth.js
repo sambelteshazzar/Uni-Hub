@@ -251,7 +251,10 @@ class AuthManager {
           body: JSON.stringify(userData),
         });
 
-        const data = await response.json();
+        let data;
+        try { data = await response.json(); } catch (_) {
+          return { success: false, error: `Server error (HTTP ${response.status}). Please try again.` };
+        }
 
         if (data.success) {
           this.saveSession(data.data.token, data.data.user);
@@ -264,7 +267,8 @@ class AuthManager {
       // Offline mode - skip backend entirely
       return this._offlineRegister(userData);
     } catch (error) {
-      return this._offlineRegister(userData);
+      console.error('Register error:', error);
+      return { success: false, error: error.message || 'Network error. Please check your connection.' };
     }
   }
 
@@ -327,7 +331,10 @@ class AuthManager {
           body: JSON.stringify({ email, password }),
         });
 
-        const data = await response.json();
+        let data;
+        try { data = await response.json(); } catch (_) {
+          return { success: false, error: `Server error (HTTP ${response.status}). Please try again.` };
+        }
 
         if (data.success) {
           this.saveSession(data.data.token, data.data.user);
@@ -341,7 +348,8 @@ class AuthManager {
   // Offline mode - skip backend entirely
   return this._tryOfflineLogin(email, password);
     } catch (error) {
-      // Backend unavailable — using offline fallback
+      console.error('Login error:', error);
+      return { success: false, error: error.message || 'Network error. Please check your connection.' };
     }
   }
 
@@ -429,7 +437,10 @@ class AuthManager {
         body: JSON.stringify(updates),
       });
 
-      const data = await response.json();
+      let data;
+      try { data = await response.json(); } catch (_) {
+        return { success: false, error: `Server error (HTTP ${response.status})` };
+      }
 
       if (data.success) {
         this.saveSession(this.token, data.data);
@@ -468,7 +479,10 @@ class AuthManager {
         body: JSON.stringify({ currentPassword, newPassword }),
       });
 
-      const data = await response.json();
+      let data;
+      try { data = await response.json(); } catch (_) {
+        return { success: false, error: `Server error (HTTP ${response.status})` };
+      }
 
       if (data.success) {
         return { success: true, message: 'Password changed successfully' };

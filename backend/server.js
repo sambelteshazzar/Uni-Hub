@@ -308,7 +308,14 @@ error: 'Route not found',
 app.use((err, _req, res, _next) => {
   console.error('Error:', err);
 
-  // SQLite constraint error
+  if (err.name === 'ApiError') {
+    return res.status(err.statusCode).json({
+      success: false,
+      error: err.message,
+      ...(err.details && { details: err.details }),
+    });
+  }
+
   if (err.message && err.message.includes('UNIQUE constraint failed')) {
     return res.status(400).json({
       success: false,
@@ -316,7 +323,6 @@ app.use((err, _req, res, _next) => {
     });
   }
 
-  // JWT errors
   if (err.name === 'JsonWebTokenError') {
     return res.status(401).json({
       success: false,
@@ -343,7 +349,6 @@ app.use((err, _req, res, _next) => {
     });
   }
 
-  // Default error
   const safeErrors = [
     'Only image files',
     'Failed to upload',
