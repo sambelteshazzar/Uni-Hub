@@ -101,10 +101,7 @@ const handleJwtError = (error) => {
 const errorHandler = (err, req, res, _next) => {
   console.error('Error:', err.message || err);
 
-  let errorResponse = {
-    statusCode: err.statusCode || 500,
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error',
-  };
+  let errorResponse = null;
 
   if (err.name === 'ApiError') {
     errorResponse = {
@@ -112,17 +109,34 @@ const errorHandler = (err, req, res, _next) => {
       message: err.message,
       ...(err.details && { details: err.details }),
     };
+  } else if (err.message && err.message.includes('UNIQUE constraint failed')) {
+    errorResponse = { statusCode: 400, message: 'A record with this information already exists' };
   } else if (err.name === 'ValidationError') {
     errorResponse = handleValidationError(err);
   } else if (err.code === 11000) {
     errorResponse = handleDuplicateKeyError(err);
   } else if (err.name === 'SqliteError' || err.code === 'SQLITE_CONSTRAINT') {
-    errorResponse = handleDuplicateKeyError(err);
-  } else if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
-    errorResponse = handleJwtError(err);
+    errorResponse = { statusCode: 400, message: 'Database constraint error' };
+  } else if (err.name === 'JsonWebTokenError') {
+    errorResponse = { statusCode: 401, message: 'Invalid token' };
+  } else if (err.name === 'TokenExpiredError') {
+    errorResponse = { statusCode: 401, message: 'Token expired' };
+  } else if (err.name === 'MulterError') {
+    const multerMessages = {
+      LIMIT_FILE_SIZE: 'File too large (max 10MB per image)',
+      LIMIT_FILE_COUNT: 'Too many files (max 5)',
+      LIMIT_UNEXPECTED_FILE: 'Unexpected field name in upload',
+    };
+    errorResponse = { statusCode: 413, message: multerMessages[err.code] || 'Upload error: ' + err.code };
+  } else {
+    const safeErrors = ['Only image files', 'Failed to upload', 'No images uploaded', 'CSRF', 'rate limit'];
+    const isSafeError = safeErrors.some(k => (err.message || '').toLowerCase().includes(k.toLowerCase()));
+    errorResponse = {
+      statusCode: err.statusCode || err.status || 500,
+      message: (process.env.NODE_ENV === 'development' || isSafeError) ? err.message : 'Internal server error',
+    };
   }
 
-  // Send error response
   res.status(errorResponse.statusCode).json({
     success: false,
     error: errorResponse.message,

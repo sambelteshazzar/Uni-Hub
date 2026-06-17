@@ -244,6 +244,7 @@ app.get('/api/health', (req, res) => {
     message: 'Uni-Hub API is running',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
+    version: '20250617b',
   });
 });
 
@@ -296,72 +297,11 @@ app.use('/api/search', searchRoutes);
 // Sentry error handler (must be before other error handlers)
 app.use(sentryError());
 
-// 404 handler (after Sentry, before global error handler)
-app.use((_req, res) => {
-res.status(404).json({
-success: false,
-error: 'Route not found',
-});
-});
+// 404 handler
+app.use(notFoundHandler);
 
-// Global error handler
-app.use((err, _req, res, _next) => {
-  console.error('Error:', err);
-
-  if (err.name === 'ApiError') {
-    return res.status(err.statusCode).json({
-      success: false,
-      error: err.message,
-      ...(err.details && { details: err.details }),
-    });
-  }
-
-  if (err.message && err.message.includes('UNIQUE constraint failed')) {
-    return res.status(400).json({
-      success: false,
-      error: 'A record with this information already exists',
-    });
-  }
-
-  if (err.name === 'JsonWebTokenError') {
-    return res.status(401).json({
-      success: false,
-      error: 'Invalid token',
-    });
-  }
-
-  if (err.name === 'TokenExpiredError') {
-    return res.status(401).json({
-      success: false,
-      error: 'Token expired',
-    });
-  }
-
-  if (err.name === 'MulterError') {
-    const multerMessages = {
-      LIMIT_FILE_SIZE: 'File too large (max 10MB per image)',
-      LIMIT_FILE_COUNT: 'Too many files (max 5)',
-      LIMIT_UNEXPECTED_FILE: 'Unexpected field name in upload',
-    };
-    return res.status(413).json({
-      success: false,
-      error: multerMessages[err.code] || 'Upload error: ' + err.code,
-    });
-  }
-
-  const safeErrors = [
-    'Only image files',
-    'Failed to upload',
-    'No images uploaded',
-    'CSRF',
-    'rate limit',
-  ];
-  const isSafeError = safeErrors.some(k => (err.message || '').toLowerCase().includes(k.toLowerCase()));
-  res.status(err.statusCode || err.status || 500).json({
-    success: false,
-    error: (process.env.NODE_ENV === 'development' || isSafeError) ? err.message : 'Internal server error',
-  });
-});
+// Global error handler (uses errorHandler from utils/errorHandler.js)
+app.use(errorHandler);
 
 // ============================================
 // Server Startup with Socket.io
