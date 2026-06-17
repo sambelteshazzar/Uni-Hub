@@ -244,7 +244,8 @@ app.get('/api/health', (req, res) => {
     message: 'Uni-Hub API is running',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
-    version: '20250617b',
+    version: '20250617c',
+    deployId: process.env.RAILWAY_DEPLOYMENT_ID || 'local',
   });
 });
 
