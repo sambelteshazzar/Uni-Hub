@@ -15,7 +15,6 @@ class ReviewManager {
 
   _isOffline () {
     return (typeof api !== 'undefined' && api.isStaticDeploy) ||
-           (window.API_URL && window.API_URL.includes('offline.local')) ||
            !window._backendAvailable;
   }
 
@@ -36,7 +35,7 @@ class ReviewManager {
   }
 
   async _fetchWithCsrf (url, options = {}) {
-    if (window.API_URL && window.API_URL.includes('offline.local')) {
+    if (typeof api !== 'undefined' && api.isStaticDeploy) {
       const offlineBody = JSON.stringify({ success: false, error: 'Not available in offline mode' });
       return new Response(offlineBody, { status: 503, statusText: 'Offline' });
     }

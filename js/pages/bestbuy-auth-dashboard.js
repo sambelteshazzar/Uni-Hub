@@ -12,8 +12,7 @@
     // SHARED: social button SVGs & offline handler
     // ============================================
     var isOffline = function () {
-      var baseURL = (typeof window !== 'undefined' && window.API_URL) || 'http://localhost:5000/api';
-      return baseURL.includes('offline.local') || (typeof api !== 'undefined' && api.isStaticDeploy);
+      return (typeof api !== 'undefined' && api.isStaticDeploy);
     };
 
 var socialBtnStyle =
@@ -413,7 +412,7 @@ var socialBtnStyle =
 
       try {
         var baseURL = (typeof window !== 'undefined' && window.API_URL) || 'http://localhost:5000/api';
-        if (baseURL.includes('offline.local')) {
+        if (typeof api !== 'undefined' && api.isStaticDeploy) {
           showToast('Password reset is not available in offline mode. Please log in with your existing credentials.', 'info');
           setTimeout(function () { Pages.renderLogin(); }, 2000);
         } else {
@@ -518,7 +517,7 @@ var socialBtnStyle =
 
       try {
         var baseURL = (typeof window !== 'undefined' && window.API_URL) || 'http://localhost:5000/api';
-        if (baseURL.includes('offline.local')) {
+        if (typeof api !== 'undefined' && api.isStaticDeploy) {
           showToast('Password reset is not available in offline mode. Please log in with your existing credentials.', 'info');
           setTimeout(function () { Pages.renderLogin(); }, 2000);
         } else {

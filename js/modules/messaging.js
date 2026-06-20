@@ -29,7 +29,7 @@ class MessageManager {
   }
 
   async _fetchWithCsrf (url, options = {}) {
-    if (window.API_URL && window.API_URL.includes('offline.local')) {
+    if (typeof api !== 'undefined' && api.isStaticDeploy) {
       const offlineBody = JSON.stringify({ success: false, error: 'Not available in offline mode' });
       return new Response(offlineBody, { status: 503, statusText: 'Offline' });
     }
@@ -87,7 +87,7 @@ class MessageManager {
       script.src = 'https://cdn.socket.io/4.7.2/socket.io.min.js';
       script.onload = () => { resolve(); };
   script.onerror = () => {
-    if (window.API_URL && window.API_URL.includes('offline.local')) {
+    if (typeof api !== 'undefined' && api.isStaticDeploy) {
       // Offline mode — messaging disabled
       resolve();
       return;
@@ -109,7 +109,7 @@ class MessageManager {
    * Connect to Socket.IO server
    */
   connect () {
-    if (window.API_URL && window.API_URL.includes('offline.local')) {
+    if (typeof api !== 'undefined' && api.isStaticDeploy) {
       // Offline mode — Socket.IO not available
       return;
     }
