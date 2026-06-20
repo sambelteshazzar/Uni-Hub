@@ -457,7 +457,7 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
     return `
     <div class="browse-product-card" onclick="Pages.renderProductDetail('${product.id}')">
       <div class="browse-product-image-wrap">
-        <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy">
+        <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg';this.onerror=null;">
         <div class="browse-product-badges">
           <span class="browse-product-badge ${product.condition || 'good'}">${conditionLabel}</span>
         </div>

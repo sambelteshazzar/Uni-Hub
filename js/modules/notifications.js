@@ -13,7 +13,7 @@ class NotificationManager {
     if (typeof StorageManager !== 'undefined' && typeof StorageManager.get === 'function') {
       this.load();
     }
-    const isOffline = (typeof api !== 'undefined' && api.isStaticDeploy) || (window.API_URL && window.API_URL.includes('offline.local'));
+    const isOffline = (typeof api !== 'undefined' && api.isStaticDeploy);
     if (!isOffline) {
       this.setupSocketListeners();
       this.startPeriodicSync();

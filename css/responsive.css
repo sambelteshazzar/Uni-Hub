@@ -1,3 +1,115 @@
+@media (max-width: 360px) {
+  html {
+    font-size: 13px;
+  }
+
+  .container {
+    padding-left: var(--space-sm);
+    padding-right: var(--space-sm);
+  }
+
+  .navbar-container {
+    padding: 0 var(--space-sm);
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+  }
+
+  .products-grid,
+  .bb-browse-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-xs);
+  }
+
+  .product-card-body {
+    padding: var(--space-xs);
+  }
+
+  .product-card-title {
+    font-size: 0.7rem;
+  }
+
+  .product-card-price {
+    font-size: 0.85rem;
+  }
+
+  .hero-title {
+    font-size: 1.5rem !important;
+  }
+
+  .section-title {
+    font-size: 1.25rem !important;
+  }
+
+  .bb-category-card {
+    padding: var(--space-xs);
+  }
+
+  .bb-category-name {
+    font-size: 0.7rem;
+  }
+
+  .auth-card {
+    padding: var(--space-md);
+  }
+
+  .mobile-bottom-nav-item {
+    font-size: 0.6rem;
+    min-width: 40px;
+    padding: var(--space-xs);
+  }
+
+  .mobile-bottom-nav-icon {
+    font-size: var(--text-lg);
+  }
+
+  .btn {
+    font-size: var(--text-sm);
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .navbar-brand svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .navbar-cart-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  #navbar-auth-buttons .btn {
+    font-size: var(--text-xs);
+    padding: var(--space-xs) var(--space-sm);
+    min-height: 40px;
+  }
+
+  .cart-item {
+    grid-template-columns: 60px 1fr;
+    gap: var(--space-xs);
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    font-size: var(--text-sm);
+    padding: var(--space-sm);
+  }
+
+  .bb-browse-price {
+    font-size: var(--text-sm);
+  }
+
+  .bb-browse-info {
+    padding: 0.25rem;
+  }
+}
+
 @media (max-width: 576px) {
   html {
     font-size: 14px;

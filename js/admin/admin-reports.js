@@ -88,7 +88,7 @@ class AdminReportsManager {
     const activeOrders = orders.filter(o => ['placed', 'confirmed', 'in_transit'].includes(o.status)).length;
 
     let pendingVerifications = 0;
-    try { pendingVerifications = adminVerificationsManager.getStats().pending; } catch (_) {}
+    try { pendingVerifications = adminVerificationsManager.getStats().pending; } catch (e) { console.warn('reports: getStats failed:', e); }
 
     return {
       summary: {

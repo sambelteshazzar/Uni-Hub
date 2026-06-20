@@ -91,7 +91,7 @@ class ProductsManager {
           store.put(p);
         }
       };
-    } catch (_e) {}
+    } catch (_e) { console.warn('products: IndexedDB init failed:', _e); }
   }
 
   async _loadFromIndexedDB () {
@@ -142,7 +142,7 @@ class ProductsManager {
       if (localProducts.length > 0) {
         this.filteredProducts = [...this.products];
       }
-    } catch (_e) {}
+    } catch (_e) { console.warn('products: loadAll failed:', _e); }
   }
 
   /**

@@ -1,12 +1,33 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
-import { cpSync, readFileSync, writeFileSync } from 'fs';
+import { cpSync, readFileSync, writeFileSync, readdirSync, mkdirSync } from 'fs';
+import { transformSync } from 'esbuild';
 
 const appScripts = [
-'<script type="module" src="/js/utils/icons.js?v=7"></script>',
-'<script type="module" src="/js/utils/toast.js?v=8"></script>',
-'<script type="module" src="/js/app-init.js?v=7"></script>',
+  '<script type="module" src="/js/utils/icons.js?v=7"></script>',
+  '<script type="module" src="/js/utils/toast.js?v=8"></script>',
+  '<script type="module" src="/js/app-init.js?v=7"></script>',
 ];
+
+function transpileDir(dir, outDir) {
+  mkdirSync(outDir, { recursive: true });
+  const entries = readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const src = resolve(dir, entry.name);
+    const dst = resolve(outDir, entry.name);
+    if (entry.isDirectory()) {
+      transpileDir(src, dst);
+    } else if (entry.name.endsWith('.js')) {
+      const { code } = transformSync(readFileSync(src, 'utf-8'), {
+        target: ['chrome80', 'safari13', 'firefox72'],
+        format: 'esm',
+      });
+      writeFileSync(dst, code);
+    } else {
+      cpSync(src, dst);
+    }
+  }
+}
 
 export default defineConfig({
   root: '.',
@@ -14,6 +35,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    target: ['es2020', 'chrome80', 'safari13', 'firefox72'],
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
@@ -32,7 +54,7 @@ export default defineConfig({
     {
       name: 'static-app-build',
       closeBundle() {
-      cpSync(resolve(__dirname, 'js'), resolve(__dirname, 'dist/js'), { recursive: true });
+      transpileDir(resolve(__dirname, 'js'), resolve(__dirname, 'dist/js'));
       cpSync(resolve(__dirname, 'css'), resolve(__dirname, 'dist/css'), { recursive: true });
 
       const htmlPath = resolve(__dirname, 'dist/index.html');

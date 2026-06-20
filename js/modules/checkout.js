@@ -49,7 +49,7 @@ class CheckoutFlow {
         this.shippingData.university = user.university || '';
         this.shippingData.address = user.address || '';
       }
-    } catch (e) {}
+    } catch (e) { console.warn('checkout: loadUserDetails failed:', e); }
   }
 
   render() {
@@ -300,7 +300,7 @@ class CheckoutFlow {
                 return `
                   <div class="review-item">
                     <div class="review-item-image">
-                      <img src="${item.product.images?.[0] || ''}" alt="${this._esc(item.product.title)}" />
+                      <img src="${item.product.images?.[0] || ''}" alt="${this._esc(item.product.title)}" onerror="this.src='';this.onerror=null;" />
                     </div>
                     <div class="review-item-details">
                       <div class="review-item-title">${this._esc(item.product.title)}</div>
@@ -824,7 +824,7 @@ if (!order) {
       const orders = _StorageManager.get(key, true) || [];
       orders.unshift(order);
       _StorageManager.set(key, orders);
-    } catch (e) {}
+    } catch (e) { console.warn('checkout: saveOrderLocal failed:', e); }
   }
 
   _esc(str) {
@@ -898,7 +898,7 @@ class CheckoutManager {
           _cartManager.clear();
           return { success: true, message: 'Order placed successfully!', order: response.data };
         }
-      } catch (error) {}
+      } catch (error) { console.warn('checkout: placeOrder API failed, falling back to local:', error); }
     }
 
     const cartSummary = _cartManager.getSummary();
@@ -1006,7 +1006,7 @@ generateOrderNumber() {
         if (response.success) {
           return response.data.orders || response.data || [];
         }
-      } catch (error) {}
+      } catch (error) { console.warn('checkout: getOrders API failed, using local:', error); }
     }
     const orders = _StorageManager.get(this.ORDER_STORAGE_KEY, true);
     return orders || [];

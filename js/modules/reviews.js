@@ -24,7 +24,7 @@ class ReviewManager {
   }
 
   _saveLocalReviews (reviews) {
-    try { StorageManager.set(this._storageKey, reviews); } catch (_e) {}
+    try { StorageManager.set(this._storageKey, reviews); } catch (_e) { console.warn('reviews: saveLocalReviews failed:', _e); }
   }
 
   _getMyLocalReviews () {
@@ -32,7 +32,7 @@ class ReviewManager {
   }
 
   _saveMyLocalReviews (reviews) {
-    try { StorageManager.set(this._myReviewsKey, reviews); } catch (_e) {}
+    try { StorageManager.set(this._myReviewsKey, reviews); } catch (_e) { console.warn('reviews: saveMyLocalReviews failed:', _e); }
   }
 
   async _fetchWithCsrf (url, options = {}) {

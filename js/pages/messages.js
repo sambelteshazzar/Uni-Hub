@@ -179,7 +179,7 @@ class MessagesPage {
   conv.product
     ? `
               <div class="conversation-product">
-                <img src="${conv.product.images?.[0] || ''}" alt="" />
+                <img src="${conv.product.images?.[0] || ''}" alt="" onerror="this.src='';this.onerror=null;" />
                 <span>${conv.product.title}</span>
               </div>
             `

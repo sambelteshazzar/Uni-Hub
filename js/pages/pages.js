@@ -839,7 +839,7 @@ const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
 return `
 <div onclick="Pages.renderProductDetail('${product.id}')" style="min-width:160px;max-width:160px;cursor:pointer;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--neutral-200);transition:box-shadow 0.2s;background:var(--bg-primary);" onmouseover="this.style.boxShadow='var(--shadow-card-hover)'" onmouseout="this.style.boxShadow='none'">
 <div style="aspect-ratio:1;overflow:hidden;background:var(--neutral-100);">
-<img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
+<img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg';this.onerror=null;">
 </div>
 <div style="padding:0.5rem;">
 <div style="font-size:0.75rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${product.title}</div>
@@ -900,7 +900,7 @@ if (!product && typeof api !== 'undefined' && !api.isStaticDeploy && window._bac
       product = resp.data;
       productsManager.products.unshift(product);
     }
-  } catch (_) {}
+  } catch (_) { console.warn('pages: loadSeedProducts failed:', _); }
 }
 
 if (!product) {
@@ -1128,7 +1128,7 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
       }
       window.__selectedColor = colors[0];
     })
-    .catch(function() {});
+    .catch(function(e) { console.warn('pages: color fetch failed:', e); });
 })();
 </script>
 
@@ -2655,7 +2655,7 @@ const conditionClass = product.condition || 'good';
 return `
 <div class="wishlist-card" onclick="Pages.renderProductDetail('${product.id}')">
 <div class="wishlist-card-image">
-<img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy">
+<img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg';this.onerror=null;">
 <span class="condition-badge ${conditionClass}" style="position:absolute;top:0.5rem;left:0.5rem;">${conditionLabel}</span>
 <button class="wishlist-card-remove" onclick="event.stopPropagation(); Pages.toggleWishlistDetail('${product.id}')" title="Remove from wishlist">
 <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
@@ -3930,7 +3930,7 @@ static renderAdminLogin () {
           products = merged;
         }
       }
-    } catch (_) {}
+    } catch (_) { console.warn('pages: mergeLocalProducts failed:', _); }
   }
   this.hideOriginalNavFooter();
   document.body.style.background = '#111827';

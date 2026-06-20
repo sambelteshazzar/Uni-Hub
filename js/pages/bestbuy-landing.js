@@ -71,7 +71,7 @@ comingSoonBadge +
       .map(function (cat) {
         var imgSrc = categoryImages[cat.id];
         var iconContent = imgSrc
-          ? '<img src="' + imgSrc + '" alt="' + cat.name + '" loading="lazy">'
+          ? '<img src="' + imgSrc + '" alt="' + cat.name + '" loading="lazy" onerror="this.parentElement.innerHTML=\'<svg viewBox=\\\'0 0 24 24\\\' fill=\\\'none\\\' stroke=\\\'#6b7280\\\' stroke-width=\\\'1.8\\\' stroke-linecap=\\\'round\\\' stroke-linejoin=\\\'round\\\' width=\\\'28\\\' height=\\\'28\\\'><circle cx=\\\'12\\\' cy=\\\'12\\\' r=\\\'10\\\'/></svg>\';this.onerror=null;">'
           : '<svg viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><circle cx="12" cy="12" r="10"/></svg>';
         return (
           '<a href="#/browse?category=' +

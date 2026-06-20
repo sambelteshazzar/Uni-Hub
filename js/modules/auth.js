@@ -47,15 +47,14 @@ class AuthManager {
 
   async _validateToken () {
     const baseURL = this._getBaseURL();
-    if (!baseURL || baseURL.includes('offline.local')) return;
-    try {
+    if (!baseURL) return;    try {
       const res = await fetch(`${baseURL}/auth/me`, {
         headers: { Authorization: `Bearer ${this.token}` },
       });
       if (res.status === 401) {
         this.clearSession();
       }
-    } catch (_) {}
+    } catch (e) { console.warn('auth: _validateToken failed:', e); }
   }
 
   /**
@@ -74,7 +73,7 @@ class AuthManager {
       ...(offline ? { isOffline: true } : {}),
     };
 
-    localStorage.setItem('unihub_session', JSON.stringify(session));
+    try { localStorage.setItem('unihub_session', JSON.stringify(session)); } catch(e) { console.warn('localStorage unavailable:', e); }
     this.token = token;
     this.currentUser = safeUser;
     this.isAuthenticated = true;
@@ -85,7 +84,7 @@ class AuthManager {
    * Clear session from storage
    */
   clearSession () {
-    localStorage.removeItem('unihub_session');
+    try { localStorage.removeItem('unihub_session'); } catch(e) { console.warn('localStorage unavailable:', e); }
     this.currentUser = null;
     this.isAuthenticated = false;
     this.token = null;
@@ -208,7 +207,7 @@ class AuthManager {
   async _fetchCsrfToken () {
     try {
       const baseURL = this._getBaseURL();
-      if (!baseURL || baseURL.includes('offline.local')) {
+      if (!baseURL) {
         return null;
       }
       const response = await fetch(`${baseURL.replace('/api', '')}/api/auth/csrf-token`, {
@@ -239,7 +238,7 @@ class AuthManager {
       }
 
       const baseURL = this._getBaseURL();
-      if (baseURL && !baseURL.includes('offline.local')) {
+      if (baseURL) {
         const csrfToken = await this._fetchCsrfToken();
         const response = await fetch(`${this._getBaseURL()}/auth/register`, {
           method: 'POST',
@@ -319,7 +318,7 @@ class AuthManager {
       }
 
       const baseURL = this._getBaseURL();
-      if (baseURL && !baseURL.includes('offline.local')) {
+      if (baseURL) {
         const csrfToken = await this._fetchCsrfToken();
         const response = await fetch(`${this._getBaseURL()}/auth/login`, {
           method: 'POST',
@@ -358,7 +357,7 @@ class AuthManager {
    */
   logout () {
     const baseURL = this._getBaseURL();
-    if (this.token && !this.isOfflineMode && baseURL && !baseURL.includes('offline.local')) {
+    if (this.token && !this.isOfflineMode && baseURL) {
       this._fetchCsrfToken().then(csrfToken => {
         fetch(`${baseURL}/auth/logout`, {
           method: 'POST',
@@ -388,11 +387,13 @@ class AuthManager {
    */
   isLoggedIn () {
     if (this.isAuthenticated && this.token) {
-      const session = localStorage.getItem('unihub_session');
-      if (session) {
-        const parsed = JSON.parse(session);
-        return parsed.expiresAt > Date.now();
-      }
+      try {
+        const session = localStorage.getItem('unihub_session');
+        if (session) {
+          const parsed = JSON.parse(session);
+          return parsed.expiresAt > Date.now();
+        }
+      } catch(e) { console.warn('localStorage unavailable:', e); }
     }
     return false;
   }
@@ -521,10 +522,11 @@ class AuthManager {
         const isNowVerified = data.data.isVerified || false;
         if (this.currentUser.isVerified !== isNowVerified) {
           this.currentUser.isVerified = isNowVerified;
-          const session = JSON.parse(localStorage.getItem('unihub_session'));
-          if (session && session.user) {
+          let session = null;
+          try { session = JSON.parse(localStorage.getItem('unihub_session') || 'null'); } catch(e) { console.warn('localStorage unavailable:', e); }
+            if (session && session.user) {
             session.user.isVerified = isNowVerified;
-            localStorage.setItem('unihub_session', JSON.stringify(session));
+            try { localStorage.setItem('unihub_session', JSON.stringify(session)); } catch(e) { console.warn('localStorage unavailable:', e); }
           }
         }
         if (typeof StorageManager !== 'undefined' && typeof STORAGE_KEYS !== 'undefined') {
@@ -535,7 +537,7 @@ class AuthManager {
           StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verification);
         }
       }
-    } catch (e) {}
+    } catch (e) { console.warn('auth: syncVerificationStatus failed:', e); }
   }
 
   banUser (userId, reason) {

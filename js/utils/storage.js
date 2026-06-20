@@ -33,7 +33,7 @@ class StorageManager {
     } catch (error) {
       // Corrupted data - clear it and return null
       console.warn(`Storage: Corrupted data for key "${key}", clearing...`);
-      localStorage.removeItem(key);
+      try { localStorage.removeItem(key); } catch(e) { /* Safari private */ }
       return null;
     }
   }
@@ -59,7 +59,7 @@ class StorageManager {
     try {
       if (typeof STORAGE_KEYS !== 'undefined') {
         Object.values(STORAGE_KEYS).forEach(key => {
-          localStorage.removeItem(key);
+      try { localStorage.removeItem(key); } catch(e) { /* Safari private */ }
         });
       }
       return true;
@@ -74,7 +74,11 @@ class StorageManager {
    * @param {string} key - Storage key
    */
   static has (key) {
-    return localStorage.getItem(key) !== null;
+    try {
+      return localStorage.getItem(key) !== null;
+    } catch(e) {
+      return false;
+    }
   }
 
   /**
@@ -83,11 +87,15 @@ class StorageManager {
    */
   static getByPrefix (prefix) {
     const items = {};
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key.startsWith(prefix)) {
-        items[key] = this.get(key);
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith(prefix)) {
+          items[key] = this.get(key);
+        }
       }
+    } catch(e) {
+      console.warn('localStorage unavailable:', e);
     }
     return items;
   }

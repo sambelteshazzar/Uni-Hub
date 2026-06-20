@@ -6,10 +6,10 @@
 class API {
   constructor (baseURL = null) {
     var envAPI = '';
-    try { envAPI = import.meta.env.VITE_API_URL || ''; } catch (e) {}
+    try { envAPI = import.meta.env.VITE_API_URL || ''; } catch (e) { /* VITE_API_URL only available in Vite dev */ }
     this.baseURL =
       baseURL || (typeof window !== 'undefined' && window.API_URL) || envAPI || 'http://localhost:5000/api';
-    this._isStaticDeploy = !this.baseURL || this.baseURL.includes('offline.local');
+    this._isStaticDeploy = false;
     this._backendProbed = false;
     this._backendReachable = null;
 if (typeof window !== 'undefined' && !this._isStaticDeploy) {
@@ -20,6 +20,7 @@ if (typeof window !== 'undefined' && !this._isStaticDeploy) {
 
   get isStaticDeploy () {
     if (this._isStaticDeploy) return true;
+    if (this._backendProbed && this._backendReachable === false) return true;
     return false;
   }
 

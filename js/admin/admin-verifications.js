@@ -149,7 +149,7 @@ class AdminVerificationsManager {
           const k = localStorage.key(i);
           if (k && k.startsWith('unihub_student_verification')) allKeys.push(k);
         }
-      } catch (_) {}
+      } catch (e) { console.warn('verifications: ls scan failed:', e); }
 
       for (const key of allKeys) {
         try {
@@ -168,7 +168,7 @@ class AdminVerificationsManager {
             data.reviewedAt = new Date().toISOString();
             localStorage.setItem(key, JSON.stringify(data));
           }
-        } catch (_) {}
+        } catch (e) { console.warn('verifications: key update failed:', e); }
       }
     }
   }

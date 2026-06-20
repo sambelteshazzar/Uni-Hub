@@ -1224,7 +1224,7 @@ const AuthPageMethods = {
 
     try {
       const baseURL = (typeof window !== 'undefined' && window.API_URL) || 'http://localhost:5000/api';
-      if (baseURL.includes('offline.local')) {
+      if (typeof api !== 'undefined' && api.isStaticDeploy) {
         showToast('Password reset is not available in offline mode. Please log in with your existing credentials.', 'info');
         setTimeout(() => Pages.renderLogin(), 2000);
       } else {
