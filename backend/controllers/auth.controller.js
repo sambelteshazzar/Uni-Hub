@@ -18,7 +18,11 @@ function getPublicProfile(user) {
  * @access Public
  */
 exports.register = asyncHandler(async (req, res) => {
-  const { fullName, email, phone, password, university, level, hall } = req.body;
+  let { fullName, email, phone, password, university, level, hall } = req.body;
+
+  if (!fullName && req.body.firstName && req.body.lastName) {
+    fullName = req.body.firstName + ' ' + req.body.lastName;
+  }
 
   if (!fullName || typeof fullName !== 'string' || fullName.trim().length < 2) {
     throw new ApiError(400, 'Full name is required (at least 2 characters)');

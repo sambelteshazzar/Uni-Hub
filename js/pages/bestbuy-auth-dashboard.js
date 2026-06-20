@@ -337,8 +337,7 @@ var socialBtnStyle =
       var university = document.getElementById('reg-university').value;
 
       var result = await authManager.register({
-        firstName: firstName,
-        lastName: lastName,
+        fullName: firstName + ' ' + lastName,
         email: email,
         password: password,
         phone: phone,

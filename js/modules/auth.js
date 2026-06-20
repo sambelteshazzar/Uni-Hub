@@ -233,8 +233,8 @@ class AuthManager {
         return { success: false, error: 'Email and password are required' };
       }
 
-      if (userData.password.length < 6) {
-        return { success: false, error: 'Password must be at least 6 characters' };
+      if (userData.password.length < 8) {
+        return { success: false, error: 'Password must be at least 8 characters with uppercase, lowercase, number, and special character' };
       }
 
       const baseURL = this._getBaseURL();
