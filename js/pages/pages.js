@@ -251,12 +251,12 @@ static showOriginalNavFooter () {
   <div class="browse-hero" style="min-height:180px;">
   <div class="browse-hero-content" style="max-width:var(--max-content-width);margin:0 auto;width:100%;padding:0 var(--space-xl);">
   <div class="browse-hero-text" style="opacity:0.6;">
-  <div class="skeleton" style="height:12px;width:120px;background:rgba(255,255,255,0.15);border-radius:100px;margin-bottom:1rem;"></div>
-  <div class="skeleton" style="height:36px;width:320px;background:rgba(255,255,255,0.15);border-radius:8px;margin-bottom:0.75rem;"></div>
-  <div class="skeleton" style="height:18px;width:280px;background:rgba(255,255,255,0.1);border-radius:4px;margin-bottom:1.5rem;"></div>
+  <div class="skeleton" style="height:12px;width:120px;background:var(--neutral-200);border-radius:100px;margin-bottom:1rem;"></div>
+  <div class="skeleton" style="height:36px;width:320px;background:var(--neutral-200);border-radius:8px;margin-bottom:0.75rem;"></div>
+  <div class="skeleton" style="height:18px;width:280px;background:var(--neutral-100);border-radius:4px;margin-bottom:1.5rem;"></div>
   <div style="display:flex;gap:0.75rem;">
   <div class="skeleton" style="height:40px;width:140px;background:rgba(255,206,0,0.15);border-radius:10px;"></div>
-  <div class="skeleton" style="height:40px;width:120px;background:rgba(255,255,255,0.1);border-radius:10px;"></div>
+  <div class="skeleton" style="height:40px;width:120px;background:var(--neutral-100);border-radius:10px;"></div>
   </div>
   </div>
   </div>
@@ -926,64 +926,64 @@ const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
 
     mainContent.innerHTML = `
       <style>
-        .pd-page { min-height: 100vh; background: #0a0a0a; }
+        .pd-page { min-height: 100vh; background: var(--bg-secondary); }
         .pd-breadcrumb { padding: 1rem 2rem; max-width: 1400px; margin: 0 auto; display: flex; align-items: center; flex-wrap: wrap; gap: 0; }
-        .pd-back-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: #a1a1aa; font-size: 0.875rem; cursor: pointer; transition: all 0.2s; }
-        .pd-back-btn:hover { border-color: #0046be; color: #93c5fd; }
+        .pd-back-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid var(--neutral-300); background: transparent; color: var(--neutral-600); font-size: 0.875rem; cursor: pointer; transition: all 0.2s; }
+        .pd-back-btn:hover { border-color: var(--primary); color: var(--primary); }
         .pd-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; max-width: 1400px; margin: 0 auto; padding: 1rem 2rem 4rem; }
         .pd-image-section { position: sticky; top: 2rem; height: fit-content; }
-        .pd-main-image { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.06); background: #141414; }
-        .pd-info-card { background: #141414; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.06); padding: 2rem; }
-        .pd-category-tag { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(0,70,190,0.15); color: #93c5fd; margin-bottom: 0.75rem; }
-        .pd-title { font-size: 1.75rem; font-weight: 700; color: #fafafa; letter-spacing: -0.025em; margin-bottom: 1rem; line-height: 1.3; }
+        .pd-main-image { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 1rem; border: 1px solid var(--neutral-200); background: var(--bg-tertiary); }
+        .pd-info-card { background: var(--bg-primary); border-radius: 1rem; border: 1px solid var(--neutral-200); padding: 2rem; }
+        .pd-category-tag { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; background: var(--primary-light); color: var(--primary); margin-bottom: 0.75rem; }
+        .pd-title { font-size: 1.75rem; font-weight: 700; color: var(--neutral-900); letter-spacing: -0.025em; margin-bottom: 1rem; line-height: 1.3; }
         .pd-meta { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
         .pd-condition { padding: 0.375rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
-        .pd-condition.excellent { background: rgba(16,185,129,0.2); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
-        .pd-condition.good { background: rgba(245,158,11,0.2); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
-        .pd-condition.fair { background: rgba(249,115,22,0.2); color: #fdba74; border: 1px solid rgba(249,115,22,0.3); }
-        .pd-date { font-size: 0.8rem; color: #71717a; }
+        .pd-condition.excellent { background: rgba(16,185,129,0.2); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+        .pd-condition.good { background: rgba(245,158,11,0.2); color: #d27500; border: 1px solid rgba(245,158,11,0.3); }
+        .pd-condition.fair { background: rgba(249,115,22,0.2); color: #ea580c; border: 1px solid rgba(249,115,22,0.3); }
+        .pd-date { font-size: 0.8rem; color: var(--neutral-600); }
         .pd-price-box { margin-bottom: 1.5rem; }
-        .pd-price { font-size: 2.5rem; font-weight: 800; color: #fafafa; letter-spacing: -0.03em; }
-        .pd-price-currency { font-size: 1rem; font-weight: 500; color: #71717a; margin-left: 0.25rem; }
-        .pd-seller-card { background: #18181b; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
-        .pd-seller-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #0046be, #3b82f6); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; color: #fff; flex-shrink: 0; }
-        .pd-seller-name { font-size: 0.95rem; font-weight: 600; color: #fafafa; }
-        .pd-seller-rating { font-size: 0.85rem; color: #fcd34d; display: flex; align-items: center; gap: 0.25rem; margin-top: 0.125rem; }
-        .pd-desc-card { background: #18181b; border-radius: 0.75rem; padding: 1.25rem; margin-bottom: 1.5rem; }
-        .pd-desc-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #71717a; margin-bottom: 0.5rem; }
-        .pd-desc-text { font-size: 0.95rem; color: #d4d4d8; line-height: 1.7; }
+        .pd-price { font-size: 2.5rem; font-weight: 800; color: var(--neutral-900); letter-spacing: -0.03em; }
+        .pd-price-currency { font-size: 1rem; font-weight: 500; color: var(--neutral-600); margin-left: 0.25rem; }
+        .pd-seller-card { background: var(--bg-primary); border-radius: 0.75rem; padding: 1rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; border: 1px solid var(--neutral-200); }
+        .pd-seller-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #3b82f6); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; color: #fff; flex-shrink: 0; }
+        .pd-seller-name { font-size: 0.95rem; font-weight: 600; color: var(--neutral-900); }
+        .pd-seller-rating { font-size: 0.85rem; color: #d4a017; display: flex; align-items: center; gap: 0.25rem; margin-top: 0.125rem; }
+        .pd-desc-card { background: var(--bg-primary); border-radius: 0.75rem; padding: 1.25rem; margin-bottom: 1.5rem; border: 1px solid var(--neutral-200); }
+        .pd-desc-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--neutral-600); margin-bottom: 0.5rem; }
+        .pd-desc-text { font-size: 0.95rem; color: var(--neutral-700); line-height: 1.7; }
         .pd-details-list { list-style: none; padding: 0; margin: 0 0 1.5rem 0; }
-        .pd-details-item { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.875rem; }
+        .pd-details-item { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--neutral-200); font-size: 0.875rem; }
         .pd-details-item:last-child { border-bottom: none; }
-        .pd-details-label { color: #71717a; }
-        .pd-details-value { color: #d4d4d8; font-weight: 500; }
+        .pd-details-label { color: var(--neutral-600); }
+        .pd-details-value { color: var(--neutral-700); font-weight: 500; }
         .pd-methods-section { margin-bottom: 1.5rem; }
-        .pd-methods-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #71717a; margin-bottom: 0.5rem; }
+        .pd-methods-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--neutral-600); margin-bottom: 0.5rem; }
         .pd-methods-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-        .pd-method-tag { padding: 0.375rem 0.75rem; border-radius: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); font-size: 0.8rem; color: #d4d4d8; }
+        .pd-method-tag { padding: 0.375rem 0.75rem; border-radius: 0.5rem; background: var(--bg-tertiary); border: 1px solid var(--neutral-200); font-size: 0.8rem; color: var(--neutral-700); }
         .pd-actions { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.5rem; }
         .pd-btn { display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.875rem 1.5rem; border-radius: 0.75rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.25s; border: none; }
-        .pd-btn-primary { background: #0046be; color: #fff; }
-        .pd-btn-primary:hover { background: #003399; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,70,190,0.3); }
-        .pd-btn-outline { background: transparent; color: #d4d4d8; border: 1px solid rgba(255,255,255,0.1); }
-        .pd-btn-outline:hover { border-color: rgba(0,70,190,0.4); color: #93c5fd; }
-        .pd-btn-outline.active { border-color: rgba(239,68,68,0.4); color: #fca5a5; background: rgba(239,68,68,0.05); }
+        .pd-btn-primary { background: var(--primary); color: #fff; }
+        .pd-btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,70,190,0.3); }
+        .pd-btn-outline { background: transparent; color: var(--neutral-700); border: 1px solid var(--neutral-300); }
+        .pd-btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+        .pd-btn-outline.active { border-color: var(--danger); color: var(--danger); background: var(--danger-light); }
         .pd-secondary-actions { display: flex; gap: 0.5rem; }
         .pd-secondary-actions .pd-btn { flex: 1; padding: 0.625rem; font-size: 0.85rem; }
 .color-picker { margin-bottom: 1.5rem; }
-.color-picker-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #71717a; margin-bottom: 0.5rem; }
+.color-picker-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--neutral-600); margin-bottom: 0.5rem; }
 .color-swatch-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
-.color-swatch { width: 40px; height: 40px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s; position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.color-swatch:hover { transform: scale(1.15); border-color: rgba(255,255,255,0.3); }
-.color-swatch.selected { border-color: #0046be; border-width: 3px; box-shadow: 0 0 0 2px #0a0a0a, 0 0 0 4px #0046be; }
+.color-swatch { width: 40px; height: 40px; border-radius: 50%; border: 3px solid var(--neutral-300); cursor: pointer; transition: all 0.2s; position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.color-swatch:hover { transform: scale(1.15); border-color: var(--neutral-400); }
+.color-swatch.selected { border-color: var(--primary); border-width: 3px; box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--primary); }
 .color-swatch.selected::after { content: '✓'; font-size: 14px; font-weight: 700; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
 .color-swatch.out-of-stock { opacity: 0.4; cursor: not-allowed; }
 .color-swatch.out-of-stock::before { content: ''; position: absolute; width: 140%; height: 2px; background: #ef4444; transform: rotate(-45deg); }
-.color-name-display { font-size: 0.875rem; color: #a1a1aa; margin-top: 0.25rem; }
+.color-name-display { font-size: 0.875rem; color: var(--neutral-600); margin-top: 0.25rem; }
 .color-stock-indicator { font-size: 0.75rem; margin-top: 0.25rem; }
-.color-stock-indicator.in-stock { color: #10b981; }
-.color-stock-indicator.low-stock { color: #f59e0b; }
-.color-stock-indicator.out-of-stock { color: #ef4444; }
+.color-stock-indicator.in-stock { color: #1a8917; }
+.color-stock-indicator.low-stock { color: #d27500; }
+.color-stock-indicator.out-of-stock { color: #c00; }
         @media (max-width: 768px) {
 .pd-layout { grid-template-columns: 1fr; padding: 1rem; }
 .pd-image-section { position: static; }
@@ -996,13 +996,13 @@ const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
       <div class="pd-page">
         <!-- Breadcrumb -->
  <div class="pd-breadcrumb">
-  <a href="#/" style="color:#a1a1aa;text-decoration:none;font-size:0.8125rem;" onmouseover="this.style.color='#93c5fd'" onmouseout="this.style.color='#a1a1aa'">Home</a>
-  <span style="color:#52525b;margin:0 0.375rem;font-size:0.75rem;">›</span>
-  <a href="#/browse" style="color:#a1a1aa;text-decoration:none;font-size:0.8125rem;" onmouseover="this.style.color='#93c5fd'" onmouseout="this.style.color='#a1a1aa'">Browse</a>
-  <span style="color:#52525b;margin:0 0.375rem;font-size:0.75rem;">›</span>
-  <a href="#/browse?category=${product.category}" style="color:#a1a1aa;text-decoration:none;font-size:0.8125rem;" onmouseover="this.style.color='#93c5fd'" onmouseout="this.style.color='#a1a1aa'">${categoryLabel}</a>
-  <span style="color:#52525b;margin:0 0.375rem;font-size:0.75rem;">›</span>
-  <span style="color:#fafafa;font-size:0.8125rem;font-weight:500;">${product.title.length > 40 ? product.title.slice(0, 40) + '…' : product.title}</span>
+  <a href="#/" style="color:var(--neutral-600);text-decoration:none;font-size:0.8125rem;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--neutral-600)'">Home</a>
+  <span style="color:var(--neutral-500);margin:0 0.375rem;font-size:0.75rem;">›</span>
+  <a href="#/browse" style="color:var(--neutral-600);text-decoration:none;font-size:0.8125rem;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--neutral-600)'">Browse</a>
+  <span style="color:var(--neutral-500);margin:0 0.375rem;font-size:0.75rem;">›</span>
+  <a href="#/browse?category=${product.category}" style="color:var(--neutral-600);text-decoration:none;font-size:0.8125rem;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--neutral-600)'">${categoryLabel}</a>
+  <span style="color:var(--neutral-500);margin:0 0.375rem;font-size:0.75rem;">›</span>
+  <span style="color:var(--neutral-900);font-size:0.8125rem;font-weight:500;">${product.title.length > 40 ? product.title.slice(0, 40) + '…' : product.title}</span>
  </div>
 
         <!-- Layout -->
@@ -1149,13 +1149,13 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
 
         <!-- Reviews Section -->
         <div style="max-width: 1400px; margin: 0 auto; padding: 2rem;">
-          <div style="background: #141414; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.06); padding: 2rem;">
+          <div style="background: var(--bg-primary); border-radius: 1rem; border: 1px solid var(--neutral-200); padding: 2rem;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
-              <h2 style="font-size: 1.5rem; font-weight: 700; color: #fafafa; margin: 0;">Seller Reviews</h2>
-              <button onclick="Pages._showReviewModal('${product.seller?.id || product.seller}','${product.id}')" style="padding: 0.5rem 1rem; background: rgba(0,70,190,0.2); color: #93c5fd; border: 1px solid rgba(0,70,190,0.3); border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer;">Write Review</button>
+              <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--neutral-900); margin: 0;">Seller Reviews</h2>
+              <button onclick="Pages._showReviewModal('${product.seller?.id || product.seller}','${product.id}')" style="padding: 0.5rem 1rem; background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer;">Write Review</button>
             </div>
             <div id="product-reviews-container">
-              <div style="text-align: center; padding: 2rem; color: #71717a;">
+              <div style="text-align: center; padding: 2rem; color: var(--neutral-600);">
                 <p>Loading reviews...</p>
               </div>
             </div>
@@ -1275,7 +1275,7 @@ notificationManager?.info('Wishlist Cleared', 'All items removed from your wishl
 
     const product = productsManager.getById(productId);
     if (!product) {
-      container.innerHTML = '<p style="text-align: center; color: #71717a;">Product not found</p>';
+      container.innerHTML = '<p style="text-align: center; color: var(--neutral-600);">Product not found</p>';
       return;
     }
 
@@ -1307,11 +1307,11 @@ notificationManager?.info('Wishlist Cleared', 'All items removed from your wishl
         : '0';
 
       const html = `
-        <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
+        <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--neutral-200);">
           <div style="text-align: center;">
-            <div style="font-size: 2.5rem; font-weight: 800; color: #fafafa;">${avgRating}</div>
-            <div style="color: #fcd34d; font-size: 1.25rem;">${this.renderStars(Math.round(parseFloat(avgRating)))}</div>
-            <div style="font-size: 0.8rem; color: #71717a;">${reviews.length} review${reviews.length !== 1 ? 's' : ''}</div>
+            <div style="font-size: 2.5rem; font-weight: 800; color: var(--neutral-900);">${avgRating}</div>
+            <div style="color: #d4a017; font-size: 1.25rem;">${this.renderStars(Math.round(parseFloat(avgRating)))}</div>
+            <div style="font-size: 0.8rem; color: var(--neutral-600);">${reviews.length} review${reviews.length !== 1 ? 's' : ''}</div>
           </div>
           <div style="flex: 1;">
             ${reviews.map(r => this.renderReviewItem(r)).join('')}
@@ -1321,7 +1321,7 @@ notificationManager?.info('Wishlist Cleared', 'All items removed from your wishl
 
       container.innerHTML = html;
     } catch (error) {
-      container.innerHTML = '<p style="text-align: center; color: #71717a;">Unable to load reviews</p>';
+      container.innerHTML = '<p style="text-align: center; color: var(--neutral-600);">Unable to load reviews</p>';
     }
   }
 
@@ -1333,18 +1333,18 @@ notificationManager?.info('Wishlist Cleared', 'All items removed from your wishl
     const stars = this.renderStars(review.rating);
 
     return `
-      <div style="padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+      <div style="padding: 1rem 0; border-bottom: 1px solid var(--neutral-200);">
         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-          <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0046be, #3b82f6); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; color: #fff;">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #3b82f6); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; color: #fff;">
             ${(review.reviewer?.fullName || 'U').charAt(0)}
           </div>
           <div>
-            <div style="font-size: 0.9rem; font-weight: 500; color: #fafafa;">${review.reviewer?.fullName || 'Anonymous'}</div>
-            <div style="color: #fcd34d; font-size: 0.85rem;">${stars}</div>
+            <div style="font-size: 0.9rem; font-weight: 500; color: var(--neutral-900);">${review.reviewer?.fullName || 'Anonymous'}</div>
+            <div style="color: #d4a017; font-size: 0.85rem;">${stars}</div>
           </div>
-          <div style="margin-left: auto; font-size: 0.75rem; color: #71717a;">${timeAgo}</div>
+          <div style="margin-left: auto; font-size: 0.75rem; color: var(--neutral-600);">${timeAgo}</div>
         </div>
-        <p style="font-size: 0.9rem; color: #d4d4d8; line-height: 1.6; margin: 0;">${review.comment || ''}</p>
+        <p style="font-size: 0.9rem; color: var(--neutral-700); line-height: 1.6; margin: 0;">${review.comment || ''}</p>
       </div>
     `;
   }

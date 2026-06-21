@@ -18,11 +18,11 @@
 var socialBtnStyle =
     '<style>' +
     '.bb-social-divider { position: relative; margin: 1.25rem 0; text-align: center; }' +
-    '.bb-social-divider::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid #e5e5e5; }' +
-    '.bb-social-divider span { position: relative; background: #ffffff; padding: 0 0.75rem; font-size: 0.75rem; color: #666666; text-transform: uppercase; letter-spacing: 0.05em; }' +
-    '.bb-google-btn { display: flex; align-items: center; justify-content: center; gap: 0.625rem; width: 100%; height: 44px; border: 1px solid #d4d4d4; border-radius: 0.375rem; background: #ffffff; cursor: pointer; transition: all 0.15s ease; font-size: 0.875rem; font-weight: 600; color: #1a1a1a; margin-bottom: 1.25rem; }' +
-    '.bb-google-btn:hover { border-color: #0046be; background: #f8f9fa; }' +
-    '.bb-google-btn:active { background: #e8f0fe; }' +
+    '.bb-social-divider::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid var(--border-light); }' +
+    '.bb-social-divider span { position: relative; background: var(--bg-primary); padding: 0 0.75rem; font-size: 0.75rem; color: var(--neutral-600); text-transform: uppercase; letter-spacing: 0.05em; }' +
+    '.bb-google-btn { display: flex; align-items: center; justify-content: center; gap: 0.625rem; width: 100%; height: 44px; border: 1px solid var(--border-medium); border-radius: 0.375rem; background: var(--bg-primary); cursor: pointer; transition: all 0.15s ease; font-size: 0.875rem; font-weight: 600; color: var(--neutral-900); margin-bottom: 1.25rem; }' +
+    '.bb-google-btn:hover { border-color: var(--primary); background: var(--bg-secondary); }' +
+    '.bb-google-btn:active { background: var(--primary-light); }' +
     '</style>';
 
   var googleSVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width:1.25rem;height:1.25rem;">' +
@@ -195,8 +195,8 @@ var socialBtnStyle =
         '</form>' +
         '<div class="bb-auth-footer">' +
         '<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">' +
-        '<a href="#" onclick="Pages.renderForgotPassword(); return false;" style="color: #93c5fd; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color=\'#fff\'" onmouseout="this.style.color=\'#93c5fd\'">Forgot Password?</a>' +
-        '<p style="margin: 0; font-size: 0.85rem; color: #a1a1aa;">Don\'t have an account? <a href="#" onclick="Pages.renderRegister(); return false;" style="color: #93c5fd; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color=\'#fff\'" onmouseout="this.style.color=\'#93c5fd\'">Create an account</a></p>' +
+        '<a href="#" onclick="Pages.renderForgotPassword(); return false;" style="color: var(--primary); text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color=\'var(--primary-hover)\'" onmouseout="this.style.color=\'var(--primary)\'">Forgot Password?</a>' +
+        '<p style="margin: 0; font-size: 0.85rem; color: var(--neutral-600);">Don\'t have an account? <a href="#" onclick="Pages.renderRegister(); return false;" style="color: var(--primary); text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color=\'var(--primary-hover)\'" onmouseout="this.style.color=\'var(--primary)\'">Create an account</a></p>' +
         '</div>' +
         '</div>' +
         '</div>' +
@@ -308,13 +308,13 @@ var socialBtnStyle =
         '<div class="bb-form-group">' +
         '<label class="bb-checkbox-label">' +
         '<input type="checkbox" id="reg-terms" name="terms" required />' +
-        '<span>I agree to the <a href="#" style="color: #93c5fd; text-decoration: underline;">Terms of Service</a> and <a href="#" style="color: #93c5fd; text-decoration: underline;">Privacy Policy</a></span>' +
+        '<span>I agree to the <a href="#" style="color: var(--primary); text-decoration: underline;">Terms of Service</a> and <a href="#" style="color: var(--primary); text-decoration: underline;">Privacy Policy</a></span>' +
         '</label>' +
         '</div>' +
         '<button type="submit" class="bb-submit-btn">Create Account</button>' +
         '</form>' +
         '<div class="bb-auth-footer">' +
-        '<p style="margin: 0; font-size: 0.85rem; color: #a1a1aa;">Already have an account? <a href="#" onclick="Pages.renderLogin(); return false;" style="color: #93c5fd; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color=\'#fff\'" onmouseout="this.style.color=\'#93c5fd\'">Sign in</a></p>' +
+        '<p style="margin: 0; font-size: 0.85rem; color: var(--neutral-600);">Already have an account? <a href="#" onclick="Pages.renderLogin(); return false;" style="color: var(--primary); text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color=\'var(--primary-hover)\'" onmouseout="this.style.color=\'var(--primary)\'">Sign in</a></p>' +
         '</div>' +
         '</div>' +
         '</div>' +
@@ -393,7 +393,7 @@ var socialBtnStyle =
         '<button type="submit" class="bb-submit-btn">Send Reset Link</button>' +
         '</form>' +
         '<div class="bb-auth-footer">' +
-        '<p style="margin: 0; font-size: 0.85rem; color: #a1a1aa;"><a href="#" onclick="Pages.renderLogin(); return false;" style="color: #93c5fd; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color=\'#fff\'" onmouseout="this.style.color=\'#93c5fd\'">Back to Login</a></p>' +
+        '<p style="margin: 0; font-size: 0.85rem; color: var(--neutral-600);"><a href="#" onclick="Pages.renderLogin(); return false;" style="color: var(--primary); text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color=\'var(--primary-hover)\'" onmouseout="this.style.color=\'var(--primary)\'">Back to Login</a></p>' +
         '</div>' +
         '</div>' +
         '</div>' +
@@ -490,7 +490,7 @@ var socialBtnStyle =
         '<button type="submit" class="bb-submit-btn">Reset Password</button>' +
         '</form>' +
         '<div class="bb-auth-footer">' +
-        '<p style="margin: 0; font-size: 0.85rem; color: #a1a1aa;"><a href="#" onclick="Pages.renderLogin(); return false;" style="color: #93c5fd; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color=\'#fff\'" onmouseout="this.style.color=\'#93c5fd\'">Back to Login</a></p>' +
+        '<p style="margin: 0; font-size: 0.85rem; color: var(--neutral-600);"><a href="#" onclick="Pages.renderLogin(); return false;" style="color: var(--primary); text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color=\'var(--primary-hover)\'" onmouseout="this.style.color=\'var(--primary)\'">Back to Login</a></p>' +
         '</div>' +
         '</div>' +
         '</div>' +
@@ -559,7 +559,7 @@ var socialBtnStyle =
           '<p class="bb-auth-form-subtitle">Verify your student status to unlock full marketplace access.</p>' +
           '</div>' +
           '<div style="text-align: center; padding: 2rem;">' +
-          '<p style="color: #a1a1aa;">Student verification is available after logging in. Please <a href="#" onclick="Pages.renderLogin(); return false;" style="color: #93c5fd; text-decoration: underline;">sign in</a> first.</p>' +
+          '<p style="color: var(--neutral-600);">Student verification is available after logging in. Please <a href="#" onclick="Pages.renderLogin(); return false;" style="color: var(--primary); text-decoration: underline;">sign in</a> first.</p>' +
           '</div>' +
           '</div>' +
           '</div>' +

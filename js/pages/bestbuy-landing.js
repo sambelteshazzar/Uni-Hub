@@ -114,7 +114,7 @@ comingSoonBadge +
       'Uni-Hub is a global university marketplace app that connects students to easily buy essential academic items. Textbooks, electronics, accommodation listings, and other campus essentials — all within your university community and beyond.' +
       '</p>' +
       '<div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 3rem;">' +
-      '<button onclick="Pages.renderBrowse(); return false;" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem 2rem; font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: #ffce00; color: #1a1a1a; border: none; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background=\'#e6b800\'; this.style.transform=\'translateY(-2px)\'; this.style.boxShadow=\'0 8px 20px rgba(255, 206, 0, 0.3)\'" onmouseout="this.style.background=\'#ffce00\'; this.style.transform=\'translateY(0)\'; this.style.boxShadow=\'none\'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:inline-block;vertical-align:middle;margin-right:0.25rem;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Browse Items</button>' +
+      '<button onclick="Pages.renderBrowse(); return false;" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem 2rem; font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: #ffce00; color: var(--neutral-900); border: none; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background=\'#e6b800\'; this.style.transform=\'translateY(-2px)\'; this.style.boxShadow=\'0 8px 20px rgba(255, 206, 0, 0.3)\'" onmouseout="this.style.background=\'#ffce00\'; this.style.transform=\'translateY(0)\'; this.style.boxShadow=\'none\'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:inline-block;vertical-align:middle;margin-right:0.25rem;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Browse Items</button>' +
       '</div>' +
       '<div style="display: flex; flex-wrap: wrap; gap: 2.5rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.15);">' +
       '<div style="text-align: left;"><div style="font-size: 1.75rem; font-weight: 800; color: #ffce00; margin-bottom: 0.25rem;">7+</div><div style="color: rgba(255,255,255,0.7); font-size: 0.875rem;">Universities</div></div>' +
@@ -127,14 +127,14 @@ comingSoonBadge +
       '</div>' +
       '</section>' +
       '<!-- Mission Statement Section -->' +
-      '<section style="padding: 5rem 2rem; background: #f8f9fa; border-top: 1px solid #e5e7eb;">' +
+      '<section style="padding: 5rem 2rem; background: var(--bg-secondary); border-top: 1px solid var(--border-light);">' +
       '<div style="max-width: 56rem; margin: 0 auto;">' +
       '<div style="text-align: center; margin-bottom: 2rem;">' +
-      '<h2 style="font-size: 1.875rem; font-weight: 800; color: #1a1a1a; margin-bottom: 0.5rem;">Our Mission</h2>' +
-      '<p style="color: #6b7280; font-size: 1rem;">Making student essentials affordable and accessible</p>' +
+      '<h2 style="font-size: 1.875rem; font-weight: 800; color: var(--neutral-900); margin-bottom: 0.5rem;">Our Mission</h2>' +
+      '<p style="color: var(--neutral-600); font-size: 1rem;">Making student essentials affordable and accessible</p>' +
       '</div>' +
-      '<div style="padding: 2rem; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 0.75rem; border-left: 4px solid #0046be;">' +
-      '<p style="color: #374151; font-size: 1.125rem; line-height: 1.8;">' +
+      '<div style="padding: 2rem; background: var(--bg-primary); border: 1px solid var(--border-light); border-radius: 0.75rem; border-left: 4px solid var(--primary);">' +
+      '<p style="color: var(--neutral-700); font-size: 1.125rem; line-height: 1.8;">' +
       'At Uni-Hub, our mission is to make student essentials affordable and accessible, ensuring that every student can get what they need without financial stress.' +
       '</p>' +
       '</div>' +
@@ -224,9 +224,9 @@ comingSoonBadge +
 '<div class="bb-category-card" onclick="Pages.renderBrowse(); return false;"><div class="bb-category-icon" style="background:rgba(139,92,246,0.1)"><svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 21v-6h6v6"/><path d="M10 9h4"/><path d="M10 13h4"/></svg></div><p class="bb-category-name">KNUST</p><p class="bb-category-count">220+ items</p></div>' +
 '<div class="bb-category-card" onclick="Pages.renderBrowse(); return false;"><div class="bb-category-icon" style="background:rgba(16,185,129,0.1)"><svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div><p class="bb-category-name">University of Cape Coast</p><p class="bb-category-count">180+ items</p></div>' +
 '<div class="bb-category-card" onclick="Pages.renderBrowse(); return false;"><div class="bb-category-icon" style="background:rgba(245,158,11,0.1)"><svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M12 2L2 8l10 6 10-6-10-6z"/><path d="M2 17l10 6 10-6"/><path d="M2 12l10 6 10-6"/></svg></div><p class="bb-category-name">Ashesi University</p><p class="bb-category-count">95+ items</p></div>') +
-'<div class="bb-category-card" onclick="Pages.renderBrowse(); return false;" style="border: 2px dashed #0046be;">' +
-'<div class="bb-category-icon" style="background:rgba(0,70,190,0.08);font-size:var(--text-xl);color:#0046be;font-weight:700;">+</div>' +
-      '<p class="bb-category-name" style="color: #0046be;">View All Universities</p>' +
+      '<div class="bb-category-card" onclick="Pages.renderBrowse(); return false;" style="border: 2px dashed var(--primary);">' +
+      '<div class="bb-category-icon" style="background:rgba(0,70,190,0.08);font-size:var(--text-xl);color:var(--primary);font-weight:700;">+</div>' +
+      '<p class="bb-category-name" style="color: var(--primary);">View All Universities</p>' +
       '<p class="bb-category-count">7 total</p>' +
       '</div>' +
       '</div>' +
@@ -253,7 +253,7 @@ comingSoonBadge +
       '<h2 class="bb-cta-title">Ready to Start Saving?</h2>' +
       '<p class="bb-cta-desc">Join thousands of students already buying  on Uni-Hub. It\'s free to sign up.</p>' +
       '<div class="bb-hero-buttons" style="justify-content: center;">' +
-      '<button onclick="Pages.renderRegister(); return false;" class="bb-btn bb-btn-primary" style="background: #ffce00; color: #1a1a1a;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:inline-block;vertical-align:middle;margin-right:0.25rem;"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg> Create Free Account</button>' +
+      '<button onclick="Pages.renderRegister(); return false;" class="bb-btn bb-btn-primary" style="background: #ffce00; color: var(--neutral-900);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:inline-block;vertical-align:middle;margin-right:0.25rem;"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg> Create Free Account</button>' +
       '<button onclick="Pages.renderBrowse(); return false;" class="bb-btn bb-btn-outline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:inline-block;vertical-align:middle;margin-right:0.25rem;"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Browse Items</button>' +
       '</div>' +
       '</div>' +

@@ -495,7 +495,7 @@ const AuthPageMethods = {
     .auth-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(0, 0, 0, 0.6);
       backdrop-filter: blur(12px);
       display: flex;
       align-items: center;
@@ -517,10 +517,10 @@ const AuthPageMethods = {
       width: 100%;
       max-width: 26rem;
       padding: 2.5rem;
-      background: linear-gradient(145deg, #0f0f0f, #1a1a1a);
+      background: var(--bg-primary);
       border-radius: 1.25rem;
-      border: 1px solid rgba(0, 70, 190, 0.3);
-      box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 70, 190, 0.1);
+      border: 1px solid var(--primary);
+      box-shadow: var(--shadow-xl);
       animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .auth-close-btn {
@@ -529,13 +529,13 @@ const AuthPageMethods = {
       right: 1rem;
       background: transparent;
       border: none;
-      color: #71717a;
+      color: var(--neutral-600);
       cursor: pointer;
       padding: 0.5rem;
       transition: color 0.2s;
     }
     .auth-close-btn:hover {
-      color: #fafafa;
+      color: var(--neutral-900);
     }
     .auth-card-header {
       text-align: center;
@@ -556,13 +556,13 @@ const AuthPageMethods = {
       font-size: 1.5rem;
       font-weight: 600;
       letter-spacing: -0.025em;
-      color: #fafafa;
+      color: var(--neutral-900);
       margin-bottom: 0.25rem;
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
     .auth-subtitle {
       font-size: 0.875rem;
-      color: #a1a1aa;
+      color: var(--neutral-600);
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
     .social-buttons-grid {
@@ -578,14 +578,14 @@ const AuthPageMethods = {
       height: 2.25rem;
       padding: 0 0.75rem;
       border-radius: 0.375rem;
-      border: 1px solid rgba(39, 39, 42, 1);
-      background: #0a0a0a;
+      border: var(--border-light);
+      background: var(--bg-secondary);
       cursor: pointer;
       transition: all 0.2s;
     }
     .social-btn:hover {
-      background: rgba(24, 24, 27, 1);
-      border-color: rgba(63, 63, 70, 1);
+      background: var(--bg-tertiary);
+      border-color: var(--neutral-400);
     }
     .divider {
       position: relative;
@@ -599,7 +599,7 @@ const AuthPageMethods = {
     }
     .divider-line span {
       width: 100%;
-      border-top: 1px solid rgba(39, 39, 42, 1);
+      border-top: 1px solid var(--neutral-200);
     }
     .divider-text {
       position: relative;
@@ -610,9 +610,9 @@ const AuthPageMethods = {
       letter-spacing: 0.05em;
     }
     .divider-text span {
-      background: #0a0a0a;
+      background: var(--bg-primary);
       padding: 0 0.5rem;
-      color: #a1a1aa;
+      color: var(--neutral-600);
     }
     .form-group-modern {
       margin-bottom: 1rem;
@@ -621,7 +621,7 @@ const AuthPageMethods = {
       display: block;
       font-size: 0.875rem;
       font-weight: 500;
-      color: #fafafa;
+      color: var(--neutral-900);
       margin-bottom: 0.5rem;
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
@@ -630,21 +630,21 @@ const AuthPageMethods = {
       height: 2.75rem;
       width: 100%;
       border-radius: 0.375rem;
-      border: 1px solid rgba(39, 39, 42, 1);
-      background: #0a0a0a;
+      border: 1px solid var(--neutral-300);
+      background: var(--bg-secondary);
       padding: 0 0.75rem;
       font-size: 0.875rem;
-      color: #fafafa;
+      color: var(--neutral-900);
       transition: all 0.2s;
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
     .form-input:focus {
       outline: none;
-      border-color: rgba(0, 70, 190, 0.5);
-      box-shadow: 0 0 0 2px rgba(0, 70, 190, 0.2);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-light);
     }
     .form-input::placeholder {
-      color: #52525b;
+      color: var(--neutral-500);
     }
     .password-input-wrapper {
       position: relative;
@@ -658,11 +658,11 @@ const AuthPageMethods = {
       border: none;
       cursor: pointer;
       padding: 0.25rem;
-      color: #71717a;
+      color: var(--neutral-600);
       transition: color 0.2s;
     }
     .password-toggle-btn:hover {
-      color: #fafafa;
+      color: var(--neutral-900);
     }
     .submit-btn {
       display: inline-flex;
@@ -676,38 +676,38 @@ const AuthPageMethods = {
       height: 2.75rem;
       padding: 0 1rem;
       width: 100%;
-      background: #18181b;
-      color: #fafafa;
-      border: 1px solid rgba(39, 39, 42, 1);
+      background: var(--bg-tertiary);
+      color: var(--neutral-900);
+      border: 1px solid var(--neutral-300);
       cursor: pointer;
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
     .submit-btn:hover {
-      background: #27272a;
-      border-color: rgba(63, 63, 70, 1);
+      background: var(--neutral-200);
+      border-color: var(--neutral-400);
     }
     .submit-btn-primary {
-      background: #0046be;
-      color: #ffffff;
+      background: var(--primary);
+      color: var(--bg-primary);
       border: none;
     }
     .submit-btn-primary:hover {
-      background: #003399;
+      background: var(--primary-hover);
     }
     .auth-footer-links {
       text-align: center;
       margin-top: 1.5rem;
       padding-top: 1.5rem;
-      border-top: 1px solid rgba(39, 39, 42, 1);
+      border-top: 1px solid var(--neutral-200);
     }
     .auth-footer-links p {
       font-size: 0.875rem;
-      color: #a1a1aa;
+      color: var(--neutral-600);
       margin-bottom: 0;
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
     .auth-link {
-      color: #0046be;
+      color: var(--primary);
       text-decoration: none;
       font-weight: 500;
       transition: color 0.2s;
@@ -715,7 +715,7 @@ const AuthPageMethods = {
       display: inline-block;
     }
     .auth-link:hover {
-      color: #003399;
+      color: var(--primary-hover);
       text-decoration: underline;
     }
     </style>
@@ -746,12 +746,12 @@ const AuthPageMethods = {
   </svg>
   </button>
   <button class="social-btn" title="Sign in with Apple" onclick="showToast('Social login is not available in offline mode', 'error')">
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; fill: #fafafa;">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; fill: var(--neutral-900);">
   <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.09997 22C7.78997 22.05 6.79997 20.68 5.95997 19.47C4.24997 17 2.93997 12.45 4.69997 9.39C5.56997 7.87 7.12997 6.91 8.81997 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.09 16.67C20.06 16.74 19.67 18.11 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"></path>
   </svg>
   </button>
   <button class="social-btn" title="Sign in with X" onclick="showToast('Social login is not available in offline mode', 'error')">
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; fill: #fafafa;">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; fill: var(--neutral-900);">
   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
   </svg>
   </button>
@@ -784,9 +784,9 @@ const AuthPageMethods = {
     <div style="display: flex; justify-content: flex-end; margin: -0.5rem 0 0.5rem;">
     <a onclick="Pages.renderForgotPassword(); Pages.closeAuthOverlay(); return false;"
     class="auth-link"
-    style="font-size: 0.875rem; color: #71717a; transition: color 0.2s; cursor: pointer;"
-    onmouseover="this.style.color='#0046be'"
-    onmouseout="this.style.color='#71717a'">
+    style="font-size: 0.875rem; color: var(--neutral-600); transition: color 0.2s; cursor: pointer;"
+    onmouseover="this.style.color='var(--primary)'"
+    onmouseout="this.style.color='var(--neutral-600)'">
     Forgot password?
     </a>
     </div>
@@ -899,9 +899,7 @@ const AuthPageMethods = {
       align-items: center;
       justify-content: center;
       padding: 2rem;
-      background: #050505;
-      background-image: radial-gradient(circle at 15% 50%, rgba(0, 70, 190, 0.08), transparent 25%),
-      radial-gradient(circle at 85% 30%, rgba(0, 70, 190, 0.05), transparent 25%);
+      background: var(--bg-secondary);
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
     .auth-card-modern {
@@ -909,10 +907,10 @@ const AuthPageMethods = {
       width: 100%;
       max-width: 28rem;
       padding: 1.5rem;
-      background: #0a0a0a;
+      background: var(--bg-primary);
       border-radius: 0.75rem;
-      border: 1px solid rgba(39, 39, 42, 1);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--neutral-300);
+      box-shadow: var(--shadow-xl);
     }
     .auth-card-header {
       text-align: center;
@@ -933,12 +931,12 @@ const AuthPageMethods = {
       font-size: 1.5rem;
       font-weight: 600;
       letter-spacing: -0.025em;
-      color: #fafafa;
+      color: var(--neutral-900);
       margin-bottom: 0.25rem;
     }
     .auth-subtitle {
       font-size: 0.875rem;
-      color: #a1a1aa;
+      color: var(--neutral-600);
     }
     .form-group-modern {
       margin-bottom: 1rem;
@@ -947,7 +945,7 @@ const AuthPageMethods = {
       display: block;
       font-size: 0.875rem;
       font-weight: 500;
-      color: #fafafa;
+      color: var(--neutral-900);
       margin-bottom: 0.5rem;
     }
     .form-input {
@@ -955,20 +953,20 @@ const AuthPageMethods = {
       height: 2.75rem;
       width: 100%;
       border-radius: 0.375rem;
-      border: 1px solid rgba(39, 39, 42, 1);
-      background: #0a0a0a;
+      border: 1px solid var(--neutral-300);
+      background: var(--bg-secondary);
       padding: 0 0.75rem;
       font-size: 0.875rem;
-      color: #fafafa;
+      color: var(--neutral-900);
       transition: all 0.2s;
     }
     .form-input:focus {
       outline: none;
-      border-color: rgba(0, 70, 190, 0.5);
-      box-shadow: 0 0 0 2px rgba(0, 70, 190, 0.2);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-light);
     }
     .form-input::placeholder {
-      color: #52525b;
+      color: var(--neutral-500);
     }
     .password-input-wrapper {
       position: relative;
@@ -982,11 +980,11 @@ const AuthPageMethods = {
       border: none;
       cursor: pointer;
       padding: 0.25rem;
-      color: #71717a;
+      color: var(--neutral-600);
       transition: color 0.2s;
     }
     .password-toggle-btn:hover {
-      color: #fafafa;
+      color: var(--neutral-900);
     }
     .form-check-modern {
       display: flex;
@@ -996,11 +994,11 @@ const AuthPageMethods = {
     }
     .form-check-modern input[type="checkbox"] {
       margin-top: 0.125rem;
-      accent-color: #0046be;
+      accent-color: var(--primary);
     }
     .form-check-modern label {
       font-size: 0.875rem;
-      color: #a1a1aa;
+      color: var(--neutral-600);
       cursor: pointer;
     }
     .submit-btn {
@@ -1015,42 +1013,42 @@ const AuthPageMethods = {
       height: 2.75rem;
       padding: 0 1rem;
       width: 100%;
-      background: #18181b;
-      color: #fafafa;
-      border: 1px solid rgba(39, 39, 42, 1);
+      background: var(--bg-tertiary);
+      color: var(--neutral-900);
+      border: 1px solid var(--neutral-300);
       cursor: pointer;
     }
     .submit-btn:hover {
-      background: #27272a;
-      border-color: rgba(63, 63, 70, 1);
+      background: var(--neutral-200);
+      border-color: var(--neutral-400);
     }
     .submit-btn-primary {
-      background: #0046be;
-      color: #ffffff;
+      background: var(--primary);
+      color: var(--bg-primary);
       border: none;
     }
     .submit-btn-primary:hover {
-      background: #003399;
+      background: var(--primary-hover);
     }
     .auth-footer-links {
       text-align: center;
       margin-top: 1.5rem;
       padding-top: 1.5rem;
-      border-top: 1px solid rgba(39, 39, 42, 1);
+      border-top: 1px solid var(--neutral-200);
     }
     .auth-footer-links p {
       font-size: 0.875rem;
-      color: #a1a1aa;
+      color: var(--neutral-600);
     }
     .auth-link {
-      color: #fafafa;
+      color: var(--neutral-900);
       text-decoration: underline;
       text-underline-offset: 4px;
       transition: color 0.2s;
       cursor: pointer;
     }
     .auth-link:hover {
-      color: #d4d4d8;
+      color: var(--primary);
     }
     </style>
 
@@ -1129,12 +1127,12 @@ const AuthPageMethods = {
         </svg>
       </button>
       <button class="social-btn" title="Sign up with Apple" onclick="showToast('Social login is not available in offline mode', 'error')">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; fill: #fafafa;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; fill: var(--neutral-900);">
           <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.09997 21.18C7.78997 22.05 6.79997 20.68 5.95997 19.47C4.24997 17 2.93997 12.45 4.69997 9.39C5.56997 7.87 7.12997 6.91 8.81997 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.09 16.67C20.06 16.74 19.67 18.11 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"></path>
         </svg>
       </button>
       <button class="social-btn" title="Sign up with X" onclick="showToast('Social login is not available in offline mode', 'error')">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; fill: #fafafa;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; fill: var(--neutral-900);">
           <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
         </svg>
       </button>
