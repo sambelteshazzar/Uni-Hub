@@ -1,5 +1,6 @@
 /* ============================================
    DASHBOARD - Vertical Tabs Modern Design
+   Adapts to light/dark theme via CSS variables
    ============================================ */
 
 .dashboard-vertical {
@@ -7,7 +8,7 @@
   padding: 2rem 1rem;
   display: flex;
   justify-content: center;
-  background: #0a0a0a;
+  background: var(--bg-secondary);
 }
 
 .dashboard-card {
@@ -16,19 +17,17 @@
   display: grid;
   grid-template-columns: 260px 1fr;
   min-height: 600px;
-  background: rgba(20, 20, 20, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-primary);
+  border: var(--border-light);
   border-radius: 1rem;
   overflow: hidden;
-  box-shadow:
-    0 25px 50px rgba(0, 0, 0, 0.4),
-    0 0 40px rgba(0, 70, 190, 0.05);
+  box-shadow: var(--shadow-lg);
 }
 
 /* Sidebar */
 .dv-sidebar {
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(15, 15, 15, 0.5);
+  border-right: var(--border-light);
+  background: var(--bg-secondary);
   padding: 1.5rem;
 }
 
@@ -38,14 +37,14 @@
   gap: 0.75rem;
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: var(--border-light);
 }
 
 .dv-user-avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #0046be, #3b82f6);
+  background: linear-gradient(135deg, var(--primary), #3b82f6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -58,12 +57,12 @@
 .dv-user-name {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #fafafa;
+  color: var(--neutral-800);
 }
 
 .dv-user-email {
   font-size: 0.75rem;
-  color: #71717a;
+  color: var(--neutral-500);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -85,7 +84,7 @@
   border: none;
   border-radius: 0.5rem;
   background: transparent;
-  color: #a1a1aa;
+  color: var(--neutral-600);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -95,13 +94,13 @@
 }
 
 .dv-tab:hover {
-  background: rgba(255, 255, 255, 0.03);
-  color: #d4d4d8;
+  background: var(--neutral-100);
+  color: var(--neutral-700);
 }
 
 .dv-tab.active {
-  background: rgba(0, 70, 190, 0.1);
-  color: #93c5fd;
+  background: var(--primary-light);
+  color: var(--primary);
 }
 
 .dv-tab.active::before {
@@ -112,7 +111,7 @@
   transform: translateY(-50%);
   width: 3px;
   height: 60%;
-  background: #0046be;
+  background: var(--primary);
   border-radius: 0 2px 2px 0;
 }
 
@@ -138,14 +137,15 @@
   margin-left: auto;
   padding: 0.125rem 0.5rem;
   border-radius: 9999px;
-  background: rgba(0, 70, 190, 0.15);
-  color: #93c5fd;
+  background: var(--primary-light);
+  color: var(--primary);
   font-size: 0.7rem;
   font-weight: 600;
 }
 
 .dv-tab.active .dv-tab-badge {
-  background: rgba(0, 70, 190, 0.25);
+  background: var(--primary);
+  color: #fff;
 }
 
 /* Main Content */
@@ -178,14 +178,14 @@
 .dv-panel-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #fafafa;
+  color: var(--neutral-900);
   letter-spacing: -0.025em;
   margin-bottom: 1.5rem;
 }
 
 .dv-panel-subtitle {
   font-size: 0.875rem;
-  color: #71717a;
+  color: var(--neutral-500);
   margin-bottom: 2rem;
 }
 
@@ -198,16 +198,16 @@
 }
 
 .dv-stat {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-secondary);
+  border: var(--border-light);
   border-radius: 0.75rem;
   padding: 1.25rem;
   transition: all 0.2s;
 }
 
 .dv-stat:hover {
-  border-color: rgba(0, 70, 190, 0.2);
-  background: rgba(0, 70, 190, 0.03);
+  border-color: var(--primary);
+  background: var(--primary-light);
 }
 
 .dv-stat-icon {
@@ -217,26 +217,26 @@
   align-items: center;
   justify-content: center;
   border-radius: 0.5rem;
-  background: rgba(0, 70, 190, 0.1);
+  background: var(--primary-light);
   margin-bottom: 0.75rem;
 }
 
 .dv-stat-icon svg {
   width: 18px;
   height: 18px;
-  stroke: #93c5fd;
+  stroke: var(--primary);
 }
 
 .dv-stat-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #fafafa;
+  color: var(--neutral-900);
   margin-bottom: 0.25rem;
 }
 
 .dv-stat-label {
   font-size: 0.75rem;
-  color: #71717a;
+  color: var(--neutral-500);
   font-weight: 500;
 }
 
@@ -251,12 +251,12 @@
 .dv-section-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #d4d4d8;
+  color: var(--neutral-800);
 }
 
 .dv-section-link {
   font-size: 0.8rem;
-  color: #93c5fd;
+  color: var(--primary);
   cursor: pointer;
   transition: color 0.2s;
   background: none;
@@ -265,7 +265,7 @@
 }
 
 .dv-section-link:hover {
-  color: #60a5fa;
+  color: var(--primary-hover);
 }
 
 .dv-orders {
@@ -279,15 +279,15 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.875rem 1rem;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: var(--bg-secondary);
+  border: var(--border-light);
   border-radius: 0.5rem;
   transition: all 0.2s;
 }
 
 .dv-order-item:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(0, 70, 190, 0.15);
+  background: var(--bg-tertiary);
+  border-color: var(--primary);
 }
 
 .dv-order-icon {
@@ -297,7 +297,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 0.375rem;
-  background: rgba(0, 70, 190, 0.1);
+  background: var(--primary-light);
   font-size: 0.85rem;
 }
 
@@ -309,18 +309,18 @@
 .dv-order-number {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #d4d4d8;
+  color: var(--neutral-800);
 }
 
 .dv-order-amount {
   font-size: 0.75rem;
-  color: #93c5fd;
+  color: var(--primary);
   font-weight: 500;
 }
 
 .dv-order-time {
   font-size: 0.7rem;
-  color: #71717a;
+  color: var(--neutral-500);
 }
 
 .dv-order-status {
@@ -331,23 +331,23 @@
 }
 
 .dv-order-status.placed {
-  background: rgba(0, 70, 190, 0.15);
-  color: #93c5fd;
+  background: var(--info-light);
+  color: var(--info);
 }
 
 .dv-order-status.confirmed {
-  background: rgba(16, 185, 129, 0.15);
-  color: #6ee7b7;
+  background: var(--success-light);
+  color: var(--success);
 }
 
 .dv-order-status.delivered {
-  background: rgba(16, 185, 129, 0.2);
-  color: #6ee7b7;
+  background: var(--success-light);
+  color: var(--success);
 }
 
 .dv-order-status.cancelled {
-  background: rgba(239, 68, 68, 0.15);
-  color: #fca5a5;
+  background: var(--danger-light);
+  color: var(--danger);
 }
 
 /* Wishlist Grid */
@@ -370,7 +370,7 @@
   display: block;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #a1a1aa;
+  color: var(--neutral-600);
   margin-bottom: 0.5rem;
 }
 
@@ -378,17 +378,17 @@
   width: 100%;
   padding: 0.625rem 0.875rem;
   border-radius: 0.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.03);
-  color: #fafafa;
+  border: var(--border-medium);
+  background: var(--bg-secondary);
+  color: var(--neutral-900);
   font-size: 0.875rem;
   transition: all 0.2s;
 }
 
 .dv-form-input:focus {
   outline: none;
-  border-color: #0046be;
-  box-shadow: 0 0 0 3px rgba(0, 70, 190, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 .dv-form-input:disabled {
@@ -411,26 +411,26 @@
 }
 
 .dv-btn-primary {
-  background: #0046be;
+  background: var(--primary);
   color: #fff;
 }
 
 .dv-btn-primary:hover {
-  background: #003399;
+  background: var(--primary-hover);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 70, 190, 0.3);
 }
 
 .dv-btn-outline {
   background: transparent;
-  color: #a1a1aa;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--neutral-600);
+  border: var(--border-medium);
 }
 
 .dv-btn-outline:hover {
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #fca5a5;
-  background: rgba(239, 68, 68, 0.05);
+  border-color: var(--danger);
+  color: var(--danger);
+  background: var(--danger-light);
 }
 
 /* Empty State */
@@ -448,13 +448,13 @@
 .dv-empty h3 {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #d4d4d8;
+  color: var(--neutral-800);
   margin-bottom: 0.5rem;
 }
 
 .dv-empty p {
   font-size: 0.875rem;
-  color: #71717a;
+  color: var(--neutral-500);
 }
 
 /* Responsive */
@@ -465,7 +465,7 @@
 
   .dv-sidebar {
     border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: var(--border-light);
     padding: 1rem;
   }
 
