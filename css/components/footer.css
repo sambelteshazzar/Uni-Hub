@@ -3,10 +3,10 @@
    ============================================ */
 
 .footer {
-  background: #f4f4f4;
-  color: #1a1a1a;
+  background: var(--neutral-100);
+  color: var(--neutral-900);
   padding: var(--space-4xl) 0 var(--space-xl);
-  border-top: 1px solid #e5e5e5;
+  border-top: 1px solid var(--neutral-200);
 }
 
 .footer .container {
@@ -20,20 +20,20 @@
   gap: var(--space-3xl);
   margin-bottom: var(--space-3xl);
   padding-bottom: var(--space-3xl);
-  border-bottom: 1px solid #d4d4d4;
+  border-bottom: 1px solid var(--neutral-300);
 }
 
 .footer-section h4 {
   font-size: var(--text-sm);
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--neutral-900);
   margin-bottom: var(--space-lg);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .footer-section p {
-  color: #666666;
+  color: var(--neutral-600);
   line-height: 1.6;
   margin-bottom: var(--space-md);
   font-size: var(--text-sm);
@@ -50,14 +50,14 @@
 }
 
 .footer-section ul li a {
-  color: #666666;
+  color: var(--neutral-600);
   transition: color 0.15s ease;
   font-size: var(--text-sm);
   text-decoration: none;
 }
 
 .footer-section ul li a:hover {
-  color: #0046be;
+  color: var(--primary);
   text-decoration: none;
 }
 
@@ -69,13 +69,13 @@
 .footer-brand-name {
   font-size: var(--text-2xl);
   font-weight: 800;
-  color: #0046be;
+  color: var(--primary);
   margin-bottom: var(--space-md);
   letter-spacing: -0.02em;
 }
 
 .footer-brand-desc {
-  color: #666666;
+  color: var(--neutral-600);
   font-size: var(--text-sm);
   line-height: 1.6;
   max-width: 300px;
@@ -89,7 +89,7 @@
 .footer-newsletter p {
   margin-bottom: var(--space-sm);
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--neutral-900);
 }
 
 .footer-newsletter-form {
@@ -101,22 +101,24 @@
 flex: 1;
 min-height: 44px;
 padding: var(--space-sm) var(--space-md) var(--space-sm) 3rem;
-  border: 1px solid #d4d4d4;
+  border: 1px solid var(--neutral-300);
   border-radius: var(--radius-sm);
   font-size: var(--text-sm);
+  background: var(--bg-primary);
+  color: var(--neutral-900);
 }
 
 .footer-newsletter-input:focus {
   outline: none;
-  border-color: #0046be;
-  box-shadow: 0 0 0 2px rgba(0, 70, 190, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
 }
 
 .footer-newsletter-btn {
 padding: var(--space-sm) var(--space-lg);
 min-height: 44px;
-  background: #0046be;
-  color: #ffffff;
+  background: var(--primary);
+  color: var(--bg-primary);
   border: none;
   border-radius: var(--radius-sm);
   font-size: var(--text-sm);
@@ -126,7 +128,7 @@ min-height: 44px;
 }
 
 .footer-newsletter-btn:hover {
-  background: #003399;
+  background: var(--primary-hover);
 }
 
 /* Footer Bottom Bar */
@@ -138,7 +140,7 @@ min-height: 44px;
 }
 
 .footer-bottom p {
-  color: #666666;
+  color: var(--neutral-600);
   font-size: var(--text-xs);
   margin: 0;
 }
@@ -149,14 +151,14 @@ min-height: 44px;
 }
 
 .footer-bottom-links a {
-  color: #666666;
+  color: var(--neutral-600);
   font-size: var(--text-xs);
   text-decoration: none;
   transition: color 0.15s ease;
 }
 
 .footer-bottom-links a:hover {
-  color: #0046be;
+  color: var(--primary);
   text-decoration: none;
 }
 
@@ -172,17 +174,17 @@ min-height: 44px;
   justify-content: center;
   width: 36px;
   height: 36px;
-  background: #e5e5e5;
+  background: var(--neutral-200);
   border-radius: var(--radius-full);
-  color: #666666;
+  color: var(--neutral-600);
   font-size: var(--text-base);
   text-decoration: none;
   transition: all 0.15s ease;
 }
 
 .footer-social a:hover {
-  background: #0046be;
-  color: #ffffff;
+  background: var(--primary);
+  color: var(--bg-primary);
 }
 
 /* Responsive */
@@ -235,4 +237,20 @@ min-height: 44px;
   .footer-brand-desc {
     max-width: 100%;
   }
+}
+
+/* ============================================
+   Dark Mode Overrides
+   ============================================ */
+[data-theme="dark"] .footer-newsletter-input {
+  background: var(--bg-secondary);
+  color: var(--neutral-100);
+}
+
+[data-theme="dark"] .footer-newsletter-input::placeholder {
+  color: var(--neutral-400);
+}
+
+[data-theme="dark"] .footer-social a {
+  background: var(--bg-tertiary);
 }

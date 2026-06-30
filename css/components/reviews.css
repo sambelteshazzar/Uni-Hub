@@ -10,7 +10,7 @@
 }
 
 .star {
-  color: #d1d5db;
+  color: var(--neutral-300, #d1d5db);
   transition: color 0.2s ease;
   width: 1em;
   height: 1em;
@@ -21,14 +21,14 @@
 }
 
 .star.half {
-  background: linear-gradient(90deg, #fbbf24 50%, #d1d5db 50%);
+  background: linear-gradient(90deg, #fbbf24 50%, var(--neutral-300, #d1d5db) 50%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .star.empty {
-  color: #d1d5db;
+  color: var(--neutral-300, #d1d5db);
 }
 
 /* Star SVG styling */
@@ -48,7 +48,7 @@
 }
 
 .star-input {
-  color: #d1d5db;
+  color: var(--neutral-300, #d1d5db);
   transition: all 0.15s ease;
   cursor: pointer;
 }
@@ -68,7 +68,7 @@
   display: flex;
   gap: var(--space-2xl, 24px);
   padding: var(--space-xl, 20px);
-  background-color: #ffffff;
+  background-color: var(--bg-primary, #ffffff);
   border-radius: var(--radius-xl, 12px);
   box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
   margin-bottom: var(--space-lg, 16px);
@@ -154,7 +154,7 @@
 }
 
 .review-card {
-  background-color: #ffffff;
+  background-color: var(--bg-primary, #ffffff);
   border-radius: var(--radius-xl, 12px);
   padding: var(--space-xl, 20px);
   box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
@@ -289,7 +289,7 @@
   align-items: center;
   gap: var(--space-md, 12px);
   padding-top: var(--space-md, 12px);
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  border-top: 1px solid var(--neutral-200, rgba(0, 0, 0, 0.06));
 }
 
 .review-action-btn {
@@ -313,7 +313,7 @@
 
 .review-action-btn.active {
   color: var(--primary, #0046be);
-  background-color: rgba(0, 70, 190, 0.08);
+  background-color: var(--primary-light, rgba(0, 70, 190, 0.08));
 }
 
 /* Seller response */
@@ -373,7 +373,7 @@
 }
 
 .review-form-modal {
-  background-color: #ffffff;
+  background-color: var(--bg-primary, #ffffff);
   border-radius: var(--radius-xl, 12px);
   max-width: 500px;
   width: 100%;
@@ -387,7 +387,7 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--space-xl, 20px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid var(--neutral-200, rgba(0, 0, 0, 0.06));
 }
 
 .review-form-title {
@@ -440,7 +440,7 @@
 .review-form-textarea {
   width: 100%;
   padding: 12px 16px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--neutral-300, rgba(0, 0, 0, 0.1));
   border-radius: var(--radius-lg, 8px);
   font-size: 14px;
   line-height: 1.5;
@@ -477,7 +477,7 @@
   display: flex;
   gap: var(--space-md, 12px);
   padding: var(--space-xl, 20px);
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  border-top: 1px solid var(--neutral-200, rgba(0, 0, 0, 0.06));
 }
 
 .review-form-btn {
@@ -522,7 +522,7 @@
   align-items: center;
   gap: var(--space-sm, 8px);
   padding: 8px 12px;
-  background-color: #ffffff;
+  background-color: var(--bg-primary, #ffffff);
   border-radius: var(--radius-lg, 8px);
   box-shadow: var(--shadow-xs, 0 1px 2px rgba(0, 0, 0, 0.05));
 }
@@ -625,7 +625,7 @@
 }
 
 .review-card-skeleton {
-  background-color: #ffffff;
+  background-color: var(--bg-primary, #ffffff);
   border-radius: var(--radius-xl, 12px);
   padding: var(--space-xl, 20px);
   box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
@@ -633,7 +633,7 @@
 
 .skeleton-line {
   height: 16px;
-  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background: linear-gradient(90deg, var(--neutral-200, #f3f4f6) 25%, var(--neutral-300, #e5e7eb) 50%, var(--neutral-200, #f3f4f6) 75%);
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s ease-in-out infinite;
   border-radius: 4px;
@@ -710,4 +710,24 @@
     gap: var(--space-md, 12px);
     align-items: flex-start;
   }
+}
+
+/* --- Dark Mode Overrides --- */
+[data-theme="dark"] .star,
+[data-theme="dark"] .star.empty,
+[data-theme="dark"] .star-input {
+  color: var(--neutral-300);
+}
+
+[data-theme="dark"] .star.half {
+  background: linear-gradient(90deg, #fbbf24 50%, var(--neutral-300) 50%);
+}
+
+[data-theme="dark"] .review-form-textarea {
+  background-color: var(--bg-secondary);
+  color: var(--neutral-900);
+}
+
+[data-theme="dark"] .review-form-textarea:focus {
+  box-shadow: 0 0 0 3px rgba(109, 158, 255, 0.15);
 }

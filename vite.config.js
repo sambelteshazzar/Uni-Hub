@@ -4,8 +4,6 @@ import { cpSync, readFileSync, writeFileSync, readdirSync, mkdirSync } from 'fs'
 import { transformSync } from 'esbuild';
 
 const appScripts = [
-  '<script type="module" src="/js/utils/icons.js?v=7"></script>',
-  '<script type="module" src="/js/utils/toast.js?v=8"></script>',
   '<script type="module" src="/js/app-init.js?v=7"></script>',
 ];
 

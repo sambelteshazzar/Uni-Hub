@@ -64,7 +64,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
   const deliveryFee = delivery.mode === 'inperson' ? 0 : delivery.mode === 'yango' ? 12 : 15;
   const grandTotal = subtotal + deliveryFee;
 
-  const order = await db('orders').transaction(async (txDb) => {
+  const order = await db('orders').transaction(async () => {
     const now = new Date();
     const yy = now.getFullYear().toString().slice(-2);
     const mm = (now.getMonth() + 1).toString().padStart(2, '0');

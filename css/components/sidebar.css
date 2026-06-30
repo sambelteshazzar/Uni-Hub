@@ -9,7 +9,7 @@
   left: 0;
   height: 100vh;
   width: 280px;
-  background: var(--color-white);
+  background: var(--bg-primary);
   border-right: 1px solid var(--neutral-200);
   display: flex;
   flex-direction: column;
@@ -190,7 +190,7 @@
 
 /* Filter Sidebar (for browse page) */
 .filter-sidebar {
-  background: var(--color-white);
+  background: var(--bg-primary);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
   position: sticky;

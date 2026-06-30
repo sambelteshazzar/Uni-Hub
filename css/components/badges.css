@@ -202,8 +202,8 @@ justify-content: center;
 width: 18px;
 height: 18px;
 border-radius: 50%;
-background: var(--color-primary);
-color: var(--color-white);
+  background: var(--color-primary);
+  color: #ffffff;
 font-size: 10px;
 }
 
@@ -251,7 +251,7 @@ flex-shrink: 0;
   top: var(--space-sm);
   right: var(--space-sm);
   background: var(--color-danger);
-  color: var(--color-white);
+  color: #ffffff;
   padding: 2px 8px;
   font-size: var(--text-xs);
   font-weight: var(--font-weight-semibold);
@@ -265,7 +265,7 @@ flex-shrink: 0;
   top: var(--space-sm);
   right: var(--space-sm);
   background: var(--color-warning);
-  color: var(--color-white);
+  color: #ffffff;
   padding: 4px 10px;
   font-size: var(--text-xs);
   font-weight: var(--font-weight-semibold);
@@ -276,7 +276,7 @@ flex-shrink: 0;
 /* Discount Badge */
 .discount-badge {
   background: var(--color-danger);
-  color: var(--color-white);
+  color: #ffffff;
   padding: 4px 10px;
   font-size: var(--text-xs);
   font-weight: var(--font-weight-semibold);
@@ -353,4 +353,132 @@ flex-shrink: 0;
   50% {
     opacity: 0.7;
   }
+}
+
+/* ============================================
+   DARK MODE OVERRIDES
+   ============================================ */
+[data-theme="dark"] .condition-badge.new {
+  background: rgba(109, 158, 255, 0.15);
+  color: #6d9eff;
+}
+
+[data-theme="dark"] .condition-badge.like-new {
+  background: rgba(77, 127, 219, 0.15);
+  color: #4d7fdb;
+}
+
+[data-theme="dark"] .condition-badge.fair {
+  background: rgba(255, 183, 77, 0.15);
+  color: #ffb74d;
+}
+
+[data-theme="dark"] .condition-badge.good {
+  background: rgba(102, 187, 106, 0.15);
+  color: #66bb6a;
+}
+
+[data-theme="dark"] .condition-badge.excellent {
+  background: rgba(255, 206, 0, 0.15);
+  color: #ffce00;
+}
+
+[data-theme="dark"] .product-card-badge.new {
+  background: rgba(109, 158, 255, 0.15);
+  color: #6d9eff;
+}
+
+[data-theme="dark"] .product-card-badge.like-new {
+  background: rgba(77, 127, 219, 0.15);
+  color: #4d7fdb;
+}
+
+[data-theme="dark"] .product-card-badge.fair {
+  background: rgba(255, 183, 77, 0.15);
+  color: #ffb74d;
+}
+
+[data-theme="dark"] .product-card-badge.good {
+  background: rgba(102, 187, 106, 0.15);
+  color: #66bb6a;
+}
+
+[data-theme="dark"] .product-card-badge.excellent {
+  background: rgba(255, 206, 0, 0.15);
+  color: #ffce00;
+}
+
+[data-theme="dark"] .status-badge.placed {
+  background: rgba(109, 158, 255, 0.15);
+  color: #6d9eff;
+}
+
+[data-theme="dark"] .status-badge.confirmed {
+  background: rgba(76, 175, 80, 0.15);
+  color: #4caf50;
+}
+
+[data-theme="dark"] .status-badge.in-transit {
+  background: rgba(255, 183, 77, 0.15);
+  color: #ffb74d;
+}
+
+[data-theme="dark"] .status-badge.delivered {
+  background: rgba(76, 175, 80, 0.15);
+  color: #66bb6a;
+}
+
+[data-theme="dark"] .status-badge.cancelled {
+  background: rgba(239, 83, 80, 0.15);
+  color: #ef5350;
+}
+
+[data-theme="dark"] .role-badge.buyer {
+  background: rgba(109, 158, 255, 0.15);
+  color: #6d9eff;
+}
+
+[data-theme="dark"] .role-badge.seller {
+  background: rgba(255, 183, 77, 0.15);
+  color: #ffb74d;
+}
+
+[data-theme="dark"] .role-badge.admin {
+  background: rgba(239, 83, 80, 0.15);
+  color: #ef5350;
+}
+
+[data-theme="dark"] .trust-badge-top-seller {
+  background: rgba(255, 183, 77, 0.15);
+  color: #ffb74d;
+}
+
+[data-theme="dark"] .trust-badge-verified {
+  background: rgba(76, 175, 80, 0.15);
+  color: #4caf50;
+}
+
+[data-theme="dark"] .trust-badge-secure {
+  background: rgba(109, 158, 255, 0.15);
+  color: #6d9eff;
+}
+
+[data-theme="dark"] .trust-badge-buyer-protect {
+  background: rgba(109, 158, 255, 0.15);
+  color: #6d9eff;
+}
+
+[data-theme="dark"] .delivery-badge.bolt {
+  background: rgba(255, 183, 77, 0.15);
+  color: #ffb74d;
+}
+
+[data-theme="dark"] .delivery-badge.yango {
+  background: rgba(109, 158, 255, 0.15);
+  color: #6d9eff;
+}
+
+[data-theme="dark"] .delivery-badge.inperson {
+  background: rgba(76, 175, 80, 0.15);
+  color: #4caf50;
 }

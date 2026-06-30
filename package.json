@@ -32,11 +32,7 @@
     "vercel": "^54.9.1",
     "vite": "^8.0.10"
   },
-  "dependencies": {
-    "@sentry/browser": "^10.50.0",
-    "socket.io-client": "^4.8.3",
-    "ws": "^8.20.0"
-  },
+  "dependencies": {},
   "directories": {
     "doc": "docs"
   },

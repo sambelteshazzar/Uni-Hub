@@ -632,4 +632,27 @@ function db (table) {
   return new Db(table);
 }
 
-module.exports = { db, Db, generateId, parseJson, stringifyJson, toBool, fromBool, mapUserRow, mapProductRow, mapOrderRow, mapReviewRow, mapNotificationRow, mapMessageRow, mapDeliveryRow };
+async function runInTransaction (fn) {
+  if (isTurso()) {
+    const client = getTursoClient();
+    if (!client) throw new Error('Turso client not initialized');
+    await client.execute('BEGIN');
+    try {
+      const result = await fn(db);
+      await client.execute('COMMIT');
+      return result;
+    } catch (err) {
+      try { await client.execute('ROLLBACK'); } catch (_e) { /* ignore rollback error */ }
+      throw err;
+    }
+  }
+  const localDb = getDb();
+  if (!localDb) throw new Error('Local DB not initialized');
+  const tx = localDb.transaction(() => {
+    throw new Error('Synchronous transaction cannot be used with async code');
+  });
+  const result = await fn(db);
+  return result;
+}
+
+module.exports = { db, Db, generateId, parseJson, stringifyJson, toBool, fromBool, mapUserRow, mapProductRow, mapOrderRow, mapReviewRow, mapNotificationRow, mapMessageRow, mapDeliveryRow, runInTransaction };
