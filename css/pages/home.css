@@ -326,14 +326,14 @@
   text-align: left;
   font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 700;
-  color: #000000;
+  color: var(--neutral-900);
   margin-bottom: var(--space-sm);
   letter-spacing: -0.02em;
 }
 
 .section-subtitle {
   text-align: left;
-  color: #666666;
+  color: var(--neutral-600);
   font-size: var(--text-lg);
   margin-bottom: var(--space-3xl);
 }
@@ -345,7 +345,7 @@
 }
 
 .category-card {
-  background: #f8f8f8;
+  background: var(--bg-secondary);
   padding: var(--space-xl);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -353,8 +353,8 @@
 }
 
 .category-card:hover {
-  background: #ffffff;
-  border-color: #e5e5e5;
+  background: var(--bg-primary);
+  border-color: var(--border-light);
   transform: translateY(-4px);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
@@ -368,14 +368,14 @@
 .category-card h4 {
   font-size: var(--text-lg);
   font-weight: 600;
-  color: #000000;
+  color: var(--neutral-900);
   margin-bottom: var(--space-sm);
   letter-spacing: -0.01em;
 }
 
 .category-card p {
   font-size: var(--text-sm);
-  color: #666666;
+  color: var(--neutral-600);
   line-height: 1.5;
 }
 
@@ -423,6 +423,61 @@
 .cta-section .btn-primary:hover {
   background: #f0f0f0;
   border-color: #f0f0f0;
+}
+
+/* ============================================
+   DARK MODE OVERRIDES
+   ============================================ */
+[data-theme="dark"] .hero-cta .btn-primary {
+  background: var(--neutral-900);
+  color: var(--neutral-100);
+  border-color: var(--neutral-900);
+}
+
+[data-theme="dark"] .hero-cta .btn-primary:hover {
+  background: var(--neutral-700);
+  border-color: var(--neutral-700);
+}
+
+[data-theme="dark"] .hero-cta .btn-outline {
+  color: var(--neutral-100);
+  border-color: var(--neutral-100);
+}
+
+[data-theme="dark"] .hero-cta .btn-outline:hover {
+  background: var(--neutral-100);
+  color: var(--neutral-900);
+}
+
+[data-theme="dark"] .university-card.selected {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+[data-theme="dark"] .university-card.selected .university-icon,
+[data-theme="dark"] .university-card.selected h3,
+[data-theme="dark"] .university-card.selected .campus-info,
+[data-theme="dark"] .university-card.selected .region-info {
+  color: var(--color-white);
+}
+
+[data-theme="dark"] .cta-section {
+  background: var(--neutral-900);
+}
+
+[data-theme="dark"] .cta-section p {
+  color: var(--neutral-400);
+}
+
+[data-theme="dark"] .cta-section .btn-primary {
+  background: var(--neutral-100);
+  color: var(--neutral-900);
+  border-color: var(--neutral-100);
+}
+
+[data-theme="dark"] .cta-section .btn-primary:hover {
+  background: var(--neutral-200);
+  border-color: var(--neutral-200);
 }
 
 /* ============================================
