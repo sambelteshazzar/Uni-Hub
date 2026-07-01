@@ -238,7 +238,7 @@ exports.updateProduct = asyncHandler(async (req, res) => {
   }
 
   // Check ownership
-  if (req.user.role !== 'admin') {
+  if (req.user.role !== 'admin' && product.seller !== req.user.id) {
     throw new ApiError(403, 'Not authorized to update this product');
   }
 
@@ -277,7 +277,7 @@ exports.deleteProduct = asyncHandler(async (req, res) => {
   }
 
   // Check ownership
-  if (req.user.role !== 'admin') {
+  if (req.user.role !== 'admin' && product.seller !== req.user.id) {
     throw new ApiError(403, 'Not authorized to delete this product');
   }
 
@@ -298,7 +298,7 @@ exports.uploadProductImages = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'Product not found');
   }
 
-  if (req.user.role !== 'admin') {
+  if (req.user.role !== 'admin' && product.seller !== req.user.id) {
     throw new ApiError(403, 'Not authorized to update this product');
   }
 

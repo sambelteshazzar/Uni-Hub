@@ -27,13 +27,13 @@ router.get('/', getProducts);
 router.get('/:id/colors', validateObjectId, getProductColors);
 router.get('/:id', validateObjectId, getProduct);
 
-router.post('/', protect, authorize('admin'), createProduct);
-router.post('/upload', protect, authorize('admin'), uploadMultipleMemory('images', 5), uploadImages);
+router.post('/', protect, createProduct);
+router.post('/upload', protect, uploadMultipleMemory('images', 5), uploadImages);
 router.post('/:id/images', validateObjectId, protect, uploadMultiple('images', 5), uploadProductImages);
 router.post('/:id/colors', validateObjectId, protect, addProductColor);
 router.put('/:id/colors/:colorId', validateObjectId, protect, updateProductColor);
 router.delete('/:id/colors/:colorId', validateObjectId, protect, deleteProductColor);
-router.put('/:id', validateObjectId, protect, authorize('admin'), updateProduct);
-router.delete('/:id', validateObjectId, protect, authorize('admin'), deleteProduct);
+router.put('/:id', validateObjectId, protect, updateProduct);
+router.delete('/:id', validateObjectId, protect, deleteProduct);
 
 module.exports = router;

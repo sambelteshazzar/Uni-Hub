@@ -5,14 +5,14 @@
 
 /* Dashboard Container */
 .bb-dashboard {
-  background: #f4f4f4;
+  background: var(--bg-secondary);
   min-height: calc(100vh - 200px);
 }
 
 /* Dashboard Header */
 .bb-dashboard-header {
-  background: #ffffff;
-  border-bottom: 1px solid #e5e5e5;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--neutral-200);
   padding: var(--space-lg) var(--space-xl);
 }
 
@@ -27,7 +27,7 @@
 .bb-dashboard-title {
   font-size: var(--text-2xl);
   font-weight: 800;
-  color: #1a1a1a;
+  color: var(--neutral-900);
   margin: 0;
 }
 
@@ -41,7 +41,7 @@
   width: 40px;
   height: 40px;
   border-radius: var(--radius-full);
-  background: #0046be;
+  background: var(--primary);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -57,12 +57,12 @@
 .bb-dashboard-user-name {
   font-size: var(--text-sm);
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--neutral-900);
 }
 
 .bb-dashboard-user-email {
   font-size: var(--text-xs);
-  color: #666666;
+  color: var(--neutral-600);
 }
 
 /* Dashboard Layout */
@@ -121,7 +121,7 @@
   gap: 12px;
   padding: 12px 16px;
   border-radius: 12px;
-  color: #404040;
+  color: var(--neutral-700);
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
@@ -134,13 +134,13 @@
 }
 
 .bb-dashboard-nav-link:hover {
-  background: rgba(255, 255, 255, 0.8);
-  color: #171717;
+  background: var(--neutral-100);
+  color: var(--neutral-800);
 }
 
 .bb-dashboard-nav-link.active {
-  background: rgba(255, 255, 255, 0.95);
-  color: #171717;
+  background: var(--bg-primary);
+  color: var(--neutral-900);
   font-weight: 600;
   box-shadow: 
     0 1px 3px rgba(0, 0, 0, 0.08),
@@ -155,7 +155,7 @@
 
 .bb-dashboard-nav-badge {
   margin-left: auto;
-  background: #0046be;
+  background: var(--primary);
   color: #ffffff;
   font-size: 11px;
   font-weight: 700;
@@ -191,20 +191,20 @@
 .bb-panel-header {
   margin-bottom: var(--space-xl);
   padding-bottom: var(--space-lg);
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: 1px solid var(--neutral-200);
 }
 
 .bb-panel-title {
   font-size: var(--text-xl);
   font-weight: 800;
-  color: #1a1a1a;
+  color: var(--neutral-900);
   margin-bottom: var(--space-xs);
   letter-spacing: -0.01em;
 }
 
 .bb-panel-subtitle {
   font-size: var(--text-sm);
-  color: #666666;
+  color: var(--neutral-600);
   margin: 0;
 }
 
@@ -235,14 +235,14 @@
 .bb-stat-value {
   font-size: 1.5rem;
   font-weight: 800;
-  color: #171717;
+  color: var(--neutral-800);
   margin-bottom: 4px;
   letter-spacing: -0.02em;
 }
 
 .bb-stat-label {
   font-size: 0.75rem;
-  color: #737373;
+  color: var(--neutral-500);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 500;
@@ -269,13 +269,13 @@
 }
 
 .bb-order-card:hover {
-  border-color: #0046be;
+  border-color: var(--primary);
   background: rgba(255, 255, 255, 0.8);
   box-shadow: 0 2px 8px rgba(0, 70, 190, 0.08);
 }
 
 .bb-order-icon {
-  color: #0046be;
+  color: var(--primary);
   flex-shrink: 0;
 }
 
@@ -286,18 +286,18 @@
 .bb-order-number {
   font-size: 14px;
   font-weight: 600;
-  color: #171717;
+  color: var(--neutral-800);
 }
 
 .bb-order-details {
   font-size: 12px;
-  color: #737373;
+  color: var(--neutral-500);
 }
 
 .bb-order-amount {
   font-size: 16px;
   font-weight: 700;
-  color: #0046be;
+  color: var(--primary);
 }
 
 .bb-order-status {
@@ -310,19 +310,19 @@
 
 .bb-order-status.placed,
 .bb-order-status.processing {
-  background: #fff3e0;
-  color: #d27500;
+  background: var(--warning-light);
+  color: var(--warning);
 }
 
 .bb-order-status.completed,
 .bb-order-status.delivered {
-  background: #e8f5e8;
-  color: #1a8917;
+  background: var(--success-light);
+  color: var(--success);
 }
 
 .bb-order-status.cancelled {
-  background: #ffe8e8;
-  color: #cc0000;
+  background: var(--danger-light);
+  color: var(--danger);
 }
 
 /* Wishlist Grid */
@@ -333,7 +333,7 @@
 }
 
 .bb-wishlist-card {
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--neutral-200);
   border-radius: var(--radius-md);
   overflow: hidden;
   cursor: pointer;
@@ -341,7 +341,7 @@
 }
 
 .bb-wishlist-card:hover {
-  border-color: #0046be;
+  border-color: var(--primary);
   box-shadow: 0 4px 12px rgba(0, 70, 190, 0.1);
 }
 
@@ -358,7 +358,7 @@
 .bb-wishlist-title {
   font-size: var(--text-sm);
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--neutral-900);
   margin-bottom: var(--space-xs);
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -369,7 +369,7 @@
 .bb-wishlist-price {
   font-size: var(--text-base);
   font-weight: 700;
-  color: #0046be;
+  color: var(--primary);
 }
 
 /* Profile Form */
@@ -391,7 +391,7 @@
   display: block;
   font-size: var(--text-sm);
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--neutral-900);
   margin-bottom: var(--space-xs);
 }
 
@@ -399,28 +399,28 @@
   width: 100%;
   height: 44px;
   padding: 0 var(--space-md);
-  border: 1px solid #d4d4d4;
+  border: 1px solid var(--neutral-300);
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
-  color: #1a1a1a;
+  color: var(--neutral-900);
   transition: all 0.15s ease;
 }
 
 .bb-form-input:focus {
   outline: none;
-  border-color: #0046be;
+  border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(0, 70, 190, 0.1);
 }
 
 .bb-form-input:disabled {
-  background: #f4f4f4;
-  color: #666666;
+  background: var(--bg-secondary);
+  color: var(--neutral-600);
 }
 
 .bb-save-btn {
   height: 48px;
   padding: 0 var(--space-xl);
-  background: #0046be;
+  background: var(--primary);
   color: #ffffff;
   border: none;
   border-radius: var(--radius-md);
@@ -433,7 +433,7 @@
 }
 
 .bb-save-btn:hover {
-  background: #003399;
+  background: var(--primary-hover);
 }
 
 /* Empty State */
@@ -444,20 +444,20 @@
 
 .bb-empty-icon {
   margin-bottom: 16px;
-  color: #a3a3a3;
+  color: var(--neutral-400);
   opacity: 0.5;
 }
 
 .bb-empty-title {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #171717;
+  color: var(--neutral-800);
   margin-bottom: 8px;
 }
 
 .bb-empty-desc {
   font-size: 0.875rem;
-  color: #737373;
+  color: var(--neutral-500);
   margin: 0;
 }
 
@@ -483,19 +483,19 @@
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
-  color: #171717;
+  color: var(--neutral-800);
 }
 
 .bb-quick-action:hover {
-  border-color: #0046be;
-  background: rgba(232, 240, 254, 0.6);
+  border-color: var(--primary);
+  background: var(--primary-light);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 70, 190, 0.1);
 }
 
 .bb-quick-action-icon {
   font-size: 1.5rem;
-  color: #0046be;
+  color: var(--primary);
 }
 
 .bb-quick-action-label {
@@ -558,4 +558,73 @@
   .bb-wishlist-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+/* Dark theme overrides */
+[data-theme='dark'] .bb-dashboard-nav {
+  background: rgba(26, 26, 26, 0.75);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.2),
+    0 2px 4px -2px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+[data-theme='dark'] .bb-dashboard-nav-link:hover {
+  background: var(--neutral-100);
+  color: var(--neutral-800);
+}
+
+[data-theme='dark'] .bb-dashboard-nav-link.active {
+  background: var(--bg-secondary);
+  color: var(--neutral-900);
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.2),
+    0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme='dark'] .bb-dashboard-main {
+  background: rgba(26, 26, 26, 0.85);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.2),
+    0 2px 4px -2px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+[data-theme='dark'] .bb-stat-card {
+  background: rgba(36, 36, 36, 0.6);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .bb-stat-card:hover {
+  background: rgba(36, 36, 36, 0.8);
+}
+
+[data-theme='dark'] .bb-order-card {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(36, 36, 36, 0.5);
+}
+
+[data-theme='dark'] .bb-order-card:hover {
+  background: rgba(36, 36, 36, 0.8);
+}
+
+[data-theme='dark'] .bb-quick-action {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(36, 36, 36, 0.5);
+}
+
+[data-theme='dark'] .bb-quick-action:hover {
+  background: var(--primary-light);
+}
+
+[data-theme='dark'] .bb-form-input {
+  background: var(--bg-secondary);
+  border-color: var(--neutral-300);
+  color: var(--neutral-900);
+}
+
+[data-theme='dark'] .bb-form-input:focus {
+  box-shadow: 0 0 0 3px rgba(109, 158, 255, 0.15);
 }

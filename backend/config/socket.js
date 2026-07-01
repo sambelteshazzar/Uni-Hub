@@ -108,11 +108,18 @@ return;
 const participants = await db('conversation_participants')
 .find({ conversationId });
 
+const senderParticipant = participants.find(p => p.userId === socket.userId);
+
+if (!senderParticipant) {
+  socket.emit('error', { message: 'Not a participant in this conversation' });
+  return;
+}
+
 const receiverParticipant = participants.find(p => p.userId !== socket.userId);
 
 if (!receiverParticipant) {
-socket.emit('error', { message: 'Invalid conversation' });
-return;
+  socket.emit('error', { message: 'Invalid conversation' });
+  return;
 }
 
 const receiverId = receiverParticipant.userId;

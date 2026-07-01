@@ -123,7 +123,7 @@ showToast('Review submitted locally!', 'success');
 
       const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = -1 } = options;
       const params = new URLSearchParams({ page, limit, sortBy, sortOrder });
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/seller/${sellerId}?${params}`);
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-production.up.railway.app/api'}/reviews/seller/${sellerId}?${params}`);
       const result = await response.json();
       if (!response.ok) { throw new Error(result.error || 'Failed to fetch reviews'); }
       return result.data;
@@ -144,7 +144,7 @@ showToast('Review submitted locally!', 'success');
         return { averageRating: Math.round(avgRating * 10) / 10, totalReviews: total, distribution };
       }
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/seller/${sellerId}/summary`);
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-production.up.railway.app/api'}/reviews/seller/${sellerId}/summary`);
       const result = await response.json();
       if (!response.ok) { throw new Error(result.error || 'Failed to fetch rating summary'); }
       return result.data;
@@ -168,7 +168,7 @@ showToast('Review submitted locally!', 'success');
 
       const { page = 1, limit = 10 } = options;
       const params = new URLSearchParams({ page, limit });
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/my-reviews?${params}`);
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-production.up.railway.app/api'}/reviews/my-reviews?${params}`);
       const result = await response.json();
       if (!response.ok) { throw new Error(result.error || 'Failed to fetch reviews'); }
       return result.data;
@@ -193,7 +193,7 @@ showToast('Review updated locally!', 'success');
         return reviews[idx];
       }
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/${reviewId}`, {
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-production.up.railway.app/api'}/reviews/${reviewId}`, {
         method: 'PUT',
         body: JSON.stringify(data),
       });
@@ -218,7 +218,7 @@ showToast('Review deleted', 'info');
         return { success: true };
       }
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/${reviewId}`, { method: 'DELETE' });
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-production.up.railway.app/api'}/reviews/${reviewId}`, { method: 'DELETE' });
       const result = await response.json();
       if (!response.ok) { throw new Error(result.error || 'Failed to delete review'); }
       showToast('Review deleted', 'info');
@@ -238,7 +238,7 @@ showToast('Review deleted', 'info');
         return { helpful: review?.helpful || 0 };
       }
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/${reviewId}/helpful`, { method: 'POST' });
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-production.up.railway.app/api'}/reviews/${reviewId}/helpful`, { method: 'POST' });
       const result = await response.json();
       if (!response.ok) { throw new Error(result.error || 'Failed to mark as helpful'); }
       return result.data;
@@ -258,7 +258,7 @@ showToast('Review reported', 'info');
         return { success: true };
       }
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/${reviewId}/report`, { method: 'POST' });
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-production.up.railway.app/api'}/reviews/${reviewId}/report`, { method: 'POST' });
       const result = await response.json();
       if (!response.ok) { throw new Error(result.error || 'Failed to report review'); }
       showToast('Review reported', 'info');
@@ -282,7 +282,7 @@ showToast('Response added', 'success');
         return review;
       }
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'http://localhost:5000/api'}/reviews/${reviewId}/respond`, {
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-production.up.railway.app/api'}/reviews/${reviewId}/respond`, {
         method: 'POST',
         body: JSON.stringify({ comment }),
       });

@@ -490,8 +490,12 @@ class Db {
         continue;
       }
 
-      conditions.push(`${key} = ?`);
-      params.push(value);
+      if (value === null || value === undefined) {
+        conditions.push(`${key} IS NULL`);
+      } else {
+        conditions.push(`${key} = ?`);
+        params.push(value);
+      }
     }
 
     const sql = conditions.length > 0 ? ' WHERE ' + conditions.join(' AND ') : '';

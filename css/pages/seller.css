@@ -12,7 +12,7 @@
 
 /* Seller Sidebar */
 .seller-sidebar {
-  background: var(--color-white);
+  background: var(--bg-primary);
   border-right: 1px solid var(--neutral-200);
   padding: var(--space-lg);
 }
@@ -115,7 +115,7 @@
 }
 
 .seller-stat-card {
-  background: var(--color-white);
+  background: var(--bg-primary);
   border-radius: var(--radius-xl);
   padding: var(--space-lg);
   box-shadow: var(--shadow-sm);
@@ -174,7 +174,7 @@
 }
 
 .seller-product-card {
-  background: var(--color-white);
+  background: var(--bg-primary);
   border-radius: var(--radius-xl);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
@@ -260,7 +260,7 @@
 }
 
 .add-product-form {
-  background: var(--color-white);
+  background: var(--bg-primary);
   border-radius: var(--radius-xl);
   padding: var(--space-xl);
   box-shadow: var(--shadow-sm);
@@ -473,7 +473,7 @@
 }
 
 .seller-order-card {
-  background: var(--color-white);
+  background: var(--bg-primary);
   border-radius: var(--radius-xl);
   padding: var(--space-lg);
   box-shadow: var(--shadow-sm);
@@ -574,4 +574,8 @@
   .form-actions .btn {
     width: 100%;
   }
+}
+
+[data-theme="dark"] .seller-dashboard {
+  background: var(--bg-secondary);
 }

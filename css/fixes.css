@@ -159,7 +159,7 @@
 .form-control:focus,
 .form-input:focus {
   outline: none;
-  border-color: #0046be;
+  border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(0, 70, 190, 0.1);
 }
 
@@ -207,7 +207,7 @@ html {
   top: 64px;
   left: 0;
   right: 0;
-  background: white;
+  background: var(--bg-primary);
   padding: 1rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transform: translateY(-100%);
@@ -239,7 +239,7 @@ html {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
-  background: white;
+  background: var(--bg-primary);
   border: none;
   border-radius: 50%;
   width: 36px;
@@ -262,7 +262,7 @@ html {
   width: 32px;
   height: 32px;
   border: 1px solid var(--neutral-300);
-  background: white;
+  background: var(--bg-primary);
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 1.25rem;
@@ -294,8 +294,8 @@ html {
 }
 
 .option-card.selected {
-  border-color: #0046be;
-  background: rgba(0, 70, 190, 0.05);
+  border-color: var(--primary);
+  background: var(--primary-light);
 }
 
 .option-card input[type='radio'] {
@@ -309,39 +309,39 @@ html {
 }
 
 .condition-badge.good {
-  background: rgba(5, 150, 105, 0.1);
-  color: #059669;
+  background: var(--success-light);
+  color: var(--success);
 }
 
 .condition-badge.fair {
-  background: rgba(217, 119, 6, 0.1);
-  color: #d97706;
+  background: var(--warning-light);
+  color: var(--warning);
 }
 
 /* Fix status badge colors */
 .status-badge.placed {
-  background: rgba(0, 70, 190, 0.1);
-  color: #0046be;
+  background: var(--primary-light);
+  color: var(--primary);
 }
 
 .status-badge.confirmed {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+  background: var(--success-light);
+  color: var(--success);
 }
 
 .status-badge.in-transit {
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
+  background: var(--warning-light);
+  color: var(--warning);
 }
 
 .status-badge.delivered {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+  background: var(--success-light);
+  color: var(--success);
 }
 
 .status-badge.cancelled {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  background: var(--danger-light);
+  color: var(--danger);
 }
 
 /* Fix role badge */
@@ -354,18 +354,18 @@ html {
 }
 
 .role-badge.admin {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  background: var(--danger-light);
+  color: var(--danger);
 }
 
 .role-badge.seller {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+  background: var(--success-light);
+  color: var(--success);
 }
 
 .role-badge.buyer {
-  background: rgba(0, 70, 190, 0.1);
-  color: #0046be;
+  background: var(--primary-light);
+  color: var(--primary);
 }
 
 /* Fix pagination */
@@ -392,7 +392,7 @@ html {
 
 .search-bar input:focus {
   outline: none;
-  border-color: #0046be;
+  border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(0, 70, 190, 0.1);
 }
 
@@ -476,7 +476,7 @@ html {
 
 .confirmation-details {
   text-align: left;
-  background: white;
+  background: var(--bg-primary);
   border: 1px solid var(--neutral-200);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
@@ -578,7 +578,7 @@ html {
 }
 
 .stat-card {
-  background: white;
+  background: var(--bg-primary);
   border: 1px solid var(--neutral-200);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
@@ -607,7 +607,7 @@ html {
 
 /* Fix dashboard section */
 .dashboard-section {
-  background: white;
+  background: var(--bg-primary);
   border: 1px solid var(--neutral-200);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
@@ -626,7 +626,7 @@ html {
 }
 
 .dashboard-section-link {
-  color: #0046be;
+  color: var(--primary);
   text-decoration: none;
   font-size: 0.875rem;
   font-weight: 500;
@@ -647,8 +647,8 @@ html {
 }
 
 .file-upload-area:hover {
-  border-color: #0046be;
-  background: rgba(0, 70, 190, 0.05);
+  border-color: var(--primary);
+  background: var(--primary-light);
 }
 
 .upload-icon {
@@ -697,14 +697,14 @@ html {
   padding: 1.5rem;
   border: 2px solid var(--neutral-200);
   border-radius: var(--radius-lg);
-  background: white;
+  background: var(--bg-primary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .verification-tab.active {
-  border-color: #0046be;
-  background: rgba(0, 70, 190, 0.05);
+  border-color: var(--primary);
+  background: var(--primary-light);
 }
 
 .tab-icon {
@@ -737,16 +737,16 @@ html {
 }
 
 .verification-info {
-  background: rgba(0, 70, 190, 0.1);
-  border-left: 4px solid #0046be;
+  background: var(--primary-light);
+  border-left: 4px solid var(--primary);
   padding: 1rem;
   margin-bottom: 1.5rem;
   border-radius: var(--radius-sm);
 }
 
 .verification-info.warning {
-  background: rgba(245, 158, 11, 0.1);
-  border-left-color: #f59e0b;
+  background: var(--warning-light);
+  border-left-color: var(--warning);
 }
 
 .verification-actions {
@@ -796,7 +796,7 @@ html {
 }
 
 .auth-links a {
-  color: #0046be;
+  color: var(--primary);
   text-decoration: none;
   font-weight: 500;
 }
@@ -841,7 +841,7 @@ html {
 .quick-view-price {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #0046be;
+  color: var(--primary);
   margin-bottom: 1rem;
 }
 
@@ -878,8 +878,8 @@ html {
 }
 
 .condition-option.selected {
-  border-color: #0046be;
-  background: rgba(0, 70, 190, 0.05);
+  border-color: var(--primary);
+  background: var(--primary-light);
 }
 
 .condition-option input[type='radio'] {
@@ -910,7 +910,7 @@ html {
   height: 50px;
   border: 4px solid rgba(0, 70, 190, 0.3);
   border-radius: 50%;
-  border-top-color: #0046be;
+  border-top-color: var(--primary);
   animation: spin 1s linear infinite;
   margin: 0 auto 1.5rem;
 }
@@ -931,7 +931,7 @@ html {
 }
 
 .admin-stat-card {
-  background: white;
+  background: var(--bg-primary);
   border: 1px solid var(--neutral-200);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
@@ -946,19 +946,19 @@ html {
 }
 
 .admin-stat-icon.primary {
-  color: #0046be;
+  color: var(--primary);
 }
 
 .admin-stat-icon.success {
-  color: #10b981;
+  color: var(--success);
 }
 
 .admin-stat-icon.warning {
-  color: #f59e0b;
+  color: var(--warning);
 }
 
 .admin-stat-icon.danger {
-  color: #ef4444;
+  color: var(--danger);
 }
 
 .admin-stat-value {
@@ -980,7 +980,7 @@ html {
 }
 
 .report-card {
-  background: white;
+  background: var(--bg-primary);
   border: 1px solid var(--neutral-200);
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -1128,7 +1128,7 @@ html {
 
 .order-item-price {
   font-weight: 600;
-  color: #0046be;
+  color: var(--primary);
 }
 
 /* Fix seller product grid */
@@ -1169,7 +1169,7 @@ html {
   font-size: 0.75rem;
   font-weight: 600;
   background: rgba(16, 185, 129, 0.9);
-  color: white;
+  color: #ffffff;
 }
 
 .seller-product-content {
@@ -1188,7 +1188,7 @@ html {
 .seller-product-price {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #0046be;
+  color: var(--primary);
   margin-bottom: 1rem;
 }
 
@@ -1204,13 +1204,13 @@ html {
 }
 
 .btn-danger {
-  color: #ef4444;
-  border-color: #ef4444;
+  color: var(--danger);
+  border-color: var(--danger);
 }
 
 .btn-danger:hover {
-  background: #ef4444;
-  color: white;
+  background: var(--danger);
+  color: #ffffff;
 }
 
 /* Fix manage products header */
@@ -1235,7 +1235,7 @@ html {
 }
 
 .form-section {
-  background: white;
+  background: var(--bg-primary);
   border: 1px solid var(--neutral-200);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
@@ -1258,8 +1258,8 @@ html {
 }
 
 .image-upload:hover {
-  border-color: #0046be;
-  background: rgba(0, 70, 190, 0.05);
+  border-color: var(--primary);
+  background: var(--primary-light);
 }
 
 .image-upload-icon {
@@ -1330,8 +1330,8 @@ html {
 .dashboard-menu-link.active,
 .seller-nav-link.active,
 .admin-menu-link.active {
-  background: rgba(0, 70, 190, 0.1);
-  color: #0046be;
+  background: var(--primary-light);
+  color: var(--primary);
 }
 
 .dashboard-menu-icon,
@@ -1354,7 +1354,7 @@ html {
 .admin-brand-icon {
   width: 40px;
   height: 40px;
-  background: rgba(0, 70, 190, 0.1);
+  background: var(--primary-light);
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
@@ -1409,7 +1409,7 @@ html {
 /* Fix required field indicator */
 .required::after {
   content: ' *';
-  color: #ef4444;
+  color: var(--danger);
 }
 
 .optional::after {
@@ -1427,10 +1427,10 @@ html {
 
 /* Fix checkbox warning style */
 .warning-check {
-  background: rgba(245, 158, 11, 0.1);
+  background: var(--warning-light);
   padding: 1rem;
   border-radius: var(--radius-md);
-  border-left: 4px solid #f59e0b;
+  border-left: 4px solid var(--warning);
 }
 
 .warning-check label {
@@ -1439,7 +1439,7 @@ html {
 
 /* Fix order summary in checkout */
 .order-summary {
-  background: white;
+  background: var(--bg-primary);
   border: 1px solid var(--neutral-200);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
@@ -1479,7 +1479,7 @@ html {
   display: block;
   text-align: center;
   margin-top: 1rem;
-  color: #0046be;
+  color: var(--primary);
   text-decoration: none;
   font-size: 0.875rem;
 }
@@ -1490,7 +1490,7 @@ html {
 
 /* Fix checkout sections */
 .checkout-section {
-  background: white;
+  background: var(--bg-primary);
   border: 1px solid var(--neutral-200);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
@@ -1554,24 +1554,24 @@ html {
 }
 
 .commerce-btn-default {
-  background: #0046be;
-  color: white;
+  background: var(--primary);
+  color: #ffffff;
 }
 
 .commerce-btn-default:hover {
-  background: #003399;
+  background: var(--primary-hover);
 }
 
 .commerce-btn-outline {
-  background: white;
-  color: #0046be;
-  border-color: #0046be;
+  background: var(--bg-primary);
+  color: var(--primary);
+  border-color: var(--primary);
 }
 
 .commerce-btn-outline:hover,
 .commerce-btn-outline.active {
-  background: #0046be;
-  color: white;
+  background: var(--primary);
+  color: #ffffff;
 }
 
 .commerce-btn-secondary {

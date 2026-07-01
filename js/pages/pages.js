@@ -1098,7 +1098,7 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
   <script>
   (function() {
   var productId = '${productId}';
-  var apiUrl = window.API_URL || 'http://localhost:5000/api';
+  var apiUrl = window.API_URL || 'https://uni-hub-production.up.railway.app/api';
   if (typeof api !== 'undefined' && api.isStaticDeploy) return;
   fetch(apiUrl + '/products/' + productId + '/colors')
     .then(function(r) { return r.json(); })
@@ -3410,7 +3410,7 @@ static async renderAdminDashboard () {
   }
 
   this.hideOriginalNavFooter();
-  document.body.style.background = '#111827';
+  document.body.style.background = '';
 
   const mainContent = document.getElementById('main-content');
 
@@ -3576,7 +3576,13 @@ static async renderAdminVerifications (filter = 'pending') {
     if (!adminAuthManager.isLoggedIn()) { this.renderAdminLogin(); return; }
 
     this.hideOriginalNavFooter();
-    document.body.style.background = '#111827';
+    document.body.style.background = '';
+
+    if (typeof adminVerificationsManager === 'undefined') {
+      const mainContent = document.getElementById('main-content');
+      mainContent.innerHTML = '<p>Verification module not loaded</p>';
+      return;
+    }
 
     const mainContent = document.getElementById('main-content');
     const stats = adminVerificationsManager.getStats();
@@ -3688,6 +3694,7 @@ static async renderAdminVerifications (filter = 'pending') {
   }
 
   static viewVerificationDetail (id) {
+    if (typeof adminVerificationsManager === 'undefined') { showToast('Verification module not loaded', 'error'); return; }
     const v = adminVerificationsManager.getById(id);
     if (!v) { showToast('Verification not found', 'error'); return; }
 
@@ -3754,6 +3761,7 @@ static async renderAdminVerifications (filter = 'pending') {
   }
 
   static approveVerification (id) {
+    if (typeof adminVerificationsManager === 'undefined') { showToast('Verification module not loaded', 'error'); return; }
     const notesEl = document.getElementById(`vrf-review-notes-${id}`);
     const notes = notesEl ? notesEl.value.trim() : '';
     const result = adminVerificationsManager.approve(id, notes);
@@ -3766,6 +3774,7 @@ static async renderAdminVerifications (filter = 'pending') {
   }
 
   static rejectVerification (id) {
+    if (typeof adminVerificationsManager === 'undefined') { showToast('Verification module not loaded', 'error'); return; }
     const notesEl = document.getElementById(`vrf-review-notes-${id}`);
     let notes = notesEl ? notesEl.value.trim() : '';
 
@@ -3789,7 +3798,7 @@ static async renderAdminVerifications (filter = 'pending') {
 */
 static renderAdminLogin () {
   this.hideOriginalNavFooter();
-  document.body.style.background = '#111827';
+  document.body.style.background = '';
   const mainContent = document.getElementById('main-content');
   mainContent.innerHTML = `
   <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#111827;padding:2rem;">
@@ -3839,7 +3848,7 @@ static renderAdminLogin () {
    */
   static async renderAdminUsers () {
   this.hideOriginalNavFooter();
-  document.body.style.background = '#111827';
+  document.body.style.background = '';
   const mainContent = document.getElementById('main-content');
 
   mainContent.innerHTML = `
@@ -3933,7 +3942,7 @@ static renderAdminLogin () {
     } catch (_) { console.warn('pages: mergeLocalProducts failed:', _); }
   }
   this.hideOriginalNavFooter();
-  document.body.style.background = '#111827';
+  document.body.style.background = '';
   const mainContent = document.getElementById('main-content');
 
   mainContent.innerHTML = `
@@ -4004,7 +4013,7 @@ static renderAdminLogin () {
    */
   static async renderAdminOrders () {
   this.hideOriginalNavFooter();
-  document.body.style.background = '#111827';
+  document.body.style.background = '';
   const mainContent = document.getElementById('main-content');
 
   mainContent.innerHTML = `
@@ -4069,7 +4078,7 @@ static renderAdminLogin () {
 static renderAdminRegions () {
   const regions = regionManager.getAllRegions();
   this.hideOriginalNavFooter();
-  document.body.style.background = '#111827';
+  document.body.style.background = '';
   const mainContent = document.getElementById('main-content');
 
   mainContent.innerHTML = `
@@ -4119,7 +4128,7 @@ static renderAdminRegions () {
    */
   static async renderAdminReports () {
   this.hideOriginalNavFooter();
-  document.body.style.background = '#111827';
+  document.body.style.background = '';
   const mainContent = document.getElementById('main-content');
 
   mainContent.innerHTML = `
@@ -4271,7 +4280,7 @@ showToast(e.message || 'Failed to unban user', 'error');
 
 static async renderAdminActivity () {
   this.hideOriginalNavFooter();
-  document.body.style.background = '#111827';
+  document.body.style.background = '';
   const mainContent = document.getElementById('main-content');
 
   mainContent.innerHTML = `
@@ -4459,7 +4468,7 @@ static async renderAdminActivity () {
     this._pendingImageFiles = [];
     this._uploadedImageUrls = [];
     this.hideOriginalNavFooter();
-  document.body.style.background = '#111827';
+  document.body.style.background = '';
   const mainContent = document.getElementById('main-content');
     const categories = ['electronics', 'textbooks', 'appliances', 'hostel-items', 'fashion', 'accessories', 'thrifts'];
     const conditions = ['new', 'like-new', 'good', 'fair', 'excellent'];
@@ -4728,7 +4737,7 @@ if (this._pendingImageFiles.length > 0) {
     this._pendingImageFiles = [];
     this._uploadedImageUrls = [];
     this.hideOriginalNavFooter();
-    document.body.style.background = '#111827';
+    document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
 
     let product;
@@ -4911,7 +4920,7 @@ if (this._pendingImageFiles.length > 0) {
 
   static async renderAdminAnalytics () {
     this.hideOriginalNavFooter();
-    document.body.style.background = '#111827';
+    document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
 
     mainContent.innerHTML = `

@@ -20,16 +20,18 @@ pageSize = 12,
 
 const filter = { status: 'active' };
 
-if (query) {
-if (query.length >= 3) {
-filter.$text = { $search: query };
-} else {
-filter.$or = [
-{ title: { $regex: escapeRegex(query) } },
-{ description: { $regex: escapeRegex(query) } },
-{ category: { $regex: escapeRegex(query) } },
-];
-}
+if (query && query.length >= 3) {
+  filter.$or = [
+    { title: { $regex: escapeRegex(query) } },
+    { description: { $regex: escapeRegex(query) } },
+    { category: { $regex: escapeRegex(query) } },
+  ];
+} else if (query) {
+  filter.$or = [
+    { title: { $regex: escapeRegex(query) } },
+    { description: { $regex: escapeRegex(query) } },
+    { category: { $regex: escapeRegex(query) } },
+  ];
 }
 
 if (university) {

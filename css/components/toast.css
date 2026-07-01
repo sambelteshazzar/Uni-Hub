@@ -14,12 +14,12 @@
   align-items: center;
   gap: 10px;
   padding: 12px 16px;
-  background: #1f2937;
+  background: var(--neutral-800);
   border-radius: 0.75rem;
   box-shadow: 0 10px 25px rgba(0,0,0,0.25);
-  border-left: 4px solid #0046be;
+  border-left: 4px solid var(--primary);
   font-size: 0.875rem;
-  color: #e5e7eb;
+  color: var(--neutral-200);
   pointer-events: auto;
   transform: translateX(120%);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -33,19 +33,19 @@
 }
 
 .uni-toast-item.uni-toast-success {
-  border-left-color: #10b981;
+  border-left-color: var(--success, #10b981);
 }
 
 .uni-toast-item.uni-toast-error {
-  border-left-color: #ef4444;
+  border-left-color: var(--danger, #ef4444);
 }
 
 .uni-toast-item.uni-toast-warning {
-  border-left-color: #f59e0b;
+  border-left-color: var(--warning, #f59e0b);
 }
 
 .uni-toast-item.uni-toast-info {
-  border-left-color: #3b82f6;
+  border-left-color: var(--info, #3b82f6);
 }
 
 .uni-toast-icon {
@@ -62,7 +62,7 @@
   border: none;
   background: none;
   cursor: pointer;
-  color: #6b7280;
+  color: var(--neutral-500);
   font-size: 16px;
   padding: 0 2px;
   flex-shrink: 0;
@@ -70,5 +70,10 @@
 }
 
 .uni-toast-close:hover {
-  color: #9ca3af;
+  color: var(--neutral-400);
+}
+
+[data-theme="dark"] .uni-toast-item {
+  background: var(--bg-tertiary);
+  color: var(--neutral-100);
 }

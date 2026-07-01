@@ -821,7 +821,7 @@
 }
 
 .order-summary {
-  background: var(--color-white);
+  background: var(--bg-primary);
   border-radius: var(--radius-xl);
   padding: var(--space-lg);
   box-shadow: var(--shadow-sm);
@@ -945,7 +945,7 @@
 }
 
 .confirmation-details {
-  background: var(--color-white);
+  background: var(--bg-primary);
   border-radius: var(--radius-xl);
   padding: var(--space-lg);
   box-shadow: var(--shadow-sm);
@@ -1036,3 +1036,5 @@
     padding: var(--space-md) var(--space-sm);
   }
 }
+
+[data-theme="dark"] .momo-provider-color.mtn { color: var(--neutral-900); }

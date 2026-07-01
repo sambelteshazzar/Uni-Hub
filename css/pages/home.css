@@ -19,7 +19,7 @@
 }
 
 .landing-hero {
-  background: #ffffff;
+  background: var(--bg-primary);
   padding: 0;
   overflow: hidden;
 }
@@ -45,7 +45,7 @@
 .hero-text h1 {
   font-size: clamp(3rem, 6vw, 5rem);
   font-weight: 700;
-  color: #000000;
+  color: var(--neutral-900);
   line-height: 1.1;
   letter-spacing: -0.03em;
   margin-bottom: var(--space-lg);
@@ -53,7 +53,7 @@
 
 .hero-text p {
   font-size: clamp(1.1rem, 2vw, 1.25rem);
-  color: #666666;
+  color: var(--neutral-600);
   line-height: 1.6;
   margin-bottom: var(--space-md);
   max-width: 500px;
@@ -61,7 +61,7 @@
 
 .hero-subtitle {
   font-size: clamp(1rem, 1.5vw, 1.125rem);
-  color: #888888;
+  color: var(--neutral-500);
   font-weight: 400;
 }
 
@@ -95,8 +95,8 @@
 
 .hero-cta .btn-outline {
   background: transparent;
-  color: #000000;
-  border: 2px solid #000000;
+  color: var(--neutral-900);
+  border: 2px solid var(--neutral-900);
 }
 
 .hero-cta .btn-outline:hover {
@@ -110,7 +110,7 @@
   gap: var(--space-xl);
   margin-top: var(--space-3xl);
   padding-top: var(--space-xl);
-  border-top: 1px solid #e5e5e5;
+  border-top: 1px solid var(--border-light);
 }
 
 .stat-item {
@@ -120,14 +120,14 @@
 .stat-number {
   font-size: var(--text-3xl);
   font-weight: 700;
-  color: #000000;
+  color: var(--neutral-900);
   display: block;
   letter-spacing: -0.02em;
 }
 
 .stat-label {
   font-size: var(--text-sm);
-  color: #888888;
+  color: var(--neutral-500);
   display: block;
   margin-top: var(--space-xs);
   text-transform: uppercase;
@@ -138,7 +138,7 @@
   position: relative;
   height: 100%;
   min-height: 90vh;
-  background: #f8f8f8;
+  background: var(--bg-secondary);
   overflow: hidden;
 }
 
@@ -155,7 +155,7 @@
 
 .university-selector-section {
   padding: var(--space-4xl) 0;
-  background: #ffffff;
+  background: var(--bg-primary);
 }
 
 .university-selector-section .container {
@@ -166,14 +166,14 @@
   text-align: left;
   font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 700;
-  color: #000000;
+  color: var(--neutral-900);
   margin-bottom: var(--space-sm);
   letter-spacing: -0.02em;
 }
 
 .section-subtitle {
   text-align: left;
-  color: #666666;
+  color: var(--neutral-600);
   font-size: var(--text-lg);
   margin-bottom: var(--space-3xl);
   max-width: 600px;
@@ -187,8 +187,8 @@
 }
 
 .university-card {
-  background: #ffffff;
-  border: 1px solid #e5e5e5;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
   border-radius: 0;
   padding: var(--space-xl);
   cursor: pointer;
@@ -197,8 +197,8 @@
 }
 
 .university-card:hover {
-  border-color: #000000;
-  background: #fafafa;
+  border-color: var(--neutral-900);
+  background: var(--bg-secondary);
 }
 
 .university-card.selected {
@@ -222,7 +222,7 @@
 .university-card h3 {
   font-size: var(--text-xl);
   font-weight: 600;
-  color: #000000;
+  color: var(--neutral-900);
   margin-bottom: var(--space-sm);
   letter-spacing: -0.01em;
 }
@@ -230,7 +230,7 @@
 .campus-info,
 .region-info {
   font-size: var(--text-sm);
-  color: #666666;
+  color: var(--neutral-600);
   margin: var(--space-xs) 0;
   font-weight: 400;
 }
@@ -254,7 +254,7 @@
 
 .features-section {
   padding: var(--space-4xl) 0;
-  background: #fafafa;
+  background: var(--bg-secondary);
 }
 
 .features-section .container {
@@ -265,7 +265,7 @@
   text-align: left;
   font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 700;
-  color: #000000;
+  color: var(--neutral-900);
   margin-bottom: var(--space-3xl);
   letter-spacing: -0.02em;
 }
@@ -277,15 +277,15 @@
 }
 
 .feature-card {
-  background: #ffffff;
+  background: var(--bg-primary);
   padding: var(--space-2xl);
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border-light);
   text-align: left;
   transition: all 0.2s ease;
 }
 
 .feature-card:hover {
-  border-color: #000000;
+  border-color: var(--neutral-900);
   transform: translateY(-4px);
 }
 
@@ -298,13 +298,13 @@
 .feature-card h3 {
   font-size: var(--text-xl);
   font-weight: 600;
-  color: #000000;
+  color: var(--neutral-900);
   margin-bottom: var(--space-sm);
   letter-spacing: -0.01em;
 }
 
 .feature-card p {
-  color: #666666;
+  color: var(--neutral-600);
   line-height: 1.6;
   font-size: var(--text-base);
 }
@@ -315,7 +315,7 @@
 
 .categories-section {
   padding: var(--space-4xl) 0;
-  background: #ffffff;
+  background: var(--bg-primary);
 }
 
 .categories-section .container {

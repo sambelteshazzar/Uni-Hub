@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
-import { cpSync, readFileSync, writeFileSync, readdirSync, mkdirSync } from 'fs';
+import { cpSync, readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from 'fs';
 import { transformSync } from 'esbuild';
 
 const appScripts = [
@@ -55,9 +55,14 @@ export default defineConfig({
       transpileDir(resolve(__dirname, 'js'), resolve(__dirname, 'dist/js'));
       cpSync(resolve(__dirname, 'css'), resolve(__dirname, 'dist/css'), { recursive: true });
 
+      const srcHtmlPath = resolve(__dirname, 'index.html');
       const htmlPath = resolve(__dirname, 'dist/index.html');
+      if (!existsSync(htmlPath)) {
+        cpSync(srcHtmlPath, htmlPath);
+      }
+
       let html = readFileSync(htmlPath, 'utf-8');
-      const srcHtml = readFileSync(resolve(__dirname, 'index.html'), 'utf-8');
+      const srcHtml = readFileSync(srcHtmlPath, 'utf-8');
 
       const viteBundleMatch = html.match(/<script[^>]*src="\/assets\/main-[^"]*\.js"[^>]*><\/script>/);
       if (viteBundleMatch) {

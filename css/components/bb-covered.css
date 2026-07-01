@@ -5,18 +5,18 @@ DM Serif Display headline, animated reveals, blue marquee ticker
 ============================================ */
 
 .bb-covered {
-  --covered-bg: #ffffff;
-  --covered-bg-subtle: #f0f5ff;
-  --covered-text: #1a1a1a;
-  --covered-muted: #4a5568;
-  --covered-blue: #0046be;
+  --covered-bg: var(--bg-primary);
+  --covered-bg-subtle: var(--primary-light);
+  --covered-text: var(--neutral-900);
+  --covered-muted: var(--neutral-600);
+  --covered-blue: var(--primary);
   --covered-blue-hover: #003399;
-  --covered-blue-light: #e8f0fe;
+  --covered-blue-light: var(--primary-light);
   --covered-blue-glow: rgba(0, 70, 190, 0.12);
   --covered-yellow: #ffce00;
   --covered-yellow-glow: rgba(255, 206, 0, 0.18);
-  --covered-border: #d6e4f7;
-  --covered-card: #ffffff;
+  --covered-border: var(--neutral-200);
+  --covered-card: var(--bg-secondary);
   --covered-photo-radius: 1.25rem;
   padding: 0;
   background: var(--covered-bg);
@@ -464,4 +464,9 @@ DM Serif Display headline, animated reveals, blue marquee ticker
   .bb-covered-body {
     font-size: 0.95rem;
   }
+}
+
+[data-theme="dark"] .bb-covered-photo--top,
+[data-theme="dark"] .bb-covered-photo--bottom {
+  border-color: var(--bg-primary);
 }

@@ -28,7 +28,7 @@
 
 /* Modal Container */
 .modal-container {
-  background: var(--color-white);
+  background: var(--bg-primary);
   border-radius: var(--radius-lg);
   max-width: 500px;
   width: 90%;
@@ -200,7 +200,7 @@
   align-items: center;
   gap: var(--space-md);
   padding: var(--space-md) var(--space-lg);
-  background: var(--color-white);
+  background: var(--bg-primary);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   min-width: 300px;
@@ -323,6 +323,10 @@ justify-content: center;
 
   .toast-container {
     left: var(--space-lg);
-    right: var(--space-lg);
-  }
+     right: var(--space-lg);
+   }
+ }
+
+[data-theme="dark"] .modal-overlay {
+  background: rgba(0, 0, 0, 0.7);
 }

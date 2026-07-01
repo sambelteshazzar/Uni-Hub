@@ -7,7 +7,7 @@ Blue & white theme, refined & professional
 
 .browse-page {
   min-height: 100vh;
-  background: #ffffff;
+  background: var(--bg-primary);
   font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
@@ -292,7 +292,7 @@ Blue & white theme, refined & professional
 
 /* ---- Breadcrumb ---- */
 .browse-breadcrumb {
-  background: #ffffff;
+  background: var(--bg-primary);
   border-bottom: 1px solid rgba(0, 70, 190, 0.06);
   padding: 0;
 }
@@ -394,7 +394,7 @@ Blue & white theme, refined & professional
 
 /* ---- Sidebar ---- */
 .browse-sidebar {
-  background: #ffffff;
+  background: var(--bg-primary);
   border-right: none;
   border-radius: 0;
   padding: var(--space-lg) 0;
@@ -512,7 +512,7 @@ Blue & white theme, refined & professional
   font-size: var(--text-sm);
   font-family: 'DM Sans', sans-serif;
   color: var(--neutral-900);
-  background: #ffffff;
+  background: var(--bg-primary);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
@@ -586,7 +586,7 @@ Blue & white theme, refined & professional
   padding: 0.5625rem var(--space-sm);
   border: 1px solid rgba(0, 70, 190, 0.12);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--bg-primary);
   color: var(--neutral-600);
   font-size: 0.8125rem;
   font-family: 'DM Sans', sans-serif;
@@ -599,7 +599,7 @@ Blue & white theme, refined & professional
 .browse-clear-filters-btn:hover {
   border-color: var(--danger);
   color: var(--danger);
-  background: #fff5f5;
+  background: rgba(204, 0, 0, 0.06);
 }
 
 /* ---- Main Content Area ---- */
@@ -616,7 +616,7 @@ Blue & white theme, refined & professional
   padding: var(--space-md) var(--space-lg);
   border-bottom: none;
   flex-wrap: wrap;
-  background: #f8faff;
+  background: var(--bg-secondary);
   border-radius: 12px;
   border: 1px solid rgba(0, 70, 190, 0.06);
 }
@@ -639,7 +639,7 @@ Blue & white theme, refined & professional
   font-family: 'DM Sans', sans-serif;
   font-weight: 500;
   color: var(--neutral-900);
-  background: #ffffff;
+  background: var(--bg-primary);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
@@ -711,7 +711,7 @@ Blue & white theme, refined & professional
   font-family: 'DM Sans', sans-serif;
   font-weight: 500;
   color: var(--neutral-900);
-  background: #ffffff;
+  background: var(--bg-primary);
   cursor: pointer;
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%230046be' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
@@ -739,7 +739,7 @@ Blue & white theme, refined & professional
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background: var(--bg-primary);
   border: none;
   color: var(--neutral-400);
   cursor: pointer;
@@ -833,7 +833,7 @@ Blue & white theme, refined & professional
 }
 
 .browse-filter-chip-clear:hover {
-  background: #fff5f5;
+  background: rgba(204, 0, 0, 0.06);
   border-color: var(--danger);
 }
 
@@ -846,40 +846,9 @@ PRODUCT GRID — Luxury Card Design
  gap: 18px;
 }
 
-.browse-skeleton-grid {
- grid-template-columns: repeat(3, 1fr);
- gap: 1px;
- background: #e5e5e5;
- border-radius: 8px;
- overflow: hidden;
-}
-
-.browse-product-grid.list-view {
-  grid-template-columns: 1fr;
-  gap: 12px;
-}
-
-.browse-product-grid.list-view .browse-product-card {
-  display: grid;
-  grid-template-columns: 140px 1fr;
-  border-radius: 12px;
-}
-
-.browse-product-grid.list-view .browse-product-image-wrap {
-  aspect-ratio: 1;
-  border-radius: 12px 0 0 12px;
-}
-
-.browse-product-grid.list-view .browse-product-info {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 16px 20px;
-}
-
 /* ---- Product Card ---- */
 .browse-product-card {
-  background: #ffffff;
+  background: var(--bg-primary);
   overflow: hidden;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
@@ -919,7 +888,7 @@ PRODUCT GRID — Luxury Card Design
   position: relative;
   aspect-ratio: 1;
   overflow: hidden;
-  background: linear-gradient(145deg, #f8faff, #f0f4ff);
+  background: var(--bg-tertiary);
   border-radius: 14px 14px 0 0;
 }
 
@@ -1007,7 +976,7 @@ PRODUCT GRID — Luxury Card Design
 }
 
 .browse-product-wishlist-btn:hover {
-  background: #ffffff;
+  background: var(--bg-primary);
   color: var(--danger);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   transform: translateY(0) scale(1.05);
@@ -1117,7 +1086,7 @@ PRODUCT GRID — Luxury Card Design
   height: 36px;
   border: 1px solid rgba(0, 70, 190, 0.15);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--bg-primary);
   color: var(--primary);
   font-family: 'DM Sans', sans-serif;
   font-size: 0.75rem;
@@ -1145,7 +1114,7 @@ PRODUCT GRID — Luxury Card Design
   grid-column: 1 / -1;
   text-align: center;
   padding: var(--space-4xl) var(--space-xl);
-  background: #f8faff;
+  background: var(--bg-secondary);
   border-radius: 16px;
   border: 1px dashed rgba(0, 70, 190, 0.15);
 }
@@ -1205,7 +1174,7 @@ PRODUCT GRID — Luxury Card Design
   padding: 0.75rem 2.5rem;
   border: 2px solid rgba(0, 70, 190, 0.15);
   border-radius: 10px;
-  background: #ffffff;
+  background: var(--bg-primary);
   color: var(--primary);
   font-family: 'DM Sans', sans-serif;
   font-size: 0.875rem;
@@ -1240,7 +1209,7 @@ PRODUCT GRID — Luxury Card Design
   justify-content: center;
   border: 1px solid rgba(0, 70, 190, 0.1);
   border-radius: 10px;
-  background: #ffffff;
+  background: var(--bg-primary);
   color: var(--neutral-700);
   font-family: 'DM Sans', sans-serif;
   font-size: 0.8125rem;
@@ -1356,7 +1325,7 @@ MOBILE DRAWER
   bottom: 0;
   width: 300px;
   max-width: 85vw;
-  background: #ffffff;
+  background: var(--bg-primary);
   z-index: var(--z-modal);
   transform: translateX(-100%);
   transition: transform 0.35s cubic-bezier(0.23, 1, 0.32, 1);
@@ -1378,7 +1347,7 @@ MOBILE DRAWER
   border-bottom: 1px solid rgba(0, 70, 190, 0.08);
   position: sticky;
   top: 0;
-  background: #ffffff;
+  background: var(--bg-primary);
   z-index: 1;
 }
 
@@ -1425,7 +1394,7 @@ MOBILE DRAWER
   padding: 0.5rem var(--space-md);
   border: 1px solid rgba(0, 70, 190, 0.12);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--bg-primary);
   color: var(--primary);
   font-family: 'DM Sans', sans-serif;
   font-size: 0.8125rem;
@@ -1734,7 +1703,19 @@ RESPONSIVE
  }
 
  .browse-pagination {
- flex-wrap: wrap;
- gap: 4px;
- }
+  flex-wrap: wrap;
+  gap: 4px;
+  }
+}
+
+[data-theme="dark"] .browse-toolbar {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .browse-product-image-wrap {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .browse-empty {
+  background: var(--bg-tertiary);
 }

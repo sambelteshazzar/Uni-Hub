@@ -8,12 +8,12 @@
   min-height: 100vh;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  background: #ffffff;
+  background: var(--bg-primary);
 }
 
 /* Left Side - Branding/Hero */
 .bb-auth-branding {
-  background: linear-gradient(135deg, #0046be 0%, #003399 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -106,14 +106,14 @@
 .bb-auth-form-title {
   font-size: var(--text-2xl);
   font-weight: 800;
-  color: #1a1a1a;
+  color: var(--neutral-900);
   margin-bottom: var(--space-sm);
   letter-spacing: -0.01em;
 }
 
 .bb-auth-form-subtitle {
   font-size: var(--text-sm);
-  color: #525252;
+  color: var(--neutral-700);
   margin: 0;
 }
 
@@ -132,19 +132,19 @@
   gap: var(--space-sm);
   width: 100%;
   height: 44px;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--neutral-200);
   border-radius: var(--radius-md);
-  background: #ffffff;
+  background: var(--bg-primary);
   cursor: pointer;
   transition: all 0.15s ease;
   font-size: var(--text-sm);
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--neutral-900);
 }
 
 .bb-social-btn:hover {
-  border-color: #0046be;
-  background: #f8f9fa;
+  border-color: var(--primary);
+  background: var(--bg-secondary);
 }
 
 /* Divider */
@@ -153,7 +153,7 @@
   align-items: center;
   gap: var(--space-md);
   margin: var(--space-xl) 0;
-  color: #666666;
+  color: var(--neutral-600);
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -164,7 +164,7 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: #e5e5e5;
+  background: var(--neutral-200);
 }
 
 /* Best Buy Form Styles */
@@ -183,11 +183,11 @@
 .bb-form-label {
   font-size: var(--text-sm);
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--neutral-900);
 }
 
 .bb-form-label .required-star {
-  color: #cc0000;
+  color: var(--danger);
   margin-left: 2px;
 }
 
@@ -195,22 +195,22 @@
   width: 100%;
   height: 44px;
   padding: 0 var(--space-md);
-  border: 1px solid #d4d4d4;
+  border: 1px solid var(--neutral-300);
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
-  color: #1a1a1a;
-  background: #ffffff;
+  color: var(--neutral-900);
+  background: var(--bg-primary);
   transition: all 0.15s ease;
 }
 
 .bb-form-input:focus {
   outline: none;
-  border-color: #0046be;
+  border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(0, 70, 190, 0.1);
 }
 
 .bb-form-input::placeholder {
-  color: #666666;
+  color: var(--neutral-600);
 }
 
 /* Password Input */
@@ -230,7 +230,7 @@ transform: translateY(-50%);
 background: none;
 border: none;
 cursor: pointer;
-color: #666666;
+color: var(--neutral-600);
 padding: 4px;
 min-width: 44px;
 min-height: 44px;
@@ -241,7 +241,7 @@ transition: color 0.15s ease;
 }
 
 .bb-password-toggle:hover {
-  color: #1a1a1a;
+  color: var(--neutral-900);
 }
 
 /* Remember Me */
@@ -255,19 +255,19 @@ transition: color 0.15s ease;
 .bb-remember-me input[type='checkbox'] {
   width: 18px;
   height: 18px;
-  accent-color: #0046be;
+  accent-color: var(--primary);
 }
 
 .bb-remember-me label {
   font-size: var(--text-sm);
-  color: #525252;
+  color: var(--neutral-700);
 }
 
 /* Submit Button */
 .bb-submit-btn {
   width: 100%;
   height: 48px;
-  background: #0046be;
+  background: var(--primary);
   color: #ffffff;
   border: none;
   border-radius: var(--radius-md);
@@ -280,7 +280,7 @@ transition: color 0.15s ease;
 }
 
 .bb-submit-btn:hover {
-  background: #003399;
+  background: var(--primary-hover);
 }
 
 /* Auth Footer Links */
@@ -288,17 +288,17 @@ transition: color 0.15s ease;
   text-align: center;
   margin-top: var(--space-xl);
   padding-top: var(--space-xl);
-  border-top: 1px solid #e5e5e5;
+  border-top: 1px solid var(--neutral-200);
 }
 
 .bb-auth-footer p {
   font-size: var(--text-sm);
-  color: #525252;
+  color: var(--neutral-700);
   margin: 0;
 }
 
 .bb-auth-footer a {
-  color: #0046be;
+  color: var(--primary);
   font-weight: 600;
   text-decoration: none;
 }
@@ -315,7 +315,7 @@ transition: color 0.15s ease;
 
 .bb-forgot-password a {
   font-size: var(--text-xs);
-  color: #0046be;
+  color: var(--primary);
   text-decoration: none;
 }
 
@@ -341,17 +341,17 @@ transition: color 0.15s ease;
   width: 100%;
   height: 44px;
   padding: 0 var(--space-md);
-  border: 1px solid #d4d4d4;
+  border: 1px solid var(--neutral-300);
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
-  color: #1a1a1a;
-  background: #ffffff;
+  color: var(--neutral-900);
+  background: var(--bg-primary);
   cursor: pointer;
 }
 
 .bb-university-select select:focus {
   outline: none;
-  border-color: #0046be;
+  border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(0, 70, 190, 0.1);
 }
 
@@ -378,4 +378,50 @@ transition: color 0.15s ease;
   .bb-auth-form-section {
     padding: var(--space-lg);
   }
+}
+
+/* Dark theme overrides */
+[data-theme='dark'] .bb-auth-page {
+  background: var(--bg-primary);
+}
+
+[data-theme='dark'] .bb-auth-form-section {
+  background: var(--bg-primary);
+}
+
+[data-theme='dark'] .bb-social-btn {
+  background: var(--bg-secondary);
+  border-color: var(--neutral-300);
+  color: var(--neutral-900);
+}
+
+[data-theme='dark'] .bb-social-btn:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--primary);
+}
+
+[data-theme='dark'] .bb-form-input {
+  background: var(--bg-secondary);
+  border-color: var(--neutral-300);
+  color: var(--neutral-900);
+}
+
+[data-theme='dark'] .bb-university-select select {
+  background: var(--bg-secondary);
+  border-color: var(--neutral-300);
+  color: var(--neutral-900);
+}
+
+[data-theme='dark'] .bb-auth-divider {
+  color: var(--neutral-500);
+}
+
+[data-theme='dark'] .bb-auth-divider::before,
+[data-theme='dark'] .bb-auth-divider::after {
+  background: var(--neutral-300);
+}
+
+[data-theme='dark'] .bb-form-input:focus,
+[data-theme='dark'] .bb-university-select select:focus {
+  box-shadow: 0 0 0 3px rgba(109, 158, 255, 0.15);
 }

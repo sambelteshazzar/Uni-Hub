@@ -231,8 +231,8 @@ exports.getUserConversations = asyncHandler(async (req, res) => {
     const lastMsg = conv.lastMessage ? await db('messages').findById(conv.lastMessage) : null;
 
     let product = null;
-    if (conv.productId) {
-      product = await db('products').findById(conv.productId);
+    if (conv.product) {
+      product = await db('products').findById(conv.product);
     }
 
     const participantsWithUsers = [];
@@ -312,8 +312,8 @@ exports.getConversation = asyncHandler(async (req, res) => {
     populatedConversation.lastMessage = lastMsg ? { content: lastMsg.content, sender: lastMsg.sender, createdAt: lastMsg.createdAt, type: lastMsg.type } : null;
   }
 
-  if (conversation.productId) {
-    const product = await db('products').findById(conversation.productId);
+  if (conversation.product) {
+    const product = await db('products').findById(conversation.product);
     populatedConversation.product = product ? { id: product.id, title: product.title, price: product.price, images: parseJson(product.images) } : null;
   }
 

@@ -8,7 +8,7 @@ class API {
     var envAPI = '';
     try { envAPI = import.meta.env.VITE_API_URL || ''; } catch (e) { /* VITE_API_URL only available in Vite dev */ }
     this.baseURL =
-      baseURL || (typeof window !== 'undefined' && window.API_URL) || envAPI || 'http://localhost:5000/api';
+      baseURL || (typeof window !== 'undefined' && window.API_URL) || envAPI || 'https://uni-hub-production.up.railway.app/api';
     this._isStaticDeploy = false;
     this._backendProbed = false;
     this._backendReachable = null;

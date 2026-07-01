@@ -10,7 +10,7 @@ if (typeof window !== 'undefined' && !window.API_URL) {
   if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' && window.location.protocol !== 'file:') {
     window.API_URL = 'https://uni-hub-production.up.railway.app/api';
   } else {
-    window.API_URL = window.API_URL || 'http://localhost:5000/api';
+    window.API_URL = window.API_URL || 'https://uni-hub-production.up.railway.app/api';
   }
 }
 
