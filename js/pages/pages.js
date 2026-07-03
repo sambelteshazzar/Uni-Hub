@@ -1456,7 +1456,10 @@ notificationManager?.info('Wishlist Cleared', 'All items removed from your wishl
           await reviewManager.submitReview({ sellerId, rating, comment: comment || '', productId });
           showToast('Review submitted successfully!', 'success');
         } else {
-          showToast('Review submitted!', 'success');
+          showToast('Review service not available. Please try again later.', 'error');
+          submitBtn.textContent = 'Submit Review';
+          submitBtn.style.pointerEvents = 'auto';
+          return;
         }
 
         overlay.remove();
@@ -3583,6 +3586,8 @@ static async renderAdminVerifications (filter = 'pending') {
       mainContent.innerHTML = '<p>Verification module not loaded</p>';
       return;
     }
+
+    await adminVerificationsManager.init();
 
     const mainContent = document.getElementById('main-content');
     const stats = adminVerificationsManager.getStats();

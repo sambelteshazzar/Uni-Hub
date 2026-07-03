@@ -88,7 +88,7 @@ showToast('Review submitted locally!', 'success');
         return review;
       }
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || ''}/api/reviews`, {
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-production.up.railway.app/api'}/reviews`, {
         method: 'POST',
         body: JSON.stringify({ sellerId, rating, comment, productId, orderId, detailedRatings }),
       });

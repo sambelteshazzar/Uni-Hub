@@ -7,6 +7,13 @@ class AdminVerificationsManager {
   constructor () {
     this.QUEUE_KEY = STORAGE_KEYS.VERIFICATION_QUEUE;
     this.queue = this._loadQueue();
+    this._initialized = false;
+  }
+
+  async init () {
+    if (this._initialized) return;
+    this._initialized = true;
+    await this._fetchFromBackend();
   }
 
   _loadQueue () {
@@ -14,6 +21,44 @@ class AdminVerificationsManager {
       return StorageManager.get(this.QUEUE_KEY, true) || [];
     }
     return [];
+  }
+
+  async _fetchFromBackend () {
+    try {
+      if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable !== false) {
+        const resp = await api.admin.getPendingVerifications();
+        if (resp.success && resp.data) {
+          const backendItems = Array.isArray(resp.data) ? resp.data : (resp.data.verifications || []);
+          for (const backendItem of backendItems) {
+            const exists = this.queue.find(item =>
+              (item.studentId === backendItem.studentId && item.university === backendItem.university) ||
+              (item.id === backendItem.id)
+            );
+            if (!exists) {
+              this.queue.push({
+                id: backendItem.id,
+                studentId: backendItem.studentId,
+                fullName: backendItem.fullName,
+                email: backendItem.email || backendItem.universityEmail,
+                phone: backendItem.phone,
+                university: backendItem.university,
+                level: backendItem.level,
+                hall: backendItem.hall,
+                verificationMethod: backendItem.verificationMethod,
+                universityEmail: backendItem.universityEmail,
+                status: backendItem.status || 'pending',
+                submittedAt: backendItem.createdAt || backendItem.submittedAt,
+                reviewedBy: backendItem.reviewedBy,
+                reviewedAt: backendItem.reviewedAt,
+                reviewNotes: backendItem.reviewNotes,
+                userId: backendItem.userId,
+              });
+            }
+          }
+          this._persist();
+        }
+      }
+    } catch (_) { console.warn('verifications: backend fetch failed:', _); }
   }
 
   _persist () {
@@ -85,6 +130,7 @@ class AdminVerificationsManager {
     this._persist();
 
     this._syncUserVerification(entry, true);
+    this._syncBackendAction(id, 'approve', notes);
 
     if (typeof adminAuthManager !== 'undefined' && adminAuthManager.logActivity) {
       adminAuthManager.logActivity('Verification approved', { id, studentId: entry.studentId, fullName: entry.fullName });
@@ -107,12 +153,25 @@ class AdminVerificationsManager {
     this._persist();
 
     this._syncUserVerification(entry, false);
+    this._syncBackendAction(id, 'reject', notes);
 
     if (typeof adminAuthManager !== 'undefined' && adminAuthManager.logActivity) {
       adminAuthManager.logActivity('Verification rejected', { id, studentId: entry.studentId, fullName: entry.fullName, notes });
     }
 
     return { success: true, data: entry };
+  }
+
+  async _syncBackendAction (id, action, notes) {
+    try {
+      if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable !== false) {
+        if (action === 'approve') {
+          await api.admin.approveVerification(id, notes);
+        } else if (action === 'reject') {
+          await api.admin.rejectVerification(id, notes);
+        }
+      }
+    } catch (_) { console.warn('verifications: backend sync failed:', _); }
   }
 
   _syncUserVerification (entry, isVerified) {

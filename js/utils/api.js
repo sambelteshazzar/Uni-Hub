@@ -345,6 +345,9 @@ if (typeof window !== 'undefined' && !this._isStaticDeploy) {
     rejectProduct: (id, reason) => this.put(`/admin/products/${id}/reject`, { reason }),
     banUser: (id, reason) => this.put(`/admin/users/${id}/ban`, { action: 'ban', reason }),
     unbanUser: id => this.put(`/admin/users/${id}/ban`, { action: 'unban' }),
+    getPendingVerifications: () => this.get('/verification/pending'),
+    approveVerification: (id, notes) => this.put(`/verification/${id}/approve`, { notes }),
+    rejectVerification: (id, notes) => this.put(`/verification/${id}/reject`, { notes }),
   };
 
   wishlist = {

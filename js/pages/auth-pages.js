@@ -352,12 +352,15 @@ const AuthPageMethods = {
         });
 
         if (response.success) {
-          // Email verification is pending code confirmation
           verificationData.isVerified = false;
           verificationData.isPending = true;
           verificationData.submittedAt = new Date().toISOString();
           StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verificationData);
           showToast(`Verification Submitted! A verification code has been sent to ${verificationData.studentEmail}. Your account will be verified once confirmed.`, 'info');
+          // Also populate the admin queue so admin can see pending verification
+          if (typeof adminVerificationsManager !== 'undefined') {
+            adminVerificationsManager.submit(verificationData);
+          }
           Pages.renderBrowse();
           return;
         }
@@ -444,6 +447,10 @@ const AuthPageMethods = {
         if (response.success) {
           StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verificationData);
           showToast(`Verification Submitted! Thank you, ${verificationData.fullName}! Your documents have been submitted for verification. You will be notified within 24-48 hours once your student status is confirmed. You must be verified before making any purchases.`, 'success');
+          // Also populate the admin queue so admin can see pending verification
+          if (typeof adminVerificationsManager !== 'undefined') {
+            adminVerificationsManager.submit(verificationData);
+          }
           Pages.renderBrowse();
           return;
         }
