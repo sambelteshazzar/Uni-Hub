@@ -6,14 +6,25 @@
 class AdminProductsManager {
   constructor () {
     this.MODERATION_STORAGE_KEY = `${STORAGE_KEY_PREFIX}product_moderation`;
+    this._initialized = false;
+    this._backendProducts = null;
   }
 
-  /**
-   * Get all products (including flagged)
-   * @returns {Array}
-   */
+  async init () {
+    if (this._initialized) return;
+    this._initialized = true;
+    try {
+      if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable !== false) {
+        const resp = await api.admin.getProducts({ limit: 200 });
+        if (resp.success && resp.data && resp.data.products) {
+          this._backendProducts = resp.data.products;
+        }
+      }
+    } catch (_) { console.warn('admin-products: backend fetch failed:', _); }
+  }
+
   getAllProducts () {
-    return productsManager.getAll();
+    return this._backendProducts || productsManager.getAll();
   }
 
   /**
@@ -103,6 +114,8 @@ class AdminProductsManager {
     flags[index].resolvedAt = new Date().toISOString();
     StorageManager.set(this.MODERATION_STORAGE_KEY, flags);
 
+    this._syncBackendFlag(flags[index], 'approve');
+
     adminAuthManager.logActivity('Flag approved', { flagId });
 
     return {
@@ -132,8 +145,8 @@ class AdminProductsManager {
     flags[index].resolvedAt = new Date().toISOString();
     StorageManager.set(this.MODERATION_STORAGE_KEY, flags);
 
-    // Remove the product
     this.deleteProduct(flag.productId);
+    this._syncBackendFlag(flags[index], 'reject');
 
     adminAuthManager.logActivity('Flag rejected - product removed', {
       flagId,
@@ -360,6 +373,19 @@ class AdminProductsManager {
     const csvContent = [headers, ...rows].map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
     this._downloadCSV(csvContent, 'uni-hub-products.csv');
     return csvContent;
+  }
+
+  _syncBackendFlag (flag, action) {
+    try {
+      if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable !== false) {
+        const productId = flag.productId;
+        if (action === 'approve') {
+          api.admin.approveProduct(productId).catch(() => {});
+        } else if (action === 'reject') {
+          api.admin.rejectProduct(productId, flag.reason).catch(() => {});
+        }
+      }
+    } catch (_) {}
   }
 
   _downloadCSV (csvContent, filename) {

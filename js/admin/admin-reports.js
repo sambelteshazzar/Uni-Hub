@@ -310,8 +310,8 @@ class AdminReportsManager {
   }));
   }
 
-  generatePDFReport (type, options = {}) {
-  const reportContent = this._buildReportHTML(type, options);
+async generatePDFReport (type, options = {}) {
+    const reportContent = await this._buildReportHTML(type, options);
   const printWindow = window.open('', '_blank');
   if (printWindow) {
   printWindow.document.write(`
@@ -344,18 +344,22 @@ class AdminReportsManager {
   };
   }
 
-  _buildReportHTML (type, options) {
+  async _buildReportHTML (type, options) {
   const date = new Date().toLocaleDateString('en-GH', { year: 'numeric', month: 'long', day: 'numeric' });
   let content = `<h1>Uni-Hub ${type.charAt(0).toUpperCase() + type.slice(1)} Report</h1><p class="meta">Generated on ${date}</p>`;
 
   try {
-  if (type === 'sales') {
-  const stats = this.getSalesStats(options.period || 'month');
-  content += `<h2>Sales Summary</h2><table><tr><th>Metric</th><th>Value</th></tr>`;
-  content += `<tr><td>Total Revenue</td><td>GHS ${stats.totalRevenue || 0}</td></tr>`;
-  content += `<tr><td>Total Orders</td><td>${stats.totalOrders || 0}</td></tr>`;
-  content += `<tr><td>Average Order</td><td>GHS ${stats.averageOrder || 0}</td></tr>`;
-  content += `</table>`;
+if (type === 'sales') {
+        const report = await this.getSalesReport(options.period || 'monthly');
+        const allGroups = Array.isArray(report?.data) ? report.data : [];
+        const totalOrders = allGroups.reduce((s, g) => s + (g.orders || 0), 0);
+        const totalRevenue = allGroups.reduce((s, g) => s + (g.revenue || 0), 0);
+        const averageOrder = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
+        content += `<h2>Sales Summary</h2><table><tr><th>Metric</th><th>Value</th></tr>`;
+        content += `<tr><td>Total Revenue</td><td>GHS ${totalRevenue}</td></tr>`;
+        content += `<tr><td>Total Orders</td><td>${totalOrders}</td></tr>`;
+        content += `<tr><td>Average Order</td><td>GHS ${averageOrder}</td></tr>`;
+        content += `</table>`;
   } else if (type === 'users') {
   const users = adminUsersManager.getAllUsers();
   content += `<h2>User Summary</h2><table><tr><th>ID</th><th>Name</th><th>Email</th><th>University</th><th>Role</th><th>Verified</th></tr>`;

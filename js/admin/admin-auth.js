@@ -34,82 +34,25 @@ class AdminAuthManager {
         const user = response.data.user;
 
         if (user.role !== 'admin') {
-          return {
-            success: false,
-            error: 'Access denied. Admin credentials required.',
-          };
+          return { success: false, error: 'Access denied. Admin credentials required.' };
         }
 
         if (response.data.token) {
           StorageManager.set(STORAGE_KEYS.CURRENT_USER, { token: response.data.token, user });
         }
 
-        const adminUser = {
-          ...user,
-          token: response.data.token,
-          loginAt: new Date().toISOString(),
-        };
-
+        const adminUser = { ...user, token: response.data.token, loginAt: new Date().toISOString() };
         this.adminUser = adminUser;
         StorageManager.set(this.ADMIN_STORAGE_KEY, adminUser);
         this.logActivity('Admin login', { email });
 
-        return {
-          success: true,
-          message: 'Login successful',
-          user: adminUser,
-        };
+        return { success: true, message: 'Login successful', user: adminUser };
       }
+
+      return { success: false, error: response.error || 'Login failed' };
     } catch (error) {
-      // Backend not available, try offline fallback
+      return { success: false, error: 'Cannot connect to server. Please check your internet connection.' };
     }
-
-      // Offline fallback: use authManager session if user is admin
-      const currentUser = typeof authManager !== 'undefined' ? authManager.getCurrentUser() : null;
-      if (currentUser && currentUser.role === 'admin' && currentUser.email === email) {
-        const adminUser = {
-          ...currentUser,
-          loginAt: new Date().toISOString(),
-        };
-
-        this.adminUser = adminUser;
-        StorageManager.set(this.ADMIN_STORAGE_KEY, adminUser);
-        this.logActivity('Admin login (offline)', { email });
-
-        return {
-          success: true,
-          message: 'Login successful (offline)',
-          user: adminUser,
-        };
-      }
-
-      // Hardcoded offline fallback for development/demo
-  if (email === 'admin@unihub.local' && password === 'Admin123!') {
-    const adminUser = {
-      id: 'admin-offline',
-      fullName: 'Admin User',
-      email: 'admin@unihub.local',
-      role: 'admin',
-      isVerified: true,
-      permissions: ['view_dashboard', 'manage_users', 'manage_products', 'manage_orders', 'manage_regions', 'view_reports', 'manage_settings', 'delete_users', 'delete_products', 'delete_orders'],
-      loginAt: new Date().toISOString(),
-    };
-
-        this.adminUser = adminUser;
-        StorageManager.set(this.ADMIN_STORAGE_KEY, adminUser);
-        this.logActivity('Admin login (offline hardcoded)', { email });
-
-        return {
-          success: true,
-          message: 'Login successful (offline)',
-          user: adminUser,
-        };
-      }
-
-    return {
-      success: false,
-      error: 'Invalid admin credentials',
-    };
   }
 
   /**
@@ -126,21 +69,7 @@ class AdminAuthManager {
    * @returns {boolean}
    */
   isLoggedIn () {
-    if (this.adminUser) {
-      return true;
-    }
-
-    // Fallback: check if authManager has an admin session
-    if (typeof authManager !== 'undefined') {
-      const user = authManager.getCurrentUser();
-      if (user && user.role === 'admin' && authManager.isLoggedIn()) {
-        this.adminUser = { ...user, loginAt: new Date().toISOString() };
-        StorageManager.set(this.ADMIN_STORAGE_KEY, this.adminUser);
-        return true;
-      }
-    }
-
-    return false;
+    return !!this.adminUser;
   }
 
   /**

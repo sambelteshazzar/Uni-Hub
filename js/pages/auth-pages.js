@@ -366,33 +366,11 @@ const AuthPageMethods = {
         }
       }
     } catch (e) {
-      // Backend verification unavailable — offline mode
+      console.warn('auth-pages: verification API unreachable:', e);
     }
 
-  // Fallback: store locally (offline mode) — auto-verify email method since no mail server
-  verificationData.isVerified = true;
-  verificationData.verifiedAt = new Date().toISOString();
-  verificationData.email = verificationData.studentEmail;
-
-  const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
-  verificationData.userId = session?.user?.id || null;
-
-  if (typeof adminVerificationsManager !== 'undefined') {
-    const result = adminVerificationsManager.submit(verificationData);
-    if (result.success) {
-      adminVerificationsManager.approve(result.data.id, 'Auto-approved: university email verification (offline mode)');
-    }
-  }
-
-  if (session?.user) {
-    session.user.isVerified = true;
-    session.user.verifiedAt = new Date().toISOString();
-    StorageManager.set(STORAGE_KEYS.SESSION, session, true);
-  }
-
-  StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verificationData);
-      showToast(`Verification Successful! Welcome, ${verificationData.fullName}! You are now verified as a student of ${university ? university.name : 'your university'}. You can now browse and trade on Uni-Hub.`, 'success');
-  Pages.renderBrowse();
+    showToast('Cannot connect to server. Please check your internet connection and try again.', 'error');
+    return;
   },
 
   async handleDocumentVerification (event) {
@@ -456,34 +434,11 @@ const AuthPageMethods = {
         }
       }
     } catch (e) {
-      // Backend verification unavailable — offline mode
+      console.warn('auth-pages: document verification API unreachable:', e);
     }
 
-    // Fallback: store locally (offline mode) — read files as base64 and push to admin queue
-    try {
-      const fileReads = Array.from(files).map(f => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve({ name: f.name, size: f.size, type: f.type, dataUrl: reader.result });
-        reader.onerror = reject;
-        reader.readAsDataURL(f);
-      }));
-      const docs = await Promise.all(fileReads);
-      verificationData.documents = docs;
-    } catch (_) {
-      verificationData.documents = Array.from(files).map(f => ({ name: f.name, size: f.size }));
-    }
-
-    const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
-    verificationData.userId = session?.user?.id || null;
-    verificationData.email = verificationData.personalEmail;
-
-    if (typeof adminVerificationsManager !== 'undefined') {
-      adminVerificationsManager.submit(verificationData);
-    }
-
-    StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verificationData);
-      showToast(`Verification Submitted! Thank you, ${verificationData.fullName}! Your documents have been submitted for admin review. You will be notified once your student status is confirmed. You must be verified before making any purchases.`, 'success');
-    Pages.renderBrowse();
+    showToast('Cannot connect to server. Please check your internet connection and try again.', 'error');
+    return;
   },
 
   renderLogin () {

@@ -18,22 +18,17 @@ class AdminUsersManager {
    */
   async loadUsers () {
     try {
-      // Load base users from JSON
-      const data = await api.loadJSON('data/users.json');
-      const baseUsers = data.users || [];
+      if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable !== false) {
+        const resp = await api.users.getAll({ limit: 200 });
+        if (resp.success && resp.data && resp.data.users) {
+          this.users = resp.data.users;
+          StorageManager.set(this.USERS_STORAGE_KEY, this.users, true);
+          return;
+        }
+      }
+    } catch (_) { console.warn('admin-users: backend fetch failed, using cache:', _); }
 
-      // Load user-created users from storage
-      const storedUsers = StorageManager.get(this.USERS_STORAGE_KEY, true) || [];
-
-      // Merge users (stored users take precedence)
-      const storedIds = new Set(storedUsers.map(u => u.id));
-      const newBaseUsers = baseUsers.filter(u => !storedIds.has(u.id));
-
-      this.users = [...newBaseUsers, ...storedUsers];
-    } catch (error) {
-      console.error('Error loading users:', error);
-      this.users = [];
-    }
+    this.users = StorageManager.get(this.USERS_STORAGE_KEY, true) || [];
   }
 
   /**
@@ -122,11 +117,11 @@ class AdminUsersManager {
 
     this._persistUser(user);
 
-    if (typeof api !== 'undefined' && api.users && api.users.updateRole) {
+    if (typeof api !== 'undefined' && api.users && api.users.update) {
       try {
-        await api.users.updateRole(userId, newRole);
+        await api.users.update(userId, { role: newRole });
       } catch (err) {
-        console.error('Failed to sync role update to backend:', err);
+        console.warn('admin-users: backend role sync failed:', err);
       }
     }
 
@@ -159,11 +154,11 @@ class AdminUsersManager {
 
     this._persistUser(user);
 
-    if (typeof api !== 'undefined' && api.users && api.users.verify) {
+    if (typeof api !== 'undefined' && api.users && api.users.update) {
       try {
-        await api.users.verify(userId);
+        await api.users.update(userId, { isVerified: true, verifiedAt: new Date().toISOString() });
       } catch (err) {
-        console.error('Failed to sync verification to backend:', err);
+        console.warn('admin-users: backend verify sync failed:', err);
       }
     }
 
@@ -273,11 +268,11 @@ class AdminUsersManager {
 
     this._persistUsersList();
 
-    if (typeof api !== 'undefined' && api.admin && api.admin.deleteUser) {
+    if (typeof api !== 'undefined' && api.users && api.users.delete) {
       try {
-        await api.admin.deleteUser(userId);
+        await api.users.delete(userId);
       } catch (err) {
-        console.error('Failed to sync user deletion to backend:', err);
+        console.warn('admin-users: backend delete sync failed:', err);
       }
     }
 

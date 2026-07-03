@@ -304,6 +304,8 @@ if (typeof window !== 'undefined' && !this._isStaticDeploy) {
     track: trackingNumber => this.get(`/orders/track/${trackingNumber}`),
     completePayment: (id, transactionId) => this.post(`/orders/${id}/payment`, { transactionId }),
     cancel: id => this.put(`/orders/${id}/cancel`),
+    updateStatus: (id, status, note) => this.put(`/orders/${id}/status`, { status, note }),
+    refund: (id, reason) => this.put(`/orders/${id}/status`, { status: 'refunded', note: reason }),
   };
 
   /**

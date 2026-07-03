@@ -14,8 +14,7 @@ class ReviewManager {
   }
 
   _isOffline () {
-    return (typeof api !== 'undefined' && api.isStaticDeploy) ||
-           !window._backendAvailable;
+    return window._backendAvailable === false;
   }
 
   _getLocalReviews () {
@@ -64,28 +63,7 @@ class ReviewManager {
       if (!sellerId || !rating) { throw new Error('Seller ID and rating are required'); }
 
       if (this._isOffline()) {
-        const user = typeof authManager !== 'undefined' ? authManager.getCurrentUser() : null;
-        const review = {
-          id: `rev-${Date.now()}`,
-          sellerId, rating, comment: comment || '', productId, orderId,
-          detailedRatings: detailedRatings || {},
-          reviewerId: user?.id || 'offline-user',
-          reviewerName: user?.fullName || user?.name || 'Anonymous',
-          reviewerAvatar: user?.avatar || null,
-          helpful: 0,
-          reported: false,
-          sellerResponse: null,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        const reviews = this._getLocalReviews();
-        reviews.push(review);
-        this._saveLocalReviews(reviews);
-        const myReviews = this._getMyLocalReviews();
-        myReviews.push(review);
-        this._saveMyLocalReviews(myReviews);
-showToast('Review submitted locally!', 'success');
-        return review;
+        throw new Error('Cannot connect to server. Please check your internet connection and try again.');
       }
 
       const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-production.up.railway.app/api'}/reviews`, {
@@ -95,11 +73,8 @@ showToast('Review submitted locally!', 'success');
       const result = await response.json();
       if (!response.ok) { throw new Error(result.error || 'Failed to submit review'); }
       showToast('Review submitted successfully!', 'success');
-      return result.data;
+return result.data;
     } catch (error) {
-      if (this._isOffline()) {
-        return this.submitReview(data);
-      }
       throw error;
     }
   }
@@ -128,8 +103,8 @@ showToast('Review submitted locally!', 'success');
       if (!response.ok) { throw new Error(result.error || 'Failed to fetch reviews'); }
       return result.data;
     } catch (error) {
-      if (this._isOffline()) { return this.getSellerReviews(sellerId, options); }
-      throw error;
+      console.warn('reviews: getSellerReviews failed:', error);
+      return { reviews: [], total: 0 };
     }
   }
 
@@ -149,8 +124,8 @@ showToast('Review submitted locally!', 'success');
       if (!response.ok) { throw new Error(result.error || 'Failed to fetch rating summary'); }
       return result.data;
     } catch (error) {
-      if (this._isOffline()) { return this.getRatingSummary(sellerId); }
-      throw error;
+      console.warn('reviews: getRatingSummary failed:', error);
+      return { average: 0, total: 0, distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } };
     }
   }
 
@@ -173,25 +148,14 @@ showToast('Review submitted locally!', 'success');
       if (!response.ok) { throw new Error(result.error || 'Failed to fetch reviews'); }
       return result.data;
     } catch (error) {
-      if (this._isOffline()) { return this.getMyReviews(options); }
-      throw error;
+      console.warn('reviews: getMyReviews failed:', error);
+      return { reviews: [], total: 0 };
     }
   }
 
   async updateReview (reviewId, data) {
     try {
-      if (this._isOffline()) {
-        const reviews = this._getLocalReviews();
-        const idx = reviews.findIndex(r => r.id === reviewId);
-        if (idx === -1) throw new Error('Review not found');
-        Object.assign(reviews[idx], data, { updatedAt: new Date().toISOString() });
-        this._saveLocalReviews(reviews);
-        const myReviews = this._getMyLocalReviews();
-        const myIdx = myReviews.findIndex(r => r.id === reviewId);
-        if (myIdx !== -1) { Object.assign(myReviews[myIdx], data, { updatedAt: new Date().toISOString() }); this._saveMyLocalReviews(myReviews); }
-showToast('Review updated locally!', 'success');
-        return reviews[idx];
-      }
+      if (this._isOffline()) { throw new Error('Cannot connect to server. Please check your internet connection and try again.'); }
 
       const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-production.up.railway.app/api'}/reviews/${reviewId}`, {
         method: 'PUT',
@@ -202,21 +166,13 @@ showToast('Review updated locally!', 'success');
       showToast('Review updated successfully!', 'success');
       return result.data;
     } catch (error) {
-      if (this._isOffline()) { return this.updateReview(reviewId, data); }
       throw error;
     }
   }
 
   async deleteReview (reviewId) {
     try {
-      if (this._isOffline()) {
-        let reviews = this._getLocalReviews().filter(r => r.id !== reviewId);
-        this._saveLocalReviews(reviews);
-        let myReviews = this._getMyLocalReviews().filter(r => r.id !== reviewId);
-        this._saveMyLocalReviews(myReviews);
-showToast('Review deleted', 'info');
-        return { success: true };
-      }
+      if (this._isOffline()) { throw new Error('Cannot connect to server. Please check your internet connection and try again.'); }
 
       const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-production.up.railway.app/api'}/reviews/${reviewId}`, { method: 'DELETE' });
       const result = await response.json();
@@ -224,39 +180,26 @@ showToast('Review deleted', 'info');
       showToast('Review deleted', 'info');
       return result;
     } catch (error) {
-      if (this._isOffline()) { return this.deleteReview(reviewId); }
       throw error;
     }
   }
 
   async markHelpful (reviewId) {
     try {
-      if (this._isOffline()) {
-        const reviews = this._getLocalReviews();
-        const review = reviews.find(r => r.id === reviewId);
-        if (review) { review.helpful = (review.helpful || 0) + 1; this._saveLocalReviews(reviews); }
-        return { helpful: review?.helpful || 0 };
-      }
+      if (this._isOffline()) { throw new Error('Cannot connect to server. Please check your internet connection and try again.'); }
 
       const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-production.up.railway.app/api'}/reviews/${reviewId}/helpful`, { method: 'POST' });
       const result = await response.json();
       if (!response.ok) { throw new Error(result.error || 'Failed to mark as helpful'); }
       return result.data;
     } catch (error) {
-      if (this._isOffline()) { return this.markHelpful(reviewId); }
       throw error;
     }
   }
 
   async reportReview (reviewId) {
     try {
-      if (this._isOffline()) {
-        const reviews = this._getLocalReviews();
-        const review = reviews.find(r => r.id === reviewId);
-        if (review) { review.reported = true; this._saveLocalReviews(reviews); }
-showToast('Review reported', 'info');
-        return { success: true };
-      }
+      if (this._isOffline()) { throw new Error('Cannot connect to server. Please check your internet connection and try again.'); }
 
       const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-production.up.railway.app/api'}/reviews/${reviewId}/report`, { method: 'POST' });
       const result = await response.json();
@@ -264,23 +207,13 @@ showToast('Review reported', 'info');
       showToast('Review reported', 'info');
       return result;
     } catch (error) {
-      if (this._isOffline()) { return this.reportReview(reviewId); }
       throw error;
     }
   }
 
   async respondToReview (reviewId, comment) {
     try {
-      if (this._isOffline()) {
-        const reviews = this._getLocalReviews();
-        const review = reviews.find(r => r.id === reviewId);
-        if (review) {
-          review.sellerResponse = { comment, createdAt: new Date().toISOString() };
-          this._saveLocalReviews(reviews);
-        }
-showToast('Response added', 'success');
-        return review;
-      }
+      if (this._isOffline()) { throw new Error('Cannot connect to server. Please check your internet connection and try again.'); }
 
       const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-production.up.railway.app/api'}/reviews/${reviewId}/respond`, {
         method: 'POST',
@@ -291,7 +224,6 @@ showToast('Response added', 'success');
       showToast('Response added', 'success');
       return result.data;
     } catch (error) {
-      if (this._isOffline()) { return this.respondToReview(reviewId, comment); }
       throw error;
     }
   }

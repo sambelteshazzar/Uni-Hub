@@ -1,19 +1,47 @@
 const crypto = require('crypto');
 
-const csrfTokens = new Map();
-
+const CSRF_SECRET = process.env.CSRF_SECRET || crypto.randomBytes(32).toString('hex');
 const CSRF_TOKEN_EXPIRY = 2 * 60 * 60 * 1000;
+const COOKIE_NAME = '__Host-csrf';
+const MAX_AGE_SECONDS = 7200;
 
 function generateCsrfToken () {
-  const token = crypto.randomBytes(32).toString('hex');
-  return token;
+  const nonce = crypto.randomBytes(16).toString('hex');
+  const expires = Date.now() + CSRF_TOKEN_EXPIRY;
+  const payload = `${nonce}.${expires}`;
+  const signature = crypto
+    .createHmac('sha256', CSRF_SECRET)
+    .update(payload)
+    .digest('hex');
+  return `${payload}.${signature}`;
+}
+
+function validateCsrfToken (token) {
+  if (!token || typeof token !== 'string') return false;
+  const parts = token.split('.');
+  if (parts.length !== 3) return false;
+  const payload = `${parts[0]}.${parts[1]}`;
+  const signature = parts[2];
+  const expected = crypto
+    .createHmac('sha256', CSRF_SECRET)
+    .update(payload)
+    .digest('hex');
+  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return false;
+  const expires = parseInt(parts[1], 10);
+  if (isNaN(expires) || Date.now() > expires) return false;
+  return true;
 }
 
 function csrfTokenHandler (req, res, next) {
   if (req.method === 'GET' && req.path === '/api/auth/csrf-token') {
     const token = generateCsrfToken();
-    csrfTokens.set(token, { createdAt: Date.now() });
-    cleanExpiredTokens();
+    res.cookie(COOKIE_NAME, token, {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'none',
+      path: '/',
+      maxAge: MAX_AGE_SECONDS * 1000,
+    });
     return res.json({ success: true, csrfToken: token });
   }
   next();
@@ -33,41 +61,14 @@ function csrfProtection (req, res, next) {
     });
   }
 
-  const tokenData = csrfTokens.get(csrfToken);
-  if (!tokenData) {
+  if (!validateCsrfToken(csrfToken)) {
     return res.status(403).json({
       success: false,
-      error: 'Invalid CSRF token',
+      error: 'Invalid or expired CSRF token',
     });
-  }
-
-  if (Date.now() - tokenData.createdAt > CSRF_TOKEN_EXPIRY) {
-    csrfTokens.delete(csrfToken);
-    return res.status(403).json({
-      success: false,
-      error: 'CSRF token expired',
-    });
-  }
-
-  // Token is valid but NOT consumed - allows reuse within expiry window
-  // This prevents 403 errors from concurrent/rapid sequential requests
-  tokenData.useCount = (tokenData.useCount || 0) + 1;
-
-  // Invalidate after excessive use (possible token theft)
-  if (tokenData.useCount > 100) {
-    csrfTokens.delete(csrfToken);
   }
 
   next();
 }
 
-function cleanExpiredTokens () {
-  const now = Date.now();
-  for (const [token, data] of csrfTokens.entries()) {
-    if (now - data.createdAt > CSRF_TOKEN_EXPIRY) {
-      csrfTokens.delete(token);
-    }
-  }
-}
-
-module.exports = { csrfTokenHandler, csrfProtection, generateCsrfToken };
+module.exports = { csrfTokenHandler, csrfProtection, generateCsrfToken, validateCsrfToken };

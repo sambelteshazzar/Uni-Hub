@@ -12,13 +12,23 @@ class AdminOrdersManager {
   }
 
   async _getOrders () {
-  const now = Date.now();
-  if (this._ordersCache && now - this._cacheTime < this.CACHE_TTL) {
-  return this._ordersCache;
-  }
-  this._ordersCache = await checkoutManager.getAllOrders();
-  this._cacheTime = now;
-  return this._ordersCache;
+    const now = Date.now();
+    if (this._ordersCache && now - this._cacheTime < this.CACHE_TTL) {
+      return this._ordersCache;
+    }
+    try {
+      if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable !== false) {
+        const resp = await api.admin.getOrders({ limit: 200 });
+        if (resp.success && resp.data && resp.data.orders) {
+          this._ordersCache = resp.data.orders;
+          this._cacheTime = now;
+          return this._ordersCache;
+        }
+      }
+    } catch (_) { console.warn('admin-orders: backend fetch failed:', _); }
+    this._ordersCache = await checkoutManager.getAllOrders();
+    this._cacheTime = now;
+    return this._ordersCache;
   }
 
   invalidateCache () {
@@ -54,14 +64,20 @@ class AdminOrdersManager {
   }
 
   updateOrderStatus (orderId, status) {
-  const result = checkoutManager.updateOrderStatus(orderId, status);
+    const result = checkoutManager.updateOrderStatus(orderId, status);
 
-  if (result.success) {
-  adminAuthManager.logActivity('Order status updated', { orderId, status });
-  this.invalidateCache();
-  }
+    if (result.success) {
+      adminAuthManager.logActivity('Order status updated', { orderId, status });
+      this.invalidateCache();
+    }
 
-  return result;
+    try {
+      if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable !== false) {
+        api.orders.updateStatus(orderId, status, '').catch(() => {});
+      }
+    } catch (_) {}
+
+    return result;
   }
 
   async cancelOrder (orderId, reason) {
