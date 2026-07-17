@@ -2,31 +2,58 @@ services:
   - type: web
     name: uni-hub-api
     runtime: node
-    buildFilter:
-      paths:
-        - backend/**
-    buildCommand: cd backend && npm install
-    startCommand: cd backend && node server.js
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
     env: node
     plan: free
+    healthCheckPath: /api/health
+    autoDeploy: true
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 5000
+      # PORT is injected automatically by Render — do not set it here.
       - key: FRONTEND_URL
         sync: false
       - key: JWT_SECRET
         generateValue: true
-      - key: ADMIN_PASSWORD
-        sync: false
+      - key: JWT_EXPIRE
+        value: 7d
       - key: ADMIN_EMAIL
         sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      # Turso (libSQL) cloud database — required for persistent data on Render's free tier.
+      # Create a free DB at https://turso.tech and paste the values below.
+      - key: TURSO_URL
+        sync: false
+      - key: TURSO_AUTH_TOKEN
+        sync: false
+      # Cloudinary (image uploads) — required for product images to show.
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY
         sync: false
       - key: CLOUDINARY_API_SECRET
+        sync: false
+      # Optional integrations (leave blank to disable)
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: PAYSTACK_PUBLIC_KEY
+        sync: false
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_PORT
+        sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
         sync: false
 
   - type: web
