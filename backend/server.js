@@ -252,7 +252,7 @@ app.get('/api/health', (req, res) => {
 // TEMPORARY diagnostic endpoint — kept for now to verify the FK repair migration worked
 app.get('/api/diagnostics/reviews-schema', async (req, res) => {
   const { getTursoClient, getDb, isTurso } = require('./config/database');
-  const out = { isTurso: isTurso(), fkList: [], selectOk: null, insertTest: null };
+  const out = { isTurso: isTurso(), fkList: [], selectOk: null, insertTest: null, pathTest: null };
 
   try {
     if (isTurso()) {
@@ -290,6 +290,28 @@ app.get('/api/diagnostics/reviews-schema', async (req, res) => {
       out.insertTest = { ok: true };
     }
   } catch (e) { out.insertTest = { ok: false, error: e.message, code: e.code }; }
+
+  // Reproduce the actual getSellerReviews code path with a known seller ID
+  try {
+    const { db, mapReviewRow } = require('./utils/db');
+    const sellerId = '949cc9ef-bba3-43d4-a0d1-9dad0b1c3815';
+    const seller = await db('users').findById(sellerId);
+    out.pathTest = { sellerFound: !!seller, sellerName: seller?.fullName };
+    if (seller) {
+      const reviews = await db('reviews').find(
+        { seller: sellerId },
+        { sort: { createdAt: -1 }, limit: 10, skip: 0 },
+      );
+      out.pathTest.reviewsFound = reviews.length;
+      const total = await db('reviews').countDocuments({ seller: sellerId });
+      out.pathTest.total = total;
+      const row = await db('reviews').rawGet(
+        `SELECT AVG(rating) as averageRating, COUNT(*) as totalReviews FROM reviews WHERE seller = ?`,
+        sellerId,
+      );
+      out.pathTest.avg = row;
+    }
+  } catch (e) { out.pathTest = { ...(out.pathTest || {}), error: e.message, code: e.code, stack: e.stack }; }
 
   res.json(out);
 });
