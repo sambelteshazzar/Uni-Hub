@@ -249,62 +249,39 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// TEMPORARY diagnostic endpoint — returns raw reviews-table schema and
-// the raw error from sampling a SELECT. Remove after debugging is done.
+// TEMPORARY diagnostic endpoint — kept for now to verify the FK repair migration worked
 app.get('/api/diagnostics/reviews-schema', async (req, res) => {
   const { getTursoClient, getDb, isTurso } = require('./config/database');
-  const out = { isTurso: isTurso(), pragma: [], selectError: null, insertTest: null };
+  const out = { isTurso: isTurso(), fkList: [], selectOk: null, insertTest: null };
 
   try {
     if (isTurso()) {
       const client = getTursoClient();
-      const r = await client.execute("PRAGMA table_info(reviews)");
-      out.pragma = r.rows;
-
-      // Inspect the actual stored schema SQL — exposes rewrite of FK references
-      const sql = await client.execute("SELECT sql FROM sqlite_master WHERE name='reviews'");
-      out.reviewsSchemaSql = sql.rows[0]?.sql || null;
-
-      // Count rows (so we know if dropping the table would lose data)
-      const cnt = await client.execute("SELECT COUNT(*) as n FROM reviews");
-      out.rowCount = cnt.rows[0]?.n ?? 0;
-
-      // Check if products_old orphan exists
-      const orphan = await client.execute("SELECT name FROM sqlite_master WHERE name='products_old'");
-      out.productsOldOrphan = orphan.rows.length > 0;
-
-      // foreign_key_list on reviews
-      const fk = await client.execute("PRAGMA foreign_key_list(reviews)");
+      const fk = await client.execute('PRAGMA foreign_key_list(reviews)');
       out.fkList = fk.rows;
     } else {
       const localDb = getDb();
-      out.pragma = localDb.prepare("PRAGMA table_info(reviews)").all();
-      out.reviewsSchemaSql = localDb.prepare("SELECT sql FROM sqlite_master WHERE name='reviews'").get()?.sql || null;
-      out.rowCount = localDb.prepare("SELECT COUNT(*) as n FROM reviews").get().n;
-      out.productsOldOrphan = localDb.prepare("SELECT name FROM sqlite_master WHERE name='products_old'").get() !== undefined;
-      out.fkList = localDb.prepare("PRAGMA foreign_key_list(reviews)").all();
+      out.fkList = localDb.prepare('PRAGMA foreign_key_list(reviews)').all();
     }
-  } catch (e) { out.pragmaError = e.message; }
+  } catch (e) { out.fkError = e.message; }
 
   try {
     if (isTurso()) {
-      await getTursoClient().execute("SELECT * FROM reviews LIMIT 1");
+      await getTursoClient().execute('SELECT * FROM reviews LIMIT 1');
     } else {
-      getDb().prepare("SELECT * FROM reviews LIMIT 1").all();
+      getDb().prepare('SELECT * FROM reviews LIMIT 1').all();
     }
     out.selectOk = true;
   } catch (e) { out.selectError = e.message; }
 
-  // Test an INSERT into a temp id (will be caught by FK or rolled back by CHECK)
   try {
     if (isTurso()) {
       const client = getTursoClient();
       const r = await client.execute({
-        sql: 'INSERT INTO reviews (id, reviewer, seller, rating, comment) VALUES (?, ?, ?, ?, ?)',
+        sql: "INSERT INTO reviews (id, reviewer, seller, rating, comment) VALUES (?, ?, ?, ?, ?)",
         args: ['__diag_test__', '__diag_test__', '__diag_test__', 5, 'diag'],
       });
       out.insertTest = { ok: true, rowsAffected: r.rowsAffected };
-      // roll back immediately
       await client.execute({ sql: "DELETE FROM reviews WHERE id = ?", args: ['__diag_test__'] });
     } else {
       const localDb = getDb();

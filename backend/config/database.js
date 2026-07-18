@@ -544,6 +544,58 @@ async function runTursoMigrations () {
       console.error('Products migration rollback failed:', rollbackErr.message);
     }
   }
+
+  // Repair reviews table if its product FK was rewritten to point to
+  // the (now-dropped) products_old orphan by a prior products migration.
+  // SQLite rewrites FK references when ALTER TABLE RENAME runs, so the
+  // earlier "products status migration" could leave reviews.product →
+  // products_old(id) even though products_old no longer exists. Every
+  // INSERT into reviews then fails FK validation with
+  //   "no such table: main.products_old".
+  // Fix: drop the orphaned FK by recreating the reviews table with the
+  // correct FK reference (back to products). Preserves existing rows
+  // via INSERT...SELECT.
+  try {
+    const fkList = await tursoClient.execute('PRAGMA foreign_key_list(reviews)');
+    const hasBrokenFk = fkList.rows.some(r => r.table === 'products_old');
+    if (hasBrokenFk) {
+      console.log('Repairing reviews table: product FK points to dropped products_old, recreating table...');
+      await tursoClient.execute('ALTER TABLE reviews RENAME TO reviews_broken');
+      await tursoClient.execute(`CREATE TABLE reviews (
+  id TEXT PRIMARY KEY,
+  reviewer TEXT NOT NULL REFERENCES users(id),
+  seller TEXT NOT NULL REFERENCES users(id),
+  product TEXT REFERENCES products(id),
+  "order" TEXT REFERENCES orders(id),
+  rating INTEGER NOT NULL CHECK(rating >= 1 AND rating <= 5),
+  detailedRatings_accuracy INTEGER CHECK(detailedRatings_accuracy >= 1 AND detailedRatings_accuracy <= 5),
+  detailedRatings_communication INTEGER CHECK(detailedRatings_communication >= 1 AND detailedRatings_communication <= 5),
+  detailedRatings_value INTEGER CHECK(detailedRatings_value >= 1 AND detailedRatings_value <= 5),
+  comment TEXT,
+  status TEXT DEFAULT 'approved' CHECK(status IN ('pending','approved','rejected')),
+  helpfulVotes TEXT DEFAULT '[]',
+  reportCount INTEGER DEFAULT 0,
+  sellerResponse_comment TEXT,
+  sellerResponse_respondedAt TEXT,
+  createdAt TEXT DEFAULT (datetime('now')),
+  updatedAt TEXT DEFAULT (datetime('now'))
+)`);
+      await tursoClient.execute('INSERT INTO reviews SELECT * FROM reviews_broken');
+      await tursoClient.execute('DROP TABLE reviews_broken');
+      console.log('Reviews table repair complete.');
+    }
+  } catch (repairErr) {
+    console.error('Reviews FK repair failed:', repairErr.message);
+    try {
+      const hasBroken = await tursoClient.execute("SELECT name FROM sqlite_master WHERE name='reviews_broken'");
+      if (hasBroken.rows.length > 0) {
+        await tursoClient.execute('ALTER TABLE reviews_broken RENAME TO reviews');
+        console.log('Rolled back reviews table rename.');
+      }
+    } catch (rollbackErr) {
+      console.error('Reviews repair rollback failed:', rollbackErr.message);
+    }
+  }
 }
 
 function connectLocal () {
