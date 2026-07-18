@@ -201,7 +201,7 @@ class AuthManager {
    * Fetch CSRF token from backend
    */
   _getBaseURL () {
-    return (typeof window !== 'undefined' && window.API_URL) || 'https://uni-hub-production.up.railway.app/api';
+    return (typeof window !== 'undefined' && window.API_URL) || 'https://uni-hub-bnxi.onrender.com/api';
   }
 
   async _fetchCsrfToken () {

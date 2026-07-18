@@ -79,7 +79,7 @@ scriptSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https:
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
         imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
-        connectSrc: ["'self'", 'http://localhost:5000', 'ws://localhost:5000', 'http://127.0.0.1:5000', 'ws://127.0.0.1:5000', 'https://*.sentry.io', 'https://accounts.google.com', 'https://www.googleapis.com', 'https://uni-hub-production.up.railway.app', 'wss://uni-hub-production.up.railway.app', 'https://api.cloudinary.com'],
+        connectSrc: ["'self'", 'http://localhost:5000', 'ws://localhost:5000', 'http://127.0.0.1:5000', 'ws://127.0.0.1:5000', 'https://*.sentry.io', 'https://accounts.google.com', 'https://www.googleapis.com', 'https://uni-hub-bnxi.onrender.com', 'wss://uni-hub-bnxi.onrender.com', 'https://api.cloudinary.com'],
       frameAncestors: ["'none'"],
       baseUri: ["'self'"],
       formAction: ["'self'"],

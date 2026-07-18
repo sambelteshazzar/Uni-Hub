@@ -410,7 +410,7 @@ var socialBtnStyle =
       submitBtn.textContent = 'Sending...';
 
       try {
-        var baseURL = (typeof window !== 'undefined' && window.API_URL) || 'https://uni-hub-production.up.railway.app/api';
+        var baseURL = (typeof window !== 'undefined' && window.API_URL) || 'https://uni-hub-bnxi.onrender.com/api';
         if (typeof api !== 'undefined' && api.isStaticDeploy) {
           showToast('Password reset is not available in offline mode. Please log in with your existing credentials.', 'info');
           setTimeout(function () { Pages.renderLogin(); }, 2000);
@@ -515,7 +515,7 @@ var socialBtnStyle =
       submitBtn.textContent = 'Resetting...';
 
       try {
-        var baseURL = (typeof window !== 'undefined' && window.API_URL) || 'https://uni-hub-production.up.railway.app/api';
+        var baseURL = (typeof window !== 'undefined' && window.API_URL) || 'https://uni-hub-bnxi.onrender.com/api';
         if (typeof api !== 'undefined' && api.isStaticDeploy) {
           showToast('Password reset is not available in offline mode. Please log in with your existing credentials.', 'info');
           setTimeout(function () { Pages.renderLogin(); }, 2000);

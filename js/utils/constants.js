@@ -28,7 +28,7 @@ const STORAGE_KEYS = {
 
 // API endpoints (will be used when backend is ready)
 const API_ENDPOINTS = {
-  BASE_URL: (typeof window !== 'undefined' && window.API_URL) || 'https://uni-hub-production.up.railway.app/api',
+  BASE_URL: (typeof window !== 'undefined' && window.API_URL) || 'https://uni-hub-bnxi.onrender.com/api',
   AUTH: {
     LOGIN: '/auth/login',
     REGISTER: '/auth/register',

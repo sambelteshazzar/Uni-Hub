@@ -1098,7 +1098,7 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
   <script>
   (function() {
   var productId = '${productId}';
-  var apiUrl = window.API_URL || 'https://uni-hub-production.up.railway.app/api';
+  var apiUrl = window.API_URL || 'https://uni-hub-bnxi.onrender.com/api';
   if (typeof api !== 'undefined' && api.isStaticDeploy) return;
   fetch(apiUrl + '/products/' + productId + '/colors')
     .then(function(r) { return r.json(); })

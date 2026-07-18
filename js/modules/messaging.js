@@ -94,7 +94,7 @@ class MessageManager {
     }
     // If CDN fails, try loading from backend
     const backendScript = document.createElement('script');
-    backendScript.src = `${window.API_URL?.replace('/api', '') || 'https://uni-hub-production.up.railway.app'}/socket.io/socket.io.js`;
+    backendScript.src = `${window.API_URL?.replace('/api', '') || 'https://uni-hub-bnxi.onrender.com'}/socket.io/socket.io.js`;
     backendScript.onload = resolve;
       backendScript.onerror = () => {
           resolve();
@@ -135,7 +135,7 @@ class MessageManager {
       }
 
     try {
-      const serverUrl = (window.API_URL || 'https://uni-hub-production.up.railway.app/api').replace('/api', '');
+      const serverUrl = (window.API_URL || 'https://uni-hub-bnxi.onrender.com/api').replace('/api', '');
 
       this.socket = io(serverUrl, {
         auth: { token },
@@ -271,7 +271,7 @@ class MessageManager {
         return this._sendOfflineMessage(data);
       }
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-production.up.railway.app/api'}/messages`, {
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages`, {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -378,7 +378,7 @@ class MessageManager {
       const { page = 1, limit = 20, status = 'active' } = options;
       const params = new URLSearchParams({ page, limit, status });
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-production.up.railway.app/api'}/messages/conversations?${params}`);
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/conversations?${params}`);
 
       const result = await response.json();
 
@@ -407,7 +407,7 @@ class MessageManager {
         return convs.find(c => c.id === conversationId) || null;
       }
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-production.up.railway.app/api'}/messages/conversation/${conversationId}`);
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/conversation/${conversationId}`);
 
       const result = await response.json();
 
@@ -441,7 +441,7 @@ class MessageManager {
       const params = new URLSearchParams({ page, limit });
 
       const response = await this._fetchWithCsrf(
-        `${window.API_URL || 'https://uni-hub-production.up.railway.app/api'}/messages/conversation/${conversationId}/messages?${params}`,
+        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/conversation/${conversationId}/messages?${params}`,
       );
 
       const result = await response.json();
@@ -474,7 +474,7 @@ class MessageManager {
         return { count: 0 };
       }
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-production.up.railway.app/api'}/messages/unread-count`);
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/unread-count`);
 
       const result = await response.json();
 
@@ -499,7 +499,7 @@ class MessageManager {
    */
   async deleteMessage (messageId) {
     try {
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-production.up.railway.app/api'}/messages/${messageId}`, {
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/${messageId}`, {
         method: 'DELETE',
       });
 
@@ -529,7 +529,7 @@ class MessageManager {
         params.append('conversationId', conversationId);
       }
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-production.up.railway.app/api'}/messages/search?${params}`);
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/search?${params}`);
 
       const result = await response.json();
 
