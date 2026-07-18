@@ -669,9 +669,30 @@ min-height: 44px;
 .product-card-image {
   display: block;
   width: 100%;
-  height: 100%;
+  height: auto;
+  aspect-ratio: 1;
   object-fit: cover;
+  background: linear-gradient(145deg, #f8faff, #f0f4ff);
   transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Higher-specificity override: legacy cards.css targets .product-card-image
+   as if it were a wrapper div (padding-top:100% trick + position:relative),
+   but the modern markup uses .product-card-image directly on the <img>.
+   Scope under .product-card-modern so we win the cascade without !important. */
+.product-card-modern .product-card-image {
+  padding-top: 0;
+  position: static;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
+.product-card-image[src=''],
+.product-card-image[src*='no-image.svg'] {
+  object-fit: contain;
+  padding: 25%;
 }
 
 .product-card-modern:hover .product-card-image {
