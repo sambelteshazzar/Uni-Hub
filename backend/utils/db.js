@@ -382,16 +382,16 @@ class Db {
   }
 
   async rawAll (sql, params = []) {
-    return this._all(sql, params);
+    return this._all(sql, Array.isArray(params) ? params : [params]);
   }
 
   async rawGet (sql, params = []) {
-    const { row } = await this._get(sql, params);
+    const { row } = await this._get(sql, Array.isArray(params) ? params : [params]);
     return row;
   }
 
   async rawRun (sql, params = []) {
-    return this._runWrite(sql, params);
+    return this._runWrite(sql, Array.isArray(params) ? params : [params]);
   }
 
   async transaction (fn) {
