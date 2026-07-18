@@ -441,6 +441,41 @@ async function runTursoMigrations () {
       alter: 'ALTER TABLE users ADD COLUMN googleId TEXT',
     },
     {
+      check: "PRAGMA table_info(reviews)",
+      find: 'detailedRatings_accuracy',
+      alter: 'ALTER TABLE reviews ADD COLUMN detailedRatings_accuracy INTEGER',
+    },
+    {
+      check: "PRAGMA table_info(reviews)",
+      find: 'detailedRatings_communication',
+      alter: 'ALTER TABLE reviews ADD COLUMN detailedRatings_communication INTEGER',
+    },
+    {
+      check: "PRAGMA table_info(reviews)",
+      find: 'detailedRatings_value',
+      alter: 'ALTER TABLE reviews ADD COLUMN detailedRatings_value INTEGER',
+    },
+    {
+      check: "PRAGMA table_info(reviews)",
+      find: 'helpfulVotes',
+      alter: "ALTER TABLE reviews ADD COLUMN helpfulVotes TEXT DEFAULT '[]'",
+    },
+    {
+      check: "PRAGMA table_info(reviews)",
+      find: 'reportCount',
+      alter: 'ALTER TABLE reviews ADD COLUMN reportCount INTEGER DEFAULT 0',
+    },
+    {
+      check: "PRAGMA table_info(reviews)",
+      find: 'sellerResponse_comment',
+      alter: 'ALTER TABLE reviews ADD COLUMN sellerResponse_comment TEXT',
+    },
+    {
+      check: "PRAGMA table_info(reviews)",
+      find: 'sellerResponse_respondedAt',
+      alter: 'ALTER TABLE reviews ADD COLUMN sellerResponse_respondedAt TEXT',
+    },
+    {
     check: "SELECT 1 FROM sqlite_master WHERE name='products' AND sql LIKE '%approved%'",
     find: '__status_check_has_approved__',
     alter: null,
