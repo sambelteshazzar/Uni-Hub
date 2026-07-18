@@ -61,6 +61,13 @@ const { csrfTokenHandler, csrfProtection } = require('./middleware/csrf.middlewa
 // Initialize Express app
 const app = express();
 
+// Render proxies behind Cloudflare, so the client's real IP arrives via
+// X-Forwarded-* headers. trust proxy = 1 lets express-rate-limit key off
+// the real client IP (one bucket per user) instead of the shared
+// load-balancer IP, which would otherwise collapse all users into a
+// single rate-limit counter and trip limits prematurely.
+app.set('trust proxy', 1);
+
 app.use(sentryRequest());
 
 // Shared io instance — set during server startup
@@ -130,6 +137,8 @@ app.use(cors({
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: {
     success: false,
     error: 'Too many requests, please try again later.',
@@ -140,7 +149,9 @@ app.use('/api/', limiter);
 // Stricter rate limiting for auth endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: {
     success: false,
     error: 'Too many authentication attempts, please try again later.',
@@ -152,6 +163,8 @@ app.use('/api/auth/', authLimiter);
 const verificationLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: {
     success: false,
     error: 'Too many verification attempts, please try again later.',
@@ -163,6 +176,8 @@ app.use('/api/verification/', verificationLimiter);
 const reviewLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: {
     success: false,
     error: 'Too many review submissions, please try again later.',
@@ -174,6 +189,8 @@ app.use('/api/reviews/', reviewLimiter);
 const messageLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 50,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: {
     success: false,
     error: 'Too many messages, please slow down.',
@@ -185,6 +202,8 @@ app.use('/api/messages/', messageLimiter);
 const orderLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: {
     success: false,
     error: 'Too many order requests, please try again later.',
