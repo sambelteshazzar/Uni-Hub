@@ -249,6 +249,54 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// TEMPORARY diagnostic endpoint — returns raw reviews-table schema and
+// the raw error from sampling a SELECT. Remove after debugging is done.
+app.get('/api/diagnostics/reviews-schema', async (req, res) => {
+  const { getTursoClient, getDb, isTurso } = require('./config/database');
+  const out = { isTurso: isTurso(), pragma: [], selectError: null, insertTest: null };
+
+  try {
+    if (isTurso()) {
+      const client = getTursoClient();
+      const r = await client.execute("PRAGMA table_info(reviews)");
+      out.pragma = r.rows;
+    } else {
+      const localDb = getDb();
+      out.pragma = localDb.prepare("PRAGMA table_info(reviews)").all();
+    }
+  } catch (e) { out.pragmaError = e.message; }
+
+  try {
+    if (isTurso()) {
+      await getTursoClient().execute("SELECT * FROM reviews LIMIT 1");
+    } else {
+      getDb().prepare("SELECT * FROM reviews LIMIT 1").all();
+    }
+    out.selectOk = true;
+  } catch (e) { out.selectError = e.message; }
+
+  // Test an INSERT into a temp id (will be caught by FK or rolled back by CHECK)
+  try {
+    if (isTurso()) {
+      const client = getTursoClient();
+      const r = await client.execute({
+        sql: 'INSERT INTO reviews (id, reviewer, seller, rating, comment) VALUES (?, ?, ?, ?, ?)',
+        args: ['__diag_test__', '__diag_test__', '__diag_test__', 5, 'diag'],
+      });
+      out.insertTest = { ok: true, rowsAffected: r.rowsAffected };
+      // roll back immediately
+      await client.execute({ sql: "DELETE FROM reviews WHERE id = ?", args: ['__diag_test__'] });
+    } else {
+      const localDb = getDb();
+      localDb.prepare('INSERT INTO reviews (id, reviewer, seller, rating, comment) VALUES (?, ?, ?, ?, ?)').run('__diag_test__','__diag_test__','__diag_test__',5,'diag');
+      localDb.prepare("DELETE FROM reviews WHERE id = ?").run('__diag_test__');
+      out.insertTest = { ok: true };
+    }
+  } catch (e) { out.insertTest = { ok: false, error: e.message, code: e.code }; }
+
+  res.json(out);
+});
+
 // Authentication routes
 app.use('/api/auth', authRoutes);
 
