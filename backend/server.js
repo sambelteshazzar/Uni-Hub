@@ -260,9 +260,29 @@ app.get('/api/diagnostics/reviews-schema', async (req, res) => {
       const client = getTursoClient();
       const r = await client.execute("PRAGMA table_info(reviews)");
       out.pragma = r.rows;
+
+      // Inspect the actual stored schema SQL — exposes rewrite of FK references
+      const sql = await client.execute("SELECT sql FROM sqlite_master WHERE name='reviews'");
+      out.reviewsSchemaSql = sql.rows[0]?.sql || null;
+
+      // Count rows (so we know if dropping the table would lose data)
+      const cnt = await client.execute("SELECT COUNT(*) as n FROM reviews");
+      out.rowCount = cnt.rows[0]?.n ?? 0;
+
+      // Check if products_old orphan exists
+      const orphan = await client.execute("SELECT name FROM sqlite_master WHERE name='products_old'");
+      out.productsOldOrphan = orphan.rows.length > 0;
+
+      // foreign_key_list on reviews
+      const fk = await client.execute("PRAGMA foreign_key_list(reviews)");
+      out.fkList = fk.rows;
     } else {
       const localDb = getDb();
       out.pragma = localDb.prepare("PRAGMA table_info(reviews)").all();
+      out.reviewsSchemaSql = localDb.prepare("SELECT sql FROM sqlite_master WHERE name='reviews'").get()?.sql || null;
+      out.rowCount = localDb.prepare("SELECT COUNT(*) as n FROM reviews").get().n;
+      out.productsOldOrphan = localDb.prepare("SELECT name FROM sqlite_master WHERE name='products_old'").get() !== undefined;
+      out.fkList = localDb.prepare("PRAGMA foreign_key_list(reviews)").all();
     }
   } catch (e) { out.pragmaError = e.message; }
 
