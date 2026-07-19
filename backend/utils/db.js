@@ -166,6 +166,12 @@ class Db {
     this.table = table;
   }
 
+  // Wrap an SQL identifier (table or column name) in double quotes so
+  // reserved keywords like "order" / "group" / "select" don't break SQL
+  // parsing. Doubles any embedded double-quotes per SQL standard.
+  _q (ident) {
+    return '"' + String(ident).replace(/"/g, '""') + '"';
+  }
   _mapRow (row) {
     if (!row) return null;
     const mapper = MAPPER_MAP[this.table];
@@ -234,19 +240,19 @@ class Db {
   }
 
   async findById (id) {
-    const { row } = await this._get(`SELECT * FROM ${this.table} WHERE id = ?`, [id]);
+    const { row } = await this._get(`SELECT * FROM ${this._q(this.table)} WHERE ${this._q('id')} = ?`, [id]);
     return this._mapRow(row);
   }
 
   async findOne (where) {
     const { sql, params } = this._buildWhere(where);
-    const { row } = await this._get(`SELECT * FROM ${this.table} ${sql} LIMIT 1`, params);
+    const { row } = await this._get(`SELECT * FROM ${this._q(this.table)} ${sql} LIMIT 1`, params);
     return this._mapRow(row);
   }
 
   async find (where = {}, opts = {}) {
     const { sql, params } = this._buildWhere(where);
-    let query = `SELECT * FROM ${this.table} ${sql}`;
+    let query = `SELECT * FROM ${this._q(this.table)} ${sql}`;
 
     if (opts.sort) {
       query += ' ORDER BY ' + this._buildOrder(opts.sort);
@@ -271,7 +277,7 @@ class Db {
 
   async countDocuments (where = {}) {
     const { sql, params } = this._buildWhere(where);
-    const { row } = await this._get(`SELECT COUNT(*) as count FROM ${this.table} ${sql}`, params);
+    const { row } = await this._get(`SELECT COUNT(*) as count FROM ${this._q(this.table)} ${sql}`, params);
     return (row && row.count) || 0;
   }
 
@@ -286,13 +292,13 @@ class Db {
 
     for (const [key, value] of Object.entries(data)) {
       if (value === undefined) continue;
-      cols.push(key);
+      cols.push(this._q(key));
       vals.push(this._serializeValue(key, value));
       placeholders.push('?');
     }
 
     await this._runWrite(
-      `INSERT INTO ${this.table} (${cols.join(', ')}) VALUES (${placeholders.join(', ')})`,
+      `INSERT INTO ${this._q(this.table)} (${cols.join(', ')}) VALUES (${placeholders.join(', ')})`,
       vals,
     );
 
@@ -306,17 +312,17 @@ class Db {
     for (const [key, value] of Object.entries(data)) {
       if (key === 'id' || key === '_id') continue;
       if (value === undefined) continue;
-      sets.push(`${key} = ?`);
+      sets.push(`${this._q(key)} = ?`);
       vals.push(this._serializeValue(key, value));
     }
 
     if (sets.length === 0) return this.findById(id);
 
-    sets.push("updatedAt = datetime('now')");
+    sets.push(`${this._q('updatedAt')} = datetime('now')`);
     vals.push(id);
 
     await this._runWrite(
-      `UPDATE ${this.table} SET ${sets.join(', ')} WHERE id = ?`,
+      `UPDATE ${this._q(this.table)} SET ${sets.join(', ')} WHERE ${this._q('id')} = ?`,
       vals,
     );
 
@@ -324,7 +330,7 @@ class Db {
   }
 
   async deleteById (id) {
-    const { changes } = await this._runWrite(`DELETE FROM ${this.table} WHERE id = ?`, [id]);
+    const { changes } = await this._runWrite(`DELETE FROM ${this._q(this.table)} WHERE ${this._q('id')} = ?`, [id]);
     return changes > 0;
   }
 
@@ -444,29 +450,29 @@ class Db {
 
       if (value && typeof value === 'object' && !Array.isArray(value)) {
         if (value.$gte !== undefined) {
-          conditions.push(`${key} >= ?`);
+          conditions.push(`${this._q(key)} >= ?`);
           params.push(value.$gte);
         }
         if (value.$lte !== undefined) {
-          conditions.push(`${key} <= ?`);
+          conditions.push(`${this._q(key)} <= ?`);
           params.push(value.$lte);
         }
         if (value.$gt !== undefined) {
-          conditions.push(`${key} > ?`);
+          conditions.push(`${this._q(key)} > ?`);
           params.push(value.$gt);
         }
         if (value.$ne !== undefined) {
-          conditions.push(`${key} != ?`);
+          conditions.push(`${this._q(key)} != ?`);
           params.push(value.$ne);
         }
         if (value.$in !== undefined) {
           const placeholders = value.$in.map(() => '?').join(',');
-          conditions.push(`${key} IN (${placeholders})`);
+          conditions.push(`${this._q(key)} IN (${placeholders})`);
           params.push(...value.$in);
         }
         if (value.$regex !== undefined) {
           const regexStr = value.$regex;
-          conditions.push(`${key} LIKE ?`);
+          conditions.push(`${this._q(key)} LIKE ?`);
           let likePattern = regexStr;
           if (!likePattern.startsWith('^') && !likePattern.startsWith('%')) {
             likePattern = `%${likePattern}%`;
@@ -484,16 +490,16 @@ class Db {
           conditions.push('1 = 0');
         } else {
           const placeholders = value.map(() => '?').join(',');
-          conditions.push(`${key} IN (${placeholders})`);
+          conditions.push(`${this._q(key)} IN (${placeholders})`);
           params.push(...value);
         }
         continue;
       }
 
       if (value === null || value === undefined) {
-        conditions.push(`${key} IS NULL`);
+        conditions.push(`${this._q(key)} IS NULL`);
       } else {
-        conditions.push(`${key} = ?`);
+        conditions.push(`${this._q(key)} = ?`);
         params.push(value);
       }
     }
