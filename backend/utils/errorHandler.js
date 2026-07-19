@@ -146,6 +146,7 @@ const errorHandler = (err, req, res, _next) => {
     success: false,
     error: errorResponse.message,
     ...(errorResponse.details && { details: errorResponse.details }),
+    ...(errorResponse.stack && { stack: errorResponse.stack, code: errorResponse.code, name: errorResponse.name }),
   });
 };
 
