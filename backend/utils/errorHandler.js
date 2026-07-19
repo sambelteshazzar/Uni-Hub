@@ -131,14 +131,9 @@ const errorHandler = (err, req, res, _next) => {
   } else {
     const safeErrors = ['Only image files', 'Failed to upload', 'No images uploaded', 'CSRF', 'rate limit'];
     const isSafeError = safeErrors.some(k => (err.message || '').toLowerCase().includes(k.toLowerCase()));
-    // TEMP debug backdoor — clients sending 'X-Debug-Diagnostics: 1' receive
-    // the real err.message even in production. Lets us diagnose 500s without
-    // flipping NODE_ENV globally. Remove once review bug is resolved.
-    const debugBypass = req.get('X-Debug-Diagnostics') === '1';
     errorResponse = {
       statusCode: err.statusCode || err.status || 500,
-      message: (process.env.NODE_ENV === 'development' || isSafeError || debugBypass) ? err.message : 'Internal server error',
-      ...(debugBypass ? { stack: err.stack, code: err.code, name: err.name } : {}),
+      message: (process.env.NODE_ENV === 'development' || isSafeError) ? err.message : 'Internal server error',
     };
   }
 
@@ -146,7 +141,6 @@ const errorHandler = (err, req, res, _next) => {
     success: false,
     error: errorResponse.message,
     ...(errorResponse.details && { details: errorResponse.details }),
-    ...(errorResponse.stack && { stack: errorResponse.stack, code: errorResponse.code, name: errorResponse.name }),
   });
 };
 
