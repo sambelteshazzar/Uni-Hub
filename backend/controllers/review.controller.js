@@ -1,30 +1,42 @@
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { db, generateId, parseJson, stringifyJson, mapReviewRow } = require('../utils/db');
 
-async function calculateAverageRating (sellerId) {
-const row = await db('reviews').rawGet(
-`SELECT AVG(rating) as averageRating, COUNT(*) as totalReviews FROM reviews WHERE seller = ?`,
-sellerId
-);
+async function calculateAverageRating (sellerId, productId = null) {
+  let query = 'SELECT AVG(rating) as averageRating, COUNT(*) as totalReviews FROM reviews WHERE seller = ?';
+  const params = [sellerId];
+  
+  if (productId) {
+    query += ' AND product = ?';
+    params.push(productId);
+  }
 
-const breakdown = await db('reviews').rawAll(
-`SELECT rating, COUNT(*) as count FROM reviews WHERE seller = ? GROUP BY rating ORDER BY rating DESC`,
-sellerId
-);
+  const row = await db('reviews').rawGet(query, ...params);
 
-const ratingBreakdown = {};
-for (let i = 1; i <= 5; i++) {
-ratingBreakdown[i] = 0;
-}
-for (const b of breakdown) {
-ratingBreakdown[b.rating] = b.count;
-}
+  let breakdownQuery = 'SELECT rating, COUNT(*) as count FROM reviews WHERE seller = ?';
+  const breakdownParams = [sellerId];
+  
+  if (productId) {
+    breakdownQuery += ' AND product = ?';
+    breakdownParams.push(productId);
+  }
+  
+  breakdownQuery += ' GROUP BY rating ORDER BY rating DESC';
 
-return {
-averageRating: row.averageRating ? Math.round(row.averageRating * 10) / 10 : 0,
-totalReviews: row.totalReviews || 0,
-ratingBreakdown,
-};
+  const breakdown = await db('reviews').rawAll(breakdownQuery, ...breakdownParams);
+
+  const ratingBreakdown = {};
+  for (let i = 1; i <= 5; i++) {
+    ratingBreakdown[i] = 0;
+  }
+  for (const b of breakdown) {
+    ratingBreakdown[b.rating] = b.count;
+  }
+
+  return {
+    averageRating: row.averageRating ? Math.round(row.averageRating * 10) / 10 : 0,
+    totalReviews: row.totalReviews || 0,
+    ratingBreakdown,
+  };
 }
 
 async function updateSellerRating (sellerId) {
@@ -123,63 +135,70 @@ data: populatedReview,
 });
 
 exports.getSellerReviews = asyncHandler(async (req, res) => {
-const { sellerId } = req.params;
-const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = -1 } = req.query;
+  const { sellerId } = req.params;
+  const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = -1, productId } = req.query;
 
-const allowedSortFields = ['createdAt', 'rating', 'updatedAt'];
-const safeSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
+  const allowedSortFields = ['createdAt', 'rating', 'updatedAt'];
+  const safeSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
 
-const seller = await db('users').findById(sellerId);
-if (!seller) {
-throw new ApiError(404, 'Seller not found');
-}
+  const seller = await db('users').findById(sellerId);
+  if (!seller) {
+    throw new ApiError(404, 'Seller not found');
+  }
 
-const pageNum = parseInt(page);
-const limitNum = parseInt(limit);
-const skip = (pageNum - 1) * limitNum;
+  const pageNum = parseInt(page);
+  const limitNum = parseInt(limit);
+  const skip = (pageNum - 1) * limitNum;
 
-const sortObj = {};
-sortObj[safeSortBy] = parseInt(sortOrder);
+  const sortObj = {};
+  sortObj[safeSortBy] = parseInt(sortOrder);
 
-const reviews = await db('reviews').find({ seller: sellerId }, { sort: sortObj, limit: limitNum, skip });
-const total = await db('reviews').countDocuments({ seller: sellerId });
+  // Build query - filter by seller, optionally by product
+  const query = { seller: sellerId };
+  if (productId) {
+    query.product = productId;
+  }
 
-const populatedReviews = [];
-for (const r of reviews) {
-const reviewer = await db('users').findById(r.reviewer);
-const product = r.product ? await db('products').findById(r.product) : null;
-populatedReviews.push({
-...mapReviewRow(r),
-reviewer: reviewer ? { id: reviewer.id, fullName: reviewer.fullName, avatar: reviewer.avatar, university: reviewer.university } : null,
-product: product ? { id: product.id, title: product.title, images: parseJson(product.images) } : null,
-});
-}
+  const reviews = await db('reviews').find(query, { sort: sortObj, limit: limitNum, skip });
+  const total = await db('reviews').countDocuments(query);
 
-const averageRating = await calculateAverageRating(sellerId);
+  const populatedReviews = [];
+  for (const r of reviews) {
+    const reviewer = await db('users').findById(r.reviewer);
+    const product = r.product ? await db('products').findById(r.product) : null;
+    populatedReviews.push({
+      ...mapReviewRow(r),
+      reviewer: reviewer ? { id: reviewer.id, fullName: reviewer.fullName, avatar: reviewer.avatar, university: reviewer.university } : null,
+      product: product ? { id: product.id, title: product.title, images: parseJson(product.images) } : null,
+    });
+  }
 
-res.json({
-success: true,
-data: {
-reviews: populatedReviews,
-total,
-pages: Math.ceil(total / limitNum),
-currentPage: pageNum,
-averageRating: averageRating.averageRating,
-totalReviews: averageRating.totalReviews,
-ratingBreakdown: averageRating.ratingBreakdown,
-},
-});
+  const averageRating = await calculateAverageRating(sellerId, productId);
+
+  res.json({
+    success: true,
+    data: {
+      reviews: populatedReviews,
+      total,
+      pages: Math.ceil(total / limitNum),
+      currentPage: pageNum,
+      averageRating: averageRating.averageRating,
+      totalReviews: averageRating.totalReviews,
+      ratingBreakdown: averageRating.ratingBreakdown,
+    },
+  });
 });
 
 exports.getSellerRatingSummary = asyncHandler(async (req, res) => {
-const { sellerId } = req.params;
+  const { sellerId } = req.params;
+  const { productId } = req.query;
 
-const summary = await calculateAverageRating(sellerId);
+  const summary = await calculateAverageRating(sellerId, productId);
 
-res.json({
-success: true,
-data: summary,
-});
+  res.json({
+    success: true,
+    data: summary,
+  });
 });
 
 exports.getMyReviews = asyncHandler(async (req, res) => {

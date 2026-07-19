@@ -1286,7 +1286,7 @@ notificationManager?.info('Wishlist Cleared', 'All items removed from your wishl
       let reviews = [];
       if (typeof reviewManager !== 'undefined' && reviewManager.getSellerReviews) {
         try {
-          const result = await reviewManager.getSellerReviews(sellerId, { limit: 10 });
+          const result = await reviewManager.getSellerReviews(sellerId, { limit: 10, productId: product.id });
           reviews = result.reviews || [];
         } catch (_e) {
           // Fallback to local storage

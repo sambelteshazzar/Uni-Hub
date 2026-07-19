@@ -96,8 +96,9 @@ return result.data;
         };
       }
 
-      const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = -1 } = options;
+      const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = -1, productId } = options;
       const params = new URLSearchParams({ page, limit, sortBy, sortOrder });
+      if (productId) params.append('productId', productId);
       const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/seller/${sellerId}?${params}`);
       const result = await response.json();
       if (!response.ok) { throw new Error(result.error || 'Failed to fetch reviews'); }
@@ -108,10 +109,10 @@ return result.data;
     }
   }
 
-  async getRatingSummary (sellerId) {
+  async getRatingSummary (sellerId, productId = null) {
     try {
       if (this._isOffline()) {
-        const reviews = this._getLocalReviews().filter(r => r.sellerId === sellerId);
+        const reviews = this._getLocalReviews().filter(r => r.sellerId === sellerId && (!productId || r.productId === productId));
         const total = reviews.length;
         const avgRating = total > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / total : 0;
         const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
@@ -119,7 +120,9 @@ return result.data;
         return { averageRating: Math.round(avgRating * 10) / 10, totalReviews: total, distribution };
       }
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/seller/${sellerId}/summary`);
+      const params = new URLSearchParams();
+      if (productId) params.append('productId', productId);
+      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/seller/${sellerId}/summary?${params}`);
       const result = await response.json();
       if (!response.ok) { throw new Error(result.error || 'Failed to fetch rating summary'); }
       return result.data;
