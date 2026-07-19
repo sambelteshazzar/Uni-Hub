@@ -10,7 +10,7 @@ async function calculateAverageRating (sellerId, productId = null) {
     params.push(productId);
   }
 
-  const row = await db('reviews').rawGet(query, ...params);
+  const row = await db('reviews').rawGet(query, params);
 
   let breakdownQuery = 'SELECT rating, COUNT(*) as count FROM reviews WHERE seller = ?';
   const breakdownParams = [sellerId];
@@ -22,7 +22,7 @@ async function calculateAverageRating (sellerId, productId = null) {
   
   breakdownQuery += ' GROUP BY rating ORDER BY rating DESC';
 
-  const breakdown = await db('reviews').rawAll(breakdownQuery, ...breakdownParams);
+  const breakdown = await db('reviews').rawAll(breakdownQuery, breakdownParams);
 
   const ratingBreakdown = {};
   for (let i = 1; i <= 5; i++) {
