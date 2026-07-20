@@ -4654,6 +4654,13 @@ if (this._pendingImageFiles.length > 0) {
     if (uploadResult.success && uploadResult.urls) {
       images = uploadResult.urls;
       this._uploadedImageUrls = images;
+      // Surface per-file failures so the user knows some images didn't
+      // make it (Cloudinary occasionally rejects specific files for
+      // format/corruption reasons while accepting the rest).
+      if (uploadResult.failures && uploadResult.failures.length > 0) {
+        const names = uploadResult.failures.map(f => f.filename || 'unknown').join(', ');
+        showToast(`${uploadResult.failures.length} image(s) failed: ${names}. ${uploadResult.urls.length} uploaded.`, 'warning');
+      }
     } else {
       if (uploadResult.isAuthError) {
       showToast('Session expired — please log in again', 'error');
@@ -4859,8 +4866,13 @@ if (this._pendingImageFiles.length > 0) {
 if (this._pendingImageFiles.length > 0) {
   try {
     const uploadResult = await api.upload.images(this._pendingImageFiles);
-    if (uploadResult.success && uploadResult.urls) { newUrls = uploadResult.urls; }
-    else { showToast('Image upload failed: ' + (uploadResult.error || 'Unknown error'), 'error'); }
+    if (uploadResult.success && uploadResult.urls) {
+      newUrls = uploadResult.urls;
+      if (uploadResult.failures && uploadResult.failures.length > 0) {
+        const names = uploadResult.failures.map(f => f.filename || 'unknown').join(', ');
+        showToast(`${uploadResult.failures.length} image(s) failed: ${names}. ${uploadResult.urls.length} uploaded.`, 'warning');
+      }
+    } else { showToast('Image upload failed: ' + (uploadResult.error || 'Unknown error'), 'error'); }
   } catch (uploadErr) {
     showToast('Image upload failed: ' + uploadErr.message, 'error');
   }

@@ -488,44 +488,42 @@ upload = {
         this._csrfToken = null;
         const freshCsrf = await this.fetchCsrfToken();
         const retry = await doUpload(freshCsrf);
-        if (retry.error) return { success: false, error: retry.error, urls: [] };
+        if (retry.error) return { success: false, error: retry.error, urls: [], failures: [] };
         if (retry.response) {
           const data = await retry.response.json().catch(() => ({}));
-          console.warn('Upload retry response:', retry.response.status, data);
           if (retry.response.status === 401) {
             if (typeof authManager !== 'undefined' && authManager.clearSession) authManager.clearSession();
-            return { success: false, error: 'Session expired — please log in again', urls: [], isAuthError: true };
+            return { success: false, error: 'Session expired — please log in again', urls: [], failures: [], isAuthError: true };
           }
-          if (data.success && data.urls && data.urls.length > 0) return { success: true, urls: data.urls };
-          return { success: false, error: data.error || data.message || 'Upload failed', urls: [] };
+          if (data.success && data.urls && data.urls.length > 0) return { success: true, urls: data.urls, failures: data.failures || [] };
+          return { success: false, error: data.error || data.message || 'Upload failed', urls: [], failures: [] };
         }
       }
-      if (!first.response) return { success: false, error: first.error || 'Upload failed', urls: [] };
+      if (!first.response) return { success: false, error: first.error || 'Upload failed', urls: [], failures: [] };
       const data = await first.response.json().catch(() => ({}));
-      console.warn('Upload response:', first.response.status, data);
       if (data.success && data.urls && data.urls.length > 0) {
-        return { success: true, urls: data.urls };
+        return { success: true, urls: data.urls, failures: data.failures || [] };
       }
       if (first.response && first.response.status === 401) {
         if (typeof authManager !== 'undefined' && authManager.clearSession) authManager.clearSession();
-        return { success: false, error: 'Session expired — please log in again', urls: [], isAuthError: true };
+        return { success: false, error: 'Session expired — please log in again', urls: [], failures: [], isAuthError: true };
       }
       if (first.response && first.response.status === 403 && data.error && data.error.toLowerCase().includes('csrf')) {
         this._csrfToken = null;
         const retryCsrf = await this.fetchCsrfToken();
         if (retryCsrf) {
           const retry = await doUpload(retryCsrf);
-          if (retry.error) return { success: false, error: retry.error, urls: [] };
+          if (retry.error) return { success: false, error: retry.error, urls: [], failures: [] };
           if (retry.response) {
             const retryData = await retry.response.json().catch(() => ({}));
-            if (retryData.success && retryData.urls && retryData.urls.length > 0) return { success: true, urls: retryData.urls };
-            return { success: false, error: retryData.error || retryData.message || 'Upload failed', urls: [] };
+            if (retryData.success && retryData.urls && retryData.urls.length > 0) return { success: true, urls: retryData.urls, failures: retryData.failures || [] };
+            return { success: false, error: retryData.error || retryData.message || 'Upload failed', urls: [], failures: [] };
           }
         }
       }
-      return { success: false, error: data.error || data.message || `Upload failed (HTTP ${first.response.status})`, urls: [] };
+      return { success: false, error: data.error || data.message || `Upload failed (HTTP ${first.response.status})`, urls: [], failures: [] };
     } catch (err) {
-      return { success: false, error: err.message || 'Upload error', urls: [] };
+      return { success: false, error: err.message || 'Upload error', urls: [], failures: [] };
     }
   },
 };

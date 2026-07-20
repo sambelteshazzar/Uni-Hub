@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS orders (
   payment_status TEXT DEFAULT 'pending' CHECK(payment_status IN ('pending','completed','failed','refunded')),
   payment_transactionId TEXT,
   payment_paidAt TEXT,
-  status TEXT DEFAULT 'placed' CHECK(status IN ('placed','confirmed','in-transit','delivered','cancelled')),
+  status TEXT DEFAULT 'placed' CHECK(status IN ('placed','confirmed','in-transit','delivered','cancelled','refunded')),
   createdAt TEXT DEFAULT (datetime('now')),
   updatedAt TEXT DEFAULT (datetime('now'))
 );
@@ -642,6 +642,58 @@ async function runTursoMigrations () {
       }
     } catch (rollbackErr) {
       console.error('Reviews repair rollback failed:', rollbackErr.message);
+    }
+  }
+
+  // Migrate orders.status CHECK constraint to include 'refunded' so the
+  // new refund flow can write status='refunded' without a CHECK failure.
+  // Idempotent: only re-creates the table if the existing schema lacks
+  // 'refunded' in the status CHECK.
+  try {
+    const checkResult = await tursoClient.execute("SELECT sql FROM sqlite_master WHERE name='orders'");
+    const ordersSchemaSql = checkResult.rows[0]?.sql || '';
+    if (ordersSchemaSql && !ordersSchemaSql.includes("'refunded'")) {
+      console.log('Migrating orders table to include "refunded" in status CHECK...');
+      await tursoClient.execute('ALTER TABLE orders RENAME TO orders_old');
+      await tursoClient.execute(`CREATE TABLE orders (
+  id TEXT PRIMARY KEY,
+  orderNumber TEXT UNIQUE,
+  trackingNumber TEXT UNIQUE,
+  userId TEXT NOT NULL REFERENCES users(id),
+  customer_name TEXT NOT NULL,
+  customer_email TEXT NOT NULL,
+  customer_phone TEXT NOT NULL,
+  customer_university TEXT NOT NULL,
+  pricing_subtotal REAL NOT NULL,
+  pricing_deliveryFee REAL DEFAULT 0,
+  pricing_grandTotal REAL NOT NULL,
+  pricing_currency TEXT DEFAULT 'GHS',
+  delivery_mode TEXT NOT NULL CHECK(delivery_mode IN ('bolt','yango','inperson')),
+  delivery_address TEXT NOT NULL,
+  delivery_instructions TEXT,
+  delivery_status TEXT DEFAULT 'pending' CHECK(delivery_status IN ('pending','processing','in-transit','delivered','cancelled')),
+  payment_mode TEXT NOT NULL CHECK(payment_mode IN ('momo','telecel','bank','cash')),
+  payment_status TEXT DEFAULT 'pending' CHECK(payment_status IN ('pending','completed','failed','refunded')),
+  payment_transactionId TEXT,
+  payment_paidAt TEXT,
+  status TEXT DEFAULT 'placed' CHECK(status IN ('placed','confirmed','in-transit','delivered','cancelled','refunded')),
+  createdAt TEXT DEFAULT (datetime('now')),
+  updatedAt TEXT DEFAULT (datetime('now'))
+)`);
+      await tursoClient.execute('INSERT INTO orders SELECT * FROM orders_old');
+      await tursoClient.execute('DROP TABLE orders_old');
+      console.log('Orders "refunded" status migration complete.');
+    }
+  } catch (ordersMigrateErr) {
+    console.error('Orders refunded-status migration failed:', ordersMigrateErr.message);
+    try {
+      const hasOld = await tursoClient.execute("SELECT name FROM sqlite_master WHERE name='orders_old'");
+      if (hasOld.rows.length > 0) {
+        await tursoClient.execute('ALTER TABLE orders_old RENAME TO orders');
+        console.log('Rolled back orders table rename.');
+      }
+    } catch (rollbackErr) {
+      console.error('Orders migration rollback failed:', rollbackErr.message);
     }
   }
 }
