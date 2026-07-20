@@ -61,12 +61,13 @@ const { csrfTokenHandler, csrfProtection } = require('./middleware/csrf.middlewa
 // Initialize Express app
 const app = express();
 
-// Render proxies behind Cloudflare, so the client's real IP arrives via
-// X-Forwarded-* headers. trust proxy = 1 lets express-rate-limit key off
-// the real client IP (one bucket per user) instead of the shared
-// load-balancer IP, which would otherwise collapse all users into a
-// single rate-limit counter and trip limits prematurely.
-app.set('trust proxy', 1);
+// Render sits behind Cloudflare, so the client's real IP traverses two
+// proxy hops before reaching Express: Cloudflare → Render LB → app.
+// trust proxy = 2 lets express-rate-limit key off the real client IP
+// (one bucket per user) instead of the shared proxy IP, which would
+// otherwise collapse all users into a single rate-limit counter and
+// trip limits prematurely. If you remove Cloudflare, set this back to 1.
+app.set('trust proxy', 2);
 
 app.use(sentryRequest());
 

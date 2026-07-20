@@ -43,7 +43,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
     if (!dbProduct) {
       throw new ApiError(400, `Product ${item.productId} not found`);
     }
-    if (dbProduct.status === 'sold') {
+    if (dbProduct.status === 'sold' || dbProduct.status === 'reserved') {
       throw new ApiError(400, `Product "${dbProduct.title}" is no longer available`);
     }
     const images = parseJson(dbProduct.images) || [];
@@ -111,7 +111,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
     }
 
     for (const pid of productIds) {
-      await db('products').updateById(pid, { status: 'sold' });
+      await db('products').updateById(pid, { status: 'reserved' });
     }
 
     await db('users').updateById(req.user.id, {
@@ -209,9 +209,80 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
     throw new ApiError(403, 'Not authorized to update this order');
   }
 
-  await db('orders').updateById(order.id, {
-    status,
-  });
+  // Mirror order status into delivery_status so tracking endpoints read
+  // consistent state. The deliveries table has its own status field
+  // managed separately by delivery.controller; this keeps the order
+  // row's own denormalized delivery_status in sync with order.status.
+  const deliveryStatusMap = {
+    pending: 'pending',
+    confirmed: 'processing',
+    'in-transit': 'in-transit',
+    delivered: 'delivered',
+    cancelled: 'cancelled',
+    refunded: 'cancelled',
+  };
+  const deliveryStatus = deliveryStatusMap[status] || order.delivery_status;
+
+  const updates = { status };
+  if (deliveryStatus) updates.delivery_status = deliveryStatus;
+
+  // Refund flow: release inventory back to 'active' and try to refund
+  // via Paystack if the payment was card/momo/bank. Cash refunds are
+  // out-of-band (no Paystack transaction to reverse).
+  if (status === 'refunded') {
+    updates.payment_status = 'refunded';
+    for (const item of orderItems) {
+      await db('products').updateById(item.productId, { status: 'active' });
+    }
+    const payments = await db('payments').find({ orderId: order.id });
+    const payment = payments[0];
+    if (payment && (payment.mode === 'momo' || payment.mode === 'telecel' || payment.mode === 'bank') && payment.transactionId) {
+      const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+      if (PAYSTACK_SECRET_KEY) {
+        try {
+          const response = await fetch('https://api.paystack.co/refund', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ transaction: payment.transactionId, merchant_note: note || 'Order refunded' }),
+          });
+          const data = await response.json();
+          if (!(data.status === true)) {
+            console.error('Paystack refund failed:', data.message || data);
+          } else if (payment) {
+            await db('payments').updateById(payment.id, {
+              status: 'refunded',
+              refundedAt: new Date().toISOString(),
+              refundReason: note || 'Order refunded',
+            });
+          }
+        } catch (err) {
+          console.error('Paystack refund error:', err.message);
+        }
+      }
+    } else if (payment) {
+      await db('payments').updateById(payment.id, {
+        status: 'refunded',
+        refundedAt: new Date().toISOString(),
+        refundReason: note || 'Order refunded',
+      });
+    }
+  }
+
+  if (status === 'cancelled' && order.status !== 'cancelled') {
+    // Release inventory on transition into cancelled (only if not
+    // already cancelled to avoid double-release on idempotent calls).
+    for (const item of orderItems) {
+      const p = await db('products').findById(item.productId);
+      if (p && (p.status === 'reserved' || p.status === 'sold')) {
+        await db('products').updateById(item.productId, { status: 'active' });
+      }
+    }
+  }
+
+  await db('orders').updateById(order.id, updates);
 
   await db('order_status_history').create({
     orderId: order.id,
@@ -298,6 +369,14 @@ exports.completePayment = asyncHandler(async (req, res) => {
     payment_paidAt: new Date().toISOString(),
   });
 
+  // Payment completed → lock inventory as sold (was 'reserved' at
+  // order-create time). If the order is later cancelled/refunded, the
+  // cancelOrder flow already resets the product status back to 'active'.
+  const paidItems = await db('order_items').find({ orderId: order.id });
+  for (const item of paidItems) {
+    await db('products').updateById(item.productId, { status: 'sold' });
+  }
+
   if (payment) {
     await db('payments').updateById(payment.id, {
       status: 'completed',
@@ -335,8 +414,13 @@ exports.cancelOrder = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Cannot cancel a delivered order');
   }
 
+  if (order.status === 'cancelled') {
+    throw new ApiError(400, 'Order is already cancelled');
+  }
+
   await db('orders').updateById(order.id, {
     status: 'cancelled',
+    delivery_status: 'cancelled',
   });
 
   await db('order_status_history').create({
@@ -346,9 +430,14 @@ exports.cancelOrder = asyncHandler(async (req, res) => {
     updatedBy: req.user.id,
   });
 
+  // Release inventory back to 'active'. Only reset if currently reserved
+  // or sold — avoids double-release on idempotent calls.
   const orderItems = await db('order_items').find({ orderId: order.id });
   for (const item of orderItems) {
-    await db('products').updateById(item.productId, { status: 'active' });
+    const p = await db('products').findById(item.productId);
+    if (p && (p.status === 'reserved' || p.status === 'sold')) {
+      await db('products').updateById(item.productId, { status: 'active' });
+    }
   }
 
   const io = req.app.get('io');

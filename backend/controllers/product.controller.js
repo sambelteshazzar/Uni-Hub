@@ -92,13 +92,15 @@ exports.getProducts = asyncHandler(async (req, res) => {
       sortOptions = { createdAt: -1 };
   }
 
-  // Pagination
-  const skip = (page - 1) * limit;
+  // Pagination — clamp to safe integers to prevent NaN/SQL injection
+  const pageNum = Math.max(1, parseInt(page) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 12));
+  const skip = (pageNum - 1) * limitNum;
   const total = await db('products').countDocuments(query);
-  const pages = Math.ceil(total / limit);
+  const pages = Math.ceil(total / limitNum);
 
   // Execute query
-  const products = await db('products').find(query, { sort: sortOptions, limit: Number(limit), skip });
+  const products = await db('products').find(query, { sort: sortOptions, limit: limitNum, skip });
 
   const populated = await Promise.all(products.map(p => populateCreator(p)));
 
@@ -107,8 +109,8 @@ exports.getProducts = asyncHandler(async (req, res) => {
     data: {
       products: populated,
       pagination: {
-        page: Number(page),
-        limit: Number(limit),
+        page: pageNum,
+        limit: limitNum,
         total,
         pages,
       },
@@ -122,14 +124,19 @@ exports.getProducts = asyncHandler(async (req, res) => {
  * @access Public
  */
 exports.getProduct = asyncHandler(async (req, res) => {
-  const product = await db('products').findById(req.params.id);
+  const products = db('products');
+  const product = await products.findById(req.params.id);
 
   if (!product) {
     throw new ApiError(404, 'Product not found');
   }
 
-  // Increment view count
-  await db('products').updateById(product.id, { views: (product.views || 0) + 1 });
+  // Atomic view increment — avoids lost-update race when multiple
+  // users open the same product concurrently.
+  await products.rawRun(
+    `UPDATE ${products._q('products')} SET ${products._q('views')} = ${products._q('views')} + 1 WHERE ${products._q('id')} = ?`,
+    [product.id],
+  );
 
   const populated = await populateCreatorDetail(product);
 
@@ -308,6 +315,7 @@ exports.uploadProductImages = asyncHandler(async (req, res) => {
 
   const { uploadStream } = require('../utils/cloudinary.util');
   const uploadedUrls = [];
+  const failedFiles = [];
 
   for (const file of req.files) {
     try {
@@ -315,11 +323,13 @@ exports.uploadProductImages = asyncHandler(async (req, res) => {
       uploadedUrls.push(result.secure_url);
     } catch (error) {
       console.error(`Failed to upload ${file.originalname}:`, error.message);
+      failedFiles.push({ filename: file.originalname, reason: error.message || 'upload failed' });
     }
   }
 
   if (uploadedUrls.length === 0) {
-    throw new ApiError(500, 'Failed to upload any images');
+    const detail = failedFiles.length > 0 ? ` Failures: ${failedFiles.map(f => f.filename).join(', ')}` : '';
+    throw new ApiError(500, `Failed to upload any images.${detail}`);
   }
 
   const maxImages = 5;
@@ -338,6 +348,7 @@ exports.uploadProductImages = asyncHandler(async (req, res) => {
     data: {
       images: uploadedUrls,
       totalImages: newImages.length,
+      failures: failedFiles.length > 0 ? failedFiles : undefined,
     },
   });
 });
@@ -412,24 +423,27 @@ exports.uploadImages = asyncHandler(async (req, res) => {
 
   const { uploadStream } = require('../utils/cloudinary.util');
   const uploadedUrls = [];
+  const failedFiles = [];
 
   for (const file of req.files) {
     try {
-      console.log(`Uploading ${file.originalname} (${(file.size / 1024).toFixed(0)}KB, ${file.mimetype})`);
       const result = await uploadStream(file.buffer);
       uploadedUrls.push(result.secure_url);
     } catch (error) {
       console.error(`Failed to upload ${file.originalname}:`, error.message);
+      failedFiles.push({ filename: file.originalname, reason: error.message || 'upload failed' });
     }
   }
 
   if (uploadedUrls.length === 0) {
-    throw new ApiError(500, 'Failed to upload any images to Cloudinary');
+    const detail = failedFiles.length > 0 ? ` Failures: ${failedFiles.map(f => f.filename).join(', ')}` : '';
+    throw new ApiError(500, `Failed to upload any images to Cloudinary.${detail}`);
   }
 
   res.json({
     success: true,
     message: `${uploadedUrls.length} image(s) uploaded successfully`,
     urls: uploadedUrls,
+    failures: failedFiles.length > 0 ? failedFiles : undefined,
   });
 });

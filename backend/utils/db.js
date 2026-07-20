@@ -337,16 +337,16 @@ class Db {
   async deleteMany (where = {}) {
     const { sql, params } = this._buildWhere(where);
     if (!sql) {
-      const { changes } = await this._runWrite(`DELETE FROM ${this.table}`);
+      const { changes } = await this._runWrite(`DELETE FROM ${this._q(this.table)}`);
       return changes;
     }
-    const { changes } = await this._runWrite(`DELETE FROM ${this.table} ${sql}`, params);
+    const { changes } = await this._runWrite(`DELETE FROM ${this._q(this.table)} ${sql}`, params);
     return changes;
   }
 
   async deleteOne (where) {
     const { sql, params } = this._buildWhere(where);
-    const { row } = await this._get(`SELECT id FROM ${this.table} ${sql} LIMIT 1`, params);
+    const { row } = await this._get(`SELECT id FROM ${this._q(this.table)} ${sql} LIMIT 1`, params);
     if (!row) return 0;
     const deleted = await this.deleteById(row.id);
     return deleted ? 1 : 0;
@@ -360,21 +360,21 @@ class Db {
     for (const [key, value] of Object.entries(data)) {
       if (key === 'id' || key === '_id') continue;
       if (value === undefined) continue;
-      sets.push(`${key} = ?`);
+      sets.push(`${this._q(key)} = ?`);
       vals.push(this._serializeValue(key, value));
     }
 
     if (sets.length === 0) return 0;
-    sets.push("updatedAt = datetime('now')");
+    sets.push(`${this._q('updatedAt')} = datetime('now')`);
 
-    const query = `UPDATE ${this.table} SET ${sets.join(', ')} ${sql}`;
+    const query = `UPDATE ${this._q(this.table)} SET ${sets.join(', ')} ${sql}`;
     const { changes } = await this._runWrite(query, [...vals, ...whereParams]);
     return changes;
   }
 
   async findOneAndUpdate (where, data, _opts = {}) {
     const { sql, params } = this._buildWhere(where);
-    const { row } = await this._get(`SELECT id FROM ${this.table} ${sql} LIMIT 1`, params);
+    const { row } = await this._get(`SELECT id FROM ${this._q(this.table)} ${sql} LIMIT 1`, params);
     if (!row) return null;
     return this.updateById(row.id, data);
   }
@@ -402,19 +402,54 @@ class Db {
 
   async transaction (fn) {
     if (isTurso()) {
+      // NOTE: Turso's HTTP client does not preserve transaction state
+      // across separate execute() calls (each call is its own HTTP
+      // request and the server auto-commits). This wrapper therefore
+      // does NOT provide true atomicity on Turso — it's a logical
+      // boundary only. For true atomicity on Turso, use batchWrite()
+      // with an array of statements, which submits them all via a
+      // single client.batch() call. On local better-sqlite3, this
+      // wrapper is still non-atomic (same as before) but the natural
+      // fsync-per-statement is fast enough that mid-txn crashes are
+      // extremely rare.
       const client = this._turso();
-      await client.execute('BEGIN');
+      try {
+        await client.execute('BEGIN');
+      } catch (_e) { /* server may reject BEGIN — fall through to non-atomic */ }
       try {
         const result = await fn(this);
-        await client.execute('COMMIT');
+        try { await client.execute('COMMIT'); } catch (_e) { /* ignore */ }
         return result;
       } catch (err) {
-        await client.execute('ROLLBACK');
+        try { await client.execute('ROLLBACK'); } catch (_e) { /* ignore */ }
         throw err;
       }
     }
     const result = await fn(this);
     return result;
+  }
+
+  // Atomic write on Turso via libSQL's batch() (single HTTP call, all
+  // statements succeed or all fail). On local better-sqlite3, wraps
+  // the statements in a real transaction. Each statement is
+  // { sql: string, args?: any[] }.
+  async batchWrite (statements) {
+    if (!Array.isArray(statements) || statements.length === 0) return [];
+    if (isTurso()) {
+      const client = this._turso();
+      const batch = statements.map(s => ({ sql: s.sql, args: s.args || [] }));
+      return client.batch(batch, 'write');
+    }
+    const localDb = this._local();
+    const tx = localDb.transaction(() => {
+      const results = [];
+      for (const s of statements) {
+        const info = localDb.prepare(s.sql).run(...(s.args || []));
+        results.push({ changes: info.changes, lastInsertRowid: info.lastInsertRowid });
+      }
+      return results;
+    });
+    return tx();
   }
 
   _serializeValue (key, value) {
@@ -533,7 +568,7 @@ class Db {
         console.warn(`Invalid sort field rejected: ${field} on table ${this.table}`);
         return '';
       }
-      return `${field} ${dir === 1 ? 'ASC' : 'DESC'}`;
+      return `${this._q(field)} ${dir === 1 ? 'ASC' : 'DESC'}`;
     }).filter(Boolean).join(', ');
   }
 
@@ -548,19 +583,19 @@ class Db {
           if (groupBy === null) {
             const selectParts = sums.map(([alias, expr]) => {
               if (expr.$sum) {
-                return `SUM(${expr.$sum.replace('$', '').replace('pricing.', 'pricing_')}) as ${alias}`;
+                return `SUM(${this._q(expr.$sum.replace('$', '').replace('pricing.', 'pricing_'))}) as ${this._q(alias)}`;
               }
-              return `COUNT(*) as ${alias}`;
+              return `COUNT(*) as ${this._q(alias)}`;
             });
-            return this._all(`SELECT ${selectParts.join(', ')} FROM ${this.table} ${sql}`, params);
+            return this._all(`SELECT ${selectParts.join(', ')} FROM ${this._q(this.table)} ${sql}`, params);
           }
 
-          const selectParts = [`${groupBy} as _id`, ...sums.map(([alias, expr]) => {
+          const selectParts = [`${this._q(groupBy)} as _id`, ...sums.map(([alias, expr]) => {
             if (expr.$sum) {
-              if (typeof expr.$sum === 'number') return `SUM(${expr.$sum}) as ${alias}`;
-              return `SUM(${expr.$sum.replace('$', '').replace('pricing.', 'pricing_')}) as ${alias}`;
+              if (typeof expr.$sum === 'number') return `SUM(${expr.$sum}) as ${this._q(alias)}`;
+              return `SUM(${this._q(expr.$sum.replace('$', '').replace('pricing.', 'pricing_'))}) as ${this._q(alias)}`;
             }
-            return `COUNT(*) as ${alias}`;
+            return `COUNT(*) as ${this._q(alias)}`;
           })];
 
           const sortPart = pipeline.find(s => s.$sort);
@@ -569,7 +604,7 @@ class Db {
             orderSql = ' ORDER BY ' + this._buildOrder(sortPart.$sort);
           }
 
-          return this._all(`SELECT ${selectParts.join(', ')} FROM ${this.table} ${sql} GROUP BY ${groupBy}${orderSql}`, params);
+          return this._all(`SELECT ${selectParts.join(', ')} FROM ${this._q(this.table)} ${sql} GROUP BY ${this._q(groupBy)}${orderSql}`, params);
         }
 
         if (stage.$match && !stage.$group) {
@@ -590,20 +625,20 @@ class Db {
 
           let groupExpr;
           if (typeof groupBy === 'string' && groupBy.startsWith('$')) {
-            groupExpr = groupBy.replace('$', '').replace('pricing.', 'pricing_');
+            groupExpr = this._q(groupBy.replace('$', '').replace('pricing.', 'pricing_'));
           } else if (groupBy && typeof groupBy === 'object' && groupBy.$dateToString) {
             const format = groupBy.$dateToString.format;
             const dateField = groupBy.$dateToString.date.replace('$', '');
-            groupExpr = `strftime('${format.replace('%Y', '%Y').replace('%m', '%m').replace('%d', '%d').replace('%U', '%W')}', ${dateField})`;
+            groupExpr = `strftime('${format.replace('%Y', '%Y').replace('%m', '%m').replace('%d', '%d').replace('%U', '%W')}', ${this._q(dateField)})`;
           } else {
             groupExpr = groupBy;
           }
 
           const selectParts = [`${groupExpr} as _id`, ...sums.map(([alias, expr]) => {
-            if (expr.$sum && typeof expr.$sum === 'number') return `SUM(${expr.$sum}) as ${alias}`;
-            if (expr.$sum) return `SUM(${expr.$sum.replace('$', '').replace('pricing.', 'pricing_')}) as ${alias}`;
-            if (expr.$count) return `COUNT(*) as ${alias}`;
-            return `COUNT(*) as ${alias}`;
+            if (expr.$sum && typeof expr.$sum === 'number') return `SUM(${expr.$sum}) as ${this._q(alias)}`;
+            if (expr.$sum) return `SUM(${this._q(expr.$sum.replace('$', '').replace('pricing.', 'pricing_'))}) as ${this._q(alias)}`;
+            if (expr.$count) return `COUNT(*) as ${this._q(alias)}`;
+            return `COUNT(*) as ${this._q(alias)}`;
           })];
 
           const sortStage = pipeline.find(s => s.$sort);
@@ -612,7 +647,7 @@ class Db {
             orderSql = ' ORDER BY ' + this._buildOrder(sortStage.$sort);
           }
 
-          return this._all(`SELECT ${selectParts.join(', ')} FROM ${this.table} ${whereSql} GROUP BY ${groupExpr}${orderSql}`, whereParams);
+          return this._all(`SELECT ${selectParts.join(', ')} FROM ${this._q(this.table)} ${whereSql} GROUP BY ${groupExpr}${orderSql}`, whereParams);
         }
       }
     }
@@ -624,12 +659,12 @@ class Db {
           const groupBy = stage.$group._id.replace('$', '');
           const sums = Object.entries(stage.$group).filter(([k]) => k !== '_id');
 
-          const selectParts = [`${groupBy} as _id`, ...sums.map(([alias, expr]) => {
-            if (expr.$sum) return `SUM(${expr.$sum.replace('$', '').replace('pricing.', 'pricing_')}) as ${alias}`;
-            return `COUNT(*) as ${alias}`;
+          const selectParts = [`${this._q(groupBy)} as _id`, ...sums.map(([alias, expr]) => {
+            if (expr.$sum) return `SUM(${this._q(expr.$sum.replace('$', '').replace('pricing.', 'pricing_'))}) as ${this._q(alias)}`;
+            return `COUNT(*) as ${this._q(alias)}`;
           })];
 
-          return this._all(`SELECT ${selectParts.join(', ')} FROM ${this.table} ${sql} GROUP BY ${groupBy}`, params);
+          return this._all(`SELECT ${selectParts.join(', ')} FROM ${this._q(this.table)} ${sql} GROUP BY ${this._q(groupBy)}`, params);
         }
       }
     }

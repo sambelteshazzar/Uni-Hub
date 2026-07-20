@@ -1,6 +1,15 @@
 const crypto = require('crypto');
 
-const CSRF_SECRET = process.env.CSRF_SECRET || crypto.randomBytes(32).toString('hex');
+// Persist across restarts/deploys by setting CSRF_SECRET in env. Without
+// it, every server (re)start mints a new secret, instantly invalidating
+// every CSRF token still held in users' browsers — every mutation
+// request then 403s with "Invalid or expired CSRF token". In production
+// on Render's free tier, the server sleeps/wakes/redeploys constantly,
+// so this fallback causes pervasive UX breakage. Set CSRF_SECRET to a
+// 32+ char random string in the Render environment.
+const CSRF_SECRET = process.env.CSRF_SECRET || (process.env.NODE_ENV === 'production'
+  ? (() => { console.error('CSRF_SECRET not set — CSRF tokens will not survive restarts. Set CSRF_SECRET env var.'); return crypto.randomBytes(32).toString('hex'); })()
+  : crypto.randomBytes(32).toString('hex'));
 const CSRF_TOKEN_EXPIRY = 2 * 60 * 60 * 1000;
 const COOKIE_NAME = '__Host-csrf';
 const MAX_AGE_SECONDS = 7200;

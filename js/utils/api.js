@@ -12,10 +12,25 @@ class API {
     this._isStaticDeploy = false;
     this._backendProbed = false;
     this._backendReachable = null;
-if (typeof window !== 'undefined' && !this._isStaticDeploy) {
-    this._probeBackend();
-  }
+    // Origin of the API server (this.baseURL minus the /api... path).
+    // Used to hit /api/auth/csrf-token which lives at the same origin
+    // as the rest of the backend but outside the /api path prefix.
+    // Constructed from a URL object so variations like /api/v2 or
+    // trailing slashes don't break.
+    try {
+      const u = new URL(this.baseURL);
+      this._apiOrigin = u.origin;
+    } catch (e) {
+      this._apiOrigin = this.baseURL.replace(/\/api\/?$/, '').replace(/\/$/, '');
+    }
+    if (typeof window !== 'undefined' && !this._isStaticDeploy) {
+      this._probeBackend();
+    }
     this.timeout = 30000;
+  }
+
+  _csrfUrl () {
+    return `${this._apiOrigin}/api/auth/csrf-token`;
   }
 
   get isStaticDeploy () {
@@ -29,7 +44,7 @@ if (typeof window !== 'undefined' && !this._isStaticDeploy) {
     const timeoutMs = attempt === 1 ? 8000 : 10000;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
-    fetch(`${this.baseURL.replace('/api', '')}/api/auth/csrf-token`, {
+    fetch(this._csrfUrl(), {
       signal: controller.signal,
       credentials: 'include',
     })
@@ -56,7 +71,7 @@ if (typeof window !== 'undefined' && !this._isStaticDeploy) {
     if (this._csrfToken) return this._csrfToken;
     if (this._csrfPromise) return this._csrfPromise;
 
-  const csrfPromise = fetch(`${this.baseURL.replace('/api', '')}/api/auth/csrf-token`, {
+  const csrfPromise = fetch(this._csrfUrl(), {
       credentials: 'include',
     })
     .then(res => res.json())
@@ -140,7 +155,13 @@ if (typeof window !== 'undefined' && !this._isStaticDeploy) {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        if (response.status === 401 && typeof authManager !== 'undefined' && authManager.clearSession) {
+        // Don't trigger session-expired flow for auth endpoints — a 401
+        // from /auth/login (wrong password) or /auth/me (token check on
+        // first load) is a normal error, not an expired-session signal.
+        // Clearing the session there fires a misleading "Session expired"
+        // toast and kicks the user to the login screen on a typo.
+        const isAuthEndpoint = url.startsWith('/auth/');
+        if (response.status === 401 && typeof authManager !== 'undefined' && authManager.clearSession && !isAuthEndpoint) {
           authManager.clearSession();
           const e = new Error('Session expired — please log in again');
           e.status = 401;

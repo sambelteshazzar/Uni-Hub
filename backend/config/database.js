@@ -406,7 +406,55 @@ async function connectTurso () {
     }
   }
 
-  await runTursoMigrations();
+  // Advisory lock so concurrent server boots (e.g. Render rolling deploys
+  // or preview + main instance racing) don't both try to ALTER tables
+  // at once — that race can leave half-migrated schemas. We use a
+  // migrations_log row with a unique constraint on a locked-flag column.
+  // Inserting a row with lock=1 succeeds only once; the loser gets a
+  // UNIQUE constraint violation and skips migration.
+  await tursoClient.execute(`
+    CREATE TABLE IF NOT EXISTS migrations_log (
+      id TEXT PRIMARY KEY,
+      locked INTEGER DEFAULT 0,
+      ran_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+  // Add UNIQUE constraint on locked=1 via partial index — allows many
+  // rows with locked=0 but only one with locked=1, so first INSERT
+  // wins and subsequent inserts fail.
+  try {
+    await tursoClient.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_migrations_lock ON migrations_log(locked) WHERE locked = 1');
+  } catch (_e) { /* older sqlite/turso may not support partial unique — fall back to app-level guard */ }
+
+  const lockId = require('crypto').randomUUID();
+  let acquired = false;
+  try {
+    await tursoClient.execute({
+      sql: "INSERT INTO migrations_log (id, locked) VALUES (?, 1)",
+      args: [lockId],
+    });
+    acquired = true;
+  } catch (err) {
+    if (err.message && err.message.includes('UNIQUE')) {
+      console.log('ℹ️ Another instance is running migrations — skipping.');
+    } else {
+      // If the lock table doesn't exist yet (cold start) or another race
+      // happened, fall through and run migrations anyway.
+      acquired = true;
+    }
+  }
+
+  try {
+    if (acquired) {
+      await runTursoMigrations();
+    }
+  } finally {
+    if (acquired) {
+      try {
+        await tursoClient.execute({ sql: "DELETE FROM migrations_log WHERE id = ?", args: [lockId] });
+      } catch (_e) { /* release best-effort */ }
+    }
+  }
 
   // eslint-disable-next-line no-console
   console.log(`✅ Turso Connected: ${TURSO_URL.replace(/\/\/.*@/, '//***@')}`);

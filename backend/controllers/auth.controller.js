@@ -36,7 +36,10 @@ exports.register = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Password must be at least 8 characters');
   }
 
-  if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(password)) {
+  // Anchored regex — must contain upper, lower, digit, special, and only
+  // those characters. Matches the reset-password regex exactly so the two
+  // paths enforce identical rules.
+  if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password)) {
     throw new ApiError(400, 'Password must contain uppercase, lowercase, number, and special character');
   }
 
@@ -358,10 +361,16 @@ exports.googleTokenLogin = asyncHandler(async (req, res) => {
   if (!user) {
     const hashedPassword = await bcrypt.hash(Math.random().toString(36).slice(2) + '!Aa1', 12);
 
+    // Phone format for Google users is synthetic (no real number captured
+    // by the OAuth flow). Use a stable, schema-compliant placeholder so
+    // the NOT NULL column is satisfied without confusing the phone-
+    // uniqueness check on subsequent normal signups.
+    const syntheticPhone = `gg-${googleId}`;
+
     user = await db('users').create({
       fullName,
       email,
-      phone: `google_${googleId}`,
+      phone: syntheticPhone,
       password: hashedPassword,
       university: 'Not Set',
       role: 'buyer',
@@ -370,7 +379,7 @@ exports.googleTokenLogin = asyncHandler(async (req, res) => {
       googleId,
     });
 
-    await logActivity('signup', mapUserRow(user), { email, method: 'google' }, 'info', req);
+    await logActivity('signup', mapUserRow(user), { email, method: 'google', phone: syntheticPhone }, 'info', req);
   } else {
     const mapped = mapUserRow(user);
     if (mapped.isSuspended) {
