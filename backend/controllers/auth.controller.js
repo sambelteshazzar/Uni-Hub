@@ -418,5 +418,5 @@ exports.googleRedirect = (req, res) => {
   const mappedUser = mapUserRow(req.user);
   const token = generateToken(mappedUser.id);
   const frontendUrl = process.env.FRONTEND_URL?.split(',')[0] || 'http://localhost:8000';
-  res.redirect(`${frontendUrl}/#browse?google_token=${token}&google_user=${encodeURIComponent(JSON.stringify(getPublicProfile(mappedUser)))}`);
+  res.redirect(`${frontendUrl}/#/browse?google_token=${token}&google_user=${encodeURIComponent(JSON.stringify(getPublicProfile(mappedUser)))}`);
 };

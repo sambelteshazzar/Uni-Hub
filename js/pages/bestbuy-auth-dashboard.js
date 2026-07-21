@@ -136,7 +136,7 @@ var socialBtnStyle =
         authManager.setSession(data.user, data.token);
       }
       showToast('Signed in with Google!', 'success');
-      setTimeout(function () { window.location.hash = '#browse'; }, 500);
+      setTimeout(function () { window.location.hash = '#/browse'; }, 500);
     } catch (err) {
       showToast(err.message || 'Google Sign-In failed. Please try again.', 'error');
     }

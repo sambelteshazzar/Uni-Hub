@@ -95,8 +95,12 @@ return labels[condition] || (condition ? condition.charAt(0).toUpperCase() + con
   static handleSearch () {
     const input = document.getElementById('navbar-search-input');
     if (input && input.value.trim()) {
-      window.location.hash = '/browse?q=' + encodeURIComponent(input.value.trim());
-      this.renderBrowse({ search: input.value.trim() });
+      // Setting the hash triggers a hashchange event → the router fires
+      // → router calls this.renderBrowse(...) automatically. Calling
+      // renderBrowse() here too would double-render + double-fetch.
+      window.location.hash = '#/browse?q=' + encodeURIComponent(input.value.trim());
+    } else {
+      this.renderBrowse();
     }
   }
 
@@ -199,46 +203,33 @@ static showOriginalNavFooter () {
 
 
   /**
-   * Render Browse Products Page - Modern Professional Design
+   * Render Browse Products Page
+   *
+   * Delegates to BrowsePage (the modern implementation in
+   * js/pages/browse-pages.js) which includes skeleton, breadcrumb,
+   * sidebar filters, and pagination. The legacy renderBrowseSkeleton
+   * and renderBrowseModernHTML implementations have been removed to
+   * avoid two parallel browse renderers with inconsistent behavior.
+   *
+   * BrowsePageMethods.renderBrowse is registered in app-init.js as a
+   * Level-4 module and is guaranteed to be on window.BrowsePageMethods
+   * before any route handler runs.
    */
   static async renderBrowse (filters = {}) {
-    // Show original navbar and footer for non-landing pages
-    this.showOriginalNavFooter();
-
+    if (typeof BrowsePageMethods !== 'undefined' && BrowsePageMethods.renderBrowse) {
+      return BrowsePageMethods.renderBrowse(filters);
+    }
+    // Fallback: if the module hasn't loaded yet, surface a clear error
+    // rather than silently rendering nothing.
+    console.error('BrowsePageMethods not loaded — browse module failed to initialize');
     const mainContent = document.getElementById('main-content');
-
-    // Show loading skeleton immediately
-    mainContent.innerHTML = this.renderBrowseSkeleton();
-
-    await productsManager.init();
-
-    // Apply filters
-    if (filters.category) {
-      productsManager.filter({ category: filters.category });
-    }
-
-    if (filters.search) {
-      productsManager.filter({ searchQuery: filters.search });
-    }
-
-    // Get selected university from storage or filters
-    const selectedUniversity = filters.university || StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
-    if (selectedUniversity) {
-      productsManager.filter({ university: selectedUniversity });
-    }
-
-    const paginatedData = await this._fetchPaginatedData(1);
-    const totalProducts = paginatedData.totalProducts || paginatedData.total || productsManager.filteredProducts.length;
-
-    // Render the modern browse page
-    mainContent.innerHTML = this.renderBrowseModernHTML(paginatedData, totalProducts);
-
-    // Update search input with current search query if present
-    if (filters.search) {
-      const searchInput = document.getElementById('navbar-search-input');
-      if (searchInput) {
-        searchInput.value = filters.search;
-      }
+    if (mainContent) {
+      mainContent.innerHTML = `
+        <div class="container" style="padding:3rem 1rem;text-align:center;">
+          <h1>Browse unavailable</h1>
+          <p>The browse module failed to load. Try refreshing the page.</p>
+          <button class="btn btn-primary" onclick="window.location.reload()">Reload</button>
+        </div>`;
     }
   }
 
@@ -885,30 +876,52 @@ return `
 
   /**
    * Render Product Detail Page - Modern Professional Design
+   *
+   * Direct onclick callers (cards, messaging "view product" button)
+   * invoke this method synchronously. We want exactly one render per
+   * user click, so we adopt this pattern:
+   *   1. If the URL hash is not yet on this product, set the hash and
+   *      return immediately. The hashchange event then fires the
+   *      router, which calls this method again to do the actual render.
+   *   2. If the hash is already on this product (router-initiated call),
+   *      render the page in place.
+   * This avoids a double render (click → set hash → hash → render) AND
+   * keeps the URL predictable so refresh/back/forward work correctly.
    */
- static async renderProductDetail (productId) {
-  if (!window.location.hash.includes('/product/' + productId)) {
-   window.location.hash = '#/product/' + productId;
-   return;
-  }
-  let product = productsManager.getById(productId);
-
-if (!product && typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
-  try {
-    const resp = await api.products.getById(productId);
-    if (resp.success && resp.data) {
-      product = resp.data;
-      productsManager.products.unshift(product);
+  static async renderProductDetail (productId) {
+    const desiredPath = `/product/${productId}`;
+    const currentPath = (window.location.hash || '#').replace(/^#/, '').split('?')[0];
+    if (currentPath !== desiredPath) {
+      // Setting the hash fires hashchange → router picks it up and
+      // dispatches to this method again. Return now to avoid rendering
+      // twice for the same click.
+      window.location.hash = '#' + desiredPath;
+      return;
     }
-  } catch (_) { console.warn('pages: loadSeedProducts failed:', _); }
-}
 
-if (!product) {
-showToast('Product not found', 'warning');
-return;
-}
+    let product = productsManager.getById(productId);
 
-productsManager.addToRecentlyViewed(productId);
+    if (!product && typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
+      try {
+        const resp = await api.products.getById(productId);
+        if (resp.success && resp.data) {
+          product = resp.data;
+          productsManager.products.unshift(product);
+        }
+      } catch (_) { console.warn('pages: loadSeedProducts failed:', _); }
+    }
+
+    if (!product) {
+      showToast('Product not found', 'warning');
+      // Clean up the hash if the URL mistakenly points at a missing
+      // product so a refresh doesn't keep landing on the error toast.
+      if (window.location.hash.includes('/product/')) {
+        window.location.hash = '#/browse';
+      }
+      return;
+    }
+
+    productsManager.addToRecentlyViewed(productId);
 
     const mainContent = document.getElementById('main-content');
     const isInWishlist = productsManager.isInWishlist(productId);
@@ -1479,7 +1492,7 @@ notificationManager?.info('Wishlist Cleared', 'All items removed from your wishl
 */
   static shareProduct (productId) {
   const product = productsManager.getById(productId);
-  const shareUrl = window.location.href.split('#')[0] + `#product/${productId}`;
+   const shareUrl = window.location.href.split('#')[0] + `#/product/${productId}`;
   const shareText = `Check out this item on Uni-Hub: ${product.title} - GHS ${product.price?.toLocaleString() || '0'}`;
 
   if (navigator.share) {
@@ -1684,6 +1697,21 @@ prompt('Copy this link:', url);
 
     mainContent.innerHTML = `
       <div class="container" style="padding: 2rem 1rem;">
+        <nav class="browse-breadcrumb" aria-label="Breadcrumb">
+          <div class="browse-breadcrumb-inner">
+            <ol class="browse-breadcrumb-list">
+              <li class="browse-breadcrumb-item browse-breadcrumb-item--first">
+                <a href="#/" class="browse-breadcrumb-link">Home</a>
+              </li>
+              <li class="browse-breadcrumb-item">
+                <span class="browse-breadcrumb-arrow"></span>
+              </li>
+              <li class="browse-breadcrumb-item">
+                <span class="browse-breadcrumb-current">Cart</span>
+              </li>
+            </ol>
+          </div>
+        </nav>
         <h1 style="margin-bottom: 1.5rem;">Shopping Cart</h1>
         
         <div class="cart-container">
@@ -1917,6 +1945,24 @@ prompt('Copy this link:', url);
 
     mainContent.innerHTML = `
       <div class="container" style="padding: 2rem 1rem;">
+        <nav class="browse-breadcrumb" aria-label="Breadcrumb">
+          <div class="browse-breadcrumb-inner">
+            <ol class="browse-breadcrumb-list">
+              <li class="browse-breadcrumb-item browse-breadcrumb-item--first">
+                <a href="#/" class="browse-breadcrumb-link">Home</a>
+              </li>
+              <li class="browse-breadcrumb-item">
+                <a href="#/cart" class="browse-breadcrumb-link">Cart</a>
+              </li>
+              <li class="browse-breadcrumb-item">
+                <span class="browse-breadcrumb-arrow"></span>
+              </li>
+              <li class="browse-breadcrumb-item">
+                <span class="browse-breadcrumb-current">Checkout</span>
+              </li>
+            </ol>
+          </div>
+        </nav>
         <h1 style="margin-bottom: 1.5rem;">Checkout</h1>
         
         <form id="checkout-form" onsubmit="Pages.handleCheckout(event)">
@@ -2300,6 +2346,21 @@ prompt('Copy this link:', url);
 
     mainContent.innerHTML = `
       <div class="container" style="padding: 2rem 1rem;">
+        <nav class="browse-breadcrumb" aria-label="Breadcrumb">
+          <div class="browse-breadcrumb-inner">
+            <ol class="browse-breadcrumb-list">
+              <li class="browse-breadcrumb-item browse-breadcrumb-item--first">
+                <a href="#/" class="browse-breadcrumb-link">Home</a>
+              </li>
+              <li class="browse-breadcrumb-item">
+                <span class="browse-breadcrumb-arrow"></span>
+              </li>
+              <li class="browse-breadcrumb-item">
+                <span class="browse-breadcrumb-current">My Orders</span>
+              </li>
+            </ol>
+          </div>
+        </nav>
         <h1 style="margin-bottom: 1.5rem;">My Orders</h1>
         
         <div class="cart-items">
@@ -2633,6 +2694,21 @@ ${priceDrops.map(d => `<span style="font-size:0.8rem;background:var(--bg-primary
 
 mainContent.innerHTML = `
 <div class="container" style="padding: 2rem 1rem;">
+<nav class="browse-breadcrumb" aria-label="Breadcrumb">
+<div class="browse-breadcrumb-inner">
+<ol class="browse-breadcrumb-list">
+<li class="browse-breadcrumb-item browse-breadcrumb-item--first">
+<a href="#/" class="browse-breadcrumb-link">Home</a>
+</li>
+<li class="browse-breadcrumb-item">
+<span class="browse-breadcrumb-arrow"></span>
+</li>
+<li class="browse-breadcrumb-item">
+<span class="browse-breadcrumb-current">My Wishlist</span>
+</li>
+</ol>
+</div>
+</nav>
 ${priceDropBanner}
 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
 <div>
@@ -2796,6 +2872,21 @@ window.scrollTo(0, 0);
 
     mainContent.innerHTML = `
       <div class="dashboard-vertical">
+        <nav class="browse-breadcrumb" style="padding: 0 1rem; margin-bottom: 0.5rem;" aria-label="Breadcrumb">
+          <div class="browse-breadcrumb-inner">
+            <ol class="browse-breadcrumb-list">
+              <li class="browse-breadcrumb-item browse-breadcrumb-item--first">
+                <a href="#/" class="browse-breadcrumb-link">Home</a>
+              </li>
+              <li class="browse-breadcrumb-item">
+                <span class="browse-breadcrumb-arrow"></span>
+              </li>
+              <li class="browse-breadcrumb-item">
+                <span class="browse-breadcrumb-current">Dashboard</span>
+              </li>
+            </ol>
+          </div>
+        </nav>
         <div class="dashboard-card">
           <!-- Sidebar -->
           <aside class="dv-sidebar">
@@ -3921,6 +4012,7 @@ static renderAdminLogin () {
   </table>
   </div>`;
   }
+
   }
 
   /**
