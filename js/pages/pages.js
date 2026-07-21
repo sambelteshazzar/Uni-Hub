@@ -940,7 +940,6 @@ const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
     mainContent.innerHTML = `
       <style>
         .pd-page { min-height: 100vh; background: var(--bg-secondary); }
-        .pd-breadcrumb { padding: 1rem 2rem; max-width: 1400px; margin: 0 auto; display: flex; align-items: center; flex-wrap: wrap; gap: 0; }
         .pd-back-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid var(--neutral-300); background: transparent; color: var(--neutral-600); font-size: 0.875rem; cursor: pointer; transition: all 0.2s; }
         .pd-back-btn:hover { border-color: var(--primary); color: var(--primary); }
         .pd-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; max-width: 1400px; margin: 0 auto; padding: 1rem 2rem 4rem; }
@@ -1001,22 +1000,33 @@ const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
 .pd-layout { grid-template-columns: 1fr; padding: 1rem; }
 .pd-image-section { position: static; }
 .pd-title { font-size: 1.375rem; }
-.pd-breadcrumb { padding: 0.75rem 1rem; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
           .pd-price { font-size: 2rem; }
         }
       </style>
 
       <div class="pd-page">
         <!-- Breadcrumb -->
- <div class="pd-breadcrumb">
-  <a href="#/" style="color:var(--neutral-600);text-decoration:none;font-size:0.8125rem;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--neutral-600)'">Home</a>
-  <span style="color:var(--neutral-500);margin:0 0.375rem;font-size:0.75rem;">›</span>
-  <a href="#/browse" style="color:var(--neutral-600);text-decoration:none;font-size:0.8125rem;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--neutral-600)'">Browse</a>
-  <span style="color:var(--neutral-500);margin:0 0.375rem;font-size:0.75rem;">›</span>
-  <a href="#/browse?category=${product.category}" style="color:var(--neutral-600);text-decoration:none;font-size:0.8125rem;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--neutral-600)'">${categoryLabel}</a>
-  <span style="color:var(--neutral-500);margin:0 0.375rem;font-size:0.75rem;">›</span>
-  <span style="color:var(--neutral-900);font-size:0.8125rem;font-weight:500;">${product.title.length > 40 ? product.title.slice(0, 40) + '…' : product.title}</span>
- </div>
+        <nav class="browse-breadcrumb" aria-label="Breadcrumb">
+          <div class="browse-breadcrumb-inner">
+            <ol class="browse-breadcrumb-list">
+              <li class="browse-breadcrumb-item browse-breadcrumb-item--first">
+                <a href="#/" class="browse-breadcrumb-link">Home</a>
+              </li>
+              <li class="browse-breadcrumb-item">
+                <span class="browse-breadcrumb-arrow"></span>
+                <a href="#/browse" class="browse-breadcrumb-link">Browse</a>
+              </li>
+              <li class="browse-breadcrumb-item">
+                <span class="browse-breadcrumb-arrow"></span>
+                <a href="#/browse?category=${product.category}" class="browse-breadcrumb-link">${categoryLabel}</a>
+              </li>
+              <li class="browse-breadcrumb-item">
+                <span class="browse-breadcrumb-arrow"></span>
+                <span class="browse-breadcrumb-current" aria-current="page">${product.title.length > 40 ? product.title.slice(0, 40) + '…' : product.title}</span>
+              </li>
+            </ol>
+          </div>
+        </nav>
 
         <!-- Layout -->
         <div class="pd-layout">
