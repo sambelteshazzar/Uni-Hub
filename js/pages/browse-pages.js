@@ -52,24 +52,42 @@ class BrowsePage {
 
     await productsManager.init();
 
-    if (filters.category) {
+    // Reset the browse-page filter state derived from URL params each
+    // time we render. Use object-literal key presence so "absent" (i.e.
+    // `#/browse` with no query string) clears stale state from a prior
+    // visit; an explicit `undefined`/`null`/`''` value also clears it.
+    if ('category' in filters && filters.category) {
       productsManager.filter({ category: filters.category });
       this.state.selectedCategories = [filters.category];
-    }
-    if (filters.search) {
-      productsManager.filter({ searchQuery: filters.search });
-      this.state.searchQuery = filters.search;
-    }
-    if (filters.university) {
-      productsManager.filter({ university: filters.university });
-      this.state.selectedUniversities = [filters.university];
+    } else {
+      productsManager.currentFilters.category = null;
+      this.state.selectedCategories = [];
     }
 
-    const selectedUniversity = filters.university || StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
-    if (selectedUniversity && !filters.university) {
-      productsManager.filter({ university: selectedUniversity });
-      this.state.selectedUniversities = [selectedUniversity];
+    if ('search' in filters && filters.search) {
+      productsManager.filter({ searchQuery: filters.search });
+      this.state.searchQuery = filters.search;
+    } else {
+      productsManager.currentFilters.searchQuery = '';
+      this.state.searchQuery = '';
     }
+
+    if ('university' in filters && filters.university) {
+      productsManager.filter({ university: filters.university });
+      this.state.selectedUniversities = [filters.university];
+    } else {
+      const selectedUniversity = StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
+      if (selectedUniversity) {
+        productsManager.filter({ university: selectedUniversity });
+        this.state.selectedUniversities = [selectedUniversity];
+      } else {
+        productsManager.currentFilters.university = null;
+        this.state.selectedUniversities = [];
+      }
+    }
+
+    // Re-apply after explicit filter resets so filteredProducts stays in sync.
+    productsManager.applyFilters();
 
     this._allProducts = productsManager.getAll();
     this._buildFilterCounts();

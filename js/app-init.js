@@ -103,8 +103,15 @@ class ModuleLoader {
    */
   async loadModule(moduleDef) {
     try {
-      // Dynamic import for ES6 modules
-      await import(/* @vite-ignore */ `./${moduleDef.file.replace('js/', '')}`);
+      // Dynamic import for ES6 modules. Append a version query so the
+      // browser fetches a fresh copy after each code change (the static
+      // <script src="js/app-init.js?v=N"> tag in index.html is the only
+      // explicitly-versioned entry point; without a version query here a
+      // user can keep getting a stale pages.js / browse-pages.js from
+      // the HTTP cache long after a deploy). Bump this version whenever
+      // any of the dynamically-imported module files change.
+      const MODULE_VERSION = '8';
+      await import(/* @vite-ignore */ `./${moduleDef.file.replace('js/', '')}?v=${MODULE_VERSION}`);
 
       // Verify module was exposed to window
       const isLoaded = moduleDef.exposes.length === 0 ||
