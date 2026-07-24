@@ -1,7 +1,7 @@
 
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
+  "buildCommand": "echo 'no build - serving static files'",
+  "outputDirectory": ".",
   "framework": null,
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
