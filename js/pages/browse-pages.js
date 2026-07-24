@@ -238,17 +238,6 @@ class BrowsePage {
             </div>
           </div>
         </div>
-        ${featured.length >= 3 ? `
-        <div class="browse-hero-visual">
-          <div class="browse-hero-visual-grid">
-            ${featured.slice(0, 6).map((p, i) => `
-            <div class="browse-hero-visual-item">
-              <img src="${p.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${p.title}" loading="lazy">
-            </div>
-            `).join('')}
-          </div>
-        </div>
-        ` : ''}
       </div>
     </div>`;
   }
