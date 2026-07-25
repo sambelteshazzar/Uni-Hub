@@ -17,6 +17,7 @@ class BrowsePage {
       viewMode: 'grid',
       mobileDrawerOpen: false,
       totalProducts: 0,
+      selectedGender: null,
     };
     this._categories = [
       { id: 'appliances', name: 'Appliances', icon: 'settings' },
@@ -84,6 +85,13 @@ class BrowsePage {
         productsManager.currentFilters.university = null;
         this.state.selectedUniversities = [];
       }
+    }
+
+    // Gender sub-filter (only relevant under the Fashion category).
+    if ('gender' in filters && filters.gender) {
+      this.state.selectedGender = filters.gender;
+    } else {
+      this.state.selectedGender = null;
     }
 
     // Re-apply after explicit filter resets so filteredProducts stays in sync.
@@ -276,15 +284,53 @@ return `
 <div class="browse-categories-scroll">
 <button class="category-pill ${allActive ? 'active' : ''}" onclick="BrowsePage.clearCategoryFilters()">All<span class="pill-count">${this._allProducts.length}</span></button>
 ${this.state.categories.map(cat => `
-<button class="category-pill ${this.state.selectedCategories.includes(cat.id) ? 'active' : ''}" onclick="BrowsePage.toggleCategory('${cat.id}')">${cat.name}<span class="pill-count">${cat.count}</span></button>
+<button class="category-pill ${this.state.selectedCategories.includes(cat.id) ? 'active' : ''}" onclick="BrowsePage.selectCategory('${cat.id}')">${cat.name}<span class="pill-count">${cat.count}</span></button>
 `).join('')}
 </div>
+${this._renderGenderSubBar()}
 </div>`;
 }
 
+// Sub-bar of male/female pills, only shown when Fashion is the active
+// category (the only apparel category for now).
+_renderGenderSubBar() {
+  if (!this.state.selectedCategories.includes('fashion')) return '';
+  const active = this.state.selectedGender || 'all';
+  const maleCount = this._allProducts.filter(p => p.category === 'fashion' && (p.gender || 'unisex') === 'male').length;
+  const femaleCount = this._allProducts.filter(p => p.category === 'fashion' && (p.gender || 'unisex') === 'female').length;
+  const unisexCount = this._allProducts.filter(p => p.category === 'fashion' && (p.gender || 'unisex') === 'unisex').length;
+  return `
+  <div class="browse-subcategories" role="group" aria-label="Filter fashion by gender">
+    <button class="subcategory-pill ${active === 'all' ? 'active' : ''}" onclick="BrowsePage.selectGender('all')">All<span class="pill-count">${this._allProducts.filter(p => p.category === 'fashion').length}</span></button>
+    <button class="subcategory-pill ${active === 'male' ? 'active' : ''}" onclick="BrowsePage.selectGender('male')">Male<span class="pill-count">${maleCount}</span></button>
+    <button class="subcategory-pill ${active === 'female' ? 'active' : ''}" onclick="BrowsePage.selectGender('female')">Female<span class="pill-count">${femaleCount}</span></button>
+    <button class="subcategory-pill ${active === 'unisex' ? 'active' : ''}" onclick="BrowsePage.selectGender('unisex')">Unisex<span class="pill-count">${unisexCount}</span></button>
+  </div>`;
+}
+
+// Category pill click: navigate to #/browse?category=X. The hashchange
+// fires the router, which re-renders BrowsePage with the new filter.
+// This makes the click feel like a "real" navigation (URL changes,
+// back/forward work, shareable link) rather than an in-place state
+// mutation. Clear filters by sending the user back to plain /browse.
+selectCategory(catId) {
+  if (this.state.selectedCategories.includes(catId)) {
+    // Already selected -> deselect -> go back to /browse.
+    Pages.navigate('#/browse');
+  } else {
+    Pages.navigate(`#/browse?category=${encodeURIComponent(catId)}`);
+  }
+}
+
+selectGender(gender) {
+  this.state.selectedGender = gender === 'all' ? null : gender;
+  this.applyFilters();
+}
+
 clearCategoryFilters() {
-this.state.selectedCategories = [];
-this.applyFilters();
+  this.state.selectedCategories = [];
+  this.state.selectedGender = null;
+  Pages.navigate('#/browse');
 }
 
 renderSidebar(maxPrice) {
@@ -582,6 +628,18 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
     }
 
     this._filteredProducts = productsManager.filteredProducts || [];
+
+    // Gender is a browse-page-only sub-filter for the Fashion category;
+    // applied client-side after the manager's category filter so it doesn't
+    // require backend support (existing fashion products without a
+    // `gender` field are treated as "unisex").
+    if (this.state.selectedGender) {
+      const g = this.state.selectedGender;
+      this._filteredProducts = this._filteredProducts.filter(
+        p => p.category !== 'fashion' || (p.gender || 'unisex') === g,
+      );
+    }
+
     this.state.totalProducts = this._filteredProducts.length;
 
     const paginatedData = await this._fetchPaginatedData(1);
@@ -600,6 +658,7 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
     this.state.sortBy = 'newest';
     this.state.searchQuery = '';
     this.state.currentPage = 1;
+    this.state.selectedGender = null;
     productsManager.resetFilters();
     this._filteredProducts = productsManager.filteredProducts || [...this._allProducts];
     this.state.totalProducts = this._filteredProducts.length;
@@ -734,12 +793,15 @@ const browsePage = new BrowsePage();
 
 const BrowsePageMethods = {
 renderBrowse(filters) { return browsePage.render(filters); },
-filterByCategory(catId) { return browsePage.toggleCategory(catId); },
+filterByCategory(catId) { return browsePage.selectCategory(catId); },
+selectCategory(catId) { return browsePage.selectCategory(catId); },
+selectGender(gender) { return browsePage.selectGender(gender); },
 applyBrowseFilters() { return browsePage.applyFilters(); },
 applyPriceFilter() { return browsePage.applyPriceFilter(); },
 clearCategoryFilters() { return browsePage.clearCategoryFilters(); },
 resetConditionFilter() { browsePage.state.selectedConditions = []; return browsePage.applyFilters(); },
 resetPriceFilter() { browsePage.state.priceRange = { min: 0, max: Infinity }; return browsePage.applyFilters(); },
+toggleCategory(catId) { return browsePage.selectCategory(catId); },
 toggleMobileFilters() { return browsePage.state.mobileDrawerOpen ? browsePage.closeMobileDrawer() : browsePage.openMobileDrawer(); },
 setRatingFilter(rating) { productsManager.filter({ minRating: rating }); return browsePage.render(); },
 renderProductCardModern(product) { return browsePage.renderProductCard(product); },
