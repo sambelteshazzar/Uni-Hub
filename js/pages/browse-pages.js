@@ -93,6 +93,7 @@ class BrowsePage {
     } else {
       this.state.selectedGender = null;
     }
+    productsManager.filter({ gender: this.state.selectedGender });
 
     // Re-apply after explicit filter resets so filteredProducts stays in sync.
     productsManager.applyFilters();
