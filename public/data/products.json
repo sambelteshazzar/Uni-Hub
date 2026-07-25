@@ -184,6 +184,54 @@
 "university": "ug",
 "createdAt": "2026-03-13T10:00:00Z",
 "status": "approved"
+},
+{
+"id": "prod-009",
+"title": "Men's Denim Jacket",
+"description": "Classic blue denim jacket, size L. Lightly worn, excellent condition. Great for layering on cool campus evenings.",
+"price": 120,
+"currency": "GHS",
+"category": "fashion",
+"condition": "excellent",
+"gender": "male",
+"seller": {
+"id": "user_001",
+"name": "Kwame Mensah",
+"university": "ug",
+"rating": 4.7
+},
+"images": [
+"/assets/images/products/no-image.svg"
+],
+"deliveryModes": ["bolt", "yango", "inperson"],
+"paymentModes": ["momo", "cash"],
+"university": "ug",
+"createdAt": "2026-04-22T08:00:00Z",
+"status": "approved"
+},
+{
+"id": "prod-010",
+"title": "Women's Summer Dress",
+"description": "Floral print summer dress, size M. Worn twice, like-new condition. Perfect for warm weather.",
+"price": 85,
+"currency": "GHS",
+"category": "fashion",
+"condition": "like-new",
+"gender": "female",
+"seller": {
+"id": "user_002",
+"name": "Ama Osei",
+"university": "knust",
+"rating": 4.8
+},
+"images": [
+"/assets/images/products/no-image.svg"
+],
+"deliveryModes": ["yango", "inperson"],
+"paymentModes": ["momo", "telecel", "cash"],
+"university": "knust",
+"createdAt": "2026-05-04T11:00:00Z",
+"status": "approved"
 }
 ]
 }
