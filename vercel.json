@@ -4,7 +4,10 @@
   "outputDirectory": ".",
   "framework": null,
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/favicon.png", "destination": "/public/favicon.png" },
+    { "source": "/assets/(.*)", "destination": "/public/assets/$1" },
+    { "source": "/data/(.*)", "destination": "/public/data/$1" },
+    { "source": "/((?!favicon\\.png|assets|data|css|js|public).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
