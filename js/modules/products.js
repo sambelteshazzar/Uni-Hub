@@ -15,6 +15,7 @@ class ProductsManager {
       priceRange: { min: 0, max: Infinity },
       searchQuery: '',
       sortBy: 'newest',
+      gender: null,
     };
     this.currentPage = 1;
     this.pageSize = PAGINATION.DEFAULT_PAGE_SIZE;
@@ -231,6 +232,9 @@ class ProductsManager {
     if (filters.sortBy) {
       this.currentFilters.sortBy = filters.sortBy;
     }
+    if (filters.gender !== undefined) {
+      this.currentFilters.gender = filters.gender;
+    }
 
     this.applyFilters();
   }
@@ -249,6 +253,13 @@ class ProductsManager {
     // Category filter
     if (this.currentFilters.category) {
       filtered = filtered.filter(p => p.category === this.currentFilters.category);
+    }
+
+    // Gender sub-filter (only meaningful for fashion products; items
+    // without an explicit `gender` field are treated as "unisex").
+    if (this.currentFilters.gender) {
+      const g = this.currentFilters.gender;
+      filtered = filtered.filter(p => p.category !== 'fashion' || (p.gender || 'unisex') === g);
     }
 
     // Condition filter
@@ -304,6 +315,7 @@ class ProductsManager {
       priceRange: { min: 0, max: Infinity },
       searchQuery: '',
       sortBy: 'newest',
+      gender: null,
     };
     this.filteredProducts = [...this.products];
     this.currentPage = 1;

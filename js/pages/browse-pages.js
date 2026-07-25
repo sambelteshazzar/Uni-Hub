@@ -618,6 +618,7 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
       priceRange: { ...this.state.priceRange },
       sortBy: this.state.sortBy,
       searchQuery: this.state.searchQuery || '',
+      gender: this.state.selectedGender || null,
     });
 
     if (this.state.selectedUniversities.length > 0) {
@@ -628,18 +629,6 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
     }
 
     this._filteredProducts = productsManager.filteredProducts || [];
-
-    // Gender is a browse-page-only sub-filter for the Fashion category;
-    // applied client-side after the manager's category filter so it doesn't
-    // require backend support (existing fashion products without a
-    // `gender` field are treated as "unisex").
-    if (this.state.selectedGender) {
-      const g = this.state.selectedGender;
-      this._filteredProducts = this._filteredProducts.filter(
-        p => p.category !== 'fashion' || (p.gender || 'unisex') === g,
-      );
-    }
-
     this.state.totalProducts = this._filteredProducts.length;
 
     const paginatedData = await this._fetchPaginatedData(1);
