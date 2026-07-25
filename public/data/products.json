@@ -146,6 +146,7 @@
 "currency": "GHS",
 "category": "fashion",
 "condition": "fair",
+"gender": "unisex",
 "seller": {
 "id": "user_002",
 "name": "Ama Osei",
