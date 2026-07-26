@@ -98,7 +98,7 @@ class PaymentManager {
       paymentId: payment.id,
       instructions: {
         bankName: 'GCB Bank',
-        accountName: 'Uni-Hub Ghana',
+        accountName: 'JERTS CART Ghana',
         accountNumber: '1234567890',
         reference: payment.orderNumber,
       },

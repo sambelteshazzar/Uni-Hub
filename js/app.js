@@ -4,7 +4,7 @@
 
 
 /**
- * Initialize the Uni-Hub application
+ * Initialize the JERTS CART application
  * Sets up global event listeners and initializes core modules
  */
 class App {
@@ -32,9 +32,9 @@ class App {
       this.initUIComponents();
 
       this.initialized = true;
-      console.log(`Uni-Hub v${this.version} initialized successfully`);
+      console.log(`JERTS CART v${this.version} initialized successfully`);
     } catch (error) {
-      console.error('Failed to initialize Uni-Hub:', error);
+      console.error('Failed to initialize JERTS CART:', error);
     }
   }
 
@@ -99,7 +99,7 @@ class App {
       // Sync any pending data
       this.syncPendingData();
     } else {
-      console.log('Uni-Hub is offline - some features may be limited');
+      console.log('JERTS CART is offline - some features may be limited');
     }
   }
 

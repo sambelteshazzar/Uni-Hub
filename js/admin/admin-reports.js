@@ -318,7 +318,7 @@ async generatePDFReport (type, options = {}) {
   <!DOCTYPE html>
   <html>
   <head>
-  <title>Uni-Hub Report — ${type}</title>
+  <title>JERTS CART Report — ${type}</title>
   <style>
   body { font-family: Arial, sans-serif; padding: 40px; color: #1f2937; }
   h1 { color: #0046be; border-bottom: 2px solid #0046be; padding-bottom: 8px; }
@@ -346,7 +346,7 @@ async generatePDFReport (type, options = {}) {
 
   async _buildReportHTML (type, options) {
   const date = new Date().toLocaleDateString('en-GH', { year: 'numeric', month: 'long', day: 'numeric' });
-  let content = `<h1>Uni-Hub ${type.charAt(0).toUpperCase() + type.slice(1)} Report</h1><p class="meta">Generated on ${date}</p>`;
+  let content = `<h1>JERTS CART ${type.charAt(0).toUpperCase() + type.slice(1)} Report</h1><p class="meta">Generated on ${date}</p>`;
 
   try {
 if (type === 'sales') {

@@ -111,7 +111,7 @@ comingSoonBadge +
       'MADE FOR <span style="color: #ffce00;">CAMPUS LIFE</span>' +
       '</h1>' +
       '<p style="font-size: 1.125rem; line-height: 1.8; color: rgba(255,255,255,0.9); max-width: 42rem; margin-bottom: 2rem;">' +
-      'Uni-Hub is a global university marketplace app that connects students to easily buy essential academic items. Textbooks, electronics, accommodation listings, and other campus essentials — all within your university community and beyond.' +
+      'JERTS CART is a global university marketplace app that connects students to easily buy essential academic items. Textbooks, electronics, accommodation listings, and other campus essentials — all within your university community and beyond.' +
       '</p>' +
       '<div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 3rem;">' +
       '<button onclick="Pages.renderBrowse(); return false;" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem 2rem; font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: #ffce00; color: var(--neutral-900); border: none; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background=\'#e6b800\'; this.style.transform=\'translateY(-2px)\'; this.style.boxShadow=\'0 8px 20px rgba(255, 206, 0, 0.3)\'" onmouseout="this.style.background=\'#ffce00\'; this.style.transform=\'translateY(0)\'; this.style.boxShadow=\'none\'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:inline-block;vertical-align:middle;margin-right:0.25rem;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Browse Items</button>' +
@@ -135,7 +135,7 @@ comingSoonBadge +
       '</div>' +
       '<div style="padding: 2rem; background: var(--bg-primary); border: 1px solid var(--border-light); border-radius: 0.75rem; border-left: 4px solid var(--primary);">' +
       '<p style="color: var(--neutral-700); font-size: 1.125rem; line-height: 1.8;">' +
-      'At Uni-Hub, our mission is to make student essentials affordable and accessible, ensuring that every student can get what they need without financial stress.' +
+      'At JERTS CART, our mission is to make student essentials affordable and accessible, ensuring that every student can get what they need without financial stress.' +
       '</p>' +
       '</div>' +
       '</div>' +
@@ -164,7 +164,7 @@ comingSoonBadge +
       '<div class="bb-covered-text-col">' +
       '<span class="bb-covered-eyebrow">Community First</span>' +
       '<h2 class="bb-covered-headline">WE\'VE GOT<br>YOU<br><em class="bb-covered-accent">COVERED</em></h2>' +
-      '<p class="bb-covered-body">From textbooks to accommodation, electronics to everyday essentials — Uni-Hub connects you with suppliers who\'ve got exactly what you need. Buy and thrive together on campus.</p>' +
+      '<p class="bb-covered-body">From textbooks to accommodation, electronics to everyday essentials — JERTS CART connects you with suppliers who\'ve got exactly what you need. Buy and thrive together on campus.</p>' +
       '<div class="bb-covered-pills">' +
       '<span class="bb-covered-pill">Textbooks</span>' +
       '<span class="bb-covered-pill">Electronics</span>' +
@@ -236,7 +236,7 @@ comingSoonBadge +
       '<section class="bb-how-it-works">' +
       '<div class="bb-container">' +
       '<div class="bb-section-header" style="text-align: center;">' +
-      '<h2 class="bb-section-title">How Uni-Hub Works</h2>' +
+      '<h2 class="bb-section-title">How JERTS CART Works</h2>' +
       '<p class="bb-section-subtitle">Buy in 3 simple steps</p>' +
       '</div>' +
       '<div class="bb-steps-grid">' +
@@ -251,7 +251,7 @@ comingSoonBadge +
       '<div class="bb-container">' +
       '<div class="bb-cta-content">' +
       '<h2 class="bb-cta-title">Ready to Start Saving?</h2>' +
-      '<p class="bb-cta-desc">Join thousands of students already buying  on Uni-Hub. It\'s free to sign up.</p>' +
+      '<p class="bb-cta-desc">Join thousands of students already buying  on JERTS CART. It\'s free to sign up.</p>' +
       '<div class="bb-hero-buttons" style="justify-content: center;">' +
       '<button onclick="Pages.renderRegister(); return false;" class="bb-btn bb-btn-primary" style="background: #ffce00; color: var(--neutral-900);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:inline-block;vertical-align:middle;margin-right:0.25rem;"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg> Create Free Account</button>' +
       '<button onclick="Pages.renderBrowse(); return false;" class="bb-btn bb-btn-outline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:inline-block;vertical-align:middle;margin-right:0.25rem;"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Browse Items</button>' +

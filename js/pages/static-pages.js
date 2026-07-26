@@ -10,17 +10,17 @@ const StaticPageMethods = {
 
         <section style="margin-bottom: 2rem;">
           <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem;">1. Acceptance of Terms</h2>
-          <p style="line-height: 1.7; color: var(--text-secondary);">By accessing and using Uni-Hub, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our platform. Uni-Hub is a student marketplace platform that connects buyers and sellers within university communities in Ghana.</p>
+          <p style="line-height: 1.7; color: var(--text-secondary);">By accessing and using JERTS CART, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our platform. JERTS CART is a student marketplace platform that connects buyers and sellers within university communities in Ghana.</p>
         </section>
 
         <section style="margin-bottom: 2rem;">
           <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem;">2. User Accounts</h2>
-          <p style="line-height: 1.7; color: var(--text-secondary);">You must be a registered student at a Ghanaian university to use Uni-Hub. You are responsible for maintaining the confidentiality of your account credentials. You must provide accurate information during registration and verify your student status. Uni-Hub reserves the right to suspend accounts that violate these terms.</p>
+          <p style="line-height: 1.7; color: var(--text-secondary);">You must be a registered student at a Ghanaian university to use JERTS CART. You are responsible for maintaining the confidentiality of your account credentials. You must provide accurate information during registration and verify your student status. JERTS CART reserves the right to suspend accounts that violate these terms.</p>
         </section>
 
         <section style="margin-bottom: 2rem;">
           <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem;">3. Buying and Selling</h2>
-          <p style="line-height: 1.7; color: var(--text-secondary);">All listings must be for legal products and services. Sellers are responsible for accurate product descriptions and fair pricing. Buyers should inspect products before completing transactions. Uni-Hub facilitates connections but is not a party to any transaction between users. Both buyers and sellers must honour completed transactions.</p>
+          <p style="line-height: 1.7; color: var(--text-secondary);">All listings must be for legal products and services. Sellers are responsible for accurate product descriptions and fair pricing. Buyers should inspect products before completing transactions. JERTS CART facilitates connections but is not a party to any transaction between users. Both buyers and sellers must honour completed transactions.</p>
         </section>
 
         <section style="margin-bottom: 2rem;">
@@ -30,12 +30,12 @@ const StaticPageMethods = {
 
         <section style="margin-bottom: 2rem;">
           <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem;">5. Payments and Refunds</h2>
-          <p style="line-height: 1.7; color: var(--text-secondary);">Payments are processed through our supported payment methods (MTN MoMo, Telecel Cash, Bank Transfer). Refund policies vary by seller and are subject to our dispute resolution process. Uni-Hub is not liable for payment disputes between users.</p>
+          <p style="line-height: 1.7; color: var(--text-secondary);">Payments are processed through our supported payment methods (MTN MoMo, Telecel Cash, Bank Transfer). Refund policies vary by seller and are subject to our dispute resolution process. JERTS CART is not liable for payment disputes between users.</p>
         </section>
 
         <section style="margin-bottom: 2rem;">
           <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem;">6. Limitation of Liability</h2>
-          <p style="line-height: 1.7; color: var(--text-secondary);">Uni-Hub provides the platform &ldquo;as is&rdquo; and is not responsible for the quality, safety, or legality of items listed, the accuracy of listings, or the ability of sellers to sell or buyers to pay. We are not liable for any damages arising from your use of the platform.</p>
+          <p style="line-height: 1.7; color: var(--text-secondary);">JERTS CART provides the platform &ldquo;as is&rdquo; and is not responsible for the quality, safety, or legality of items listed, the accuracy of listings, or the ability of sellers to sell or buyers to pay. We are not liable for any damages arising from your use of the platform.</p>
         </section>
 
         <section style="margin-bottom: 2rem;">
@@ -99,8 +99,8 @@ const StaticPageMethods = {
     Pages.showOriginalNavFooter();
     mainContent.innerHTML = `
       <div class="container" style="padding: 3rem 1rem; max-width: 800px; margin: 0 auto;">
-        <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">About Uni-Hub</h1>
-        <p style="font-size: 1.125rem; line-height: 1.7; color: var(--text-secondary); margin-bottom: 2rem;">Uni-Hub is Ghana's premier student marketplace, built by students for students. We connect buyers and sellers within university communities, making it easy and safe to trade textbooks, electronics, hostel essentials, and more.</p>
+        <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">About JERTS CART</h1>
+        <p style="font-size: 1.125rem; line-height: 1.7; color: var(--text-secondary); margin-bottom: 2rem;">JERTS CART is Ghana's premier student marketplace, built by students for students. We connect buyers and sellers within university communities, making it easy and safe to trade textbooks, electronics, hostel essentials, and more.</p>
 
         <section style="margin-bottom: 2.5rem;">
           <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem;">Our Mission</h2>
@@ -120,12 +120,12 @@ const StaticPageMethods = {
 
         <section style="margin-bottom: 2.5rem;">
           <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem;">Universities We Serve</h2>
-          <p style="line-height: 1.7; color: var(--text-secondary);">Uni-Hub serves students across all major Ghanaian universities including University of Ghana (Legon), KNUST, University of Cape Coast, UDS, UPSA, Ashesi University, and many more across all 16 regions of Ghana.</p>
+          <p style="line-height: 1.7; color: var(--text-secondary);">JERTS CART serves students across all major Ghanaian universities including University of Ghana (Legon), KNUST, University of Cape Coast, UDS, UPSA, Ashesi University, and many more across all 16 regions of Ghana.</p>
         </section>
 
         <section style="margin-bottom: 2.5rem;">
           <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem;">Our Team</h2>
-          <p style="line-height: 1.7; color: var(--text-secondary);">Uni-Hub was founded by Ghanaian university students who experienced firsthand the challenges of finding affordable textbooks, electronics, and hostel items. We understand the student hustle and built this platform to make campus life easier and more affordable.</p>
+          <p style="line-height: 1.7; color: var(--text-secondary);">JERTS CART was founded by Ghanaian university students who experienced firsthand the challenges of finding affordable textbooks, electronics, and hostel items. We understand the student hustle and built this platform to make campus life easier and more affordable.</p>
         </section>
       </div>
     `;

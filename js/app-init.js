@@ -164,7 +164,7 @@ class ModuleLoader {
    */
   async initialize() {
     this.loadStartTime = performance.now();
-    console.log('🚀 Initializing Uni-Hub modules...');
+    console.log('🚀 Initializing JERTS CART modules...');
 
     try {
       // Load modules in dependency order

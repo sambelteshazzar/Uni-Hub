@@ -36,7 +36,7 @@ const LandingPageMethods = {
     Pages.hideOriginalNavFooter();
     const mainContent = document.getElementById('main-content');
     if (mainContent) {
-      mainContent.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0046be;color:#fff;text-align:center;padding:2rem;"><div><h2>Loading Uni-Hub...</h2><p>Please wait.</p></div></div>';
+      mainContent.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0046be;color:#fff;text-align:center;padding:2rem;"><div><h2>Loading JERTS CART...</h2><p>Please wait.</p></div></div>';
     }
     const check = setInterval(() => {
       if (typeof window.renderBestBuyLanding === 'function') {

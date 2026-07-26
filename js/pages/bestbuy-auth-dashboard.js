@@ -157,7 +157,7 @@ var socialBtnStyle =
         '</style>' +
         '<div class="bb-auth-brand-content">' +
         '<div class="bb-auth-brand-logo">' +
-        '<img src="/favicon.png" alt="Uni-Hub" width="40" height="40" style="border-radius: 8px;" />' +
+        '<img src="/favicon.png" alt="JERTS CART" width="40" height="40" style="border-radius: 8px;" />' +
         '</div>' +
         '<h2 class="bb-auth-brand-title"><span id="bb-typewriter-text"></span><span class="bb-typewriter-cursor" id="bb-typewriter-cursor"></span></h2>' +
         '<p class="bb-auth-brand-desc">Sign in to your account to access your university marketplace. Buy, sell, and connect with fellow students.</p>' +
@@ -166,7 +166,7 @@ var socialBtnStyle =
         '<div class="bb-auth-form-section">' +
         '<div class="bb-auth-form-container">' +
         '<div class="bb-auth-logo">' +
-        '<img src="/favicon.png" alt="Uni-Hub" width="36" height="36" style="border-radius: 6px;" />' +
+        '<img src="/favicon.png" alt="JERTS CART" width="36" height="36" style="border-radius: 6px;" />' +
         '</div>' +
         '<div class="bb-auth-form-header">' +
         '<h1 class="bb-auth-form-title">Sign In</h1>' +
@@ -254,7 +254,7 @@ var socialBtnStyle =
         '</style>' +
         '<div class="bb-auth-brand-content">' +
         '<div class="bb-auth-brand-logo">' +
-        '<img src="/favicon.png" alt="Uni-Hub" width="40" height="40" style="border-radius: 8px;" />' +
+        '<img src="/favicon.png" alt="JERTS CART" width="40" height="40" style="border-radius: 8px;" />' +
         '</div>' +
         '<h2 class="bb-auth-brand-title"><span id="bb-typewriter-text"></span><span class="bb-typewriter-cursor" id="bb-typewriter-cursor"></span></h2>' +
         '<p class="bb-auth-brand-desc">Create your free account and start buying and selling with verified students at your university.</p>' +
@@ -263,7 +263,7 @@ var socialBtnStyle =
         '<div class="bb-auth-form-section">' +
         '<div class="bb-auth-form-container">' +
         '<div class="bb-auth-logo">' +
-        '<img src="/favicon.png" alt="Uni-Hub" width="36" height="36" style="border-radius: 6px;" />' +
+        '<img src="/favicon.png" alt="JERTS CART" width="36" height="36" style="border-radius: 6px;" />' +
         '</div>' +
         '<div class="bb-auth-form-header">' +
         '<h1 class="bb-auth-form-title">Create Account</h1>' +
@@ -321,7 +321,7 @@ var socialBtnStyle =
         '</div>';
 
       window.scrollTo({ top: 0 });
-      runTypewriter(['Join Uni-Hub', 'Your Campus Marketplace', 'Buy & Sell with Students', 'Create Your Account']);
+      runTypewriter(['Join JERTS CART', 'Your Campus Marketplace', 'Buy & Sell with Students', 'Create Your Account']);
     };
 
     // ============================================
@@ -370,7 +370,7 @@ var socialBtnStyle =
         '<div class="bb-auth-branding">' +
         '<div class="bb-auth-brand-content">' +
         '<div class="bb-auth-brand-logo">' +
-        '<img src="/favicon.png" alt="Uni-Hub" width="40" height="40" style="border-radius: 8px;" />' +
+        '<img src="/favicon.png" alt="JERTS CART" width="40" height="40" style="border-radius: 8px;" />' +
         '</div>' +
         '<h2 class="bb-auth-brand-title">Forgot Password?</h2>' +
         '<p class="bb-auth-brand-desc">No worries. Enter your email address and we\'ll send you a link to reset your password.</p>' +
@@ -379,7 +379,7 @@ var socialBtnStyle =
         '<div class="bb-auth-form-section">' +
         '<div class="bb-auth-form-container">' +
         '<div class="bb-auth-logo">' +
-        '<img src="/favicon.png" alt="Uni-Hub" width="36" height="36" style="border-radius: 6px;" />' +
+        '<img src="/favicon.png" alt="JERTS CART" width="36" height="36" style="border-radius: 6px;" />' +
         '</div>' +
         '<div class="bb-auth-form-header">' +
         '<h1 class="bb-auth-form-title">Reset Password</h1>' +
@@ -453,7 +453,7 @@ var socialBtnStyle =
         '<div class="bb-auth-branding">' +
         '<div class="bb-auth-brand-content">' +
         '<div class="bb-auth-brand-logo">' +
-        '<img src="/favicon.png" alt="Uni-Hub" width="40" height="40" style="border-radius: 8px;" />' +
+        '<img src="/favicon.png" alt="JERTS CART" width="40" height="40" style="border-radius: 8px;" />' +
         '</div>' +
         '<h2 class="bb-auth-brand-title">Set New Password</h2>' +
         '<p class="bb-auth-brand-desc">Enter your new password below to regain access to your account.</p>' +
@@ -462,7 +462,7 @@ var socialBtnStyle =
         '<div class="bb-auth-form-section">' +
         '<div class="bb-auth-form-container">' +
         '<div class="bb-auth-logo">' +
-        '<img src="/favicon.png" alt="Uni-Hub" width="36" height="36" style="border-radius: 6px;" />' +
+        '<img src="/favicon.png" alt="JERTS CART" width="36" height="36" style="border-radius: 6px;" />' +
         '</div>' +
         '<div class="bb-auth-form-header">' +
         '<h1 class="bb-auth-form-title">New Password</h1>' +

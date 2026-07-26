@@ -191,7 +191,7 @@ static showOriginalNavFooter () {
     this.hideOriginalNavFooter();
     const mainContent = document.getElementById('main-content');
     if (mainContent) {
-      mainContent.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0046be;color:#fff;text-align:center;padding:2rem;"><div><h2>Loading Uni-Hub...</h2><p>Please wait.</p></div></div>';
+      mainContent.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0046be;color:#fff;text-align:center;padding:2rem;"><div><h2>Loading JERTS CART...</h2><p>Please wait.</p></div></div>';
     }
     const check = setInterval(() => {
       if (typeof window.renderBestBuyLanding === 'function') {
@@ -1503,7 +1503,7 @@ notificationManager?.info('Wishlist Cleared', 'All items removed from your wishl
   static shareProduct (productId) {
   const product = productsManager.getById(productId);
    const shareUrl = window.location.href.split('#')[0] + `#/product/${productId}`;
-  const shareText = `Check out this item on Uni-Hub: ${product.title} - GHS ${product.price?.toLocaleString() || '0'}`;
+  const shareText = `Check out this item on JERTS CART: ${product.title} - GHS ${product.price?.toLocaleString() || '0'}`;
 
   if (navigator.share) {
   navigator.share({
@@ -1613,7 +1613,7 @@ Copy Link
   </head>
   <body>
   <div class="header">
-  <h1>Uni-Hub</h1>
+  <h1>JERTS CART</h1>
   <p>Student Marketplace Receipt</p>
   </div>
   <div class="info-grid">
@@ -1653,7 +1653,7 @@ Copy Link
   <strong>Payment:</strong> ${Formatter.capitalize(order.payment?.mode || 'N/A')}
   </div>
   <div class="footer">
-  <p>Thank you for shopping on Uni-Hub!</p>
+  <p>Thank you for shopping on JERTS CART!</p>
   <p>This receipt was generated on ${new Date().toLocaleDateString()}.</p>
   </div>
   <script>window.onload=function(){window.print();}</script>
@@ -5155,8 +5155,8 @@ if (this._pendingImageFiles.length > 0) {
 
     const faqItems = [
       {
-        q: 'What is Uni-Hub?',
-        a: 'Uni-Hub is a student marketplace for buying and selling items within university communities in Ghana. Whether you\'re looking for textbooks, electronics, hostel essentials, or fashion items, Uni-Hub connects you with fellow students.',
+        q: 'What is JERTS CART?',
+        a: 'JERTS CART is a student marketplace for buying and selling items within university communities in Ghana. Whether you\'re looking for textbooks, electronics, hostel essentials, or fashion items, JERTS CART connects you with fellow students.',
       },
       {
         q: 'How do I create an account?',
@@ -5168,7 +5168,7 @@ if (this._pendingImageFiles.length > 0) {
       },
       {
         q: 'What payment methods are supported?',
-        a: 'Uni-Hub supports Mobile Money (MoMo), Telecel Cash, and Bank Transfer. Payment options are set by each seller.',
+        a: 'JERTS CART supports Mobile Money (MoMo), Telecel Cash, and Bank Transfer. Payment options are set by each seller.',
       },
       {
         q: 'How does delivery work?',
@@ -5180,7 +5180,7 @@ if (this._pendingImageFiles.length > 0) {
       },
       {
         q: 'Is my payment secure?',
-        a: 'Uni-Hub uses secure payment processing. For Mobile Money and bank transfers, payments are processed through trusted providers. Always confirm delivery before releasing payment.',
+        a: 'JERTS CART uses secure payment processing. For Mobile Money and bank transfers, payments are processed through trusted providers. Always confirm delivery before releasing payment.',
       },
       {
         q: 'Can I return an item?',
@@ -5188,7 +5188,7 @@ if (this._pendingImageFiles.length > 0) {
       },
       {
         q: 'How do I contact a seller?',
-        a: 'Use the in-app messaging feature. Go to any product page and click "Message Seller" to start a conversation. All communications happen within Uni-Hub for your safety.',
+        a: 'Use the in-app messaging feature. Go to any product page and click "Message Seller" to start a conversation. All communications happen within JERTS CART for your safety.',
       },
       {
         q: 'What if I encounter a scam?',
@@ -5199,7 +5199,7 @@ if (this._pendingImageFiles.length > 0) {
     mainContent.innerHTML = `
       <div class="faq-page" style="max-width: 800px; margin: 0 auto; padding: 3rem 1.5rem;">
         <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary, #111827);">Frequently Asked Questions</h1>
-        <p style="color: var(--text-secondary, #6b7280); margin-bottom: 2.5rem; font-size: 1.05rem;">Everything you need to know about buying and selling on Uni-Hub.</p>
+        <p style="color: var(--text-secondary, #6b7280); margin-bottom: 2.5rem; font-size: 1.05rem;">Everything you need to know about buying and selling on JERTS CART.</p>
         <div class="faq-list">
           ${faqItems.map((item, i) => `
             <details class="faq-item" style="border: 1px solid var(--border-color, #e5e7eb); border-radius: 0.75rem; margin-bottom: 0.75rem; overflow: hidden; background: var(--bg-primary, #fff);${i === 0 ? ' open;' : ''}">

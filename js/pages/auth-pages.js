@@ -692,10 +692,10 @@ const AuthPageMethods = {
 
     <div class="auth-card-header">
     <div class="auth-icon-wrapper">
-    <img src="/favicon.png" alt="Uni-Hub" />
+    <img src="/favicon.png" alt="JERTS CART" />
     </div>
     <h1 class="auth-title">Welcome back</h1>
-    <p class="auth-subtitle">Enter your credentials to sign in to Uni-Hub</p>
+    <p class="auth-subtitle">Enter your credentials to sign in to JERTS CART</p>
     </div>
 
   <div class="social-buttons-grid">
@@ -1018,10 +1018,10 @@ const AuthPageMethods = {
     <div class="auth-card-modern">
     <div class="auth-card-header">
     <div class="auth-icon-wrapper">
-    <img src="/favicon.png" alt="Uni-Hub" />
+    <img src="/favicon.png" alt="JERTS CART" />
     </div>
     <h1 class="auth-title">Create an account</h1>
-    <p class="auth-subtitle">Enter your details to get started with Uni-Hub</p>
+    <p class="auth-subtitle">Enter your details to get started with JERTS CART</p>
     </div>
 
     <form id="register-form" onsubmit="Pages.handleRegister(event)" class="space-y-4">
