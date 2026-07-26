@@ -1,5 +1,5 @@
 /**
- * Jest Configuration for Uni-Hub Backend Tests
+ * Jest Configuration for JERTS CART Backend Tests
  */
 module.exports = {
   testEnvironment: 'node',

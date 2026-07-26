@@ -1,8 +1,8 @@
-# Uni-Hub - Project Documentation
+# JERTS CART - Project Documentation
 
 ## 📋 Project Overview
 
-**Uni-Hub** is a student-focused e-commerce marketplace platform designed for buying and selling items within university communities. It's built to be web-first with mobile app expansion planned for later phases.
+**JERTS CART** is a student-focused e-commerce marketplace platform designed for buying and selling items within university communities. It's built to be web-first with mobile app expansion planned for later phases.
 
 **Current Version:** Phase 1 MVP (Landing & Browsing)
 
@@ -354,4 +354,4 @@ await Pages.handleRegister(event);
 ---
 
 **Last Updated:** March 26, 2026
-**Maintainer:** Uni-Hub Development Team
+**Maintainer:** JERTS CART Development Team

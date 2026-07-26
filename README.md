@@ -1,4 +1,4 @@
-# Uni-Hub - Student Marketplace
+# JERTS CART - Student Marketplace
 
 A web-based student marketplace for buying and selling used items on university campuses in Ghana.
 
@@ -29,7 +29,7 @@ Password: Admin123!
 ## Project Structure
 
 ```
-Uni-Hub/
+JERTS CART/
 ├── backend/                 # Express.js API Server
 │   ├── server.js           # Main entry point (port 5000)
 │   ├── config/             # Database configuration

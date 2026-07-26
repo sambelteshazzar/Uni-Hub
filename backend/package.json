@@ -1,7 +1,7 @@
 {
   "name": "uni-hub-backend",
   "version": "1.0.1",
-  "description": "Backend API for Uni-Hub Student Marketplace",
+  "description": "Backend API for JERTS CART Student Marketplace",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -18,7 +18,7 @@
     "e-commerce",
     "ghana"
   ],
-  "author": "Uni-Hub Team",
+  "author": "JERTS CART Team",
   "license": "MIT",
   "dependencies": {
     "@libsql/client": "^0.17.3",

@@ -1,4 +1,4 @@
-# 🚀 Uni-Hub Backend Quick Start Guide
+# 🚀 JERTS CART Backend Quick Start Guide
 
 ## Step 1: Database Setup
 
@@ -7,7 +7,7 @@ SQLite requires no separate server — it runs as an embedded database in the No
 ## Step 2: Install Node.js Dependencies
 
 ```bash
-cd /home/belteshazzarkijin/danny/Uni-Hub/backend
+cd /home/belteshazzarkijin/danny/JERTS CART/backend
 npm install
 ```
 
@@ -47,7 +47,7 @@ You should see:
 ```
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
-║   🎓 Uni-Hub Backend API                                  ║
+║   🎓 JERTS CART Backend API                                  ║
 ║                                                           ║
 ║   Server running on port 5000                             ║
 ║   Environment: development                                ║
@@ -68,7 +68,7 @@ Expected response:
 ```json
 {
   "success": true,
-  "message": "Uni-Hub API is running",
+  "message": "JERTS CART API is running",
   "timestamp": "2026-03-28T...",
   "environment": "development"
 }
@@ -92,7 +92,7 @@ The frontend is already configured to connect to `http://localhost:5000/api`.
 
 Start the frontend:
 ```bash
-cd /home/belteshazzarkijin/danny/Uni-Hub
+cd /home/belteshazzarkijin/danny/JERTS CART
 npm run dev
 ```
 

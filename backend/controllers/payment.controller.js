@@ -164,7 +164,7 @@ case 'bank':
 return {
 message: 'Transfer to the following account',
 bankName: 'GCB Bank',
-accountName: 'Uni-Hub Ghana',
+accountName: 'JERTS CART Ghana',
 accountNumber: '1234567890',
 reference: order.orderNumber,
 };

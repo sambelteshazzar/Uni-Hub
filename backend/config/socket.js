@@ -1,7 +1,7 @@
 /**
 * ============================================
 * Socket.io Configuration
-* Real-time messaging for Uni-Hub
+* Real-time messaging for JERTS CART
 * ============================================
 */
 

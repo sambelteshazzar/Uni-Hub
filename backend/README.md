@@ -1,6 +1,6 @@
-# Uni-Hub Backend API
+# JERTS CART Backend API
 
-Backend API for the Uni-Hub Student Marketplace platform.
+Backend API for the JERTS CART Student Marketplace platform.
 
 ## 🚀 Quick Start
 

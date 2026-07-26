@@ -1,6 +1,6 @@
 /**
  * ============================================
- * Uni-Hub Backend API Server
+ * JERTS CART Backend API Server
  * ============================================
  * Main entry point for the Express server
  */
@@ -261,7 +261,7 @@ if (process.env.NODE_ENV === 'development') {
 app.get('/api/health', (req, res) => {
   res.json({
     success: true,
-    message: 'Uni-Hub API is running',
+    message: 'JERTS CART API is running',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
     version: '20250617c',
@@ -359,7 +359,7 @@ const startServer = async () => {
       fullName: 'Admin',
       email: adminEmail,
       phone: '+233000000000',
-      university: 'Uni-Hub',
+      university: 'JERTS CART',
       level: 'Admin',
       hall: 'System',
       password: hashedPassword,
@@ -392,7 +392,7 @@ const startServer = async () => {
       console.log(`
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
-║   🎓 Uni-Hub Backend API                                  ║
+║   🎓 JERTS CART Backend API                                  ║
 ║                                                           ║
 ║   Server running on port ${PORT}                           ║
 ║   Environment: ${process.env.NODE_ENV || 'development'}                            ║

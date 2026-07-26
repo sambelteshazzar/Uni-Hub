@@ -1,4 +1,4 @@
-# Uni-Hub Architecture
+# JERTS CART Architecture
 
 ## 🏗️ System Architecture
 

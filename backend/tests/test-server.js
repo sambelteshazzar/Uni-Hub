@@ -66,7 +66,7 @@ const createTestApp = () => {
   app.get('/api/health', (req, res) => {
     res.json({
       success: true,
-      message: 'Uni-Hub API Test Server',
+      message: 'JERTS CART API Test Server',
       timestamp: new Date().toISOString(),
     });
   });

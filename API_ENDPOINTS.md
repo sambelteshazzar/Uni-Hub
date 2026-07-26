@@ -1,4 +1,4 @@
-# 🔌 Uni-Hub Complete API Endpoints Reference
+# 🔌 JERTS CART Complete API Endpoints Reference
 
 **Base URL:** `http://localhost:5000/api`
 
@@ -718,7 +718,7 @@ GET /api/health
 Response: 200
 {
   "success": true,
-  "message": "Uni-Hub API is running",
+  "message": "JERTS CART API is running",
   "timestamp": "2026-04-06T10:00:00Z",
   "environment": "development"
 }

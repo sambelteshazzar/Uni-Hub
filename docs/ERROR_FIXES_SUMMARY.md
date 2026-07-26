@@ -1,4 +1,4 @@
-# Uni-Hub Error Fixes Summary
+# JERTS CART Error Fixes Summary
 
 **Date:** March 26, 2026
 **Status:** ✅ All Errors Fixed

@@ -35,7 +35,7 @@ async function sendEmail (to, subject, html) {
 
   try {
     const info = await mailTransporter.sendMail({
-      from: `"Uni-Hub" <${process.env.EMAIL_USER}>`,
+      from: `"JERTS CART" <${process.env.EMAIL_USER}>`,
       to,
       subject,
       html,
@@ -54,37 +54,37 @@ async function sendPasswordResetEmail (email, resetToken) {
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #0046be;">Uni-Hub Password Reset</h2>
-      <p>You requested a password reset for your Uni-Hub account.</p>
+      <h2 style="color: #0046be;">JERTS CART Password Reset</h2>
+      <p>You requested a password reset for your JERTS CART account.</p>
       <p>Click the button below to reset your password. This link expires in 1 hour.</p>
       <a href="${resetUrl}" style="display: inline-block; padding: 12px 24px; background: #0046be; color: white; text-decoration: none; border-radius: 6px; margin: 16px 0;">
         Reset Password
       </a>
       <p>If you did not request this, you can safely ignore this email.</p>
       <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-      <p style="color: #6b7280; font-size: 13px;">Uni-Hub — Student Marketplace for Ghanaian Universities</p>
+      <p style="color: #6b7280; font-size: 13px;">JERTS CART — Student Marketplace for Ghanaian Universities</p>
     </div>
   `;
 
-  return sendEmail(email, 'Uni-Hub — Reset Your Password', html);
+  return sendEmail(email, 'JERTS CART — Reset Your Password', html);
 }
 
 async function sendVerificationEmail (email, verificationCode, universityName) {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #0046be;">Uni-Hub Student Verification</h2>
+      <h2 style="color: #0046be;">JERTS CART Student Verification</h2>
       <p>Verify your student status at <strong>${universityName}</strong>.</p>
       <p>Your verification code is:</p>
       <div style="background: #f3f4f6; padding: 16px; text-align: center; font-size: 28px; letter-spacing: 4px; font-weight: bold; border-radius: 8px; margin: 16px 0;">
         ${verificationCode}
       </div>
-      <p>Enter this code in the Uni-Hub app to complete verification. This code expires in 24 hours.</p>
+      <p>Enter this code in the JERTS CART app to complete verification. This code expires in 24 hours.</p>
       <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-      <p style="color: #6b7280; font-size: 13px;">Uni-Hub — Student Marketplace for Ghanaian Universities</p>
+      <p style="color: #6b7280; font-size: 13px;">JERTS CART — Student Marketplace for Ghanaian Universities</p>
     </div>
   `;
 
-  return sendEmail(email, 'Uni-Hub — Verify Your Student Account', html);
+  return sendEmail(email, 'JERTS CART — Verify Your Student Account', html);
 }
 
 async function sendOrderConfirmationEmail (email, order) {
@@ -97,12 +97,12 @@ async function sendOrderConfirmationEmail (email, order) {
   <p><strong>Delivery:</strong> ${order.delivery?.mode || order.deliveryMode || 'N/A'}</p>
   <p><strong>Payment:</strong> ${order.payment?.mode || order.paymentMode || 'N/A'}</p>
   </div>
-  <p>You can track your order status in the Uni-Hub app.</p>
+  <p>You can track your order status in the JERTS CART app.</p>
   <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-  <p style="color: #6b7280; font-size: 13px;">Uni-Hub — Student Marketplace for Ghanaian Universities</p>
+  <p style="color: #6b7280; font-size: 13px;">JERTS CART — Student Marketplace for Ghanaian Universities</p>
   </div>
   `;
-  return sendEmail(email, `Uni-Hub — Order #${order.orderNumber || order._id} Confirmed`, html);
+  return sendEmail(email, `JERTS CART — Order #${order.orderNumber || order._id} Confirmed`, html);
 }
 
 async function sendOrderStatusEmail (email, order) {
@@ -128,12 +128,12 @@ async function sendOrderStatusEmail (email, order) {
   <p style="margin: 0; font-size: 18px; font-weight: bold; color: ${color};">${statusLabel}</p>
   <p style="margin: 8px 0 0;">Total: GHS ${order.pricing?.grandTotal || order.totalAmount || 'N/A'}</p>
   </div>
-  <p>Check the Uni-Hub app for full details and tracking information.</p>
+  <p>Check the JERTS CART app for full details and tracking information.</p>
   <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-  <p style="color: #6b7280; font-size: 13px;">Uni-Hub — Student Marketplace for Ghanaian Universities</p>
+  <p style="color: #6b7280; font-size: 13px;">JERTS CART — Student Marketplace for Ghanaian Universities</p>
   </div>
   `;
-  return sendEmail(email, `Uni-Hub — Order #${order.orderNumber || order._id} ${statusLabel}`, html);
+  return sendEmail(email, `JERTS CART — Order #${order.orderNumber || order._id} ${statusLabel}`, html);
 }
 
 async function sendPaymentVerifiedEmail (email, payment) {
@@ -146,12 +146,12 @@ async function sendPaymentVerifiedEmail (email, payment) {
   <p><strong>Mode:</strong> ${payment.mode || 'N/A'}</p>
   <p><strong>Transaction ID:</strong> ${payment.transactionId || 'N/A'}</p>
   </div>
-  <p>Your order will be processed shortly. Track it in the Uni-Hub app.</p>
+  <p>Your order will be processed shortly. Track it in the JERTS CART app.</p>
   <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-  <p style="color: #6b7280; font-size: 13px;">Uni-Hub — Student Marketplace for Ghanaian Universities</p>
+  <p style="color: #6b7280; font-size: 13px;">JERTS CART — Student Marketplace for Ghanaian Universities</p>
   </div>
   `;
-  return sendEmail(email, 'Uni-Hub — Payment Verified', html);
+  return sendEmail(email, 'JERTS CART — Payment Verified', html);
 }
 
 async function sendDeliveryStatusEmail (email, delivery) {
@@ -185,31 +185,31 @@ async function sendDeliveryStatusEmail (email, delivery) {
   ${delivery.address ? `<p style="margin: 4px 0 0;">Address: ${delivery.address}</p>` : ''}
   </div>
   ${delivery.status === 'delivered' ? '<p style="color: #10b981; font-weight: bold;">Your order has been delivered! Enjoy your purchase.</p>' : ''}
-  ${delivery.status === 'in-transit' ? '<p>Your order is on its way! Track it in the Uni-Hub app.</p>' : ''}
+  ${delivery.status === 'in-transit' ? '<p>Your order is on its way! Track it in the JERTS CART app.</p>' : ''}
   <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-  <p style="color: #6b7280; font-size: 13px;">Uni-Hub — Student Marketplace for Ghanaian Universities</p>
+  <p style="color: #6b7280; font-size: 13px;">JERTS CART — Student Marketplace for Ghanaian Universities</p>
   </div>
   `;
-  return sendEmail(email, `Uni-Hub — Delivery ${statusLabel}`, html);
+  return sendEmail(email, `JERTS CART — Delivery ${statusLabel}`, html);
 }
 
 async function sendNewOrderEmail (email, order) {
   const html = `
   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
   <h2 style="color: #0046be;">You Have a New Order!</h2>
-  <p>Someone just purchased your product on Uni-Hub.</p>
+  <p>Someone just purchased your product on JERTS CART.</p>
   <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
   <p><strong>Order #:</strong> ${order.orderNumber || order._id}</p>
   <p><strong>Customer:</strong> ${order.customer_name || 'N/A'}</p>
   <p><strong>Total:</strong> GHS ${order.pricing?.grandTotal || order.totalAmount || 'N/A'}</p>
   <p><strong>Delivery Mode:</strong> ${order.delivery?.mode || order.deliveryMode || 'N/A'}</p>
   </div>
-  <p>Please check the Uni-Hub app to confirm and process this order.</p>
+  <p>Please check the JERTS CART app to confirm and process this order.</p>
   <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-  <p style="color: #6b7280; font-size: 13px;">Uni-Hub — Student Marketplace for Ghanaian Universities</p>
+  <p style="color: #6b7280; font-size: 13px;">JERTS CART — Student Marketplace for Ghanaian Universities</p>
   </div>
   `;
-  return sendEmail(email, `Uni-Hub — New Order #${order.orderNumber || order._id}`, html);
+  return sendEmail(email, `JERTS CART — New Order #${order.orderNumber || order._id}`, html);
 }
 
 module.exports = {
