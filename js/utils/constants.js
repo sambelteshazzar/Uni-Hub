@@ -3,7 +3,7 @@
 // ============================================
 /* eslint-disable no-unused-vars */
 
-const APP_NAME = 'Uni-Hub';
+const APP_NAME = 'JERTS CART';
 const APP_VERSION = '1.0.0';
 const STORAGE_KEY_PREFIX = 'unihub_';
 
