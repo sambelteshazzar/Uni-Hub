@@ -114,10 +114,12 @@
   html {
     font-size: 14px;
     overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
   }
 
   h1 {
@@ -190,6 +192,7 @@ display: none;
 .navbar-drawer {
     width: 85%;
     max-width: 300px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .navbar-drawer-link {

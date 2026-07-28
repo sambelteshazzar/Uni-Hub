@@ -189,6 +189,21 @@ select.form-control {
   .input-group .btn {
     border-radius: var(--radius-md);
   }
+
+  .form-control,
+  .form-group input,
+  .form-group select,
+  .form-group textarea,
+  .footer-newsletter-input {
+    font-size: 16px;
+    min-height: 48px;
+  }
+
+  .form-check input[type='checkbox'],
+  .form-check input[type='radio'] {
+    width: 24px;
+    height: 24px;
+  }
 }
 
 @media (max-width: 576px) {
