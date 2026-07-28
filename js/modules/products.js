@@ -267,10 +267,11 @@ class ProductsManager {
     }
 
     // Gadget type sub-filter (only meaningful for gadgets/hostel-items;
-    // "laptops-phones" keeps products whose title/description mention a
-    // laptop or phone).
-    if (this.currentFilters.gadgetType === 'laptops-phones') {
-      filtered = filtered.filter(p => p.category !== 'hostel-items' || /\b(laptop|laptops|phone|phones|mobile|smartphone|iphone|tablet)\b/i.test(`${p.title} ${p.description || ''}`));
+    // "laptops" / "phones" narrow the list by title/description keywords).
+    if (this.currentFilters.gadgetType === 'laptops') {
+      filtered = filtered.filter(p => p.category !== 'hostel-items' || /\b(laptop|laptops|macbook|notebook|chromebook)\b/i.test(`${p.title} ${p.description || ''}`));
+    } else if (this.currentFilters.gadgetType === 'phones') {
+      filtered = filtered.filter(p => p.category !== 'hostel-items' || /\b(phone|phones|mobile|smartphone|iphone|android|samsung|tecno|infinix|redmi)\b/i.test(`${p.title} ${p.description || ''}`));
     }
 
     // Condition filter

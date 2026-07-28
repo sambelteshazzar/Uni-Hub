@@ -339,19 +339,22 @@ selectGender(gender) {
 }
 
 // Sub-bar of laptop/phone pills, only shown when Gadgets (hostel-items)
-// is the active category. The single pill "Laptops and Phones" filters
-// down to gadget products whose title or description mention a laptop or
-// phone. "All" restores the full gadgets list.
+// is the active category. Two independent pills filter gadgets down to
+// laptop products or phone products based on title/description keywords;
+// "All" restores the full gadgets list.
 _renderGadgetTypeSubBar() {
   if (!this.state.selectedCategories.includes('hostel-items')) return '';
   const active = this.state.selectedGadgetType || 'all';
   const gadgets = this._allProducts.filter(p => p.category === 'hostel-items');
-  const _isLaptopOrPhone = p => /\b(laptop|laptops|phone|phones|mobile|smartphone|iphone|tablet)\b/i.test(`${p.title} ${p.description || ''}`);
-  const laptopsPhonesCount = gadgets.filter(_isLaptopOrPhone).length;
+  const _isLaptop = p => /\b(laptop|laptops|macbook|notebook|chromebook)\b/i.test(`${p.title} ${p.description || ''}`);
+  const _isPhone = p => /\b(phone|phones|mobile|smartphone|iphone|android|samsung|tecno|infinix|redmi)\b/i.test(`${p.title} ${p.description || ''}`);
+  const laptopsCount = gadgets.filter(_isLaptop).length;
+  const phonesCount = gadgets.filter(_isPhone).length;
   return `
   <div class="browse-subcategories" role="group" aria-label="Filter gadgets by type">
     <button class="subcategory-pill ${active === 'all' ? 'active' : ''}" onclick="BrowsePage.selectGadgetType('all')">All<span class="pill-count">${gadgets.length}</span></button>
-    <button class="subcategory-pill ${active === 'laptops-phones' ? 'active' : ''}" onclick="BrowsePage.selectGadgetType('laptops-phones')">Laptops and Phones<span class="pill-count">${laptopsPhonesCount}</span></button>
+    <button class="subcategory-pill ${active === 'laptops' ? 'active' : ''}" onclick="BrowsePage.selectGadgetType('laptops')">Laptops<span class="pill-count">${laptopsCount}</span></button>
+    <button class="subcategory-pill ${active === 'phones' ? 'active' : ''}" onclick="BrowsePage.selectGadgetType('phones')">Phones<span class="pill-count">${phonesCount}</span></button>
   </div>`;
 }
 
