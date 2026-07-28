@@ -18,12 +18,13 @@ class BrowsePage {
       mobileDrawerOpen: false,
       totalProducts: 0,
       selectedGender: null,
+      selectedGadgetType: null,
     };
     this._categories = [
       { id: 'appliances', name: 'Appliances', icon: 'settings' },
-      { id: 'hostel-items', name: 'Hostel Items', icon: 'home' },
+      { id: 'hostel-items', name: 'Gadgets', icon: 'home' },
       { id: 'accessories', name: 'Accessories', icon: 'bag' },
-      { id: 'textbooks', name: 'Textbooks', icon: 'books' },
+      { id: 'textbooks', name: 'Book and Stationery', icon: 'books' },
       { id: 'electronics', name: 'Electronics', icon: 'laptop' },
       { id: 'fashion', name: 'Fashion', icon: 'shirt' },
       { id: 'thrifts', name: 'Thrifts', icon: 'gift' },
@@ -94,6 +95,14 @@ class BrowsePage {
       this.state.selectedGender = null;
     }
     productsManager.filter({ gender: this.state.selectedGender });
+
+    // GadgetType sub-filter (only relevant under the Gadgets category).
+    if ('gadgetType' in filters && filters.gadgetType) {
+      this.state.selectedGadgetType = filters.gadgetType;
+    } else {
+      this.state.selectedGadgetType = null;
+    }
+    productsManager.filter({ gadgetType: this.state.selectedGadgetType });
 
     // Re-apply after explicit filter resets so filteredProducts stays in sync.
     productsManager.applyFilters();
@@ -289,6 +298,7 @@ ${this.state.categories.map(cat => `
 `).join('')}
 </div>
 ${this._renderGenderSubBar()}
+${this._renderGadgetTypeSubBar()}
 </div>`;
 }
 
@@ -328,9 +338,32 @@ selectGender(gender) {
   this.applyFilters();
 }
 
+// Sub-bar of laptop/phone pills, only shown when Gadgets (hostel-items)
+// is the active category. The single pill "Laptops and Phones" filters
+// down to gadget products whose title or description mention a laptop or
+// phone. "All" restores the full gadgets list.
+_renderGadgetTypeSubBar() {
+  if (!this.state.selectedCategories.includes('hostel-items')) return '';
+  const active = this.state.selectedGadgetType || 'all';
+  const gadgets = this._allProducts.filter(p => p.category === 'hostel-items');
+  const _isLaptopOrPhone = p => /\b(laptop|laptops|phone|phones|mobile|smartphone|iphone|tablet)\b/i.test(`${p.title} ${p.description || ''}`);
+  const laptopsPhonesCount = gadgets.filter(_isLaptopOrPhone).length;
+  return `
+  <div class="browse-subcategories" role="group" aria-label="Filter gadgets by type">
+    <button class="subcategory-pill ${active === 'all' ? 'active' : ''}" onclick="BrowsePage.selectGadgetType('all')">All<span class="pill-count">${gadgets.length}</span></button>
+    <button class="subcategory-pill ${active === 'laptops-phones' ? 'active' : ''}" onclick="BrowsePage.selectGadgetType('laptops-phones')">Laptops and Phones<span class="pill-count">${laptopsPhonesCount}</span></button>
+  </div>`;
+}
+
+selectGadgetType(type) {
+  this.state.selectedGadgetType = type === 'all' ? null : type;
+  this.applyFilters();
+}
+
 clearCategoryFilters() {
   this.state.selectedCategories = [];
   this.state.selectedGender = null;
+  this.state.selectedGadgetType = null;
   Pages.navigate('#/browse');
 }
 
@@ -620,6 +653,7 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
       sortBy: this.state.sortBy,
       searchQuery: this.state.searchQuery || '',
       gender: this.state.selectedGender || null,
+      gadgetType: this.state.selectedGadgetType || null,
     });
 
     if (this.state.selectedUniversities.length > 0) {
@@ -649,6 +683,7 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
     this.state.searchQuery = '';
     this.state.currentPage = 1;
     this.state.selectedGender = null;
+    this.state.selectedGadgetType = null;
     productsManager.resetFilters();
     this._filteredProducts = productsManager.filteredProducts || [...this._allProducts];
     this.state.totalProducts = this._filteredProducts.length;
@@ -786,6 +821,7 @@ renderBrowse(filters) { return browsePage.render(filters); },
 filterByCategory(catId) { return browsePage.selectCategory(catId); },
 selectCategory(catId) { return browsePage.selectCategory(catId); },
 selectGender(gender) { return browsePage.selectGender(gender); },
+selectGadgetType(type) { return browsePage.selectGadgetType(type); },
 applyBrowseFilters() { return browsePage.applyFilters(); },
 applyPriceFilter() { return browsePage.applyPriceFilter(); },
 clearCategoryFilters() { return browsePage.clearCategoryFilters(); },

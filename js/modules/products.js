@@ -16,6 +16,7 @@ class ProductsManager {
       searchQuery: '',
       sortBy: 'newest',
       gender: null,
+      gadgetType: null,
     };
     this.currentPage = 1;
     this.pageSize = PAGINATION.DEFAULT_PAGE_SIZE;
@@ -235,6 +236,9 @@ class ProductsManager {
     if (filters.gender !== undefined) {
       this.currentFilters.gender = filters.gender;
     }
+    if (filters.gadgetType !== undefined) {
+      this.currentFilters.gadgetType = filters.gadgetType;
+    }
 
     this.applyFilters();
   }
@@ -260,6 +264,13 @@ class ProductsManager {
     if (this.currentFilters.gender) {
       const g = this.currentFilters.gender;
       filtered = filtered.filter(p => p.category !== 'fashion' || (p.gender || 'unisex') === g);
+    }
+
+    // Gadget type sub-filter (only meaningful for gadgets/hostel-items;
+    // "laptops-phones" keeps products whose title/description mention a
+    // laptop or phone).
+    if (this.currentFilters.gadgetType === 'laptops-phones') {
+      filtered = filtered.filter(p => p.category !== 'hostel-items' || /\b(laptop|laptops|phone|phones|mobile|smartphone|iphone|tablet)\b/i.test(`${p.title} ${p.description || ''}`));
     }
 
     // Condition filter
@@ -316,6 +327,7 @@ class ProductsManager {
       searchQuery: '',
       sortBy: 'newest',
       gender: null,
+      gadgetType: null,
     };
     this.filteredProducts = [...this.products];
     this.currentPage = 1;
