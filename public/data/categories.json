@@ -9,7 +9,7 @@
     },
     {
       "id": "hostel-items",
-      "name": "Hostel Items",
+      "name": "Gadgets",
       "icon": "🛏️",
       "description": "Furniture and room essentials",
       "subcategories": ["Beds", "Mattresses", "Chairs", "Tables", "Storage Boxes", "Lamps", "Curtains"]
@@ -23,7 +23,7 @@
     },
     {
       "id": "textbooks",
-      "name": "Textbooks & Books",
+      "name": "Book and Stationery",
       "icon": "📚",
       "description": "Course materials and reference books",
       "subcategories": ["Science", "Engineering", "Medicine", "Law", "Business", "Arts", "Education"]

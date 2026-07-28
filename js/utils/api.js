@@ -269,7 +269,11 @@ class API {
 
   async loadJSON (filePath) {
     try {
-      const response = await fetch(filePath);
+      // Cache-bust: append a version query so the browser fetches a fresh
+      // copy after updates. Bump JSON_VERSION whenever any data/*.json
+      // file changes.
+      const JSON_VERSION = '2';
+      const response = await fetch(`${filePath}?v=${JSON_VERSION}`);
       if (!response.ok) {
       const fallback = this._jsonFallbacks[filePath];
       if (fallback) {

@@ -220,7 +220,7 @@
 },
 {
 "id": "hostel-items",
-"name": "Hostel Items",
+"name": "Gadgets",
 "icon": "🛏️",
 "description": "Furniture and room essentials"
 },
@@ -232,7 +232,7 @@
 },
 {
 "id": "textbooks",
-"name": "Textbooks & Books",
+"name": "Book and Stationery",
 "icon": "📚",
 "description": "Course materials and reference books"
 },
