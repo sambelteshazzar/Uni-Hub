@@ -149,9 +149,9 @@ comingSoonBadge +
       '</div>' +
       '<div class="bb-categories-grid">' +
 (categoriesHTML ||
-'<a href="#/browse?category=textbooks" class="bb-category-card"><div class="bb-category-icon"><img src="https://files.catbox.moe/823h9l.jpg" alt="Textbooks" loading="lazy"></div><p class="bb-category-name">Textbooks</p><p class="bb-category-count">120+ items</p></a>' +
+'<a href="#/browse?category=textbooks" class="bb-category-card"><div class="bb-category-icon"><img src="https://files.catbox.moe/823h9l.jpg" alt="Book and Stationery" loading="lazy"></div><p class="bb-category-name">Book and Stationery</p><p class="bb-category-count">120+ items</p></a>' +
 '<a href="#/browse?category=electronics" class="bb-category-card"><div class="bb-category-icon"><img src="https://files.catbox.moe/1imqtj.jpg" alt="Electronics" loading="lazy"></div><p class="bb-category-name">Electronics</p><p class="bb-category-count">85+ items</p></a>' +
-'<a href="#/browse?category=hostel-items" class="bb-category-card"><div class="bb-category-icon"><img src="https://files.catbox.moe/gckfc2.jpg" alt="Hostel Items" loading="lazy"></div><p class="bb-category-name">Hostel Items</p><p class="bb-category-count">95+ items</p></a>' +
+'<a href="#/browse?category=hostel-items" class="bb-category-card"><div class="bb-category-icon"><img src="https://files.catbox.moe/gckfc2.jpg" alt="Gadgets" loading="lazy"></div><p class="bb-category-name">Gadgets</p><p class="bb-category-count">95+ items</p></a>' +
 '<a href="#/browse?category=accessories" class="bb-category-card"><div class="bb-category-icon"><img src="https://files.catbox.moe/pbrhk5.jpg" alt="Accessories" loading="lazy"></div><p class="bb-category-name">Accessories</p><p class="bb-category-count">45+ items</p></a>' +
 '<a href="#/browse?category=fashion" class="bb-category-card"><div class="bb-category-icon"><img src="https://files.catbox.moe/33juh8.jpg" alt="Fashion" loading="lazy"></div><p class="bb-category-name">Fashion</p><p class="bb-category-count">60+ items</p></a>' +
 '<a href="#/browse?category=appliances" class="bb-category-card"><div class="bb-category-icon"><img src="https://files.catbox.moe/ov8039.jpg" alt="Appliances" loading="lazy"></div><p class="bb-category-name">Appliances</p><p class="bb-category-count">35+ items</p></a>') +
@@ -166,9 +166,9 @@ comingSoonBadge +
       '<h2 class="bb-covered-headline">WE\'VE GOT<br>YOU<br><em class="bb-covered-accent">COVERED</em></h2>' +
       '<p class="bb-covered-body">From textbooks to accommodation, electronics to everyday essentials — JERTS CART connects you with suppliers who\'ve got exactly what you need. Buy and thrive together on campus.</p>' +
       '<div class="bb-covered-pills">' +
-      '<span class="bb-covered-pill">Textbooks</span>' +
-      '<span class="bb-covered-pill">Electronics</span>' +
-      '<span class="bb-covered-pill">Hostel Items</span>' +
+'<span class="bb-covered-pill">Book and Stationery</span>' +
+'<span class="bb-covered-pill">Electronics</span>' +
+'<span class="bb-covered-pill">Gadgets</span>' +
       '<span class="bb-covered-pill">Accessories</span>' +
       '<span class="bb-covered-pill">Fashion</span>' +
       '<span class="bb-covered-pill">Appliances</span>' +
@@ -192,7 +192,7 @@ comingSoonBadge +
       '</div>' +
       '<div class="bb-covered-marquee">' +
       '<div class="bb-covered-marquee-track">' +
-      '<span>Textbooks</span><span class="bb-covered-marquee-dot">&#10038;</span>' +
+      '<span>Book and Stationery</span><span class="bb-covered-marquee-dot">&#10038;</span>' +
       '<span>Electronics</span><span class="bb-covered-marquee-dot">&#10038;</span>' +
       '<span>Accommodation</span><span class="bb-covered-marquee-dot">&#10038;</span>' +
       '<span>Furniture</span><span class="bb-covered-marquee-dot">&#10038;</span>' +
@@ -200,7 +200,7 @@ comingSoonBadge +
       '<span>Sports Gear</span><span class="bb-covered-marquee-dot">&#10038;</span>' +
       '<span>Kitchen Essentials</span><span class="bb-covered-marquee-dot">&#10038;</span>' +
       '<span>Stationery</span><span class="bb-covered-marquee-dot">&#10038;</span>' +
-      '<span>Textbooks</span><span class="bb-covered-marquee-dot">&#10038;</span>' +
+      '<span>Book and Stationery</span><span class="bb-covered-marquee-dot">&#10038;</span>' +
       '<span>Electronics</span><span class="bb-covered-marquee-dot">&#10038;</span>' +
       '<span>Accommodation</span><span class="bb-covered-marquee-dot">&#10038;</span>' +
       '<span>Furniture</span><span class="bb-covered-marquee-dot">&#10038;</span>' +
