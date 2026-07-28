@@ -1,14 +1,14 @@
 #!/bin/bash
 
 # ============================================
-# Uni-Hub One-Command Startup
+# JERTS CART One-Command Startup
 # ============================================
 
 cd "$(dirname "$0")" || exit 1
 
 echo ""
 echo "╔═══════════════════════════════════════════════════════════╗"
-echo "║ 🎓 Uni-Hub Complete System Startup ║"
+echo "║ 🎓 JERTS CART Complete System Startup ║"
 echo "╚═══════════════════════════════════════════════════════════╝"
 echo ""
 

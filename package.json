@@ -1,7 +1,8 @@
 {
   "name": "uni-hub",
   "version": "1.0.0",
-  "description": "Student marketplace for buying and selling items within university communities",
+  "description": "JERTS CART — student marketplace for buying and selling items within university communities",
+  "main": "index.html",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -18,10 +19,11 @@
   "keywords": [
     "marketplace",
     "students",
+    "jerts-cart",
     "uni-hub",
     "e-commerce"
   ],
-  "author": "Uni-Hub Team",
+  "author": "JERTS CART Team",
   "license": "MIT",
   "devDependencies": {
     "@playwright/test": "^1.60.0",
