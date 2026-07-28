@@ -1405,8 +1405,15 @@ RESPONSIVE
     display: inline-flex;
   }
 
-  .browse-mobile-drawer, .browse-mobile-overlay {
-    display: block;
+  /* Drawer/overlay stay display:none by default; JS sets display:block
+     when opening. The previous `display:block` here created empty grid
+     tracks inside .browse-page-inner (because fixed-position items still
+     reserve a grid row), causing a huge gap above the product grid on
+     mobile. They are position:fixed so they don't visually overlap the
+     grid layout once shown. */
+  .browse-mobile-drawer,
+  .browse-mobile-overlay {
+    display: none;
   }
 
   .browse-mobile-drawer {
