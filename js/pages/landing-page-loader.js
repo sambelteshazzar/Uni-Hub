@@ -14,7 +14,7 @@ class _LandingPageLoader {
       // Cache-bust: append a version query so the browser fetches a fresh
       // copy after updates. Bump COMPONENT_VERSION whenever any landing
       // page component HTML changes.
-      const COMPONENT_VERSION = '2';
+      const COMPONENT_VERSION = '3';
       const response = await fetch(`${path}?v=${COMPONENT_VERSION}`);
       if (!response.ok) {
         console.warn(`Failed to load component: ${path}`);
