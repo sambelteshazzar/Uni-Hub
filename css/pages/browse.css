@@ -1543,7 +1543,10 @@ RESPONSIVE
 
   .browse-product-add-cart-btn {
     height: 32px;
-    font-size: 0.6875rem;
+    /* Use a px floor so the uppercase "ADD TO CART" label stays
+       legible on the 14px (<=576) and 15px (577-768) mobile root
+       font scales, rather than 0.6875rem which collapses to ~9.6px. */
+    font-size: 11px;
     border-radius: 6px;
   }
 
