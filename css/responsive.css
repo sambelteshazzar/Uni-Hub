@@ -113,12 +113,17 @@
 @media (max-width: 576px) {
   html {
     font-size: 14px;
-    overflow-x: hidden;
+    /* `overflow-x: hidden` makes html/body become the scroll container and
+       silently breaks `position: sticky` on descendants (navbar, browse
+       category bar, etc.) when the document scrolls the <html>. `clip`
+       achieves the same horizontal clipping without creating a scroll
+       container, so sticky positioning keeps working. */
+    overflow-x: clip;
     -webkit-text-size-adjust: 100%;
   }
 
   body {
-    overflow-x: hidden;
+    overflow-x: clip;
     -webkit-overflow-scrolling: touch;
   }
 
@@ -653,12 +658,14 @@ display: none;
     font-size: var(--text-xl);
   }
 
-  body {
-    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
-  }
-
+  /* The 60px body bottom padding was bookkeeping for `.mobile-bottom-nav`,
+     a fixed bottom tab bar. That markup is never rendered anywhere in the
+     app, so the padding just leaves ~60px of dead scroll space at the end
+     of every page (visible at the bottom of the browse-page footer). The
+     `.page-content` 80px rule has the same origin and is reduced to safe
+     area inset only. */
   .page-content {
-    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .option-card {
@@ -730,11 +737,12 @@ display: none;
 @media (min-width: 577px) and (max-width: 768px) {
   html {
     font-size: 15px;
-    overflow-x: hidden;
+    /* see the (max-width: 576px) breakpoint for why we use `clip` here. */
+    overflow-x: clip;
   }
 
   body {
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   h1 {
@@ -968,12 +976,11 @@ max-width: 320px;
     font-size: var(--text-xl);
   }
 
-  body {
-    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
-  }
-
+  /* See the (max-width: 576px) block: the 60px body bottom padding here
+     had the same dead-bookkeeping source as there — `.mobile-bottom-nav`
+     markup is never rendered — so it's removed for parity. */
   .page-content {
-    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .option-card {

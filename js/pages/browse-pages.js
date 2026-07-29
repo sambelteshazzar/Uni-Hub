@@ -450,7 +450,7 @@ renderSidebar(maxPrice) {
 renderToolbar(showing, total) {
 return `
 <div class="browse-toolbar">
-<button class="browse-mobile-filter-btn" onclick="BrowsePage.openMobileDrawer()">
+<button class="browse-mobile-filter-btn" onclick="BrowsePage.openMobileDrawer()" aria-label="Open filters" title="Filters">
 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16" height="16"><path d="M3 4h18M6 12h12M9 20h6"/></svg>
 Filters
 </button>

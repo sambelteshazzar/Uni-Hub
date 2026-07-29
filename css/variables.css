@@ -178,7 +178,10 @@
   --breakpoint-2xl: 1536px;
 
 /* Layout */
---header-height: 72px; /* Taller for Best Buy style */
+--header-height: 64px; /* matches the actual .navbar height at every breakpoint
+                          (navbar.css forces 64px at all sizes; the 56px rule in
+                          responsive.css is overridden by source order). Sticky
+                          offsets such as .browse-categories top inherit this. */
 --max-content-width: 1400px; /* Wide content area like Best Buy */
 --sidebar-width: 260px;
 }

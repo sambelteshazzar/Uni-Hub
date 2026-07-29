@@ -1486,21 +1486,32 @@ RESPONSIVE
     border-radius: 10px;
   }
 
-  .browse-search {
-    max-width: none;
-    flex-basis: 100%;
+  /* Row 1: Filters button + Search input on the same row.
+     DOM order is Filters -> Search -> Results -> Right; we group them
+     by giving Filters+Search order:1 / order:2 and forcing the next
+     two items to a new row via order + 100% width on results-count. */
+  .browse-mobile-filter-btn {
     order: 1;
+    flex: 0 0 auto;
+  }
+
+  .browse-search {
+    order: 2;
+    max-width: none;
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .browse-results-count {
-    order: 2;
+    order: 3;
+    flex: 0 0 auto;
   }
 
   .browse-toolbar-right {
-    order: 3;
-    margin-left: 0;
-    width: 100%;
-    justify-content: space-between;
+    order: 4;
+    margin-left: auto;
+    flex: 0 0 auto;
+    justify-content: flex-end;
   }
 
  .browse-product-grid {
@@ -1618,8 +1629,12 @@ RESPONSIVE
   }
 
   .browse-product-title {
-    font-size: 0.75rem;
-    -webkit-line-clamp: 1;
+    /* Restore legibility: keep the 2-line clamp so longer titles stay
+       readable on the narrow 2-col grid instead of being clipped to a
+       single 10.5px line. */
+    font-size: 0.8125rem;
+    -webkit-line-clamp: 2;
+    line-height: 1.3;
   }
 
   .browse-product-category {
@@ -1630,12 +1645,50 @@ RESPONSIVE
     display: none;
   }
 
+  /* At very narrow widths the Filters button crowds the search out of a
+     shared row. Collapse it to a compact icon-only 36px square so the
+     search input keeps meaningful width on the same row. The "Filters"
+     text label is hidden via font-size:0 on the container (the SVG icon
+     has its own width/height), and kept accessible through aria-label on
+     the button via the renderer's title attribute. */
+  .browse-mobile-filter-btn {
+    padding: 0;
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    justify-content: center;
+    font-size: 0;
+    line-height: 0;
+  }
+
+  .browse-mobile-filter-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .browse-product-add-cart-btn {
+    /* 0.6875rem becomes 9.625px at the 14px mobile root font — undreadable.
+       Use a px floor so the label stays legible regardless of root scale. */
+    height: 34px;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    padding: 0 0.5rem;
+  }
+
   .browse-product-card {
     border-radius: 8px;
   }
 
   .browse-product-image-wrap {
     border-radius: 8px 8px 0 0;
+  }
+
+  .browse-product-info {
+    padding: 8px 10px 12px;
+  }
+
+  .browse-product-price {
+    font-size: 0.95rem;
   }
 
   .browse-breadcrumb-list {
