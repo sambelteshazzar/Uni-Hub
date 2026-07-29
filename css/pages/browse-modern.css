@@ -1163,6 +1163,18 @@ height: 44px;
   display: none;
 }
 
+/* Hide the desktop sidebar on mobile — the mobile drawer takes over.
+   This override must live in browse-modern.css because it loads after
+   browse.css; otherwise the unscoped `.browse-sidebar{display:block}`
+   above wins the cascade over browse.css's `@media(max-width:768px)`
+   rule (equal specificity, later source order), leaving the sidebar
+   visible and pushing .browse-main far down the page on phones. */
+@media (max-width: 768px) {
+  .browse-page .browse-page-inner > .browse-sidebar {
+    display: none;
+  }
+}
+
 .sidebar-overlay {
   display: none;
 }
