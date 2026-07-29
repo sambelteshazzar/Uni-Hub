@@ -1509,8 +1509,10 @@ RESPONSIVE
 
   .browse-toolbar-right {
     order: 4;
-    margin-left: auto;
+    margin-left: 0;
     flex: 0 0 auto;
+    /* right-side group takes whatever's left at the end of the toolbar
+       row; small gap between results-count and itself via gap=var(--space-sm). */
     justify-content: flex-end;
   }
 
