@@ -470,3 +470,20 @@ DM Serif Display headline, animated reveals, blue marquee ticker
 [data-theme="dark"] .bb-covered-photo--bottom {
   border-color: var(--bg-primary);
 }
+
+/* On touch/coarse-pointer devices there is no hover, so the photo labels
+   would stay at opacity:0 forever. Show them tapheld but compact, and
+   prevent the "Study together" text from overflowing the small thumbnails
+   on phones (the label is absolutely positioned left:0/right:0 inside a
+   ~60px thumbnail, so we shrink the font + allow wrapping). */
+@media (hover: none) and (pointer: coarse) {
+  .bb-covered-photo-label {
+    opacity: 1;
+    transform: translateY(0);
+    font-size: 0.55rem;
+    padding: 0.5rem 0.5rem 0.4rem;
+    letter-spacing: 0.04em;
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+}

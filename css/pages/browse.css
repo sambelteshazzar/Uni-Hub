@@ -1571,6 +1571,9 @@ RESPONSIVE
   .browse-hero-badge {
     font-size: 0.625rem;
     padding: 4px 10px;
+    letter-spacing: 0.05em;
+    max-width: 100%;
+    overflow-wrap: anywhere;
   }
 
   .browse-hero-stats {
