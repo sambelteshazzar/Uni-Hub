@@ -149,8 +149,18 @@
     padding: 0 var(--space-md);
   }
 
+  /* Keep the "JERTS CART" brand label visible on mobile — the previous
+     `display:none` was overly cautious. Measured widths: at >=361vw the
+     icon + label + the right-hand actions (cart+signup+search+menu ~213px)
+     fit in the container content width comfortably. On the very narrowest
+     phones (<=360vw) the label would push the Sign up button off-screen,
+     so below that we collapse to icon-only brand (the same fallback also
+     used at <=576vw previously). */
   .navbar-brand span {
-    display: none;
+    display: inline;
+    font-size: var(--text-base);
+    line-height: 1;
+    white-space: nowrap;
   }
 
 .navbar-search {
@@ -1489,4 +1499,19 @@ min-height: 48px;
 box-shadow: none;
 border-color: var(--neutral-200);
 }
+}
+
+/* ============================================================
+   VERY NARROW PHONES (<=360vw) — must run after the (max-width: 576px)
+   block so the cascade wins. Each rule here is a fallback for the
+   narrowest phones where a normal layout breaks.
+   ============================================================ */
+@media (max-width: 360px) {
+  /* "JERTS CART" + the 32px icon + the right-side actions
+     (~213px nowrap) don't fit in a <=360vw navbar content width, so
+     collapse the brand to icon-only. The home link in the mobile
+     dropdown menu still shows the full brand text. */
+  .navbar-brand span {
+    display: none;
+  }
 }

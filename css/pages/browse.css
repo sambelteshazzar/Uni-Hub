@@ -1650,27 +1650,6 @@ RESPONSIVE
     display: none;
   }
 
-  /* At very narrow widths the Filters button crowds the search out of a
-     shared row. Collapse it to a compact icon-only 36px square so the
-     search input keeps meaningful width on the same row. The "Filters"
-     text label is hidden via font-size:0 on the container (the SVG icon
-     has its own width/height), and kept accessible through aria-label on
-     the button via the renderer's title attribute. */
-  .browse-mobile-filter-btn {
-    padding: 0;
-    flex: 0 0 36px;
-    width: 36px;
-    height: 36px;
-    justify-content: center;
-    font-size: 0;
-    line-height: 0;
-  }
-
-  .browse-mobile-filter-btn svg {
-    width: 18px;
-    height: 18px;
-  }
-
   .browse-product-add-cart-btn {
     /* 0.6875rem becomes 9.625px at the 14px mobile root font — undreadable.
        Use a px floor so the label stays legible regardless of root scale. */
@@ -1732,4 +1711,33 @@ RESPONSIVE
 
 [data-theme="dark"] .browse-empty {
   background: var(--bg-tertiary);
+}
+
+/* ============================================================
+   VERY NARROW PHONES (<=360vw)
+   The Filters button + Search input don't fit on a single row at
+   <=360vw if the labeled "Filters" button is shown. Collapse to an
+   icon-only 36px square so the search input keeps meaningful width
+   on the same row. The "Filters" text is hidden via font-size:0 on the
+   button container (the inline SVG has its own width/height and isn't
+   affected); the button itself keeps aria-label="Open filters" set on
+   the renderer, so it stays accessible to screen readers.
+   Reference: js/pages/browse-pages.js -> renderToolbar() (Filters btn
+   has aria-label="Open filters" + title="Filters").
+   ============================================================ */
+@media (max-width: 360px) {
+  .browse-mobile-filter-btn {
+    padding: 0;
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    justify-content: center;
+    font-size: 0;
+    line-height: 0;
+  }
+
+  .browse-mobile-filter-btn svg {
+    width: 18px;
+    height: 18px;
+  }
 }
