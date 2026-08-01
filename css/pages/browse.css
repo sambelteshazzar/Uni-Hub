@@ -8,7 +8,12 @@ Blue & white theme, refined & professional
 .browse-page {
   min-height: 100vh;
   background: var(--bg-primary);
-  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family:
+    'DM Sans',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
 }
 
 /* ---- Hero Section ---- */
@@ -254,20 +259,20 @@ Blue & white theme, refined & professional
 }
 
 .browse-breadcrumb-list {
- display: flex;
- align-items: center;
- list-style: none;
- margin: 0;
- padding: 0;
- gap: 0;
- font-size: 0.8125rem;
- color: var(--neutral-600);
- height: 44px;
- font-weight: 500;
- letter-spacing: 0.01em;
- overflow: hidden;
- white-space: nowrap;
- text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+  font-size: 0.8125rem;
+  color: var(--neutral-600);
+  height: 44px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .browse-breadcrumb-item {
@@ -463,7 +468,9 @@ Blue & white theme, refined & professional
   font-family: 'DM Sans', sans-serif;
   color: var(--neutral-900);
   background: var(--bg-primary);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .browse-price-input:focus {
@@ -500,7 +507,9 @@ Blue & white theme, refined & professional
   height: 100%;
   background: linear-gradient(90deg, var(--primary), #1a6dff);
   border-radius: var(--radius-full);
-  transition: left var(--transition-base), width var(--transition-base);
+  transition:
+    left var(--transition-base),
+    width var(--transition-base);
 }
 
 .browse-price-apply-btn {
@@ -590,7 +599,9 @@ Blue & white theme, refined & professional
   font-weight: 500;
   color: var(--neutral-900);
   background: var(--bg-primary);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .browse-search-input:focus {
@@ -791,9 +802,9 @@ Blue & white theme, refined & professional
 PRODUCT GRID — Luxury Card Design
 =========================================== */
 .browse-product-grid {
- display: grid;
- grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
- gap: 18px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 18px;
 }
 
 /* ---- Product Card ---- */
@@ -807,12 +818,16 @@ PRODUCT GRID — Luxury Card Design
   flex-direction: column;
   border-radius: 14px;
   border: 1px solid rgba(0, 70, 190, 0.06);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.02);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.02),
+    0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 .browse-product-card:hover {
   border-color: rgba(0, 70, 190, 0.15);
-  box-shadow: 0 8px 32px rgba(0, 70, 190, 0.1), 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 8px 32px rgba(0, 70, 190, 0.1),
+    0 2px 8px rgba(0, 0, 0, 0.04);
   transform: translateY(-4px);
   z-index: 1;
 }
@@ -1188,12 +1203,12 @@ PRODUCT GRID — Luxury Card Design
 }
 
 /* ---- Skeleton Loader ---- */
- .browse-skeleton {
-   background: linear-gradient(145deg, var(--neutral-100, #f0f4ff), var(--neutral-200, #e8f0fe));
-   border-radius: 8px;
-   position: relative;
-   overflow: hidden;
- }
+.browse-skeleton {
+  background: linear-gradient(145deg, var(--neutral-100, #f0f4ff), var(--neutral-200, #e8f0fe));
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
 
 .browse-skeleton::after {
   content: '';
@@ -1202,21 +1217,35 @@ PRODUCT GRID — Luxury Card Design
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.6) 50%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.6) 50%,
+    transparent 100%
+  );
   transform: translateX(-100%);
   animation: browse-shimmer 1.8s ease-in-out infinite;
 }
 
 @keyframes browse-shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
-[data-theme="dark"] .browse-skeleton {
+[data-theme='dark'] .browse-skeleton {
   background: linear-gradient(145deg, var(--neutral-800), var(--neutral-700));
 }
-[data-theme="dark"] .browse-skeleton::after {
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.08) 50%, transparent 100%);
+[data-theme='dark'] .browse-skeleton::after {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    transparent 100%
+  );
 }
 
 /* ---- Card entrance animation ---- */
@@ -1235,15 +1264,33 @@ PRODUCT GRID — Luxury Card Design
   animation: browseCardIn 0.5s cubic-bezier(0.23, 1, 0.32, 1) both;
 }
 
-.browse-product-card:nth-child(1) { animation-delay: 0.02s; }
-.browse-product-card:nth-child(2) { animation-delay: 0.06s; }
-.browse-product-card:nth-child(3) { animation-delay: 0.1s; }
-.browse-product-card:nth-child(4) { animation-delay: 0.14s; }
-.browse-product-card:nth-child(5) { animation-delay: 0.18s; }
-.browse-product-card:nth-child(6) { animation-delay: 0.22s; }
-.browse-product-card:nth-child(7) { animation-delay: 0.26s; }
-.browse-product-card:nth-child(8) { animation-delay: 0.3s; }
-.browse-product-card:nth-child(9) { animation-delay: 0.34s; }
+.browse-product-card:nth-child(1) {
+  animation-delay: 0.02s;
+}
+.browse-product-card:nth-child(2) {
+  animation-delay: 0.06s;
+}
+.browse-product-card:nth-child(3) {
+  animation-delay: 0.1s;
+}
+.browse-product-card:nth-child(4) {
+  animation-delay: 0.14s;
+}
+.browse-product-card:nth-child(5) {
+  animation-delay: 0.18s;
+}
+.browse-product-card:nth-child(6) {
+  animation-delay: 0.22s;
+}
+.browse-product-card:nth-child(7) {
+  animation-delay: 0.26s;
+}
+.browse-product-card:nth-child(8) {
+  animation-delay: 0.3s;
+}
+.browse-product-card:nth-child(9) {
+  animation-delay: 0.34s;
+}
 
 /* ============================================
 MOBILE DRAWER
@@ -1372,13 +1419,13 @@ RESPONSIVE
     gap: var(--space-lg);
   }
 
- .browse-product-grid {
- grid-template-columns: repeat(2, 1fr);
- gap: 14px;
- }
+  .browse-product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
 
   .browse-skeleton-grid {
-  grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .browse-hero {
@@ -1397,7 +1444,9 @@ RESPONSIVE
     padding: 0 var(--space-md) var(--space-2xl);
   }
 
-  .browse-sidebar {
+  /* Hide only the standalone desktop sidebar so the sidebar reused inside
+     the mobile drawer stays visible when the drawer opens. */
+  .browse-page-inner > .browse-sidebar {
     display: none;
   }
 
@@ -1516,14 +1565,14 @@ RESPONSIVE
     justify-content: flex-end;
   }
 
- .browse-product-grid {
- grid-template-columns: repeat(2, 1fr);
- gap: 12px;
- }
+  .browse-product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
 
- .browse-skeleton-grid {
- grid-template-columns: repeat(2, 1fr);
- }
+  .browse-skeleton-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 
   .browse-product-card {
     border-radius: 10px;
@@ -1607,14 +1656,14 @@ RESPONSIVE
     height: 14px;
   }
 
- .browse-product-grid {
- grid-template-columns: repeat(2, 1fr);
- gap: 8px;
- }
+  .browse-product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
 
- .browse-skeleton-grid {
- grid-template-columns: repeat(2, 1fr);
- }
+  .browse-skeleton-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 
   .browse-product-grid.list-view {
     grid-template-columns: 1fr;
@@ -1689,27 +1738,27 @@ RESPONSIVE
     padding: 0.125rem 0.25rem;
   }
 
-.browse-breadcrumb-arrow {
- width: 16px;
- height: 16px;
- margin: 0 0.0625rem;
- }
+  .browse-breadcrumb-arrow {
+    width: 16px;
+    height: 16px;
+    margin: 0 0.0625rem;
+  }
 
- .browse-pagination {
-  flex-wrap: wrap;
-  gap: 4px;
+  .browse-pagination {
+    flex-wrap: wrap;
+    gap: 4px;
   }
 }
 
-[data-theme="dark"] .browse-toolbar {
+[data-theme='dark'] .browse-toolbar {
   background: var(--bg-tertiary);
 }
 
-[data-theme="dark"] .browse-product-image-wrap {
+[data-theme='dark'] .browse-product-image-wrap {
   background: var(--bg-tertiary);
 }
 
-[data-theme="dark"] .browse-empty {
+[data-theme='dark'] .browse-empty {
   background: var(--bg-tertiary);
 }
 
