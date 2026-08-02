@@ -7,14 +7,18 @@
 
 require('dotenv').config();
 
-const { initSentry, requestHandler: sentryRequest, errorHandler: sentryError } = require('./utils/sentry');
+const {
+  initSentry,
+  requestHandler: sentryRequest,
+  errorHandler: sentryError,
+} = require('./utils/sentry');
 initSentry();
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection:', reason);
 });
 
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', error => {
   console.error('Uncaught Exception:', error);
   process.exit(1);
 });
@@ -79,25 +83,47 @@ let io = null;
 // ============================================
 
 // Security headers
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-scriptSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://browser.sentry-cdn.com', 'https://cdn.socket.io', 'https://cdn.jsdelivr.net', 'https://accounts.google.com'],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          'https://fonts.googleapis.com',
+          'https://browser.sentry-cdn.com',
+          'https://cdn.socket.io',
+          'https://cdn.jsdelivr.net',
+          'https://accounts.google.com',
+        ],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
         imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
-        connectSrc: ["'self'", 'http://localhost:5000', 'ws://localhost:5000', 'http://127.0.0.1:5000', 'ws://127.0.0.1:5000', 'https://*.sentry.io', 'https://accounts.google.com', 'https://www.googleapis.com', 'https://uni-hub-bnxi.onrender.com', 'wss://uni-hub-bnxi.onrender.com', 'https://api.cloudinary.com'],
-      frameAncestors: ["'none'"],
-      baseUri: ["'self'"],
-      formAction: ["'self'"],
+        connectSrc: [
+          "'self'",
+          'http://localhost:5000',
+          'ws://localhost:5000',
+          'http://127.0.0.1:5000',
+          'ws://127.0.0.1:5000',
+          'https://*.sentry.io',
+          'https://accounts.google.com',
+          'https://www.googleapis.com',
+          'https://uni-hub-bnxi.onrender.com',
+          'wss://uni-hub-bnxi.onrender.com',
+          'https://api.cloudinary.com',
+        ],
+        frameAncestors: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+      },
     },
-  },
-  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-  crossOriginResourcePolicy: { policy: 'cross-origin' },
-  crossOriginOpenerPolicy: { policy: 'unsafe-none' },
-  crossOriginEmbedderPolicy: false,
-}));
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    crossOriginOpenerPolicy: { policy: 'unsafe-none' },
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
 // HTTPS enforcement in production
 if (process.env.NODE_ENV === 'production') {
@@ -115,24 +141,29 @@ const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:8000')
   .map(origin => origin.trim())
   .filter(Boolean);
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
-      callback(null, true);
-    } else if (origin && allowedOrigins.some(allowed => origin.startsWith(allowed.replace(/\/$/, '')))) {
-      callback(null, true);
-    } else {
-      if (process.env.NODE_ENV === 'production') {
-        callback(new Error('CORS not allowed'));
-      } else {
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
         callback(null, true);
+      } else if (
+        origin &&
+        allowedOrigins.some(allowed => origin.startsWith(allowed.replace(/\/$/, '')))
+      ) {
+        callback(null, true);
+      } else {
+        if (process.env.NODE_ENV === 'production') {
+          callback(new Error('CORS not allowed'));
+        } else {
+          callback(null, true);
+        }
       }
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
-}));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+  })
+);
 
 // Rate limiting - general
 const limiter = rateLimit({
@@ -217,12 +248,18 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Session + Passport (for Google OAuth redirect flow)
-app.use(session({
-  secret: process.env.JWT_SECRET || 'fallback-session-secret',
-  resave: false,
-  saveUninitialized: false,
-  cookie: { secure: process.env.NODE_ENV === 'production', sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', maxAge: 24 * 60 * 60 * 1000 },
-}));
+app.use(
+  session({
+    secret: process.env.JWT_SECRET || 'fallback-session-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 24 * 60 * 60 * 1000,
+    },
+  })
+);
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -340,34 +377,51 @@ const startServer = async () => {
       process.exit(1);
     }
 
-  if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32)) {
-    console.error('JWT_SECRET must be at least 32 characters in production');
-    process.exit(1);
-  }
+    if (
+      process.env.NODE_ENV === 'production' &&
+      (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32)
+    ) {
+      console.error('JWT_SECRET must be at least 32 characters in production');
+      process.exit(1);
+    }
+
+    // Refuse to boot in production with the documented default / weak
+    // admin password. The fallback below creates an admin with
+    // ADMIN_PASSWORD (or 'Admin123!' if unset) — silently seeding a
+    // known-weak admin credential in prod is a remote-takeover vector.
+    if (process.env.NODE_ENV === 'production') {
+      const adminPw = process.env.ADMIN_PASSWORD || '';
+      if (adminPw.length < 12 || adminPw === 'Admin123!') {
+        console.error(
+          'ADMIN_PASSWORD must be set to a strong, unique value (>=12 chars, not the default) in production'
+        );
+        process.exit(1);
+      }
+    }
 
     await connectDatabase();
 
-  // Ensure admin user exists
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@unihub.local';
-  const adminPassword = process.env.ADMIN_PASSWORD || 'Admin123!';
-  const bcrypt = require('bcryptjs');
-  const { db } = require('./utils/db');
-  const existingAdmin = await db('users').findOne({ email: adminEmail });
-  if (!existingAdmin) {
-    const hashedPassword = await bcrypt.hash(adminPassword, 12);
-    await db('users').create({
-      fullName: 'Admin',
-      email: adminEmail,
-      phone: '+233000000000',
-      university: 'JERTS CART',
-      level: 'Admin',
-      hall: 'System',
-      password: hashedPassword,
-      role: 'admin',
-      isVerified: 1,
-    });
-    console.log(`✅ Admin user created: ${adminEmail}`);
-  }
+    // Ensure admin user exists
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@unihub.local';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'Admin123!';
+    const bcrypt = require('bcryptjs');
+    const { db } = require('./utils/db');
+    const existingAdmin = await db('users').findOne({ email: adminEmail });
+    if (!existingAdmin) {
+      const hashedPassword = await bcrypt.hash(adminPassword, 12);
+      await db('users').create({
+        fullName: 'Admin',
+        email: adminEmail,
+        phone: '+233000000000',
+        university: 'JERTS CART',
+        level: 'Admin',
+        hall: 'System',
+        password: hashedPassword,
+        role: 'admin',
+        isVerified: 1,
+      });
+      console.log(`✅ Admin user created: ${adminEmail}`);
+    }
 
     // Create HTTP server
     const server = http.createServer(app);

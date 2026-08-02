@@ -3,38 +3,61 @@
 // PAGE RENDERERS
 // ============================================
 
+// Centralized escape helpers. SecurityUtils (js/utils/security.js)
+// is the canonical XSS defense layer — these helpers resolve to
+// SecurityUtils when available and fall back to identity string
+// conversion otherwise so the render doesn't crash if a module-load
+// race leaves SecurityUtils undefined. The backend's sanitizeXss
+// already escapes strings on HTTP ingress, but several write paths
+// bypass it (Socket.io, Google OAuth ingest, seed data), so the
+// render layer must validate too — defense in depth.
+const _pageEsc = v => {
+  if (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) {
+    return SecurityUtils.escapeHtml(String(v == null ? '' : v));
+  }
+  return String(v == null ? '' : v);
+};
+const _pageSafeUrl = url => {
+  if (typeof SecurityUtils !== 'undefined' && SecurityUtils.sanitizeUrl) {
+    return SecurityUtils.sanitizeUrl(url) || '';
+  }
+  return String(url == null ? '' : url);
+};
+
 class Pages {
   /**
    * Navigate to a page using hash-based routing
    * @param {string} hash - Hash to navigate to (e.g., '/cart', '/product/prod-001')
    */
-  static navigate (hash) {
+  static navigate(hash) {
     window.location.hash = hash;
   }
 
   /**
    * Register all page routes with the router
    */
-static registerRoutes () {
-console.log('✓ Pages.registerRoutes() called');
-// Home/Landing
-router.register('/', () => this.renderLanding());
-router.register('/home', () => this.renderLanding());
+  static registerRoutes() {
+    console.log('✓ Pages.registerRoutes() called');
+    // Home/Landing
+    router.register('/', () => this.renderLanding());
+    router.register('/home', () => this.renderLanding());
 
-// Auth
-router.register('/login', () => this.renderLogin());
-router.register('/register', () => this.renderRegister());
-router.register('/auth', () => { window.location.hash = '#/login'; });
-console.log('✓ Auth routes registered');
+    // Auth
+    router.register('/login', () => this.renderLogin());
+    router.register('/register', () => this.renderRegister());
+    router.register('/auth', () => {
+      window.location.hash = '#/login';
+    });
+    console.log('✓ Auth routes registered');
 
-// Main pages
-router.register('/browse', (params) => this.renderBrowse(params));
-router.register('/cart', () => this.renderCart());
-router.register('/checkout', () => this.renderCheckout());
-  router.register('/dashboard', () => this.renderDashboard());
-router.register('/profile', () => this.renderProfile());
-router.register('/orders', () => this.renderOrders());
-router.register('/wishlist', () => this.renderWishlist());
+    // Main pages
+    router.register('/browse', params => this.renderBrowse(params));
+    router.register('/cart', () => this.renderCart());
+    router.register('/checkout', () => this.renderCheckout());
+    router.register('/dashboard', () => this.renderDashboard());
+    router.register('/profile', () => this.renderProfile());
+    router.register('/orders', () => this.renderOrders());
+    router.register('/wishlist', () => this.renderWishlist());
     router.register('/faq', () => this.renderFAQ());
     router.register('/terms', () => this.renderTerms());
     router.register('/privacy', () => this.renderPrivacy());
@@ -42,44 +65,49 @@ router.register('/wishlist', () => this.renderWishlist());
     router.register('/contact', () => this.renderContact());
     router.register('/track', () => this.renderTrackOrder());
     router.register('/verification', () => this.renderStudentVerification());
-router.register('/notifications', () => this.renderNotifications());
+    router.register('/notifications', () => this.renderNotifications());
     console.log('✓ Main routes registered');
 
-// Product detail
-router.register('/product/:id', (params) => this.renderProductDetail(params.id));
+    // Product detail
+    router.register('/product/:id', params => this.renderProductDetail(params.id));
 
-// Messaging
-router.register('/messages', (params) => messagesPage.render(params));
+    // Messaging
+    router.register('/messages', params => messagesPage.render(params));
 
-// Admin
+    // Admin
     router.register('/admin', () => this.renderAdminDashboard());
     router.register('/admin/verifications', () => this.renderAdminVerifications());
     router.register('/admin/products', () => this.renderAdminProducts());
-      router.register('/admin/products/edit/:id', (params) => this.renderAdminProductEdit(params.id));
-      router.register('/admin/analytics', () => this.renderAdminAnalytics());
+    router.register('/admin/products/edit/:id', params => this.renderAdminProductEdit(params.id));
+    router.register('/admin/analytics', () => this.renderAdminAnalytics());
     router.register('/admin/users', () => this.renderAdminUsers());
     router.register('/admin/orders', () => this.renderAdminOrders());
     router.register('/admin/reports', () => this.renderAdminReports());
     router.register('/admin/activity', () => this.renderAdminActivity());
 
-console.log('✓ All routes registered successfully');
-}
+    console.log('✓ All routes registered successfully');
+  }
 
-static formatConditionLabel (condition) {
-const labels = {
-new: 'New',
-'like-new': 'Like New',
-fair: 'Fair',
-good: 'Good',
-excellent: 'Excellent',
-};
-return labels[condition] || (condition ? condition.charAt(0).toUpperCase() + condition.slice(1).replace(/-/g, ' ') : 'Good');
-}
+  static formatConditionLabel(condition) {
+    const labels = {
+      new: 'New',
+      'like-new': 'Like New',
+      fair: 'Fair',
+      good: 'Good',
+      excellent: 'Excellent',
+    };
+    return (
+      labels[condition] ||
+      (condition
+        ? condition.charAt(0).toUpperCase() + condition.slice(1).replace(/-/g, ' ')
+        : 'Good')
+    );
+  }
 
   /**
    * Navigate to Messages (with auth check)
    */
-  static navigateToMessages () {
+  static navigateToMessages() {
     const token = StorageManager.getAuthToken();
     if (!token && typeof authManager !== 'undefined' && !authManager.isLoggedIn()) {
       showToast('Please log in to access messages', 'info');
@@ -92,7 +120,7 @@ return labels[condition] || (condition ? condition.charAt(0).toUpperCase() + con
   /**
    * Handle search submission from navbar
    */
-  static handleSearch () {
+  static handleSearch() {
     const input = document.getElementById('navbar-search-input');
     if (input && input.value.trim()) {
       // Setting the hash triggers a hashchange event → the router fires
@@ -107,7 +135,7 @@ return labels[condition] || (condition ? condition.charAt(0).toUpperCase() + con
   /**
    * Toggle mobile menu drawer
    */
-  static toggleMobileMenu () {
+  static toggleMobileMenu() {
     const drawer = document.getElementById('navbar-drawer');
     const overlay = document.getElementById('navbar-overlay');
     if (drawer && overlay) {
@@ -120,7 +148,7 @@ return labels[condition] || (condition ? condition.charAt(0).toUpperCase() + con
   /**
    * Close mobile menu drawer
    */
-  static closeMobileMenu () {
+  static closeMobileMenu() {
     const drawer = document.getElementById('navbar-drawer');
     const overlay = document.getElementById('navbar-overlay');
     if (drawer && overlay) {
@@ -133,7 +161,7 @@ return labels[condition] || (condition ? condition.charAt(0).toUpperCase() + con
   /**
    * Render SVG star rating
    */
-  static renderStars (rating) {
+  static renderStars(rating) {
     let html = '';
     for (let i = 1; i <= 5; i++) {
       if (i <= rating) {
@@ -148,7 +176,7 @@ return labels[condition] || (condition ? condition.charAt(0).toUpperCase() + con
   /**
    * Hide original navbar and footer for landing page
    */
-  static hideOriginalNavFooter () {
+  static hideOriginalNavFooter() {
     const navbar = document.getElementById('navbar');
     const footer = document.getElementById('footer');
     if (navbar) {
@@ -164,34 +192,35 @@ return labels[condition] || (condition ? condition.charAt(0).toUpperCase() + con
   /**
    * Show original navbar and footer for other pages
    */
-static showOriginalNavFooter () {
-  const navbar = document.getElementById('navbar');
-  const footer = document.getElementById('footer');
-  if (navbar && navbar.getAttribute('data-hidden') === 'true') {
-    navbar.style.display = '';
-    navbar.removeAttribute('data-hidden');
+  static showOriginalNavFooter() {
+    const navbar = document.getElementById('navbar');
+    const footer = document.getElementById('footer');
+    if (navbar && navbar.getAttribute('data-hidden') === 'true') {
+      navbar.style.display = '';
+      navbar.removeAttribute('data-hidden');
+    }
+    if (footer && footer.getAttribute('data-hidden') === 'true') {
+      footer.style.display = 'block';
+      footer.removeAttribute('data-hidden');
+    }
+    document.body.style.background = '';
+    this.updateNavbar();
   }
-  if (footer && footer.getAttribute('data-hidden') === 'true') {
-    footer.style.display = 'block';
-    footer.removeAttribute('data-hidden');
-  }
-  document.body.style.background = '';
-  this.updateNavbar();
-}
 
   /**
 
   /**
    * Render Landing Page - Delegates to BestBuy Landing
    */
-  static async renderLanding () {
+  static async renderLanding() {
     if (typeof window.renderBestBuyLanding === 'function') {
       return window.renderBestBuyLanding();
     }
     this.hideOriginalNavFooter();
     const mainContent = document.getElementById('main-content');
     if (mainContent) {
-      mainContent.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0046be;color:#fff;text-align:center;padding:2rem;"><div><h2>Loading JERTS CART...</h2><p>Please wait.</p></div></div>';
+      mainContent.innerHTML =
+        '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0046be;color:#fff;text-align:center;padding:2rem;"><div><h2>Loading JERTS CART...</h2><p>Please wait.</p></div></div>';
     }
     const check = setInterval(() => {
       if (typeof window.renderBestBuyLanding === 'function') {
@@ -200,7 +229,6 @@ static showOriginalNavFooter () {
       }
     }, 50);
   }
-
 
   /**
    * Render Browse Products Page
@@ -215,7 +243,7 @@ static showOriginalNavFooter () {
    * Level-4 module and is guaranteed to be on window.BrowsePageMethods
    * before any route handler runs.
    */
-  static async renderBrowse (filters = {}) {
+  static async renderBrowse(filters = {}) {
     if (typeof BrowsePageMethods !== 'undefined' && BrowsePageMethods.renderBrowse) {
       return BrowsePageMethods.renderBrowse(filters);
     }
@@ -236,8 +264,8 @@ static showOriginalNavFooter () {
   /**
    * Render Browse Page Loading Skeleton
    */
-  static renderBrowseSkeleton () {
-  return `
+  static renderBrowseSkeleton() {
+    return `
   <div class="browse-modern">
   <div class="browse-hero" style="min-height:180px;">
   <div class="browse-hero-content" style="max-width:var(--max-content-width);margin:0 auto;width:100%;padding:0 var(--space-xl);">
@@ -254,7 +282,10 @@ static showOriginalNavFooter () {
   </div>
  <div class="browse-container">
  <div class="products-grid-modern">
-            ${Array(6).fill().map(() => `
+            ${Array(6)
+              .fill()
+              .map(
+                () => `
               <div class="product-card-modern">
                 <div class="product-card-image-wrap">
                   <div class="skeleton-image" style="width: 100%; height: 100%;"></div>
@@ -265,7 +296,9 @@ static showOriginalNavFooter () {
                   <div class="skeleton" style="height: 20px; width: 60%; border-radius: 4px;"></div>
                 </div>
               </div>
-            `).join('')}
+            `
+              )
+              .join('')}
           </div>
         </div>
       </div>
@@ -291,43 +324,70 @@ static showOriginalNavFooter () {
   /**
    * Render Modern Browse Page HTML
    */
- static renderBrowseModernHTML (paginatedData, totalProducts) {
- const allProducts = productsManager.getAll();
- const categoryCounts = {};
- allProducts.forEach(p => {
- categoryCounts[p.category] = (categoryCounts[p.category] || 0) + 1;
- });
- const conditionCounts = {};
- allProducts.forEach(p => {
- conditionCounts[p.condition] = (conditionCounts[p.condition] || 0) + 1;
- });
- const maxPrice = allProducts.length > 0 ? Math.max(...allProducts.map(p => p.price)) : 0;
- const selectedConditions = productsManager.currentFilters.condition
- ? (Array.isArray(productsManager.currentFilters.condition) ? productsManager.currentFilters.condition : [productsManager.currentFilters.condition])
- : [];
+  static renderBrowseModernHTML(paginatedData, totalProducts) {
+    const allProducts = productsManager.getAll();
+    const categoryCounts = {};
+    allProducts.forEach(p => {
+      categoryCounts[p.category] = (categoryCounts[p.category] || 0) + 1;
+    });
+    const conditionCounts = {};
+    allProducts.forEach(p => {
+      conditionCounts[p.condition] = (conditionCounts[p.condition] || 0) + 1;
+    });
+    const maxPrice = allProducts.length > 0 ? Math.max(...allProducts.map(p => p.price)) : 0;
+    const selectedConditions = productsManager.currentFilters.condition
+      ? Array.isArray(productsManager.currentFilters.condition)
+        ? productsManager.currentFilters.condition
+        : [productsManager.currentFilters.condition]
+      : [];
 
- const categories = [
- { id: 'all', name: 'All', icon: 'cart', count: totalProducts },
- { id: 'appliances', name: 'Appliances', icon: 'settings', count: categoryCounts['appliances'] || 0 },
- { id: 'hostel-items', name: 'Hostel Items', icon: 'home', count: categoryCounts['hostel-items'] || 0 },
- { id: 'accessories', name: 'Accessories', icon: 'bag', count: categoryCounts['accessories'] || 0 },
- { id: 'textbooks', name: 'Textbooks', icon: 'books', count: categoryCounts['textbooks'] || 0 },
- { id: 'electronics', name: 'Electronics', icon: 'laptop', count: categoryCounts['electronics'] || 0 },
- { id: 'fashion', name: 'Fashion', icon: 'shirt', count: categoryCounts['fashion'] || 0 },
- { id: 'thrifts', name: 'Thrifts', icon: 'gift', count: categoryCounts['thrifts'] || 0 },
- ];
+    const categories = [
+      { id: 'all', name: 'All', icon: 'cart', count: totalProducts },
+      {
+        id: 'appliances',
+        name: 'Appliances',
+        icon: 'settings',
+        count: categoryCounts['appliances'] || 0,
+      },
+      {
+        id: 'hostel-items',
+        name: 'Hostel Items',
+        icon: 'home',
+        count: categoryCounts['hostel-items'] || 0,
+      },
+      {
+        id: 'accessories',
+        name: 'Accessories',
+        icon: 'bag',
+        count: categoryCounts['accessories'] || 0,
+      },
+      {
+        id: 'textbooks',
+        name: 'Textbooks',
+        icon: 'books',
+        count: categoryCounts['textbooks'] || 0,
+      },
+      {
+        id: 'electronics',
+        name: 'Electronics',
+        icon: 'laptop',
+        count: categoryCounts['electronics'] || 0,
+      },
+      { id: 'fashion', name: 'Fashion', icon: 'shirt', count: categoryCounts['fashion'] || 0 },
+      { id: 'thrifts', name: 'Thrifts', icon: 'gift', count: categoryCounts['thrifts'] || 0 },
+    ];
 
- const conditions = [
- { id: 'new', name: 'New', count: conditionCounts['new'] || 0 },
- { id: 'like-new', name: 'Like New', count: conditionCounts['like-new'] || 0 },
- { id: 'excellent', name: 'Excellent', count: conditionCounts['excellent'] || 0 },
- { id: 'good', name: 'Good', count: conditionCounts['good'] || 0 },
- { id: 'fair', name: 'Fair', count: conditionCounts['fair'] || 0 },
- ];
+    const conditions = [
+      { id: 'new', name: 'New', count: conditionCounts['new'] || 0 },
+      { id: 'like-new', name: 'Like New', count: conditionCounts['like-new'] || 0 },
+      { id: 'excellent', name: 'Excellent', count: conditionCounts['excellent'] || 0 },
+      { id: 'good', name: 'Good', count: conditionCounts['good'] || 0 },
+      { id: 'fair', name: 'Fair', count: conditionCounts['fair'] || 0 },
+    ];
 
- const selectedCondCount = selectedConditions.length;
+    const selectedCondCount = selectedConditions.length;
 
-  return `
+    return `
   <div class="browse-modern">
   <!-- Hero Banner -->
   <div class="browse-hero">
@@ -361,13 +421,17 @@ static showOriginalNavFooter () {
  <!-- Category Pills -->
  <div class="browse-categories">
  <div class="browse-categories-scroll">
- ${categories.map(cat => `
- <button class="category-pill ${cat.id === productsManager.currentFilters.category ? 'active' : (!productsManager.currentFilters.category && cat.id === 'all' ? 'active' : '')}" onclick="BrowsePageMethods.filterByCategory('${cat.id}')">
+ ${categories
+   .map(
+     cat => `
+ <button class="category-pill ${cat.id === productsManager.currentFilters.category ? 'active' : !productsManager.currentFilters.category && cat.id === 'all' ? 'active' : ''}" onclick="BrowsePageMethods.filterByCategory('${cat.id}')">
  ${Icons[cat.icon] || ''}
  ${cat.name}
  <span class="pill-count">${cat.count}</span>
  </button>
- `).join('')}
+ `
+   )
+   .join('')}
  </div>
  </div>
 
@@ -399,13 +463,17 @@ static showOriginalNavFooter () {
  <button class="reset-link" onclick="BrowsePageMethods.resetConditionFilter()">Reset</button>
  </div>
  <div class="filter-dropdown-body">
- ${conditions.map(cond => `
+ ${conditions
+   .map(
+     cond => `
  <div class="filter-option">
  <input type="checkbox" id="cond-${cond.id}" onchange="BrowsePageMethods.applyBrowseFilters()" ${selectedConditions.includes(cond.id) ? 'checked' : ''}>
  <label for="cond-${cond.id}">${cond.name}</label>
  <span class="filter-count">${cond.count}</span>
  </div>
- `).join('')}
+ `
+   )
+   .join('')}
  </div>
  </div>
  </details>
@@ -458,9 +526,18 @@ static showOriginalNavFooter () {
  </div>
  </details>
 
- ${productsManager.currentFilters.category || productsManager.currentFilters.condition || (productsManager.currentFilters.priceRange && (productsManager.currentFilters.priceRange.min > 0 || productsManager.currentFilters.priceRange.max < Infinity)) || productsManager.currentFilters.minRating ? `
+ ${
+   productsManager.currentFilters.category ||
+   productsManager.currentFilters.condition ||
+   (productsManager.currentFilters.priceRange &&
+     (productsManager.currentFilters.priceRange.min > 0 ||
+       productsManager.currentFilters.priceRange.max < Infinity)) ||
+   productsManager.currentFilters.minRating
+     ? `
  <button style="padding:0.5rem 0.875rem;background:transparent;border:1px solid #ef4444;border-radius:8px;font-size:0.8125rem;font-weight:500;color:#ef4444;cursor:pointer;" onclick="Pages.resetBrowseFilters()">Clear all</button>
- ` : ''}
+ `
+     : ''
+ }
  </div>
 
  <!-- Sort -->
@@ -481,28 +558,37 @@ static showOriginalNavFooter () {
 
  <!-- Products Grid -->
  <div class="products-grid-modern">
- ${paginatedData.products.length > 0
- ? paginatedData.products.map(product => this.renderProductCardModern(product)).join('')
- : `
+ ${
+   paginatedData.products.length > 0
+     ? paginatedData.products.map(product => this.renderProductCardModern(product)).join('')
+     : `
  <div class="browse-empty" style="grid-column: 1/-1;">
  <div class="browse-empty-icon" style="width: 64px; height: 64px; margin: 0 auto 1rem;">${Icons.search}</div>
  <h3>No items found</h3>
  <p>Try adjusting your filters or search for something else</p>
  <button class="btn btn-primary" onclick="Pages.resetBrowseFilters()">Clear Filters</button>
  </div>
- `}
+ `
+ }
  </div>
 
-${paginatedData.totalPages > 1 ? `
+${
+  paginatedData.totalPages > 1
+    ? `
         <div class="pagination">
           <button class="page-btn" onclick="Pages.goToBrowsePage(${paginatedData.currentPage - 1})" ${paginatedData.currentPage <= 1 ? 'disabled style="opacity:0.4;pointer-events:none;"' : ''}>&laquo;</button>
-          ${this._renderPageNumbers(paginatedData.currentPage, paginatedData.totalPages).map(p => p === '...'
-            ? '<span style="padding:0 4px;color:var(--neutral-400);">...</span>'
-            : `<button class="page-btn ${p === paginatedData.currentPage ? 'active' : ''}" onclick="Pages.goToBrowsePage(${p})">${p}</button>`
-          ).join('')}
+          ${this._renderPageNumbers(paginatedData.currentPage, paginatedData.totalPages)
+            .map(p =>
+              p === '...'
+                ? '<span style="padding:0 4px;color:var(--neutral-400);">...</span>'
+                : `<button class="page-btn ${p === paginatedData.currentPage ? 'active' : ''}" onclick="Pages.goToBrowsePage(${p})">${p}</button>`
+            )
+            .join('')}
           <button class="page-btn" onclick="Pages.goToBrowsePage(${paginatedData.currentPage + 1})" ${paginatedData.currentPage >= paginatedData.totalPages ? 'disabled style="opacity:0.4;pointer-events:none;"' : ''}>&raquo;</button>
         </div>
-      ` : ''}
+      `
+    : ''
+}
  </div>
 </div>
 
@@ -514,13 +600,17 @@ ${Pages.renderRecentlyViewedSection()}
   /**
    * Render Modern Product Card
    */
-  static renderProductCardModern (product) {
+  static renderProductCardModern(product) {
     const isInWishlist = productsManager.isInWishlist?.(product.id) || false;
     const _sn = product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
     const initials = _sn
-      .split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-const conditionClass = product.condition || 'good';
-const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+    const conditionClass = product.condition || 'good';
+    const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
     const categoryLabel = product.category
       ? product.category.charAt(0).toUpperCase() + product.category.slice(1).replace('-', ' ')
       : 'Item';
@@ -538,19 +628,23 @@ const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
         </div>
         <div class="product-card-info">
           <div class="product-card-category">${categoryLabel}</div>
-          <h3 class="product-card-title">${product.title}</h3>
+          <h3 class="product-card-title">${_pageEsc(product.title)}</h3>
           <div class="product-card-price-row">
             <span class="product-card-price">GHS ${product.price?.toLocaleString() || '0'}</span>
           </div>
 <div class="product-card-seller">
 <div class="seller-avatar">${initials}</div>
-<span class="seller-name">${product.seller?.name || 'Unknown'}</span>
-${product.seller?.rating ? `
+<span class="seller-name">${_pageEsc(product.seller?.name || 'Unknown')}</span>
+${
+  product.seller?.rating
+    ? `
 <div class="seller-rating">
 ${Icons.star}
 <span>${product.seller?.rating || product.sellerRating || '4.5'}</span>
 </div>
-` : ''}
+`
+    : ''
+}
 ${product.seller?.rating >= 4.5 ? '<span class="trust-badge trust-badge-top-seller"><svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Top Seller</span>' : ''}
 ${product.seller?.verified ? '<span class="trust-badge trust-badge-verified"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>Verified</span>' : ''}
 </div>
@@ -567,50 +661,51 @@ ${product.seller?.verified ? '<span class="trust-badge trust-badge-verified"><sv
   /**
    * Filter by Category (for category pills)
    */
- static filterByCategory (categoryId) {
- document.querySelectorAll('.category-pill').forEach(pill => {
- pill.classList.remove('active');
- });
+  static filterByCategory(categoryId) {
+    document.querySelectorAll('.category-pill').forEach(pill => {
+      pill.classList.remove('active');
+    });
 
- const clickedPill = event.target.closest('.category-pill');
- if (clickedPill) clickedPill.classList.add('active');
+    const clickedPill = event.target.closest('.category-pill');
+    if (clickedPill) clickedPill.classList.add('active');
 
- if (categoryId === 'all') {
- productsManager.resetFilters();
- } else {
- productsManager.filter({ category: categoryId });
- }
+    if (categoryId === 'all') {
+      productsManager.resetFilters();
+    } else {
+      productsManager.filter({ category: categoryId });
+    }
 
- this.renderBrowse();
- }
+    this.renderBrowse();
+  }
 
   /**
    * Toggle Mobile Filters
    */
- static toggleMobileFilters () {
- const group = document.getElementById('browse-filters-group');
- group?.classList.toggle('open');
- }
+  static toggleMobileFilters() {
+    const group = document.getElementById('browse-filters-group');
+    group?.classList.toggle('open');
+  }
 
   /**
    * Set Rating Filter
    */
-  static setRatingFilter (rating) {
-productsManager.filter({ minRating: rating });
+  static setRatingFilter(rating) {
+    productsManager.filter({ minRating: rating });
     this.renderBrowse();
   }
 
   /**
    * Render Product Card - Modern Professional Design
    */
-  static renderProductCard (product) {
+  static renderProductCard(product) {
     const isInWishlist = productsManager.isInWishlist(product.id);
-    const initials = product.seller?.name
-      ?.split(' ')
-      ?.map(n => n[0])
-      ?.join('')
-      ?.toUpperCase()
-      ?.slice(0, 2) || 'UN';
+    const initials =
+      product.seller?.name
+        ?.split(' ')
+        ?.map(n => n[0])
+        ?.join('')
+        ?.toUpperCase()
+        ?.slice(0, 2) || 'UN';
     const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
     const categoryLabel = product.category
       ? product.category.charAt(0).toUpperCase() + product.category.slice(1).replace('-', ' ')
@@ -632,7 +727,7 @@ productsManager.filter({ minRating: rating });
         <!-- Product Info -->
         <div class="store-product-info">
           <div class="store-product-category">${categoryLabel}</div>
-          <h3 class="store-product-title">${product.title}</h3>
+          <h3 class="store-product-title">${_pageEsc(product.title)}</h3>
           <div class="store-product-price-row">
             <span class="store-product-price">${product.price.toLocaleString()}</span>
             <span class="store-product-currency">GHS</span>
@@ -642,7 +737,7 @@ productsManager.filter({ minRating: rating });
 <div class="store-product-seller-row">
 <div class="store-seller-info">
 <div class="store-seller-avatar">${initials}</div>
-<span class="store-seller-name">${product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller'}</span>
+<span class="store-seller-name">${_pageEsc(product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller')}</span>
 ${product.seller?.rating >= 4.5 ? '<span class="trust-badge trust-badge-top-seller"><svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Top</span>' : ''}
 </div>
 <div class="store-seller-rating">
@@ -664,11 +759,15 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
   /**
    * Render Best Buy-style Product Card for Browse/Top Deals page
    */
-  static renderBBProductCard (product) {
+  static renderBBProductCard(product) {
     const isInWishlist = productsManager.isInWishlist(product.id);
     const _bsn = product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
     const initials = _bsn
-      .split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
     const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
     const categoryLabel = product.category
       ? product.category.charAt(0).toUpperCase() + product.category.slice(1).replace('-', ' ')
@@ -688,11 +787,11 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
       '\');">' +
       (isInWishlist ? Icons.heart : Icons.heartOutline) +
       '</button>' +
-  '<img src="' +
-  ((product.images && product.images[0]) || '/assets/images/products/no-image.svg') +
-  '" alt="' +
-  product.title +
-  '" class="bb-browse-image" loading="lazy" onerror="this.src=\'/assets/images/products/no-image.svg\'" />' +
+      '<img src="' +
+      ((product.images && product.images[0]) || '/assets/images/products/no-image.svg') +
+      '" alt="' +
+      product.title +
+      '" class="bb-browse-image" loading="lazy" onerror="this.src=\'/assets/images/products/no-image.svg\'" />' +
       '<div class="bb-browse-info">' +
       '<p class="bb-browse-category">' +
       categoryLabel +
@@ -701,7 +800,13 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
       product.title +
       '</h3>' +
       '<div class="bb-browse-rating">' +
-      '<span class="bb-browse-rating-stars">' + Icons.star + Icons.star + Icons.star + Icons.star + Icons.starOutline + '</span>' +
+      '<span class="bb-browse-rating-stars">' +
+      Icons.star +
+      Icons.star +
+      Icons.star +
+      Icons.star +
+      Icons.starOutline +
+      '</span>' +
       '<span class="bb-browse-rating-count">(' +
       (product.seller?.rating || product.sellerRating || '4.5') +
       ')</span>' +
@@ -728,7 +833,9 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
       '</span>' +
       '<button class="bb-browse-add-cart" onclick="event.stopPropagation(); cartManager.add(' +
       JSON.stringify(product).replace(/"/g, '&quot;') +
-      '); Pages.updateCartBadge();">' + Icons.cart + ' Add to Cart</button>' +
+      '); Pages.updateCartBadge();">' +
+      Icons.cart +
+      ' Add to Cart</button>' +
       '<div class="bb-browse-seller">' +
       '<div class="bb-browse-seller-avatar">' +
       initials +
@@ -742,28 +849,28 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
     );
   }
 
-/**
-* Toggle Wishlist
-*/
-static toggleWishlist (event, productId) {
-event.stopPropagation();
+  /**
+   * Toggle Wishlist
+   */
+  static toggleWishlist(event, productId) {
+    event.stopPropagation();
 
-if (productsManager.isInWishlist(productId)) {
-productsManager.removeFromWishlist(productId);
-notificationManager?.info('Removed from Wishlist', 'Product removed from your wishlist');
-} else {
-productsManager.addToWishlist(productId);
-notificationManager?.success('Added to Wishlist', 'Product saved to your wishlist');
-}
+    if (productsManager.isInWishlist(productId)) {
+      productsManager.removeFromWishlist(productId);
+      notificationManager?.info('Removed from Wishlist', 'Product removed from your wishlist');
+    } else {
+      productsManager.addToWishlist(productId);
+      notificationManager?.success('Added to Wishlist', 'Product saved to your wishlist');
+    }
 
-Pages.updateWishlistBadge();
-this.renderBrowse();
-}
+    Pages.updateWishlistBadge();
+    this.renderBrowse();
+  }
 
   /**
    * Apply Browse Filters
    */
-  static applyBrowseFilters () {
+  static applyBrowseFilters() {
     const conditions = [];
     if (document.getElementById('cond-new')?.checked) conditions.push('new');
     if (document.getElementById('cond-like-new')?.checked) conditions.push('like-new');
@@ -781,7 +888,7 @@ this.renderBrowse();
   /**
    * Reset Browse Filters
    */
-  static resetBrowseFilters () {
+  static resetBrowseFilters() {
     productsManager.resetFilters();
     this.renderBrowse();
   }
@@ -789,62 +896,64 @@ this.renderBrowse();
   /**
    * Apply Sort Order
    */
- static applySortOrder () {
- const sortBy = document.getElementById('sort-select').value;
- productsManager.currentFilters.sortBy = sortBy;
- productsManager.applyFilters();
- this.renderBrowse();
- }
+  static applySortOrder() {
+    const sortBy = document.getElementById('sort-select').value;
+    productsManager.currentFilters.sortBy = sortBy;
+    productsManager.applyFilters();
+    this.renderBrowse();
+  }
 
   /**
    * Re-render just the products grid (for filtering without page refresh)
    */
-static renderBrowseProducts () {
-const paginatedData = productsManager.getPaginated(1);
-const productsGrid = document.querySelector('.products-grid');
+  static renderBrowseProducts() {
+    const paginatedData = productsManager.getPaginated(1);
+    const productsGrid = document.querySelector('.products-grid');
 
-if (productsGrid) {
-productsGrid.innerHTML =
-paginatedData.products.length > 0
-? paginatedData.products.map(product => this.renderProductCard(product)).join('')
-: '<div class="empty-state">No products found. Try adjusting your filters.</div>';
-}
-}
+    if (productsGrid) {
+      productsGrid.innerHTML =
+        paginatedData.products.length > 0
+          ? paginatedData.products.map(product => this.renderProductCard(product)).join('')
+          : '<div class="empty-state">No products found. Try adjusting your filters.</div>';
+    }
+  }
 
-/**
-* Render Recently Viewed Section HTML
-*/
-static renderRecentlyViewedSection () {
-const recentlyViewed = productsManager.getRecentlyViewed(8);
-if (!recentlyViewed || recentlyViewed.length === 0) return '';
+  /**
+   * Render Recently Viewed Section HTML
+   */
+  static renderRecentlyViewedSection() {
+    const recentlyViewed = productsManager.getRecentlyViewed(8);
+    if (!recentlyViewed || recentlyViewed.length === 0) return '';
 
-return `
+    return `
 <div class="recently-viewed-section" style="padding: 2rem 0 1rem;">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
 <h2 style="font-size:1.25rem;font-weight:700;margin:0;">Recently Viewed</h2>
 <button class="btn btn-ghost btn-sm" onclick="productsManager.clearRecentlyViewed(); Pages.renderBrowse();" style="font-size:0.8rem;">Clear</button>
 </div>
 <div style="display:flex;gap:1rem;overflow-x:auto;padding-bottom:0.5rem;scrollbar-width:thin;">
-${recentlyViewed.map(product => {
-const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
-return `
+${recentlyViewed
+  .map(product => {
+    const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
+    return `
 <div onclick="Pages.renderProductDetail('${product.id}')" style="min-width:160px;max-width:160px;cursor:pointer;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--neutral-200);transition:box-shadow 0.2s;background:var(--bg-primary);" onmouseover="this.style.boxShadow='var(--shadow-card-hover)'" onmouseout="this.style.boxShadow='none'">
 <div style="aspect-ratio:1;overflow:hidden;background:var(--neutral-100);">
 <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg';this.onerror=null;">
 </div>
 <div style="padding:0.5rem;">
-<div style="font-size:0.75rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${product.title}</div>
+<div style="font-size:0.75rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${_pageEsc(product.title)}</div>
 <div style="font-size:0.8rem;font-weight:700;color:var(--price-color);margin-top:2px;">GHS ${product.price?.toLocaleString() || '0'}</div>
 <span class="condition-badge ${product.condition || 'good'}" style="font-size:0.65rem;padding:2px 6px;margin-top:4px;">${conditionLabel}</span>
 </div>
 </div>`;
-}).join('')}
+  })
+  .join('')}
 </div>
 </div>
 `;
-}
+  }
 
-  static _renderPageNumbers (current, total) {
+  static _renderPageNumbers(current, total) {
     const pages = [];
     pages.push(1);
     if (current > 3) pages.push('...');
@@ -856,9 +965,10 @@ return `
     return pages;
   }
 
-  static async goToBrowsePage (page) {
+  static async goToBrowsePage(page) {
     const paginatedData = await this._fetchPaginatedData(page);
-    const totalProducts = paginatedData.totalProducts || paginatedData.total || productsManager.filteredProducts.length;
+    const totalProducts =
+      paginatedData.totalProducts || paginatedData.total || productsManager.filteredProducts.length;
     const mainContent = document.getElementById('main-content');
     if (mainContent) {
       mainContent.innerHTML = this.renderBrowseModernHTML(paginatedData, totalProducts);
@@ -866,7 +976,7 @@ return `
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  static async _fetchPaginatedData (page) {
+  static async _fetchPaginatedData(page) {
     if (productsManager._backendAvailable) {
       const serverData = await productsManager.fetchPage(page);
       if (serverData) return serverData;
@@ -888,7 +998,7 @@ return `
    * This avoids a double render (click → set hash → hash → render) AND
    * keeps the URL predictable so refresh/back/forward work correctly.
    */
-  static async renderProductDetail (productId) {
+  static async renderProductDetail(productId) {
     const desiredPath = `/product/${productId}`;
     const currentPath = (window.location.hash || '#').replace(/^#/, '').split('?')[0];
     if (currentPath !== desiredPath) {
@@ -908,7 +1018,9 @@ return `
           product = resp.data;
           productsManager.products.unshift(product);
         }
-      } catch (_) { console.warn('pages: loadSeedProducts failed:', _); }
+      } catch (_) {
+        console.warn('pages: loadSeedProducts failed:', _);
+      }
     }
 
     if (!product) {
@@ -925,14 +1037,15 @@ return `
 
     const mainContent = document.getElementById('main-content');
     const isInWishlist = productsManager.isInWishlist(productId);
-    const sellerName = product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
+    const sellerName =
+      product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
     const initials = sellerName
       .split(' ')
       .map(n => n[0])
       .join('')
       .toUpperCase()
       .slice(0, 2);
-const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
+    const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
     const categoryLabel = product.category
       ? product.category.charAt(0).toUpperCase() + product.category.slice(1).replace('-', ' ')
       : 'Other';
@@ -1022,7 +1135,7 @@ const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
               </li>
               <li class="browse-breadcrumb-item">
                 <span class="browse-breadcrumb-arrow"></span>
-                <span class="browse-breadcrumb-current" aria-current="page">${product.title.length > 40 ? product.title.slice(0, 40) + '…' : product.title}</span>
+                <span class="browse-breadcrumb-current" aria-current="page">${_pageEsc(product.title.length > 40 ? product.title.slice(0, 40) + '…' : product.title)}</span>
               </li>
             </ol>
           </div>
@@ -1038,7 +1151,7 @@ const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
           <!-- Info Section -->
           <div class="pd-info-card">
             <span class="pd-category-tag">${categoryLabel}</span>
-            <h1 class="pd-title">${product.title}</h1>
+            <h1 class="pd-title">${_pageEsc(product.title)}</h1>
 
             <div class="pd-meta">
               <span class="pd-condition ${product.condition}">${conditionLabel}</span>
@@ -1065,7 +1178,7 @@ const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
             <!-- Description -->
             <div class="pd-desc-card">
               <div class="pd-desc-label">Description</div>
-              <p class="pd-desc-text">${product.description}</p>
+              <p class="pd-desc-text">${_pageEsc(product.description)}</p>
             </div>
 
             <!-- Details -->
@@ -1100,21 +1213,29 @@ const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
   </div>
   </div>
 
-${product.variants && product.variants.length > 0 ? `
+${
+  product.variants && product.variants.length > 0
+    ? `
 <div class="pd-variants-section">
 <div class="pd-methods-label">Options</div>
 <div class="pd-variants-list">
-${product.variants.map((v, i) => `
+${product.variants
+  .map(
+    (v, i) => `
 <button class="pd-variant-btn" data-variant-index="${i}" onclick="Pages.selectVariant(this, ${i})">
 <span class="pd-variant-label">${v.label}</span>
 <span class="pd-variant-value">${v.value}</span>
 ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
 </button>
-`).join('')}
+`
+  )
+  .join('')}
 </div>
 <input type="hidden" id="selected-variant-index" value="-1" />
 </div>
-` : ''}
+`
+    : ''
+}
 
 <div id="color-picker-section"></div>
 
@@ -1187,17 +1308,17 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
       </div>
     `;
 
-  // Load reviews after DOM is rendered
-  this.loadProductReviews(productId);
+    // Load reviews after DOM is rendered
+    this.loadProductReviews(productId);
   }
 
-static selectVariant (btn, index) {
+  static selectVariant(btn, index) {
     document.querySelectorAll('.pd-variant-btn').forEach(b => b.classList.remove('selected'));
     btn.classList.add('selected');
     document.getElementById('selected-variant-index').value = index;
   }
 
-  static selectColor (btn) {
+  static selectColor(btn) {
     document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
     btn.classList.add('selected');
     var nameEl = document.querySelector('.color-name-display');
@@ -1205,9 +1326,16 @@ static selectVariant (btn, index) {
     var stock = parseInt(btn.dataset.colorStock) || 0;
     var indicator = document.querySelector('.color-stock-indicator');
     if (indicator) {
-      if (stock <= 0) { indicator.textContent = 'Out of Stock'; indicator.className = 'color-stock-indicator out-of-stock'; }
-      else if (stock <= 3) { indicator.textContent = 'Only ' + stock + ' left'; indicator.className = 'color-stock-indicator low-stock'; }
-      else { indicator.textContent = 'In Stock'; indicator.className = 'color-stock-indicator in-stock'; }
+      if (stock <= 0) {
+        indicator.textContent = 'Out of Stock';
+        indicator.className = 'color-stock-indicator out-of-stock';
+      } else if (stock <= 3) {
+        indicator.textContent = 'Only ' + stock + ' left';
+        indicator.className = 'color-stock-indicator low-stock';
+      } else {
+        indicator.textContent = 'In Stock';
+        indicator.className = 'color-stock-indicator in-stock';
+      }
     }
     if (btn.dataset.colorImage) {
       var mainImg = document.querySelector('.pd-main-image');
@@ -1218,16 +1346,21 @@ static selectVariant (btn, index) {
       color_name: btn.dataset.colorName,
       color_hex: btn.dataset.colorHex,
       stock: stock,
-      image_url: btn.dataset.colorImage || ''
+      image_url: btn.dataset.colorImage || '',
     };
   }
 
-  static addToCartWithVariant (productId) {
+  static addToCartWithVariant(productId) {
     const product = productsManager.getById(productId);
     if (!product) return;
     const variantIndex = parseInt(document.getElementById('selected-variant-index')?.value);
     let variant = null;
-    if (!isNaN(variantIndex) && variantIndex >= 0 && product.variants && product.variants[variantIndex]) {
+    if (
+      !isNaN(variantIndex) &&
+      variantIndex >= 0 &&
+      product.variants &&
+      product.variants[variantIndex]
+    ) {
       variant = product.variants[variantIndex];
     }
     if (window.__selectedColor) {
@@ -1241,64 +1374,73 @@ static selectVariant (btn, index) {
     const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true);
     const isVerified = user?.isVerified || (verification && verification.isVerified);
     if (!isVerified) {
-      showToast('Item added to cart, but you must be verified as a student to purchase.', 'warning');
+      showToast(
+        'Item added to cart, but you must be verified as a student to purchase.',
+        'warning'
+      );
     } else {
       showToast('Added to cart', 'success');
     }
   }
 
-/**
-* Toggle Wishlist in Detail View
-*/
-static toggleWishlistDetail (productId) {
-if (productsManager.isInWishlist(productId)) {
-productsManager.removeFromWishlist(productId);
-notificationManager?.info('Removed from Wishlist', 'Product removed from your wishlist');
-} else {
-productsManager.addToWishlist(productId);
-notificationManager?.success('Added to Wishlist', 'Product saved to your wishlist');
-}
+  /**
+   * Toggle Wishlist in Detail View
+   */
+  static toggleWishlistDetail(productId) {
+    if (productsManager.isInWishlist(productId)) {
+      productsManager.removeFromWishlist(productId);
+      notificationManager?.info('Removed from Wishlist', 'Product removed from your wishlist');
+    } else {
+      productsManager.addToWishlist(productId);
+      notificationManager?.success('Added to Wishlist', 'Product saved to your wishlist');
+    }
 
-Pages.updateWishlistBadge();
-this.renderProductDetail(productId);
-}
+    Pages.updateWishlistBadge();
+    this.renderProductDetail(productId);
+  }
 
-/**
-* Add all wishlist items to cart
-*/
-static addAllWishlistToCart () {
-const wishlistProducts = productsManager.getWishlist();
-let added = 0;
-wishlistProducts.forEach(product => {
-const result = cartManager?.add(product);
-if (result?.success) added++;
-});
-Pages.updateCartBadge();
-notificationManager?.success('Added to Cart', `${added} item${added !== 1 ? 's' : ''} added to your cart`);
-}
+  /**
+   * Add all wishlist items to cart
+   */
+  static addAllWishlistToCart() {
+    const wishlistProducts = productsManager.getWishlist();
+    let added = 0;
+    wishlistProducts.forEach(product => {
+      const result = cartManager?.add(product);
+      if (result?.success) added++;
+    });
+    Pages.updateCartBadge();
+    notificationManager?.success(
+      'Added to Cart',
+      `${added} item${added !== 1 ? 's' : ''} added to your cart`
+    );
+  }
 
-/**
-* Clear entire wishlist
-*/
-static clearWishlist () {
-if (!confirm('Remove all items from your wishlist?')) return;
-const wishlistIds = StorageManager.get(productsManager.wishlistKey, true) || [];
-wishlistIds.forEach(id => productsManager.removeFromWishlist(id));
-Pages.updateWishlistBadge();
-Pages.renderWishlist();
-notificationManager?.info('Wishlist Cleared', 'All items removed from your wishlist');
-}
+  /**
+   * Clear entire wishlist
+   */
+  static clearWishlist() {
+    if (!confirm('Remove all items from your wishlist?')) return;
+    const wishlistIds = StorageManager.get(productsManager.wishlistKey, true) || [];
+    wishlistIds.forEach(id => productsManager.removeFromWishlist(id));
+    Pages.updateWishlistBadge();
+    Pages.renderWishlist();
+    notificationManager?.info('Wishlist Cleared', 'All items removed from your wishlist');
+  }
 
   /**
    * Load and display reviews for a product's seller
    */
-  static async loadProductReviews (productId) {
+  static async loadProductReviews(productId) {
     const container = document.getElementById('product-reviews-container');
-    if (!container) {return;}
+    if (!container) {
+      return;
+    }
 
     const product = productsManager.getById(productId);
     if (!product) {
-      container.innerHTML = '<p style="text-align: center; color: var(--neutral-600);">Product not found</p>';
+      container.innerHTML =
+        '<p style="text-align: center; color: var(--neutral-600);">Product not found</p>';
       return;
     }
 
@@ -1309,7 +1451,10 @@ notificationManager?.info('Wishlist Cleared', 'All items removed from your wishl
       let reviews = [];
       if (typeof reviewManager !== 'undefined' && reviewManager.getSellerReviews) {
         try {
-          const result = await reviewManager.getSellerReviews(sellerId, { limit: 10, productId: product.id });
+          const result = await reviewManager.getSellerReviews(sellerId, {
+            limit: 10,
+            productId: product.id,
+          });
           reviews = result.reviews || [];
         } catch (_e) {
           // Fallback to local storage
@@ -1319,15 +1464,34 @@ notificationManager?.info('Wishlist Cleared', 'All items removed from your wishl
       // Fallback: generate placeholder reviews from local data
       if (!reviews || reviews.length === 0) {
         reviews = [
-          { id: 'rev1', reviewer: { fullName: 'Kofi A.' }, rating: 5, comment: 'Great seller! Item was exactly as described. Very responsive to messages.', createdAt: new Date(Date.now() - 86400000 * 2).toISOString() },
-          { id: 'rev2', reviewer: { fullName: 'Ama M.' }, rating: 4, comment: 'Good experience. Item was in good condition. Delivery was a bit slow.', createdAt: new Date(Date.now() - 86400000 * 7).toISOString() },
-          { id: 'rev3', reviewer: { fullName: 'Yaw D.' }, rating: 5, comment: 'Highly recommend! Fair price and quick delivery.', createdAt: new Date(Date.now() - 86400000 * 14).toISOString() },
+          {
+            id: 'rev1',
+            reviewer: { fullName: 'Kofi A.' },
+            rating: 5,
+            comment: 'Great seller! Item was exactly as described. Very responsive to messages.',
+            createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+          },
+          {
+            id: 'rev2',
+            reviewer: { fullName: 'Ama M.' },
+            rating: 4,
+            comment: 'Good experience. Item was in good condition. Delivery was a bit slow.',
+            createdAt: new Date(Date.now() - 86400000 * 7).toISOString(),
+          },
+          {
+            id: 'rev3',
+            reviewer: { fullName: 'Yaw D.' },
+            rating: 5,
+            comment: 'Highly recommend! Fair price and quick delivery.',
+            createdAt: new Date(Date.now() - 86400000 * 14).toISOString(),
+          },
         ];
       }
 
-      const avgRating = reviews.length > 0
-        ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
-        : '0';
+      const avgRating =
+        reviews.length > 0
+          ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+          : '0';
 
       const html = `
         <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--neutral-200);">
@@ -1344,14 +1508,15 @@ notificationManager?.info('Wishlist Cleared', 'All items removed from your wishl
 
       container.innerHTML = html;
     } catch (error) {
-      container.innerHTML = '<p style="text-align: center; color: var(--neutral-600);">Unable to load reviews</p>';
+      container.innerHTML =
+        '<p style="text-align: center; color: var(--neutral-600);">Unable to load reviews</p>';
     }
   }
 
   /**
    * Render a single review item
    */
-  static renderReviewItem (review) {
+  static renderReviewItem(review) {
     const timeAgo = this.formatReviewTime(review.createdAt);
     const stars = this.renderStars(review.rating);
 
@@ -1359,15 +1524,15 @@ notificationManager?.info('Wishlist Cleared', 'All items removed from your wishl
       <div style="padding: 1rem 0; border-bottom: 1px solid var(--neutral-200);">
         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
           <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #3b82f6); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; color: #fff;">
-            ${(review.reviewer?.fullName || 'U').charAt(0)}
+            ${_pageEsc((review.reviewer?.fullName || 'U').charAt(0))}
           </div>
           <div>
-            <div style="font-size: 0.9rem; font-weight: 500; color: var(--neutral-900);">${review.reviewer?.fullName || 'Anonymous'}</div>
+            <div style="font-size: 0.9rem; font-weight: 500; color: var(--neutral-900);">${_pageEsc(review.reviewer?.fullName || 'Anonymous')}</div>
             <div style="color: #d4a017; font-size: 0.85rem;">${stars}</div>
           </div>
-          <div style="margin-left: auto; font-size: 0.75rem; color: var(--neutral-600);">${timeAgo}</div>
+          <div style="margin-left: auto; font-size: 0.75rem; color: var(--neutral-600);">${_pageEsc(timeAgo)}</div>
         </div>
-        <p style="font-size: 0.9rem; color: var(--neutral-700); line-height: 1.6; margin: 0;">${review.comment || ''}</p>
+        <p style="font-size: 0.9rem; color: var(--neutral-700); line-height: 1.6; margin: 0;">${_pageEsc(review.comment || '')}</p>
       </div>
     `;
   }
@@ -1375,26 +1540,34 @@ notificationManager?.info('Wishlist Cleared', 'All items removed from your wishl
   /**
    * Format review time
    */
-  static formatReviewTime (date) {
-    if (!date) {return '';}
+  static formatReviewTime(date) {
+    if (!date) {
+      return '';
+    }
     const d = new Date(date);
     const now = new Date();
     const diff = now - d;
 
-    if (diff < 3600000) {return Math.floor(diff / 60000) + 'm ago';}
-    if (diff < 86400000) {return Math.floor(diff / 3600000) + 'h ago';}
-    if (diff < 604800000) {return Math.floor(diff / 86400000) + 'd ago';}
+    if (diff < 3600000) {
+      return Math.floor(diff / 60000) + 'm ago';
+    }
+    if (diff < 86400000) {
+      return Math.floor(diff / 3600000) + 'h ago';
+    }
+    if (diff < 604800000) {
+      return Math.floor(diff / 86400000) + 'd ago';
+    }
     return d.toLocaleDateString();
   }
 
   /**
    * Write Review for Seller
    */
-  static async writeReview (sellerId, productId) {
+  static async writeReview(sellerId, productId) {
     this._showReviewModal(sellerId, productId);
   }
 
-  static _showReviewModal (sellerId, productId) {
+  static _showReviewModal(sellerId, productId) {
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
     if (!currentUser) {
@@ -1408,7 +1581,8 @@ notificationManager?.info('Wishlist Cleared', 'All items removed from your wishl
 
     const overlay = document.createElement('div');
     overlay.id = 'review-modal-overlay';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem;';
+    overlay.style.cssText =
+      'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem;';
 
     overlay.innerHTML = `
       <div style="background:var(--bg-primary,#fff);border-radius:1rem;padding:2rem;max-width:480px;width:100%;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);">
@@ -1416,7 +1590,7 @@ notificationManager?.info('Wishlist Cleared', 'All items removed from your wishl
         <div style="margin-bottom:1rem;">
           <label style="display:block;margin-bottom:0.5rem;font-weight:600;font-size:0.875rem;">Rating</label>
           <div id="review-star-selector" style="display:flex;gap:0.25rem;cursor:pointer;">
-            ${[1,2,3,4,5].map(i => `<span data-star="${i}" style="font-size:2rem;line-height:1;color:var(--neutral-300,#d4d4d4);transition:color 0.15s;">&#9733;</span>`).join('')}
+            ${[1, 2, 3, 4, 5].map(i => `<span data-star="${i}" style="font-size:2rem;line-height:1;color:var(--neutral-300,#d4d4d4);transition:color 0.15s;">&#9733;</span>`).join('')}
           </div>
           <input type="hidden" id="review-rating-value" value="0">
         </div>
@@ -1460,7 +1634,9 @@ notificationManager?.info('Wishlist Cleared', 'All items removed from your wishl
     });
 
     overlay.querySelector('#review-cancel-btn').addEventListener('click', () => overlay.remove());
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) overlay.remove();
+    });
 
     submitBtn.addEventListener('click', async () => {
       const rating = parseInt(ratingInput.value);
@@ -1497,38 +1673,43 @@ notificationManager?.info('Wishlist Cleared', 'All items removed from your wishl
     });
   }
 
-/**
-* Share Product
-*/
-  static shareProduct (productId) {
-  const product = productsManager.getById(productId);
-   const shareUrl = window.location.href.split('#')[0] + `#/product/${productId}`;
-  const shareText = `Check out this item on JERTS CART: ${product.title} - GHS ${product.price?.toLocaleString() || '0'}`;
+  /**
+   * Share Product
+   */
+  static shareProduct(productId) {
+    const product = productsManager.getById(productId);
+    const shareUrl = window.location.href.split('#')[0] + `#/product/${productId}`;
+    const shareText = `Check out this item on JERTS CART: ${product.title} - GHS ${product.price?.toLocaleString() || '0'}`;
 
-  if (navigator.share) {
-  navigator.share({
-  title: product.title,
-  text: shareText,
-  url: shareUrl,
-  }).catch(() => {});
-  return;
-  }
+    if (navigator.share) {
+      navigator
+        .share({
+          title: product.title,
+          text: shareText,
+          url: shareUrl,
+        })
+        .catch(() => {});
+      return;
+    }
 
-  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`;
-  const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
-  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
-  const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`;
+    const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
 
-const mainContent = document.getElementById('main-content');
-const overlay = document.createElement('div');
-overlay.id = 'share-overlay';
-overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;';
-overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+    const mainContent = document.getElementById('main-content');
+    const overlay = document.createElement('div');
+    overlay.id = 'share-overlay';
+    overlay.style.cssText =
+      'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;';
+    overlay.onclick = e => {
+      if (e.target === overlay) overlay.remove();
+    };
 
-overlay.innerHTML = `
+    overlay.innerHTML = `
 <div style="background:var(--bg-primary);border-radius:var(--radius-xl);padding:2rem;max-width:420px;width:100%;box-shadow:var(--shadow-xl);">
 <h3 style="margin:0 0 0.5rem;font-size:1.25rem;">Share this product</h3>
-<p style="color:var(--neutral-600);margin:0 0 1.5rem;font-size:0.9rem;">${product.title}</p>
+<p style="color:var(--neutral-600);margin:0 0 1.5rem;font-size:0.9rem;">${_pageEsc(product.title)}</p>
 <div style="display:flex;flex-direction:column;gap:0.75rem;">
 <a href="${whatsappUrl}" target="_blank" rel="noopener" class="btn btn-outline" style="display:flex;align-items:center;gap:0.75rem;justify-content:center;background:#25D366;color:white;border-color:#25D366;">
 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.553 4.12 1.52 5.855L0 24l6.335-1.652A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75c-1.97 0-3.79-.58-5.33-1.573l-.383-.228-3.764.982.998-3.648-.25-.398A9.72 9.72 0 012.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75z"/></svg>
@@ -1555,40 +1736,46 @@ Copy Link
 </div>
 `;
 
-  document.body.appendChild(overlay);
+    document.body.appendChild(overlay);
   }
 
-  static async downloadReceipt (orderId) {
-  const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
-  const currentUser = session?.user || null;
-  if (!currentUser) return;
+  static async downloadReceipt(orderId) {
+    const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
+    const currentUser = session?.user || null;
+    if (!currentUser) return;
 
-  let order = null;
-  try {
-  const orders = await checkoutManager.getAllOrders();
-  order = orders.find(o => o.id === orderId);
-    } catch (err) { /* Order fetch unavailable — offline mode */ }
+    let order = null;
+    try {
+      const orders = await checkoutManager.getAllOrders();
+      order = orders.find(o => o.id === orderId);
+    } catch (err) {
+      /* Order fetch unavailable — offline mode */
+    }
 
-  if (!order) {
-  const localOrders = StorageManager.get(`${STORAGE_KEY_PREFIX}orders`, true) || [];
-  order = localOrders.find(o => o.id === orderId);
-  }
+    if (!order) {
+      const localOrders = StorageManager.get(`${STORAGE_KEY_PREFIX}orders`, true) || [];
+      order = localOrders.find(o => o.id === orderId);
+    }
 
-  if (!order) {
-  notificationManager?.error('Not Found', 'Order not found for receipt');
-  return;
-  }
+    if (!order) {
+      notificationManager?.error('Not Found', 'Order not found for receipt');
+      return;
+    }
 
-  const itemsHtml = order.items.map(item => `
+    const itemsHtml = order.items
+      .map(
+        item => `
   <tr>
   <td style="padding:8px;border-bottom:1px solid #eee;">${item.title}${item.variant ? `<br><small style="color:#666;">${item.variant.label}: ${item.variant.value}</small>` : ''}</td>
   <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">${item.quantity}</td>
   <td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">GHS ${(item.price || 0).toLocaleString()}</td>
   <td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">GHS ${((item.price || 0) * item.quantity).toLocaleString()}</td>
   </tr>
-  `).join('');
+  `
+      )
+      .join('');
 
-  const receiptHtml = `<!DOCTYPE html>
+    const receiptHtml = `<!DOCTYPE html>
   <html>
   <head>
   <title>Receipt - ${order.orderNumber}</title>
@@ -1660,33 +1847,34 @@ Copy Link
   </body>
   </html>`;
 
-  const receiptWindow = window.open('', '_blank', 'width=800,height=600');
-  if (receiptWindow) {
-  receiptWindow.document.write(receiptHtml);
-  receiptWindow.document.close();
-  } else {
-  notificationManager?.error('Blocked', 'Please allow popups to download receipt');
-  }
+    const receiptWindow = window.open('', '_blank', 'width=800,height=600');
+    if (receiptWindow) {
+      receiptWindow.document.write(receiptHtml);
+      receiptWindow.document.close();
+    } else {
+      notificationManager?.error('Blocked', 'Please allow popups to download receipt');
+    }
   }
 
   /**
-* Copy share link to clipboard
-*/
-static copyShareLink (url) {
-navigator.clipboard.writeText(url)
-.then(() => {
-notificationManager?.success('Link Copied', 'Product link copied to clipboard');
-document.getElementById('share-overlay')?.remove();
-})
-.catch(() => {
-prompt('Copy this link:', url);
-});
-}
+   * Copy share link to clipboard
+   */
+  static copyShareLink(url) {
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        notificationManager?.success('Link Copied', 'Product link copied to clipboard');
+        document.getElementById('share-overlay')?.remove();
+      })
+      .catch(() => {
+        prompt('Copy this link:', url);
+      });
+  }
 
   /**
    * Render Cart Page
    */
-  static renderCart () {
+  static renderCart() {
     const mainContent = document.getElementById('main-content');
     const cartItems = cartManager.getItems();
     const summary = cartManager.getSummary();
@@ -1731,16 +1919,16 @@ prompt('Copy this link:', url);
             </div>
             
             ${cartItems
-    .map(
-      item => `
+              .map(
+                item => `
               <div class="cart-item" data-product-id="${item.product.id}">
                 <div class="cart-item-image">
   <img src="${item.product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${item.product.title}" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
                 </div>
                 
   <div class="cart-item-details">
-  <h4 class="cart-item-title">${item.product.title}</h4>
-  <p class="cart-item-seller">Sold by ${item.product.seller?.fullName || item.product.sellerName || item.product.seller?.name || 'Seller'}</p>
+  <h4 class="cart-item-title">${_pageEsc(item.product.title)}</h4>
+  <p class="cart-item-seller">Sold by ${_pageEsc(item.product.seller?.fullName || item.product.sellerName || item.product.seller?.name || 'Seller')}</p>
   ${item.variant ? `<span class="cart-item-variant">${item.variant.label}: ${item.variant.value}${item.variant.price > 0 ? ` (+GHS ${item.variant.price})` : ''}</span>` : ''}
   <div class="cart-item-price">${Formatter.formatPrice(item.product.price + (item.variant ? item.variant.price || 0 : 0))}</div>
   </div>
@@ -1756,9 +1944,9 @@ prompt('Copy this link:', url);
   <button class="remove-btn" onclick="Pages.removeFromCart('${item.product.id}')">Remove</button>
   </div>
               </div>
-            `,
-    )
-    .join('')}
+            `
+              )
+              .join('')}
           </div>
           
           <div class="cart-summary">
@@ -1809,7 +1997,7 @@ prompt('Copy this link:', url);
   /**
    * Add product to cart from product detail
    */
-  static addToCart (productId) {
+  static addToCart(productId) {
     const product = productsManager.getById(productId);
 
     if (!product) {
@@ -1825,18 +2013,21 @@ prompt('Copy this link:', url);
       const user = session?.user || null;
       const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true);
       const isVerified = user?.isVerified || (verification && verification.isVerified);
-    if (!isVerified) {
-      showToast('Item added to cart, but you must be verified as a student to purchase.', 'warning');
-    } else {
-      showToast(result.message, 'success');
-    }
+      if (!isVerified) {
+        showToast(
+          'Item added to cart, but you must be verified as a student to purchase.',
+          'warning'
+        );
+      } else {
+        showToast(result.message, 'success');
+      }
     }
   }
 
   /**
    * Remove item from cart
    */
-  static removeFromCart (productId) {
+  static removeFromCart(productId) {
     cartManager.remove(productId);
     this.updateCartBadge();
     this.renderCart();
@@ -1845,7 +2036,7 @@ prompt('Copy this link:', url);
   /**
    * Increment cart item quantity
    */
-  static incrementCartQuantity (productId) {
+  static incrementCartQuantity(productId) {
     cartManager.increment(productId);
     this.updateCartBadge();
     this.renderCart();
@@ -1854,7 +2045,7 @@ prompt('Copy this link:', url);
   /**
    * Decrement cart item quantity
    */
-  static decrementCartQuantity (productId) {
+  static decrementCartQuantity(productId) {
     cartManager.decrement(productId);
     this.updateCartBadge();
     this.renderCart();
@@ -1863,7 +2054,7 @@ prompt('Copy this link:', url);
   /**
    * Handle Proceed to Checkout button click from Cart
    */
-  static handleProceedToCheckout () {
+  static handleProceedToCheckout() {
     // Verify required managers are loaded
     if (typeof cartManager === 'undefined' || !cartManager) {
       console.error('Cart manager not loaded');
@@ -1898,7 +2089,10 @@ prompt('Copy this link:', url);
     const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true);
     const isVerified = currentUser.isVerified || (verification && verification.isVerified);
     if (!isVerified) {
-      showToast('You must be verified as a student to make purchases. Please complete student verification first.', 'warning');
+      showToast(
+        'You must be verified as a student to make purchases. Please complete student verification first.',
+        'warning'
+      );
       this.renderStudentVerification();
       return;
     }
@@ -1910,7 +2104,7 @@ prompt('Copy this link:', url);
   /**
    * Render Checkout Page
    */
-  static renderCheckout () {
+  static renderCheckout() {
     // Verify checkoutManager is loaded
     if (typeof checkoutManager === 'undefined' || !checkoutManager) {
       console.error('Checkout manager not loaded yet');
@@ -1926,12 +2120,12 @@ prompt('Copy this link:', url);
     if (cartItems.length === 0) {
       showToast('Your cart is empty. Add items before checkout.', 'warning');
       this.renderBrowse();
-    return;
-  }
+      return;
+    }
 
-  // Check if user is logged in
-  const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
-  const currentUser = session?.user || null;
+    // Check if user is logged in
+    const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
+    const currentUser = session?.user || null;
     if (!currentUser) {
       showToast('Please login to complete your order.', 'warning');
       this.renderLogin();
@@ -1942,7 +2136,10 @@ prompt('Copy this link:', url);
     const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true);
     const isVerified = currentUser.isVerified || (verification && verification.isVerified);
     if (!isVerified) {
-      showToast('You must be verified as a student to make purchases. Please complete student verification first.', 'warning');
+      showToast(
+        'You must be verified as a student to make purchases. Please complete student verification first.',
+        'warning'
+      );
       this.renderStudentVerification();
       return;
     }
@@ -1983,17 +2180,17 @@ prompt('Copy this link:', url);
                 <h3><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;"><path d="M5 17H4a2 2 0 01-2-2V5a2 2 0 012-2h16a2 2 0 012 2v10a2 2 0 01-2 2h-1"/><path d="M12 17V5"/><path d="M5 17a2 2 0 104 0"/><path d="M15 17a2 2 0 104 0"/></svg>Delivery Method</h3>
                 <div class="delivery-options">
                   ${deliveryOptions
-    .map(
-      option => `
+                    .map(
+                      option => `
                     <div class="option-card" onclick="Pages.selectDeliveryOption('${option.value}', this)">
                       <input type="radio" name="deliveryMode" value="${option.value}" id="delivery-${option.value}" />
                       <div class="option-icon">${option.icon}</div>
                       <div class="option-label">${option.label}</div>
                       <div class="option-fee">${option.fee === 0 ? 'Free' : `GHS ${option.fee}`}</div>
                     </div>
-                  `,
-    )
-    .join('')}
+                  `
+                    )
+                    .join('')}
                 </div>
               </div>
 
@@ -2034,16 +2231,16 @@ prompt('Copy this link:', url);
                 <h3><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><line x1="6" y1="12" x2="6.01" y2="12"/><line x1="18" y1="12" x2="18.01" y2="12"/></svg>Payment Method</h3>
                 <div class="payment-options">
                   ${paymentOptions
-    .map(
-      option => `
+                    .map(
+                      option => `
                     <div class="option-card" onclick="Pages.selectPaymentOption('${option.value}', this)">
                       <input type="radio" name="paymentMode" value="${option.value}" id="payment-${option.value}" />
                       <div class="option-icon">${option.icon}</div>
                       <div class="option-label">${option.label}</div>
                     </div>
-                  `,
-    )
-    .join('')}
+                  `
+                    )
+                    .join('')}
                 </div>
               </div>
             </div>
@@ -2054,22 +2251,22 @@ prompt('Copy this link:', url);
               
               <div class="order-items">
                 ${cartItems
-    .map(
-      item => `
+                  .map(
+                    item => `
   <div class="order-item">
   <div class="order-item-image">
         <img src="${(item.product.images && item.product.images[0]) || '/assets/images/products/no-image.svg'}" alt="${item.product.title}" onerror="this.src='/assets/images/products/no-image.svg'" />
   </div>
   <div class="order-item-details">
-  <div class="order-item-title">${item.product.title}</div>
+  <div class="order-item-title">${_pageEsc(item.product.title)}</div>
   ${item.variant ? `<div class="order-item-quantity" style="color:var(--primary);">${item.variant.label}: ${item.variant.value}${item.variant.price > 0 ? ` (+GHS ${item.variant.price})` : ''}</div>` : ''}
   <div class="order-item-quantity">Qty: ${item.quantity}</div>
   <div class="order-item-price">${Formatter.formatPrice((item.product.price + (item.variant ? item.variant.price || 0 : 0)) * item.quantity)}</div>
   </div>
   </div>
-                `,
-    )
-    .join('')}
+                `
+                  )
+                  .join('')}
               </div>
 
               <div class="summary-divider"></div>
@@ -2102,7 +2299,7 @@ prompt('Copy this link:', url);
   /**
    * Select delivery option
    */
-  static selectDeliveryOption (value, element) {
+  static selectDeliveryOption(value, element) {
     // Update radio button
     document.querySelectorAll('input[name="deliveryMode"]').forEach(radio => {
       radio.checked = radio.value === value;
@@ -2117,7 +2314,7 @@ prompt('Copy this link:', url);
     // Update delivery fee
     const deliveryFee = checkoutManager.calculateDeliveryFee(
       value,
-      cartManager.getSummary().subtotal,
+      cartManager.getSummary().subtotal
     );
     document.getElementById('delivery-fee').textContent = Formatter.formatPrice(deliveryFee);
 
@@ -2130,7 +2327,7 @@ prompt('Copy this link:', url);
   /**
    * Select payment option
    */
-  static selectPaymentOption (value, element) {
+  static selectPaymentOption(value, element) {
     // Update radio button
     document.querySelectorAll('input[name="paymentMode"]').forEach(radio => {
       radio.checked = radio.value === value;
@@ -2146,7 +2343,7 @@ prompt('Copy this link:', url);
   /**
    * Handle checkout form submission
    */
-  static async handleCheckout (event) {
+  static async handleCheckout(event) {
     event.preventDefault();
 
     const form = event.target;
@@ -2158,7 +2355,10 @@ prompt('Copy this link:', url);
     const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true);
     const isVerified = currentUser?.isVerified || (verification && verification.isVerified);
     if (!isVerified) {
-      showToast('You must be verified as a student to make purchases. Please complete student verification first.', 'warning');
+      showToast(
+        'You must be verified as a student to make purchases. Please complete student verification first.',
+        'warning'
+      );
       this.renderStudentVerification();
       return;
     }
@@ -2228,7 +2428,7 @@ prompt('Copy this link:', url);
           // Send notification
           notificationManager?.success(
             'Order Confirmed',
-            `Your order #${result.order.orderNumber} has been confirmed!`,
+            `Your order #${result.order.orderNumber} has been confirmed!`
           );
 
           // Render confirmation page
@@ -2260,7 +2460,7 @@ prompt('Copy this link:', url);
   /**
    * Render Order Confirmation Page
    */
-  static renderOrderConfirmation (order) {
+  static renderOrderConfirmation(order) {
     const mainContent = document.getElementById('main-content');
 
     mainContent.innerHTML = `
@@ -2327,7 +2527,7 @@ prompt('Copy this link:', url);
   /**
    * Render Orders Page
    */
-  static async renderOrders () {
+  static async renderOrders() {
     const mainContent = document.getElementById('main-content');
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
@@ -2375,8 +2575,8 @@ prompt('Copy this link:', url);
         
         <div class="cart-items">
           ${orders
-    .map(
-      order => `
+            .map(
+              order => `
             <div class="cart-item" style="display: block;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
 <div>
@@ -2387,16 +2587,16 @@ prompt('Copy this link:', url);
                   </div>
                 </div>
                 <span class="condition-badge ${order.status}" style="background: ${this.getStatusColor(
-  order.status,
-)}; color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.875rem;">
+                  order.status
+                )}; color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.875rem;">
                   ${Formatter.capitalize(order.status.replace('-', ' '))}
                 </span>
               </div>
               
               <div style="border-top: 1px solid var(--neutral-200); padding-top: 1rem;">
                 ${order.items
-    .map(
-      item => `
+                  .map(
+                    item => `
                   <div style="display: flex; gap: 1rem; margin-bottom: 0.75rem;">
                     <img src="${item.image || '/assets/images/products/no-image.svg'}" alt="${item.title}" style="width: 60px; height: 60px; object-fit: cover; border-radius: var(--radius-md);" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
                     <div style="flex: 1;">
@@ -2405,9 +2605,9 @@ prompt('Copy this link:', url);
                     </div>
                     <div style="font-weight: 600;">${Formatter.formatPrice(item.price * item.quantity)}</div>
                   </div>
-                `,
-    )
-    .join('')}
+                `
+                  )
+                  .join('')}
               </div>
               
 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--neutral-200);">
@@ -2426,62 +2626,67 @@ prompt('Copy this link:', url);
 
 ${Pages.renderOrderTimeline(order.status)}
 </div>
-          `,
-    )
-    .join('')}
+          `
+            )
+            .join('')}
         </div>
       </div>
     `;
   }
 
-/**
-* Get status color
-*/
-static getStatusColor (status) {
-const colors = {
-[ORDER_STATUS.PLACED]: '#0046be',
-[ORDER_STATUS.CONFIRMED]: '#10b981',
-[ORDER_STATUS.IN_TRANSIT]: '#f59e0b',
-[ORDER_STATUS.DELIVERED]: '#10b981',
-[ORDER_STATUS.CANCELLED]: '#ef4444',
-};
-return colors[status] || '#0046be';
-}
+  /**
+   * Get status color
+   */
+  static getStatusColor(status) {
+    const colors = {
+      [ORDER_STATUS.PLACED]: '#0046be',
+      [ORDER_STATUS.CONFIRMED]: '#10b981',
+      [ORDER_STATUS.IN_TRANSIT]: '#f59e0b',
+      [ORDER_STATUS.DELIVERED]: '#10b981',
+      [ORDER_STATUS.CANCELLED]: '#ef4444',
+    };
+    return colors[status] || '#0046be';
+  }
 
-/**
-* Render Order Timeline Stepper
-*/
-static renderOrderTimeline (status) {
-if (status === ORDER_STATUS.CANCELLED) {
-return `
+  /**
+   * Render Order Timeline Stepper
+   */
+  static renderOrderTimeline(status) {
+    if (status === ORDER_STATUS.CANCELLED) {
+      return `
 <div class="order-timeline" style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--neutral-200);">
 <div style="display:flex;align-items:center;gap:0.5rem;color:#ef4444;font-weight:600;font-size:0.85rem;">
 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
 Order Cancelled
 </div>
 </div>`;
-}
+    }
 
-const steps = [
-{ key: ORDER_STATUS.PLACED, label: 'Placed' },
-{ key: ORDER_STATUS.CONFIRMED, label: 'Confirmed' },
-{ key: ORDER_STATUS.IN_TRANSIT, label: 'In Transit' },
-{ key: ORDER_STATUS.DELIVERED, label: 'Delivered' },
-];
+    const steps = [
+      { key: ORDER_STATUS.PLACED, label: 'Placed' },
+      { key: ORDER_STATUS.CONFIRMED, label: 'Confirmed' },
+      { key: ORDER_STATUS.IN_TRANSIT, label: 'In Transit' },
+      { key: ORDER_STATUS.DELIVERED, label: 'Delivered' },
+    ];
 
-const stepOrder = steps.map(s => s.key);
-const currentIdx = stepOrder.indexOf(status);
-if (currentIdx === -1) return '';
+    const stepOrder = steps.map(s => s.key);
+    const currentIdx = stepOrder.indexOf(status);
+    if (currentIdx === -1) return '';
 
-return `
+    return `
 <div class="order-timeline" style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--neutral-200);">
 <div style="display:flex;align-items:center;width:100%;">
-${steps.map((step, i) => {
-const isCompleted = i <= currentIdx;
-const isCurrent = i === currentIdx;
-const dotColor = isCompleted ? (isCurrent ? this.getStatusColor(status) : '#10b981') : 'var(--neutral-300)';
-const lineColor = i < currentIdx ? '#10b981' : 'var(--neutral-200)';
-return `
+${steps
+  .map((step, i) => {
+    const isCompleted = i <= currentIdx;
+    const isCurrent = i === currentIdx;
+    const dotColor = isCompleted
+      ? isCurrent
+        ? this.getStatusColor(status)
+        : '#10b981'
+      : 'var(--neutral-300)';
+    const lineColor = i < currentIdx ? '#10b981' : 'var(--neutral-200)';
+    return `
 <div style="flex:1;display:flex;flex-direction:column;align-items:center;position:relative;">
 ${i > 0 ? `<div style="position:absolute;top:8px;left:-50%;width:100%;height:2px;background:${lineColor};z-index:0;"></div>` : ''}
 <div style="width:18px;height:18px;border-radius:50%;background:${dotColor};border:2px solid ${dotColor};z-index:1;display:flex;align-items:center;justify-content:center;margin-bottom:4px;">
@@ -2490,32 +2695,36 @@ ${isCurrent ? '<div style="width:6px;height:6px;border-radius:50%;background:whi
 </div>
 <span style="font-size:0.7rem;color:${isCompleted ? 'var(--neutral-700)' : 'var(--neutral-400)'};font-weight:${isCurrent ? '600' : '400'};text-align:center;white-space:nowrap;">${step.label}</span>
 </div>`;
-}).join('')}
+  })
+  .join('')}
 </div>
 </div>`;
-}
+  }
 
-/**
-* View Order Details (expand in page)
-*/
-  static async viewOrderDetails (orderId) {
-const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
-const currentUser = session?.user || null;
-if (!currentUser) return;
+  /**
+   * View Order Details (expand in page)
+   */
+  static async viewOrderDetails(orderId) {
+    const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
+    const currentUser = session?.user || null;
+    if (!currentUser) return;
 
-  const orders = await checkoutManager.getUserOrders(currentUser.id);
-  const order = orders.find(o => o.id === orderId);
-if (!order) {
-notificationManager?.error('Not Found', 'Order not found');
-return;
-}
+    const orders = await checkoutManager.getUserOrders(currentUser.id);
+    const order = orders.find(o => o.id === orderId);
+    if (!order) {
+      notificationManager?.error('Not Found', 'Order not found');
+      return;
+    }
 
-const overlay = document.createElement('div');
-overlay.id = 'order-detail-overlay';
-overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;';
-overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+    const overlay = document.createElement('div');
+    overlay.id = 'order-detail-overlay';
+    overlay.style.cssText =
+      'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;';
+    overlay.onclick = e => {
+      if (e.target === overlay) overlay.remove();
+    };
 
-overlay.innerHTML = `
+    overlay.innerHTML = `
 <div style="background:var(--bg-primary);border-radius:var(--radius-xl);padding:2rem;max-width:600px;width:100%;box-shadow:var(--shadow-xl);max-height:90vh;overflow-y:auto;">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
 <h2 style="margin:0;">Order #${order.orderNumber}</h2>
@@ -2528,7 +2737,9 @@ ${Formatter.capitalize(order.status.replace('-', ' '))}
 ${Pages.renderOrderTimeline(order.status)}
 <div style="margin-top:1.5rem;">
 <h3 style="font-size:1rem;margin:0 0 1rem;">Items</h3>
-${order.items.map(item => `
+${order.items
+  .map(
+    item => `
 <div style="display:flex;gap:1rem;margin-bottom:0.75rem;align-items:center;">
   <img src="${item.image || '/assets/images/products/no-image.svg'}" alt="${item.title}" style="width:50px;height:50px;object-fit:cover;border-radius:var(--radius-md);" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
 <div style="flex:1;">
@@ -2537,7 +2748,9 @@ ${order.items.map(item => `
 </div>
 <div style="font-weight:600;">${Formatter.formatPrice(item.price * item.quantity)}</div>
 </div>
-`).join('')}
+`
+  )
+  .join('')}
 </div>
   <div style="border-top:1px solid var(--neutral-200);padding-top:1rem;margin-top:1rem;display:flex;justify-content:space-between;align-items:center;">
   <div>
@@ -2556,25 +2769,25 @@ ${order.items.map(item => `
   }
 
   /**
-* Update cart badge in navbar
-*/
-static updateCartBadge () {
-const badge = document.getElementById('cart-badge');
-if (badge) {
-const count = cartManager.getCount();
-if (count > 0) {
-badge.textContent = count;
-badge.style.display = 'flex';
-} else {
-badge.style.display = 'none';
-}
-}
-}
+   * Update cart badge in navbar
+   */
+  static updateCartBadge() {
+    const badge = document.getElementById('cart-badge');
+    if (badge) {
+      const count = cartManager.getCount();
+      if (count > 0) {
+        badge.textContent = count;
+        badge.style.display = 'flex';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+  }
 
-/**
-* Update wishlist badge in navbar
-*/
-static updateWishlistBadge () {
+  /**
+   * Update wishlist badge in navbar
+   */
+  static updateWishlistBadge() {
     try {
       const badge = document.getElementById('wishlist-badge');
       if (badge && productsManager && typeof productsManager.getWishlist === 'function') {
@@ -2591,49 +2804,49 @@ static updateWishlistBadge () {
     }
   }
 
-/**
-* Initialize dark mode from saved preference
-*/
-static initDarkMode () {
-const saved = StorageManager.get(STORAGE_KEYS.THEME, false);
-if (saved === 'dark') {
-document.documentElement.setAttribute('data-theme', 'dark');
-}
-Pages.updateDarkModeIcons();
-}
+  /**
+   * Initialize dark mode from saved preference
+   */
+  static initDarkMode() {
+    const saved = StorageManager.get(STORAGE_KEYS.THEME, false);
+    if (saved === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+    Pages.updateDarkModeIcons();
+  }
 
-/**
-* Toggle dark mode
-*/
-static toggleDarkMode () {
-const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-if (isDark) {
-document.documentElement.removeAttribute('data-theme');
-StorageManager.set(STORAGE_KEYS.THEME, 'light');
-} else {
-document.documentElement.setAttribute('data-theme', 'dark');
-StorageManager.set(STORAGE_KEYS.THEME, 'dark');
-}
-Pages.updateDarkModeIcons();
-}
+  /**
+   * Toggle dark mode
+   */
+  static toggleDarkMode() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+      document.documentElement.removeAttribute('data-theme');
+      StorageManager.set(STORAGE_KEYS.THEME, 'light');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      StorageManager.set(STORAGE_KEYS.THEME, 'dark');
+    }
+    Pages.updateDarkModeIcons();
+  }
 
-/**
-* Update dark mode toggle icons
-*/
-static updateDarkModeIcons () {
-const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-const sunIcon = document.getElementById('dark-mode-icon-sun');
-const moonIcon = document.getElementById('dark-mode-icon-moon');
-if (sunIcon && moonIcon) {
-sunIcon.style.display = isDark ? 'block' : 'none';
-moonIcon.style.display = isDark ? 'none' : 'block';
-}
-}
+  /**
+   * Update dark mode toggle icons
+   */
+  static updateDarkModeIcons() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const sunIcon = document.getElementById('dark-mode-icon-sun');
+    const moonIcon = document.getElementById('dark-mode-icon-moon');
+    if (sunIcon && moonIcon) {
+      sunIcon.style.display = isDark ? 'block' : 'none';
+      moonIcon.style.display = isDark ? 'none' : 'block';
+    }
+  }
 
   /**
    * Update navbar based on authentication state
    */
-  static updateNavbar () {
+  static updateNavbar() {
     const authButtons = document.getElementById('navbar-auth-buttons');
     const userMenu = document.getElementById('navbar-user-menu');
     const drawerAuth = document.getElementById('navbar-drawer-auth');
@@ -2669,16 +2882,16 @@ moonIcon.style.display = isDark ? 'none' : 'block';
   // ADDITIONAL PAGE RENDERERS (Placeholder implementations)
   // ============================================
 
-/**
-* Render Wishlist Page
-*/
-static renderWishlist () {
-const mainContent = document.getElementById('main-content');
-const wishlistProducts = productsManager.getWishlist();
-const priceDrops = productsManager.trackWishlistPrices();
+  /**
+   * Render Wishlist Page
+   */
+  static renderWishlist() {
+    const mainContent = document.getElementById('main-content');
+    const wishlistProducts = productsManager.getWishlist();
+    const priceDrops = productsManager.trackWishlistPrices();
 
-if (wishlistProducts.length === 0) {
-mainContent.innerHTML = `
+    if (wishlistProducts.length === 0) {
+      mainContent.innerHTML = `
 <div class="container" style="padding: 3rem 1rem; text-align: center;">
 <div class="empty-cart">
 <div class="empty-cart-icon">${Icons.heartOutline}</div>
@@ -2688,11 +2901,12 @@ mainContent.innerHTML = `
 </div>
 </div>
 `;
-return;
-}
+      return;
+    }
 
-const priceDropBanner = priceDrops.length > 0
-? `<div style="background:var(--color-success-light);border:1px solid var(--color-success);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+    const priceDropBanner =
+      priceDrops.length > 0
+        ? `<div style="background:var(--color-success-light);border:1px solid var(--color-success);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2"><path d="M13 17V7M6 17l5-5 5 5M20 7l-5 5"/></svg>
 <div>
 <strong style="color:var(--color-success);">Price Drop Alert!</strong>
@@ -2700,9 +2914,9 @@ const priceDropBanner = priceDrops.length > 0
 </div>
 ${priceDrops.map(d => `<span style="font-size:0.8rem;background:var(--bg-primary);padding:2px 8px;border-radius:var(--radius-md);">${d.title}: GHS ${d.oldPrice.toLocaleString()} → GHS ${d.newPrice.toLocaleString()} <strong style="color:var(--color-success);">(-GHS ${d.saved.toLocaleString()})</strong></span>`).join('')}
 </div>`
-: '';
+        : '';
 
-mainContent.innerHTML = `
+    mainContent.innerHTML = `
 <div class="container" style="padding: 2rem 1rem;">
 <nav class="browse-breadcrumb" aria-label="Breadcrumb">
 <div class="browse-breadcrumb-inner">
@@ -2735,13 +2949,18 @@ ${Icons.trash} Clear All
 </div>
 </div>
 <div class="wishlist-grid">
-${wishlistProducts.map(product => {
-const _wsn = product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
-      const initials = _wsn
-        .split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
-const conditionClass = product.condition || 'good';
-return `
+${wishlistProducts
+  .map(product => {
+    const _wsn = product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
+    const initials = _wsn
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+    const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
+    const conditionClass = product.condition || 'good';
+    return `
 <div class="wishlist-card" onclick="Pages.renderProductDetail('${product.id}')">
 <div class="wishlist-card-image">
 <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg';this.onerror=null;">
@@ -2751,13 +2970,13 @@ return `
 </button>
 </div>
 <div class="wishlist-card-info">
-<h3 class="wishlist-card-title">${product.title}</h3>
+<h3 class="wishlist-card-title">${_pageEsc(product.title)}</h3>
 <div style="display:flex;align-items:center;gap:0.5rem;margin:0.25rem 0;">
 <span style="font-weight:700;color:var(--price-color);font-size:1.1rem;">GHS ${product.price?.toLocaleString() || '0'}</span>
 </div>
 <div class="wishlist-card-seller">
 <div class="seller-avatar" style="width:24px;height:24px;font-size:10px;">${initials}</div>
-<span style="font-size:0.85rem;color:var(--neutral-600);">${product.seller?.name || 'Unknown'}</span>
+<span style="font-size:0.85rem;color:var(--neutral-600);">${_pageEsc(product.seller?.name || 'Unknown')}</span>
 ${product.seller?.rating ? `<span style="font-size:0.8rem;color:var(--neutral-500);">★ ${product.seller.rating}</span>` : ''}
 </div>
 <div class="wishlist-card-actions">
@@ -2768,7 +2987,8 @@ ${Icons.upload}
 </div>
 </div>
 </div>`;
-}).join('')}
+  })
+  .join('')}
 </div>
 </div>
 <style>
@@ -2849,13 +3069,13 @@ font-size: 0.8rem;
 </style>
 `;
 
-window.scrollTo(0, 0);
-}
+    window.scrollTo(0, 0);
+  }
 
   /**
    * Render User Dashboard - Vertical Tabs Modern Design
    */
-  static async renderDashboard () {
+  static async renderDashboard() {
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
 
@@ -3022,10 +3242,10 @@ window.scrollTo(0, 0);
 
               <div class="dv-orders">
                 ${
-  recentOrders.length > 0
-    ? recentOrders
-      .map(
-        order => `
+                  recentOrders.length > 0
+                    ? recentOrders
+                        .map(
+                          order => `
                   <div class="dv-order-item">
 <div class="dv-order-icon">${Icons.package}</div>
           <div class="dv-order-info">
@@ -3035,17 +3255,17 @@ window.scrollTo(0, 0);
                     <div class="dv-order-time">${Formatter.formatTimeAgo(order.createdAt)}</div>
                     <span class="dv-order-status ${order.status ? order.status.toLowerCase() : 'placed'}">${order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'Placed'}</span>
                   </div>
-                `,
-      )
-      .join('')
-    : `
+                `
+                        )
+                        .join('')
+                    : `
                   <div class="dv-empty">
 <div class="dv-empty-icon">${Icons.package}</div>
         <h3>No orders yet</h3>
         <p>Start shopping to see your orders here!</p>
                   </div>
                 `
-}
+                }
               </div>
             </div>
 
@@ -3056,10 +3276,10 @@ window.scrollTo(0, 0);
 
               <div class="dv-orders">
                 ${
-  orders.length > 0
-    ? orders
-      .map(
-        order => `
+                  orders.length > 0
+                    ? orders
+                        .map(
+                          order => `
                   <div class="dv-order-item">
 <div class="dv-order-icon">${Icons.package}</div>
           <div class="dv-order-info">
@@ -3069,17 +3289,17 @@ window.scrollTo(0, 0);
                     <div class="dv-order-time">${Formatter.formatTimeAgo(order.createdAt)}</div>
                     <span class="dv-order-status ${order.status ? order.status.toLowerCase() : 'placed'}">${order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'Placed'}</span>
                   </div>
-                `,
-      )
-      .join('')
-    : `
+                `
+                        )
+                        .join('')
+                    : `
                   <div class="dv-empty">
 <div class="dv-empty-icon">${Icons.cart}</div>
         <h3>No orders yet</h3>
         <p>Browse products and make your first purchase!</p>
                   </div>
                 `
-}
+                }
               </div>
             </div>
 
@@ -3089,12 +3309,12 @@ window.scrollTo(0, 0);
               <p class="dv-panel-subtitle">Items you've saved for later.</p>
 
               ${
-  wishlist.length > 0
-    ? `
+                wishlist.length > 0
+                  ? `
                 <div class="dv-wishlist-grid">
                   ${wishlist
-    .map(
-      product => `
+                    .map(
+                      product => `
                     <div class="store-product-card" onclick="Pages.renderProductDetail('${product.id}')">
                       <div class="store-product-image">
                         <img src="${(product.images && product.images[0]) || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
@@ -3102,26 +3322,26 @@ window.scrollTo(0, 0);
                         <button class="store-wishlist-btn active" onclick="Pages.toggleWishlist(event, '${product.id}'); Pages.renderDashboard();">${Icons.heart}</button>
                       </div>
                       <div class="store-product-info">
-                        <h3 class="store-product-title">${product.title}</h3>
+          <h3 class="store-product-title">${_pageEsc(product.title)}</h3>
                         <div class="store-product-price-row">
                           <span class="store-product-price">${product.price.toLocaleString()}</span>
                           <span class="store-product-currency">GHS</span>
                         </div>
                       </div>
                     </div>
-                  `,
-    )
-    .join('')}
+                  `
+                    )
+                    .join('')}
                 </div>
               `
-    : `
+                  : `
                 <div class="dv-empty">
 <div class="dv-empty-icon">${Icons.heartOutline}</div>
         <h3>Your wishlist is empty</h3>
                   <p>Save items you love to find them later!</p>
                 </div>
               `
-}
+              }
             </div>
 
             <!-- Cart Panel -->
@@ -3130,37 +3350,37 @@ window.scrollTo(0, 0);
               <p class="dv-panel-subtitle">Review items before checkout.</p>
 
               ${
-  cartCount > 0
-    ? `
+                cartCount > 0
+                  ? `
                 <div class="dv-orders">
                   ${cartManager
-    .getItems()
-    .map(
-      item => `
+                    .getItems()
+                    .map(
+                      item => `
                     <div class="dv-order-item">
 <div class="dv-order-icon">${Icons.cart}</div>
           <div class="dv-order-info">
-            <div class="dv-order-number">${item.product.title}</div>
+            <div class="dv-order-number">${_pageEsc(item.product.title)}</div>
             <div class="dv-order-amount">Qty: ${item.quantity} × ${item.product.price.toLocaleString()} GHS</div>
           </div>
                     </div>
-                  `,
-    )
-    .join('')}
+                  `
+                    )
+                    .join('')}
                 </div>
                 <div style="margin-top:1.5rem;display:flex;gap:0.75rem;">
                   <button class="dv-btn dv-btn-outline" onclick="cartManager.clear(); Pages.renderDashboard();">Clear Cart</button>
                   <button class="dv-btn dv-btn-primary" onclick="event.preventDefault(); Pages.handleProceedToCheckout();">Proceed to Checkout →</button>
                 </div>
               `
-    : `
+                  : `
                 <div class="dv-empty">
 <div class="dv-empty-icon">${Icons.cart}</div>
         <h3>Your cart is empty</h3>
         <p>Add items to get started!</p>
                 </div>
               `
-}
+              }
             </div>
 
             <!-- Profile Panel -->
@@ -3222,7 +3442,7 @@ window.scrollTo(0, 0);
   /**
    * Switch Dashboard Tab
    */
-  static switchDashboardTab (tabId) {
+  static switchDashboardTab(tabId) {
     // Update tab buttons
     document.querySelectorAll('.dv-tab').forEach(tab => {
       tab.classList.toggle('active', tab.dataset.tab === tabId);
@@ -3237,7 +3457,7 @@ window.scrollTo(0, 0);
   /**
    * Render User Profile
    */
-  static renderProfile () {
+  static renderProfile() {
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
 
@@ -3282,7 +3502,7 @@ window.scrollTo(0, 0);
   /**
    * Handle Profile Update
    */
-  static handleProfileUpdate (event) {
+  static handleProfileUpdate(event) {
     event.preventDefault();
     const form = event.target;
     const updates = {
@@ -3302,7 +3522,7 @@ window.scrollTo(0, 0);
   /**
    * Handle Logout
    */
-  static handleLogout () {
+  static handleLogout() {
     authManager.logout();
     notificationManager?.info('Logged Out', 'You have been logged out successfully.');
     // Update navbar to show login/signup buttons
@@ -3313,7 +3533,7 @@ window.scrollTo(0, 0);
   /**
    * Render Notifications Page
    */
-  static renderNotifications () {
+  static renderNotifications() {
     const mainContent = document.getElementById('main-content');
     notificationManager?.markAllAsRead();
     const notifications = notificationManager?.getAll() || [];
@@ -3324,10 +3544,14 @@ window.scrollTo(0, 0);
           <h1 style="margin:0;">Notifications</h1>
           <div style="display:flex;gap:0.5rem;">
             <a href="#/dashboard" style="padding:0.5rem 1rem;border:1px solid var(--neutral-300,#d4d4d4);border-radius:0.5rem;font-size:0.875rem;color:var(--text-primary,#111);text-decoration:none;">Back to Dashboard</a>
-            ${notifications.length > 0 ? `
+            ${
+              notifications.length > 0
+                ? `
               <button onclick="notificationManager?.deleteRead();Pages.renderNotifications();" style="padding:0.5rem 1rem;border:1px solid var(--neutral-300,#d4d4d4);border-radius:0.5rem;background:transparent;cursor:pointer;font-size:0.875rem;color:var(--text-primary,#111);">Clear Read</button>
               <button onclick="if(confirm('Delete all notifications?')){notificationManager?.deleteAll();Pages.renderNotifications();}" style="padding:0.5rem 1rem;border:1px solid var(--color-danger,#ef4444);border-radius:0.5rem;background:transparent;cursor:pointer;font-size:0.875rem;color:var(--color-danger,#ef4444);">Clear All</button>
-            ` : ''}
+            `
+                : ''
+            }
           </div>
         </div>
         ${
@@ -3348,7 +3572,7 @@ window.scrollTo(0, 0);
                 </div>
                 <button class="remove-btn" onclick="notificationManager?.delete('${n.id}'); Pages.renderNotifications();">×</button>
               </div>
-            `,
+            `
               )
               .join('')}
           </div>
@@ -3365,10 +3589,10 @@ window.scrollTo(0, 0);
     `;
   }
 
-/**
+  /**
    * Render Delivery Options Page
    */
-  static renderDeliveryOptions () {
+  static renderDeliveryOptions() {
     const mainContent = document.getElementById('main-content');
     const deliveryOptions = deliveryManager.getDeliveryOptions();
 
@@ -3377,8 +3601,8 @@ window.scrollTo(0, 0);
         <h1 style="margin-bottom: 1.5rem;">Delivery Options</h1>
         <div class="delivery-options">
           ${deliveryOptions
-    .map(
-      option => `
+            .map(
+              option => `
             <div class="option-card">
               <div class="option-icon">${option.icon}</div>
               <div class="option-label">${option.name}</div>
@@ -3386,18 +3610,18 @@ window.scrollTo(0, 0);
               <div class="option-fee">${option.fee === 0 ? 'Free' : `GHS ${option.fee}`}</div>
               <div class="option-fee" style="font-size: 0.75rem;">${option.estimatedTime}</div>
             </div>
-          `,
-    )
-    .join('')}
+          `
+            )
+            .join('')}
         </div>
       </div>
     `;
   }
 
   /**
-  * Render Payment Page
+   * Render Payment Page
    */
-  static async renderPayment (orderId) {
+  static async renderPayment(orderId) {
     const order = await checkoutManager.getOrderById(orderId);
     const mainContent = document.getElementById('main-content');
 
@@ -3444,7 +3668,7 @@ window.scrollTo(0, 0);
   /**
    * Render Payment Success Page
    */
-  static renderPaymentSuccess () {
+  static renderPaymentSuccess() {
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `
       <div class="container" style="padding: 2rem 1rem; text-align: center;">
@@ -3456,20 +3680,55 @@ window.scrollTo(0, 0);
     `;
   }
 
-  static getAdminSidebar (activeItem) {
-  const adminUser = adminAuthManager.getCurrentUser();
+  static getAdminSidebar(activeItem) {
+    const adminUser = adminAuthManager.getCurrentUser();
     const items = [
-      { key: 'dashboard', label: 'Dashboard', icon: Icons.chart, action: 'Pages.renderAdminDashboard()' },
-      { key: 'verifications', label: 'Verifications', icon: Icons.shield || Icons.verification, action: 'Pages.renderAdminVerifications()' },
+      {
+        key: 'dashboard',
+        label: 'Dashboard',
+        icon: Icons.chart,
+        action: 'Pages.renderAdminDashboard()',
+      },
+      {
+        key: 'verifications',
+        label: 'Verifications',
+        icon: Icons.shield || Icons.verification,
+        action: 'Pages.renderAdminVerifications()',
+      },
       { key: 'users', label: 'Users', icon: Icons.users, action: 'Pages.renderAdminUsers()' },
-      { key: 'products', label: 'Products', icon: Icons.package, action: 'Pages.renderAdminProducts()' },
-      { key: 'orders', label: 'Orders', icon: Icons.clipboard, action: 'Pages.renderAdminOrders()' },
+      {
+        key: 'products',
+        label: 'Products',
+        icon: Icons.package,
+        action: 'Pages.renderAdminProducts()',
+      },
+      {
+        key: 'orders',
+        label: 'Orders',
+        icon: Icons.clipboard,
+        action: 'Pages.renderAdminOrders()',
+      },
       { key: 'reports', label: 'Reports', icon: Icons.chart, action: 'Pages.renderAdminReports()' },
-      { key: 'analytics', label: 'Analytics', icon: Icons.chart, action: 'Pages.renderAdminAnalytics()' },
-      { key: 'activity', label: 'Activity', icon: Icons.clock || Icons.chart, action: 'Pages.renderAdminActivity()' },
-      { key: 'regions', label: 'Regions', icon: Icons.globe || Icons.chart, action: 'Pages.renderAdminRegions()' },
+      {
+        key: 'analytics',
+        label: 'Analytics',
+        icon: Icons.chart,
+        action: 'Pages.renderAdminAnalytics()',
+      },
+      {
+        key: 'activity',
+        label: 'Activity',
+        icon: Icons.clock || Icons.chart,
+        action: 'Pages.renderAdminActivity()',
+      },
+      {
+        key: 'regions',
+        label: 'Regions',
+        icon: Icons.globe || Icons.chart,
+        action: 'Pages.renderAdminRegions()',
+      },
     ];
-  return `
+    return `
   <button class="admin-mobile-toggle" onclick="document.querySelector('.admin-sidebar').classList.toggle('open')">&#9776;</button>
   <aside class="admin-sidebar">
   <div class="admin-brand">
@@ -3477,23 +3736,27 @@ window.scrollTo(0, 0);
   <div class="admin-brand-name">Admin Panel</div>
   </div>
   <div class="admin-user-badge">
-  <div class="admin-user-avatar">${(adminUser?.fullName || 'A').charAt(0).toUpperCase()}</div>
+  <div class="admin-user-avatar">${_pageEsc((adminUser?.fullName || 'A').charAt(0).toUpperCase())}</div>
   <div>
-  <div class="admin-user-name">${adminUser?.fullName || 'Admin'}</div>
+  <div class="admin-user-name">${_pageEsc(adminUser?.fullName || 'Admin')}</div>
   <div class="admin-user-role">Super Admin</div>
   </div>
   </div>
   <nav class="admin-nav-section">
   <div class="admin-nav-title">Main</div>
   <ul class="admin-menu">
-  ${items.map(item => `
+  ${items
+    .map(
+      item => `
   <li class="admin-menu-item">
   <a href="#" class="admin-menu-link ${activeItem === item.key ? 'active' : ''}" onclick="${item.action}; return false;">
   <span class="admin-menu-icon">${item.icon}</span>
   <span>${item.label}</span>
   </a>
   </li>
-  `).join('')}
+  `
+    )
+    .join('')}
   </ul>
   </nav>
   <div class="admin-sidebar-footer">
@@ -3503,22 +3766,22 @@ window.scrollTo(0, 0);
   }
 
   /**
-  * Render Admin Dashboard
+   * Render Admin Dashboard
    */
-static async renderAdminDashboard () {
-  const adminUser = adminAuthManager.getCurrentUser();
+  static async renderAdminDashboard() {
+    const adminUser = adminAuthManager.getCurrentUser();
 
-  if (!adminAuthManager.isLoggedIn()) {
-    this.renderAdminLogin();
-    return;
-  }
+    if (!adminAuthManager.isLoggedIn()) {
+      this.renderAdminLogin();
+      return;
+    }
 
-  this.hideOriginalNavFooter();
-  document.body.style.background = '';
+    this.hideOriginalNavFooter();
+    document.body.style.background = '';
 
-  const mainContent = document.getElementById('main-content');
+    const mainContent = document.getElementById('main-content');
 
-  mainContent.innerHTML = `
+    mainContent.innerHTML = `
   <div class="admin-container">
   ${this.getAdminSidebar('dashboard')}
   <main class="admin-main">
@@ -3544,9 +3807,9 @@ static async renderAdminDashboard () {
   </div>
   `;
 
-  const stats = await adminReportsManager.getDashboardOverview();
+    const stats = await adminReportsManager.getDashboardOverview();
 
-  document.getElementById('admin-stats-grid').innerHTML = `
+    document.getElementById('admin-stats-grid').innerHTML = `
   <div class="admin-stat-card">
   <div class="admin-stat-header">
   <div class="admin-stat-icon primary">${Icons.users}</div>
@@ -3589,29 +3852,41 @@ static async renderAdminDashboard () {
   </div>
   `;
 
-  const recentOrdersHtml = (stats.recentOrders || []).map(o => `
+    const recentOrdersHtml =
+      (stats.recentOrders || [])
+        .map(
+          o => `
   <tr>
   <td style="font-weight:600;">#${o.orderNumber || o.id?.slice(-6)}</td>
 <td style="font-family:monospace;font-size:0.8rem;color:#0046be;">${o.trackingNumber || '—'}</td>
-  <td>${o.customer?.name || 'N/A'}</td>
+  <td>${_pageEsc(o.customer?.name || 'N/A')}</td>
   <td><span class="admin-status-badge ${o.status}">${Formatter.capitalize((o.status || 'placed').replace('-', ' '))}</span></td>
   <td style="font-weight:600;">${Formatter.formatPrice(o.pricing?.grandTotal || 0)}</td>
   <td style="color:#9ca3af;font-size:0.8rem;">${Formatter.formatTimeAgo(o.createdAt)}</td>
   </tr>
-  `).join('') || '<tr><td colspan="6" style="text-align:center;color:#6b7280;padding:2rem;">No orders yet</td></tr>';
+  `
+        )
+        .join('') ||
+      '<tr><td colspan="6" style="text-align:center;color:#6b7280;padding:2rem;">No orders yet</td></tr>';
 
-  const recentUsersHtml = (stats.recentUsers || []).map(u => `
+    const recentUsersHtml =
+      (stats.recentUsers || [])
+        .map(
+          u => `
   <div class="admin-user-row">
-  <div class="admin-user-avatar-sm">${(u.fullName || 'U').charAt(0).toUpperCase()}</div>
+  <div class="admin-user-avatar-sm">${_pageEsc((u.fullName || 'U').charAt(0).toUpperCase())}</div>
   <div style="flex:1;">
-  <div style="font-weight:500;">${u.fullName || 'Unknown'}</div>
+  <div style="font-weight:500;">${_pageEsc(u.fullName || 'Unknown')}</div>
   <div style="color:#9ca3af;font-size:0.8rem;">${u.email || ''}</div>
   </div>
   <span class="admin-role-badge ${u.role || 'buyer'}">${Formatter.capitalize(u.role || 'buyer')}</span>
   </div>
-  `).join('') || '<div style="text-align:center;color:#6b7280;padding:2rem;">No users yet</div>';
+  `
+        )
+        .join('') ||
+      '<div style="text-align:center;color:#6b7280;padding:2rem;">No users yet</div>';
 
-  document.getElementById('admin-dashboard-content').innerHTML = `
+    document.getElementById('admin-dashboard-content').innerHTML = `
   <div class="admin-dashboard-grid">
     <div class="admin-card" style="grid-row: 1 / 4;">
       <div class="admin-card-header">
@@ -3673,11 +3948,14 @@ static async renderAdminDashboard () {
     </div>
   </div>
 `;
-}
+  }
 
-static async renderAdminVerifications (filter = 'pending') {
+  static async renderAdminVerifications(filter = 'pending') {
     const adminUser = adminAuthManager.getCurrentUser();
-    if (!adminAuthManager.isLoggedIn()) { this.renderAdminLogin(); return; }
+    if (!adminAuthManager.isLoggedIn()) {
+      this.renderAdminLogin();
+      return;
+    }
 
     this.hideOriginalNavFooter();
     document.body.style.background = '';
@@ -3692,10 +3970,14 @@ static async renderAdminVerifications (filter = 'pending') {
 
     const mainContent = document.getElementById('main-content');
     const stats = adminVerificationsManager.getStats();
-    const allItems = filter === 'all' ? adminVerificationsManager.getAll()
-      : filter === 'approved' ? adminVerificationsManager.getApproved()
-      : filter === 'rejected' ? adminVerificationsManager.getRejected()
-      : adminVerificationsManager.getPending();
+    const allItems =
+      filter === 'all'
+        ? adminVerificationsManager.getAll()
+        : filter === 'approved'
+          ? adminVerificationsManager.getApproved()
+          : filter === 'rejected'
+            ? adminVerificationsManager.getRejected()
+            : adminVerificationsManager.getPending();
 
     mainContent.innerHTML = `
     <div class="admin-container">
@@ -3738,12 +4020,15 @@ static async renderAdminVerifications (filter = 'pending') {
             </div>
           </div>
           <div class="admin-table-container" style="box-shadow:none;border-radius:0;">
-            ${allItems.length === 0 ? `
+            ${
+              allItems.length === 0
+                ? `
               <div style="text-align:center;padding:3rem;color:#6b7280;">
                 <div style="font-size:2.5rem;margin-bottom:1rem;">📋</div>
                 <p style="margin:0;font-size:1rem;">No ${filter} verifications found</p>
               </div>
-            ` : `
+            `
+                : `
               <table class="admin-table">
                 <thead>
                   <tr>
@@ -3756,19 +4041,23 @@ static async renderAdminVerifications (filter = 'pending') {
                   </tr>
                 </thead>
                 <tbody>
-                  ${allItems.map(v => `
+                  ${allItems
+                    .map(
+                      v => `
                   <tr id="vrf-row-${v.id}">
                     <td>
-                      <div style="font-weight:600;color:#f9fafb;">${v.fullName || 'N/A'}</div>
+                      <div style="font-weight:600;color:#f9fafb;">${_pageEsc(v.fullName || 'N/A')}</div>
                       <div style="font-size:0.75rem;color:#9ca3af;">${v.personalEmail || v.universityEmail || v.email || ''}</div>
                       <div style="font-size:0.75rem;color:#6b7280;">${v.phone || ''}</div>
                     </td>
                     <td style="font-family:monospace;color:#60a5fa;">${v.studentId || 'N/A'}</td>
                     <td>
                       <span style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.25rem 0.5rem;border-radius:9999px;font-size:0.7rem;font-weight:600;
-                        ${v.verificationMethod === 'email'
-                          ? 'background:rgba(59,130,246,0.15);color:#60a5fa;'
-                          : 'background:rgba(245,158,11,0.15);color:#f59e0b;'}">
+                        ${
+                          v.verificationMethod === 'email'
+                            ? 'background:rgba(59,130,246,0.15);color:#60a5fa;'
+                            : 'background:rgba(245,158,11,0.15);color:#f59e0b;'
+                        }">
                         ${v.verificationMethod === 'email' ? '📧 Email' : '📄 Document'}
                       </span>
                       <div style="font-size:0.7rem;color:#6b7280;margin-top:0.25rem;">Level ${v.level || 'N/A'}${v.hall ? ' · ' + v.hall : ''}</div>
@@ -3777,49 +4066,71 @@ static async renderAdminVerifications (filter = 'pending') {
                     <td>
                       <span class="admin-status-badge ${v.status === 'approved' ? 'delivered' : v.status === 'rejected' ? 'cancelled' : 'placed'}"
                         style="text-transform:capitalize;">${v.status}</span>
-                      ${v.reviewNotes ? `<div style="font-size:0.7rem;color:#9ca3af;margin-top:0.25rem;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${v.reviewNotes.replace(/"/g, '&quot;')}">💬 ${v.reviewNotes}</div>` : ''}
+                      ${v.reviewNotes ? `<div style="font-size:0.7rem;color:#9ca3af;margin-top:0.25rem;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${v.reviewNotes.replace(/"/g, '&quot;')}">💬 ${_pageEsc(v.reviewNotes)}</div>` : ''}
                     </td>
                     <td>
                       <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
                         <button class="btn btn-sm" onclick="Pages.viewVerificationDetail('${v.id}')" style="padding:3px 8px;font-size:11px;background:#374151;color:#e5e7eb;border:none;cursor:pointer;">👁 View</button>
-                        ${v.status === 'pending' ? `
+                        ${
+                          v.status === 'pending'
+                            ? `
                           <button class="btn btn-sm" onclick="Pages.approveVerification('${v.id}')" style="padding:3px 8px;font-size:11px;background:#059669;color:#fff;border:none;cursor:pointer;">✓ Approve</button>
                           <button class="btn btn-sm" onclick="Pages.rejectVerification('${v.id}')" style="padding:3px 8px;font-size:11px;background:#dc2626;color:#fff;border:none;cursor:pointer;">✕ Reject</button>
-                        ` : ''}
+                        `
+                            : ''
+                        }
                       </div>
                     </td>
                   </tr>
-                  `).join('')}
+                  `
+                    )
+                    .join('')}
                 </tbody>
               </table>
-            `}
+            `
+            }
           </div>
         </div>
       </main>
     </div>`;
   }
 
-  static viewVerificationDetail (id) {
-    if (typeof adminVerificationsManager === 'undefined') { showToast('Verification module not loaded', 'error'); return; }
+  static viewVerificationDetail(id) {
+    if (typeof adminVerificationsManager === 'undefined') {
+      showToast('Verification module not loaded', 'error');
+      return;
+    }
     const v = adminVerificationsManager.getById(id);
-    if (!v) { showToast('Verification not found', 'error'); return; }
+    if (!v) {
+      showToast('Verification not found', 'error');
+      return;
+    }
 
     const overlay = document.createElement('div');
     overlay.id = 'vrf-detail-overlay';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:2000;padding:2rem;';
-    overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+    overlay.style.cssText =
+      'position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:2000;padding:2rem;';
+    overlay.onclick = e => {
+      if (e.target === overlay) overlay.remove();
+    };
 
-    const docsHtml = (v.documents && v.documents.length > 0)
-      ? v.documents.map(d => d.dataUrl
-        ? `<div style="border:1px solid rgba(255,255,255,0.1);border-radius:0.5rem;overflow:hidden;">
+    const docsHtml =
+      v.documents && v.documents.length > 0
+        ? v.documents
+            .map(d =>
+              d.dataUrl
+                ? `<div style="border:1px solid rgba(255,255,255,0.1);border-radius:0.5rem;overflow:hidden;">
             <div style="padding:0.5rem 0.75rem;background:#111827;font-size:0.75rem;color:#9ca3af;border-bottom:1px solid rgba(255,255,255,0.1);">${d.name} (${(d.size / 1024).toFixed(1)} KB)</div>
-            ${d.type && d.type.startsWith('image/')
-              ? `<img src="${d.dataUrl}" style="max-width:100%;max-height:300px;display:block;margin:0.5rem auto;" alt="${d.name}" />`
-              : `<div style="padding:1rem;text-align:center;color:#6b7280;">📄 ${d.name}</div>`}
+            ${
+              d.type && d.type.startsWith('image/')
+                ? `<img src="${d.dataUrl}" style="max-width:100%;max-height:300px;display:block;margin:0.5rem auto;" alt="${d.name}" />`
+                : `<div style="padding:1rem;text-align:center;color:#6b7280;">📄 ${d.name}</div>`
+            }
           </div>`
-        : `<div style="padding:0.5rem 0.75rem;background:#111827;border-radius:0.5rem;font-size:0.75rem;color:#9ca3af;border:1px solid rgba(255,255,255,0.1);">${d.name} (${(d.size / 1024).toFixed(1)} KB)</div>`
-      ).join('')
-      : '<div style="color:#6b7280;font-size:0.85rem;">No documents uploaded</div>';
+                : `<div style="padding:0.5rem 0.75rem;background:#111827;border-radius:0.5rem;font-size:0.75rem;color:#9ca3af;border:1px solid rgba(255,255,255,0.1);">${d.name} (${(d.size / 1024).toFixed(1)} KB)</div>`
+            )
+            .join('')
+        : '<div style="color:#6b7280;font-size:0.85rem;">No documents uploaded</div>';
 
     overlay.innerHTML = `
     <div style="background:#1f2937;border:1px solid rgba(255,255,255,0.1);border-radius:1rem;width:100%;max-width:600px;max-height:85vh;overflow-y:auto;padding:2rem;">
@@ -3832,8 +4143,8 @@ static async renderAdminVerifications (filter = 'pending') {
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
-        <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Full Name</div><div style="color:#f9fafb;font-weight:500;">${v.fullName || 'N/A'}</div></div>
-        <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Student ID</div><div style="color:#60a5fa;font-family:monospace;font-weight:500;">${v.studentId || 'N/A'}</div></div>
+        <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Full Name</div><div style="color:#f9fafb;font-weight:500;">${_pageEsc(v.fullName || 'N/A')}</div></div>
+        <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Student ID</div><div style="color:#60a5fa;font-family:monospace;font-weight:500;">${_pageEsc(v.studentId || 'N/A')}</div></div>
         <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Email</div><div style="color:#f9fafb;">${v.personalEmail || v.universityEmail || v.email || 'N/A'}</div></div>
         <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Phone</div><div style="color:#f9fafb;">${v.phone || 'N/A'}</div></div>
         <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Level</div><div style="color:#f9fafb;">Level ${v.level || 'N/A'}</div></div>
@@ -3842,7 +4153,7 @@ static async renderAdminVerifications (filter = 'pending') {
         <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Submitted</div><div style="color:#f9fafb;font-size:0.85rem;">${Formatter.formatDate(v.submittedAt)}</div></div>
         ${v.reviewedBy ? `<div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Reviewed By</div><div style="color:#f9fafb;">${v.reviewedBy}</div></div>` : ''}
         ${v.reviewedAt ? `<div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Reviewed At</div><div style="color:#f9fafb;font-size:0.85rem;">${Formatter.formatDate(v.reviewedAt)}</div></div>` : ''}
-        ${v.reviewNotes ? `<div style="grid-column:1/-1;"><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Review Notes</div><div style="color:#f9fafb;background:#111827;padding:0.75rem;border-radius:0.5rem;font-size:0.85rem;">${v.reviewNotes}</div></div>` : ''}
+        ${v.reviewNotes ? `<div style="grid-column:1/-1;"><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Review Notes</div><div style="color:#f9fafb;background:#111827;padding:0.75rem;border-radius:0.5rem;font-size:0.85rem;">${_pageEsc(v.reviewNotes)}</div></div>` : ''}
       </div>
 
       <div style="margin-bottom:1.5rem;">
@@ -3850,7 +4161,9 @@ static async renderAdminVerifications (filter = 'pending') {
         <div style="display:flex;flex-direction:column;gap:0.5rem;">${docsHtml}</div>
       </div>
 
-      ${v.status === 'pending' ? `
+      ${
+        v.status === 'pending'
+          ? `
       <div style="border-top:1px solid rgba(255,255,255,0.1);padding-top:1.5rem;">
         <div style="margin-bottom:1rem;">
           <label style="font-size:0.8rem;color:#9ca3af;display:block;margin-bottom:0.35rem;">Review Notes (optional)</label>
@@ -3860,14 +4173,19 @@ static async renderAdminVerifications (filter = 'pending') {
           <button onclick="Pages.approveVerification('${v.id}'); document.getElementById('vrf-detail-overlay').remove();" style="flex:1;padding:0.75rem;background:#059669;color:#fff;border:none;border-radius:0.5rem;cursor:pointer;font-weight:600;font-size:0.9rem;">✓ Approve Verification</button>
           <button onclick="Pages.rejectVerification('${v.id}'); document.getElementById('vrf-detail-overlay').remove();" style="flex:1;padding:0.75rem;background:#dc2626;color:#fff;border:none;border-radius:0.5rem;cursor:pointer;font-weight:600;font-size:0.9rem;">✕ Reject Verification</button>
         </div>
-      </div>` : ''}
+      </div>`
+          : ''
+      }
     </div>`;
 
     document.body.appendChild(overlay);
   }
 
-  static approveVerification (id) {
-    if (typeof adminVerificationsManager === 'undefined') { showToast('Verification module not loaded', 'error'); return; }
+  static approveVerification(id) {
+    if (typeof adminVerificationsManager === 'undefined') {
+      showToast('Verification module not loaded', 'error');
+      return;
+    }
     const notesEl = document.getElementById(`vrf-review-notes-${id}`);
     const notes = notesEl ? notesEl.value.trim() : '';
     const result = adminVerificationsManager.approve(id, notes);
@@ -3879,13 +4197,18 @@ static async renderAdminVerifications (filter = 'pending') {
     }
   }
 
-  static rejectVerification (id) {
-    if (typeof adminVerificationsManager === 'undefined') { showToast('Verification module not loaded', 'error'); return; }
+  static rejectVerification(id) {
+    if (typeof adminVerificationsManager === 'undefined') {
+      showToast('Verification module not loaded', 'error');
+      return;
+    }
     const notesEl = document.getElementById(`vrf-review-notes-${id}`);
     let notes = notesEl ? notesEl.value.trim() : '';
 
     if (!notes) {
-      const reason = prompt('Please provide a reason for rejection (this will be visible to the student):');
+      const reason = prompt(
+        'Please provide a reason for rejection (this will be visible to the student):'
+      );
       if (reason === null) return;
       notes = reason;
     }
@@ -3899,14 +4222,14 @@ static async renderAdminVerifications (filter = 'pending') {
     }
   }
 
-/**
-* Render Admin Login
-*/
-static renderAdminLogin () {
-  this.hideOriginalNavFooter();
-  document.body.style.background = '';
-  const mainContent = document.getElementById('main-content');
-  mainContent.innerHTML = `
+  /**
+   * Render Admin Login
+   */
+  static renderAdminLogin() {
+    this.hideOriginalNavFooter();
+    document.body.style.background = '';
+    const mainContent = document.getElementById('main-content');
+    mainContent.innerHTML = `
   <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#111827;padding:2rem;">
     <div style="background:#1f2937;border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius-xl,1rem);padding:var(--space-2xl,2rem);width:100%;max-width:400px;">
       <div style="text-align:center;margin-bottom:2rem;">
@@ -3936,7 +4259,7 @@ static renderAdminLogin () {
   /**
    * Handle Admin Login
    */
-  static async handleAdminLogin (event) {
+  static async handleAdminLogin(event) {
     event.preventDefault();
     const form = event.target;
     const result = await adminAuthManager.login(form.email.value, form.password.value);
@@ -3952,12 +4275,12 @@ static renderAdminLogin () {
   /**
    * Render Admin Users Page
    */
-  static async renderAdminUsers () {
-  this.hideOriginalNavFooter();
-  document.body.style.background = '';
-  const mainContent = document.getElementById('main-content');
+  static async renderAdminUsers() {
+    this.hideOriginalNavFooter();
+    document.body.style.background = '';
+    const mainContent = document.getElementById('main-content');
 
-  mainContent.innerHTML = `
+    mainContent.innerHTML = `
   <div class="admin-container">
   ${this.getAdminSidebar('users')}
   <main class="admin-main">
@@ -3971,12 +4294,12 @@ static renderAdminLogin () {
   </main>
   </div>`;
 
-  await adminUsersManager.loadUsers();
-  const users = adminUsersManager.getAllUsers();
+    await adminUsersManager.loadUsers();
+    const users = adminUsersManager.getAllUsers();
 
-  const tableBody = document.querySelector('.admin-card');
-  if (tableBody) {
-  tableBody.outerHTML = `
+    const tableBody = document.querySelector('.admin-card');
+    if (tableBody) {
+      tableBody.outerHTML = `
   <div class="admin-table-container">
   <table class="admin-table">
   <thead>
@@ -3990,13 +4313,15 @@ static renderAdminLogin () {
   </tr>
   </thead>
   <tbody>
-  ${users.map(user => `
+  ${users
+    .map(
+      user => `
   <tr>
   <td>
   <div class="user-cell">
-  <div class="admin-user-avatar-sm">${(user.fullName || 'U').charAt(0).toUpperCase()}</div>
+  <div class="admin-user-avatar-sm">${_pageEsc((user.fullName || 'U').charAt(0).toUpperCase())}</div>
   <div class="user-info">
-  <div class="user-name">${user.fullName}</div>
+  <div class="user-name">${_pageEsc(user.fullName)}</div>
   </div>
   </div>
   </td>
@@ -4010,49 +4335,55 @@ static renderAdminLogin () {
   </td>
   <td>
   <div class="table-actions">
-  ${user.role === 'admin' ? '' : user.isSuspended
-  ? `<button class="btn btn-sm btn-success" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminUnbanUser('${user.id}')">Unban</button>`
-  : `<button class="btn btn-sm btn-danger" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminBanUser('${user.id}')">Ban</button>`
+  ${
+    user.role === 'admin'
+      ? ''
+      : user.isSuspended
+        ? `<button class="btn btn-sm btn-success" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminUnbanUser('${user.id}')">Unban</button>`
+        : `<button class="btn btn-sm btn-danger" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminBanUser('${user.id}')">Ban</button>`
   }
   </div>
   </td>
   </tr>
-  `).join('')}
+  `
+    )
+    .join('')}
   </tbody>
   </table>
   </div>`;
-  }
-
+    }
   }
 
   /**
    * Render Admin Products Page
    */
-  static async renderAdminProducts () {
-  let products = adminProductsManager.getAllProducts();
-  if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
-    try {
-      const resp = await api.admin.getProducts({ limit: 100 });
-      if (resp.success && resp.data && resp.data.products) {
-        const backendProducts = resp.data.products;
-        if (backendProducts.length > 0) {
-          const localIds = new Set(products.map(p => p.id));
-          const merged = [...backendProducts];
-          for (const lp of products) {
-            if (!localIds.has(lp.id) && !backendProducts.some(bp => bp.id === lp.id)) {
-              merged.push(lp);
+  static async renderAdminProducts() {
+    let products = adminProductsManager.getAllProducts();
+    if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
+      try {
+        const resp = await api.admin.getProducts({ limit: 100 });
+        if (resp.success && resp.data && resp.data.products) {
+          const backendProducts = resp.data.products;
+          if (backendProducts.length > 0) {
+            const localIds = new Set(products.map(p => p.id));
+            const merged = [...backendProducts];
+            for (const lp of products) {
+              if (!localIds.has(lp.id) && !backendProducts.some(bp => bp.id === lp.id)) {
+                merged.push(lp);
+              }
             }
+            products = merged;
           }
-          products = merged;
         }
+      } catch (_) {
+        console.warn('pages: mergeLocalProducts failed:', _);
       }
-    } catch (_) { console.warn('pages: mergeLocalProducts failed:', _); }
-  }
-  this.hideOriginalNavFooter();
-  document.body.style.background = '';
-  const mainContent = document.getElementById('main-content');
+    }
+    this.hideOriginalNavFooter();
+    document.body.style.background = '';
+    const mainContent = document.getElementById('main-content');
 
-  mainContent.innerHTML = `
+    mainContent.innerHTML = `
   <div class="admin-container">
   ${this.getAdminSidebar('products')}
   <main class="admin-main">
@@ -4076,18 +4407,18 @@ static renderAdminLogin () {
   </thead>
   <tbody>
   ${products
-  .map(
-  product => `
+    .map(
+      product => `
   <tr>
   <td>
   <div class="product-cell">
   <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" class="product-image-small" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
-  <span>${product.title}</span>
+  <span>${_pageEsc(product.title)}</span>
   </div>
   </td>
   <td>${Formatter.capitalize(product.category)}</td>
   <td>${Formatter.formatPrice(product.price)}</td>
-  <td>${product.seller?.fullName || product.sellerName || product.seller?.name || product.seller || 'Unknown'}</td>
+  <td>${_pageEsc(product.seller?.fullName || product.sellerName || product.seller?.name || product.seller || 'Unknown')}</td>
   <td>
   <span class="admin-status-badge ${product.status === 'pending' ? 'placed' : 'delivered'}">
   ${product.status || 'active'}
@@ -4095,18 +4426,22 @@ static renderAdminLogin () {
   </td>
               <td>
                 <div class="table-actions">
-                  ${product.status === 'pending' ? `
+                  ${
+                    product.status === 'pending'
+                      ? `
                   <button class="btn btn-sm btn-success" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminApproveProduct('${product.id}')">Approve</button>
                   <button class="btn btn-sm btn-danger" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminRejectProduct('${product.id}')">Reject</button>
-                  ` : ''}
+                  `
+                      : ''
+                  }
                   <button class="btn btn-sm" style="padding:4px 8px;font-size:12px;background:#2563eb;color:#fff;border:none;" onclick="Pages.renderAdminProductEdit('${product.id}')">Edit</button>
                   <button class="btn btn-sm btn-danger" style="padding: 4px 8px; font-size: 12px; background:#dc2626; color:#fff; border:none;" onclick="Pages.adminDeleteProduct('${product.id}')">Delete</button>
                 </div>
               </td>
   </tr>
-  `,
-  )
-  .join('')}
+  `
+    )
+    .join('')}
   </tbody>
   </table>
   </div>
@@ -4118,12 +4453,12 @@ static renderAdminLogin () {
   /**
    * Render Admin Orders Page
    */
-  static async renderAdminOrders () {
-  this.hideOriginalNavFooter();
-  document.body.style.background = '';
-  const mainContent = document.getElementById('main-content');
+  static async renderAdminOrders() {
+    this.hideOriginalNavFooter();
+    document.body.style.background = '';
+    const mainContent = document.getElementById('main-content');
 
-  mainContent.innerHTML = `
+    mainContent.innerHTML = `
   <div class="admin-container">
   ${this.getAdminSidebar('orders')}
   <main class="admin-main">
@@ -4137,11 +4472,11 @@ static renderAdminLogin () {
   </main>
   </div>`;
 
-  const orders = await adminOrdersManager.getAllOrders();
+    const orders = await adminOrdersManager.getAllOrders();
 
-  const card = document.querySelector('.admin-card');
-  if (card) {
-  card.outerHTML = `
+    const card = document.querySelector('.admin-card');
+    if (card) {
+      card.outerHTML = `
   <div class="admin-table-container">
   <table class="admin-table">
   <thead>
@@ -4157,11 +4492,13 @@ static renderAdminLogin () {
   </tr>
   </thead>
   <tbody>
-  ${orders.map(order => `
+  ${orders
+    .map(
+      order => `
   <tr>
   <td><strong>${order.orderNumber}</strong></td>
 <td style="font-family:monospace;font-size:0.8rem;color:#0046be;">${order.trackingNumber || '—'}</td>
-  <td>${order.customer.name}</td>
+  <td>${_pageEsc(order.customer.name)}</td>
   <td>${Formatter.formatPrice(order.pricing.grandTotal)}</td>
   <td>${Formatter.capitalize(order.payment.mode)}</td>
   <td><span class="admin-status-badge ${order.status}">${Formatter.capitalize(order.status)}</span></td>
@@ -4172,23 +4509,25 @@ static renderAdminLogin () {
   </div>
   </td>
   </tr>
-  `).join('')}
+  `
+    )
+    .join('')}
   </tbody>
   </table>
   </div>`;
-  }
+    }
   }
 
   /**
    * Render Admin Regions Page
    */
-static renderAdminRegions () {
-  const regions = regionManager.getAllRegions();
-  this.hideOriginalNavFooter();
-  document.body.style.background = '';
-  const mainContent = document.getElementById('main-content');
+  static renderAdminRegions() {
+    const regions = regionManager.getAllRegions();
+    this.hideOriginalNavFooter();
+    document.body.style.background = '';
+    const mainContent = document.getElementById('main-content');
 
-  mainContent.innerHTML = `
+    mainContent.innerHTML = `
   <div class="admin-container">
   ${this.getAdminSidebar('regions')}
   <main class="admin-main">
@@ -4207,8 +4546,8 @@ static renderAdminRegions () {
               </thead>
               <tbody>
                 ${regions
-    .map(
-      region => `
+                  .map(
+                    region => `
                   <tr>
                     <td>${region.name}</td>
                     <td>${region.capital}</td>
@@ -4219,9 +4558,9 @@ static renderAdminRegions () {
                       </div>
                     </td>
                   </tr>
-                `,
-    )
-    .join('')}
+                `
+                  )
+                  .join('')}
               </tbody>
             </table>
           </div>
@@ -4233,12 +4572,12 @@ static renderAdminRegions () {
   /**
    * Render Admin Reports Page
    */
-  static async renderAdminReports () {
-  this.hideOriginalNavFooter();
-  document.body.style.background = '';
-  const mainContent = document.getElementById('main-content');
+  static async renderAdminReports() {
+    this.hideOriginalNavFooter();
+    document.body.style.background = '';
+    const mainContent = document.getElementById('main-content');
 
-  mainContent.innerHTML = `
+    mainContent.innerHTML = `
   <div class="admin-container">
   ${this.getAdminSidebar('reports')}
   <main class="admin-main">
@@ -4249,11 +4588,11 @@ static renderAdminRegions () {
   </main>
   </div>`;
 
-  const stats = await adminReportsManager.getDashboardOverview();
+    const stats = await adminReportsManager.getDashboardOverview();
 
-  const mainEl = document.querySelector('.admin-main');
-  if (mainEl) {
-  mainEl.innerHTML = `
+    const mainEl = document.querySelector('.admin-main');
+    if (mainEl) {
+      mainEl.innerHTML = `
   <div class="admin-header">
   <h1 class="admin-title">Analytics & Reports</h1>
   </div>
@@ -4281,7 +4620,7 @@ static renderAdminRegions () {
   </div>
   </div>
   </div>`;
-  }
+    }
   }
 
   // ==========================================
@@ -4291,39 +4630,48 @@ static renderAdminRegions () {
   /**
    * Approve a product
    */
-  static async adminApproveProduct (productId) {
-    if (!confirm('Are you sure you want to approve this product?')) {return;}
+  static async adminApproveProduct(productId) {
+    if (!confirm('Are you sure you want to approve this product?')) {
+      return;
+    }
     try {
       if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
         await api.request('/admin/products/' + productId + '/approve', { method: 'PUT' });
       } else {
         await productsManager.approveProduct(productId);
       }
-showToast('Product approved successfully', 'success');
+      showToast('Product approved successfully', 'success');
       this.renderAdminProducts();
     } catch (e) {
-showToast(e.message || 'Failed to approve product', 'error');
+      showToast(e.message || 'Failed to approve product', 'error');
     }
   }
 
-  static async adminRejectProduct (productId) {
+  static async adminRejectProduct(productId) {
     const reason = prompt('Please enter a reason for rejection:');
-    if (!reason) {return;}
+    if (!reason) {
+      return;
+    }
     try {
       if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
-        await api.request('/admin/products/' + productId + '/reject', { method: 'PUT', body: JSON.stringify({ reason }) });
+        await api.request('/admin/products/' + productId + '/reject', {
+          method: 'PUT',
+          body: JSON.stringify({ reason }),
+        });
       } else {
         await productsManager.rejectProduct(productId, reason);
       }
-showToast('Product rejected successfully', 'info');
+      showToast('Product rejected successfully', 'info');
       this.renderAdminProducts();
     } catch (e) {
-showToast(e.message || 'Failed to reject product', 'error');
+      showToast(e.message || 'Failed to reject product', 'error');
     }
   }
 
-  static async adminDeleteProduct (productId) {
-    if (!confirm('Are you sure you want to delete this product? This cannot be undone.')) {return;}
+  static async adminDeleteProduct(productId) {
+    if (!confirm('Are you sure you want to delete this product? This cannot be undone.')) {
+      return;
+    }
     try {
       let deleted = false;
       if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
@@ -4339,7 +4687,9 @@ showToast(e.message || 'Failed to reject product', 'error');
       }
       if (deleted) {
         productsManager.products = productsManager.products.filter(p => p.id !== productId);
-        productsManager.filteredProducts = productsManager.filteredProducts.filter(p => p.id !== productId);
+        productsManager.filteredProducts = productsManager.filteredProducts.filter(
+          p => p.id !== productId
+        );
         productsManager._persistLocalProducts();
         showToast('Product deleted successfully', 'success');
         this.renderAdminProducts();
@@ -4354,43 +4704,53 @@ showToast(e.message || 'Failed to reject product', 'error');
   /**
    * Ban a user
    */
-  static async adminBanUser (userId) {
+  static async adminBanUser(userId) {
     const reason = prompt('Please enter a reason for banning this user:');
-    if (!reason) {return;}
+    if (!reason) {
+      return;
+    }
     try {
       if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
-        await api.request('/admin/users/' + userId + '/ban', { method: 'PUT', body: JSON.stringify({ action: 'ban', reason }) });
+        await api.request('/admin/users/' + userId + '/ban', {
+          method: 'PUT',
+          body: JSON.stringify({ action: 'ban', reason }),
+        });
       } else {
         authManager.banUser(userId, reason);
       }
-showToast('User has been banned', 'success');
+      showToast('User has been banned', 'success');
       this.renderAdminUsers();
     } catch (e) {
-showToast(e.message || 'Failed to ban user', 'error');
+      showToast(e.message || 'Failed to ban user', 'error');
     }
   }
 
-  static async adminUnbanUser (userId) {
-    if (!confirm('Are you sure you want to unban this user?')) {return;}
+  static async adminUnbanUser(userId) {
+    if (!confirm('Are you sure you want to unban this user?')) {
+      return;
+    }
     try {
       if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
-        await api.request('/admin/users/' + userId + '/ban', { method: 'PUT', body: JSON.stringify({ action: 'unban' }) });
+        await api.request('/admin/users/' + userId + '/ban', {
+          method: 'PUT',
+          body: JSON.stringify({ action: 'unban' }),
+        });
       } else {
         authManager.unbanUser(userId);
       }
-showToast('User has been unbanned', 'success');
+      showToast('User has been unbanned', 'success');
       this.renderAdminUsers();
     } catch (e) {
-showToast(e.message || 'Failed to unban user', 'error');
+      showToast(e.message || 'Failed to unban user', 'error');
     }
   }
 
-static async renderAdminActivity () {
-  this.hideOriginalNavFooter();
-  document.body.style.background = '';
-  const mainContent = document.getElementById('main-content');
+  static async renderAdminActivity() {
+    this.hideOriginalNavFooter();
+    document.body.style.background = '';
+    const mainContent = document.getElementById('main-content');
 
-  mainContent.innerHTML = `
+    mainContent.innerHTML = `
   <div class="admin-container">
   ${this.getAdminSidebar('activity')}
   <main class="admin-main">
@@ -4447,19 +4807,25 @@ static async renderAdminActivity () {
     this._loadActivityLogs();
   }
 
-  static async _loadActivityLogs () {
+  static async _loadActivityLogs() {
     const actionFilter = document.getElementById('activity-filter-action')?.value || '';
     const severityFilter = document.getElementById('activity-filter-severity')?.value || '';
     const tbody = document.getElementById('activity-logs-tbody');
     const statsCards = document.getElementById('activity-stats-cards');
 
-    if (!tbody) { return; }
+    if (!tbody) {
+      return;
+    }
     this._activityPage = 1;
 
     try {
       const params = { page: this._activityPage, limit: 50 };
-      if (actionFilter) { params.action = actionFilter; }
-      if (severityFilter) { params.severity = severityFilter; }
+      if (actionFilter) {
+        params.action = actionFilter;
+      }
+      if (severityFilter) {
+        params.severity = severityFilter;
+      }
 
       const [logsRes, statsRes, onlineRes] = await Promise.all([
         api.admin.getActivity(params).catch(() => ({ success: false })),
@@ -4479,11 +4845,16 @@ static async renderAdminActivity () {
       if (logsRes.success && logsRes.data) {
         this._renderActivityRows(logsRes.data.logs || [], tbody);
         const moreBtn = document.getElementById('activity-load-more');
-        if (moreBtn) { moreBtn.style.display = logsRes.data.page < logsRes.data.pages ? '' : 'none'; }
+        if (moreBtn) {
+          moreBtn.style.display = logsRes.data.page < logsRes.data.pages ? '' : 'none';
+        }
       } else {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;">Could not load activity logs from server. Showing local activity.</td></tr>';
+        tbody.innerHTML =
+          '<tr><td colspan="5" style="text-align:center;padding:2rem;">Could not load activity logs from server. Showing local activity.</td></tr>';
         const localActivities = adminAuthManager.getActivityLog().slice(0, 50);
-        const localRows = localActivities.map(a => `
+        const localRows = localActivities
+          .map(
+            a => `
           <tr>
             <td>${new Date(a.timestamp).toLocaleString()}</td>
             <td>Admin</td>
@@ -4491,15 +4862,20 @@ static async renderAdminActivity () {
             <td>${JSON.stringify(a.details || {}).substring(0, 80)}</td>
             <td><span style="padding:2px 8px;border-radius:4px;font-size:0.75rem;background:rgba(0,70,190,0.15);color:#93c5fd;">info</span></td>
           </tr>
-        `).join('');
-        tbody.innerHTML = localRows || '<tr><td colspan="5" style="text-align:center;padding:2rem;">No activity records found.</td></tr>';
+        `
+          )
+          .join('');
+        tbody.innerHTML =
+          localRows ||
+          '<tr><td colspan="5" style="text-align:center;padding:2rem;">No activity records found.</td></tr>';
       }
     } catch (error) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--color-danger);">Error loading activity logs.</td></tr>';
+      tbody.innerHTML =
+        '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--color-danger);">Error loading activity logs.</td></tr>';
     }
   }
 
-  static async _loadMoreActivity () {
+  static async _loadMoreActivity() {
     this._activityPage = (this._activityPage || 1) + 1;
     const actionFilter = document.getElementById('activity-filter-action')?.value || '';
     const severityFilter = document.getElementById('activity-filter-severity')?.value || '';
@@ -4507,26 +4883,32 @@ static async renderAdminActivity () {
 
     try {
       const params = { page: this._activityPage, limit: 50 };
-      if (actionFilter) { params.action = actionFilter; }
-      if (severityFilter) { params.severity = severityFilter; }
+      if (actionFilter) {
+        params.action = actionFilter;
+      }
+      if (severityFilter) {
+        params.severity = severityFilter;
+      }
 
       const res = await api.admin.getActivity(params);
       if (res.success && res.data) {
         this._renderActivityRows(res.data.logs || [], tbody, true);
         const moreBtn = document.getElementById('activity-load-more');
-        if (moreBtn) { moreBtn.style.display = res.data.page < res.data.pages ? '' : 'none'; }
+        if (moreBtn) {
+          moreBtn.style.display = res.data.page < res.data.pages ? '' : 'none';
+        }
       }
     } catch (error) {
       showToast('Failed to load more logs', 'error');
     }
   }
 
-  static _renderActivityRows (logs, tbody, append = false) {
-  const severityColors = {
-    info: 'background:rgba(0,70,190,0.15);color:#93c5fd;',
-    warning: 'background:rgba(245,158,11,0.15);color:#fbbf24;',
-    critical: 'background:rgba(239,68,68,0.15);color:#f87171;',
-  };
+  static _renderActivityRows(logs, tbody, append = false) {
+    const severityColors = {
+      info: 'background:rgba(0,70,190,0.15);color:#93c5fd;',
+      warning: 'background:rgba(245,158,11,0.15);color:#fbbf24;',
+      critical: 'background:rgba(239,68,68,0.15);color:#f87171;',
+    };
 
     const actionLabels = {
       login: 'Login',
@@ -4547,40 +4929,52 @@ static async renderAdminActivity () {
       search: 'Search',
     };
 
-    const rows = (logs || []).map(log => {
-      const time = new Date(log.createdAt).toLocaleString();
-      const user = log.userName || log.userEmail || 'System';
-      const action = actionLabels[log.action] || log.action;
-      const details = log.details ? JSON.stringify(log.details).substring(0, 100) : '-';
-      const severity = log.severity || 'info';
-      const sevStyle = severityColors[severity] || severityColors.info;
+    const rows = (logs || [])
+      .map(log => {
+        const time = new Date(log.createdAt).toLocaleString();
+        const user = log.userName || log.userEmail || 'System';
+        const action = actionLabels[log.action] || log.action;
+        const details = log.details ? JSON.stringify(log.details).substring(0, 100) : '-';
+        const severity = log.severity || 'info';
+        const sevStyle = severityColors[severity] || severityColors.info;
 
-      return `<tr>
+        return `<tr>
         <td style="white-space:nowrap;font-size:0.85rem;">${time}</td>
         <td>${user}</td>
         <td><strong>${action}</strong></td>
         <td style="font-size:0.85rem;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${details}">${details}</td>
         <td><span style="padding:2px 8px;border-radius:4px;font-size:0.75rem;${sevStyle}">${severity}</span></td>
       </tr>`;
-    }).join('');
+      })
+      .join('');
 
     if (append) {
       tbody.insertAdjacentHTML('beforeend', rows);
     } else {
-      tbody.innerHTML = rows || '<tr><td colspan="5" style="text-align:center;padding:2rem;">No activity records found.</td></tr>';
+      tbody.innerHTML =
+        rows ||
+        '<tr><td colspan="5" style="text-align:center;padding:2rem;">No activity records found.</td></tr>';
     }
   }
 
-  static renderAdminProductCreate () {
+  static renderAdminProductCreate() {
     this._pendingImageFiles = [];
     this._uploadedImageUrls = [];
     this.hideOriginalNavFooter();
-  document.body.style.background = '';
-  const mainContent = document.getElementById('main-content');
-    const categories = ['electronics', 'textbooks', 'appliances', 'hostel-items', 'fashion', 'accessories', 'thrifts'];
+    document.body.style.background = '';
+    const mainContent = document.getElementById('main-content');
+    const categories = [
+      'electronics',
+      'textbooks',
+      'appliances',
+      'hostel-items',
+      'fashion',
+      'accessories',
+      'thrifts',
+    ];
     const conditions = ['new', 'like-new', 'good', 'fair', 'excellent'];
 
-  mainContent.innerHTML = `
+    mainContent.innerHTML = `
   <div class="admin-container">
   ${this.getAdminSidebar('products')}
   <main class="admin-main">
@@ -4669,53 +5063,63 @@ static async renderAdminActivity () {
   static _pendingImageFiles = [];
   static _uploadedImageUrls = [];
 
-  static _filesToDataUris (files) {
-    return Promise.all(files.map(file => new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const img = new Image();
-        img.onload = () => {
-          const MAX_DIM = 600;
-          let w = img.width;
-          let h = img.height;
-          if (w > MAX_DIM || h > MAX_DIM) {
-            const scale = MAX_DIM / Math.max(w, h);
-            w = Math.round(w * scale);
-            h = Math.round(h * scale);
-          }
-          const canvas = document.createElement('canvas');
-          canvas.width = w;
-          canvas.height = h;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, w, h);
-          resolve(canvas.toDataURL('image/jpeg', 0.6));
-        };
-        img.onerror = () => resolve(reader.result);
-        img.src = reader.result;
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    })));
+  static _filesToDataUris(files) {
+    return Promise.all(
+      files.map(
+        file =>
+          new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const img = new Image();
+              img.onload = () => {
+                const MAX_DIM = 600;
+                let w = img.width;
+                let h = img.height;
+                if (w > MAX_DIM || h > MAX_DIM) {
+                  const scale = MAX_DIM / Math.max(w, h);
+                  w = Math.round(w * scale);
+                  h = Math.round(h * scale);
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                resolve(canvas.toDataURL('image/jpeg', 0.6));
+              };
+              img.onerror = () => resolve(reader.result);
+              img.src = reader.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          })
+      )
+    );
   }
 
-  static _handleImageDrop (event) {
+  static _handleImageDrop(event) {
     const files = event.dataTransfer.files;
     this._handleImageFiles(files);
   }
 
-  static _handleImageFiles (fileList) {
+  static _handleImageFiles(fileList) {
     const heicExts = ['.heic', '.heif', '.hif'];
-    const isImageLike = f => f.type.startsWith('image/') ||
-      heicExts.some(ext => f.name.toLowerCase().endsWith(ext));
-    const files = Array.from(fileList).filter(isImageLike).slice(0, 5 - this._pendingImageFiles.length);
-    if (files.length === 0) { return; }
+    const isImageLike = f =>
+      f.type.startsWith('image/') || heicExts.some(ext => f.name.toLowerCase().endsWith(ext));
+    const files = Array.from(fileList)
+      .filter(isImageLike)
+      .slice(0, 5 - this._pendingImageFiles.length);
+    if (files.length === 0) {
+      return;
+    }
     this._pendingImageFiles.push(...files);
     const grid = document.getElementById('image-preview-grid');
     files.forEach(file => {
       const reader = new FileReader();
       reader.onload = e => {
         const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'position:relative;width:80px;height:80px;border-radius:6px;overflow:hidden;border:1px solid #374151;';
+        wrapper.style.cssText =
+          'position:relative;width:80px;height:80px;border-radius:6px;overflow:hidden;border:1px solid #374151;';
         wrapper.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover"><button type="button" onclick="Pages._removeImage(this,${this._pendingImageFiles.indexOf(file)})" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:12px;line-height:18px;text-align:center;padding:0;">&times;</button>`;
         grid.appendChild(wrapper);
       };
@@ -4724,7 +5128,7 @@ static async renderAdminActivity () {
     this._syncImageUrls();
   }
 
-  static _removeImage (btn, index) {
+  static _removeImage(btn, index) {
     if (index >= 0 && index < this._pendingImageFiles.length) {
       this._pendingImageFiles.splice(index, 1);
     }
@@ -4732,15 +5136,20 @@ static async renderAdminActivity () {
     this._syncImageUrls();
   }
 
-  static _syncImageUrls () {
+  static _syncImageUrls() {
     const textarea = document.getElementById('image-url-textarea');
     const hidden = document.getElementById('image-urls-input');
-    const manualUrls = (textarea?.value || '').split('\n').map(u => u.trim()).filter(Boolean);
+    const manualUrls = (textarea?.value || '')
+      .split('\n')
+      .map(u => u.trim())
+      .filter(Boolean);
     const all = [...this._uploadedImageUrls, ...manualUrls];
-    if (hidden) { hidden.value = all.join('\n'); }
+    if (hidden) {
+      hidden.value = all.join('\n');
+    }
   }
 
-  static async _handleAdminProductCreate (event) {
+  static async _handleAdminProductCreate(event) {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
@@ -4748,41 +5157,55 @@ static async renderAdminActivity () {
     const deliveryModes = formData.getAll('deliveryModes');
     const paymentModes = formData.getAll('paymentModes');
 
-let images = [];
-let uploadAborted = false;
-if (this._pendingImageFiles.length > 0) {
-  try {
-    const uploadResult = await api.upload.images(this._pendingImageFiles);
-    if (uploadResult.success && uploadResult.urls) {
-      images = uploadResult.urls;
-      this._uploadedImageUrls = images;
-      // Surface per-file failures so the user knows some images didn't
-      // make it (Cloudinary occasionally rejects specific files for
-      // format/corruption reasons while accepting the rest).
-      if (uploadResult.failures && uploadResult.failures.length > 0) {
-        const names = uploadResult.failures.map(f => f.filename || 'unknown').join(', ');
-        showToast(`${uploadResult.failures.length} image(s) failed: ${names}. ${uploadResult.urls.length} uploaded.`, 'warning');
+    let images = [];
+    let uploadAborted = false;
+    if (this._pendingImageFiles.length > 0) {
+      try {
+        const uploadResult = await api.upload.images(this._pendingImageFiles);
+        if (uploadResult.success && uploadResult.urls) {
+          images = uploadResult.urls;
+          this._uploadedImageUrls = images;
+          // Surface per-file failures so the user knows some images didn't
+          // make it (Cloudinary occasionally rejects specific files for
+          // format/corruption reasons while accepting the rest).
+          if (uploadResult.failures && uploadResult.failures.length > 0) {
+            const names = uploadResult.failures.map(f => f.filename || 'unknown').join(', ');
+            showToast(
+              `${uploadResult.failures.length} image(s) failed: ${names}. ${uploadResult.urls.length} uploaded.`,
+              'warning'
+            );
+          }
+        } else {
+          if (uploadResult.isAuthError) {
+            showToast('Session expired — please log in again', 'error');
+            if (typeof authManager !== 'undefined' && authManager.clearSession)
+              authManager.clearSession();
+            if (typeof navigateTo === 'function') navigateTo('login');
+            return;
+          }
+          showToast(
+            'Image upload failed: ' +
+              (uploadResult.error || 'Unknown error. Check your internet connection.'),
+            'error'
+          );
+          uploadAborted = true;
+        }
+      } catch (uploadErr) {
+        showToast('Image upload failed: ' + uploadErr.message, 'error');
+        uploadAborted = true;
       }
-    } else {
-      if (uploadResult.isAuthError) {
-      showToast('Session expired — please log in again', 'error');
-      if (typeof authManager !== 'undefined' && authManager.clearSession) authManager.clearSession();
-      if (typeof navigateTo === 'function') navigateTo('login');
-      return;
     }
-    showToast('Image upload failed: ' + (uploadResult.error || 'Unknown error. Check your internet connection.'), 'error');
-      uploadAborted = true;
-    }
-  } catch (uploadErr) {
-    showToast('Image upload failed: ' + uploadErr.message, 'error');
-    uploadAborted = true;
-  }
-}
 
-    const manualUrls = (document.getElementById('image-url-textarea')?.value || '').split('\n').map(u => u.trim()).filter(Boolean);
+    const manualUrls = (document.getElementById('image-url-textarea')?.value || '')
+      .split('\n')
+      .map(u => u.trim())
+      .filter(Boolean);
     images = [...images, ...manualUrls];
 
-    const currentUser = typeof authManager !== 'undefined' && authManager.getCurrentUser ? authManager.getCurrentUser() : null;
+    const currentUser =
+      typeof authManager !== 'undefined' && authManager.getCurrentUser
+        ? authManager.getCurrentUser()
+        : null;
 
     const data = {
       title: formData.get('title'),
@@ -4790,7 +5213,12 @@ if (this._pendingImageFiles.length > 0) {
       price: Number(formData.get('price')),
       category: formData.get('category'),
       condition: formData.get('condition'),
-      images: uploadAborted && this._pendingImageFiles.length > 0 ? [] : (images.length > 0 ? images : ['/assets/images/products/no-image.svg']),
+      images:
+        uploadAborted && this._pendingImageFiles.length > 0
+          ? []
+          : images.length > 0
+            ? images
+            : ['/assets/images/products/no-image.svg'],
       deliveryModes,
       paymentModes,
       seller: currentUser?.id || 'admin',
@@ -4801,7 +5229,9 @@ if (this._pendingImageFiles.length > 0) {
     };
 
     if (uploadAborted && this._pendingImageFiles.length > 0 && manualUrls.length === 0) {
-      if (!confirm('Image upload failed. Create product without images?')) { return; }
+      if (!confirm('Image upload failed. Create product without images?')) {
+        return;
+      }
       data.images = ['/assets/images/products/no-image.svg'];
     }
 
@@ -4833,7 +5263,8 @@ if (this._pendingImageFiles.length > 0) {
     } catch (error) {
       if (error.isAuthError || error.status === 401) {
         showToast('Session expired — please log in again', 'error');
-        if (typeof authManager !== 'undefined' && authManager.clearSession) authManager.clearSession();
+        if (typeof authManager !== 'undefined' && authManager.clearSession)
+          authManager.clearSession();
         if (typeof navigateTo === 'function') navigateTo('login');
         return;
       }
@@ -4847,7 +5278,7 @@ if (this._pendingImageFiles.length > 0) {
     }
   }
 
-  static async renderAdminProductEdit (productId) {
+  static async renderAdminProductEdit(productId) {
     this._pendingImageFiles = [];
     this._uploadedImageUrls = [];
     this.hideOriginalNavFooter();
@@ -4859,17 +5290,31 @@ if (this._pendingImageFiles.length > 0) {
       const res = await api.products.get(productId);
       product = res.data || res;
     } catch (e) {
-      mainContent.innerHTML = '<div class="admin-container" style="padding:2rem;color:#f87171;">Failed to load product.</div>';
+      mainContent.innerHTML =
+        '<div class="admin-container" style="padding:2rem;color:#f87171;">Failed to load product.</div>';
       return;
     }
 
-    const categories = ['electronics', 'textbooks', 'appliances', 'hostel-items', 'fashion', 'accessories', 'thrifts'];
+    const categories = [
+      'electronics',
+      'textbooks',
+      'appliances',
+      'hostel-items',
+      'fashion',
+      'accessories',
+      'thrifts',
+    ];
     const conditions = ['new', 'like-new', 'good', 'fair', 'excellent'];
-    const existingImages = (product.images || []).map(url => `<div style="position:relative;width:80px;height:80px;border-radius:6px;overflow:hidden;border:1px solid #374151;display:inline-block;margin-right:.5rem;margin-bottom:.5rem;"><img src="${url}" style="width:100%;height:100%;object-fit:cover"><button type="button" onclick="Pages._removeExistingImage(this,'${url}')" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:12px;line-height:18px;padding:0;">&times;</button></div>`).join('');
+    const existingImages = (product.images || [])
+      .map(
+        url =>
+          `<div style="position:relative;width:80px;height:80px;border-radius:6px;overflow:hidden;border:1px solid #374151;display:inline-block;margin-right:.5rem;margin-bottom:.5rem;"><img src="${url}" style="width:100%;height:100%;object-fit:cover"><button type="button" onclick="Pages._removeExistingImage(this,'${url}')" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:12px;line-height:18px;padding:0;">&times;</button></div>`
+      )
+      .join('');
     this._uploadedImageUrls = [...(product.images || [])];
 
-    const deliveryChecked = (mode) => (product.deliveryModes || []).includes(mode) ? 'checked' : '';
-    const paymentChecked = (mode) => (product.paymentModes || []).includes(mode) ? 'checked' : '';
+    const deliveryChecked = mode => ((product.deliveryModes || []).includes(mode) ? 'checked' : '');
+    const paymentChecked = mode => ((product.paymentModes || []).includes(mode) ? 'checked' : '');
 
     mainContent.innerHTML = `
       <div class="admin-container">
@@ -4954,31 +5399,36 @@ if (this._pendingImageFiles.length > 0) {
     `;
   }
 
-  static _removeExistingImage (btn, url) {
+  static _removeExistingImage(btn, url) {
     this._uploadedImageUrls = this._uploadedImageUrls.filter(u => u !== url);
     btn.parentElement.remove();
   }
 
-  static async _handleAdminProductEdit (event, productId) {
+  static async _handleAdminProductEdit(event, productId) {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
 
     let newUrls = [];
-if (this._pendingImageFiles.length > 0) {
-  try {
-    const uploadResult = await api.upload.images(this._pendingImageFiles);
-    if (uploadResult.success && uploadResult.urls) {
-      newUrls = uploadResult.urls;
-      if (uploadResult.failures && uploadResult.failures.length > 0) {
-        const names = uploadResult.failures.map(f => f.filename || 'unknown').join(', ');
-        showToast(`${uploadResult.failures.length} image(s) failed: ${names}. ${uploadResult.urls.length} uploaded.`, 'warning');
+    if (this._pendingImageFiles.length > 0) {
+      try {
+        const uploadResult = await api.upload.images(this._pendingImageFiles);
+        if (uploadResult.success && uploadResult.urls) {
+          newUrls = uploadResult.urls;
+          if (uploadResult.failures && uploadResult.failures.length > 0) {
+            const names = uploadResult.failures.map(f => f.filename || 'unknown').join(', ');
+            showToast(
+              `${uploadResult.failures.length} image(s) failed: ${names}. ${uploadResult.urls.length} uploaded.`,
+              'warning'
+            );
+          }
+        } else {
+          showToast('Image upload failed: ' + (uploadResult.error || 'Unknown error'), 'error');
+        }
+      } catch (uploadErr) {
+        showToast('Image upload failed: ' + uploadErr.message, 'error');
       }
-    } else { showToast('Image upload failed: ' + (uploadResult.error || 'Unknown error'), 'error'); }
-  } catch (uploadErr) {
-    showToast('Image upload failed: ' + uploadErr.message, 'error');
-  }
-}
+    }
 
     const images = [...this._uploadedImageUrls, ...newUrls];
     const deliveryModes = formData.getAll('deliveryModes');
@@ -4996,12 +5446,16 @@ if (this._pendingImageFiles.length > 0) {
     };
 
     const university = formData.get('university')?.trim();
-    if (university) { data.university = university; }
+    if (university) {
+      data.university = university;
+    }
 
     try {
       const result = await api.admin.updateProduct(productId, data);
       if (result.success) {
-        const localProduct = productsManager.products.find(p => p.id === productId || p._id === productId);
+        const localProduct = productsManager.products.find(
+          p => p.id === productId || p._id === productId
+        );
         if (localProduct && result.data) {
           Object.assign(localProduct, result.data, { updatedAt: new Date().toISOString() });
           productsManager.filteredProducts = [...productsManager.products];
@@ -5037,7 +5491,7 @@ if (this._pendingImageFiles.length > 0) {
     }
   }
 
-  static async renderAdminAnalytics () {
+  static async renderAdminAnalytics() {
     this.hideOriginalNavFooter();
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
@@ -5079,16 +5533,47 @@ if (this._pendingImageFiles.length > 0) {
       let d;
       if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
         const result = await api.admin.getAnalytics();
-        if (!result.success) { throw new Error(result.error || 'Failed to load analytics'); }
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to load analytics');
+        }
         d = result.data;
       } else {
-        const days = Array.from({ length: 30 }, (_, i) => { const dt = new Date(); dt.setDate(dt.getDate() - (29 - i)); return dt.toISOString().slice(0, 10); });
+        const days = Array.from({ length: 30 }, (_, i) => {
+          const dt = new Date();
+          dt.setDate(dt.getDate() - (29 - i));
+          return dt.toISOString().slice(0, 10);
+        });
         d = {
           revenue: days.map(dt => ({ date: dt, revenue: Math.floor(Math.random() * 500 + 100) })),
-          orderStatus: [{ status: 'completed', count: 23 }, { status: 'pending', count: 5 }, { status: 'placed', count: 8 }, { status: 'cancelled', count: 2 }, { status: 'shipped', count: 4 }, { status: 'delivered', count: 11 }],
-          categories: (typeof productsManager !== 'undefined' ? Object.entries(productsManager.products.reduce((m, p) => { m[p.category] = (m[p.category] || 0) + 1; return m; }, {})) : [['electronics', 2], ['hostel-items', 2], ['appliances', 1], ['textbooks', 1], ['accessories', 1], ['fashion', 1]]).map(([category, count]) => ({ category, count })),
+          orderStatus: [
+            { status: 'completed', count: 23 },
+            { status: 'pending', count: 5 },
+            { status: 'placed', count: 8 },
+            { status: 'cancelled', count: 2 },
+            { status: 'shipped', count: 4 },
+            { status: 'delivered', count: 11 },
+          ],
+          categories: (typeof productsManager !== 'undefined'
+            ? Object.entries(
+                productsManager.products.reduce((m, p) => {
+                  m[p.category] = (m[p.category] || 0) + 1;
+                  return m;
+                }, {})
+              )
+            : [
+                ['electronics', 2],
+                ['hostel-items', 2],
+                ['appliances', 1],
+                ['textbooks', 1],
+                ['accessories', 1],
+                ['fashion', 1],
+              ]
+          ).map(([category, count]) => ({ category, count })),
           users: days.map(dt => ({ date: dt, count: Math.floor(Math.random() * 5) })),
-          topProducts: (typeof productsManager !== 'undefined' ? productsManager.products.slice(0, 5) : []).map(p => ({ title: p.title, sold: Math.floor(Math.random() * 10 + 1) })),
+          topProducts: (typeof productsManager !== 'undefined'
+            ? productsManager.products.slice(0, 5)
+            : []
+          ).map(p => ({ title: p.title, sold: Math.floor(Math.random() * 10 + 1) })),
         };
       }
       const chartFont = { family: "'Inter', sans-serif" };
@@ -5099,55 +5584,128 @@ if (this._pendingImageFiles.length > 0) {
         type: 'line',
         data: {
           labels: (d.revenue || []).map(r => r.date?.slice(5) || ''),
-          datasets: [{ label: 'Revenue (GHS)', data: (d.revenue || []).map(r => r.revenue), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.3 }],
+          datasets: [
+            {
+              label: 'Revenue (GHS)',
+              data: (d.revenue || []).map(r => r.revenue),
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59,130,246,0.1)',
+              fill: true,
+              tension: 0.3,
+            },
+          ],
         },
-        options: { responsive: true, plugins: { legend: { labels: { color: tickColor, font: chartFont } } }, scales: { x: { ticks: { color: tickColor, font: chartFont }, grid: { color: gridColor } }, y: { ticks: { color: tickColor, font: chartFont }, grid: { color: gridColor } } } },
+        options: {
+          responsive: true,
+          plugins: { legend: { labels: { color: tickColor, font: chartFont } } },
+          scales: {
+            x: { ticks: { color: tickColor, font: chartFont }, grid: { color: gridColor } },
+            y: { ticks: { color: tickColor, font: chartFont }, grid: { color: gridColor } },
+          },
+        },
       });
 
-      const statusColors = { completed: '#22c55e', pending: '#f59e0b', placed: '#3b82f6', cancelled: '#ef4444', shipped: '#8b5cf6', delivered: '#06b6d4' };
+      const statusColors = {
+        completed: '#22c55e',
+        pending: '#f59e0b',
+        placed: '#3b82f6',
+        cancelled: '#ef4444',
+        shipped: '#8b5cf6',
+        delivered: '#06b6d4',
+      };
       new Chart(document.getElementById('analytics-orders-chart'), {
         type: 'doughnut',
         data: {
           labels: (d.orderStatus || []).map(r => r.status),
-          datasets: [{ data: (d.orderStatus || []).map(r => r.count), backgroundColor: (d.orderStatus || []).map(r => statusColors[r.status] || '#6b7280') }],
+          datasets: [
+            {
+              data: (d.orderStatus || []).map(r => r.count),
+              backgroundColor: (d.orderStatus || []).map(r => statusColors[r.status] || '#6b7280'),
+            },
+          ],
         },
-        options: { responsive: true, plugins: { legend: { labels: { color: tickColor, font: chartFont } } } },
+        options: {
+          responsive: true,
+          plugins: { legend: { labels: { color: tickColor, font: chartFont } } },
+        },
       });
 
-      const catColors = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'];
+      const catColors = [
+        '#3b82f6',
+        '#22c55e',
+        '#f59e0b',
+        '#ef4444',
+        '#8b5cf6',
+        '#06b6d4',
+        '#ec4899',
+      ];
       new Chart(document.getElementById('analytics-categories-chart'), {
         type: 'bar',
         data: {
           labels: (d.categories || []).map(r => r.category),
-          datasets: [{ label: 'Products', data: (d.categories || []).map(r => r.count), backgroundColor: (d.categories || []).map((_, i) => catColors[i % catColors.length]) }],
+          datasets: [
+            {
+              label: 'Products',
+              data: (d.categories || []).map(r => r.count),
+              backgroundColor: (d.categories || []).map((_, i) => catColors[i % catColors.length]),
+            },
+          ],
         },
-        options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: tickColor, font: chartFont }, grid: { color: gridColor } }, y: { ticks: { color: tickColor, font: chartFont }, grid: { color: gridColor } } } },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: tickColor, font: chartFont }, grid: { color: gridColor } },
+            y: { ticks: { color: tickColor, font: chartFont }, grid: { color: gridColor } },
+          },
+        },
       });
 
       new Chart(document.getElementById('analytics-users-chart'), {
         type: 'line',
         data: {
           labels: (d.users || []).map(r => r.date?.slice(5) || ''),
-          datasets: [{ label: 'New Users', data: (d.users || []).map(r => r.count), borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.1)', fill: true, tension: 0.3 }],
+          datasets: [
+            {
+              label: 'New Users',
+              data: (d.users || []).map(r => r.count),
+              borderColor: '#22c55e',
+              backgroundColor: 'rgba(34,197,94,0.1)',
+              fill: true,
+              tension: 0.3,
+            },
+          ],
         },
-        options: { responsive: true, plugins: { legend: { labels: { color: tickColor, font: chartFont } } }, scales: { x: { ticks: { color: tickColor, font: chartFont }, grid: { color: gridColor } }, y: { ticks: { color: tickColor, font: chartFont }, grid: { color: gridColor } } } },
+        options: {
+          responsive: true,
+          plugins: { legend: { labels: { color: tickColor, font: chartFont } } },
+          scales: {
+            x: { ticks: { color: tickColor, font: chartFont }, grid: { color: gridColor } },
+            y: { ticks: { color: tickColor, font: chartFont }, grid: { color: gridColor } },
+          },
+        },
       });
 
       const topEl = document.getElementById('analytics-top-products');
       if (d.topProducts && d.topProducts.length > 0) {
-        topEl.innerHTML = '<table class="admin-table"><thead><tr><th>Product</th><th>Units Sold</th></tr></thead><tbody>' +
-          d.topProducts.map(p => `<tr><td>${p.title || 'ID: ' + p.productId}</td><td>${p.sold}</td></tr>`).join('') +
+        topEl.innerHTML =
+          '<table class="admin-table"><thead><tr><th>Product</th><th>Units Sold</th></tr></thead><tbody>' +
+          d.topProducts
+            .map(p => `<tr><td>${p.title || 'ID: ' + p.productId}</td><td>${p.sold}</td></tr>`)
+            .join('') +
           '</tbody></table>';
       } else {
         topEl.textContent = 'No sales data yet.';
       }
     } catch (err) {
       const topEl = document.getElementById('analytics-top-products');
-      if (topEl) { topEl.textContent = 'Failed to load analytics: ' + err.message; }
+      if (topEl) {
+        topEl.textContent = 'Failed to load analytics: ' + err.message;
+      }
     }
   }
 
-  static renderFAQ () {
+  static renderFAQ() {
     const mainContent = document.getElementById('main-content');
     if (!mainContent) {
       return;
@@ -5156,7 +5714,7 @@ if (this._pendingImageFiles.length > 0) {
     const faqItems = [
       {
         q: 'What is JERTS CART?',
-        a: 'JERTS CART is a student marketplace for buying and selling items within university communities in Ghana. Whether you\'re looking for textbooks, electronics, hostel essentials, or fashion items, JERTS CART connects you with fellow students.',
+        a: "JERTS CART is a student marketplace for buying and selling items within university communities in Ghana. Whether you're looking for textbooks, electronics, hostel essentials, or fashion items, JERTS CART connects you with fellow students.",
       },
       {
         q: 'How do I create an account?',
@@ -5184,7 +5742,7 @@ if (this._pendingImageFiles.length > 0) {
       },
       {
         q: 'Can I return an item?',
-        a: 'Returns depend on the seller\'s policy. We recommend discussing return terms with the seller before purchasing. If you have a dispute, you can report the transaction through your order page.',
+        a: "Returns depend on the seller's policy. We recommend discussing return terms with the seller before purchasing. If you have a dispute, you can report the transaction through your order page.",
       },
       {
         q: 'How do I contact a seller?',
@@ -5201,7 +5759,9 @@ if (this._pendingImageFiles.length > 0) {
         <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary, #111827);">Frequently Asked Questions</h1>
         <p style="color: var(--text-secondary, #6b7280); margin-bottom: 2.5rem; font-size: 1.05rem;">Everything you need to know about buying and selling on JERTS CART.</p>
         <div class="faq-list">
-          ${faqItems.map((item, i) => `
+          ${faqItems
+            .map(
+              (item, i) => `
             <details class="faq-item" style="border: 1px solid var(--border-color, #e5e7eb); border-radius: 0.75rem; margin-bottom: 0.75rem; overflow: hidden; background: var(--bg-primary, #fff);${i === 0 ? ' open;' : ''}">
               <summary style="padding: 1.25rem 1.5rem; font-weight: 600; cursor: pointer; font-size: 1rem; color: var(--text-primary, #111827); list-style: none; display: flex; justify-content: space-between; align-items: center;">
                 ${item.q}
@@ -5211,7 +5771,9 @@ if (this._pendingImageFiles.length > 0) {
                 ${item.a}
               </div>
             </details>
-          `).join('')}
+          `
+            )
+            .join('')}
         </div>
         <div style="margin-top: 3rem; text-align: center; padding: 2rem; background: var(--bg-secondary, #f9fafb); border-radius: 0.75rem;">
           <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary, #111827);">Still have questions?</h2>
@@ -5229,17 +5791,37 @@ if (this._pendingImageFiles.length > 0) {
     window.scrollTo(0, 0);
   }
 
-  static renderTerms () { return (typeof StaticPageMethods !== 'undefined' ? StaticPageMethods.renderTerms() : console.warn('StaticPageMethods not loaded')); }
+  static renderTerms() {
+    return typeof StaticPageMethods !== 'undefined'
+      ? StaticPageMethods.renderTerms()
+      : console.warn('StaticPageMethods not loaded');
+  }
 
-  static renderPrivacy () { return (typeof StaticPageMethods !== 'undefined' ? StaticPageMethods.renderPrivacy() : console.warn('StaticPageMethods not loaded')); }
+  static renderPrivacy() {
+    return typeof StaticPageMethods !== 'undefined'
+      ? StaticPageMethods.renderPrivacy()
+      : console.warn('StaticPageMethods not loaded');
+  }
 
-  static renderAbout () { return (typeof StaticPageMethods !== 'undefined' ? StaticPageMethods.renderAbout() : console.warn('StaticPageMethods not loaded')); }
+  static renderAbout() {
+    return typeof StaticPageMethods !== 'undefined'
+      ? StaticPageMethods.renderAbout()
+      : console.warn('StaticPageMethods not loaded');
+  }
 
-  static renderContact () { return (typeof StaticPageMethods !== 'undefined' ? StaticPageMethods.renderContact() : console.warn('StaticPageMethods not loaded')); }
+  static renderContact() {
+    return typeof StaticPageMethods !== 'undefined'
+      ? StaticPageMethods.renderContact()
+      : console.warn('StaticPageMethods not loaded');
+  }
 
-  static _handleContactForm (event) { return (typeof StaticPageMethods !== 'undefined' ? StaticPageMethods._handleContactForm(event) : console.warn('StaticPageMethods not loaded')); }
+  static _handleContactForm(event) {
+    return typeof StaticPageMethods !== 'undefined'
+      ? StaticPageMethods._handleContactForm(event)
+      : console.warn('StaticPageMethods not loaded');
+  }
 
-  static renderTrackOrder () {
+  static renderTrackOrder() {
     const mainContent = document.getElementById('main-content');
     if (!mainContent) return;
 
@@ -5254,29 +5836,32 @@ if (this._pendingImageFiles.length > 0) {
         <div id="track-result"></div>
       </div>
     `;
-    document.getElementById('track-input').addEventListener('keydown', (e) => {
+    document.getElementById('track-input').addEventListener('keydown', e => {
       if (e.key === 'Enter') Pages._doTrackOrder();
     });
     window.scrollTo(0, 0);
   }
 
-  static async _doTrackOrder () {
+  static async _doTrackOrder() {
     const input = document.getElementById('track-input');
     const resultDiv = document.getElementById('track-result');
     if (!input || !resultDiv) return;
 
     const trackingNumber = input.value.trim().toUpperCase();
     if (!trackingNumber) {
-      resultDiv.innerHTML = '<p style="color:#ef4444;font-size:0.95rem;">Please enter a tracking number.</p>';
+      resultDiv.innerHTML =
+        '<p style="color:#ef4444;font-size:0.95rem;">Please enter a tracking number.</p>';
       return;
     }
 
-    resultDiv.innerHTML = '<p style="color:var(--text-secondary,#6b7280);font-size:0.95rem;">Looking up your order…</p>';
+    resultDiv.innerHTML =
+      '<p style="color:var(--text-secondary,#6b7280);font-size:0.95rem;">Looking up your order…</p>';
 
     try {
       const res = await api.orders.track(trackingNumber);
       if (!res.success || !res.data) {
-        resultDiv.innerHTML = '<p style="color:#ef4444;font-size:0.95rem;">No order found with that tracking number.</p>';
+        resultDiv.innerHTML =
+          '<p style="color:#ef4444;font-size:0.95rem;">No order found with that tracking number.</p>';
         return;
       }
       const order = res.data;
@@ -5290,12 +5875,16 @@ if (this._pendingImageFiles.length > 0) {
             <div style="position:absolute;top:50%;left:0;right:0;height:4px;background:#e5e7eb;transform:translateY(-50%);z-index:0;border-radius:2px;">
               <div style="height:100%;width:${currentIdx >= 0 ? (currentIdx / (statusSteps.length - 1)) * 100 : 0}%;background:#0046be;border-radius:2px;transition:width 0.3s;"></div>
             </div>
-            ${statusSteps.map((step, i) => `
+            ${statusSteps
+              .map(
+                (step, i) => `
               <div style="display:flex;flex-direction:column;align-items:center;position:relative;z-index:1;flex:1;">
                 <div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#fff;background:${i <= currentIdx ? '#0046be' : '#d1d5db'};border:3px solid ${i <= currentIdx ? '#0046be' : '#e5e7eb'};">${i <= currentIdx ? '✓' : i + 1}</div>
                 <span style="margin-top:0.5rem;font-size:0.75rem;color:${i <= currentIdx ? '#111827' : '#9ca3af'};font-weight:${i <= currentIdx ? '600' : '400'};text-align:center;">${step.charAt(0).toUpperCase() + step.slice(1).replace('-', ' ')}</span>
               </div>
-            `).join('')}
+            `
+              )
+              .join('')}
           </div>`;
 
       resultDiv.innerHTML = `
@@ -5314,19 +5903,28 @@ if (this._pendingImageFiles.length > 0) {
           </div>
         </div>
         ${stepHtml}
-        ${order.items && order.items.length ? `
+        ${
+          order.items && order.items.length
+            ? `
         <div style="background:var(--bg-primary,#fff);border:1px solid var(--border-color,#e5e7eb);border-radius:0.75rem;padding:1.5rem;">
           <h3 style="font-size:1rem;font-weight:600;margin-bottom:1rem;color:var(--text-primary,#111827);">Items</h3>
-          ${order.items.map(item => `
+          ${order.items
+            .map(
+              item => `
             <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid #f3f4f6;">
               <span style="font-size:0.95rem;color:var(--text-primary,#111827);">${item.title || 'Item'}</span>
               <span style="font-size:0.95rem;font-weight:600;color:var(--text-primary,#111827);">×${item.quantity}</span>
             </div>
-          `).join('')}
-        </div>` : ''}
+          `
+            )
+            .join('')}
+        </div>`
+            : ''
+        }
       `;
     } catch (err) {
-      resultDiv.innerHTML = '<p style="color:#ef4444;font-size:0.95rem;">Something went wrong. Please try again.</p>';
+      resultDiv.innerHTML =
+        '<p style="color:#ef4444;font-size:0.95rem;">Something went wrong. Please try again.</p>';
     }
   }
 }

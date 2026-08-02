@@ -1,5 +1,16 @@
 /* eslint-disable no-unused-vars */
 
+// Lazy escape helpers (see js/pages/pages.js for rationale — the
+// backend sanitizeXss layer is bypassed by Socket.io, Google OAuth
+// ingest, seed data, etc., so render-time escaping is defense in
+// depth). SecurityUtils is loaded globally by js/utils/security.js.
+const _browseEsc = v => {
+  if (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) {
+    return SecurityUtils.escapeHtml(String(v == null ? '' : v));
+  }
+  return String(v == null ? '' : v);
+};
+
 class BrowsePage {
   constructor() {
     this.state = {
@@ -112,7 +123,8 @@ class BrowsePage {
     this._syncFiltersFromManager();
 
     const paginatedData = await this._fetchPaginatedData(1);
-    this.state.totalProducts = paginatedData.totalProducts || paginatedData.total || this._filteredProducts.length;
+    this.state.totalProducts =
+      paginatedData.totalProducts || paginatedData.total || this._filteredProducts.length;
 
     mainContent.innerHTML = this.renderHTML(paginatedData);
 
@@ -128,7 +140,9 @@ class BrowsePage {
       this.state.selectedCategories = [cf.category];
     }
     if (cf.condition) {
-      this.state.selectedConditions = Array.isArray(cf.condition) ? [...cf.condition] : [cf.condition];
+      this.state.selectedConditions = Array.isArray(cf.condition)
+        ? [...cf.condition]
+        : [cf.condition];
     }
     if (cf.priceRange) {
       this.state.priceRange = { ...cf.priceRange };
@@ -167,7 +181,11 @@ class BrowsePage {
     });
     this.state.universities = Object.keys(uniCounts)
       .sort()
-      .map(id => ({ id, name: id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, ' '), count: uniCounts[id] }));
+      .map(id => ({
+        id,
+        name: id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, ' '),
+        count: uniCounts[id],
+      }));
   }
 
   renderSkeleton() {
@@ -186,16 +204,42 @@ class BrowsePage {
           </div>
         </div>
       </div>
-      <div class="browse-categories"><div class="browse-categories-scroll">${Array(6).fill('').map(() => '<div class="browse-skeleton" style="height:2.25rem;width:90px;flex-shrink:0;"></div>').join('')}</div></div>
+      <div class="browse-categories"><div class="browse-categories-scroll">${Array(6)
+        .fill('')
+        .map(
+          () =>
+            '<div class="browse-skeleton" style="height:2.25rem;width:90px;flex-shrink:0;"></div>'
+        )
+        .join('')}</div></div>
       <div class="browse-breadcrumb"><div class="browse-breadcrumb-inner"><div class="browse-skeleton" style="height:16px;width:180px;border-radius:4px;"></div></div></div>
       <div class="browse-page-inner">
         <aside class="browse-sidebar">
-          ${Array(3).fill('').map(() => `<div class="browse-filter-group"><div class="browse-skeleton" style="height:14px;width:80px;margin-bottom:12px;"></div>${Array(4).fill('').map(() => '<div class="browse-skeleton" style="height:20px;width:90%;margin-bottom:6px;"></div>').join('')}</div>`).join('')}
+          ${Array(3)
+            .fill('')
+            .map(
+              () =>
+                `<div class="browse-filter-group"><div class="browse-skeleton" style="height:14px;width:80px;margin-bottom:12px;"></div>${Array(
+                  4
+                )
+                  .fill('')
+                  .map(
+                    () =>
+                      '<div class="browse-skeleton" style="height:20px;width:90%;margin-bottom:6px;"></div>'
+                  )
+                  .join('')}</div>`
+            )
+            .join('')}
         </aside>
         <div class="browse-main">
           <div class="browse-toolbar"><div class="browse-skeleton" style="height:40px;width:100%;max-width:420px;border-radius:6px;"></div></div>
           <div class="browse-product-grid browse-skeleton-grid">
-            ${Array(6).fill('').map(() => `<div style="background:#fff;"><div class="browse-skeleton" style="aspect-ratio:1;border-radius:0;"></div><div style="padding:12px 16px 16px;"><div class="browse-skeleton" style="height:10px;width:40%;margin-bottom:6px;"></div><div class="browse-skeleton" style="height:14px;width:100%;margin-bottom:6px;"></div><div class="browse-skeleton" style="height:20px;width:50%;margin-bottom:8px;"></div><div class="browse-skeleton" style="height:34px;width:100%;"></div></div></div>`).join('')}
+            ${Array(6)
+              .fill('')
+              .map(
+                () =>
+                  `<div style="background:#fff;"><div class="browse-skeleton" style="aspect-ratio:1;border-radius:0;"></div><div style="padding:12px 16px 16px;"><div class="browse-skeleton" style="height:10px;width:40%;margin-bottom:6px;"></div><div class="browse-skeleton" style="height:14px;width:100%;margin-bottom:6px;"></div><div class="browse-skeleton" style="height:20px;width:50%;margin-bottom:8px;"></div><div class="browse-skeleton" style="height:34px;width:100%;"></div></div></div>`
+              )
+              .join('')}
           </div>
         </div>
       </div>
@@ -205,7 +249,8 @@ class BrowsePage {
   renderHTML(paginatedData) {
     const products = paginatedData.products || [];
     const totalProducts = this.state.totalProducts;
-    const maxPrice = this._allProducts.length > 0 ? Math.max(...this._allProducts.map(p => p.price)) : 0;
+    const maxPrice =
+      this._allProducts.length > 0 ? Math.max(...this._allProducts.map(p => p.price)) : 0;
 
     return `
     <div class="browse-page">
@@ -260,11 +305,13 @@ class BrowsePage {
     </div>`;
   }
 
-renderBreadcrumb() {
-const categoryLabel = this.state.selectedCategories.length === 1
-? this.state.selectedCategories[0].charAt(0).toUpperCase() + this.state.selectedCategories[0].slice(1).replace(/-/g, ' ')
-: '';
-return `
+  renderBreadcrumb() {
+    const categoryLabel =
+      this.state.selectedCategories.length === 1
+        ? this.state.selectedCategories[0].charAt(0).toUpperCase() +
+          this.state.selectedCategories[0].slice(1).replace(/-/g, ' ')
+        : '';
+    return `
 <nav class="browse-breadcrumb" aria-label="Breadcrumb">
 <div class="browse-breadcrumb-inner">
 <ol class="browse-breadcrumb-list">
@@ -275,118 +322,145 @@ return `
 <span class="browse-breadcrumb-arrow"></span>
 <a href="#/browse" class="browse-breadcrumb-link">Browse</a>
 </li>
-${categoryLabel ? `<li class="browse-breadcrumb-item">
+${
+  categoryLabel
+    ? `<li class="browse-breadcrumb-item">
 <span class="browse-breadcrumb-arrow"></span>
 <span class="browse-breadcrumb-current">${categoryLabel}</span>
-</li>` : `<li class="browse-breadcrumb-item">
+</li>`
+    : `<li class="browse-breadcrumb-item">
 <span class="browse-breadcrumb-arrow"></span>
 <span class="browse-breadcrumb-current">All Products</span>
-</li>`}
+</li>`
+}
 </ol>
 </div>
 </nav>`;
-}
+  }
 
-renderCategoryBar() {
-const allActive = this.state.selectedCategories.length === 0;
-return `
+  renderCategoryBar() {
+    const allActive = this.state.selectedCategories.length === 0;
+    return `
 <div class="browse-categories">
 <div class="browse-categories-scroll">
 <button class="category-pill ${allActive ? 'active' : ''}" onclick="BrowsePage.clearCategoryFilters()">All<span class="pill-count">${this._allProducts.length}</span></button>
-${this.state.categories.map(cat => `
+${this.state.categories
+  .map(
+    cat => `
 <button class="category-pill ${this.state.selectedCategories.includes(cat.id) ? 'active' : ''}" onclick="BrowsePage.selectCategory('${cat.id}')">${cat.name}<span class="pill-count">${cat.count}</span></button>
-`).join('')}
+`
+  )
+  .join('')}
 </div>
 ${this._renderGenderSubBar()}
 ${this._renderGadgetTypeSubBar()}
 </div>`;
-}
+  }
 
-// Sub-bar of male/female pills, only shown when Fashion is the active
-// category (the only apparel category for now).
-_renderGenderSubBar() {
-  if (!this.state.selectedCategories.includes('fashion')) return '';
-  const active = this.state.selectedGender || 'all';
-  const maleCount = this._allProducts.filter(p => p.category === 'fashion' && (p.gender || 'unisex') === 'male').length;
-  const femaleCount = this._allProducts.filter(p => p.category === 'fashion' && (p.gender || 'unisex') === 'female').length;
-  const unisexCount = this._allProducts.filter(p => p.category === 'fashion' && (p.gender || 'unisex') === 'unisex').length;
-  return `
+  // Sub-bar of male/female pills, only shown when Fashion is the active
+  // category (the only apparel category for now).
+  _renderGenderSubBar() {
+    if (!this.state.selectedCategories.includes('fashion')) return '';
+    const active = this.state.selectedGender || 'all';
+    const maleCount = this._allProducts.filter(
+      p => p.category === 'fashion' && (p.gender || 'unisex') === 'male'
+    ).length;
+    const femaleCount = this._allProducts.filter(
+      p => p.category === 'fashion' && (p.gender || 'unisex') === 'female'
+    ).length;
+    const unisexCount = this._allProducts.filter(
+      p => p.category === 'fashion' && (p.gender || 'unisex') === 'unisex'
+    ).length;
+    return `
   <div class="browse-subcategories" role="group" aria-label="Filter fashion by gender">
     <button class="subcategory-pill ${active === 'all' ? 'active' : ''}" onclick="BrowsePage.selectGender('all')">All<span class="pill-count">${this._allProducts.filter(p => p.category === 'fashion').length}</span></button>
     <button class="subcategory-pill ${active === 'male' ? 'active' : ''}" onclick="BrowsePage.selectGender('male')">Male<span class="pill-count">${maleCount}</span></button>
     <button class="subcategory-pill ${active === 'female' ? 'active' : ''}" onclick="BrowsePage.selectGender('female')">Female<span class="pill-count">${femaleCount}</span></button>
     <button class="subcategory-pill ${active === 'unisex' ? 'active' : ''}" onclick="BrowsePage.selectGender('unisex')">Unisex<span class="pill-count">${unisexCount}</span></button>
   </div>`;
-}
-
-// Category pill click: navigate to #/browse?category=X. The hashchange
-// fires the router, which re-renders BrowsePage with the new filter.
-// This makes the click feel like a "real" navigation (URL changes,
-// back/forward work, shareable link) rather than an in-place state
-// mutation. Clear filters by sending the user back to plain /browse.
-selectCategory(catId) {
-  if (this.state.selectedCategories.includes(catId)) {
-    // Already selected -> deselect -> go back to /browse.
-    Pages.navigate('#/browse');
-  } else {
-    Pages.navigate(`#/browse?category=${encodeURIComponent(catId)}`);
   }
-}
 
-selectGender(gender) {
-  this.state.selectedGender = gender === 'all' ? null : gender;
-  this.applyFilters();
-}
+  // Category pill click: navigate to #/browse?category=X. The hashchange
+  // fires the router, which re-renders BrowsePage with the new filter.
+  // This makes the click feel like a "real" navigation (URL changes,
+  // back/forward work, shareable link) rather than an in-place state
+  // mutation. Clear filters by sending the user back to plain /browse.
+  selectCategory(catId) {
+    if (this.state.selectedCategories.includes(catId)) {
+      // Already selected -> deselect -> go back to /browse.
+      Pages.navigate('#/browse');
+    } else {
+      Pages.navigate(`#/browse?category=${encodeURIComponent(catId)}`);
+    }
+  }
 
-// Sub-bar of laptop/phone pills, only shown when Gadgets (hostel-items)
-// is the active category. Two independent pills filter gadgets down to
-// laptop products or phone products based on title/description keywords;
-// "All" restores the full gadgets list.
-_renderGadgetTypeSubBar() {
-  if (!this.state.selectedCategories.includes('hostel-items')) return '';
-  const active = this.state.selectedGadgetType || 'all';
-  const gadgets = this._allProducts.filter(p => p.category === 'hostel-items');
-  const _isLaptop = p => /\b(laptop|laptops|macbook|notebook|chromebook)\b/i.test(`${p.title} ${p.description || ''}`);
-  const _isPhone = p => /\b(phone|phones|mobile|smartphone|iphone|android|samsung|tecno|infinix|redmi)\b/i.test(`${p.title} ${p.description || ''}`);
-  const laptopsCount = gadgets.filter(_isLaptop).length;
-  const phonesCount = gadgets.filter(_isPhone).length;
-  return `
+  selectGender(gender) {
+    this.state.selectedGender = gender === 'all' ? null : gender;
+    this.applyFilters();
+  }
+
+  // Sub-bar of laptop/phone pills, only shown when Gadgets (hostel-items)
+  // is the active category. Two independent pills filter gadgets down to
+  // laptop products or phone products based on title/description keywords;
+  // "All" restores the full gadgets list.
+  _renderGadgetTypeSubBar() {
+    if (!this.state.selectedCategories.includes('hostel-items')) return '';
+    const active = this.state.selectedGadgetType || 'all';
+    const gadgets = this._allProducts.filter(p => p.category === 'hostel-items');
+    const _isLaptop = p =>
+      /\b(laptop|laptops|macbook|notebook|chromebook)\b/i.test(`${p.title} ${p.description || ''}`);
+    const _isPhone = p =>
+      /\b(phone|phones|mobile|smartphone|iphone|android|samsung|tecno|infinix|redmi)\b/i.test(
+        `${p.title} ${p.description || ''}`
+      );
+    const laptopsCount = gadgets.filter(_isLaptop).length;
+    const phonesCount = gadgets.filter(_isPhone).length;
+    return `
   <div class="browse-subcategories" role="group" aria-label="Filter gadgets by type">
     <button class="subcategory-pill ${active === 'all' ? 'active' : ''}" onclick="BrowsePage.selectGadgetType('all')">All<span class="pill-count">${gadgets.length}</span></button>
     <button class="subcategory-pill ${active === 'laptops' ? 'active' : ''}" onclick="BrowsePage.selectGadgetType('laptops')">Laptops<span class="pill-count">${laptopsCount}</span></button>
     <button class="subcategory-pill ${active === 'phones' ? 'active' : ''}" onclick="BrowsePage.selectGadgetType('phones')">Phones<span class="pill-count">${phonesCount}</span></button>
   </div>`;
-}
+  }
 
-selectGadgetType(type) {
-  this.state.selectedGadgetType = type === 'all' ? null : type;
-  this.applyFilters();
-}
+  selectGadgetType(type) {
+    this.state.selectedGadgetType = type === 'all' ? null : type;
+    this.applyFilters();
+  }
 
-clearCategoryFilters() {
-  this.state.selectedCategories = [];
-  this.state.selectedGender = null;
-  this.state.selectedGadgetType = null;
-  Pages.navigate('#/browse');
-}
+  clearCategoryFilters() {
+    this.state.selectedCategories = [];
+    this.state.selectedGender = null;
+    this.state.selectedGadgetType = null;
+    Pages.navigate('#/browse');
+  }
 
-renderSidebar(maxPrice) {
+  renderSidebar(maxPrice) {
     const priceMin = this.state.priceRange.min > 0 ? this.state.priceRange.min : '';
     const priceMax = this.state.priceRange.max < Infinity ? this.state.priceRange.max : '';
     const sliderLeft = maxPrice > 0 ? (this.state.priceRange.min / maxPrice) * 100 : 0;
-    const sliderRight = maxPrice > 0 ? (this.state.priceRange.max < Infinity ? (this.state.priceRange.max / maxPrice) * 100 : 100) : 100;
+    const sliderRight =
+      maxPrice > 0
+        ? this.state.priceRange.max < Infinity
+          ? (this.state.priceRange.max / maxPrice) * 100
+          : 100
+        : 100;
 
     return `
       <aside class="browse-sidebar">
         <div class="browse-filter-group">
           <div class="browse-filter-group-title">Category</div>
-          ${this.state.categories.map(cat => `
+          ${this.state.categories
+            .map(
+              cat => `
             <div class="browse-filter-option">
               <input type="checkbox" id="browse-cat-${cat.id}" ${this.state.selectedCategories.includes(cat.id) ? 'checked' : ''} onchange="BrowsePage.toggleCategory('${cat.id}')">
               <label for="browse-cat-${cat.id}">${cat.name}</label>
               <span class="browse-filter-count">${cat.count}</span>
             </div>
-          `).join('')}
+          `
+            )
+            .join('')}
         </div>
 
         <div class="browse-filter-group">
@@ -407,27 +481,40 @@ renderSidebar(maxPrice) {
             Condition
             ${this.state.selectedConditions.length > 0 ? `<span class="browse-filter-group-count">${this.state.selectedConditions.length} selected</span>` : ''}
           </div>
-          ${this.state.conditions.map(cond => `
+          ${this.state.conditions
+            .map(
+              cond => `
             <div class="browse-filter-option">
               <input type="checkbox" id="browse-cond-${cond.id}" ${this.state.selectedConditions.includes(cond.id) ? 'checked' : ''} onchange="BrowsePage.toggleCondition('${cond.id}')">
               <label for="browse-cond-${cond.id}">${cond.name}</label>
               <span class="browse-filter-count">${cond.count}</span>
             </div>
-          `).join('')}
+          `
+            )
+            .join('')}
         </div>
 
-        ${this.state.universities.length > 0 ? `
+        ${
+          this.state.universities.length > 0
+            ? `
         <div class="browse-filter-group">
           <div class="browse-filter-group-title">University</div>
-          ${this.state.universities.slice(0, 8).map(uni => `
+          ${this.state.universities
+            .slice(0, 8)
+            .map(
+              uni => `
             <div class="browse-filter-option">
               <input type="checkbox" id="browse-uni-${uni.id}" ${this.state.selectedUniversities.includes(uni.id) ? 'checked' : ''} onchange="BrowsePage.toggleUniversity('${uni.id}')">
               <label for="browse-uni-${uni.id}">${uni.name}</label>
               <span class="browse-filter-count">${uni.count}</span>
             </div>
-          `).join('')}
+          `
+            )
+            .join('')}
         </div>
-        ` : ''}
+        `
+            : ''
+        }
 
         <button class="browse-clear-filters-btn" onclick="BrowsePage.clearFilters()">Clear All Filters</button>
       </aside>`;
@@ -447,8 +534,8 @@ renderSidebar(maxPrice) {
       </div>`;
   }
 
-renderToolbar(showing, total) {
-return `
+  renderToolbar(showing, total) {
+    return `
 <div class="browse-toolbar">
 <button class="browse-mobile-filter-btn" onclick="BrowsePage.openMobileDrawer()" aria-label="Open filters" title="Filters">
 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16" height="16"><path d="M3 4h18M6 12h12M9 20h6"/></svg>
@@ -456,7 +543,7 @@ Filters
 </button>
 <div class="browse-search">
 <svg class="browse-search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="18" height="18"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-<input type="text" class="browse-search-input" id="browse-search-input" placeholder="Search products..." value="${this.state.searchQuery}" onkeyup="BrowsePage.handleSearchKeyup(event)">
+<input type="text" class="browse-search-input" id="browse-search-input" placeholder="Search products..." value="${_browseEsc(this.state.searchQuery)}" onkeyup="BrowsePage.handleSearchKeyup(event)">
 </div>
 <span class="browse-results-count"><strong>${showing}</strong> of <strong>${total}</strong> results</span>
 <div class="browse-toolbar-right">
@@ -498,7 +585,8 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
 
     if (this.state.priceRange.min > 0 || this.state.priceRange.max < Infinity) {
       const minLabel = this.state.priceRange.min > 0 ? `GHS ${this.state.priceRange.min}` : 'GHS 0';
-      const maxLabel = this.state.priceRange.max < Infinity ? `GHS ${this.state.priceRange.max}` : '';
+      const maxLabel =
+        this.state.priceRange.max < Infinity ? `GHS ${this.state.priceRange.max}` : '';
       chips.push({ label: `${minLabel} - ${maxLabel || 'Any'}`, type: 'price', value: 'price' });
     }
 
@@ -506,12 +594,16 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
 
     return `
       <div class="browse-active-filters">
-        ${chips.map(chip => `
+        ${chips
+          .map(
+            chip => `
           <span class="browse-filter-chip">
             ${chip.label}
             <button class="browse-filter-chip-remove" onclick="BrowsePage.removeFilter('${chip.type}', '${chip.value}')">&times;</button>
           </span>
-        `).join('')}
+        `
+          )
+          .join('')}
         <button class="browse-filter-chip-clear" onclick="BrowsePage.clearFilters()">Clear All</button>
       </div>`;
   }
@@ -535,9 +627,14 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
 
   renderProductCard(product) {
     const isInWishlist = productsManager.isInWishlist?.(product.id) || false;
-    const _bsn2 = product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
+    const _bsn2 =
+      product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
     const initials = _bsn2
-      .split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
     const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
     const categoryLabel = product.category
       ? product.category.charAt(0).toUpperCase() + product.category.slice(1).replace(/-/g, ' ')
@@ -547,24 +644,24 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
     return `
     <div class="browse-product-card" onclick="Pages.renderProductDetail('${product.id}')">
       <div class="browse-product-image-wrap">
-        <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg';this.onerror=null;">
+        <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${_browseEsc(product.title)}" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg';this.onerror=null;">
         <div class="browse-product-badges">
           <span class="browse-product-badge ${product.condition || 'good'}">${conditionLabel}</span>
         </div>
         <button class="browse-product-wishlist-btn ${isInWishlist ? 'active' : ''}" onclick="event.stopPropagation(); Pages.toggleWishlist(event, '${product.id}')">
-          ${isInWishlist ? (Icons.heart || '') : (Icons.heartOutline || '')}
+          ${isInWishlist ? Icons.heart || '' : Icons.heartOutline || ''}
         </button>
       </div>
       <div class="browse-product-info">
         <div class="browse-product-category">${categoryLabel}</div>
-        <h3 class="browse-product-title">${product.title}</h3>
+        <h3 class="browse-product-title">${_browseEsc(product.title)}</h3>
         <div class="browse-product-price">GH₵ ${product.price?.toLocaleString() || '0'}</div>
         <div class="browse-product-seller">
-          <div class="browse-product-seller-avatar">${initials}</div>
-          <span class="browse-product-seller-name">${product.seller?.fullName || product.sellerName || product.seller?.name || 'Unknown'}</span>
-          ${sellerRating ? `<span class="browse-product-seller-rating">${Icons.star || ''} ${sellerRating}</span>` : ''}
+          <div class="browse-product-seller-avatar">${_browseEsc(initials)}</div>
+          <span class="browse-product-seller-name">${_browseEsc(product.seller?.fullName || product.sellerName || product.seller?.name || 'Unknown')}</span>
+          ${sellerRating ? `<span class="browse-product-seller-rating">${Icons.star || ''} ${_browseEsc(sellerRating)}</span>` : ''}
         </div>
-        <button class="browse-product-add-cart-btn" onclick="event.stopPropagation(); cartManager?.add(${JSON.stringify(product).replace(/"/g, '&quot;')}); Pages.updateCartBadge();">Add to Cart</button>
+        <button class="browse-product-add-cart-btn" onclick="event.stopPropagation(); cartManager?.add(${JSON.stringify(product).replace(/"/g, '"')}); Pages.updateCartBadge();">Add to Cart</button>
       </div>
     </div>`;
   }
@@ -595,10 +692,13 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
     return `
       <div class="browse-pagination">
         <button class="browse-page-btn" onclick="BrowsePage.goToPage(${current - 1})" ${current <= 1 ? 'disabled style="opacity:0.4;pointer-events:none;"' : ''}>&laquo;</button>
-        ${pages.map(p => p === '...'
-          ? '<span style="padding:0 4px;color:var(--neutral-400);">...</span>'
-          : `<button class="browse-page-btn ${p === current ? 'active' : ''}" onclick="BrowsePage.goToPage(${p})">${p}</button>`
-        ).join('')}
+        ${pages
+          .map(p =>
+            p === '...'
+              ? '<span style="padding:0 4px;color:var(--neutral-400);">...</span>'
+              : `<button class="browse-page-btn ${p === current ? 'active' : ''}" onclick="BrowsePage.goToPage(${p})">${p}</button>`
+          )
+          .join('')}
         <button class="browse-page-btn" onclick="BrowsePage.goToPage(${current + 1})" ${current >= total ? 'disabled style="opacity:0.4;pointer-events:none;"' : ''}>&raquo;</button>
       </div>`;
   }
@@ -634,8 +734,12 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
   }
 
   applyPriceFilter() {
-    const minEl = document.getElementById('browse-price-min') || document.querySelector('#browse-mobile-drawer #browse-price-min');
-    const maxEl = document.getElementById('browse-price-max') || document.querySelector('#browse-mobile-drawer #browse-price-max');
+    const minEl =
+      document.getElementById('browse-price-min') ||
+      document.querySelector('#browse-mobile-drawer #browse-price-min');
+    const maxEl =
+      document.getElementById('browse-price-max') ||
+      document.querySelector('#browse-mobile-drawer #browse-price-max');
     const min = minEl?.value ? parseInt(minEl.value) : 0;
     const max = maxEl?.value ? parseInt(maxEl.value) : Infinity;
     this.state.priceRange = { min, max };
@@ -651,7 +755,8 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
     }
 
     productsManager.filter({
-      condition: this.state.selectedConditions.length > 0 ? [...this.state.selectedConditions] : null,
+      condition:
+        this.state.selectedConditions.length > 0 ? [...this.state.selectedConditions] : null,
       priceRange: { ...this.state.priceRange },
       sortBy: this.state.sortBy,
       searchQuery: this.state.searchQuery || '',
@@ -718,7 +823,9 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
       grid.classList.toggle('list-view', mode === 'list');
     }
     document.querySelectorAll('.browse-view-btn').forEach(btn => btn.classList.remove('active'));
-    const activeBtn = document.querySelector(`.browse-view-btn[onclick="BrowsePage.toggleView('${mode}')"]`);
+    const activeBtn = document.querySelector(
+      `.browse-view-btn[onclick="BrowsePage.toggleView('${mode}')"]`
+    );
     if (activeBtn) activeBtn.classList.add('active');
   }
 
@@ -820,25 +927,68 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
 const browsePage = new BrowsePage();
 
 const BrowsePageMethods = {
-renderBrowse(filters) { return browsePage.render(filters); },
-filterByCategory(catId) { return browsePage.selectCategory(catId); },
-selectCategory(catId) { return browsePage.selectCategory(catId); },
-selectGender(gender) { return browsePage.selectGender(gender); },
-selectGadgetType(type) { return browsePage.selectGadgetType(type); },
-applyBrowseFilters() { return browsePage.applyFilters(); },
-applyPriceFilter() { return browsePage.applyPriceFilter(); },
-clearCategoryFilters() { return browsePage.clearCategoryFilters(); },
-resetConditionFilter() { browsePage.state.selectedConditions = []; return browsePage.applyFilters(); },
-resetPriceFilter() { browsePage.state.priceRange = { min: 0, max: Infinity }; return browsePage.applyFilters(); },
-toggleCategory(catId) { return browsePage.selectCategory(catId); },
-toggleMobileFilters() { return browsePage.state.mobileDrawerOpen ? browsePage.closeMobileDrawer() : browsePage.openMobileDrawer(); },
-setRatingFilter(rating) { productsManager.filter({ minRating: rating }); return browsePage.render(); },
-renderProductCardModern(product) { return browsePage.renderProductCard(product); },
-renderBBProductCard(product) { return browsePage.renderProductCard(product); },
-renderProductCard(product) { return browsePage.renderProductCard(product); },
-renderProductDetail(productId) { return Pages.renderProductDetail(productId); },
-renderBrowseProducts() { return browsePage.applyFilters(); },
-renderRecentlyViewedSection() { return ''; },
+  renderBrowse(filters) {
+    return browsePage.render(filters);
+  },
+  filterByCategory(catId) {
+    return browsePage.selectCategory(catId);
+  },
+  selectCategory(catId) {
+    return browsePage.selectCategory(catId);
+  },
+  selectGender(gender) {
+    return browsePage.selectGender(gender);
+  },
+  selectGadgetType(type) {
+    return browsePage.selectGadgetType(type);
+  },
+  applyBrowseFilters() {
+    return browsePage.applyFilters();
+  },
+  applyPriceFilter() {
+    return browsePage.applyPriceFilter();
+  },
+  clearCategoryFilters() {
+    return browsePage.clearCategoryFilters();
+  },
+  resetConditionFilter() {
+    browsePage.state.selectedConditions = [];
+    return browsePage.applyFilters();
+  },
+  resetPriceFilter() {
+    browsePage.state.priceRange = { min: 0, max: Infinity };
+    return browsePage.applyFilters();
+  },
+  toggleCategory(catId) {
+    return browsePage.selectCategory(catId);
+  },
+  toggleMobileFilters() {
+    return browsePage.state.mobileDrawerOpen
+      ? browsePage.closeMobileDrawer()
+      : browsePage.openMobileDrawer();
+  },
+  setRatingFilter(rating) {
+    productsManager.filter({ minRating: rating });
+    return browsePage.render();
+  },
+  renderProductCardModern(product) {
+    return browsePage.renderProductCard(product);
+  },
+  renderBBProductCard(product) {
+    return browsePage.renderProductCard(product);
+  },
+  renderProductCard(product) {
+    return browsePage.renderProductCard(product);
+  },
+  renderProductDetail(productId) {
+    return Pages.renderProductDetail(productId);
+  },
+  renderBrowseProducts() {
+    return browsePage.applyFilters();
+  },
+  renderRecentlyViewedSection() {
+    return '';
+  },
 };
 
 window.BrowsePageMethods = BrowsePageMethods;

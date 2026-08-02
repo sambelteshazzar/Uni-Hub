@@ -74,9 +74,13 @@ function escapeRegex (str) {
 }
 
 module.exports = {
-sanitizeQuery,
-sanitizeMongoQuery: sanitizeQuery,
-sanitizeXss,
-validateObjectId,
-escapeRegex,
+  sanitizeQuery,
+  sanitizeMongoQuery: sanitizeQuery,
+  sanitizeXss,
+  validateObjectId,
+  escapeRegex,
+  // Exported so the Socket.io handler (which bypasses the Express
+  // middleware chain) can reuse the same escape logic before persisting
+  // user-supplied message content. See backend/config/socket.js.
+  escapeHtml,
 };

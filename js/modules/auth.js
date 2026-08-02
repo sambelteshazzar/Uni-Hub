@@ -6,7 +6,7 @@
  */
 
 class AuthManager {
-  constructor () {
+  constructor() {
     this.currentUser = null;
     this.isAuthenticated = false;
     this.useBackend = true;
@@ -23,7 +23,7 @@ class AuthManager {
   /**
    * Load session from storage (token only, NO passwords)
    */
-  loadSession () {
+  loadSession() {
     try {
       const session = localStorage.getItem('unihub_session');
       if (session) {
@@ -45,22 +45,25 @@ class AuthManager {
     }
   }
 
-  async _validateToken () {
+  async _validateToken() {
     const baseURL = this._getBaseURL();
-    if (!baseURL) return;    try {
+    if (!baseURL) return;
+    try {
       const res = await fetch(`${baseURL}/auth/me`, {
         headers: { Authorization: `Bearer ${this.token}` },
       });
       if (res.status === 401) {
         this.clearSession();
       }
-    } catch (e) { console.warn('auth: _validateToken failed:', e); }
+    } catch (e) {
+      console.warn('auth: _validateToken failed:', e);
+    }
   }
 
   /**
    * Save session to storage (token only, NO passwords)
    */
-  saveSession (token, user, offline = false) {
+  saveSession(token, user, offline = false) {
     const safeUser = { ...user };
     delete safeUser.password;
     delete safeUser.passwordHash;
@@ -69,11 +72,15 @@ class AuthManager {
     const session = {
       token,
       user: safeUser,
-      expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
+      expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
       ...(offline ? { isOffline: true } : {}),
     };
 
-    try { localStorage.setItem('unihub_session', JSON.stringify(session)); } catch(e) { console.warn('localStorage unavailable:', e); }
+    try {
+      localStorage.setItem('unihub_session', JSON.stringify(session));
+    } catch (e) {
+      console.warn('localStorage unavailable:', e);
+    }
     this.token = token;
     this.currentUser = safeUser;
     this.isAuthenticated = true;
@@ -83,8 +90,12 @@ class AuthManager {
   /**
    * Clear session from storage
    */
-  clearSession () {
-    try { localStorage.removeItem('unihub_session'); } catch(e) { console.warn('localStorage unavailable:', e); }
+  clearSession() {
+    try {
+      localStorage.removeItem('unihub_session');
+    } catch (e) {
+      console.warn('localStorage unavailable:', e);
+    }
     this.currentUser = null;
     this.isAuthenticated = false;
     this.token = null;
@@ -94,17 +105,34 @@ class AuthManager {
   /**
    * Get auth token for API requests
    */
-  getToken () {
+  getToken() {
     return this.token;
   }
 
-  _isDevMode () {
-    return true;
+  _isDevMode() {
+    // Offline login bypasses the backend entirely (and accepts any
+    // password for the hardcoded demo accounts, including
+    // admin@unihub.local). Restrict it to true dev builds so a prod
+    // backend outage can't turn the offline fallback into a backdoor.
+    let isViteDev = false;
+    try {
+      isViteDev = import.meta.env?.DEV === true;
+    } catch (e) {
+      // import.meta.env is only available under Vite; in the
+      // transpiled static build (no Rollup graph) we are NOT in dev.
+      isViteDev = false;
+    }
+    const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    return isViteDev || isLocalhost;
   }
 
-  _getOfflineUsers () {
+  _getOfflineUsers() {
     if (!this._isDevMode()) return {};
-    const _defaultAvatar = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><rect fill="%232563eb" width="40" height="40" rx="20"/><text x="20" y="26" text-anchor="middle" fill="white" font-size="16" font-family="sans-serif">U</text></svg>');
+    const _defaultAvatar =
+      'data:image/svg+xml,' +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><rect fill="%232563eb" width="40" height="40" rx="20"/><text x="20" y="26" text-anchor="middle" fill="white" font-size="16" font-family="sans-serif">U</text></svg>'
+      );
     return {
       'admin@unihub.local': {
         id: 'admin_001',
@@ -169,9 +197,12 @@ class AuthManager {
     };
   }
 
-  _tryOfflineLogin (email, _password) {
+  _tryOfflineLogin(email, _password) {
     if (!this._isDevMode()) {
-      return { success: false, error: 'Server is unreachable. Please check your connection and try again.' };
+      return {
+        success: false,
+        error: 'Server is unreachable. Please check your connection and try again.',
+      };
     }
 
     const users = this._getOfflineUsers();
@@ -180,7 +211,8 @@ class AuthManager {
     if (!user) {
       return {
         success: false,
-        error: 'Server is offline (dev mode). Available demo accounts:\n\n• admin@unihub.local\n• kwame.mensah@ug.edu.gh\n• ama.osei@knust.edu.gh\n• kofi.asante@ucc.edu.gh\n• abena.darko@uew.edu.gh\n\nAny password works in dev offline mode.',
+        error:
+          'Server is offline (dev mode). Available demo accounts:\n\n• admin@unihub.local\n• kwame.mensah@ug.edu.gh\n• ama.osei@knust.edu.gh\n• kofi.asante@ucc.edu.gh\n• abena.darko@uew.edu.gh\n\nAny password works in dev offline mode.',
       };
     }
 
@@ -200,11 +232,13 @@ class AuthManager {
   /**
    * Fetch CSRF token from backend
    */
-  _getBaseURL () {
-    return (typeof window !== 'undefined' && window.API_URL) || 'https://uni-hub-bnxi.onrender.com/api';
+  _getBaseURL() {
+    return (
+      (typeof window !== 'undefined' && window.API_URL) || 'https://uni-hub-bnxi.onrender.com/api'
+    );
   }
 
-  async _fetchCsrfToken () {
+  async _fetchCsrfToken() {
     try {
       const baseURL = this._getBaseURL();
       if (!baseURL) {
@@ -227,14 +261,18 @@ class AuthManager {
   /**
    * Register new user - Backend only (with offline fallback)
    */
-  async register (userData) {
+  async register(userData) {
     try {
       if (!userData.email || !userData.password) {
         return { success: false, error: 'Email and password are required' };
       }
 
       if (userData.password.length < 8) {
-        return { success: false, error: 'Password must be at least 8 characters with uppercase, lowercase, number, and special character' };
+        return {
+          success: false,
+          error:
+            'Password must be at least 8 characters with uppercase, lowercase, number, and special character',
+        };
       }
 
       const baseURL = this._getBaseURL();
@@ -251,8 +289,13 @@ class AuthManager {
         });
 
         let data;
-        try { data = await response.json(); } catch (_) {
-          return { success: false, error: `Server error (HTTP ${response.status}). Please try again.` };
+        try {
+          data = await response.json();
+        } catch (_) {
+          return {
+            success: false,
+            error: `Server error (HTTP ${response.status}). Please try again.`,
+          };
         }
 
         if (data.success) {
@@ -267,13 +310,19 @@ class AuthManager {
       return this._offlineRegister(userData);
     } catch (error) {
       console.error('Register error:', error);
-      return { success: false, error: error.message || 'Network error. Please check your connection.' };
+      return {
+        success: false,
+        error: error.message || 'Network error. Please check your connection.',
+      };
     }
   }
 
-  _offlineRegister (userData) {
+  _offlineRegister(userData) {
     if (!this._isDevMode()) {
-      return { success: false, error: 'Server is unreachable. Registration requires an active server connection.' };
+      return {
+        success: false,
+        error: 'Server is unreachable. Registration requires an active server connection.',
+      };
     }
     // Backend unavailable — using offline fallback
     const existing = this._getOfflineUsers()[userData.email];
@@ -281,18 +330,22 @@ class AuthManager {
       return { success: false, error: 'Email already registered (offline mode)' };
     }
 
-  const newUser = {
-    id: 'user_' + Date.now(),
-    fullName: userData.fullName || ((userData.firstName && userData.lastName) ? userData.firstName + ' ' + userData.lastName : userData.name || 'New User'),
-    firstName: userData.firstName || '',
-    lastName: userData.lastName || '',
-    email: userData.email,
-    phone: userData.phone || '',
-    university: userData.university || 'ug',
-    role: 'buyer',
-    avatar: '',
-    rating: 0,
-    isVerified: false,
+    const newUser = {
+      id: 'user_' + Date.now(),
+      fullName:
+        userData.fullName ||
+        (userData.firstName && userData.lastName
+          ? userData.firstName + ' ' + userData.lastName
+          : userData.name || 'New User'),
+      firstName: userData.firstName || '',
+      lastName: userData.lastName || '',
+      email: userData.email,
+      phone: userData.phone || '',
+      university: userData.university || 'ug',
+      role: 'buyer',
+      avatar: '',
+      rating: 0,
+      isVerified: false,
       joinedDate: new Date().toISOString(),
     };
 
@@ -311,7 +364,7 @@ class AuthManager {
   /**
    * Login user - Backend with offline fallback
    */
-  async login (email, password) {
+  async login(email, password) {
     try {
       if (!email || !password) {
         return { success: false, error: 'Please enter email and password' };
@@ -331,8 +384,13 @@ class AuthManager {
         });
 
         let data;
-        try { data = await response.json(); } catch (_) {
-          return { success: false, error: `Server error (HTTP ${response.status}). Please try again.` };
+        try {
+          data = await response.json();
+        } catch (_) {
+          return {
+            success: false,
+            error: `Server error (HTTP ${response.status}). Please try again.`,
+          };
         }
 
         if (data.success) {
@@ -344,31 +402,36 @@ class AuthManager {
         return { success: false, error: data.error || 'Invalid credentials' };
       }
 
-  // Offline mode - skip backend entirely
-  return this._tryOfflineLogin(email, password);
+      // Offline mode - skip backend entirely
+      return this._tryOfflineLogin(email, password);
     } catch (error) {
       console.error('Login error:', error);
-      return { success: false, error: error.message || 'Network error. Please check your connection.' };
+      return {
+        success: false,
+        error: error.message || 'Network error. Please check your connection.',
+      };
     }
   }
 
   /**
    * Logout user
    */
-  logout () {
+  logout() {
     const baseURL = this._getBaseURL();
     if (this.token && !this.isOfflineMode && baseURL) {
-      this._fetchCsrfToken().then(csrfToken => {
-        fetch(`${baseURL}/auth/logout`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${this.token}`,
-            ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
-          },
-          credentials: 'include',
-        }).catch(() => {});
-      }).catch(() => {});
+      this._fetchCsrfToken()
+        .then(csrfToken => {
+          fetch(`${baseURL}/auth/logout`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${this.token}`,
+              ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+            },
+            credentials: 'include',
+          }).catch(() => {});
+        })
+        .catch(() => {});
     }
 
     this.clearSession();
@@ -378,14 +441,14 @@ class AuthManager {
   /**
    * Get current user
    */
-  getCurrentUser () {
+  getCurrentUser() {
     return this.currentUser;
   }
 
   /**
    * Check if user is authenticated
    */
-  isLoggedIn () {
+  isLoggedIn() {
     if (this.isAuthenticated && this.token) {
       try {
         const session = localStorage.getItem('unihub_session');
@@ -393,7 +456,9 @@ class AuthManager {
           const parsed = JSON.parse(session);
           return parsed.expiresAt > Date.now();
         }
-      } catch(e) { console.warn('localStorage unavailable:', e); }
+      } catch (e) {
+        console.warn('localStorage unavailable:', e);
+      }
     }
     return false;
   }
@@ -401,14 +466,14 @@ class AuthManager {
   /**
    * Check if user has specific role
    */
-  hasRole (role) {
+  hasRole(role) {
     return this.currentUser?.role === role;
   }
 
   /**
    * Update user profile - Backend with offline fallback
    */
-  async updateProfile (updates) {
+  async updateProfile(updates) {
     try {
       if (!this.isLoggedIn()) {
         return { success: false, error: 'Not authenticated' };
@@ -439,7 +504,9 @@ class AuthManager {
       });
 
       let data;
-      try { data = await response.json(); } catch (_) {
+      try {
+        data = await response.json();
+      } catch (_) {
         return { success: false, error: `Server error (HTTP ${response.status})` };
       }
 
@@ -458,7 +525,7 @@ class AuthManager {
   /**
    * Change password - Backend only (with offline fallback)
    */
-  async changePassword (currentPassword, newPassword) {
+  async changePassword(currentPassword, newPassword) {
     try {
       if (!this.isLoggedIn()) {
         return { success: false, error: 'Not authenticated' };
@@ -481,7 +548,9 @@ class AuthManager {
       });
 
       let data;
-      try { data = await response.json(); } catch (_) {
+      try {
+        data = await response.json();
+      } catch (_) {
         return { success: false, error: `Server error (HTTP ${response.status})` };
       }
 
@@ -499,18 +568,18 @@ class AuthManager {
   /**
    * Check if user is seller
    */
-  isSeller () {
+  isSeller() {
     return this.currentUser?.role === 'seller' || this.currentUser?.role === 'admin';
   }
 
   /**
    * Check if user is admin
    */
-  isAdmin () {
+  isAdmin() {
     return this.currentUser?.role === 'admin';
   }
 
-  async syncVerificationStatus () {
+  async syncVerificationStatus() {
     if (!this.isLoggedIn() || this.isOfflineMode) return;
     try {
       const response = await fetch(`${this._getBaseURL()}/verification/me`, {
@@ -523,10 +592,18 @@ class AuthManager {
         if (this.currentUser.isVerified !== isNowVerified) {
           this.currentUser.isVerified = isNowVerified;
           let session = null;
-          try { session = JSON.parse(localStorage.getItem('unihub_session') || 'null'); } catch(e) { console.warn('localStorage unavailable:', e); }
-            if (session && session.user) {
+          try {
+            session = JSON.parse(localStorage.getItem('unihub_session') || 'null');
+          } catch (e) {
+            console.warn('localStorage unavailable:', e);
+          }
+          if (session && session.user) {
             session.user.isVerified = isNowVerified;
-            try { localStorage.setItem('unihub_session', JSON.stringify(session)); } catch(e) { console.warn('localStorage unavailable:', e); }
+            try {
+              localStorage.setItem('unihub_session', JSON.stringify(session));
+            } catch (e) {
+              console.warn('localStorage unavailable:', e);
+            }
           }
         }
         if (typeof StorageManager !== 'undefined' && typeof STORAGE_KEYS !== 'undefined') {
@@ -537,39 +614,45 @@ class AuthManager {
           StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verification);
         }
       }
-    } catch (e) { console.warn('auth: syncVerificationStatus failed:', e); }
+    } catch (e) {
+      console.warn('auth: syncVerificationStatus failed:', e);
+    }
   }
 
-  banUser (userId, reason) {
-    const key = (typeof STORAGE_KEY_PREFIX !== 'undefined' ? STORAGE_KEY_PREFIX : 'unihub_') + 'banned_users';
+  banUser(userId, reason) {
+    const key =
+      (typeof STORAGE_KEY_PREFIX !== 'undefined' ? STORAGE_KEY_PREFIX : 'unihub_') + 'banned_users';
     const banned = StorageManager.get(key, true) || {};
     banned[userId] = { reason, bannedAt: new Date().toISOString() };
     StorageManager.set(key, banned);
     return { success: true };
   }
 
-  unbanUser (userId) {
-    const key = (typeof STORAGE_KEY_PREFIX !== 'undefined' ? STORAGE_KEY_PREFIX : 'unihub_') + 'banned_users';
+  unbanUser(userId) {
+    const key =
+      (typeof STORAGE_KEY_PREFIX !== 'undefined' ? STORAGE_KEY_PREFIX : 'unihub_') + 'banned_users';
     const banned = StorageManager.get(key, true) || {};
     delete banned[userId];
     StorageManager.set(key, banned);
     return { success: true };
   }
 
-  isUserBanned (userId) {
-    const key = (typeof STORAGE_KEY_PREFIX !== 'undefined' ? STORAGE_KEY_PREFIX : 'unihub_') + 'banned_users';
+  isUserBanned(userId) {
+    const key =
+      (typeof STORAGE_KEY_PREFIX !== 'undefined' ? STORAGE_KEY_PREFIX : 'unihub_') + 'banned_users';
     const banned = StorageManager.get(key, true) || {};
     return !!banned[userId];
   }
 
-  getBannedUsers () {
-    const key = (typeof STORAGE_KEY_PREFIX !== 'undefined' ? STORAGE_KEY_PREFIX : 'unihub_') + 'banned_users';
+  getBannedUsers() {
+    const key =
+      (typeof STORAGE_KEY_PREFIX !== 'undefined' ? STORAGE_KEY_PREFIX : 'unihub_') + 'banned_users';
     return StorageManager.get(key, true) || {};
   }
 }
 
 // Create singleton instance
-  const authManager = new AuthManager();
+const authManager = new AuthManager();
 
 // Export for ES6 modules
 export { AuthManager, authManager };

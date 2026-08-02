@@ -3,7 +3,7 @@
 // ============================================
 
 class Router {
-  constructor () {
+  constructor() {
     this.currentRoute = null;
     this.currentParams = {};
     this.routes = new Map();
@@ -15,15 +15,17 @@ class Router {
    * Initialize router - listen to hash changes
    * Does NOT handle initial load - call start() after routes are registered
    */
-  init () {
+  init() {
     window.addEventListener('hashchange', () => this.handleHashChange());
   }
 
   /**
    * Start the router - handle initial navigation after routes are registered
    */
-  start () {
-    if (this._started) {return;}
+  start() {
+    if (this._started) {
+      return;
+    }
     this._started = true;
     this.handleHashChange();
   }
@@ -31,7 +33,7 @@ class Router {
   /**
    * Handle hash change event
    */
-  handleHashChange () {
+  handleHashChange() {
     const hash = window.location.hash.slice(1) || '/';
     const [path, queryString] = hash.split('?');
     const params = this.parseQueryString(queryString || '');
@@ -42,15 +44,40 @@ class Router {
   /**
    * Parse query string to object
    */
-  parseQueryString (queryString) {
+  parseQueryString(queryString) {
     const params = {};
-    if (!queryString) {return params;}
+    if (!queryString) {
+      return params;
+    }
 
     const pairs = queryString.split('&');
     for (const pair of pairs) {
       const [key, value] = pair.split('=');
       if (key) {
-        params[decodeURIComponent(key)] = decodeURIComponent(value || '');
+        // URL hash params are attacker-controlled (anyone can craft a
+        // link). Decode then HTML-escape so handlers that interpolate
+        // these into innerHTML can't be XSS'd via the URL. Trying to
+        // decodeURIComponent first means we escape the *actual* value,
+        // not its URL-encoded form. SecurityUtils is loaded globally
+        // by js/utils/security.js; if it's somehow missing we still
+        // produce a string (the per-renderer escape helpers also
+        // guard against this).
+        let decoded;
+        try {
+          decoded = decodeURIComponent(value || '');
+        } catch (e) {
+          decoded = String(value || '');
+        }
+        if (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) {
+          decoded = SecurityUtils.escapeHtml(decoded);
+        }
+        let decodedKey;
+        try {
+          decodedKey = decodeURIComponent(key);
+        } catch (e) {
+          decodedKey = String(key);
+        }
+        params[decodedKey] = decoded;
       }
     }
     return params;
@@ -61,7 +88,7 @@ class Router {
    * @param {string} path - Route path
    * @param {Function} handler - Route handler function
    */
-  register (path, handler) {
+  register(path, handler) {
     this.routes.set(path, handler);
   }
 
@@ -71,7 +98,7 @@ class Router {
    * @param {Object} params - Route parameters
    * @param {boolean} updateHash - Whether to update the hash (default: true)
    */
-  async navigate (path, params = {}, updateHash = true) {
+  async navigate(path, params = {}, updateHash = true) {
     try {
       this.currentRoute = path;
       this.currentParams = params;
@@ -120,7 +147,7 @@ class Router {
   /**
    * Update URL hash using location.hash (triggers hashchange event)
    */
-  updateHash (path, params = {}) {
+  updateHash(path, params = {}) {
     const queryString = Object.keys(params).length
       ? '?' + new URLSearchParams(params).toString()
       : '';
@@ -135,13 +162,15 @@ class Router {
    * @param {string} path - Route path
    * @returns {Object|null}
    */
-  findRouteMatch (path) {
+  findRouteMatch(path) {
     const pathParts = path.split('/').filter(Boolean);
 
     for (const [routePath, handler] of this.routes.entries()) {
       const routeParts = routePath.split('/').filter(Boolean);
 
-      if (routeParts.length !== pathParts.length) {continue;}
+      if (routeParts.length !== pathParts.length) {
+        continue;
+      }
 
       const params = {};
       let matches = true;
@@ -168,7 +197,7 @@ class Router {
   /**
    * Navigate back
    */
-  back () {
+  back() {
     window.history.back();
   }
 
@@ -176,14 +205,14 @@ class Router {
    * Navigate to a specific hash directly
    * @param {string} hash - Hash to navigate to
    */
-  goToHash (hash) {
+  goToHash(hash) {
     window.location.hash = hash;
   }
 
   /**
    * Show 404 page
    */
-  async show404 () {
+  async show404() {
     const mainContent = document.getElementById('main-content');
     if (mainContent) {
       mainContent.innerHTML = `
@@ -205,7 +234,7 @@ class Router {
   /**
    * Show error message
    */
-  showError (message) {
+  showError(message) {
     const mainContent = document.getElementById('main-content');
     if (mainContent) {
       mainContent.innerHTML = `
@@ -221,14 +250,14 @@ class Router {
   /**
    * Get current route
    */
-  getCurrentRoute () {
+  getCurrentRoute() {
     return this.currentRoute;
   }
 
   /**
    * Get route parameters
    */
-  getParams () {
+  getParams() {
     return this.currentParams;
   }
 }

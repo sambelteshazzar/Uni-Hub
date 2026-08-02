@@ -5,8 +5,26 @@
  * ============================================
  */
 
+// Lazy-bound escape helpers. SecurityUtils is a global populated by
+// js/utils/security.js; if it's somehow not loaded yet we fall back
+// to a small identity string conversion so the render doesn't crash
+// (and the backend's sanitizeXss + socket sanitizeSocketString still
+// provide the primary defense — this is defense-in-depth).
+const _esc = v => {
+  if (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) {
+    return SecurityUtils.escapeHtml(String(v == null ? '' : v));
+  }
+  return String(v == null ? '' : v);
+};
+const _safeUrl = url => {
+  if (typeof SecurityUtils !== 'undefined' && SecurityUtils.sanitizeUrl) {
+    return SecurityUtils.sanitizeUrl(url) || '';
+  }
+  return String(url == null ? '' : url);
+};
+
 class MessagesPage {
-  constructor () {
+  constructor() {
     this.currentConversation = null;
     this.conversations = [];
     this.isLoading = false;
@@ -19,7 +37,7 @@ class MessagesPage {
    * Render the complete messaging interface
    * @param {Object} options - { conversationId?, userId?, productId? }
    */
-  async render (options = {}) {
+  async render(options = {}) {
     const mainContent = document.getElementById('main-content');
     if (!mainContent) {
       return;
@@ -69,7 +87,7 @@ class MessagesPage {
   /**
    * Get loading HTML
    */
-  getLoadingHTML () {
+  getLoadingHTML() {
     return `
       <div class="messaging-container" style="justify-content: center; align-items: center;">
         <div class="message-loading">
@@ -83,7 +101,7 @@ class MessagesPage {
   /**
    * Get error HTML
    */
-  getErrorHTML () {
+  getErrorHTML() {
     return `
       <div class="messaging-container" style="justify-content: center; align-items: center;">
         <div style="text-align: center; padding: 48px;">
@@ -99,16 +117,21 @@ class MessagesPage {
   /**
    * Get main messaging interface HTML
    */
-  getMessagingHTML () {
-    const isOffline = (typeof messageManager !== 'undefined' && messageManager._isOffline && messageManager._isOffline()) ||
-                      (typeof api !== 'undefined' && api.isStaticDeploy) ||
-                      !window._backendAvailable;
-    const offlineBanner = isOffline ? `
+  getMessagingHTML() {
+    const isOffline =
+      (typeof messageManager !== 'undefined' &&
+        messageManager._isOffline &&
+        messageManager._isOffline()) ||
+      (typeof api !== 'undefined' && api.isStaticDeploy) ||
+      !window._backendAvailable;
+    const offlineBanner = isOffline
+      ? `
       <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:10px 16px;margin-bottom:8px;display:flex;align-items:center;gap:8px;font-size:0.85rem;color:#92400e;">
         <span style="font-size:1.1rem;">&#9888;</span>
         <span><strong>Offline Mode</strong> — Messages are saved locally only. The other party won't see them until the server is available.</span>
       </div>
-    ` : '';
+    `
+      : '';
     return `
     ${offlineBanner}
     <div class="messaging-container">
@@ -142,7 +165,7 @@ class MessagesPage {
   /**
    * Get conversations list HTML
    */
-  getConversationsListHTML () {
+  getConversationsListHTML() {
     if (!this.conversations.conversations || this.conversations.conversations.length === 0) {
       return `
         <div class="empty-conversations">
@@ -161,32 +184,32 @@ class MessagesPage {
 
         return `
         <div class="conversation-item ${isActive ? 'active' : ''} ${unread > 0 ? 'unread' : ''}" 
-             data-conversation-id="${conv._id}"
-             onclick="messagesPage.loadConversation('${conv._id}')">
+             data-conversation-id="${_esc(conv._id)}"
+             onclick="messagesPage.loadConversation('${_esc(conv._id)}')">
           <div class="conversation-avatar">
-            ${otherUser?.avatar ? `<img src="${otherUser.avatar}" alt="${otherUser.fullName}" />` : otherUser?.fullName?.charAt(0) || '?'}
+            ${otherUser?.avatar ? `<img src="${_safeUrl(otherUser.avatar)}" alt="${_esc(otherUser.fullName)}" />` : _esc(otherUser?.fullName?.charAt(0)) || '?'}
             <div class="online-indicator" style="display: none;"></div>
           </div>
           <div class="conversation-info">
             <div class="conversation-header">
-              <h4 class="conversation-name">${otherUser?.fullName || 'Unknown User'}</h4>
-              <span class="conversation-time">${this.formatTime(conv.lastActivity)}</span>
+              <h4 class="conversation-name">${_esc(otherUser?.fullName || 'Unknown User')}</h4>
+              <span class="conversation-time">${_esc(this.formatTime(conv.lastActivity))}</span>
             </div>
             <p class="conversation-preview">
-              ${conv.lastMessage?.content || 'Start a conversation...'}
+              ${_esc(conv.lastMessage?.content || 'Start a conversation...')}
             </p>
             ${
-  conv.product
-    ? `
+              conv.product
+                ? `
               <div class="conversation-product">
-                <img src="${conv.product.images?.[0] || ''}" alt="" onerror="this.src='';this.onerror=null;" />
-                <span>${conv.product.title}</span>
+                <img src="${_safeUrl(conv.product.images?.[0] || '')}" alt="" onerror="this.src='';this.onerror=null;" />
+                <span>${_esc(conv.product.title)}</span>
               </div>
             `
-    : ''
-}
+                : ''
+            }
           </div>
-          ${unread > 0 ? `<span class="unread-badge">${unread}</span>` : ''}
+          ${unread > 0 ? `<span class="unread-badge">${_esc(unread)}</span>` : ''}
         </div>
       `;
       })
@@ -196,7 +219,7 @@ class MessagesPage {
   /**
    * Get chat area HTML
    */
-  getChatAreaHTML () {
+  getChatAreaHTML() {
     if (!this.currentConversation) {
       return '';
     }
@@ -209,10 +232,10 @@ class MessagesPage {
         <button class="chat-header-back" onclick="messagesPage.goBack()">←</button>
         <div class="chat-header-user">
           <div class="chat-header-avatar">
-            ${otherUser?.avatar ? `<img src="${otherUser.avatar}" alt="${otherUser.fullName}" />` : otherUser?.fullName?.charAt(0) || '?'}
+            ${otherUser?.avatar ? `<img src="${_safeUrl(otherUser.avatar)}" alt="${_esc(otherUser.fullName)}" />` : _esc(otherUser?.fullName?.charAt(0)) || '?'}
           </div>
           <div class="chat-header-info">
-            <h3>${otherUser?.fullName || 'Unknown User'}</h3>
+            <h3>${_esc(otherUser?.fullName || 'Unknown User')}</h3>
             <p class="chat-header-status" id="chat-status">Offline</p>
           </div>
         </div>
@@ -252,7 +275,7 @@ class MessagesPage {
   /**
    * Get empty chat HTML
    */
-  getEmptyChatHTML () {
+  getEmptyChatHTML() {
     return `
       <div class="empty-chat">
         <div class="empty-chat-icon">💬</div>
@@ -265,7 +288,7 @@ class MessagesPage {
   /**
    * Setup all event listeners
    */
-  setupEventListeners () {
+  setupEventListeners() {
     // Message input
     this.messageInput = document.getElementById('message-input');
     this.messagesContainer = document.getElementById('messages-container');
@@ -316,7 +339,7 @@ class MessagesPage {
   /**
    * Load a specific conversation
    */
-  async loadConversation (conversationId) {
+  async loadConversation(conversationId) {
     try {
       // Leave previous conversation
       if (this.currentConversation) {
@@ -357,7 +380,7 @@ class MessagesPage {
   /**
    * Start a new conversation
    */
-  async startConversation (userId, productId = null) {
+  async startConversation(userId, productId = null) {
     try {
       // Find or create conversation
       const response = await messageManager.sendMessage({
@@ -381,7 +404,7 @@ class MessagesPage {
   /**
    * Load messages for a conversation
    */
-  async loadMessages (conversationId) {
+  async loadMessages(conversationId) {
     try {
       const container = document.getElementById('messages-container');
       if (!container) {
@@ -413,7 +436,7 @@ class MessagesPage {
   /**
    * Get message bubble HTML
    */
-  getMessageHTML (msg) {
+  getMessageHTML(msg) {
     const isSent = msg.sender._id === this.getCurrentUserId();
     const time = new Date(msg.createdAt).toLocaleTimeString([], {
       hour: '2-digit',
@@ -431,10 +454,10 @@ class MessagesPage {
     return `
       <div class="message-group ${isSent ? 'sent' : 'received'}">
         <div class="message-bubble">
-          ${msg.content}
+          ${_esc(msg.content)}
         </div>
         <div class="message-time">
-          ${time}
+          ${_esc(time)}
           ${statusIcon}
         </div>
       </div>
@@ -445,7 +468,7 @@ class MessagesPage {
   // TYPING INDICATORS & STATUS
   // ==========================================
 
-  showTypingIndicator () {
+  showTypingIndicator() {
     const container = document.getElementById('messages-container');
     if (!container || container.querySelector('.typing-indicator')) {
       return;
@@ -458,14 +481,15 @@ class MessagesPage {
     container.scrollTop = container.scrollHeight;
   }
 
-  hideTypingIndicator () {
-    const indicator = document.getElementById('typing-indicator') || document.querySelector('.typing-indicator');
+  hideTypingIndicator() {
+    const indicator =
+      document.getElementById('typing-indicator') || document.querySelector('.typing-indicator');
     if (indicator) {
       indicator.remove();
     }
   }
 
-  updateOnlineStatus (userId, isOnline) {
+  updateOnlineStatus(userId, isOnline) {
     const statusEl = document.getElementById('chat-status');
     if (statusEl) {
       statusEl.textContent = isOnline ? 'Online' : 'Offline';
@@ -476,7 +500,7 @@ class MessagesPage {
   /**
    * Send a message
    */
-  async sendMessage () {
+  async sendMessage() {
     if (!this.messageInput || !this.currentConversation) {
       return;
     }
@@ -530,7 +554,7 @@ class MessagesPage {
   /**
    * Handle typing indicator
    */
-  handleTyping () {
+  handleTyping() {
     if (!this.currentConversation) {
       return;
     }
@@ -546,7 +570,7 @@ class MessagesPage {
   /**
    * Handle typing indicator display
    */
-  handleTypingIndicator (data) {
+  handleTypingIndicator(data) {
     if (!this.currentConversation || data.userId === this.getCurrentUserId()) {
       return;
     }
@@ -572,7 +596,7 @@ class MessagesPage {
           <div class="typing-dot"></div>
           <div class="typing-dot"></div>
         </div>
-      `,
+      `
       );
       container.scrollTop = container.scrollHeight;
     }
@@ -581,7 +605,7 @@ class MessagesPage {
   /**
    * Handle new message
    */
-  handleNewMessage (data) {
+  handleNewMessage(data) {
     if (!this.currentConversation || data.conversationId !== this.currentConversation._id) {
       // Update conversation list
       this.refreshConversations();
@@ -602,7 +626,7 @@ class MessagesPage {
   /**
    * Filter conversations
    */
-  filterConversations (query) {
+  filterConversations(query) {
     const items = document.querySelectorAll('.conversation-item');
     const lowerQuery = query.toLowerCase();
 
@@ -621,7 +645,7 @@ class MessagesPage {
   /**
    * Update sidebar active state
    */
-  updateSidebarActive (conversationId) {
+  updateSidebarActive(conversationId) {
     document.querySelectorAll('.conversation-item').forEach(item => {
       item.classList.remove('active');
       if (item.dataset.conversationId === conversationId) {
@@ -633,7 +657,7 @@ class MessagesPage {
   /**
    * Refresh conversations list
    */
-  async refreshConversations () {
+  async refreshConversations() {
     try {
       this.conversations = await messageManager.getConversations({ limit: 100 });
       const list = document.getElementById('conversation-list');
@@ -649,7 +673,7 @@ class MessagesPage {
   /**
    * Update unread count badge
    */
-  updateUnreadCount () {
+  updateUnreadCount() {
     if (messageManager.unreadCount > 0) {
       const badge = document.getElementById('message-badge');
       if (badge) {
@@ -662,7 +686,7 @@ class MessagesPage {
   /**
    * Go back to conversation list (mobile)
    */
-  goBack () {
+  goBack() {
     document.getElementById('messaging-sidebar').classList.add('active');
     document.getElementById('messaging-chat').classList.remove('active');
   }
@@ -670,7 +694,7 @@ class MessagesPage {
   /**
    * View product (from chat header)
    */
-  viewProduct () {
+  viewProduct() {
     if (this.currentConversation?.product?._id) {
       window.location.hash = `#/product/${this.currentConversation.product._id}`;
     }
@@ -679,7 +703,7 @@ class MessagesPage {
   /**
    * Helper: Get other user in conversation
    */
-  getOtherUser (conv) {
+  getOtherUser(conv) {
     if (!conv.participants) {
       return null;
     }
@@ -689,7 +713,7 @@ class MessagesPage {
   /**
    * Helper: Get current user ID
    */
-  getCurrentUserId () {
+  getCurrentUserId() {
     const token = StorageManager.getAuthToken();
     if (!token) {
       return null;
@@ -705,7 +729,7 @@ class MessagesPage {
   /**
    * Helper: Format time
    */
-  formatTime (date) {
+  formatTime(date) {
     if (!date) {
       return '';
     }
