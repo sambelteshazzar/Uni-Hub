@@ -5338,7 +5338,18 @@ font-size: 0.8rem;
     `;
     const form = document.getElementById('admin-product-form');
     this._wireAdminProductForm(form);
-    form
+    // The "Back to Products" button (pages.js:5260) lives in the
+    // `admin-header` div which is a SIBLING of the form, not a descendant.
+    // `form.querySelector('[data-action="back-to-products"]')` returns null
+    // (it only matches descendants) and `null.addEventListener(...)` throws
+    // `Cannot read properties of null (reading 'addEventListener')`. That
+    // crash also prevents the form's submit handler at line ~5344 from being
+    // wired, so clicking "Create Product" falls back to the form's default
+    // GET-submit which pollinates the URL bar with `?title=...&images=`
+    // and reloads the page ad infinitum. Fix: query from `mainContent`
+    // (the parent that contains BOTH the admin-header and the form) instead
+    // of from `form`.
+    mainContent
       .querySelector('[data-action="back-to-products"]')
       .addEventListener('click', () => Pages.renderAdminProducts());
     form.addEventListener('submit', e => Pages._handleAdminProductCreate(e));
@@ -5754,7 +5765,10 @@ font-size: 0.8rem;
       refreshSub();
     }
     Pages._wireImageDropZone(form);
-    form
+    // Same null-querySelector bug as renderAdminProductCreate (pages.js:5341-5343):
+    // the [data-action="back-to-products"] button lives in admin-header (a
+    // sibling of the form), so query it from `mainContent` not `form`.
+    mainContent
       .querySelector('[data-action="back-to-products"]')
       .addEventListener('click', () => Pages.renderAdminProducts());
     // Delegated removal of existing (already-uploaded) images.
