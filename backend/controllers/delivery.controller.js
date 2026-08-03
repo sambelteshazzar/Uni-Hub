@@ -10,7 +10,7 @@ function generateDeliveryNumber () {
 }
 
 async function populateDelivery (delivery) {
-  if (!delivery) return null;
+  if (!delivery) {return null;}
   const order = await db('orders').findById(delivery.orderId);
   if (order) {
     delivery.orderId = { _id: order.id, id: order.id, orderNumber: order.orderNumber, status: order.status, customer: { name: order.customer_name } };
@@ -97,8 +97,8 @@ exports.updateDeliveryStatus = asyncHandler(async (req, res) => {
     updates.location_lastUpdated = new Date().toISOString();
   }
 
-  if (status === 'picked-up') updates.pickedUpAt = new Date().toISOString();
-  if (status === 'delivered') updates.deliveredAt = new Date().toISOString();
+  if (status === 'picked-up') {updates.pickedUpAt = new Date().toISOString();}
+  if (status === 'delivered') {updates.deliveredAt = new Date().toISOString();}
 
   await db('deliveries').updateById(delivery.id, updates);
 
@@ -133,8 +133,8 @@ exports.getAllDeliveries = asyncHandler(async (req, res) => {
   const { status, mode, page = 1, limit = 20 } = req.query;
 
   const query = {};
-  if (status) query.status = status;
-  if (mode) query.mode = mode;
+  if (status) {query.status = status;}
+  if (mode) {query.mode = mode;}
 
   const skip = (page - 1) * limit;
   const deliveries = await db('deliveries').find(query, { sort: { createdAt: -1 }, limit: Number(limit), skip });

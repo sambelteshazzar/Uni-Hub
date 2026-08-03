@@ -2,7 +2,7 @@ const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { db, mapProductRow } = require('../utils/db');
 const logActivity = require('../utils/logActivity');
 
-async function populateCreator(product) {
+async function populateCreator (product) {
   const creator = await db('users').findById(product.seller);
   if (creator) {
     product.seller = {
@@ -17,7 +17,7 @@ async function populateCreator(product) {
   return product;
 }
 
-async function populateCreatorDetail(product) {
+async function populateCreatorDetail (product) {
   const creator = await db('users').findById(product.seller);
   if (creator) {
     product.seller = {
@@ -35,7 +35,7 @@ async function populateCreatorDetail(product) {
   return product;
 }
 
-function getPublicProduct(product) {
+function getPublicProduct (product) {
   product._id = product.id;
   delete product.__v;
   return product;
@@ -62,13 +62,23 @@ exports.getProducts = asyncHandler(async (req, res) => {
   // Build query
   const query = { status: 'active' };
 
-  if (category) { query.category = category; }
-  if (condition) { query.condition = condition; }
-  if (university) { query.university = university; }
+  if (category) {
+    query.category = category;
+  }
+  if (condition) {
+    query.condition = condition;
+  }
+  if (university) {
+    query.university = university;
+  }
   if (minPrice || maxPrice) {
     query.price = {};
-    if (minPrice) { query.price.$gte = Number(minPrice); }
-    if (maxPrice) { query.price.$lte = Number(maxPrice); }
+    if (minPrice) {
+      query.price.$gte = Number(minPrice);
+    }
+    if (maxPrice) {
+      query.price.$lte = Number(maxPrice);
+    }
   }
 
   // Text search
@@ -79,17 +89,17 @@ exports.getProducts = asyncHandler(async (req, res) => {
   // Sorting
   let sortOptions = {};
   switch (sortBy) {
-    case 'price-low':
-      sortOptions = { price: 1 };
-      break;
-    case 'price-high':
-      sortOptions = { price: -1 };
-      break;
-    case 'newest':
-      sortOptions = { createdAt: -1 };
-      break;
-    default:
-      sortOptions = { createdAt: -1 };
+  case 'price-low':
+    sortOptions = { price: 1 };
+    break;
+  case 'price-high':
+    sortOptions = { price: -1 };
+    break;
+  case 'newest':
+    sortOptions = { createdAt: -1 };
+    break;
+  default:
+    sortOptions = { createdAt: -1 };
   }
 
   // Pagination — clamp to safe integers to prevent NaN/SQL injection
@@ -158,6 +168,8 @@ exports.createProduct = asyncHandler(async (req, res) => {
     price,
     category,
     condition,
+    gender,
+    subcategory,
     variants,
     images,
     deliveryModes,
@@ -180,7 +192,15 @@ exports.createProduct = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Price cannot exceed 100,000 GHS');
   }
 
-  const allowedCategories = ['appliances', 'hostel-items', 'accessories', 'textbooks', 'electronics', 'fashion', 'thrifts'];
+  const allowedCategories = [
+    'appliances',
+    'hostel-items',
+    'accessories',
+    'textbooks',
+    'electronics',
+    'fashion',
+    'thrifts',
+  ];
   if (!category || !allowedCategories.includes(category)) {
     throw new ApiError(400, 'Valid category is required');
   }
@@ -188,6 +208,19 @@ exports.createProduct = asyncHandler(async (req, res) => {
   const allowedConditions = ['new', 'like-new', 'good', 'fair', 'excellent'];
   if (!condition || !allowedConditions.includes(condition)) {
     throw new ApiError(400, 'Valid condition is required');
+  }
+
+  // gender/subcategory are optional but constrained when present.
+  const allowedGenders = ['male', 'female', 'unisex'];
+  if (gender !== undefined && gender !== null && gender !== '') {
+    if (!allowedGenders.includes(gender)) {
+      throw new ApiError(400, 'Invalid gender (must be \'male\', \'female\', or \'unisex\')');
+    }
+  }
+  if (subcategory !== undefined && subcategory !== null && subcategory !== '') {
+    if (typeof subcategory !== 'string' || subcategory.length > 80) {
+      throw new ApiError(400, 'Subcategory must be a string of at most 80 characters');
+    }
   }
 
   if (images && !Array.isArray(images)) {
@@ -213,6 +246,8 @@ exports.createProduct = asyncHandler(async (req, res) => {
     price,
     category,
     condition,
+    gender: gender || null,
+    subcategory: subcategory || null,
     variants,
     images,
     deliveryModes,
@@ -223,7 +258,18 @@ exports.createProduct = asyncHandler(async (req, res) => {
     university: req.user.university,
   });
 
-  await logActivity('product_create', req.user, { productId: product.id, title: product.title, category: product.category, price: product.price }, 'info', req);
+  await logActivity(
+    'product_create',
+    req.user,
+    {
+      productId: product.id,
+      title: product.title,
+      category: product.category,
+      price: product.price,
+    },
+    'info',
+    req,
+  );
 
   res.status(201).json({
     success: true,
@@ -250,7 +296,20 @@ exports.updateProduct = asyncHandler(async (req, res) => {
   }
 
   // Update fields
-  const allowedFields = ['title', 'description', 'price', 'category', 'condition', 'variants', 'images', 'deliveryModes', 'paymentModes', 'status'];
+  const allowedFields = [
+    'title',
+    'description',
+    'price',
+    'category',
+    'condition',
+    'gender',
+    'subcategory',
+    'variants',
+    'images',
+    'deliveryModes',
+    'paymentModes',
+    'status',
+  ];
   const updates = {};
   allowedFields.forEach(field => {
     if (req.body[field] !== undefined) {
@@ -262,7 +321,17 @@ exports.updateProduct = asyncHandler(async (req, res) => {
 
   product = await db('products').findById(product.id);
 
-  await logActivity('product_update', req.user, { productId: product.id, title: product.title, updatedFields: Object.keys(req.body).filter(k => allowedFields.includes(k)) }, 'info', req);
+  await logActivity(
+    'product_update',
+    req.user,
+    {
+      productId: product.id,
+      title: product.title,
+      updatedFields: Object.keys(req.body).filter(k => allowedFields.includes(k)),
+    },
+    'info',
+    req,
+  );
 
   res.json({
     success: true,
@@ -290,7 +359,13 @@ exports.deleteProduct = asyncHandler(async (req, res) => {
 
   await db('products').deleteById(product.id);
 
-  await logActivity('product_delete', req.user, { productId: req.params.id, title: product.title }, 'warning', req);
+  await logActivity(
+    'product_delete',
+    req.user,
+    { productId: req.params.id, title: product.title },
+    'warning',
+    req,
+  );
 
   res.json({
     success: true,
@@ -328,7 +403,8 @@ exports.uploadProductImages = asyncHandler(async (req, res) => {
   }
 
   if (uploadedUrls.length === 0) {
-    const detail = failedFiles.length > 0 ? ` Failures: ${failedFiles.map(f => f.filename).join(', ')}` : '';
+    const detail =
+      failedFiles.length > 0 ? ` Failures: ${failedFiles.map(f => f.filename).join(', ')}` : '';
     throw new ApiError(500, `Failed to upload any images.${detail}`);
   }
 
@@ -397,7 +473,9 @@ exports.updateProductColor = asyncHandler(async (req, res) => {
   }
   const allowed = ['color_name', 'color_hex', 'image_url', 'stock'];
   const updates = {};
-  allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
+  allowed.forEach(f => {
+    if (req.body[f] !== undefined) {updates[f] = req.body[f];}
+  });
   await db('product_colors').updateById(req.params.colorId, updates);
   const updated = await db('product_colors').findById(req.params.colorId);
   res.json({ success: true, data: { color: updated } });
@@ -436,7 +514,8 @@ exports.uploadImages = asyncHandler(async (req, res) => {
   }
 
   if (uploadedUrls.length === 0) {
-    const detail = failedFiles.length > 0 ? ` Failures: ${failedFiles.map(f => f.filename).join(', ')}` : '';
+    const detail =
+      failedFiles.length > 0 ? ` Failures: ${failedFiles.map(f => f.filename).join(', ')}` : '';
     throw new ApiError(500, `Failed to upload any images to Cloudinary.${detail}`);
   }
 

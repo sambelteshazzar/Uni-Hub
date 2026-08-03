@@ -6,7 +6,7 @@ const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { sendPasswordResetEmail } = require('../utils/emailService');
 const logActivity = require('../utils/logActivity');
 
-function getPublicProfile(user) {
+function getPublicProfile (user) {
   const { password: _, resetToken: __, resetTokenExpiry: ___, passwordChangedAt: ____, bannedBy: _____, ...profile } = user;
   profile._id = profile.id;
   return profile;
@@ -155,7 +155,7 @@ exports.getMe = asyncHandler(async (req, res) => {
   const user = await db('users').findById(req.user.id);
   const mappedUser = mapUserRow(user);
 
-  if (!user) throw new ApiError(404, 'User not found');
+  if (!user) {throw new ApiError(404, 'User not found');}
 
   res.json({
     success: true,
@@ -173,14 +173,14 @@ exports.updateProfile = asyncHandler(async (req, res) => {
 
   const user = await db('users').findById(req.user.id);
 
-  if (!user) throw new ApiError(404, 'User not found');
+  if (!user) {throw new ApiError(404, 'User not found');}
 
   const updates = {};
-  if (fullName) updates.fullName = fullName;
-  if (phone) updates.phone = phone;
-  if (bio) updates.bio = bio;
-  if (hall) updates.hall = hall;
-  if (level) updates.level = level;
+  if (fullName) {updates.fullName = fullName;}
+  if (phone) {updates.phone = phone;}
+  if (bio) {updates.bio = bio;}
+  if (hall) {updates.hall = hall;}
+  if (level) {updates.level = level;}
 
   const updatedUser = await db('users').updateById(user.id, updates);
   const mappedUser = mapUserRow(updatedUser);

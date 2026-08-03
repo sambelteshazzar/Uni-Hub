@@ -3,7 +3,7 @@ const { db, generateId, parseJson, mapOrderRow, toBool, fromBool } = require('..
 const { notifyOrderCreated, notifyOrderStatusChanged, notifyPaymentCompleted, notifyOrderCancelled } = require('../utils/notificationHelper');
 
 function getPublicOrder (order) {
-  if (!order) return null;
+  if (!order) {return null;}
   const mapped = mapOrderRow(order);
   return {
     ...mapped,
@@ -224,7 +224,7 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
   const deliveryStatus = deliveryStatusMap[status] || order.delivery_status;
 
   const updates = { status };
-  if (deliveryStatus) updates.delivery_status = deliveryStatus;
+  if (deliveryStatus) {updates.delivery_status = deliveryStatus;}
 
   // Refund flow: release inventory back to 'active' and try to refund
   // via Paystack if the payment was card/momo/bank. Cash refunds are
@@ -342,7 +342,7 @@ exports.completePayment = asyncHandler(async (req, res) => {
         throw new ApiError(400, 'Transaction could not be verified with the payment provider');
       }
     } catch (err) {
-      if (err instanceof ApiError) throw err;
+      if (err instanceof ApiError) {throw err;}
       console.error('Paystack verification error:', err);
       throw new ApiError(400, 'Payment provider verification failed');
     }

@@ -24,19 +24,136 @@ const _pageSafeUrl = url => {
   return String(url == null ? '' : url);
 };
 
+// Admin route guard. AGENTS.md requires /admin/* to enforce
+// authManager.isAuthenticated plus an admin-role check before rendering —
+// never rely on hiding UI alone. We additionally accept adminAuthManager
+// (the legacy localStorage admin slot) so the existing admin login flow
+// keeps working until it is consolidated with authManager. Returns true
+// when the caller may proceed, false when the caller has already been
+// redirected (caller must `return`).
+const _requireAdmin = () => {
+  const ammgr = typeof authManager !== 'undefined' ? authManager : null;
+  const aamgr = typeof adminAuthManager !== 'undefined' ? adminAuthManager : null;
+  const backendAdmin =
+    ammgr && ammgr.isAuthenticated && ammgr.isAuthenticated() && ammgr.isAdmin && ammgr.isAdmin();
+  const legacyAdmin = aamgr && aamgr.isLoggedIn && aamgr.isLoggedIn();
+  if (backendAdmin || legacyAdmin) {
+    return true;
+  }
+  // Not authorized — show login. Prefer the existing admin login renderer
+  // if Pages has been loaded, otherwise bounce to the regular login route.
+  if (typeof Pages !== 'undefined' && Pages.renderAdminLogin) {
+    Pages.renderAdminLogin();
+  } else if (typeof navigateTo === 'function') {
+    navigateTo('login');
+  }
+  return false;
+};
+
 class Pages {
+  // Admin product-form category metadata. Mirrors public/data/categories.json
+  // so the form does not require a runtime fetch (and stays correct offline).
+  // When categories.json changes, update this too — there is no sync logic.
+  // Each entry: { id, label, subcategories: string[], hasGender: bool }.
+  // - `subcategories`: picklist for the "Subcategory" select rendered when
+  //   the category is selected. Sent to the backend as product.subcategory.
+  // - `hasGender`: when true (fashion), the form additionally renders a
+  //   Male/Female/Unisex radio group and persists product.gender.
+  static ADMIN_CATEGORY_META = [
+    {
+      id: 'electronics',
+      label: 'Electronics',
+      subcategories: [
+        'Smartphones',
+        'Laptops',
+        'Tablets',
+        'Headphones',
+        'Speakers',
+        'Power Banks',
+        'Chargers',
+      ],
+    },
+    {
+      id: 'textbooks',
+      label: 'Books & Stationery',
+      subcategories: ['Science', 'Engineering', 'Medicine', 'Law', 'Business', 'Arts', 'Education'],
+    },
+    {
+      id: 'appliances',
+      label: 'Appliances',
+      subcategories: [
+        'Blenders',
+        'Microwaves',
+        'Rice Cookers',
+        'Electric Kettles',
+        'Iron Boxes',
+        'Fans',
+      ],
+    },
+    {
+      id: 'hostel-items',
+      label: 'Gadgets',
+      subcategories: [
+        'Phones',
+        'Laptops',
+        'Beds',
+        'Mattresses',
+        'Chairs',
+        'Tables',
+        'Storage Boxes',
+        'Lamps',
+        'Curtains',
+      ],
+    },
+    {
+      id: 'fashion',
+      label: 'Fashion',
+      subcategories: [
+        'Men\'s Clothing',
+        'Women\'s Clothing',
+        'Shoes',
+        'Sneakers',
+        'Traditional Wear',
+        'Sportswear',
+      ],
+      hasGender: true,
+    },
+    {
+      id: 'accessories',
+      label: 'Accessories',
+      subcategories: [
+        'Handbags',
+        'Backpacks',
+        'Wallets',
+        'Belts',
+        'Watches',
+        'Sunglasses',
+        'Jewelry',
+      ],
+    },
+    {
+      id: 'thrifts',
+      label: 'Thrifts',
+      subcategories: ['Bundles', 'Single Items', 'Vintage', 'Clearance'],
+    },
+  ];
+
+  // Conditions offered on the product form. Keep in sync with backend
+  // product validation if any.
+  static ADMIN_CONDITIONS = ['new', 'like-new', 'good', 'fair', 'excellent'];
+
   /**
    * Navigate to a page using hash-based routing
    * @param {string} hash - Hash to navigate to (e.g., '/cart', '/product/prod-001')
    */
-  static navigate(hash) {
+  static navigate (hash) {
     window.location.hash = hash;
   }
 
   /**
    * Register all page routes with the router
    */
-  static registerRoutes() {
+  static registerRoutes () {
     console.log('✓ Pages.registerRoutes() called');
     // Home/Landing
     router.register('/', () => this.renderLanding());
@@ -75,20 +192,24 @@ class Pages {
     router.register('/messages', params => messagesPage.render(params));
 
     // Admin
+    // TODO: security review CSP — most admin routes below render forms with
+    // inline handlers; migrate to addEventListener / data-action delegation.
     router.register('/admin', () => this.renderAdminDashboard());
     router.register('/admin/verifications', () => this.renderAdminVerifications());
     router.register('/admin/products', () => this.renderAdminProducts());
+    router.register('/admin/products/new', () => this.renderAdminProductCreate());
     router.register('/admin/products/edit/:id', params => this.renderAdminProductEdit(params.id));
     router.register('/admin/analytics', () => this.renderAdminAnalytics());
     router.register('/admin/users', () => this.renderAdminUsers());
     router.register('/admin/orders', () => this.renderAdminOrders());
     router.register('/admin/reports', () => this.renderAdminReports());
     router.register('/admin/activity', () => this.renderAdminActivity());
+    router.register('/admin/regions', () => this.renderAdminRegions());
 
     console.log('✓ All routes registered successfully');
   }
 
-  static formatConditionLabel(condition) {
+  static formatConditionLabel (condition) {
     const labels = {
       new: 'New',
       'like-new': 'Like New',
@@ -107,7 +228,7 @@ class Pages {
   /**
    * Navigate to Messages (with auth check)
    */
-  static navigateToMessages() {
+  static navigateToMessages () {
     const token = StorageManager.getAuthToken();
     if (!token && typeof authManager !== 'undefined' && !authManager.isLoggedIn()) {
       showToast('Please log in to access messages', 'info');
@@ -120,7 +241,7 @@ class Pages {
   /**
    * Handle search submission from navbar
    */
-  static handleSearch() {
+  static handleSearch () {
     const input = document.getElementById('navbar-search-input');
     if (input && input.value.trim()) {
       // Setting the hash triggers a hashchange event → the router fires
@@ -135,7 +256,7 @@ class Pages {
   /**
    * Toggle mobile menu drawer
    */
-  static toggleMobileMenu() {
+  static toggleMobileMenu () {
     const drawer = document.getElementById('navbar-drawer');
     const overlay = document.getElementById('navbar-overlay');
     if (drawer && overlay) {
@@ -148,7 +269,7 @@ class Pages {
   /**
    * Close mobile menu drawer
    */
-  static closeMobileMenu() {
+  static closeMobileMenu () {
     const drawer = document.getElementById('navbar-drawer');
     const overlay = document.getElementById('navbar-overlay');
     if (drawer && overlay) {
@@ -161,7 +282,7 @@ class Pages {
   /**
    * Render SVG star rating
    */
-  static renderStars(rating) {
+  static renderStars (rating) {
     let html = '';
     for (let i = 1; i <= 5; i++) {
       if (i <= rating) {
@@ -176,7 +297,7 @@ class Pages {
   /**
    * Hide original navbar and footer for landing page
    */
-  static hideOriginalNavFooter() {
+  static hideOriginalNavFooter () {
     const navbar = document.getElementById('navbar');
     const footer = document.getElementById('footer');
     if (navbar) {
@@ -192,7 +313,7 @@ class Pages {
   /**
    * Show original navbar and footer for other pages
    */
-  static showOriginalNavFooter() {
+  static showOriginalNavFooter () {
     const navbar = document.getElementById('navbar');
     const footer = document.getElementById('footer');
     if (navbar && navbar.getAttribute('data-hidden') === 'true') {
@@ -212,7 +333,7 @@ class Pages {
   /**
    * Render Landing Page - Delegates to BestBuy Landing
    */
-  static async renderLanding() {
+  static async renderLanding () {
     if (typeof window.renderBestBuyLanding === 'function') {
       return window.renderBestBuyLanding();
     }
@@ -243,7 +364,7 @@ class Pages {
    * Level-4 module and is guaranteed to be on window.BrowsePageMethods
    * before any route handler runs.
    */
-  static async renderBrowse(filters = {}) {
+  static async renderBrowse (filters = {}) {
     if (typeof BrowsePageMethods !== 'undefined' && BrowsePageMethods.renderBrowse) {
       return BrowsePageMethods.renderBrowse(filters);
     }
@@ -264,7 +385,7 @@ class Pages {
   /**
    * Render Browse Page Loading Skeleton
    */
-  static renderBrowseSkeleton() {
+  static renderBrowseSkeleton () {
     return `
   <div class="browse-modern">
   <div class="browse-hero" style="min-height:180px;">
@@ -283,9 +404,9 @@ class Pages {
  <div class="browse-container">
  <div class="products-grid-modern">
             ${Array(6)
-              .fill()
-              .map(
-                () => `
+    .fill()
+    .map(
+      () => `
               <div class="product-card-modern">
                 <div class="product-card-image-wrap">
                   <div class="skeleton-image" style="width: 100%; height: 100%;"></div>
@@ -296,9 +417,9 @@ class Pages {
                   <div class="skeleton" style="height: 20px; width: 60%; border-radius: 4px;"></div>
                 </div>
               </div>
-            `
-              )
-              .join('')}
+            `,
+    )
+    .join('')}
           </div>
         </div>
       </div>
@@ -324,7 +445,7 @@ class Pages {
   /**
    * Render Modern Browse Page HTML
    */
-  static renderBrowseModernHTML(paginatedData, totalProducts) {
+  static renderBrowseModernHTML (paginatedData, totalProducts) {
     const allProducts = productsManager.getAll();
     const categoryCounts = {};
     allProducts.forEach(p => {
@@ -422,16 +543,16 @@ class Pages {
  <div class="browse-categories">
  <div class="browse-categories-scroll">
  ${categories
-   .map(
-     cat => `
+    .map(
+      cat => `
  <button class="category-pill ${cat.id === productsManager.currentFilters.category ? 'active' : !productsManager.currentFilters.category && cat.id === 'all' ? 'active' : ''}" onclick="BrowsePageMethods.filterByCategory('${cat.id}')">
  ${Icons[cat.icon] || ''}
  ${cat.name}
  <span class="pill-count">${cat.count}</span>
  </button>
- `
-   )
-   .join('')}
+ `,
+    )
+    .join('')}
  </div>
  </div>
 
@@ -464,16 +585,16 @@ class Pages {
  </div>
  <div class="filter-dropdown-body">
  ${conditions
-   .map(
-     cond => `
+    .map(
+      cond => `
  <div class="filter-option">
  <input type="checkbox" id="cond-${cond.id}" onchange="BrowsePageMethods.applyBrowseFilters()" ${selectedConditions.includes(cond.id) ? 'checked' : ''}>
  <label for="cond-${cond.id}">${cond.name}</label>
  <span class="filter-count">${cond.count}</span>
  </div>
- `
-   )
-   .join('')}
+ `,
+    )
+    .join('')}
  </div>
  </div>
  </details>
@@ -527,17 +648,17 @@ class Pages {
  </details>
 
  ${
-   productsManager.currentFilters.category ||
+  productsManager.currentFilters.category ||
    productsManager.currentFilters.condition ||
    (productsManager.currentFilters.priceRange &&
      (productsManager.currentFilters.priceRange.min > 0 ||
        productsManager.currentFilters.priceRange.max < Infinity)) ||
    productsManager.currentFilters.minRating
-     ? `
+    ? `
  <button style="padding:0.5rem 0.875rem;background:transparent;border:1px solid #ef4444;border-radius:8px;font-size:0.8125rem;font-weight:500;color:#ef4444;cursor:pointer;" onclick="Pages.resetBrowseFilters()">Clear all</button>
  `
-     : ''
- }
+    : ''
+}
  </div>
 
  <!-- Sort -->
@@ -559,9 +680,9 @@ class Pages {
  <!-- Products Grid -->
  <div class="products-grid-modern">
  ${
-   paginatedData.products.length > 0
-     ? paginatedData.products.map(product => this.renderProductCardModern(product)).join('')
-     : `
+  paginatedData.products.length > 0
+    ? paginatedData.products.map(product => this.renderProductCardModern(product)).join('')
+    : `
  <div class="browse-empty" style="grid-column: 1/-1;">
  <div class="browse-empty-icon" style="width: 64px; height: 64px; margin: 0 auto 1rem;">${Icons.search}</div>
  <h3>No items found</h3>
@@ -569,7 +690,7 @@ class Pages {
  <button class="btn btn-primary" onclick="Pages.resetBrowseFilters()">Clear Filters</button>
  </div>
  `
- }
+}
  </div>
 
 ${
@@ -578,12 +699,12 @@ ${
         <div class="pagination">
           <button class="page-btn" onclick="Pages.goToBrowsePage(${paginatedData.currentPage - 1})" ${paginatedData.currentPage <= 1 ? 'disabled style="opacity:0.4;pointer-events:none;"' : ''}>&laquo;</button>
           ${this._renderPageNumbers(paginatedData.currentPage, paginatedData.totalPages)
-            .map(p =>
-              p === '...'
-                ? '<span style="padding:0 4px;color:var(--neutral-400);">...</span>'
-                : `<button class="page-btn ${p === paginatedData.currentPage ? 'active' : ''}" onclick="Pages.goToBrowsePage(${p})">${p}</button>`
-            )
-            .join('')}
+    .map(p =>
+      p === '...'
+        ? '<span style="padding:0 4px;color:var(--neutral-400);">...</span>'
+        : `<button class="page-btn ${p === paginatedData.currentPage ? 'active' : ''}" onclick="Pages.goToBrowsePage(${p})">${p}</button>`,
+    )
+    .join('')}
           <button class="page-btn" onclick="Pages.goToBrowsePage(${paginatedData.currentPage + 1})" ${paginatedData.currentPage >= paginatedData.totalPages ? 'disabled style="opacity:0.4;pointer-events:none;"' : ''}>&raquo;</button>
         </div>
       `
@@ -600,7 +721,7 @@ ${Pages.renderRecentlyViewedSection()}
   /**
    * Render Modern Product Card
    */
-  static renderProductCardModern(product) {
+  static renderProductCardModern (product) {
     const isInWishlist = productsManager.isInWishlist?.(product.id) || false;
     const _sn = product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
     const initials = _sn
@@ -661,13 +782,13 @@ ${product.seller?.verified ? '<span class="trust-badge trust-badge-verified"><sv
   /**
    * Filter by Category (for category pills)
    */
-  static filterByCategory(categoryId) {
+  static filterByCategory (categoryId) {
     document.querySelectorAll('.category-pill').forEach(pill => {
       pill.classList.remove('active');
     });
 
     const clickedPill = event.target.closest('.category-pill');
-    if (clickedPill) clickedPill.classList.add('active');
+    if (clickedPill) {clickedPill.classList.add('active');}
 
     if (categoryId === 'all') {
       productsManager.resetFilters();
@@ -681,7 +802,7 @@ ${product.seller?.verified ? '<span class="trust-badge trust-badge-verified"><sv
   /**
    * Toggle Mobile Filters
    */
-  static toggleMobileFilters() {
+  static toggleMobileFilters () {
     const group = document.getElementById('browse-filters-group');
     group?.classList.toggle('open');
   }
@@ -689,7 +810,7 @@ ${product.seller?.verified ? '<span class="trust-badge trust-badge-verified"><sv
   /**
    * Set Rating Filter
    */
-  static setRatingFilter(rating) {
+  static setRatingFilter (rating) {
     productsManager.filter({ minRating: rating });
     this.renderBrowse();
   }
@@ -697,7 +818,7 @@ ${product.seller?.verified ? '<span class="trust-badge trust-badge-verified"><sv
   /**
    * Render Product Card - Modern Professional Design
    */
-  static renderProductCard(product) {
+  static renderProductCard (product) {
     const isInWishlist = productsManager.isInWishlist(product.id);
     const initials =
       product.seller?.name
@@ -759,7 +880,7 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
   /**
    * Render Best Buy-style Product Card for Browse/Top Deals page
    */
-  static renderBBProductCard(product) {
+  static renderBBProductCard (product) {
     const isInWishlist = productsManager.isInWishlist(product.id);
     const _bsn = product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
     const initials = _bsn
@@ -852,7 +973,7 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
   /**
    * Toggle Wishlist
    */
-  static toggleWishlist(event, productId) {
+  static toggleWishlist (event, productId) {
     event.stopPropagation();
 
     if (productsManager.isInWishlist(productId)) {
@@ -870,13 +991,13 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
   /**
    * Apply Browse Filters
    */
-  static applyBrowseFilters() {
+  static applyBrowseFilters () {
     const conditions = [];
-    if (document.getElementById('cond-new')?.checked) conditions.push('new');
-    if (document.getElementById('cond-like-new')?.checked) conditions.push('like-new');
-    if (document.getElementById('cond-excellent')?.checked) conditions.push('excellent');
-    if (document.getElementById('cond-good')?.checked) conditions.push('good');
-    if (document.getElementById('cond-fair')?.checked) conditions.push('fair');
+    if (document.getElementById('cond-new')?.checked) {conditions.push('new');}
+    if (document.getElementById('cond-like-new')?.checked) {conditions.push('like-new');}
+    if (document.getElementById('cond-excellent')?.checked) {conditions.push('excellent');}
+    if (document.getElementById('cond-good')?.checked) {conditions.push('good');}
+    if (document.getElementById('cond-fair')?.checked) {conditions.push('fair');}
 
     productsManager.filter({
       condition: conditions.length > 0 ? conditions : null,
@@ -888,7 +1009,7 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
   /**
    * Reset Browse Filters
    */
-  static resetBrowseFilters() {
+  static resetBrowseFilters () {
     productsManager.resetFilters();
     this.renderBrowse();
   }
@@ -896,7 +1017,7 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
   /**
    * Apply Sort Order
    */
-  static applySortOrder() {
+  static applySortOrder () {
     const sortBy = document.getElementById('sort-select').value;
     productsManager.currentFilters.sortBy = sortBy;
     productsManager.applyFilters();
@@ -906,7 +1027,7 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
   /**
    * Re-render just the products grid (for filtering without page refresh)
    */
-  static renderBrowseProducts() {
+  static renderBrowseProducts () {
     const paginatedData = productsManager.getPaginated(1);
     const productsGrid = document.querySelector('.products-grid');
 
@@ -921,9 +1042,9 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
   /**
    * Render Recently Viewed Section HTML
    */
-  static renderRecentlyViewedSection() {
+  static renderRecentlyViewedSection () {
     const recentlyViewed = productsManager.getRecentlyViewed(8);
-    if (!recentlyViewed || recentlyViewed.length === 0) return '';
+    if (!recentlyViewed || recentlyViewed.length === 0) {return '';}
 
     return `
 <div class="recently-viewed-section" style="padding: 2rem 0 1rem;">
@@ -933,9 +1054,9 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
 </div>
 <div style="display:flex;gap:1rem;overflow-x:auto;padding-bottom:0.5rem;scrollbar-width:thin;">
 ${recentlyViewed
-  .map(product => {
-    const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
-    return `
+    .map(product => {
+      const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
+      return `
 <div onclick="Pages.renderProductDetail('${product.id}')" style="min-width:160px;max-width:160px;cursor:pointer;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--neutral-200);transition:box-shadow 0.2s;background:var(--bg-primary);" onmouseover="this.style.boxShadow='var(--shadow-card-hover)'" onmouseout="this.style.boxShadow='none'">
 <div style="aspect-ratio:1;overflow:hidden;background:var(--neutral-100);">
 <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg';this.onerror=null;">
@@ -946,26 +1067,26 @@ ${recentlyViewed
 <span class="condition-badge ${product.condition || 'good'}" style="font-size:0.65rem;padding:2px 6px;margin-top:4px;">${conditionLabel}</span>
 </div>
 </div>`;
-  })
-  .join('')}
+    })
+    .join('')}
 </div>
 </div>
 `;
   }
 
-  static _renderPageNumbers(current, total) {
+  static _renderPageNumbers (current, total) {
     const pages = [];
     pages.push(1);
-    if (current > 3) pages.push('...');
+    if (current > 3) {pages.push('...');}
     for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
       pages.push(i);
     }
-    if (current < total - 2) pages.push('...');
-    if (total > 1) pages.push(total);
+    if (current < total - 2) {pages.push('...');}
+    if (total > 1) {pages.push(total);}
     return pages;
   }
 
-  static async goToBrowsePage(page) {
+  static async goToBrowsePage (page) {
     const paginatedData = await this._fetchPaginatedData(page);
     const totalProducts =
       paginatedData.totalProducts || paginatedData.total || productsManager.filteredProducts.length;
@@ -976,10 +1097,10 @@ ${recentlyViewed
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  static async _fetchPaginatedData(page) {
+  static async _fetchPaginatedData (page) {
     if (productsManager._backendAvailable) {
       const serverData = await productsManager.fetchPage(page);
-      if (serverData) return serverData;
+      if (serverData) {return serverData;}
     }
     return productsManager.getPaginated(page);
   }
@@ -998,7 +1119,7 @@ ${recentlyViewed
    * This avoids a double render (click → set hash → hash → render) AND
    * keeps the URL predictable so refresh/back/forward work correctly.
    */
-  static async renderProductDetail(productId) {
+  static async renderProductDetail (productId) {
     const desiredPath = `/product/${productId}`;
     const currentPath = (window.location.hash || '#').replace(/^#/, '').split('?')[0];
     if (currentPath !== desiredPath) {
@@ -1220,16 +1341,16 @@ ${
 <div class="pd-methods-label">Options</div>
 <div class="pd-variants-list">
 ${product.variants
-  .map(
-    (v, i) => `
+    .map(
+      (v, i) => `
 <button class="pd-variant-btn" data-variant-index="${i}" onclick="Pages.selectVariant(this, ${i})">
 <span class="pd-variant-label">${v.label}</span>
 <span class="pd-variant-value">${v.value}</span>
 ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
 </button>
-`
-  )
-  .join('')}
+`,
+    )
+    .join('')}
 </div>
 <input type="hidden" id="selected-variant-index" value="-1" />
 </div>
@@ -1312,19 +1433,19 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
     this.loadProductReviews(productId);
   }
 
-  static selectVariant(btn, index) {
+  static selectVariant (btn, index) {
     document.querySelectorAll('.pd-variant-btn').forEach(b => b.classList.remove('selected'));
     btn.classList.add('selected');
     document.getElementById('selected-variant-index').value = index;
   }
 
-  static selectColor(btn) {
+  static selectColor (btn) {
     document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
     btn.classList.add('selected');
-    var nameEl = document.querySelector('.color-name-display');
-    if (nameEl) nameEl.textContent = btn.dataset.colorName;
-    var stock = parseInt(btn.dataset.colorStock) || 0;
-    var indicator = document.querySelector('.color-stock-indicator');
+    const nameEl = document.querySelector('.color-name-display');
+    if (nameEl) {nameEl.textContent = btn.dataset.colorName;}
+    const stock = parseInt(btn.dataset.colorStock) || 0;
+    const indicator = document.querySelector('.color-stock-indicator');
     if (indicator) {
       if (stock <= 0) {
         indicator.textContent = 'Out of Stock';
@@ -1338,8 +1459,8 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
       }
     }
     if (btn.dataset.colorImage) {
-      var mainImg = document.querySelector('.pd-main-image');
-      if (mainImg && btn.dataset.colorImage) mainImg.src = btn.dataset.colorImage;
+      const mainImg = document.querySelector('.pd-main-image');
+      if (mainImg && btn.dataset.colorImage) {mainImg.src = btn.dataset.colorImage;}
     }
     window.__selectedColor = {
       id: btn.dataset.colorId,
@@ -1350,9 +1471,9 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
     };
   }
 
-  static addToCartWithVariant(productId) {
+  static addToCartWithVariant (productId) {
     const product = productsManager.getById(productId);
-    if (!product) return;
+    if (!product) {return;}
     const variantIndex = parseInt(document.getElementById('selected-variant-index')?.value);
     let variant = null;
     if (
@@ -1376,7 +1497,7 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
     if (!isVerified) {
       showToast(
         'Item added to cart, but you must be verified as a student to purchase.',
-        'warning'
+        'warning',
       );
     } else {
       showToast('Added to cart', 'success');
@@ -1386,7 +1507,7 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
   /**
    * Toggle Wishlist in Detail View
    */
-  static toggleWishlistDetail(productId) {
+  static toggleWishlistDetail (productId) {
     if (productsManager.isInWishlist(productId)) {
       productsManager.removeFromWishlist(productId);
       notificationManager?.info('Removed from Wishlist', 'Product removed from your wishlist');
@@ -1402,25 +1523,25 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
   /**
    * Add all wishlist items to cart
    */
-  static addAllWishlistToCart() {
+  static addAllWishlistToCart () {
     const wishlistProducts = productsManager.getWishlist();
     let added = 0;
     wishlistProducts.forEach(product => {
       const result = cartManager?.add(product);
-      if (result?.success) added++;
+      if (result?.success) {added++;}
     });
     Pages.updateCartBadge();
     notificationManager?.success(
       'Added to Cart',
-      `${added} item${added !== 1 ? 's' : ''} added to your cart`
+      `${added} item${added !== 1 ? 's' : ''} added to your cart`,
     );
   }
 
   /**
    * Clear entire wishlist
    */
-  static clearWishlist() {
-    if (!confirm('Remove all items from your wishlist?')) return;
+  static clearWishlist () {
+    if (!confirm('Remove all items from your wishlist?')) {return;}
     const wishlistIds = StorageManager.get(productsManager.wishlistKey, true) || [];
     wishlistIds.forEach(id => productsManager.removeFromWishlist(id));
     Pages.updateWishlistBadge();
@@ -1431,7 +1552,7 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
   /**
    * Load and display reviews for a product's seller
    */
-  static async loadProductReviews(productId) {
+  static async loadProductReviews (productId) {
     const container = document.getElementById('product-reviews-container');
     if (!container) {
       return;
@@ -1516,7 +1637,7 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
   /**
    * Render a single review item
    */
-  static renderReviewItem(review) {
+  static renderReviewItem (review) {
     const timeAgo = this.formatReviewTime(review.createdAt);
     const stars = this.renderStars(review.rating);
 
@@ -1540,7 +1661,7 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
   /**
    * Format review time
    */
-  static formatReviewTime(date) {
+  static formatReviewTime (date) {
     if (!date) {
       return '';
     }
@@ -1563,11 +1684,11 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
   /**
    * Write Review for Seller
    */
-  static async writeReview(sellerId, productId) {
+  static async writeReview (sellerId, productId) {
     this._showReviewModal(sellerId, productId);
   }
 
-  static _showReviewModal(sellerId, productId) {
+  static _showReviewModal (sellerId, productId) {
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
     if (!currentUser) {
@@ -1577,7 +1698,7 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
     }
 
     const existing = document.getElementById('review-modal-overlay');
-    if (existing) existing.remove();
+    if (existing) {existing.remove();}
 
     const overlay = document.createElement('div');
     overlay.id = 'review-modal-overlay';
@@ -1635,7 +1756,7 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
 
     overlay.querySelector('#review-cancel-btn').addEventListener('click', () => overlay.remove());
     overlay.addEventListener('click', e => {
-      if (e.target === overlay) overlay.remove();
+      if (e.target === overlay) {overlay.remove();}
     });
 
     submitBtn.addEventListener('click', async () => {
@@ -1676,7 +1797,7 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
   /**
    * Share Product
    */
-  static shareProduct(productId) {
+  static shareProduct (productId) {
     const product = productsManager.getById(productId);
     const shareUrl = window.location.href.split('#')[0] + `#/product/${productId}`;
     const shareText = `Check out this item on JERTS CART: ${product.title} - GHS ${product.price?.toLocaleString() || '0'}`;
@@ -1703,7 +1824,7 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
     overlay.style.cssText =
       'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;';
     overlay.onclick = e => {
-      if (e.target === overlay) overlay.remove();
+      if (e.target === overlay) {overlay.remove();}
     };
 
     overlay.innerHTML = `
@@ -1739,10 +1860,10 @@ Copy Link
     document.body.appendChild(overlay);
   }
 
-  static async downloadReceipt(orderId) {
+  static async downloadReceipt (orderId) {
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
-    if (!currentUser) return;
+    if (!currentUser) {return;}
 
     let order = null;
     try {
@@ -1771,7 +1892,7 @@ Copy Link
   <td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">GHS ${(item.price || 0).toLocaleString()}</td>
   <td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">GHS ${((item.price || 0) * item.quantity).toLocaleString()}</td>
   </tr>
-  `
+  `,
       )
       .join('');
 
@@ -1859,7 +1980,7 @@ Copy Link
   /**
    * Copy share link to clipboard
    */
-  static copyShareLink(url) {
+  static copyShareLink (url) {
     navigator.clipboard
       .writeText(url)
       .then(() => {
@@ -1874,7 +1995,7 @@ Copy Link
   /**
    * Render Cart Page
    */
-  static renderCart() {
+  static renderCart () {
     const mainContent = document.getElementById('main-content');
     const cartItems = cartManager.getItems();
     const summary = cartManager.getSummary();
@@ -1919,8 +2040,8 @@ Copy Link
             </div>
             
             ${cartItems
-              .map(
-                item => `
+    .map(
+      item => `
               <div class="cart-item" data-product-id="${item.product.id}">
                 <div class="cart-item-image">
   <img src="${item.product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${item.product.title}" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
@@ -1944,9 +2065,9 @@ Copy Link
   <button class="remove-btn" onclick="Pages.removeFromCart('${item.product.id}')">Remove</button>
   </div>
               </div>
-            `
-              )
-              .join('')}
+            `,
+    )
+    .join('')}
           </div>
           
           <div class="cart-summary">
@@ -1997,7 +2118,7 @@ Copy Link
   /**
    * Add product to cart from product detail
    */
-  static addToCart(productId) {
+  static addToCart (productId) {
     const product = productsManager.getById(productId);
 
     if (!product) {
@@ -2016,7 +2137,7 @@ Copy Link
       if (!isVerified) {
         showToast(
           'Item added to cart, but you must be verified as a student to purchase.',
-          'warning'
+          'warning',
         );
       } else {
         showToast(result.message, 'success');
@@ -2027,7 +2148,7 @@ Copy Link
   /**
    * Remove item from cart
    */
-  static removeFromCart(productId) {
+  static removeFromCart (productId) {
     cartManager.remove(productId);
     this.updateCartBadge();
     this.renderCart();
@@ -2036,7 +2157,7 @@ Copy Link
   /**
    * Increment cart item quantity
    */
-  static incrementCartQuantity(productId) {
+  static incrementCartQuantity (productId) {
     cartManager.increment(productId);
     this.updateCartBadge();
     this.renderCart();
@@ -2045,7 +2166,7 @@ Copy Link
   /**
    * Decrement cart item quantity
    */
-  static decrementCartQuantity(productId) {
+  static decrementCartQuantity (productId) {
     cartManager.decrement(productId);
     this.updateCartBadge();
     this.renderCart();
@@ -2054,7 +2175,7 @@ Copy Link
   /**
    * Handle Proceed to Checkout button click from Cart
    */
-  static handleProceedToCheckout() {
+  static handleProceedToCheckout () {
     // Verify required managers are loaded
     if (typeof cartManager === 'undefined' || !cartManager) {
       console.error('Cart manager not loaded');
@@ -2091,7 +2212,7 @@ Copy Link
     if (!isVerified) {
       showToast(
         'You must be verified as a student to make purchases. Please complete student verification first.',
-        'warning'
+        'warning',
       );
       this.renderStudentVerification();
       return;
@@ -2104,7 +2225,7 @@ Copy Link
   /**
    * Render Checkout Page
    */
-  static renderCheckout() {
+  static renderCheckout () {
     // Verify checkoutManager is loaded
     if (typeof checkoutManager === 'undefined' || !checkoutManager) {
       console.error('Checkout manager not loaded yet');
@@ -2138,7 +2259,7 @@ Copy Link
     if (!isVerified) {
       showToast(
         'You must be verified as a student to make purchases. Please complete student verification first.',
-        'warning'
+        'warning',
       );
       this.renderStudentVerification();
       return;
@@ -2180,17 +2301,17 @@ Copy Link
                 <h3><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;"><path d="M5 17H4a2 2 0 01-2-2V5a2 2 0 012-2h16a2 2 0 012 2v10a2 2 0 01-2 2h-1"/><path d="M12 17V5"/><path d="M5 17a2 2 0 104 0"/><path d="M15 17a2 2 0 104 0"/></svg>Delivery Method</h3>
                 <div class="delivery-options">
                   ${deliveryOptions
-                    .map(
-                      option => `
+    .map(
+      option => `
                     <div class="option-card" onclick="Pages.selectDeliveryOption('${option.value}', this)">
                       <input type="radio" name="deliveryMode" value="${option.value}" id="delivery-${option.value}" />
                       <div class="option-icon">${option.icon}</div>
                       <div class="option-label">${option.label}</div>
                       <div class="option-fee">${option.fee === 0 ? 'Free' : `GHS ${option.fee}`}</div>
                     </div>
-                  `
-                    )
-                    .join('')}
+                  `,
+    )
+    .join('')}
                 </div>
               </div>
 
@@ -2231,16 +2352,16 @@ Copy Link
                 <h3><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><line x1="6" y1="12" x2="6.01" y2="12"/><line x1="18" y1="12" x2="18.01" y2="12"/></svg>Payment Method</h3>
                 <div class="payment-options">
                   ${paymentOptions
-                    .map(
-                      option => `
+    .map(
+      option => `
                     <div class="option-card" onclick="Pages.selectPaymentOption('${option.value}', this)">
                       <input type="radio" name="paymentMode" value="${option.value}" id="payment-${option.value}" />
                       <div class="option-icon">${option.icon}</div>
                       <div class="option-label">${option.label}</div>
                     </div>
-                  `
-                    )
-                    .join('')}
+                  `,
+    )
+    .join('')}
                 </div>
               </div>
             </div>
@@ -2251,8 +2372,8 @@ Copy Link
               
               <div class="order-items">
                 ${cartItems
-                  .map(
-                    item => `
+    .map(
+      item => `
   <div class="order-item">
   <div class="order-item-image">
         <img src="${(item.product.images && item.product.images[0]) || '/assets/images/products/no-image.svg'}" alt="${item.product.title}" onerror="this.src='/assets/images/products/no-image.svg'" />
@@ -2264,9 +2385,9 @@ Copy Link
   <div class="order-item-price">${Formatter.formatPrice((item.product.price + (item.variant ? item.variant.price || 0 : 0)) * item.quantity)}</div>
   </div>
   </div>
-                `
-                  )
-                  .join('')}
+                `,
+    )
+    .join('')}
               </div>
 
               <div class="summary-divider"></div>
@@ -2299,7 +2420,7 @@ Copy Link
   /**
    * Select delivery option
    */
-  static selectDeliveryOption(value, element) {
+  static selectDeliveryOption (value, element) {
     // Update radio button
     document.querySelectorAll('input[name="deliveryMode"]').forEach(radio => {
       radio.checked = radio.value === value;
@@ -2314,7 +2435,7 @@ Copy Link
     // Update delivery fee
     const deliveryFee = checkoutManager.calculateDeliveryFee(
       value,
-      cartManager.getSummary().subtotal
+      cartManager.getSummary().subtotal,
     );
     document.getElementById('delivery-fee').textContent = Formatter.formatPrice(deliveryFee);
 
@@ -2327,7 +2448,7 @@ Copy Link
   /**
    * Select payment option
    */
-  static selectPaymentOption(value, element) {
+  static selectPaymentOption (value, element) {
     // Update radio button
     document.querySelectorAll('input[name="paymentMode"]').forEach(radio => {
       radio.checked = radio.value === value;
@@ -2343,7 +2464,7 @@ Copy Link
   /**
    * Handle checkout form submission
    */
-  static async handleCheckout(event) {
+  static async handleCheckout (event) {
     event.preventDefault();
 
     const form = event.target;
@@ -2357,7 +2478,7 @@ Copy Link
     if (!isVerified) {
       showToast(
         'You must be verified as a student to make purchases. Please complete student verification first.',
-        'warning'
+        'warning',
       );
       this.renderStudentVerification();
       return;
@@ -2428,7 +2549,7 @@ Copy Link
           // Send notification
           notificationManager?.success(
             'Order Confirmed',
-            `Your order #${result.order.orderNumber} has been confirmed!`
+            `Your order #${result.order.orderNumber} has been confirmed!`,
           );
 
           // Render confirmation page
@@ -2460,7 +2581,7 @@ Copy Link
   /**
    * Render Order Confirmation Page
    */
-  static renderOrderConfirmation(order) {
+  static renderOrderConfirmation (order) {
     const mainContent = document.getElementById('main-content');
 
     mainContent.innerHTML = `
@@ -2527,7 +2648,7 @@ Copy Link
   /**
    * Render Orders Page
    */
-  static async renderOrders() {
+  static async renderOrders () {
     const mainContent = document.getElementById('main-content');
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
@@ -2575,8 +2696,8 @@ Copy Link
         
         <div class="cart-items">
           ${orders
-            .map(
-              order => `
+    .map(
+      order => `
             <div class="cart-item" style="display: block;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
 <div>
@@ -2587,16 +2708,16 @@ Copy Link
                   </div>
                 </div>
                 <span class="condition-badge ${order.status}" style="background: ${this.getStatusColor(
-                  order.status
-                )}; color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.875rem;">
+  order.status,
+)}; color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.875rem;">
                   ${Formatter.capitalize(order.status.replace('-', ' '))}
                 </span>
               </div>
               
               <div style="border-top: 1px solid var(--neutral-200); padding-top: 1rem;">
                 ${order.items
-                  .map(
-                    item => `
+    .map(
+      item => `
                   <div style="display: flex; gap: 1rem; margin-bottom: 0.75rem;">
                     <img src="${item.image || '/assets/images/products/no-image.svg'}" alt="${item.title}" style="width: 60px; height: 60px; object-fit: cover; border-radius: var(--radius-md);" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
                     <div style="flex: 1;">
@@ -2605,9 +2726,9 @@ Copy Link
                     </div>
                     <div style="font-weight: 600;">${Formatter.formatPrice(item.price * item.quantity)}</div>
                   </div>
-                `
-                  )
-                  .join('')}
+                `,
+    )
+    .join('')}
               </div>
               
 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--neutral-200);">
@@ -2626,9 +2747,9 @@ Copy Link
 
 ${Pages.renderOrderTimeline(order.status)}
 </div>
-          `
-            )
-            .join('')}
+          `,
+    )
+    .join('')}
         </div>
       </div>
     `;
@@ -2637,7 +2758,7 @@ ${Pages.renderOrderTimeline(order.status)}
   /**
    * Get status color
    */
-  static getStatusColor(status) {
+  static getStatusColor (status) {
     const colors = {
       [ORDER_STATUS.PLACED]: '#0046be',
       [ORDER_STATUS.CONFIRMED]: '#10b981',
@@ -2651,7 +2772,7 @@ ${Pages.renderOrderTimeline(order.status)}
   /**
    * Render Order Timeline Stepper
    */
-  static renderOrderTimeline(status) {
+  static renderOrderTimeline (status) {
     if (status === ORDER_STATUS.CANCELLED) {
       return `
 <div class="order-timeline" style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--neutral-200);">
@@ -2671,22 +2792,22 @@ Order Cancelled
 
     const stepOrder = steps.map(s => s.key);
     const currentIdx = stepOrder.indexOf(status);
-    if (currentIdx === -1) return '';
+    if (currentIdx === -1) {return '';}
 
     return `
 <div class="order-timeline" style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--neutral-200);">
 <div style="display:flex;align-items:center;width:100%;">
 ${steps
-  .map((step, i) => {
-    const isCompleted = i <= currentIdx;
-    const isCurrent = i === currentIdx;
-    const dotColor = isCompleted
-      ? isCurrent
-        ? this.getStatusColor(status)
-        : '#10b981'
-      : 'var(--neutral-300)';
-    const lineColor = i < currentIdx ? '#10b981' : 'var(--neutral-200)';
-    return `
+    .map((step, i) => {
+      const isCompleted = i <= currentIdx;
+      const isCurrent = i === currentIdx;
+      const dotColor = isCompleted
+        ? isCurrent
+          ? this.getStatusColor(status)
+          : '#10b981'
+        : 'var(--neutral-300)';
+      const lineColor = i < currentIdx ? '#10b981' : 'var(--neutral-200)';
+      return `
 <div style="flex:1;display:flex;flex-direction:column;align-items:center;position:relative;">
 ${i > 0 ? `<div style="position:absolute;top:8px;left:-50%;width:100%;height:2px;background:${lineColor};z-index:0;"></div>` : ''}
 <div style="width:18px;height:18px;border-radius:50%;background:${dotColor};border:2px solid ${dotColor};z-index:1;display:flex;align-items:center;justify-content:center;margin-bottom:4px;">
@@ -2695,8 +2816,8 @@ ${isCurrent ? '<div style="width:6px;height:6px;border-radius:50%;background:whi
 </div>
 <span style="font-size:0.7rem;color:${isCompleted ? 'var(--neutral-700)' : 'var(--neutral-400)'};font-weight:${isCurrent ? '600' : '400'};text-align:center;white-space:nowrap;">${step.label}</span>
 </div>`;
-  })
-  .join('')}
+    })
+    .join('')}
 </div>
 </div>`;
   }
@@ -2704,10 +2825,10 @@ ${isCurrent ? '<div style="width:6px;height:6px;border-radius:50%;background:whi
   /**
    * View Order Details (expand in page)
    */
-  static async viewOrderDetails(orderId) {
+  static async viewOrderDetails (orderId) {
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
-    if (!currentUser) return;
+    if (!currentUser) {return;}
 
     const orders = await checkoutManager.getUserOrders(currentUser.id);
     const order = orders.find(o => o.id === orderId);
@@ -2721,7 +2842,7 @@ ${isCurrent ? '<div style="width:6px;height:6px;border-radius:50%;background:whi
     overlay.style.cssText =
       'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;';
     overlay.onclick = e => {
-      if (e.target === overlay) overlay.remove();
+      if (e.target === overlay) {overlay.remove();}
     };
 
     overlay.innerHTML = `
@@ -2738,8 +2859,8 @@ ${Pages.renderOrderTimeline(order.status)}
 <div style="margin-top:1.5rem;">
 <h3 style="font-size:1rem;margin:0 0 1rem;">Items</h3>
 ${order.items
-  .map(
-    item => `
+    .map(
+      item => `
 <div style="display:flex;gap:1rem;margin-bottom:0.75rem;align-items:center;">
   <img src="${item.image || '/assets/images/products/no-image.svg'}" alt="${item.title}" style="width:50px;height:50px;object-fit:cover;border-radius:var(--radius-md);" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
 <div style="flex:1;">
@@ -2748,9 +2869,9 @@ ${order.items
 </div>
 <div style="font-weight:600;">${Formatter.formatPrice(item.price * item.quantity)}</div>
 </div>
-`
-  )
-  .join('')}
+`,
+    )
+    .join('')}
 </div>
   <div style="border-top:1px solid var(--neutral-200);padding-top:1rem;margin-top:1rem;display:flex;justify-content:space-between;align-items:center;">
   <div>
@@ -2771,7 +2892,7 @@ ${order.items
   /**
    * Update cart badge in navbar
    */
-  static updateCartBadge() {
+  static updateCartBadge () {
     const badge = document.getElementById('cart-badge');
     if (badge) {
       const count = cartManager.getCount();
@@ -2787,7 +2908,7 @@ ${order.items
   /**
    * Update wishlist badge in navbar
    */
-  static updateWishlistBadge() {
+  static updateWishlistBadge () {
     try {
       const badge = document.getElementById('wishlist-badge');
       if (badge && productsManager && typeof productsManager.getWishlist === 'function') {
@@ -2807,7 +2928,7 @@ ${order.items
   /**
    * Initialize dark mode from saved preference
    */
-  static initDarkMode() {
+  static initDarkMode () {
     const saved = StorageManager.get(STORAGE_KEYS.THEME, false);
     if (saved === 'dark') {
       document.documentElement.setAttribute('data-theme', 'dark');
@@ -2818,7 +2939,7 @@ ${order.items
   /**
    * Toggle dark mode
    */
-  static toggleDarkMode() {
+  static toggleDarkMode () {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     if (isDark) {
       document.documentElement.removeAttribute('data-theme');
@@ -2833,7 +2954,7 @@ ${order.items
   /**
    * Update dark mode toggle icons
    */
-  static updateDarkModeIcons() {
+  static updateDarkModeIcons () {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     const sunIcon = document.getElementById('dark-mode-icon-sun');
     const moonIcon = document.getElementById('dark-mode-icon-moon');
@@ -2846,7 +2967,7 @@ ${order.items
   /**
    * Update navbar based on authentication state
    */
-  static updateNavbar() {
+  static updateNavbar () {
     const authButtons = document.getElementById('navbar-auth-buttons');
     const userMenu = document.getElementById('navbar-user-menu');
     const drawerAuth = document.getElementById('navbar-drawer-auth');
@@ -2857,24 +2978,24 @@ ${order.items
 
     if (isLoggedIn) {
       // Desktop navbar - logged in
-      if (authButtons) authButtons.style.display = 'none';
+      if (authButtons) {authButtons.style.display = 'none';}
       if (userMenu) {
         userMenu.style.display = 'flex';
         userMenu.style.gap = 'var(--space-sm)';
       }
       // Mobile drawer - logged in
-      if (drawerAuth) drawerAuth.style.display = 'none';
-      if (drawerUser) drawerUser.style.display = 'block';
+      if (drawerAuth) {drawerAuth.style.display = 'none';}
+      if (drawerUser) {drawerUser.style.display = 'block';}
     } else {
       // Desktop navbar - logged out
       if (authButtons) {
         authButtons.style.display = 'flex';
         authButtons.style.gap = 'var(--space-sm)';
       }
-      if (userMenu) userMenu.style.display = 'none';
+      if (userMenu) {userMenu.style.display = 'none';}
       // Mobile drawer - logged out
-      if (drawerAuth) drawerAuth.style.display = 'block';
-      if (drawerUser) drawerUser.style.display = 'none';
+      if (drawerAuth) {drawerAuth.style.display = 'block';}
+      if (drawerUser) {drawerUser.style.display = 'none';}
     }
   }
 
@@ -2885,7 +3006,7 @@ ${order.items
   /**
    * Render Wishlist Page
    */
-  static renderWishlist() {
+  static renderWishlist () {
     const mainContent = document.getElementById('main-content');
     const wishlistProducts = productsManager.getWishlist();
     const priceDrops = productsManager.trackWishlistPrices();
@@ -2950,17 +3071,17 @@ ${Icons.trash} Clear All
 </div>
 <div class="wishlist-grid">
 ${wishlistProducts
-  .map(product => {
-    const _wsn = product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
-    const initials = _wsn
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-    const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
-    const conditionClass = product.condition || 'good';
-    return `
+    .map(product => {
+      const _wsn = product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
+      const initials = _wsn
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+      const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
+      const conditionClass = product.condition || 'good';
+      return `
 <div class="wishlist-card" onclick="Pages.renderProductDetail('${product.id}')">
 <div class="wishlist-card-image">
 <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg';this.onerror=null;">
@@ -2987,8 +3108,8 @@ ${Icons.upload}
 </div>
 </div>
 </div>`;
-  })
-  .join('')}
+    })
+    .join('')}
 </div>
 </div>
 <style>
@@ -3075,7 +3196,7 @@ font-size: 0.8rem;
   /**
    * Render User Dashboard - Vertical Tabs Modern Design
    */
-  static async renderDashboard() {
+  static async renderDashboard () {
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
 
@@ -3242,10 +3363,10 @@ font-size: 0.8rem;
 
               <div class="dv-orders">
                 ${
-                  recentOrders.length > 0
-                    ? recentOrders
-                        .map(
-                          order => `
+  recentOrders.length > 0
+    ? recentOrders
+      .map(
+        order => `
                   <div class="dv-order-item">
 <div class="dv-order-icon">${Icons.package}</div>
           <div class="dv-order-info">
@@ -3255,17 +3376,17 @@ font-size: 0.8rem;
                     <div class="dv-order-time">${Formatter.formatTimeAgo(order.createdAt)}</div>
                     <span class="dv-order-status ${order.status ? order.status.toLowerCase() : 'placed'}">${order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'Placed'}</span>
                   </div>
-                `
-                        )
-                        .join('')
-                    : `
+                `,
+      )
+      .join('')
+    : `
                   <div class="dv-empty">
 <div class="dv-empty-icon">${Icons.package}</div>
         <h3>No orders yet</h3>
         <p>Start shopping to see your orders here!</p>
                   </div>
                 `
-                }
+}
               </div>
             </div>
 
@@ -3276,10 +3397,10 @@ font-size: 0.8rem;
 
               <div class="dv-orders">
                 ${
-                  orders.length > 0
-                    ? orders
-                        .map(
-                          order => `
+  orders.length > 0
+    ? orders
+      .map(
+        order => `
                   <div class="dv-order-item">
 <div class="dv-order-icon">${Icons.package}</div>
           <div class="dv-order-info">
@@ -3289,17 +3410,17 @@ font-size: 0.8rem;
                     <div class="dv-order-time">${Formatter.formatTimeAgo(order.createdAt)}</div>
                     <span class="dv-order-status ${order.status ? order.status.toLowerCase() : 'placed'}">${order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'Placed'}</span>
                   </div>
-                `
-                        )
-                        .join('')
-                    : `
+                `,
+      )
+      .join('')
+    : `
                   <div class="dv-empty">
 <div class="dv-empty-icon">${Icons.cart}</div>
         <h3>No orders yet</h3>
         <p>Browse products and make your first purchase!</p>
                   </div>
                 `
-                }
+}
               </div>
             </div>
 
@@ -3309,12 +3430,12 @@ font-size: 0.8rem;
               <p class="dv-panel-subtitle">Items you've saved for later.</p>
 
               ${
-                wishlist.length > 0
-                  ? `
+  wishlist.length > 0
+    ? `
                 <div class="dv-wishlist-grid">
                   ${wishlist
-                    .map(
-                      product => `
+    .map(
+      product => `
                     <div class="store-product-card" onclick="Pages.renderProductDetail('${product.id}')">
                       <div class="store-product-image">
                         <img src="${(product.images && product.images[0]) || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
@@ -3329,19 +3450,19 @@ font-size: 0.8rem;
                         </div>
                       </div>
                     </div>
-                  `
-                    )
-                    .join('')}
+                  `,
+    )
+    .join('')}
                 </div>
               `
-                  : `
+    : `
                 <div class="dv-empty">
 <div class="dv-empty-icon">${Icons.heartOutline}</div>
         <h3>Your wishlist is empty</h3>
                   <p>Save items you love to find them later!</p>
                 </div>
               `
-              }
+}
             </div>
 
             <!-- Cart Panel -->
@@ -3350,13 +3471,13 @@ font-size: 0.8rem;
               <p class="dv-panel-subtitle">Review items before checkout.</p>
 
               ${
-                cartCount > 0
-                  ? `
+  cartCount > 0
+    ? `
                 <div class="dv-orders">
                   ${cartManager
-                    .getItems()
-                    .map(
-                      item => `
+    .getItems()
+    .map(
+      item => `
                     <div class="dv-order-item">
 <div class="dv-order-icon">${Icons.cart}</div>
           <div class="dv-order-info">
@@ -3364,23 +3485,23 @@ font-size: 0.8rem;
             <div class="dv-order-amount">Qty: ${item.quantity} × ${item.product.price.toLocaleString()} GHS</div>
           </div>
                     </div>
-                  `
-                    )
-                    .join('')}
+                  `,
+    )
+    .join('')}
                 </div>
                 <div style="margin-top:1.5rem;display:flex;gap:0.75rem;">
                   <button class="dv-btn dv-btn-outline" onclick="cartManager.clear(); Pages.renderDashboard();">Clear Cart</button>
                   <button class="dv-btn dv-btn-primary" onclick="event.preventDefault(); Pages.handleProceedToCheckout();">Proceed to Checkout →</button>
                 </div>
               `
-                  : `
+    : `
                 <div class="dv-empty">
 <div class="dv-empty-icon">${Icons.cart}</div>
         <h3>Your cart is empty</h3>
         <p>Add items to get started!</p>
                 </div>
               `
-              }
+}
             </div>
 
             <!-- Profile Panel -->
@@ -3442,7 +3563,7 @@ font-size: 0.8rem;
   /**
    * Switch Dashboard Tab
    */
-  static switchDashboardTab(tabId) {
+  static switchDashboardTab (tabId) {
     // Update tab buttons
     document.querySelectorAll('.dv-tab').forEach(tab => {
       tab.classList.toggle('active', tab.dataset.tab === tabId);
@@ -3457,7 +3578,7 @@ font-size: 0.8rem;
   /**
    * Render User Profile
    */
-  static renderProfile() {
+  static renderProfile () {
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
 
@@ -3502,7 +3623,7 @@ font-size: 0.8rem;
   /**
    * Handle Profile Update
    */
-  static handleProfileUpdate(event) {
+  static handleProfileUpdate (event) {
     event.preventDefault();
     const form = event.target;
     const updates = {
@@ -3522,7 +3643,7 @@ font-size: 0.8rem;
   /**
    * Handle Logout
    */
-  static handleLogout() {
+  static handleLogout () {
     authManager.logout();
     notificationManager?.info('Logged Out', 'You have been logged out successfully.');
     // Update navbar to show login/signup buttons
@@ -3533,7 +3654,7 @@ font-size: 0.8rem;
   /**
    * Render Notifications Page
    */
-  static renderNotifications() {
+  static renderNotifications () {
     const mainContent = document.getElementById('main-content');
     notificationManager?.markAllAsRead();
     const notifications = notificationManager?.getAll() || [];
@@ -3545,22 +3666,22 @@ font-size: 0.8rem;
           <div style="display:flex;gap:0.5rem;">
             <a href="#/dashboard" style="padding:0.5rem 1rem;border:1px solid var(--neutral-300,#d4d4d4);border-radius:0.5rem;font-size:0.875rem;color:var(--text-primary,#111);text-decoration:none;">Back to Dashboard</a>
             ${
-              notifications.length > 0
-                ? `
+  notifications.length > 0
+    ? `
               <button onclick="notificationManager?.deleteRead();Pages.renderNotifications();" style="padding:0.5rem 1rem;border:1px solid var(--neutral-300,#d4d4d4);border-radius:0.5rem;background:transparent;cursor:pointer;font-size:0.875rem;color:var(--text-primary,#111);">Clear Read</button>
               <button onclick="if(confirm('Delete all notifications?')){notificationManager?.deleteAll();Pages.renderNotifications();}" style="padding:0.5rem 1rem;border:1px solid var(--color-danger,#ef4444);border-radius:0.5rem;background:transparent;cursor:pointer;font-size:0.875rem;color:var(--color-danger,#ef4444);">Clear All</button>
             `
-                : ''
-            }
+    : ''
+}
           </div>
         </div>
         ${
-          notifications.length > 0
-            ? `
+  notifications.length > 0
+    ? `
           <div class="cart-items">
             ${notifications
-              .map(
-                n => `
+    .map(
+      n => `
               <div class="cart-item ${n.read ? 'read' : 'unread'}" style="display: flex; align-items: flex-start; gap: 1rem;${n.read ? '' : 'border-left:3px solid var(--color-primary,#2563eb);'}">
                 <div style="font-size: 2rem;">${n.icon}</div>
                 <div style="flex: 1;">
@@ -3572,19 +3693,19 @@ font-size: 0.8rem;
                 </div>
                 <button class="remove-btn" onclick="notificationManager?.delete('${n.id}'); Pages.renderNotifications();">×</button>
               </div>
-            `
-              )
-              .join('')}
+            `,
+    )
+    .join('')}
           </div>
         `
-            : `
+    : `
           <div class="empty-cart">
             <div class="empty-cart-icon">${Icons.bell}</div>
             <h3>No notifications</h3>
             <p>You're all caught up!</p>
           </div>
         `
-        }
+}
       </div>
     `;
   }
@@ -3592,7 +3713,7 @@ font-size: 0.8rem;
   /**
    * Render Delivery Options Page
    */
-  static renderDeliveryOptions() {
+  static renderDeliveryOptions () {
     const mainContent = document.getElementById('main-content');
     const deliveryOptions = deliveryManager.getDeliveryOptions();
 
@@ -3601,8 +3722,8 @@ font-size: 0.8rem;
         <h1 style="margin-bottom: 1.5rem;">Delivery Options</h1>
         <div class="delivery-options">
           ${deliveryOptions
-            .map(
-              option => `
+    .map(
+      option => `
             <div class="option-card">
               <div class="option-icon">${option.icon}</div>
               <div class="option-label">${option.name}</div>
@@ -3610,9 +3731,9 @@ font-size: 0.8rem;
               <div class="option-fee">${option.fee === 0 ? 'Free' : `GHS ${option.fee}`}</div>
               <div class="option-fee" style="font-size: 0.75rem;">${option.estimatedTime}</div>
             </div>
-          `
-            )
-            .join('')}
+          `,
+    )
+    .join('')}
         </div>
       </div>
     `;
@@ -3621,7 +3742,7 @@ font-size: 0.8rem;
   /**
    * Render Payment Page
    */
-  static async renderPayment(orderId) {
+  static async renderPayment (orderId) {
     const order = await checkoutManager.getOrderById(orderId);
     const mainContent = document.getElementById('main-content');
 
@@ -3668,7 +3789,7 @@ font-size: 0.8rem;
   /**
    * Render Payment Success Page
    */
-  static renderPaymentSuccess() {
+  static renderPaymentSuccess () {
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `
       <div class="container" style="padding: 2rem 1rem; text-align: center;">
@@ -3680,7 +3801,7 @@ font-size: 0.8rem;
     `;
   }
 
-  static getAdminSidebar(activeItem) {
+  static getAdminSidebar (activeItem) {
     const adminUser = adminAuthManager.getCurrentUser();
     const items = [
       {
@@ -3754,7 +3875,7 @@ font-size: 0.8rem;
   <span>${item.label}</span>
   </a>
   </li>
-  `
+  `,
     )
     .join('')}
   </ul>
@@ -3768,10 +3889,14 @@ font-size: 0.8rem;
   /**
    * Render Admin Dashboard
    */
-  static async renderAdminDashboard() {
-    const adminUser = adminAuthManager.getCurrentUser();
+  static async renderAdminDashboard () {
+    if (!_requireAdmin()) {return;}
+    const adminUser =
+      (typeof adminAuthManager !== 'undefined' && adminAuthManager.getCurrentUser?.()) ||
+      (typeof authManager !== 'undefined' && authManager.getCurrentUser?.()) ||
+      null;
 
-    if (!adminAuthManager.isLoggedIn()) {
+    if (!adminUser) {
       this.renderAdminLogin();
       return;
     }
@@ -3864,7 +3989,7 @@ font-size: 0.8rem;
   <td style="font-weight:600;">${Formatter.formatPrice(o.pricing?.grandTotal || 0)}</td>
   <td style="color:#9ca3af;font-size:0.8rem;">${Formatter.formatTimeAgo(o.createdAt)}</td>
   </tr>
-  `
+  `,
         )
         .join('') ||
       '<tr><td colspan="6" style="text-align:center;color:#6b7280;padding:2rem;">No orders yet</td></tr>';
@@ -3881,7 +4006,7 @@ font-size: 0.8rem;
   </div>
   <span class="admin-role-badge ${u.role || 'buyer'}">${Formatter.capitalize(u.role || 'buyer')}</span>
   </div>
-  `
+  `,
         )
         .join('') ||
       '<div style="text-align:center;color:#6b7280;padding:2rem;">No users yet</div>';
@@ -3950,9 +4075,13 @@ font-size: 0.8rem;
 `;
   }
 
-  static async renderAdminVerifications(filter = 'pending') {
-    const adminUser = adminAuthManager.getCurrentUser();
-    if (!adminAuthManager.isLoggedIn()) {
+  static async renderAdminVerifications (filter = 'pending') {
+    if (!_requireAdmin()) {return;}
+    const adminUser =
+      (typeof adminAuthManager !== 'undefined' && adminAuthManager.getCurrentUser?.()) ||
+      (typeof authManager !== 'undefined' && authManager.getCurrentUser?.()) ||
+      null;
+    if (!adminUser) {
       this.renderAdminLogin();
       return;
     }
@@ -4021,14 +4150,14 @@ font-size: 0.8rem;
           </div>
           <div class="admin-table-container" style="box-shadow:none;border-radius:0;">
             ${
-              allItems.length === 0
-                ? `
+  allItems.length === 0
+    ? `
               <div style="text-align:center;padding:3rem;color:#6b7280;">
                 <div style="font-size:2.5rem;margin-bottom:1rem;">📋</div>
                 <p style="margin:0;font-size:1rem;">No ${filter} verifications found</p>
               </div>
             `
-                : `
+    : `
               <table class="admin-table">
                 <thead>
                   <tr>
@@ -4042,8 +4171,8 @@ font-size: 0.8rem;
                 </thead>
                 <tbody>
                   ${allItems
-                    .map(
-                      v => `
+    .map(
+      v => `
                   <tr id="vrf-row-${v.id}">
                     <td>
                       <div style="font-weight:600;color:#f9fafb;">${_pageEsc(v.fullName || 'N/A')}</div>
@@ -4054,10 +4183,10 @@ font-size: 0.8rem;
                     <td>
                       <span style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.25rem 0.5rem;border-radius:9999px;font-size:0.7rem;font-weight:600;
                         ${
-                          v.verificationMethod === 'email'
-                            ? 'background:rgba(59,130,246,0.15);color:#60a5fa;'
-                            : 'background:rgba(245,158,11,0.15);color:#f59e0b;'
-                        }">
+  v.verificationMethod === 'email'
+    ? 'background:rgba(59,130,246,0.15);color:#60a5fa;'
+    : 'background:rgba(245,158,11,0.15);color:#f59e0b;'
+}">
                         ${v.verificationMethod === 'email' ? '📧 Email' : '📄 Document'}
                       </span>
                       <div style="font-size:0.7rem;color:#6b7280;margin-top:0.25rem;">Level ${v.level || 'N/A'}${v.hall ? ' · ' + v.hall : ''}</div>
@@ -4072,30 +4201,30 @@ font-size: 0.8rem;
                       <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
                         <button class="btn btn-sm" onclick="Pages.viewVerificationDetail('${v.id}')" style="padding:3px 8px;font-size:11px;background:#374151;color:#e5e7eb;border:none;cursor:pointer;">👁 View</button>
                         ${
-                          v.status === 'pending'
-                            ? `
+  v.status === 'pending'
+    ? `
                           <button class="btn btn-sm" onclick="Pages.approveVerification('${v.id}')" style="padding:3px 8px;font-size:11px;background:#059669;color:#fff;border:none;cursor:pointer;">✓ Approve</button>
                           <button class="btn btn-sm" onclick="Pages.rejectVerification('${v.id}')" style="padding:3px 8px;font-size:11px;background:#dc2626;color:#fff;border:none;cursor:pointer;">✕ Reject</button>
                         `
-                            : ''
-                        }
+    : ''
+}
                       </div>
                     </td>
                   </tr>
-                  `
-                    )
-                    .join('')}
+                  `,
+    )
+    .join('')}
                 </tbody>
               </table>
             `
-            }
+}
           </div>
         </div>
       </main>
     </div>`;
   }
 
-  static viewVerificationDetail(id) {
+  static viewVerificationDetail (id) {
     if (typeof adminVerificationsManager === 'undefined') {
       showToast('Verification module not loaded', 'error');
       return;
@@ -4111,25 +4240,25 @@ font-size: 0.8rem;
     overlay.style.cssText =
       'position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:2000;padding:2rem;';
     overlay.onclick = e => {
-      if (e.target === overlay) overlay.remove();
+      if (e.target === overlay) {overlay.remove();}
     };
 
     const docsHtml =
       v.documents && v.documents.length > 0
         ? v.documents
-            .map(d =>
-              d.dataUrl
-                ? `<div style="border:1px solid rgba(255,255,255,0.1);border-radius:0.5rem;overflow:hidden;">
+          .map(d =>
+            d.dataUrl
+              ? `<div style="border:1px solid rgba(255,255,255,0.1);border-radius:0.5rem;overflow:hidden;">
             <div style="padding:0.5rem 0.75rem;background:#111827;font-size:0.75rem;color:#9ca3af;border-bottom:1px solid rgba(255,255,255,0.1);">${d.name} (${(d.size / 1024).toFixed(1)} KB)</div>
             ${
-              d.type && d.type.startsWith('image/')
-                ? `<img src="${d.dataUrl}" style="max-width:100%;max-height:300px;display:block;margin:0.5rem auto;" alt="${d.name}" />`
-                : `<div style="padding:1rem;text-align:center;color:#6b7280;">📄 ${d.name}</div>`
-            }
+  d.type && d.type.startsWith('image/')
+    ? `<img src="${d.dataUrl}" style="max-width:100%;max-height:300px;display:block;margin:0.5rem auto;" alt="${d.name}" />`
+    : `<div style="padding:1rem;text-align:center;color:#6b7280;">📄 ${d.name}</div>`
+}
           </div>`
-                : `<div style="padding:0.5rem 0.75rem;background:#111827;border-radius:0.5rem;font-size:0.75rem;color:#9ca3af;border:1px solid rgba(255,255,255,0.1);">${d.name} (${(d.size / 1024).toFixed(1)} KB)</div>`
-            )
-            .join('')
+              : `<div style="padding:0.5rem 0.75rem;background:#111827;border-radius:0.5rem;font-size:0.75rem;color:#9ca3af;border:1px solid rgba(255,255,255,0.1);">${d.name} (${(d.size / 1024).toFixed(1)} KB)</div>`,
+          )
+          .join('')
         : '<div style="color:#6b7280;font-size:0.85rem;">No documents uploaded</div>';
 
     overlay.innerHTML = `
@@ -4162,8 +4291,8 @@ font-size: 0.8rem;
       </div>
 
       ${
-        v.status === 'pending'
-          ? `
+  v.status === 'pending'
+    ? `
       <div style="border-top:1px solid rgba(255,255,255,0.1);padding-top:1.5rem;">
         <div style="margin-bottom:1rem;">
           <label style="font-size:0.8rem;color:#9ca3af;display:block;margin-bottom:0.35rem;">Review Notes (optional)</label>
@@ -4174,14 +4303,14 @@ font-size: 0.8rem;
           <button onclick="Pages.rejectVerification('${v.id}'); document.getElementById('vrf-detail-overlay').remove();" style="flex:1;padding:0.75rem;background:#dc2626;color:#fff;border:none;border-radius:0.5rem;cursor:pointer;font-weight:600;font-size:0.9rem;">✕ Reject Verification</button>
         </div>
       </div>`
-          : ''
-      }
+    : ''
+}
     </div>`;
 
     document.body.appendChild(overlay);
   }
 
-  static approveVerification(id) {
+  static approveVerification (id) {
     if (typeof adminVerificationsManager === 'undefined') {
       showToast('Verification module not loaded', 'error');
       return;
@@ -4197,7 +4326,7 @@ font-size: 0.8rem;
     }
   }
 
-  static rejectVerification(id) {
+  static rejectVerification (id) {
     if (typeof adminVerificationsManager === 'undefined') {
       showToast('Verification module not loaded', 'error');
       return;
@@ -4207,9 +4336,9 @@ font-size: 0.8rem;
 
     if (!notes) {
       const reason = prompt(
-        'Please provide a reason for rejection (this will be visible to the student):'
+        'Please provide a reason for rejection (this will be visible to the student):',
       );
-      if (reason === null) return;
+      if (reason === null) {return;}
       notes = reason;
     }
 
@@ -4225,41 +4354,46 @@ font-size: 0.8rem;
   /**
    * Render Admin Login
    */
-  static renderAdminLogin() {
+  static renderAdminLogin () {
     this.hideOriginalNavFooter();
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `
-  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#111827;padding:2rem;">
-    <div style="background:#1f2937;border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius-xl,1rem);padding:var(--space-2xl,2rem);width:100%;max-width:400px;">
+  <div class="admin-container" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;">
+    <div style="background:var(--admin-bg-elev2,#1f2937);border:1px solid var(--admin-border,rgba(255,255,255,0.1));border-radius:var(--radius-xl,1rem);padding:var(--space-2xl,2rem);width:100%;max-width:400px;box-shadow:var(--shadow-xl);">
       <div style="text-align:center;margin-bottom:2rem;">
-        <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#0046be,#003399);color:white;display:inline-flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.25rem;margin-bottom:1rem;">U</div>
-        <h2 style="color:#f9fafb;margin:0;">Admin Login</h2>
-        <p style="color:#9ca3af;margin:0.5rem 0 0;font-size:0.875rem;">Sign in to access the admin panel</p>
+        <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--primary,#0046be),var(--primary-hover,#003399));color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.25rem;margin-bottom:1rem;">U</div>
+        <h2 style="color:var(--admin-text-strong,#f9fafb);margin:0;">Admin Login</h2>
+        <p style="color:var(--admin-text-muted,#9ca3af);margin:0.5rem 0 0;font-size:0.875rem;">Sign in to access the admin panel</p>
       </div>
-      <form onsubmit="Pages.handleAdminLogin(event)">
+      <form id="admin-login-form">
         <div class="form-group">
-          <label for="admin-email" class="required" style="color:#d1d5db;">Email</label>
-          <input type="email" id="admin-email" name="email" class="form-control" required style="background:#111827;border-color:rgba(255,255,255,0.1);color:#f9fafb;" />
+          <label for="admin-email" class="required" style="color:var(--admin-text,#d1d5db);">Email</label>
+          <input type="email" id="admin-email" name="email" class="form-control" required style="background:var(--admin-bg,#111827);border-color:var(--admin-border-strong,rgba(255,255,255,0.1));color:var(--admin-text-strong,#f9fafb);" />
         </div>
         <div class="form-group">
-          <label for="admin-password" class="required" style="color:#d1d5db;">Password</label>
-          <input type="password" id="admin-password" name="password" class="form-control" required style="background:#111827;border-color:rgba(255,255,255,0.1);color:#f9fafb;" />
+          <label for="admin-password" class="required" style="color:var(--admin-text,#d1d5db);">Password</label>
+          <input type="password" id="admin-password" name="password" class="form-control" required style="background:var(--admin-bg,#111827);border-color:var(--admin-border-strong,rgba(255,255,255,0.1));color:var(--admin-text-strong,#f9fafb);" />
         </div>
-        <button type="submit" class="btn btn-primary btn-block" style="background:#0046be;border-color:#0046be;">Login as Admin</button>
+        <button type="submit" class="btn btn-primary btn-block" style="background:var(--primary,#0046be);border-color:var(--primary,#0046be);">Login as Admin</button>
       </form>
       <div style="text-align:center;margin-top:1.5rem;">
-        <a href="#/" style="color:#9ca3af;font-size:0.875rem;">Back to Home</a>
+        <a href="#/" style="color:var(--admin-text-muted,#9ca3af);font-size:0.875rem;">Back to Home</a>
       </div>
     </div>
   </div>
   `;
+    // Wire submit via addEventListener (no inline handler — CSP-friendly).
+    const form = document.getElementById('admin-login-form');
+    if (form) {
+      form.addEventListener('submit', e => Pages.handleAdminLogin(e));
+    }
   }
 
   /**
    * Handle Admin Login
    */
-  static async handleAdminLogin(event) {
+  static async handleAdminLogin (event) {
     event.preventDefault();
     const form = event.target;
     const result = await adminAuthManager.login(form.email.value, form.password.value);
@@ -4275,7 +4409,8 @@ font-size: 0.8rem;
   /**
    * Render Admin Users Page
    */
-  static async renderAdminUsers() {
+  static async renderAdminUsers () {
+    if (!_requireAdmin()) {return;}
     this.hideOriginalNavFooter();
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
@@ -4336,16 +4471,16 @@ font-size: 0.8rem;
   <td>
   <div class="table-actions">
   ${
-    user.role === 'admin'
-      ? ''
-      : user.isSuspended
-        ? `<button class="btn btn-sm btn-success" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminUnbanUser('${user.id}')">Unban</button>`
-        : `<button class="btn btn-sm btn-danger" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminBanUser('${user.id}')">Ban</button>`
-  }
+  user.role === 'admin'
+    ? ''
+    : user.isSuspended
+      ? `<button class="btn btn-sm btn-success" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminUnbanUser('${user.id}')">Unban</button>`
+      : `<button class="btn btn-sm btn-danger" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminBanUser('${user.id}')">Ban</button>`
+}
   </div>
   </td>
   </tr>
-  `
+  `,
     )
     .join('')}
   </tbody>
@@ -4357,7 +4492,8 @@ font-size: 0.8rem;
   /**
    * Render Admin Products Page
    */
-  static async renderAdminProducts() {
+  static async renderAdminProducts () {
+    if (!_requireAdmin()) {return;}
     let products = adminProductsManager.getAllProducts();
     if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
       try {
@@ -4427,19 +4563,19 @@ font-size: 0.8rem;
               <td>
                 <div class="table-actions">
                   ${
-                    product.status === 'pending'
-                      ? `
+  product.status === 'pending'
+    ? `
                   <button class="btn btn-sm btn-success" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminApproveProduct('${product.id}')">Approve</button>
                   <button class="btn btn-sm btn-danger" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminRejectProduct('${product.id}')">Reject</button>
                   `
-                      : ''
-                  }
+    : ''
+}
                   <button class="btn btn-sm" style="padding:4px 8px;font-size:12px;background:#2563eb;color:#fff;border:none;" onclick="Pages.renderAdminProductEdit('${product.id}')">Edit</button>
                   <button class="btn btn-sm btn-danger" style="padding: 4px 8px; font-size: 12px; background:#dc2626; color:#fff; border:none;" onclick="Pages.adminDeleteProduct('${product.id}')">Delete</button>
                 </div>
               </td>
   </tr>
-  `
+  `,
     )
     .join('')}
   </tbody>
@@ -4453,7 +4589,8 @@ font-size: 0.8rem;
   /**
    * Render Admin Orders Page
    */
-  static async renderAdminOrders() {
+  static async renderAdminOrders () {
+    if (!_requireAdmin()) {return;}
     this.hideOriginalNavFooter();
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
@@ -4509,7 +4646,7 @@ font-size: 0.8rem;
   </div>
   </td>
   </tr>
-  `
+  `,
     )
     .join('')}
   </tbody>
@@ -4521,7 +4658,8 @@ font-size: 0.8rem;
   /**
    * Render Admin Regions Page
    */
-  static renderAdminRegions() {
+  static renderAdminRegions () {
+    if (!_requireAdmin()) {return;}
     const regions = regionManager.getAllRegions();
     this.hideOriginalNavFooter();
     document.body.style.background = '';
@@ -4546,8 +4684,8 @@ font-size: 0.8rem;
               </thead>
               <tbody>
                 ${regions
-                  .map(
-                    region => `
+    .map(
+      region => `
                   <tr>
                     <td>${region.name}</td>
                     <td>${region.capital}</td>
@@ -4558,9 +4696,9 @@ font-size: 0.8rem;
                       </div>
                     </td>
                   </tr>
-                `
-                  )
-                  .join('')}
+                `,
+    )
+    .join('')}
               </tbody>
             </table>
           </div>
@@ -4572,7 +4710,8 @@ font-size: 0.8rem;
   /**
    * Render Admin Reports Page
    */
-  static async renderAdminReports() {
+  static async renderAdminReports () {
+    if (!_requireAdmin()) {return;}
     this.hideOriginalNavFooter();
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
@@ -4630,7 +4769,7 @@ font-size: 0.8rem;
   /**
    * Approve a product
    */
-  static async adminApproveProduct(productId) {
+  static async adminApproveProduct (productId) {
     if (!confirm('Are you sure you want to approve this product?')) {
       return;
     }
@@ -4647,7 +4786,7 @@ font-size: 0.8rem;
     }
   }
 
-  static async adminRejectProduct(productId) {
+  static async adminRejectProduct (productId) {
     const reason = prompt('Please enter a reason for rejection:');
     if (!reason) {
       return;
@@ -4668,7 +4807,7 @@ font-size: 0.8rem;
     }
   }
 
-  static async adminDeleteProduct(productId) {
+  static async adminDeleteProduct (productId) {
     if (!confirm('Are you sure you want to delete this product? This cannot be undone.')) {
       return;
     }
@@ -4688,7 +4827,7 @@ font-size: 0.8rem;
       if (deleted) {
         productsManager.products = productsManager.products.filter(p => p.id !== productId);
         productsManager.filteredProducts = productsManager.filteredProducts.filter(
-          p => p.id !== productId
+          p => p.id !== productId,
         );
         productsManager._persistLocalProducts();
         showToast('Product deleted successfully', 'success');
@@ -4704,7 +4843,7 @@ font-size: 0.8rem;
   /**
    * Ban a user
    */
-  static async adminBanUser(userId) {
+  static async adminBanUser (userId) {
     const reason = prompt('Please enter a reason for banning this user:');
     if (!reason) {
       return;
@@ -4725,7 +4864,7 @@ font-size: 0.8rem;
     }
   }
 
-  static async adminUnbanUser(userId) {
+  static async adminUnbanUser (userId) {
     if (!confirm('Are you sure you want to unban this user?')) {
       return;
     }
@@ -4745,7 +4884,8 @@ font-size: 0.8rem;
     }
   }
 
-  static async renderAdminActivity() {
+  static async renderAdminActivity () {
+    if (!_requireAdmin()) {return;}
     this.hideOriginalNavFooter();
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
@@ -4807,7 +4947,7 @@ font-size: 0.8rem;
     this._loadActivityLogs();
   }
 
-  static async _loadActivityLogs() {
+  static async _loadActivityLogs () {
     const actionFilter = document.getElementById('activity-filter-action')?.value || '';
     const severityFilter = document.getElementById('activity-filter-severity')?.value || '';
     const tbody = document.getElementById('activity-logs-tbody');
@@ -4862,7 +5002,7 @@ font-size: 0.8rem;
             <td>${JSON.stringify(a.details || {}).substring(0, 80)}</td>
             <td><span style="padding:2px 8px;border-radius:4px;font-size:0.75rem;background:rgba(0,70,190,0.15);color:#93c5fd;">info</span></td>
           </tr>
-        `
+        `,
           )
           .join('');
         tbody.innerHTML =
@@ -4875,7 +5015,7 @@ font-size: 0.8rem;
     }
   }
 
-  static async _loadMoreActivity() {
+  static async _loadMoreActivity () {
     this._activityPage = (this._activityPage || 1) + 1;
     const actionFilter = document.getElementById('activity-filter-action')?.value || '';
     const severityFilter = document.getElementById('activity-filter-severity')?.value || '';
@@ -4903,7 +5043,7 @@ font-size: 0.8rem;
     }
   }
 
-  static _renderActivityRows(logs, tbody, append = false) {
+  static _renderActivityRows (logs, tbody, append = false) {
     const severityColors = {
       info: 'background:rgba(0,70,190,0.15);color:#93c5fd;',
       warning: 'background:rgba(245,158,11,0.15);color:#fbbf24;',
@@ -4957,22 +5097,147 @@ font-size: 0.8rem;
     }
   }
 
-  static renderAdminProductCreate() {
+  // Render the conditional sub-options block for the admin product form.
+  // For `fashion`: a Male/Female/Unisex radio group (product.gender).
+  // For categories with a subcategories list: a subcategory <select>
+  // (product.subcategory). Categories with neither render nothing.
+  // `values` may contain { gender, subcategory } for pre-selection (Edit).
+  static _renderAdminProductSubOptions (categoryId, values = {}) {
+    const meta = Pages.ADMIN_CATEGORY_META.find(m => m.id === categoryId);
+    if (!meta) {return '';}
+    const parts = [];
+    if (meta.hasGender) {
+      const cur = values.gender || 'unisex';
+      const opts = ['male', 'female', 'unisex']
+        .map(
+          g =>
+            `<label style="display:inline-flex;align-items:center;gap:.35rem;"><input type="radio" name="gender" value="${g}" ${g === cur ? 'checked' : ''}> ${g.charAt(0).toUpperCase() + g.slice(1)}</label>`,
+        )
+        .join(' ');
+      parts.push(`
+        <div style="margin-bottom:.75rem;">
+          <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Gender *</label>
+          <div style="display:flex;gap:1rem;flex-wrap:wrap;">${opts}</div>
+        </div>`);
+    }
+    if (meta.subcategories && meta.subcategories.length > 0) {
+      const cur = values.subcategory || '';
+      const opts = [`<option value="">— Select ${_pageEsc(meta.label)} subcategory —</option>`]
+        .concat(
+          meta.subcategories.map(
+            s =>
+              `<option value="${_pageEsc(s)}" ${s === cur ? 'selected' : ''}>${_pageEsc(s)}</option>`,
+          ),
+        )
+        .join('');
+      parts.push(`
+        <div>
+          <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Subcategory${meta.hasGender ? '' : ' *'}</label>
+          <select name="subcategory" class="admin-form-select">${opts}</select>
+        </div>`);
+    }
+    return parts.join('');
+  }
+
+  // Wire up the admin product form: category-change listener that re-renders
+  // the sub-options block, drop-zone + image-preview event delegation (no
+  // inline handlers — CSP-friendly), max-5 warning, and the manual-URL
+  // textarea sync. Used by both Create and Edit forms.
+  static _wireAdminProductForm (form) {
+    const categorySelect = form.querySelector('[name="category"]');
+    const subHost = form.querySelector('#admin-sub-options-host');
+    const refreshSub = () => {
+      if (!subHost) {return;}
+      const cur = {};
+      const g = form.querySelector('[name="gender"]:checked');
+      if (g) {cur.gender = g.value;}
+      const sc = form.querySelector('[name="subcategory"]');
+      if (sc) {cur.subcategory = sc.value;}
+      subHost.innerHTML = Pages._renderAdminProductSubOptions(categorySelect.value, cur);
+    };
+    if (categorySelect && subHost) {
+      categorySelect.addEventListener('change', refreshSub);
+      refreshSub();
+    }
+    Pages._wireImageDropZone(form);
+  }
+
+  // Attach event listeners to the drop-zone + file input + image-preview
+  // grid + manual-URL textarea inside an admin product form. Replaces the
+  // previous inline onclick/ondrag*/onchange/oninput handlers (CSP: a
+  // strict Content-Security-Policy blocks inline handlers, and AGENTS.md
+  // forbids adding new ones). Uses event delegation on the preview grid so
+  // the × button's handler does not depend on a stale pending-image index.
+  static _wireImageDropZone (form) {
+    const dropZone = form.querySelector('#image-drop-zone');
+    const fileInput = form.querySelector('#image-file-input');
+    const previewGrid = form.querySelector('#image-preview-grid');
+    const urlTextarea = form.querySelector('#image-url-textarea');
+    if (!dropZone || !fileInput || !previewGrid) {return;}
+
+    const openPicker = e => {
+      // Avoid re-opening when the file input itself was the click target.
+      if (e.target === fileInput) {return;}
+      fileInput.click();
+    };
+    dropZone.addEventListener('click', openPicker);
+
+    dropZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropZone.style.borderColor = 'var(--primary,#3b82f6)';
+      dropZone.style.background = 'rgba(0,70,190,0.08)';
+    });
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.style.borderColor = 'var(--admin-border,#4b5563)';
+      dropZone.style.background = '';
+    });
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.style.borderColor = 'var(--admin-border,#4b5563)';
+      dropZone.style.background = '';
+      Pages._handleImageFiles(e.dataTransfer.files);
+    });
+    fileInput.addEventListener('change', () => {
+      Pages._handleImageFiles(fileInput.files);
+      // Reset so picking the same file twice still fires change.
+      fileInput.value = '';
+    });
+    // Delegation: a click bubbling to the grid that originated on a
+    // .remove-pending-image button removes the closest preview wrapper and
+    // re-syncs _pendingImageFiles by matching the wrapper's data-index
+    //_at_ attach time. We avoid stale indexOf by re-deriving the index
+    // from the wrappers themselves.
+    previewGrid.addEventListener('click', ev => {
+      const btn = ev.target.closest('.remove-pending-image');
+      if (!btn) {return;}
+      ev.preventDefault();
+      const wrapper = btn.closest('[data-pending-index]');
+      if (!wrapper) {return;}
+      const idx = Number(wrapper.dataset.pendingIndex);
+      if (Number.isInteger(idx) && idx >= 0 && idx < Pages._pendingImageFiles.length) {
+        Pages._pendingImageFiles.splice(idx, 1);
+      }
+      wrapper.remove();
+      // Re-index remaining wrappers so future removals still match.
+      Array.from(previewGrid.querySelectorAll('[data-pending-index]')).forEach((w, i) => {
+        w.dataset.pendingIndex = String(i);
+      });
+      Pages._syncImageUrls();
+    });
+    if (urlTextarea) {
+      urlTextarea.addEventListener('input', () => Pages._syncImageUrls());
+    }
+  }
+
+  static renderAdminProductCreate () {
+    if (!_requireAdmin()) {return;}
     this._pendingImageFiles = [];
     this._uploadedImageUrls = [];
     this.hideOriginalNavFooter();
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
-    const categories = [
-      'electronics',
-      'textbooks',
-      'appliances',
-      'hostel-items',
-      'fashion',
-      'accessories',
-      'thrifts',
-    ];
-    const conditions = ['new', 'like-new', 'good', 'fair', 'excellent'];
+    const categories = Pages.ADMIN_CATEGORY_META;
+    const conditions = Pages.ADMIN_CONDITIONS;
 
     mainContent.innerHTML = `
   <div class="admin-container">
@@ -4980,9 +5245,9 @@ font-size: 0.8rem;
   <main class="admin-main">
           <div class="admin-header">
             <h1 class="admin-title">Add New Product</h1>
-            <button class="btn btn-outline" onclick="Pages.renderAdminProducts()">Back to Products</button>
+            <button class="btn btn-outline" data-action="back-to-products">Back to Products</button>
           </div>
-          <form id="admin-product-form" onsubmit="Pages._handleAdminProductCreate(event)" style="max-width:700px;">
+          <form id="admin-product-form" style="max-width:700px;">
             <div style="display:grid;gap:1rem;">
               <div>
                 <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Title *</label>
@@ -5000,7 +5265,7 @@ font-size: 0.8rem;
                 <div>
                   <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Category *</label>
                   <select name="category" required class="admin-form-select">
-                    ${categories.map(c => '<option value="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>').join('')}
+                    ${categories.map(c => `<option value="${_pageEsc(c.id)}">${_pageEsc(c.label)}</option>`).join('')}
                   </select>
                 </div>
               </div>
@@ -5008,7 +5273,7 @@ font-size: 0.8rem;
                 <div>
                   <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Condition *</label>
                   <select name="condition" required class="admin-form-select">
-                    ${conditions.map(c => '<option value="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>').join('')}
+                    ${conditions.map(c => `<option value="${_pageEsc(c)}">${c.charAt(0).toUpperCase() + c.slice(1)}</option>`).join('')}
                   </select>
                 </div>
                 <div>
@@ -5016,19 +5281,20 @@ font-size: 0.8rem;
                   <input type="text" name="university" class="admin-form-input" placeholder="Leave blank for your university">
                 </div>
               </div>
+              <div id="admin-sub-options-host"></div>
               <div>
                 <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Product Images</label>
-                <div id="image-drop-zone" style="border:2px dashed #4b5563;border-radius:8px;padding:2rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;position:relative;" onclick="document.getElementById('image-file-input').click()" ondragover="event.preventDefault();this.style.borderColor='#3b82f6';this.style.background='rgba(59,130,246,0.08)'" ondragleave="this.style.borderColor='#4b5563';this.style.background=''" ondrop="event.preventDefault();this.style.borderColor='#4b5563';this.style.background='';Pages._handleImageDrop(event)">
-                  <input type="file" id="image-file-input" multiple accept="image/*" style="display:none" onchange="Pages._handleImageFiles(this.files)">
+                <div id="image-drop-zone" style="border:2px dashed var(--admin-border,#4b5563);border-radius:8px;padding:2rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;position:relative;">
+                  <input type="file" id="image-file-input" multiple accept="image/png,image/jpeg,image/webp,image/gif" style="display:none">
                   <svg style="width:2rem;height:2rem;margin:0 auto .5rem;display:block;opacity:.5;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                  <p style="margin:0;color:#9ca3af;font-size:.9rem;">Drag & drop images here, or <span style="color:#3b82f6;text-decoration:underline;">browse</span></p>
-                  <p style="margin:.25rem 0 0;color:#6b7280;font-size:.75rem;">PNG, JPG, WEBP — max 5 files</p>
+                  <p style="margin:0;color:var(--admin-muted,#9ca3af);font-size:.9rem;">Drag & drop images here, or <span style="color:var(--primary,#3b82f6);text-decoration:underline;">browse</span></p>
+                  <p style="margin:.25rem 0 0;color:var(--admin-muted,#6b7280);font-size:.75rem;">PNG, JPG, WEBP — max 5 files</p>
                 </div>
                 <div id="image-preview-grid" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem;"></div>
                 <input type="hidden" name="images" id="image-urls-input">
                 <details style="margin-top:.75rem;">
-                  <summary style="cursor:pointer;color:#9ca3af;font-size:.8rem;">Or paste image URLs manually</summary>
-                  <textarea id="image-url-textarea" rows="3" class="admin-form-input" style="margin-top:.5rem;" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg" oninput="Pages._syncImageUrls()"></textarea>
+                  <summary style="cursor:pointer;color:var(--admin-muted,#9ca3af);font-size:.8rem;">Or paste image URLs manually</summary>
+                  <textarea id="image-url-textarea" rows="3" class="admin-form-input" style="margin-top:.5rem;" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"></textarea>
                 </details>
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
@@ -5058,12 +5324,18 @@ font-size: 0.8rem;
         </main>
       </div>
     `;
+    const form = document.getElementById('admin-product-form');
+    this._wireAdminProductForm(form);
+    form
+      .querySelector('[data-action="back-to-products"]')
+      .addEventListener('click', () => Pages.renderAdminProducts());
+    form.addEventListener('submit', e => Pages._handleAdminProductCreate(e));
   }
 
   static _pendingImageFiles = [];
   static _uploadedImageUrls = [];
 
-  static _filesToDataUris(files) {
+  static _filesToDataUris (files) {
     return Promise.all(
       files.map(
         file =>
@@ -5092,51 +5364,96 @@ font-size: 0.8rem;
             };
             reader.onerror = reject;
             reader.readAsDataURL(file);
-          })
-      )
+          }),
+      ),
     );
   }
 
-  static _handleImageDrop(event) {
+  static _handleImageDrop (event) {
     const files = event.dataTransfer.files;
     this._handleImageFiles(files);
   }
 
-  static _handleImageFiles(fileList) {
-    const heicExts = ['.heic', '.heif', '.hif'];
-    const isImageLike = f =>
-      f.type.startsWith('image/') || heicExts.some(ext => f.name.toLowerCase().endsWith(ext));
-    const files = Array.from(fileList)
-      .filter(isImageLike)
-      .slice(0, 5 - this._pendingImageFiles.length);
+  static _handleImageFiles (fileList) {
+    // HEIC/HEIF are accepted by no browser's Image decoder and would fail
+    // silently at upload time. They were previously in the allowed list
+    // — dropped until a converter is wired in.
+    const isImageLike = f => f.type.startsWith('image/');
+    const room = 5 - this._pendingImageFiles.length;
+    if (room <= 0) {
+      if (typeof showToast === 'function') {
+        showToast('You can upload at most 5 images. Remove one first.', 'warning');
+      }
+      return;
+    }
+    const dropped = Array.from(fileList).filter(f => !isImageLike(f));
+    if (dropped.length > 0 && typeof showToast === 'function') {
+      showToast(
+        `${dropped.length} file(s) skipped — not images (HEIC is not supported).`,
+        'warning',
+      );
+    }
+    const files = Array.from(fileList).filter(isImageLike).slice(0, room);
     if (files.length === 0) {
       return;
+    }
+    // If the user provided more images than we have room for, tell them.
+    const remainingWanted = Array.from(fileList).filter(isImageLike).length - files.length;
+    if (remainingWanted > 0 && typeof showToast === 'function') {
+      showToast(
+        `Only ${files.length} of ${Array.from(fileList).filter(isImageLike).length} image(s) added — max 5 per product.`,
+        'warning',
+      );
     }
     this._pendingImageFiles.push(...files);
     const grid = document.getElementById('image-preview-grid');
     files.forEach(file => {
+      const startIdx = this._pendingImageFiles.length - 1;
       const reader = new FileReader();
       reader.onload = e => {
         const wrapper = document.createElement('div');
         wrapper.style.cssText =
-          'position:relative;width:80px;height:80px;border-radius:6px;overflow:hidden;border:1px solid #374151;';
-        wrapper.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover"><button type="button" onclick="Pages._removeImage(this,${this._pendingImageFiles.indexOf(file)})" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:12px;line-height:18px;text-align:center;padding:0;">&times;</button>`;
+          'position:relative;width:80px;height:80px;border-radius:6px;overflow:hidden;border:1px solid var(--admin-border,#374151);';
+        // Capture the index at attach time. Event delegation in
+        // _wireImageDropZone re-indexes wrappers on removal so this stays
+        // accurate.
+        wrapper.dataset.pendingIndex = String(startIdx);
+        // data: URLs are produced locally by FileReader — sanitize anyway
+        // for defense-in-depth (a strict sanitizeUrl still accepts data:*).
+        const safeSrc = _pageSafeUrl(e.target.result);
+        wrapper.innerHTML = `<img src="${safeSrc}" style="width:100%;height:100%;object-fit:cover"><button type="button" class="remove-pending-image" aria-label="Remove image" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:12px;line-height:18px;text-align:center;padding:0;">&times;</button>`;
         grid.appendChild(wrapper);
+        // Re-index after every append so each wrapper knows its real index.
+        Array.from(grid.querySelectorAll('[data-pending-index]')).forEach((w, i) => {
+          w.dataset.pendingIndex = String(i);
+        });
       };
       reader.readAsDataURL(file);
     });
     this._syncImageUrls();
   }
 
-  static _removeImage(btn, index) {
-    if (index >= 0 && index < this._pendingImageFiles.length) {
+  // Legacy entry point — kept so older callers (if any) keep working.
+  // Inline handlers used to call this with (btn, index); the new
+  // delegated handler in _wireImageDropZone handles removal directly.
+  static _removeImage (btn, index) {
+    if (Number.isInteger(index) && index >= 0 && index < this._pendingImageFiles.length) {
       this._pendingImageFiles.splice(index, 1);
     }
-    btn.parentElement.remove();
+    const wrapper = btn.parentElement;
+    if (wrapper) {
+      wrapper.remove();
+      const grid = document.getElementById('image-preview-grid');
+      if (grid) {
+        Array.from(grid.querySelectorAll('[data-pending-index]')).forEach((w, i) => {
+          w.dataset.pendingIndex = String(i);
+        });
+      }
+    }
     this._syncImageUrls();
   }
 
-  static _syncImageUrls() {
+  static _syncImageUrls () {
     const textarea = document.getElementById('image-url-textarea');
     const hidden = document.getElementById('image-urls-input');
     const manualUrls = (textarea?.value || '')
@@ -5149,7 +5466,7 @@ font-size: 0.8rem;
     }
   }
 
-  static async _handleAdminProductCreate(event) {
+  static async _handleAdminProductCreate (event) {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
@@ -5172,21 +5489,21 @@ font-size: 0.8rem;
             const names = uploadResult.failures.map(f => f.filename || 'unknown').join(', ');
             showToast(
               `${uploadResult.failures.length} image(s) failed: ${names}. ${uploadResult.urls.length} uploaded.`,
-              'warning'
+              'warning',
             );
           }
         } else {
           if (uploadResult.isAuthError) {
             showToast('Session expired — please log in again', 'error');
             if (typeof authManager !== 'undefined' && authManager.clearSession)
-              authManager.clearSession();
-            if (typeof navigateTo === 'function') navigateTo('login');
+            {authManager.clearSession();}
+            if (typeof navigateTo === 'function') {navigateTo('login');}
             return;
           }
           showToast(
             'Image upload failed: ' +
               (uploadResult.error || 'Unknown error. Check your internet connection.'),
-            'error'
+            'error',
           );
           uploadAborted = true;
         }
@@ -5213,6 +5530,8 @@ font-size: 0.8rem;
       price: Number(formData.get('price')),
       category: formData.get('category'),
       condition: formData.get('condition'),
+      gender: formData.get('gender') || undefined,
+      subcategory: formData.get('subcategory') || undefined,
       images:
         uploadAborted && this._pendingImageFiles.length > 0
           ? []
@@ -5227,6 +5546,9 @@ font-size: 0.8rem;
       university: formData.get('university')?.trim() || currentUser?.university || '',
       status: 'active',
     };
+    // Remove empty optional fields so the backend doesn't persist "undefined".
+    if (!data.gender) {delete data.gender;}
+    if (!data.subcategory) {delete data.subcategory;}
 
     if (uploadAborted && this._pendingImageFiles.length > 0 && manualUrls.length === 0) {
       if (!confirm('Image upload failed. Create product without images?')) {
@@ -5264,8 +5586,8 @@ font-size: 0.8rem;
       if (error.isAuthError || error.status === 401) {
         showToast('Session expired — please log in again', 'error');
         if (typeof authManager !== 'undefined' && authManager.clearSession)
-          authManager.clearSession();
-        if (typeof navigateTo === 'function') navigateTo('login');
+        {authManager.clearSession();}
+        if (typeof navigateTo === 'function') {navigateTo('login');}
         return;
       }
       const fallbackResult = await productsManager.addProduct(data);
@@ -5278,7 +5600,8 @@ font-size: 0.8rem;
     }
   }
 
-  static async renderAdminProductEdit(productId) {
+  static async renderAdminProductEdit (productId) {
+    if (!_requireAdmin()) {return;}
     this._pendingImageFiles = [];
     this._uploadedImageUrls = [];
     this.hideOriginalNavFooter();
@@ -5291,26 +5614,25 @@ font-size: 0.8rem;
       product = res.data || res;
     } catch (e) {
       mainContent.innerHTML =
-        '<div class="admin-container" style="padding:2rem;color:#f87171;">Failed to load product.</div>';
+        '<div class="admin-container" style="padding:2rem;color:var(--admin-danger,#f87171);">Failed to load product.</div>';
       return;
     }
 
-    const categories = [
-      'electronics',
-      'textbooks',
-      'appliances',
-      'hostel-items',
-      'fashion',
-      'accessories',
-      'thrifts',
-    ];
-    const conditions = ['new', 'like-new', 'good', 'fair', 'excellent'];
-    const existingImages = (product.images || [])
-      .map(
-        url =>
-          `<div style="position:relative;width:80px;height:80px;border-radius:6px;overflow:hidden;border:1px solid #374151;display:inline-block;margin-right:.5rem;margin-bottom:.5rem;"><img src="${url}" style="width:100%;height:100%;object-fit:cover"><button type="button" onclick="Pages._removeExistingImage(this,'${url}')" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:12px;line-height:18px;padding:0;">&times;</button></div>`
-      )
-      .join('');
+    const categories = Pages.ADMIN_CATEGORY_META;
+    const conditions = Pages.ADMIN_CONDITIONS;
+    // Escape every value we interpolate into HTML. URLs come from the
+    // backend response and could include breakout payloads if any
+    // upstream write path was compromised. data-url is the sanitized URL;
+    // we do NOT inline the URL into JS code (no onclick="...,'url'").
+    const safeProductId = _pageEsc(productId);
+    const existingImageWrappers = (product.images || []).map(url => {
+      const safeUrl = _pageSafeUrl(url);
+      // Store the URL in a data attribute so the delegated remove handler
+      // can read it without us ever inlining it into a JS string.
+      const attr = safeUrl.replace(/"/g, '"');
+      return `<div class="existing-image-wrapper" data-url="${attr}" style="position:relative;width:80px;height:80px;border-radius:6px;overflow:hidden;border:1px solid var(--admin-border,#374151);display:inline-block;margin-right:.5rem;margin-bottom:.5rem;"><img src="${attr}" alt="product image" style="width:100%;height:100%;object-fit:cover"><button type="button" class="remove-existing-image" aria-label="Remove image" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:12px;line-height:18px;text-align:center;padding:0;">&times;</button></div>`;
+    });
+    const existingImages = existingImageWrappers.join('');
     this._uploadedImageUrls = [...(product.images || [])];
 
     const deliveryChecked = mode => ((product.deliveryModes || []).includes(mode) ? 'checked' : '');
@@ -5319,30 +5641,30 @@ font-size: 0.8rem;
     mainContent.innerHTML = `
       <div class="admin-container">
         ${this.getAdminSidebar('products')}
-        <main class="admin-main">
+        <div class="admin-main">
           <div class="admin-header">
             <h1 class="admin-title">Edit Product</h1>
-            <button class="btn btn-outline" onclick="Pages.renderAdminProducts()">Back to Products</button>
+            <button class="btn btn-outline" data-action="back-to-products">Back to Products</button>
           </div>
-          <form id="admin-product-edit-form" onsubmit="Pages._handleAdminProductEdit(event,'${productId}')" style="max-width:700px;">
+          <form id="admin-product-edit-form" data-product-id="${safeProductId}" style="max-width:700px;">
             <div style="display:grid;gap:1rem;">
               <div>
                 <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Title *</label>
-                <input type="text" name="title" required class="admin-form-input" value="${product.title || ''}">
+                <input type="text" name="title" required class="admin-form-input" value="${_pageEsc(product.title || '')}">
               </div>
               <div>
                 <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Description *</label>
-                <textarea name="description" required rows="4" class="admin-form-input">${product.description || ''}</textarea>
+                <textarea name="description" required rows="4" class="admin-form-input">${_pageEsc(product.description || '')}</textarea>
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
                 <div>
                   <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Price (GHS) *</label>
-                  <input type="number" name="price" required min="1" class="admin-form-input" value="${product.price || ''}">
+                  <input type="number" name="price" required min="1" class="admin-form-input" value="${_pageEsc(product.price || '')}">
                 </div>
                 <div>
                   <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Category *</label>
                   <select name="category" required class="admin-form-select">
-                    ${categories.map(c => `<option value="${c}" ${product.category === c ? 'selected' : ''}>${c.charAt(0).toUpperCase() + c.slice(1)}</option>`).join('')}
+                    ${categories.map(c => `<option value="${_pageEsc(c.id)}" ${product.category === c.id ? 'selected' : ''}>${_pageEsc(c.label)}</option>`).join('')}
                   </select>
                 </div>
               </div>
@@ -5350,23 +5672,24 @@ font-size: 0.8rem;
                 <div>
                   <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Condition *</label>
                   <select name="condition" required class="admin-form-select">
-                    ${conditions.map(c => `<option value="${c}" ${product.condition === c ? 'selected' : ''}>${c.charAt(0).toUpperCase() + c.slice(1)}</option>`).join('')}
+                    ${conditions.map(c => `<option value="${_pageEsc(c)}" ${product.condition === c ? 'selected' : ''}>${c.charAt(0).toUpperCase() + c.slice(1)}</option>`).join('')}
                   </select>
                 </div>
                 <div>
                   <label style="display:block;margin-bottom:0.25rem;font-weight:600;">University</label>
-                  <input type="text" name="university" class="admin-form-input" value="${product.university || ''}">
+                  <input type="text" name="university" class="admin-form-input" value="${_pageEsc(product.university || '')}">
                 </div>
               </div>
+              <div id="admin-sub-options-host"></div>
               <div>
                 <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Current Images</label>
-                <div id="existing-images-grid">${existingImages || '<span style="color:#6b7280;font-size:.85rem;">No images</span>'}</div>
+                <div id="existing-images-grid">${existingImages || '<span style="color:var(--admin-muted,#6b7280);font-size:.85rem;">No images</span>'}</div>
               </div>
               <div>
                 <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Add New Images</label>
-                <div id="image-drop-zone" style="border:2px dashed #4b5563;border-radius:8px;padding:2rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;" onclick="document.getElementById('image-file-input').click()" ondragover="event.preventDefault();this.style.borderColor='#3b82f6';this.style.background='rgba(59,130,246,0.08)'" ondragleave="this.style.borderColor='#4b5563';this.style.background=''" ondrop="event.preventDefault();this.style.borderColor='#4b5563';this.style.background='';Pages._handleImageDrop(event)">
-                  <input type="file" id="image-file-input" multiple accept="image/*" style="display:none" onchange="Pages._handleImageFiles(this.files)">
-                  <p style="margin:0;color:#9ca3af;font-size:.9rem;">Drag & drop or <span style="color:#3b82f6;text-decoration:underline;">browse</span> to add more images</p>
+                <div id="image-drop-zone" style="border:2px dashed var(--admin-border,#4b5563);border-radius:8px;padding:2rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;">
+                  <input type="file" id="image-file-input" multiple accept="image/png,image/jpeg,image/webp,image/gif" style="display:none">
+                  <p style="margin:0;color:var(--admin-muted,#9ca3af);font-size:.9rem;">Drag & drop or <span style="color:var(--primary,#3b82f6);text-decoration:underline;">browse</span> to add more images</p>
                 </div>
                 <div id="image-preview-grid" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem;"></div>
               </div>
@@ -5394,17 +5717,61 @@ font-size: 0.8rem;
               </div>
             </div>
           </form>
-        </main>
+        </div>
       </div>
     `;
+    const form = document.getElementById('admin-product-edit-form');
+    // Wire sub-options + image drop-zone using the existing form helpers.
+    // We seed the sub-options with the product's current gender/subcategory
+    // so the initial render reflects saved state.
+    const subHost = form.querySelector('#admin-sub-options-host');
+    const categorySelect = form.querySelector('[name="category"]');
+    const refreshSub = () => {
+      if (!subHost) {return;}
+      const cur = { gender: product.gender, subcategory: product.subcategory };
+      subHost.innerHTML = Pages._renderAdminProductSubOptions(categorySelect.value, cur);
+      // After rendering, capture any new values so a later category re-select
+      // preserves the user's latest input.
+      const g = form.querySelector('[name="gender"]:checked');
+      if (g) {product.gender = g.value;}
+      const sc = form.querySelector('[name="subcategory"]');
+      if (sc) {product.subcategory = sc.value;}
+    };
+    if (categorySelect && subHost) {
+      categorySelect.addEventListener('change', refreshSub);
+      refreshSub();
+    }
+    Pages._wireImageDropZone(form);
+    form
+      .querySelector('[data-action="back-to-products"]')
+      .addEventListener('click', () => Pages.renderAdminProducts());
+    // Delegated removal of existing (already-uploaded) images.
+    const existingGrid = form.querySelector('#existing-images-grid');
+    if (existingGrid) {
+      existingGrid.addEventListener('click', ev => {
+        const btn = ev.target.closest('.remove-existing-image');
+        if (!btn) {return;}
+        ev.preventDefault();
+        const wrapper = btn.closest('.existing-image-wrapper');
+        if (!wrapper) {return;}
+        const url = wrapper.dataset.url || '';
+        // Remove from pending upload list and DOM.
+        Pages._uploadedImageUrls = Pages._uploadedImageUrls.filter(u => u !== url);
+        wrapper.remove();
+      });
+    }
+    form.addEventListener('submit', e => {
+      const id = form.dataset.productId || '';
+      Pages._handleAdminProductEdit(e, id);
+    });
   }
 
-  static _removeExistingImage(btn, url) {
+  static _removeExistingImage (btn, url) {
     this._uploadedImageUrls = this._uploadedImageUrls.filter(u => u !== url);
     btn.parentElement.remove();
   }
 
-  static async _handleAdminProductEdit(event, productId) {
+  static async _handleAdminProductEdit (event, productId) {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
@@ -5419,7 +5786,7 @@ font-size: 0.8rem;
             const names = uploadResult.failures.map(f => f.filename || 'unknown').join(', ');
             showToast(
               `${uploadResult.failures.length} image(s) failed: ${names}. ${uploadResult.urls.length} uploaded.`,
-              'warning'
+              'warning',
             );
           }
         } else {
@@ -5440,10 +5807,16 @@ font-size: 0.8rem;
       price: Number(formData.get('price')),
       category: formData.get('category'),
       condition: formData.get('condition'),
+      gender: formData.get('gender') || undefined,
+      subcategory: formData.get('subcategory') || undefined,
       images: images.length > 0 ? images : ['/assets/images/products/no-image.svg'],
       deliveryModes,
       paymentModes,
     };
+    // Drop empty optional fields so the backend can distinguish "unset"
+    // from "explicitly cleared".
+    if (!data.gender) {delete data.gender;}
+    if (!data.subcategory) {delete data.subcategory;}
 
     const university = formData.get('university')?.trim();
     if (university) {
@@ -5454,7 +5827,7 @@ font-size: 0.8rem;
       const result = await api.admin.updateProduct(productId, data);
       if (result.success) {
         const localProduct = productsManager.products.find(
-          p => p.id === productId || p._id === productId
+          p => p.id === productId || p._id === productId,
         );
         if (localProduct && result.data) {
           Object.assign(localProduct, result.data, { updatedAt: new Date().toISOString() });
@@ -5491,7 +5864,8 @@ font-size: 0.8rem;
     }
   }
 
-  static async renderAdminAnalytics() {
+  static async renderAdminAnalytics () {
+    if (!_requireAdmin()) {return;}
     this.hideOriginalNavFooter();
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
@@ -5555,19 +5929,19 @@ font-size: 0.8rem;
           ],
           categories: (typeof productsManager !== 'undefined'
             ? Object.entries(
-                productsManager.products.reduce((m, p) => {
-                  m[p.category] = (m[p.category] || 0) + 1;
-                  return m;
-                }, {})
-              )
+              productsManager.products.reduce((m, p) => {
+                m[p.category] = (m[p.category] || 0) + 1;
+                return m;
+              }, {}),
+            )
             : [
-                ['electronics', 2],
-                ['hostel-items', 2],
-                ['appliances', 1],
-                ['textbooks', 1],
-                ['accessories', 1],
-                ['fashion', 1],
-              ]
+              ['electronics', 2],
+              ['hostel-items', 2],
+              ['appliances', 1],
+              ['textbooks', 1],
+              ['accessories', 1],
+              ['fashion', 1],
+            ]
           ).map(([category, count]) => ({ category, count })),
           users: days.map(dt => ({ date: dt, count: Math.floor(Math.random() * 5) })),
           topProducts: (typeof productsManager !== 'undefined'
@@ -5576,7 +5950,7 @@ font-size: 0.8rem;
           ).map(p => ({ title: p.title, sold: Math.floor(Math.random() * 10 + 1) })),
         };
       }
-      const chartFont = { family: "'Inter', sans-serif" };
+      const chartFont = { family: '\'Inter\', sans-serif' };
       const gridColor = 'rgba(75,85,99,0.3)';
       const tickColor = '#9ca3af';
 
@@ -5705,7 +6079,7 @@ font-size: 0.8rem;
     }
   }
 
-  static renderFAQ() {
+  static renderFAQ () {
     const mainContent = document.getElementById('main-content');
     if (!mainContent) {
       return;
@@ -5714,7 +6088,7 @@ font-size: 0.8rem;
     const faqItems = [
       {
         q: 'What is JERTS CART?',
-        a: "JERTS CART is a student marketplace for buying and selling items within university communities in Ghana. Whether you're looking for textbooks, electronics, hostel essentials, or fashion items, JERTS CART connects you with fellow students.",
+        a: 'JERTS CART is a student marketplace for buying and selling items within university communities in Ghana. Whether you\'re looking for textbooks, electronics, hostel essentials, or fashion items, JERTS CART connects you with fellow students.',
       },
       {
         q: 'How do I create an account?',
@@ -5742,7 +6116,7 @@ font-size: 0.8rem;
       },
       {
         q: 'Can I return an item?',
-        a: "Returns depend on the seller's policy. We recommend discussing return terms with the seller before purchasing. If you have a dispute, you can report the transaction through your order page.",
+        a: 'Returns depend on the seller\'s policy. We recommend discussing return terms with the seller before purchasing. If you have a dispute, you can report the transaction through your order page.',
       },
       {
         q: 'How do I contact a seller?',
@@ -5760,8 +6134,8 @@ font-size: 0.8rem;
         <p style="color: var(--text-secondary, #6b7280); margin-bottom: 2.5rem; font-size: 1.05rem;">Everything you need to know about buying and selling on JERTS CART.</p>
         <div class="faq-list">
           ${faqItems
-            .map(
-              (item, i) => `
+    .map(
+      (item, i) => `
             <details class="faq-item" style="border: 1px solid var(--border-color, #e5e7eb); border-radius: 0.75rem; margin-bottom: 0.75rem; overflow: hidden; background: var(--bg-primary, #fff);${i === 0 ? ' open;' : ''}">
               <summary style="padding: 1.25rem 1.5rem; font-weight: 600; cursor: pointer; font-size: 1rem; color: var(--text-primary, #111827); list-style: none; display: flex; justify-content: space-between; align-items: center;">
                 ${item.q}
@@ -5771,9 +6145,9 @@ font-size: 0.8rem;
                 ${item.a}
               </div>
             </details>
-          `
-            )
-            .join('')}
+          `,
+    )
+    .join('')}
         </div>
         <div style="margin-top: 3rem; text-align: center; padding: 2rem; background: var(--bg-secondary, #f9fafb); border-radius: 0.75rem;">
           <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary, #111827);">Still have questions?</h2>
@@ -5791,39 +6165,39 @@ font-size: 0.8rem;
     window.scrollTo(0, 0);
   }
 
-  static renderTerms() {
+  static renderTerms () {
     return typeof StaticPageMethods !== 'undefined'
       ? StaticPageMethods.renderTerms()
       : console.warn('StaticPageMethods not loaded');
   }
 
-  static renderPrivacy() {
+  static renderPrivacy () {
     return typeof StaticPageMethods !== 'undefined'
       ? StaticPageMethods.renderPrivacy()
       : console.warn('StaticPageMethods not loaded');
   }
 
-  static renderAbout() {
+  static renderAbout () {
     return typeof StaticPageMethods !== 'undefined'
       ? StaticPageMethods.renderAbout()
       : console.warn('StaticPageMethods not loaded');
   }
 
-  static renderContact() {
+  static renderContact () {
     return typeof StaticPageMethods !== 'undefined'
       ? StaticPageMethods.renderContact()
       : console.warn('StaticPageMethods not loaded');
   }
 
-  static _handleContactForm(event) {
+  static _handleContactForm (event) {
     return typeof StaticPageMethods !== 'undefined'
       ? StaticPageMethods._handleContactForm(event)
       : console.warn('StaticPageMethods not loaded');
   }
 
-  static renderTrackOrder() {
+  static renderTrackOrder () {
     const mainContent = document.getElementById('main-content');
-    if (!mainContent) return;
+    if (!mainContent) {return;}
 
     mainContent.innerHTML = `
       <div style="max-width:640px;margin:0 auto;padding:3rem 1.5rem;">
@@ -5837,15 +6211,15 @@ font-size: 0.8rem;
       </div>
     `;
     document.getElementById('track-input').addEventListener('keydown', e => {
-      if (e.key === 'Enter') Pages._doTrackOrder();
+      if (e.key === 'Enter') {Pages._doTrackOrder();}
     });
     window.scrollTo(0, 0);
   }
 
-  static async _doTrackOrder() {
+  static async _doTrackOrder () {
     const input = document.getElementById('track-input');
     const resultDiv = document.getElementById('track-result');
-    if (!input || !resultDiv) return;
+    if (!input || !resultDiv) {return;}
 
     const trackingNumber = input.value.trim().toUpperCase();
     if (!trackingNumber) {
@@ -5876,15 +6250,15 @@ font-size: 0.8rem;
               <div style="height:100%;width:${currentIdx >= 0 ? (currentIdx / (statusSteps.length - 1)) * 100 : 0}%;background:#0046be;border-radius:2px;transition:width 0.3s;"></div>
             </div>
             ${statusSteps
-              .map(
-                (step, i) => `
+    .map(
+      (step, i) => `
               <div style="display:flex;flex-direction:column;align-items:center;position:relative;z-index:1;flex:1;">
                 <div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#fff;background:${i <= currentIdx ? '#0046be' : '#d1d5db'};border:3px solid ${i <= currentIdx ? '#0046be' : '#e5e7eb'};">${i <= currentIdx ? '✓' : i + 1}</div>
                 <span style="margin-top:0.5rem;font-size:0.75rem;color:${i <= currentIdx ? '#111827' : '#9ca3af'};font-weight:${i <= currentIdx ? '600' : '400'};text-align:center;">${step.charAt(0).toUpperCase() + step.slice(1).replace('-', ' ')}</span>
               </div>
-            `
-              )
-              .join('')}
+            `,
+    )
+    .join('')}
           </div>`;
 
       resultDiv.innerHTML = `
@@ -5904,23 +6278,23 @@ font-size: 0.8rem;
         </div>
         ${stepHtml}
         ${
-          order.items && order.items.length
-            ? `
+  order.items && order.items.length
+    ? `
         <div style="background:var(--bg-primary,#fff);border:1px solid var(--border-color,#e5e7eb);border-radius:0.75rem;padding:1.5rem;">
           <h3 style="font-size:1rem;font-weight:600;margin-bottom:1rem;color:var(--text-primary,#111827);">Items</h3>
           ${order.items
-            .map(
-              item => `
+    .map(
+      item => `
             <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid #f3f4f6;">
               <span style="font-size:0.95rem;color:var(--text-primary,#111827);">${item.title || 'Item'}</span>
               <span style="font-size:0.95rem;font-weight:600;color:var(--text-primary,#111827);">×${item.quantity}</span>
             </div>
-          `
-            )
-            .join('')}
+          `,
+    )
+    .join('')}
         </div>`
-            : ''
-        }
+    : ''
+}
       `;
     } catch (err) {
       resultDiv.innerHTML =

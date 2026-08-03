@@ -5,7 +5,7 @@
 
 class API {
   constructor (baseURL = null) {
-    var envAPI = '';
+    let envAPI = '';
     try { envAPI = import.meta.env.VITE_API_URL || ''; } catch (e) { /* VITE_API_URL only available in Vite dev */ }
     this.baseURL =
       baseURL || (typeof window !== 'undefined' && window.API_URL) || envAPI || 'https://uni-hub-bnxi.onrender.com/api';
@@ -34,8 +34,8 @@ class API {
   }
 
   get isStaticDeploy () {
-    if (this._isStaticDeploy) return true;
-    if (this._backendProbed && this._backendReachable === false) return true;
+    if (this._isStaticDeploy) {return true;}
+    if (this._backendProbed && this._backendReachable === false) {return true;}
     return false;
   }
 
@@ -68,29 +68,29 @@ class API {
     if (this.isStaticDeploy) {
       return null;
     }
-    if (this._csrfToken) return this._csrfToken;
-    if (this._csrfPromise) return this._csrfPromise;
+    if (this._csrfToken) {return this._csrfToken;}
+    if (this._csrfPromise) {return this._csrfPromise;}
 
-  const csrfPromise = fetch(this._csrfUrl(), {
+    const csrfPromise = fetch(this._csrfUrl(), {
       credentials: 'include',
     })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success && data.csrfToken) {
-        this._csrfToken = data.csrfToken;
-        return this._csrfToken;
-      }
-      return null;
-    })
-    .catch(() => null)
-    .finally(() => {
-      if (this._csrfPromise === csrfPromise) {
-        this._csrfPromise = null;
-      }
-    });
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.csrfToken) {
+          this._csrfToken = data.csrfToken;
+          return this._csrfToken;
+        }
+        return null;
+      })
+      .catch(() => null)
+      .finally(() => {
+        if (this._csrfPromise === csrfPromise) {
+          this._csrfPromise = null;
+        }
+      });
 
-  this._csrfPromise = csrfPromise;
-  return csrfPromise;
+    this._csrfPromise = csrfPromise;
+    return csrfPromise;
   }
 
   /**
@@ -275,19 +275,19 @@ class API {
       const JSON_VERSION = '2';
       const response = await fetch(`${filePath}?v=${JSON_VERSION}`);
       if (!response.ok) {
+        const fallback = this._jsonFallbacks[filePath];
+        if (fallback) {
+          return fallback;
+        }
+        throw new Error(`Failed to load ${filePath}`);
+      }
+      return await response.json();
+    } catch (error) {
       const fallback = this._jsonFallbacks[filePath];
       if (fallback) {
         return fallback;
       }
-      throw new Error(`Failed to load ${filePath}`);
-    }
-    return await response.json();
-  } catch (error) {
-    const fallback = this._jsonFallbacks[filePath];
-    if (fallback) {
-      return fallback;
-    }
-    throw error;
+      throw error;
     }
   }
 
@@ -440,97 +440,97 @@ class API {
     });
   }
 
-upload = {
-  images: async (files) => {
-    if (this.isStaticDeploy) {
-      return { success: false, error: 'Offline mode - upload unavailable', urls: [] };
-    }
-    const compressed = [];
-    for (const f of files) {
-      try {
-        const c = await this._compressImage(f);
-        compressed.push(c);
-      } catch (compErr) {
-        console.error('Compression error for', f.name, ':', compErr.message);
-        return { success: false, error: compErr.message, urls: [] };
+  upload = {
+    images: async (files) => {
+      if (this.isStaticDeploy) {
+        return { success: false, error: 'Offline mode - upload unavailable', urls: [] };
       }
-    }
-    const formData = new FormData();
-    for (const file of compressed) {
-      formData.append('images', file);
-    }
-    const doUpload = async (csrfToken) => {
-      const token = this.getToken();
-      const headers = {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+      const compressed = [];
+      for (const f of files) {
+        try {
+          const c = await this._compressImage(f);
+          compressed.push(c);
+        } catch (compErr) {
+          console.error('Compression error for', f.name, ':', compErr.message);
+          return { success: false, error: compErr.message, urls: [] };
+        }
+      }
+      const formData = new FormData();
+      for (const file of compressed) {
+        formData.append('images', file);
+      }
+      const doUpload = async (csrfToken) => {
+        const token = this.getToken();
+        const headers = {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+        };
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 60000);
+        try {
+          const res = await fetch(`${this.baseURL}/products/upload`, {
+            method: 'POST',
+            headers,
+            body: formData,
+            signal: controller.signal,
+            credentials: 'include',
+          });
+          clearTimeout(timeout);
+          return { response: res, csrfInvalid: false };
+        } catch (err) {
+          clearTimeout(timeout);
+          if (err.name === 'AbortError') {
+            return { error: 'Upload timed out — try a smaller image or better connection' };
+          }
+          return { error: err.message || 'Network error during upload' };
+        }
       };
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 60000);
       try {
-        const res = await fetch(`${this.baseURL}/products/upload`, {
-          method: 'POST',
-          headers,
-          body: formData,
-          signal: controller.signal,
-          credentials: 'include',
-        });
-        clearTimeout(timeout);
-        return { response: res, csrfInvalid: false };
-      } catch (err) {
-        clearTimeout(timeout);
-        if (err.name === 'AbortError') {
-          return { error: 'Upload timed out — try a smaller image or better connection' };
-        }
-        return { error: err.message || 'Network error during upload' };
-      }
-    };
-    try {
-      let csrfToken = await this.fetchCsrfToken();
-      const first = await doUpload(csrfToken);
-      if (first.error) {
-        this._csrfToken = null;
-        const freshCsrf = await this.fetchCsrfToken();
-        const retry = await doUpload(freshCsrf);
-        if (retry.error) return { success: false, error: retry.error, urls: [], failures: [] };
-        if (retry.response) {
-          const data = await retry.response.json().catch(() => ({}));
-          if (retry.response.status === 401) {
-            if (typeof authManager !== 'undefined' && authManager.clearSession) authManager.clearSession();
-            return { success: false, error: 'Session expired — please log in again', urls: [], failures: [], isAuthError: true };
-          }
-          if (data.success && data.urls && data.urls.length > 0) return { success: true, urls: data.urls, failures: data.failures || [] };
-          return { success: false, error: data.error || data.message || 'Upload failed', urls: [], failures: [] };
-        }
-      }
-      if (!first.response) return { success: false, error: first.error || 'Upload failed', urls: [], failures: [] };
-      const data = await first.response.json().catch(() => ({}));
-      if (data.success && data.urls && data.urls.length > 0) {
-        return { success: true, urls: data.urls, failures: data.failures || [] };
-      }
-      if (first.response && first.response.status === 401) {
-        if (typeof authManager !== 'undefined' && authManager.clearSession) authManager.clearSession();
-        return { success: false, error: 'Session expired — please log in again', urls: [], failures: [], isAuthError: true };
-      }
-      if (first.response && first.response.status === 403 && data.error && data.error.toLowerCase().includes('csrf')) {
-        this._csrfToken = null;
-        const retryCsrf = await this.fetchCsrfToken();
-        if (retryCsrf) {
-          const retry = await doUpload(retryCsrf);
-          if (retry.error) return { success: false, error: retry.error, urls: [], failures: [] };
+        const csrfToken = await this.fetchCsrfToken();
+        const first = await doUpload(csrfToken);
+        if (first.error) {
+          this._csrfToken = null;
+          const freshCsrf = await this.fetchCsrfToken();
+          const retry = await doUpload(freshCsrf);
+          if (retry.error) {return { success: false, error: retry.error, urls: [], failures: [] };}
           if (retry.response) {
-            const retryData = await retry.response.json().catch(() => ({}));
-            if (retryData.success && retryData.urls && retryData.urls.length > 0) return { success: true, urls: retryData.urls, failures: retryData.failures || [] };
-            return { success: false, error: retryData.error || retryData.message || 'Upload failed', urls: [], failures: [] };
+            const data = await retry.response.json().catch(() => ({}));
+            if (retry.response.status === 401) {
+              if (typeof authManager !== 'undefined' && authManager.clearSession) {authManager.clearSession();}
+              return { success: false, error: 'Session expired — please log in again', urls: [], failures: [], isAuthError: true };
+            }
+            if (data.success && data.urls && data.urls.length > 0) {return { success: true, urls: data.urls, failures: data.failures || [] };}
+            return { success: false, error: data.error || data.message || 'Upload failed', urls: [], failures: [] };
           }
         }
+        if (!first.response) {return { success: false, error: first.error || 'Upload failed', urls: [], failures: [] };}
+        const data = await first.response.json().catch(() => ({}));
+        if (data.success && data.urls && data.urls.length > 0) {
+          return { success: true, urls: data.urls, failures: data.failures || [] };
+        }
+        if (first.response && first.response.status === 401) {
+          if (typeof authManager !== 'undefined' && authManager.clearSession) {authManager.clearSession();}
+          return { success: false, error: 'Session expired — please log in again', urls: [], failures: [], isAuthError: true };
+        }
+        if (first.response && first.response.status === 403 && data.error && data.error.toLowerCase().includes('csrf')) {
+          this._csrfToken = null;
+          const retryCsrf = await this.fetchCsrfToken();
+          if (retryCsrf) {
+            const retry = await doUpload(retryCsrf);
+            if (retry.error) {return { success: false, error: retry.error, urls: [], failures: [] };}
+            if (retry.response) {
+              const retryData = await retry.response.json().catch(() => ({}));
+              if (retryData.success && retryData.urls && retryData.urls.length > 0) {return { success: true, urls: retryData.urls, failures: retryData.failures || [] };}
+              return { success: false, error: retryData.error || retryData.message || 'Upload failed', urls: [], failures: [] };
+            }
+          }
+        }
+        return { success: false, error: data.error || data.message || `Upload failed (HTTP ${first.response.status})`, urls: [], failures: [] };
+      } catch (err) {
+        return { success: false, error: err.message || 'Upload error', urls: [], failures: [] };
       }
-      return { success: false, error: data.error || data.message || `Upload failed (HTTP ${first.response.status})`, urls: [], failures: [] };
-    } catch (err) {
-      return { success: false, error: err.message || 'Upload error', urls: [], failures: [] };
-    }
-  },
-};
+    },
+  };
 }
 
 // Create singleton instance

@@ -1,4 +1,4 @@
-/** 
+/**
  * Test Setup File
  * Configure test environment with in-memory SQLite
  */
@@ -19,14 +19,14 @@ global.testUtils = {
     role: 'buyer',
   }),
 
-generateTestProduct: (creatorId) => ({
-title: `Test Product ${Date.now()}`,
-description: 'A test product for automated testing',
-price: 100,
-category: 'electronics',
-condition: 'good',
-university: 'University of Ghana',
-seller: creatorId || 'test-creator-id',
+  generateTestProduct: (creatorId) => ({
+    title: `Test Product ${Date.now()}`,
+    description: 'A test product for automated testing',
+    price: 100,
+    category: 'electronics',
+    condition: 'good',
+    university: 'University of Ghana',
+    seller: creatorId || 'test-creator-id',
     images: ['https://example.com/test-image.jpg'],
   }),
 };

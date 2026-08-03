@@ -5,7 +5,7 @@
 
 function sanitizeQuery (req, res, next) {
   const sanitize = (obj) => {
-    if (!obj || typeof obj !== 'object') return obj;
+    if (!obj || typeof obj !== 'object') {return obj;}
     const sanitized = Array.isArray(obj) ? [] : {};
     for (const key in obj) {
       if (key.startsWith('$') || key.includes('.')) {
@@ -25,7 +25,7 @@ function sanitizeQuery (req, res, next) {
 }
 
 function escapeHtml (str) {
-  if (typeof str !== 'string') return str;
+  if (typeof str !== 'string') {return str;}
   return str
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -38,12 +38,12 @@ const SENSITIVE_FIELDS = new Set(['password', 'currentPassword', 'newPassword', 
 
 function sanitizeXss (req, res, next) {
   const sanitizeString = (obj, skipField) => {
-    if (!obj) return obj;
+    if (!obj) {return obj;}
     if (typeof obj === 'string') {
-      if (skipField) return obj;
+      if (skipField) {return obj;}
       return escapeHtml(obj);
     }
-    if (Array.isArray(obj)) return obj.map(item => sanitizeString(item, false));
+    if (Array.isArray(obj)) {return obj.map(item => sanitizeString(item, false));}
     if (typeof obj === 'object') {
       const sanitized = {};
       for (const key in obj) {

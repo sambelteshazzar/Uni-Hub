@@ -60,6 +60,8 @@ CREATE TABLE IF NOT EXISTS products (
   currency TEXT DEFAULT 'GHS',
   category TEXT NOT NULL CHECK(category IN ('appliances','hostel-items','accessories','textbooks','electronics','fashion','thrifts')),
   condition TEXT NOT NULL CHECK(condition IN ('new','like-new','fair','good','excellent')),
+  gender TEXT,
+  subcategory TEXT,
   variants TEXT DEFAULT '[]',
   images TEXT DEFAULT '[]',
   seller TEXT NOT NULL REFERENCES users(id),
@@ -391,8 +393,7 @@ async function connectTurso () {
 
   await tursoClient.execute('SELECT 1');
 
-  const schemaStatements = SCHEMA_SQL
-    .split(';')
+  const schemaStatements = SCHEMA_SQL.split(';')
     .map(s => s.trim())
     .filter(s => s.length > 0);
 
@@ -423,14 +424,18 @@ async function connectTurso () {
   // rows with locked=0 but only one with locked=1, so first INSERT
   // wins and subsequent inserts fail.
   try {
-    await tursoClient.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_migrations_lock ON migrations_log(locked) WHERE locked = 1');
-  } catch (_e) { /* older sqlite/turso may not support partial unique — fall back to app-level guard */ }
+    await tursoClient.execute(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_migrations_lock ON migrations_log(locked) WHERE locked = 1',
+    );
+  } catch (_e) {
+    /* older sqlite/turso may not support partial unique — fall back to app-level guard */
+  }
 
   const lockId = require('crypto').randomUUID();
   let acquired = false;
   try {
     await tursoClient.execute({
-      sql: "INSERT INTO migrations_log (id, locked) VALUES (?, 1)",
+      sql: 'INSERT INTO migrations_log (id, locked) VALUES (?, 1)',
       args: [lockId],
     });
     acquired = true;
@@ -451,8 +456,13 @@ async function connectTurso () {
   } finally {
     if (acquired) {
       try {
-        await tursoClient.execute({ sql: "DELETE FROM migrations_log WHERE id = ?", args: [lockId] });
-      } catch (_e) { /* release best-effort */ }
+        await tursoClient.execute({
+          sql: 'DELETE FROM migrations_log WHERE id = ?',
+          args: [lockId],
+        });
+      } catch (_e) {
+        /* release best-effort */
+      }
     }
   }
 
@@ -464,75 +474,85 @@ async function connectTurso () {
 async function runTursoMigrations () {
   const migrations = [
     {
-      check: "PRAGMA table_info(products)",
+      check: 'PRAGMA table_info(products)',
       find: 'variants',
-      alter: "ALTER TABLE products ADD COLUMN variants TEXT DEFAULT '[]'",
+      alter: 'ALTER TABLE products ADD COLUMN variants TEXT DEFAULT \'[]\'',
     },
     {
-      check: "PRAGMA table_info(order_items)",
+      check: 'PRAGMA table_info(order_items)',
       find: 'variant',
       alter: 'ALTER TABLE order_items ADD COLUMN variant TEXT',
     },
     {
-      check: "PRAGMA table_info(student_verifications)",
+      check: 'PRAGMA table_info(student_verifications)',
       find: 'userId',
       alter: 'ALTER TABLE student_verifications ADD COLUMN userId TEXT REFERENCES users(id)',
     },
     {
-      check: "PRAGMA table_info(order_status_history)",
+      check: 'PRAGMA table_info(order_status_history)',
       find: 'updatedBy',
       alter: 'ALTER TABLE order_status_history ADD COLUMN updatedBy TEXT REFERENCES users(id)',
     },
     {
-      check: "PRAGMA table_info(users)",
+      check: 'PRAGMA table_info(users)',
       find: 'googleId',
       alter: 'ALTER TABLE users ADD COLUMN googleId TEXT',
     },
     {
-      check: "PRAGMA table_info(reviews)",
+      check: 'PRAGMA table_info(reviews)',
       find: 'detailedRatings_accuracy',
       alter: 'ALTER TABLE reviews ADD COLUMN detailedRatings_accuracy INTEGER',
     },
     {
-      check: "PRAGMA table_info(reviews)",
+      check: 'PRAGMA table_info(reviews)',
       find: 'detailedRatings_communication',
       alter: 'ALTER TABLE reviews ADD COLUMN detailedRatings_communication INTEGER',
     },
     {
-      check: "PRAGMA table_info(reviews)",
+      check: 'PRAGMA table_info(reviews)',
       find: 'detailedRatings_value',
       alter: 'ALTER TABLE reviews ADD COLUMN detailedRatings_value INTEGER',
     },
     {
-      check: "PRAGMA table_info(reviews)",
+      check: 'PRAGMA table_info(reviews)',
       find: 'helpfulVotes',
-      alter: "ALTER TABLE reviews ADD COLUMN helpfulVotes TEXT DEFAULT '[]'",
+      alter: 'ALTER TABLE reviews ADD COLUMN helpfulVotes TEXT DEFAULT \'[]\'',
     },
     {
-      check: "PRAGMA table_info(reviews)",
+      check: 'PRAGMA table_info(reviews)',
       find: 'reportCount',
       alter: 'ALTER TABLE reviews ADD COLUMN reportCount INTEGER DEFAULT 0',
     },
     {
-      check: "PRAGMA table_info(reviews)",
+      check: 'PRAGMA table_info(reviews)',
       find: 'sellerResponse_comment',
       alter: 'ALTER TABLE reviews ADD COLUMN sellerResponse_comment TEXT',
     },
     {
-      check: "PRAGMA table_info(reviews)",
+      check: 'PRAGMA table_info(reviews)',
       find: 'sellerResponse_respondedAt',
       alter: 'ALTER TABLE reviews ADD COLUMN sellerResponse_respondedAt TEXT',
     },
     {
-    check: "SELECT 1 FROM sqlite_master WHERE name='products' AND sql LIKE '%approved%'",
-    find: '__status_check_has_approved__',
-    alter: null,
-  },
-];
+      check: 'PRAGMA table_info(products)',
+      find: 'gender',
+      alter: 'ALTER TABLE products ADD COLUMN gender TEXT',
+    },
+    {
+      check: 'PRAGMA table_info(products)',
+      find: 'subcategory',
+      alter: 'ALTER TABLE products ADD COLUMN subcategory TEXT',
+    },
+    {
+      check: 'SELECT 1 FROM sqlite_master WHERE name=\'products\' AND sql LIKE \'%approved%\'',
+      find: '__status_check_has_approved__',
+      alter: null,
+    },
+  ];
 
   for (const m of migrations) {
     try {
-      if (m.alter === null) continue;
+      if (m.alter === null) {continue;}
       const result = await tursoClient.execute(m.check);
       const has = result.rows.some(r => {
         const vals = Object.values(r);
@@ -547,9 +567,11 @@ async function runTursoMigrations () {
   }
 
   try {
-    const checkResult = await tursoClient.execute("SELECT sql FROM sqlite_master WHERE name='products'");
+    const checkResult = await tursoClient.execute(
+      'SELECT sql FROM sqlite_master WHERE name=\'products\'',
+    );
     const schemaSql = checkResult.rows[0]?.sql || '';
-    if (schemaSql && !schemaSql.includes("'approved'")) {
+    if (schemaSql && !schemaSql.includes('\'approved\'')) {
       console.log('Migrating products table to add approved status...');
       await tursoClient.execute('ALTER TABLE products RENAME TO products_old');
       await tursoClient.execute(`CREATE TABLE products (
@@ -560,6 +582,8 @@ async function runTursoMigrations () {
   currency TEXT DEFAULT 'GHS',
   category TEXT NOT NULL CHECK(category IN ('appliances','hostel-items','accessories','textbooks','electronics','fashion','thrifts')),
   condition TEXT NOT NULL CHECK(condition IN ('new','like-new','fair','good','excellent')),
+  gender TEXT,
+  subcategory TEXT,
   variants TEXT DEFAULT '[]',
   images TEXT DEFAULT '[]',
   seller TEXT NOT NULL REFERENCES users(id),
@@ -583,7 +607,9 @@ async function runTursoMigrations () {
   } catch (err) {
     console.warn('Products status migration warning:', err.message);
     try {
-      const hasOld = await tursoClient.execute("SELECT name FROM sqlite_master WHERE name='products_old'");
+      const hasOld = await tursoClient.execute(
+        'SELECT name FROM sqlite_master WHERE name=\'products_old\'',
+      );
       if (hasOld.rows.length > 0) {
         await tursoClient.execute('ALTER TABLE products_old RENAME TO products');
         console.log('Rolled back products table rename.');
@@ -607,7 +633,9 @@ async function runTursoMigrations () {
     const fkList = await tursoClient.execute('PRAGMA foreign_key_list(reviews)');
     const hasBrokenFk = fkList.rows.some(r => r.table === 'products_old');
     if (hasBrokenFk) {
-      console.log('Repairing reviews table: product FK points to dropped products_old, recreating table...');
+      console.log(
+        'Repairing reviews table: product FK points to dropped products_old, recreating table...',
+      );
       await tursoClient.execute('ALTER TABLE reviews RENAME TO reviews_broken');
       await tursoClient.execute(`CREATE TABLE reviews (
   id TEXT PRIMARY KEY,
@@ -635,7 +663,9 @@ async function runTursoMigrations () {
   } catch (repairErr) {
     console.error('Reviews FK repair failed:', repairErr.message);
     try {
-      const hasBroken = await tursoClient.execute("SELECT name FROM sqlite_master WHERE name='reviews_broken'");
+      const hasBroken = await tursoClient.execute(
+        'SELECT name FROM sqlite_master WHERE name=\'reviews_broken\'',
+      );
       if (hasBroken.rows.length > 0) {
         await tursoClient.execute('ALTER TABLE reviews_broken RENAME TO reviews');
         console.log('Rolled back reviews table rename.');
@@ -650,9 +680,11 @@ async function runTursoMigrations () {
   // Idempotent: only re-creates the table if the existing schema lacks
   // 'refunded' in the status CHECK.
   try {
-    const checkResult = await tursoClient.execute("SELECT sql FROM sqlite_master WHERE name='orders'");
+    const checkResult = await tursoClient.execute(
+      'SELECT sql FROM sqlite_master WHERE name=\'orders\'',
+    );
     const ordersSchemaSql = checkResult.rows[0]?.sql || '';
-    if (ordersSchemaSql && !ordersSchemaSql.includes("'refunded'")) {
+    if (ordersSchemaSql && !ordersSchemaSql.includes('\'refunded\'')) {
       console.log('Migrating orders table to include "refunded" in status CHECK...');
       await tursoClient.execute('ALTER TABLE orders RENAME TO orders_old');
       await tursoClient.execute(`CREATE TABLE orders (
@@ -687,7 +719,9 @@ async function runTursoMigrations () {
   } catch (ordersMigrateErr) {
     console.error('Orders refunded-status migration failed:', ordersMigrateErr.message);
     try {
-      const hasOld = await tursoClient.execute("SELECT name FROM sqlite_master WHERE name='orders_old'");
+      const hasOld = await tursoClient.execute(
+        'SELECT name FROM sqlite_master WHERE name=\'orders_old\'',
+      );
       if (hasOld.rows.length > 0) {
         await tursoClient.execute('ALTER TABLE orders_old RENAME TO orders');
         console.log('Rolled back orders table rename.');
@@ -715,7 +749,7 @@ function connectLocal () {
   try {
     const productCols = db.prepare('PRAGMA table_info(products)').all();
     if (!productCols.find(c => c.name === 'variants')) {
-      db.prepare("ALTER TABLE products ADD COLUMN variants TEXT DEFAULT '[]'").run();
+      db.prepare('ALTER TABLE products ADD COLUMN variants TEXT DEFAULT \'[]\'').run();
     }
     const orderItemCols = db.prepare('PRAGMA table_info(order_items)').all();
     if (!orderItemCols.find(c => c.name === 'variant')) {
@@ -723,15 +757,28 @@ function connectLocal () {
     }
     const verificationCols = db.prepare('PRAGMA table_info(student_verifications)').all();
     if (!verificationCols.find(c => c.name === 'userId')) {
-      db.prepare('ALTER TABLE student_verifications ADD COLUMN userId TEXT REFERENCES users(id)').run();
+      db.prepare(
+        'ALTER TABLE student_verifications ADD COLUMN userId TEXT REFERENCES users(id)',
+      ).run();
     }
     const statusHistCols = db.prepare('PRAGMA table_info(order_status_history)').all();
     if (!statusHistCols.find(c => c.name === 'updatedBy')) {
-      db.prepare('ALTER TABLE order_status_history ADD COLUMN updatedBy TEXT REFERENCES users(id)').run();
+      db.prepare(
+        'ALTER TABLE order_status_history ADD COLUMN updatedBy TEXT REFERENCES users(id)',
+      ).run();
     }
     const userCols = db.prepare('PRAGMA table_info(users)').all();
     if (!userCols.find(c => c.name === 'googleId')) {
       db.prepare('ALTER TABLE users ADD COLUMN googleId TEXT').run();
+    }
+    // gender + subcategory columns power the Fashion and Gadgets
+    // sub-options on the admin product form. Both are nullable.
+    const productColsAll = db.prepare('PRAGMA table_info(products)').all();
+    if (!productColsAll.find(c => c.name === 'gender')) {
+      db.prepare('ALTER TABLE products ADD COLUMN gender TEXT').run();
+    }
+    if (!productColsAll.find(c => c.name === 'subcategory')) {
+      db.prepare('ALTER TABLE products ADD COLUMN subcategory TEXT').run();
     }
   } catch (migrationErr) {
     console.warn('Migration warning:', migrationErr.message);

@@ -17,21 +17,21 @@ const { escapeHtml } = require('../middleware/sanitize.middleware');
 // and the frontend renders message bodies via innerHTML, so this is
 // a live stored-XSS vector. Escape here at the socket boundary so
 // the DB stores the same escaped form the HTTP path would store.
-function sanitizeSocketString(value) {
-  if (typeof value !== 'string') return value;
+function sanitizeSocketString (value) {
+  if (typeof value !== 'string') {return value;}
   return escapeHtml(value);
 }
 
 const onlineUsers = new Map();
 
-function addUserSocket(userId, socketId) {
+function addUserSocket (userId, socketId) {
   if (!onlineUsers.has(userId)) {
     onlineUsers.set(userId, new Set());
   }
   onlineUsers.get(userId).add(socketId);
 }
 
-function removeUserSocket(userId, socketId) {
+function removeUserSocket (userId, socketId) {
   const sockets = onlineUsers.get(userId);
   if (sockets) {
     sockets.delete(socketId);
@@ -41,7 +41,7 @@ function removeUserSocket(userId, socketId) {
   }
 }
 
-function getUserSockets(userId) {
+function getUserSockets (userId) {
   return onlineUsers.has(userId) ? [...onlineUsers.get(userId)] : [];
 }
 
@@ -159,9 +159,9 @@ const initializeSocket = io => {
         });
 
         await db('conversation_participants').rawRun(
-          `UPDATE conversation_participants SET unreadCount = unreadCount + 1 WHERE conversationId = ? AND userId = ?`,
+          'UPDATE conversation_participants SET unreadCount = unreadCount + 1 WHERE conversationId = ? AND userId = ?',
           conversationId,
-          receiverId
+          receiverId,
         );
 
         const senderUser = await db('users').findById(socket.userId);
@@ -171,19 +171,19 @@ const initializeSocket = io => {
           ...message,
           sender: senderUser
             ? {
-                id: senderUser.id,
-                fullName: senderUser.fullName,
-                avatar: senderUser.avatar,
-                university: senderUser.university,
-              }
+              id: senderUser.id,
+              fullName: senderUser.fullName,
+              avatar: senderUser.avatar,
+              university: senderUser.university,
+            }
             : null,
           receiver: receiverUser
             ? {
-                id: receiverUser.id,
-                fullName: receiverUser.fullName,
-                avatar: receiverUser.avatar,
-                university: receiverUser.university,
-              }
+              id: receiverUser.id,
+              fullName: receiverUser.fullName,
+              avatar: receiverUser.avatar,
+              university: receiverUser.university,
+            }
             : null,
         };
 
@@ -191,11 +191,11 @@ const initializeSocket = io => {
           const productRow = await db('products').findById(productId);
           broadcastMessage.product = productRow
             ? {
-                id: productRow.id,
-                title: productRow.title,
-                price: productRow.price,
-                images: JSON.parse(productRow.images || '[]'),
-              }
+              id: productRow.id,
+              title: productRow.title,
+              price: productRow.price,
+              images: JSON.parse(productRow.images || '[]'),
+            }
             : null;
         }
 

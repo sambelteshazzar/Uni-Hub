@@ -26,18 +26,18 @@ function generateCsrfToken () {
 }
 
 function validateCsrfToken (token) {
-  if (!token || typeof token !== 'string') return false;
+  if (!token || typeof token !== 'string') {return false;}
   const parts = token.split('.');
-  if (parts.length !== 3) return false;
+  if (parts.length !== 3) {return false;}
   const payload = `${parts[0]}.${parts[1]}`;
   const signature = parts[2];
   const expected = crypto
     .createHmac('sha256', CSRF_SECRET)
     .update(payload)
     .digest('hex');
-  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return false;
+  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {return false;}
   const expires = parseInt(parts[1], 10);
-  if (isNaN(expires) || Date.now() > expires) return false;
+  if (isNaN(expires) || Date.now() > expires) {return false;}
   return true;
 }
 

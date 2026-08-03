@@ -2,7 +2,7 @@ const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { db } = require('../utils/db');
 
 function getPublicProfile (user) {
-  if (!user) return null;
+  if (!user) {return null;}
   return {
     id: user.id,
     fullName: user.fullName,

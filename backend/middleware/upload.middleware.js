@@ -52,14 +52,14 @@ const uploadMemory = multer({
 // Export upload middleware
 module.exports = {
 // Upload single image
-uploadSingle: (fieldName = 'image') => upload.single(fieldName),
+  uploadSingle: (fieldName = 'image') => upload.single(fieldName),
 
-// Upload multiple images
-uploadMultiple: (fieldName = 'images', maxCount = 5) => upload.array(fieldName, maxCount),
+  // Upload multiple images
+  uploadMultiple: (fieldName = 'images', maxCount = 5) => upload.array(fieldName, maxCount),
 
-// Upload multiple images to memory (no disk)
-uploadMultipleMemory: (fieldName = 'images', maxCount = 5) => uploadMemory.array(fieldName, maxCount),
+  // Upload multiple images to memory (no disk)
+  uploadMultipleMemory: (fieldName = 'images', maxCount = 5) => uploadMemory.array(fieldName, maxCount),
 
-// Upload multiple fields
-uploadFields: (fields) => upload.fields(fields),
+  // Upload multiple fields
+  uploadFields: (fields) => upload.fields(fields),
 };

@@ -87,21 +87,21 @@ app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
-        defaultSrc: ["'self'"],
+        defaultSrc: ['\'self\''],
         scriptSrc: [
-          "'self'",
-          "'unsafe-inline'",
+          '\'self\'',
+          '\'unsafe-inline\'',
           'https://fonts.googleapis.com',
           'https://browser.sentry-cdn.com',
           'https://cdn.socket.io',
           'https://cdn.jsdelivr.net',
           'https://accounts.google.com',
         ],
-        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-        fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-        imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+        styleSrc: ['\'self\'', '\'unsafe-inline\'', 'https://fonts.googleapis.com'],
+        fontSrc: ['\'self\'', 'https://fonts.gstatic.com'],
+        imgSrc: ['\'self\'', 'data:', 'https:', 'blob:'],
         connectSrc: [
-          "'self'",
+          '\'self\'',
           'http://localhost:5000',
           'ws://localhost:5000',
           'http://127.0.0.1:5000',
@@ -113,16 +113,16 @@ app.use(
           'wss://uni-hub-bnxi.onrender.com',
           'https://api.cloudinary.com',
         ],
-        frameAncestors: ["'none'"],
-        baseUri: ["'self'"],
-        formAction: ["'self'"],
+        frameAncestors: ['\'none\''],
+        baseUri: ['\'self\''],
+        formAction: ['\'self\''],
       },
     },
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
     crossOriginResourcePolicy: { policy: 'cross-origin' },
     crossOriginOpenerPolicy: { policy: 'unsafe-none' },
     crossOriginEmbedderPolicy: false,
-  })
+  }),
 );
 
 // HTTPS enforcement in production
@@ -162,7 +162,7 @@ app.use(
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
-  })
+  }),
 );
 
 // Rate limiting - general
@@ -258,7 +258,7 @@ app.use(
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 24 * 60 * 60 * 1000,
     },
-  })
+  }),
 );
 app.use(passport.initialize());
 app.use(passport.session());
@@ -393,7 +393,7 @@ const startServer = async () => {
       const adminPw = process.env.ADMIN_PASSWORD || '';
       if (adminPw.length < 12 || adminPw === 'Admin123!') {
         console.error(
-          'ADMIN_PASSWORD must be set to a strong, unique value (>=12 chars, not the default) in production'
+          'ADMIN_PASSWORD must be set to a strong, unique value (>=12 chars, not the default) in production',
         );
         process.exit(1);
       }
@@ -428,10 +428,7 @@ const startServer = async () => {
         isVerified: 1,
       });
       console.log(`✅ Admin user created: ${adminEmail}`);
-    } else if (
-      process.env.NODE_ENV === 'production' &&
-      adminPassword !== 'Admin123!'
-    ) {
+    } else if (process.env.NODE_ENV === 'production' && adminPassword !== 'Admin123!') {
       const matches = await bcrypt.compare(adminPassword, existingAdmin.password);
       if (!matches) {
         const hashedPassword = await bcrypt.hash(adminPassword, 12);

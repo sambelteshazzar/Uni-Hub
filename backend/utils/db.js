@@ -15,14 +15,14 @@ function generateId () {
 }
 
 function parseJson (val) {
-  if (!val) return val;
-  if (typeof val === 'object') return val;
+  if (!val) {return val;}
+  if (typeof val === 'object') {return val;}
   try { return JSON.parse(val); } catch { return val; }
 }
 
 function stringifyJson (val) {
-  if (!val) return val;
-  if (typeof val === 'string') return val;
+  if (!val) {return val;}
+  if (typeof val === 'string') {return val;}
   return JSON.stringify(val);
 }
 
@@ -35,7 +35,7 @@ function fromBool (val) {
 }
 
 function mapUserRow (row) {
-  if (!row) return null;
+  if (!row) {return null;}
   return {
     ...row,
     isActive: fromBool(row.isActive),
@@ -47,7 +47,7 @@ function mapUserRow (row) {
 }
 
 function mapProductRow (row) {
-  if (!row) return null;
+  if (!row) {return null;}
   return {
     ...row,
     images: parseJson(row.images) || [],
@@ -58,7 +58,7 @@ function mapProductRow (row) {
 }
 
 function mapOrderRow (row) {
-  if (!row) return null;
+  if (!row) {return null;}
   return {
     ...row,
     orderNumber: row.orderNumber,
@@ -91,7 +91,7 @@ function mapOrderRow (row) {
 }
 
 function mapReviewRow (row) {
-  if (!row) return null;
+  if (!row) {return null;}
   return {
     ...row,
     detailedRatings: {
@@ -108,7 +108,7 @@ function mapReviewRow (row) {
 }
 
 function mapNotificationRow (row) {
-  if (!row) return null;
+  if (!row) {return null;}
   return {
     ...row,
     read: fromBool(row.read),
@@ -116,7 +116,7 @@ function mapNotificationRow (row) {
 }
 
 function mapMessageRow (row) {
-  if (!row) return null;
+  if (!row) {return null;}
   return {
     ...row,
     isRead: fromBool(row.isRead),
@@ -124,7 +124,7 @@ function mapMessageRow (row) {
 }
 
 function mapDeliveryRow (row) {
-  if (!row) return null;
+  if (!row) {return null;}
   return {
     ...row,
     location: row.location_latitude ? {
@@ -173,7 +173,7 @@ class Db {
     return '"' + String(ident).replace(/"/g, '""') + '"';
   }
   _mapRow (row) {
-    if (!row) return null;
+    if (!row) {return null;}
     const mapper = MAPPER_MAP[this.table];
     const mapped = mapper ? mapper(row) : row;
     if (mapped && !mapped._id) {
@@ -188,7 +188,7 @@ class Db {
 
   _turso () {
     const client = getTursoClient();
-    if (!client) throw new Error('Turso client not initialized');
+    if (!client) {throw new Error('Turso client not initialized');}
     return client;
   }
 
@@ -291,7 +291,7 @@ class Db {
     const placeholders = [];
 
     for (const [key, value] of Object.entries(data)) {
-      if (value === undefined) continue;
+      if (value === undefined) {continue;}
       cols.push(this._q(key));
       vals.push(this._serializeValue(key, value));
       placeholders.push('?');
@@ -310,13 +310,13 @@ class Db {
     const vals = [];
 
     for (const [key, value] of Object.entries(data)) {
-      if (key === 'id' || key === '_id') continue;
-      if (value === undefined) continue;
+      if (key === 'id' || key === '_id') {continue;}
+      if (value === undefined) {continue;}
       sets.push(`${this._q(key)} = ?`);
       vals.push(this._serializeValue(key, value));
     }
 
-    if (sets.length === 0) return this.findById(id);
+    if (sets.length === 0) {return this.findById(id);}
 
     sets.push(`${this._q('updatedAt')} = datetime('now')`);
     vals.push(id);
@@ -347,7 +347,7 @@ class Db {
   async deleteOne (where) {
     const { sql, params } = this._buildWhere(where);
     const { row } = await this._get(`SELECT id FROM ${this._q(this.table)} ${sql} LIMIT 1`, params);
-    if (!row) return 0;
+    if (!row) {return 0;}
     const deleted = await this.deleteById(row.id);
     return deleted ? 1 : 0;
   }
@@ -358,13 +358,13 @@ class Db {
     const vals = [];
 
     for (const [key, value] of Object.entries(data)) {
-      if (key === 'id' || key === '_id') continue;
-      if (value === undefined) continue;
+      if (key === 'id' || key === '_id') {continue;}
+      if (value === undefined) {continue;}
       sets.push(`${this._q(key)} = ?`);
       vals.push(this._serializeValue(key, value));
     }
 
-    if (sets.length === 0) return 0;
+    if (sets.length === 0) {return 0;}
     sets.push(`${this._q('updatedAt')} = datetime('now')`);
 
     const query = `UPDATE ${this._q(this.table)} SET ${sets.join(', ')} ${sql}`;
@@ -375,7 +375,7 @@ class Db {
   async findOneAndUpdate (where, data, _opts = {}) {
     const { sql, params } = this._buildWhere(where);
     const { row } = await this._get(`SELECT id FROM ${this._q(this.table)} ${sql} LIMIT 1`, params);
-    if (!row) return null;
+    if (!row) {return null;}
     return this.updateById(row.id, data);
   }
 
@@ -434,7 +434,7 @@ class Db {
   // the statements in a real transaction. Each statement is
   // { sql: string, args?: any[] }.
   async batchWrite (statements) {
-    if (!Array.isArray(statements) || statements.length === 0) return [];
+    if (!Array.isArray(statements) || statements.length === 0) {return [];}
     if (isTurso()) {
       const client = this._turso();
       const batch = statements.map(s => ({ sql: s.sql, args: s.args || [] }));
@@ -453,8 +453,8 @@ class Db {
   }
 
   _serializeValue (key, value) {
-    if (value === null) return null;
-    if (typeof value === 'boolean') return toBool(value);
+    if (value === null) {return null;}
+    if (typeof value === 'boolean') {return toBool(value);}
     if (Array.isArray(value) || (typeof value === 'object' && value !== null && !(value instanceof Date))) {
       return JSON.stringify(value);
     }
@@ -592,7 +592,7 @@ class Db {
 
           const selectParts = [`${this._q(groupBy)} as _id`, ...sums.map(([alias, expr]) => {
             if (expr.$sum) {
-              if (typeof expr.$sum === 'number') return `SUM(${expr.$sum}) as ${this._q(alias)}`;
+              if (typeof expr.$sum === 'number') {return `SUM(${expr.$sum}) as ${this._q(alias)}`;}
               return `SUM(${this._q(expr.$sum.replace('$', '').replace('pricing.', 'pricing_'))}) as ${this._q(alias)}`;
             }
             return `COUNT(*) as ${this._q(alias)}`;
@@ -635,9 +635,9 @@ class Db {
           }
 
           const selectParts = [`${groupExpr} as _id`, ...sums.map(([alias, expr]) => {
-            if (expr.$sum && typeof expr.$sum === 'number') return `SUM(${expr.$sum}) as ${this._q(alias)}`;
-            if (expr.$sum) return `SUM(${this._q(expr.$sum.replace('$', '').replace('pricing.', 'pricing_'))}) as ${this._q(alias)}`;
-            if (expr.$count) return `COUNT(*) as ${this._q(alias)}`;
+            if (expr.$sum && typeof expr.$sum === 'number') {return `SUM(${expr.$sum}) as ${this._q(alias)}`;}
+            if (expr.$sum) {return `SUM(${this._q(expr.$sum.replace('$', '').replace('pricing.', 'pricing_'))}) as ${this._q(alias)}`;}
+            if (expr.$count) {return `COUNT(*) as ${this._q(alias)}`;}
             return `COUNT(*) as ${this._q(alias)}`;
           })];
 
@@ -660,7 +660,7 @@ class Db {
           const sums = Object.entries(stage.$group).filter(([k]) => k !== '_id');
 
           const selectParts = [`${this._q(groupBy)} as _id`, ...sums.map(([alias, expr]) => {
-            if (expr.$sum) return `SUM(${this._q(expr.$sum.replace('$', '').replace('pricing.', 'pricing_'))}) as ${this._q(alias)}`;
+            if (expr.$sum) {return `SUM(${this._q(expr.$sum.replace('$', '').replace('pricing.', 'pricing_'))}) as ${this._q(alias)}`;}
             return `COUNT(*) as ${this._q(alias)}`;
           })];
 
@@ -680,7 +680,7 @@ function db (table) {
 async function runInTransaction (fn) {
   if (isTurso()) {
     const client = getTursoClient();
-    if (!client) throw new Error('Turso client not initialized');
+    if (!client) {throw new Error('Turso client not initialized');}
     await client.execute('BEGIN');
     try {
       const result = await fn(db);
@@ -692,7 +692,7 @@ async function runInTransaction (fn) {
     }
   }
   const localDb = getDb();
-  if (!localDb) throw new Error('Local DB not initialized');
+  if (!localDb) {throw new Error('Local DB not initialized');}
   const tx = localDb.transaction(() => {
     throw new Error('Synchronous transaction cannot be used with async code');
   });

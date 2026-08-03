@@ -10,14 +10,14 @@ class SecurityUtils {
    * @returns {string} - Escaped HTML-safe string
    */
   static escapeHtml (text) {
-    if (typeof text !== 'string') return '';
+    if (typeof text !== 'string') {return '';}
 
     const htmlEscapes = {
       '&': '&amp;',
       '<': '&lt;',
       '>': '&gt;',
       '"': '&quot;',
-      "'": '&#x27;',
+      '\'': '&#x27;',
       '/': '&#x2F;',
       '`': '&#x60;',
       '=': '&#x3D;',
@@ -32,7 +32,7 @@ class SecurityUtils {
    * @returns {string} - Sanitized string
    */
   static sanitizeInput (input) {
-    if (!input) return '';
+    if (!input) {return '';}
 
     // Convert to string
     let sanitized = String(input);
@@ -83,7 +83,7 @@ class SecurityUtils {
    * @returns {string|null} - Safe URL or null
    */
   static sanitizeUrl (url) {
-    if (!url) return null;
+    if (!url) {return null;}
 
     try {
       const parsed = new URL(url, window.location.origin);
@@ -141,7 +141,7 @@ class SecurityUtils {
    * @returns {string} - Sanitized HTML with only allowed tags
    */
   static sanitizeHtml (html) {
-    if (!html) return '';
+    if (!html) {return '';}
 
     // Allowed tags (whitelist)
     const allowedTags = {
@@ -160,14 +160,14 @@ class SecurityUtils {
     };
 
     // Strip all tags first
-    let sanitized = html.replace(/<[^>]*>/g, match => {
+    const sanitized = html.replace(/<[^>]*>/g, match => {
       const tagMatch = match.match(/^<\/?([a-z][a-z0-9]*)[^>]*>$/i);
-      if (!tagMatch) return '';
+      if (!tagMatch) {return '';}
 
       const tagName = tagMatch[1].toLowerCase();
       const isClosing = match.startsWith('</');
 
-      if (!allowedTags[tagName]) return '';
+      if (!allowedTags[tagName]) {return '';}
 
       if (isClosing) {
         return `</${tagName}>`;
@@ -233,7 +233,7 @@ class SecurityUtils {
    * @returns {boolean} - True if suspicious
    */
   static containsXssPatterns (input) {
-    if (typeof input !== 'string') return false;
+    if (typeof input !== 'string') {return false;}
 
     const xssPatterns = [
       /<script[^>]*>/i,
@@ -259,7 +259,7 @@ class SecurityUtils {
    */
   static safeTruncate (text, maxLength = 100) {
     const sanitized = this.sanitizeInput(text);
-    if (sanitized.length <= maxLength) return sanitized;
+    if (sanitized.length <= maxLength) {return sanitized;}
     return sanitized.substring(0, maxLength) + '...';
   }
 }

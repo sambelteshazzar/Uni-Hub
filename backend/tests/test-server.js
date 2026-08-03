@@ -45,7 +45,7 @@ const createTestApp = () => {
     res.json({ success: true, csrfToken: 'test-csrf-token' });
   });
   app.use((req, res, next) => {
-    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {return next();}
     const csrfToken = req.headers['x-csrf-token'];
     if (!csrfToken || csrfToken !== 'test-csrf-token') {
       // In tests, allow requests without CSRF for simplicity

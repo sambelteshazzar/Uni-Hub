@@ -12,7 +12,7 @@ async function findOrCreateConversation (userId1, userId2, productId) {
     JOIN conversation_participants cp2 ON cp2.conversationId = c.id AND cp2.userId = ?
     WHERE c.product ${productId ? '= ?' : 'IS NULL'}
     LIMIT 1`,
-    userId1, userId2, ...(productId ? [productId] : [])
+    userId1, userId2, ...(productId ? [productId] : []),
   );
 
   if (existing) {
@@ -134,7 +134,7 @@ exports.getConversationMessages = asyncHandler(async (req, res) => {
     `SELECT COUNT(*) as count FROM messages m
     LEFT JOIN message_deleted_by mdb ON mdb.messageId = m.id AND mdb.userId = ?
     WHERE m.conversationId = ? AND mdb.id IS NULL`,
-    req.user.id, conversationId
+    req.user.id, conversationId,
   );
 
   const totalFiltered = countRow.count;
@@ -145,7 +145,7 @@ exports.getConversationMessages = asyncHandler(async (req, res) => {
     WHERE m.conversationId = ? AND mdb.id IS NULL
     ORDER BY m.createdAt DESC
     LIMIT ? OFFSET ?`,
-    req.user.id, conversationId, limitNum, offset
+    req.user.id, conversationId, limitNum, offset,
   );
 
   const senderIds = [...new Set(rows.map(m => m.sender))];
@@ -157,7 +157,7 @@ exports.getConversationMessages = asyncHandler(async (req, res) => {
     const placeholders = allUserIds.map(() => '?').join(',');
     const userRows = await db('users').rawAll(
       `SELECT id, fullName, avatar, university FROM users WHERE id IN (${placeholders})`,
-      ...allUserIds
+      ...allUserIds,
     );
     for (const u of userRows) {
       userMap[u.id] = u;
@@ -210,7 +210,7 @@ exports.getUserConversations = asyncHandler(async (req, res) => {
     `SELECT COUNT(*) as count FROM conversations c
     JOIN conversation_participants cp ON cp.conversationId = c.id
     WHERE cp.userId = ? AND c.status = ?`,
-    req.user.id, status
+    req.user.id, status,
   );
 
   const rows = await db('conversations').rawAll(
@@ -219,7 +219,7 @@ exports.getUserConversations = asyncHandler(async (req, res) => {
     WHERE cp.userId = ? AND c.status = ?
     ORDER BY c.lastActivity DESC
     LIMIT ? OFFSET ?`,
-    req.user.id, status, limitNum, offset
+    req.user.id, status, limitNum, offset,
   );
 
   const conversations = [];
@@ -254,8 +254,8 @@ exports.getUserConversations = asyncHandler(async (req, res) => {
   }
 
   const unreadRow = await db('conversations').rawGet(
-    `SELECT COALESCE(SUM(unreadCount), 0) as total FROM conversation_participants WHERE userId = ?`,
-    req.user.id
+    'SELECT COALESCE(SUM(unreadCount), 0) as total FROM conversation_participants WHERE userId = ?',
+    req.user.id,
   );
 
   res.json({
@@ -420,7 +420,7 @@ exports.searchMessages = asyncHandler(async (req, res) => {
     const placeholders = allUserIds.map(() => '?').join(',');
     const userRows = await db('users').rawAll(
       `SELECT id, fullName, avatar, university FROM users WHERE id IN (${placeholders})`,
-      ...allUserIds
+      ...allUserIds,
     );
     for (const u of userRows) {
       userMap[u.id] = u;

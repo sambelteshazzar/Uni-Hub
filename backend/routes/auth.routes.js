@@ -32,7 +32,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       const fullName = profile.displayName || 'Google User';
       const avatar = profile.photos?.[0]?.value || null;
 
-      if (!email) return done(new Error('Google account has no email'), null);
+      if (!email) {return done(new Error('Google account has no email'), null);}
 
       let user = await db('users').findOne({ email });
 
@@ -62,7 +62,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   router.get('/google', passport.authenticate('google', { scope: ['openid', 'email', 'profile'] }));
   router.get('/google/callback',
     passport.authenticate('google', { failureRedirect: '/#login', session: false }),
-    googleRedirect
+    googleRedirect,
   );
 }
 

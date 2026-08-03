@@ -31,9 +31,7 @@ async function resetAdminPassword () {
     process.exit(1);
   }
   if (newPassword.length < 12 || newPassword === 'Admin123!') {
-    console.error(
-      '❌ ADMIN_PASSWORD must be >= 12 chars and not the default Admin123!'
-    );
+    console.error('❌ ADMIN_PASSWORD must be >= 12 chars and not the default Admin123!');
     process.exit(1);
   }
 
@@ -47,15 +45,13 @@ async function resetAdminPassword () {
   if (!existing) {
     console.error(`❌ No user found with email ${adminEmail}.`);
     console.error(
-      '   Run `npm run seed` first (dev) or restart the server (prod) to seed the admin.'
+      '   Run `npm run seed` first (dev) or restart the server (prod) to seed the admin.',
     );
     process.exit(1);
   }
 
   if (existing.role !== 'admin') {
-    console.error(
-      `❌ User ${adminEmail} exists but has role "${existing.role}", not "admin".`
-    );
+    console.error(`❌ User ${adminEmail} exists but has role "${existing.role}", not "admin".`);
     process.exit(1);
   }
 
