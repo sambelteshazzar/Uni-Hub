@@ -401,11 +401,18 @@ const startServer = async () => {
 
     await connectDatabase();
 
-    // Ensure admin user exists
+    // Ensure admin user exists, and keep its password in sync with
+    // ADMIN_PASSWORD so that rotating the env var on Render takes effect
+    // without a manual DB update (the prior create-only logic meant the
+    // first-seeded hash stuck forever and rotating ADMIN_PASSWORD did nothing).
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@unihub.local';
     const adminPassword = process.env.ADMIN_PASSWORD || 'Admin123!';
     const bcrypt = require('bcryptjs');
     const { db } = require('./utils/db');
+    // TODO: security review — admin password sync-on-boot is a behavior change
+    // to a security-sensitive path. If ADMIN_PASSWORD is ever leaked, rotating
+    // it now actually takes effect (previously it did not). Re-validate that
+    // the env-var source on the deploy target is the only place this is set.
     const existingAdmin = await db('users').findOne({ email: adminEmail });
     if (!existingAdmin) {
       const hashedPassword = await bcrypt.hash(adminPassword, 12);
@@ -421,6 +428,18 @@ const startServer = async () => {
         isVerified: 1,
       });
       console.log(`✅ Admin user created: ${adminEmail}`);
+    } else if (
+      process.env.NODE_ENV === 'production' &&
+      adminPassword !== 'Admin123!'
+    ) {
+      const matches = await bcrypt.compare(adminPassword, existingAdmin.password);
+      if (!matches) {
+        const hashedPassword = await bcrypt.hash(adminPassword, 12);
+        await db('users').updateById(existingAdmin.id, {
+          password: hashedPassword,
+        });
+        console.log(`🔄 Admin password synced from ADMIN_PASSWORD env var for ${adminEmail}`);
+      }
     }
 
     // Create HTTP server

@@ -29,19 +29,21 @@ describe('XSS Defense — socket message sanitization', () => {
     const escaped = escapeHtml(payload);
 
     // The escaped form must never produce a working HTML tag or event
-    // handler. The escape map (sanitize.middleware.js:29-34) maps
-    // < -> <  > -> >  " -> "  ' -> &#x27;  & -> &.
+    // handler. The escape map (sanitize.middleware.js:29-34) maps:
+    //   & -> &   < -> <   > -> >
+    //   " -> "  ' -> &#x27;
     // An HTML parser decoding <img... produces *visible text*, not
     // a tag, and onerror="..." is decoded to the literal
     // text "onerror=", not a real attribute — so the payload is
     // rendered inert when assigned via innerHTML.
-    expect(escaped).not.toMatch(/<img\s+src=/i);   // never a real <img tag
-    expect(escaped).not.toMatch(/\sonerror=/i);     // never a real onerror attr
-    expect(escaped).not.toMatch(/<script/i);        // never a real script tag
-    // And the canonical escapes are present:
-    expect(escaped).toContain('<img');
-    expect(escaped).toContain('>');
-    expect(escaped).toContain('"');
+    expect(escaped).not.toMatch(/<img\s+src=/i); // never a real <img tag
+    expect(escaped).not.toMatch(/\sonerror=\s*["']/i); // never a real onerror attr
+    expect(escaped).not.toMatch(/<script/i); // never a real script tag
+    // And the canonical entity escapes are present:
+    expect(escaped).toContain('&lt;img');
+    expect(escaped).toContain('&gt;');
+    expect(escaped).toContain('&quot;');
+    expect(escaped).toContain('&#x27;');
   });
 
   test('escapeHtml preserves normal message text exactly', () => {
@@ -54,8 +56,8 @@ describe('XSS Defense — socket message sanitization', () => {
   test('escapeHtml handles apostrophes and quotes that could break attribute contexts', () => {
     const input = `She said "hi" and it's cool`;
     const escaped = escapeHtml(input);
-    expect(escaped).toContain('"');        // " is escaped to entity
-    expect(escaped).toContain('&#x27;');   // ' is escaped to entity
+    expect(escaped).toContain('&quot;'); // " is escaped to entity
+    expect(escaped).toContain('&#x27;'); // ' is escaped to entity
     // No raw, unescaped apostrophe or double-quote should survive —
     // i.e. neither appears outside of an existing entity. We verify
     // the canonical escaping took place.
@@ -79,7 +81,7 @@ describe('XSS Defense — socket message sanitization', () => {
     expect(escaped).not.toMatch(/<script/i);
     expect(escaped).not.toMatch(/<\/script/i);
     // The angle brackets are escaped to entities (visible text)
-    expect(escaped).toContain('<script>');
-    expect(escaped).toContain('</script>');
+    expect(escaped).toContain('&lt;script&gt;');
+    expect(escaped).toContain('&lt;/script&gt;');
   });
 });
