@@ -38,7 +38,26 @@ class AdminAuthManager {
         }
 
         if (response.data.token) {
-          StorageManager.set(STORAGE_KEYS.CURRENT_USER, { token: response.data.token, user });
+          // Write to unihub_session (STORAGE_KEYS.CURRENT_USER) in the SAME
+          // SHAPE that AuthManager.loadSession (js/modules/auth.js:26-46)
+          // expects: { token, user, expiresAt }. If `expiresAt` is omitted,
+          // the next page load evaluates `parsed.expiresAt > Date.now()`
+          // (which is `undefined > Date.now()` === false) and silently
+          // wipes the session via clearSession(). After the wipe, every
+          // admin-API call sends no Authorization header -> 401 ->
+          // misleading "Session expired" error thrown by api.request.
+          // The 24h window matches adminAuthManager's own session expiry
+          // (admin-auth.js verifySession, ~24h).
+          // TODO: security review — admin session storage shape must stay
+          // in sync with AuthManager.saveSession in js/modules/auth.js. The
+          // real fix is to consolidate the two auth managers (see design
+          // doc: docs/superpowers/specs/2026-08-03-admin-block-and-email-
+          // verification-design.md, "Out of scope").
+          StorageManager.set(STORAGE_KEYS.CURRENT_USER, {
+            token: response.data.token,
+            user,
+            expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+          });
         }
 
         const adminUser = { ...user, token: response.data.token, loginAt: new Date().toISOString() };

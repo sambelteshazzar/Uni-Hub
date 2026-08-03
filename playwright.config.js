@@ -17,6 +17,6 @@ module.exports = defineConfig({
   ],
   webServer: [
     { command: 'cd backend && node server.js', port: 5000, reuseExistingServer: true, timeout: 10000 },
-    { command: 'npx http-server -p 8000 -c-1 --cors', port: 8000, reuseExistingServer: true, timeout: 10000 },
+    { command: 'npx http-server . -p 8000 -c-1 --cors', port: 8000, reuseExistingServer: true, timeout: 10000 },
   ],
 });

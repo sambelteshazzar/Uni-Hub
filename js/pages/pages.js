@@ -34,8 +34,20 @@ const _pageSafeUrl = url => {
 const _requireAdmin = () => {
   const ammgr = typeof authManager !== 'undefined' ? authManager : null;
   const aamgr = typeof adminAuthManager !== 'undefined' ? adminAuthManager : null;
+  // NOTE: authManager.isAuthenticated is a BOOLEAN property, not a function
+  // (see js/modules/auth.js:11,34,86,100). Use the isLoggedIn() *function*
+  // instead of isAuthenticated(), otherwise calling `true()` throws
+  // `TypeError: ammgr.isAuthenticated is not a function`. This bug was
+  // latent for a long time because adminAuthManager.login used to write a
+  // session shape without `expiresAt` (admin-auth.js:41), causing
+  // AuthManager.loadSession to wipe the session on the next page reload
+  // — so `isAuthenticated` was always `false` on the admin route and the
+  // broken boolean-as-function branch never fired. The admin-auth.js
+  // fix (now adds `expiresAt`) makes loadSession accept the session and
+  // sets isAuthenticated=true, surfacing this second bug. Fix it here by
+  // using isLoggedIn() (a function) consistently.
   const backendAdmin =
-    ammgr && ammgr.isAuthenticated && ammgr.isAuthenticated() && ammgr.isAdmin && ammgr.isAdmin();
+    ammgr && ammgr.isLoggedIn && ammgr.isLoggedIn() && ammgr.isAdmin && ammgr.isAdmin();
   const legacyAdmin = aamgr && aamgr.isLoggedIn && aamgr.isLoggedIn();
   if (backendAdmin || legacyAdmin) {
     return true;
