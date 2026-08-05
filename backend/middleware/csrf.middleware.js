@@ -35,7 +35,18 @@ function validateCsrfToken (token) {
     .createHmac('sha256', CSRF_SECRET)
     .update(payload)
     .digest('hex');
-  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {return false;}
+  // timingSafeEqual throws RangeError "Input buffers must have the same
+  // byte length" when the two buffers differ in length. A malformed or
+  // tampered token whose signature isn't exactly 64 hex chars (the
+  // length of a hex-encoded SHA-256 digest) would crash here, and
+  // because validateCsrfToken runs inside csrfProtection the throw
+  // turned into an unhandled 500 instead of the intended 403. Compare
+  // lengths first; if they differ the token is invalid (and not
+  // constant-time-safe anyway — the secret is not what's leaking).
+  const sigBuf = Buffer.from(signature);
+  const expBuf = Buffer.from(expected);
+  if (sigBuf.length !== expBuf.length) {return false;}
+  if (!crypto.timingSafeEqual(sigBuf, expBuf)) {return false;}
   const expires = parseInt(parts[1], 10);
   if (isNaN(expires) || Date.now() > expires) {return false;}
   return true;

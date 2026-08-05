@@ -255,13 +255,18 @@ class AdminDashboard {
 
     const recentUserActivities = (this.recentUsers || []).slice(0, 2).map(u => ({
       icon: 'user',
-      text: `<strong>${u.fullName || 'User'}</strong> joined the platform`,
+      // u.fullName is backend user-controlled data (entry on signup /
+      // Google OAuth / seed) and several write paths bypass the
+      // sanitizeXss middleware — escape before innerHTML.
+      text: `<strong>${this._esc(u.fullName || 'User')}</strong> joined the platform`,
       time: u.createdAt || u.joinedDate,
     }));
 
     const logActivities = activities.slice(0, 5).map(a => ({
       icon: this._getActivityIcon(a.action),
-      text: a.action,
+      // a.action is free-text admin-supplied (adminAuthManager.logActivity
+      // stores whatever action string the caller passed). Escape it.
+      text: this._esc(a.action),
       time: a.timestamp,
     }));
 
@@ -271,7 +276,7 @@ class AdminDashboard {
 
     const items = allActivities.map(a => `
       <li class="admin-activity-item">
-        <div class="admin-activity-icon ${a.icon}">${this._getActivityIconSvg(a.icon)}</div>
+        <div class="admin-activity-icon ${this._esc(a.icon)}">${this._getActivityIconSvg(a.icon)}</div>
         <div class="admin-activity-body">
           <div class="admin-activity-text">${a.text}</div>
           <div class="admin-activity-time">${a.time ? Formatter.formatTimeAgo(a.time) : 'Just now'}</div>
@@ -288,6 +293,18 @@ class AdminDashboard {
         <ul class="admin-activity-feed">${items}</ul>
       </div>
     `;
+  }
+
+  // Centralized escape helper for admin-dashboard. SecurityUtils
+  // (js/utils/security.js) is the canonical XSS defense layer — these
+  // helpers resolve to SecurityUtils when available and fall back to
+  // identity string conversion otherwise so the render doesn't crash if
+  // a module-load race leaves SecurityUtils undefined.
+  _esc (v) {
+    if (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) {
+      return SecurityUtils.escapeHtml(String(v === null || v === undefined ? '' : v));
+    }
+    return String(v === null || v === undefined ? '' : v);
   }
 
   _getActivityIcon (action) {

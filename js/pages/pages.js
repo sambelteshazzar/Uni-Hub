@@ -4472,9 +4472,9 @@ font-size: 0.8rem;
   </div>
   </div>
   </td>
-  <td>${user.email}</td>
-  <td>${user.university || '-'}</td>
-  <td><span class="admin-role-badge ${user.role}">${user.role}</span></td>
+  <td>${_pageEsc(user.email)}</td>
+  <td>${_pageEsc(user.university || '-')}</td>
+  <td><span class="admin-role-badge ${_pageEsc(user.role)}">${_pageEsc(user.role)}</span></td>
   <td>
   <span class="admin-status-badge ${user.isSuspended ? 'cancelled' : 'delivered'}">
   ${user.isSuspended ? 'Suspended' : 'Active'}
@@ -4486,8 +4486,8 @@ font-size: 0.8rem;
   user.role === 'admin'
     ? ''
     : user.isSuspended
-      ? `<button class="btn btn-sm btn-success" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminUnbanUser('${user.id}')">Unban</button>`
-      : `<button class="btn btn-sm btn-danger" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminBanUser('${user.id}')">Ban</button>`
+      ? `<button class="btn btn-sm btn-success" style="padding: 4px 8px; font-size: 12px;" data-action="admin-unban" data-user-id="${_pageEsc(user.id)}">Unban</button>`
+      : `<button class="btn btn-sm btn-danger" style="padding: 4px 8px; font-size: 12px;" data-action="admin-ban" data-user-id="${_pageEsc(user.id)}">Ban</button>`
 }
   </div>
   </td>
@@ -4498,8 +4498,28 @@ font-size: 0.8rem;
   </tbody>
   </table>
   </div>`;
+
+    // Delegated click handler for the Ban/Unban buttons. Replaces the
+    // old inline onclick="Pages.adminBanUser('${user.id}')" pattern,
+    // which interpolated a raw backend string into a JS string literal
+    // inside an HTML attribute — triple context-breakout risk.
+    // tableBody was replaced via outerHTML above, so re-query the fresh
+    // .admin-table-container node (the original reference is detached).
+    const freshTable = mainContent.querySelector('.admin-table-container');
+    if (freshTable) {
+      freshTable.addEventListener('click', ev => {
+        const btn = ev.target.closest('[data-action]');
+        if (!btn) {return;}
+        const userId = btn.dataset.userId || '';
+        if (btn.dataset.action === 'admin-ban') {
+          Pages.adminBanUser(userId);
+        } else if (btn.dataset.action === 'admin-unban') {
+          Pages.adminUnbanUser(userId);
+        }
+      });
     }
   }
+}
 
   /**
    * Render Admin Products Page
@@ -4645,12 +4665,12 @@ font-size: 0.8rem;
     .map(
       order => `
   <tr>
-  <td><strong>${order.orderNumber}</strong></td>
-<td style="font-family:monospace;font-size:0.8rem;color:#0046be;">${order.trackingNumber || '—'}</td>
-  <td>${_pageEsc(order.customer.name)}</td>
-  <td>${Formatter.formatPrice(order.pricing.grandTotal)}</td>
-  <td>${Formatter.capitalize(order.payment.mode)}</td>
-  <td><span class="admin-status-badge ${order.status}">${Formatter.capitalize(order.status)}</span></td>
+  <td><strong>${_pageEsc(order.orderNumber || '')}</strong></td>
+<td style="font-family:monospace;font-size:0.8rem;color:#0046be;">${_pageEsc(order.trackingNumber || '—')}</td>
+  <td>${_pageEsc(order.customer?.name || 'N/A')}</td>
+  <td>${Formatter.formatPrice(order.pricing?.grandTotal ?? 0)}</td>
+  <td>${_pageEsc(Formatter.capitalize(order.payment?.mode || '') || '—')}</td>
+  <td><span class="admin-status-badge ${_pageEsc(order.status || '')}">${_pageEsc(Formatter.capitalize(order.status || '') || '—')}</span></td>
   <td>${Formatter.formatDate(order.createdAt)}</td>
   <td>
   <div class="table-actions">
@@ -4862,10 +4882,13 @@ font-size: 0.8rem;
     }
     try {
       if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
-        await api.request('/admin/users/' + userId + '/ban', {
-          method: 'PUT',
-          body: JSON.stringify({ action: 'ban', reason }),
-        });
+        // Use the api.admin.banUser helper (js/utils/api.js:373) instead of
+        // bypassing it with api.request — AGENTS.md requires all backend
+        // calls to go through js/utils/api.js. encodeURIComponent guards
+        // against path traversal / query injection from a malformed id
+        // (admin routes currently skip validateObjectId on the backend,
+        // see backend/routes/admin.routes.js:19-25).
+        await api.admin.banUser(encodeURIComponent(userId), reason);
       } else {
         authManager.banUser(userId, reason);
       }
@@ -4882,10 +4905,7 @@ font-size: 0.8rem;
     }
     try {
       if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
-        await api.request('/admin/users/' + userId + '/ban', {
-          method: 'PUT',
-          body: JSON.stringify({ action: 'unban' }),
-        });
+        await api.admin.unbanUser(encodeURIComponent(userId));
       } else {
         authManager.unbanUser(userId);
       }
@@ -5008,10 +5028,10 @@ font-size: 0.8rem;
           .map(
             a => `
           <tr>
-            <td>${new Date(a.timestamp).toLocaleString()}</td>
+            <td>${_pageEsc(new Date(a.timestamp).toLocaleString())}</td>
             <td>Admin</td>
-            <td>${a.action}</td>
-            <td>${JSON.stringify(a.details || {}).substring(0, 80)}</td>
+            <td>${_pageEsc(a.action)}</td>
+            <td>${_pageEsc(JSON.stringify(a.details || {}).substring(0, 80))}</td>
             <td><span style="padding:2px 8px;border-radius:4px;font-size:0.75rem;background:rgba(0,70,190,0.15);color:#93c5fd;">info</span></td>
           </tr>
         `,
@@ -5091,11 +5111,11 @@ font-size: 0.8rem;
         const sevStyle = severityColors[severity] || severityColors.info;
 
         return `<tr>
-        <td style="white-space:nowrap;font-size:0.85rem;">${time}</td>
-        <td>${user}</td>
-        <td><strong>${action}</strong></td>
-        <td style="font-size:0.85rem;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${details}">${details}</td>
-        <td><span style="padding:2px 8px;border-radius:4px;font-size:0.75rem;${sevStyle}">${severity}</span></td>
+        <td style="white-space:nowrap;font-size:0.85rem;">${_pageEsc(time)}</td>
+        <td>${_pageEsc(user)}</td>
+        <td><strong>${_pageEsc(action)}</strong></td>
+        <td style="font-size:0.85rem;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${_pageEsc(details)}">${_pageEsc(details)}</td>
+        <td><span style="padding:2px 8px;border-radius:4px;font-size:0.75rem;${sevStyle}">${_pageEsc(severity)}</span></td>
       </tr>`;
       })
       .join('');
