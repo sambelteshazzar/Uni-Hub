@@ -309,78 +309,109 @@ class API {
 
   /**
    * Products API
+   *
+   * Every helper that interpolates an id (or other backend-supplied
+   * string) into a URL path segment uses encodeURIComponent on it
+   * (AGENTS.md: do not bypass js/utils/api.js). For legitimate UUIDs
+   * encodeURIComponent is a no-op, so there is no behavioural
+   * change for valid input. The guard matters when a caller passes
+   * 'undefined' / 'null' (literal strings), '/', '%', or a tampered
+   * value: encodeURIComponent turns '/' into '%2F' so it stays inside
+   * one path segment and can't reach another route handler, and the
+   * backend's validateObjectId (product.routes.js:27-37,
+   * admin.routes.js) then rejects it as 400 'Invalid ID format'.
    */
   products = {
     getAll: params => this.get('/products', params),
-    getById: id => this.get(`/products/${id}`),
+    getById: id => this.get(`/products/${encodeURIComponent(id)}`),
     create: data => this.post('/products', data),
-    update: (id, data) => this.put(`/products/${id}`, data),
-    delete: id => this.delete(`/products/${id}`),
+    update: (id, data) => this.put(`/products/${encodeURIComponent(id)}`, data),
+    delete: id => this.delete(`/products/${encodeURIComponent(id)}`),
     getMyProducts: status => this.get('/products/seller/my-products', { status }),
   };
 
   /**
-   * Orders API
+   * Orders API — see products block for the encodeURIComponent rationale.
+   * `track` takes a trackingNumber rather than an id; tracking numbers may
+   * contain alphanumerics and dashes (UUIDs and similar) and the encoder
+   * is still correct for them. It is REQUIRED for any value that might
+   * otherwise contain reserved URL characters (rare but possible).
    */
   orders = {
     create: data => this.post('/orders', data),
     getMyOrders: () => this.get('/orders/my-orders'),
-    getById: id => this.get(`/orders/${id}`),
-    track: trackingNumber => this.get(`/orders/track/${trackingNumber}`),
-    completePayment: (id, transactionId) => this.post(`/orders/${id}/payment`, { transactionId }),
-    cancel: id => this.put(`/orders/${id}/cancel`),
-    updateStatus: (id, status, note) => this.put(`/orders/${id}/status`, { status, note }),
-    refund: (id, reason) => this.put(`/orders/${id}/status`, { status: 'refunded', note: reason }),
+    getById: id => this.get(`/orders/${encodeURIComponent(id)}`),
+    track: trackingNumber => this.get(`/orders/track/${encodeURIComponent(trackingNumber)}`),
+    completePayment: (id, transactionId) =>
+      this.post(`/orders/${encodeURIComponent(id)}/payment`, { transactionId }),
+    cancel: id => this.put(`/orders/${encodeURIComponent(id)}/cancel`),
+    updateStatus: (id, status, note) =>
+      this.put(`/orders/${encodeURIComponent(id)}/status`, { status, note }),
+    refund: (id, reason) =>
+      this.put(`/orders/${encodeURIComponent(id)}/status`, { status: 'refunded', note: reason }),
   };
 
   /**
-   * Verification API
+   * Verification API — `getStatus` interpolates two path params (studentId,
+   * university). Both can legitimately be short alphanumeric strings (e.g.
+   * ug, knust) but a user can supply arbitrary input via the public form,
+   * encodeURIComponent keeps it inside one segment.
    */
   verification = {
     submit: data => this.post('/verification', data),
     getStatus: (studentId, university) =>
-      this.get(`/verification/status/${studentId}/${university}`),
+      this.get(
+        `/verification/status/${encodeURIComponent(studentId)}/${encodeURIComponent(university)}`,
+      ),
     getMyStatus: () => this.get('/verification/me'),
   };
 
   /**
-   * Users API
+   * Users API — see products block for the encodeURIComponent rationale.
+   * These three are admin-only on the backend (user.routes.js:7-9).
    */
   users = {
-    getById: id => this.get(`/users/${id}`),
+    getById: id => this.get(`/users/${encodeURIComponent(id)}`),
     getAll: params => this.get('/users', params), // Admin only
-    update: (id, data) => this.put(`/users/${id}`, data), // Admin only
-    delete: id => this.delete(`/users/${id}`), // Admin only
+    update: (id, data) => this.put(`/users/${encodeURIComponent(id)}`, data), // Admin only
+    delete: id => this.delete(`/users/${encodeURIComponent(id)}`), // Admin only
   };
 
   /**
-   * Admin API
+   * Admin API — see products block for the encodeURIComponent rationale.
+   * All :id-bearing routes now also enforce validateObjectId on the
+   * backend (admin.routes.js), so the encoder here is the first line
+   * of defense and the middleware the second — defense in depth.
    */
   admin = {
     login: (email, password) => this.post('/auth/login', { email, password }),
     getStats: () => this.get('/admin/stats'),
     getProducts: params => this.get('/admin/products', params),
     createProduct: data => this.post('/admin/products', data),
-    updateProduct: (id, data) => this.put(`/admin/products/${id}`, data),
+    updateProduct: (id, data) => this.put(`/admin/products/${encodeURIComponent(id)}`, data),
     getAnalytics: () => this.get('/admin/analytics'),
-    deleteProduct: id => this.delete(`/admin/products/${id}`),
+    deleteProduct: id => this.delete(`/admin/products/${encodeURIComponent(id)}`),
     getOrders: params => this.get('/admin/orders', params),
     getActivity: params => this.get('/admin/activity', params),
     getActivityStats: () => this.get('/admin/activity/stats'),
     getOnlineUsers: () => this.get('/admin/online-users'),
-    approveProduct: id => this.put(`/admin/products/${id}/approve`),
-    rejectProduct: (id, reason) => this.put(`/admin/products/${id}/reject`, { reason }),
-    banUser: (id, reason) => this.put(`/admin/users/${id}/ban`, { action: 'ban', reason }),
-    unbanUser: id => this.put(`/admin/users/${id}/ban`, { action: 'unban' }),
+    approveProduct: id => this.put(`/admin/products/${encodeURIComponent(id)}/approve`),
+    rejectProduct: (id, reason) =>
+      this.put(`/admin/products/${encodeURIComponent(id)}/reject`, { reason }),
+    banUser: (id, reason) =>
+      this.put(`/admin/users/${encodeURIComponent(id)}/ban`, { action: 'ban', reason }),
+    unbanUser: id => this.put(`/admin/users/${encodeURIComponent(id)}/ban`, { action: 'unban' }),
     getPendingVerifications: () => this.get('/verification/pending'),
-    approveVerification: (id, notes) => this.put(`/verification/${id}/approve`, { notes }),
-    rejectVerification: (id, notes) => this.put(`/verification/${id}/reject`, { notes }),
+    approveVerification: (id, notes) =>
+      this.put(`/verification/${encodeURIComponent(id)}/approve`, { notes }),
+    rejectVerification: (id, notes) =>
+      this.put(`/verification/${encodeURIComponent(id)}/reject`, { notes }),
   };
 
   wishlist = {
     getAll: () => this.get('/wishlist'),
-    add: productId => this.post(`/wishlist/${productId}`),
-    remove: productId => this.delete(`/wishlist/${productId}`),
+    add: productId => this.post(`/wishlist/${encodeURIComponent(productId)}`),
+    remove: productId => this.delete(`/wishlist/${encodeURIComponent(productId)}`),
     clear: () => this.delete('/wishlist'),
   };
 
@@ -388,9 +419,9 @@ class API {
     getAll: params => this.get('/notifications', params),
     getUnreadCount: () => this.get('/notifications/unread-count'),
     create: data => this.post('/notifications', data),
-    markAsRead: id => this.put(`/notifications/${id}/read`),
+    markAsRead: id => this.put(`/notifications/${encodeURIComponent(id)}/read`),
     markAllAsRead: () => this.put('/notifications/read-all'),
-    delete: id => this.delete(`/notifications/${id}`),
+    delete: id => this.delete(`/notifications/${encodeURIComponent(id)}`),
     deleteAll: () => this.delete('/notifications/all'),
     deleteRead: () => this.delete('/notifications/read'),
   };

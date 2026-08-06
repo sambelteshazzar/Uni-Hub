@@ -4882,13 +4882,12 @@ font-size: 0.8rem;
     }
     try {
       if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
-        // Use the api.admin.banUser helper (js/utils/api.js:373) instead of
-        // bypassing it with api.request — AGENTS.md requires all backend
-        // calls to go through js/utils/api.js. encodeURIComponent guards
-        // against path traversal / query injection from a malformed id
-        // (admin routes currently skip validateObjectId on the backend,
-        // see backend/routes/admin.routes.js:19-25).
-        await api.admin.banUser(encodeURIComponent(userId), reason);
+        // Use api.admin.banUser (js/utils/api.js) which itself applies
+        // encodeURIComponent to the id — no need to encode here. Double
+        // encoding (% -> %25) would break backend path matching. The
+        // backend also enforces validateObjectId (admin.routes.js) as
+        // a second line of defense.
+        await api.admin.banUser(userId, reason);
       } else {
         authManager.banUser(userId, reason);
       }
@@ -4905,7 +4904,7 @@ font-size: 0.8rem;
     }
     try {
       if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
-        await api.admin.unbanUser(encodeURIComponent(userId));
+        await api.admin.unbanUser(userId);
       } else {
         authManager.unbanUser(userId);
       }
