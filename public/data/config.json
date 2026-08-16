@@ -5,7 +5,8 @@
 "name": "University of Ghana (UG)",
 "campus": "Legon, Accra",
 "region": "Greater Accra",
-"active": false
+"active": false,
+"logo": "/assets/logos/ug-logo.jpg"
 },
 {
 "id": "upsa",
@@ -19,21 +20,24 @@
 "name": "Ghana Institute of Management & Public Administration (GIMPA)",
 "campus": "Achimota, Accra",
 "region": "Greater Accra",
-"active": false
+"active": false,
+"logo": "/assets/logos/gimpa-logo.jpg"
 },
 {
 "id": "ashesi",
 "name": "Ashesi University",
 "campus": "Berekuso",
 "region": "Greater Accra",
-"active": false
+"active": false,
+"logo": "/assets/logos/ashesi-logo.jpg"
 },
 {
 "id": "atu",
 "name": "Accra Technical University (ATU)",
 "campus": "Accra",
 "region": "Greater Accra",
-"active": true
+"active": true,
+"logo": "/assets/logos/atu-logo.jpg"
 },
 {
 "id": "gctu",
@@ -47,35 +51,40 @@
 "name": "Central University",
 "campus": "Miotso, Greater Accra",
 "region": "Greater Accra",
-"active": false
+"active": false,
+"logo": "/assets/logos/central-logo.jpg"
 },
 {
 "id": "knust",
 "name": "Kwame Nkrumah University of Science & Technology (KNUST)",
 "campus": "Kumasi",
 "region": "Ashanti",
-"active": false
+"active": false,
+"logo": "/assets/logos/knust-logo.jpg"
 },
 {
 "id": "kstu",
 "name": "Kumasi Technical University (KsTU)",
 "campus": "Kumasi",
 "region": "Ashanti",
-"active": false
+"active": false,
+"logo": "/assets/logos/kstu-logo.jpg"
 },
 {
 "id": "ucc",
 "name": "University of Cape Coast (UCC)",
 "campus": "Cape Coast",
 "region": "Central",
-"active": false
+"active": false,
+"logo": "/assets/logos/ucc-logo.jpg"
 },
 {
 "id": "uew",
 "name": "University of Education, Winneba (UEW)",
 "campus": "Winneba",
 "region": "Central",
-"active": false
+"active": false,
+"logo": "/assets/logos/uew-logo.jpg"
 },
 {
 "id": "cctu",
@@ -96,14 +105,16 @@
 "name": "Takoradi Technical University (TTU)",
 "campus": "Sekondi-Takoradi",
 "region": "Western",
-"active": false
+"active": false,
+"logo": "/assets/logos/ttu-logo.jpg"
 },
 {
 "id": "uenr",
 "name": "University of Energy & Natural Resources (UENR)",
 "campus": "Sunyani",
 "region": "Bono",
-"active": false
+"active": false,
+"logo": "/assets/logos/uenr-logo.jpg"
 },
 {
 "id": "stu",
@@ -131,14 +142,16 @@
 "name": "University of Mines & Technology (UMaT)",
 "campus": "Tarkwa",
 "region": "Western",
-"active": false
+"active": false,
+"logo": "/assets/logos/umat-logo.jpg"
 },
 {
 "id": "ktu",
 "name": "Koforidua Technical University (KTU)",
 "campus": "Koforidua",
 "region": "Eastern",
-"active": false
+"active": false,
+"logo": "/assets/logos/koforidua-logo.jpg"
 },
 {
 "id": "vvu",
