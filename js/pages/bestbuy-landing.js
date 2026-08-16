@@ -21,7 +21,7 @@
       console.error('Error loading config:', error);
     }
 
-    // Build universities HTML
+// Build universities HTML
     let universitiesHTML = '';
     if (config.universities && config.universities.length > 0) {
       universitiesHTML = config.universities
@@ -32,17 +32,29 @@
             : 'Pages.showUniversityComingSoon(\'' + uni.name + '\'); return false;';
           const comingSoonBadge = isActive ? '' : '<span style="position:absolute;top:0.5rem;right:0.5rem;background:#eab308;color:#000;font-size:0.65rem;font-weight:600;padding:0.2rem 0.4rem;border-radius:0.25rem;text-transform:uppercase;letter-spacing:0.05em;">Coming Soon</span>';
           const countText = isActive ? (100 + i * 50) + '+ items' : 'Not yet available';
-const uniColors = ['#0046be', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899', '#ef4444', '#6b7280'];
-const uniColor = uniColors[i % uniColors.length];
-const uniIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="' + uniColor + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>';
-const uniBg = uniColor.replace('#', '');
-const r = parseInt(uniBg.substring(0,2),16);
-const g = parseInt(uniBg.substring(2,4),16);
-const b = parseInt(uniBg.substring(4,6),16);
-return (
-'<div class="bb-category-card" style="position:relative;' + (isActive ? '' : 'opacity:0.7;cursor:default;') + '" onclick="' + clickHandler + '">' +
-comingSoonBadge +
-'<div class="bb-category-icon" style="background:rgba(' + r + ',' + g + ',' + b + ',0.1)">' + uniIcon + '</div>' +
+
+          // Use real logo if available, fallback to generated SVG
+          let uniIcon;
+          let bgStyle = '';
+          if (uni.logo) {
+            uniIcon = '<img src="' + uni.logo + '" alt="' + uni.name + ' logo" width="28" height="28" style="display:block;object-fit:contain;" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'block\';" />' +
+                      '<svg viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.8" width="28" height="28" style="display:none;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>';
+            bgStyle = 'background:rgba(0,70,190,0.08)';
+          } else {
+            const uniColors = ['#0046be', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899', '#ef4444', '#6b7280'];
+            const uniColor = uniColors[i % uniColors.length];
+            uniIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="' + uniColor + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>';
+            const uniBg = uniColor.replace('#', '');
+            const r = parseInt(uniBg.substring(0,2),16);
+            const g = parseInt(uniBg.substring(2,4),16);
+            const b = parseInt(uniBg.substring(4,6),16);
+            bgStyle = 'background:rgba(' + r + ',' + g + ',' + b + ',0.1)';
+          }
+
+          return (
+            '<div class="bb-category-card" style="position:relative;' + (isActive ? '' : 'opacity:0.7;cursor:default;') + '" onclick="' + clickHandler + '">' +
+            comingSoonBadge +
+            '<div class="bb-category-icon" style="' + bgStyle + '">' + uniIcon + '</div>' +
             '<p class="bb-category-name">' +
             uni.name +
             '</p>' +
