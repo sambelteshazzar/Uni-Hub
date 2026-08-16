@@ -52,7 +52,7 @@ describe('Admin route :id validation (validateObjectId)', () => {
     'undefined',
     'null',
     '../',
-    "'; SELECT 1 --",
+    '"; SELECT 1 --',
     '12345', // 5 chars — neither UUID nor 24-hex
     'abcdefghijklmnopqrstuvwxyz012345', // 31 chars — wrong length
   ];
