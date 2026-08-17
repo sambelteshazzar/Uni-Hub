@@ -112,13 +112,7 @@
       '<div class="bb-hero-container" style="max-width: 80rem; margin: 0 auto; width: 100%; position: relative; z-index: 10;">' +
       '<div style="display: grid; grid-template-columns: 1fr; gap: 3rem; align-items: center;">' +
       '<div>' +
-      '<div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.875rem; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); border-radius: 9999px; margin-bottom: 1.5rem;">' +
-      '<span style="position: relative; display: flex; width: 8px; height: 8px;">' +
-      '<span style="position: absolute; inset: 0; border-radius: 50%; background: #ffce00; animation: ping 2s cubic-bezier(0,0,0.2,1) infinite;"></span>' +
-      '<span style="position: relative; display: block; width: 8px; height: 8px; border-radius: 50%; background: #ffce00;"></span>' +
-      '</span>' +
-      '<span style="font-size: 0.875rem; font-weight: 600; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em;">Global University Marketplace</span>' +
-      '</div>' +
+      
       '<h1 id="hero-animated-text" style="font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; color: #ffffff; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 1.5rem;">' +
       'MADE FOR <span style="color: #ffce00;">CAMPUS LIFE</span>' +
       '</h1>' +
