@@ -14,7 +14,7 @@ try {
   console.warn('Brevo not initialized:', err.message);
 }
 const FROM_EMAIL = process.env.NEWSLETTER_FROM_EMAIL || 'noreply@unihub.local';
-const FROM_NAME = 'Uni-Hub';
+const FROM_NAME = 'JERTS CART';
 const FRONTEND_URL = process.env.FRONTEND_URL?.split(',')[0]?.trim() || 'http://localhost:8000';
 
 function generateVerificationToken () {
@@ -37,7 +37,7 @@ async function sendVerificationEmail (email, token) {
       </head>
       <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; border-radius: 12px 12px 0 0; text-align: center;">
-          <h1 style="color: white; margin: 0; font-size: 28px;">Welcome to Uni-Hub! 🎓</h1>
+          <h1 style="color: white; margin: 0; font-size: 28px;">Welcome to JERTS CART! 🎓</h1>
         </div>
         <div style="background: #f9fafb; padding: 40px 20px; border-radius: 0 0 12px 12px;">
           <p style="font-size: 16px; margin-bottom: 24px;">Thanks for subscribing to our newsletter! Please confirm your email address to start receiving updates.</p>
@@ -54,7 +54,7 @@ async function sendVerificationEmail (email, token) {
   await brevoApiInstance.sendTransacEmail({
     sender: { email: FROM_EMAIL, name: FROM_NAME },
     to: [{ email }],
-    subject: 'Confirm your Uni-Hub newsletter subscription',
+    subject: 'Confirm your JERTS CART newsletter subscription',
     htmlContent,
   });
 }
@@ -82,7 +82,7 @@ async function sendWelcomeEmail (email) {
             <p style="margin: 0; font-size: 24px; font-weight: 700; color: #047857; letter-spacing: 2px;">WELCOME10</p>
             <p style="margin: 8px 0 0; font-size: 12px; color: #065f46;">10% off your first purchase</p>
           </div>
-          <p style="font-size: 14px; color: #6b7280;">Happy shopping (and selling)!<br>The Uni-Hub Team</p>
+          <p style="font-size: 14px; color: #6b7280;">Happy shopping (and selling)!<br>The JERTS CART Team</p>
         </div>
       </body>
     </html>
@@ -90,7 +90,7 @@ async function sendWelcomeEmail (email) {
   await brevoApiInstance.sendTransacEmail({
     sender: { email: FROM_EMAIL, name: FROM_NAME },
     to: [{ email }],
-    subject: 'You\'re confirmed! 🎉 Welcome to Uni-Hub',
+    subject: 'You\'re confirmed! 🎉 Welcome to JERTS CART',
     htmlContent,
   });
 }
