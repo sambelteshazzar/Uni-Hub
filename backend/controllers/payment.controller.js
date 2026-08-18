@@ -1,5 +1,5 @@
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
-const { db, mapOrderRow, toBool, fromBool } = require('../utils/db');
+const { db, mapOrderRow } = require('../utils/db');
 const { notifyPaymentVerified } = require('../utils/notificationHelper');
 const crypto = require('crypto');
 
@@ -304,7 +304,7 @@ exports.refundPayment = asyncHandler(async (req, res) => {
   }
 
   try {
-    const response = await fetch(`https://api.paystack.co/refund`, {
+    const response = await fetch('https://api.paystack.co/refund', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${secret}`,

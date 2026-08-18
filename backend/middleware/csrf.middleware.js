@@ -78,6 +78,7 @@ function csrfProtection (req, res, next) {
     '/api/newsletter/subscribe',
     '/api/newsletter/confirm',
     '/api/newsletter/unsubscribe',
+    '/api/payment/webhook',
   ];
   if (publicNewsletterEndpoints.includes(req.path)) {
     return next();
