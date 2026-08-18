@@ -53,31 +53,122 @@ class PaymentManager {
   }
 
   /**
-   * Initiate Mobile Money payment
+   * Initiate Mobile Money payment via Paystack Inline
    */
   async initiateMoMoPayment (payment) {
-    // Placeholder for Paystack integration
-    // In production, this would call Paystack API
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve({
-          success: true,
-          message: 'MoMo payment initiated',
+    if (!window.PaystackPop) {
+      console.error('PaystackPop not loaded. Add <script src="https://js.paystack.co/v1/inline.js"></script> to your HTML');
+      return {
+        success: false,
+        error: 'Paystack not loaded. Please refresh the page.',
+      };
+    }
+
+    if (!this.PAYSTACK_PUBLIC_KEY) {
+      console.warn('PAYSTACK_PUBLIC_KEY not set');
+      return {
+        success: false,
+        error: 'Payment gateway not configured. Contact support.',
+      };
+    }
+
+    const user = typeof authManager !== 'undefined' ? authManager.getCurrentUser() : null;
+    if (!user?.email) {
+      return {
+        success: false,
+        error: 'User not authenticated',
+      };
+    }
+
+    return new Promise((resolve, reject) => {
+      const handler = window.PaystackPop.setup({
+        key: this.PAYSTACK_PUBLIC_KEY,
+        email: user.email,
+        amount: Math.round(payment.amount * 100),
+        currency: 'GHS',
+        reference: payment.reference || `PAY-${Date.now()}`,
+        channels: ['mobile_money'],
+        metadata: {
+          orderId: payment.orderId,
           paymentId: payment.id,
-          instructions: 'Enter your MoMo number to complete payment',
-          reference: `PAY-${Date.now()}`,
-        });
-      }, 1000);
+          custom_fields: [
+            { display_name: 'Payment Method', variable_name: 'payment_method', value: 'MTN Mobile Money' },
+          ],
+        },
+        callback: (response) => {
+          resolve({
+            success: true,
+            message: 'Payment initiated. Complete on Paystack.',
+            reference: response.reference,
+            trans: response.trans,
+          });
+        },
+        onClose: () => {
+          reject(new Error('Payment cancelled by user'));
+        },
+      });
+      handler.openIframe();
     });
   }
 
   /**
-   * Initiate Telecel Cash payment
+   * Initiate Telecel Cash payment via Paystack Inline
    */
   async initiateTelecelCashPayment (payment) {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve({
+    if (!window.PaystackPop) {
+      console.error('PaystackPop not loaded. Add <script src="https://js.paystack.co/v1/inline.js"></script> to your HTML');
+      return {
+        success: false,
+        error: 'Paystack not loaded. Please refresh the page.',
+      };
+    }
+
+    if (!this.PAYSTACK_PUBLIC_KEY) {
+      console.warn('PAYSTACK_PUBLIC_KEY not set');
+      return {
+        success: false,
+        error: 'Payment gateway not configured. Contact support.',
+      };
+    }
+
+    const user = typeof authManager !== 'undefined' ? authManager.getCurrentUser() : null;
+    if (!user?.email) {
+      return {
+        success: false,
+        error: 'User not authenticated',
+      };
+    }
+
+    return new Promise((resolve, reject) => {
+      const handler = window.PaystackPop.setup({
+        key: this.PAYSTACK_PUBLIC_KEY,
+        email: user.email,
+        amount: Math.round(payment.amount * 100),
+        currency: 'GHS',
+        reference: payment.reference || `PAY-${Date.now()}`,
+        channels: ['mobile_money'],
+        metadata: {
+          orderId: payment.orderId,
+          paymentId: payment.id,
+          custom_fields: [
+            { display_name: 'Payment Method', variable_name: 'payment_method', value: 'Telecel Cash' },
+          ],
+        },
+        callback: (response) => {
+          resolve({
+            success: true,
+            message: 'Payment initiated. Complete on Paystack.',
+            reference: response.reference,
+            trans: response.trans,
+          });
+        },
+        onClose: () => {
+          reject(new Error('Payment cancelled by user'));
+        },
+      });
+      handler.openIframe();
+    });
+  }
           success: true,
           message: 'Telecel Cash payment initiated',
           paymentId: payment.id,
