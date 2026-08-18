@@ -5391,32 +5391,32 @@ font-size: 0.8rem;
 
   static _filesToDataUris (files) {
     return Promise.all(
-      files.map(
-        file =>
-          new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-              const img = new Image();
-              img.onload = () => {
-                const MAX_DIM = 600;
-                let w = img.width;
-                let h = img.height;
-                if (w > MAX_DIM || h > MAX_DIM) {
-                  const scale = MAX_DIM / Math.max(w, h);
-                  w = Math.round(w * scale);
-                  h = Math.round(h * scale);
-                }
-                const canvas = document.createElement('canvas');
-                canvas.width = w;
-                canvas.height = h;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, w, h);
-                resolve(canvas.toDataURL('image/jpeg', 0.6));
-};
-
-  /**
-   * Render Admin Newsletter Page
-   */
+      files.map(file => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = function () {
+            const img = new Image();
+            img.onload = function () {
+              const MAX_DIM = 600;
+              let w = img.width;
+              let h = img.height;
+              if (w > MAX_DIM || h > MAX_DIM) {
+                const scale = MAX_DIM / Math.max(w, h);
+                w = Math.round(w * scale);
+                h = Math.round(h * scale);
+              }
+              const canvas = document.createElement('canvas');
+              canvas.width = w;
+              canvas.height = h;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, w, h);
+              resolve(canvas.toDataURL('image/jpeg', 0.6));
+            };
+          };
+        });
+      })
+    );
+  }
   static async renderAdminNewsletter () {
     if (!_requireAdmin()) {return;}
     this.hideOriginalNavFooter();
@@ -5652,16 +5652,6 @@ font-size: 0.8rem;
       sendBtn.textContent = originalText;
     }
   }
-              img.onerror = () => resolve(reader.result);
-              img.src = reader.result;
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          }),
-      ),
-    );
-  }
-
   static _handleImageDrop (event) {
     const files = event.dataTransfer.files;
     this._handleImageFiles(files);

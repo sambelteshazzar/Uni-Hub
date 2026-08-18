@@ -388,26 +388,26 @@ CREATE TABLE IF NOT EXISTS newsletter_subscribers (
   email TEXT NOT NULL UNIQUE,
   source TEXT DEFAULT 'unknown',
   status TEXT DEFAULT 'pending' CHECK(status IN ('pending','active','unsubscribed','bounced')),
-  verification_token TEXT UNIQUE,
-  verified_at TEXT,
-  created_at TEXT DEFAULT (datetime('now')),
-  updated_at TEXT DEFAULT (datetime('now'))
+  verificationToken TEXT UNIQUE,
+  verifiedAt TEXT,
+  createdAt TEXT DEFAULT (datetime('now')),
+  updatedAt TEXT DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS email_campaigns (
   id TEXT PRIMARY KEY,
   subject TEXT NOT NULL,
-  html_content TEXT NOT NULL,
-  sent_at TEXT,
-  recipient_count INTEGER DEFAULT 0,
-  resend_id TEXT,
-  created_at TEXT DEFAULT (datetime('now'))
+  htmlContent TEXT NOT NULL,
+  sentAt TEXT,
+  recipientCount INTEGER DEFAULT 0,
+  resendId TEXT,
+  createdAt TEXT DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_newsletter_email ON newsletter_subscribers(email);
 CREATE INDEX IF NOT EXISTS idx_newsletter_status ON newsletter_subscribers(status);
 CREATE INDEX IF NOT EXISTS idx_newsletter_source ON newsletter_subscribers(source);
-CREATE INDEX IF NOT EXISTS idx_newsletter_token ON newsletter_subscribers(verification_token);
+CREATE INDEX IF NOT EXISTS idx_newsletter_token ON newsletter_subscribers(verificationToken);
 `;
 
 async function connectTurso () {
@@ -815,24 +815,24 @@ function connectLocal () {
           email TEXT NOT NULL UNIQUE,
           source TEXT DEFAULT 'unknown',
           status TEXT DEFAULT 'pending' CHECK(status IN ('pending','active','unsubscribed','bounced')),
-          verification_token TEXT UNIQUE,
-          verified_at TEXT,
-          created_at TEXT DEFAULT (datetime('now')),
-          updated_at TEXT DEFAULT (datetime('now'))
+          verificationToken TEXT UNIQUE,
+          verifiedAt TEXT,
+          createdAt TEXT DEFAULT (datetime('now')),
+          updatedAt TEXT DEFAULT (datetime('now'))
         );
         CREATE TABLE email_campaigns (
           id TEXT PRIMARY KEY,
           subject TEXT NOT NULL,
-          html_content TEXT NOT NULL,
-          sent_at TEXT,
-          recipient_count INTEGER DEFAULT 0,
-          resend_id TEXT,
-          created_at TEXT DEFAULT (datetime('now'))
+          htmlContent TEXT NOT NULL,
+          sentAt TEXT,
+          recipientCount INTEGER DEFAULT 0,
+          resendId TEXT,
+          createdAt TEXT DEFAULT (datetime('now'))
         );
         CREATE INDEX IF NOT EXISTS idx_newsletter_email ON newsletter_subscribers(email);
         CREATE INDEX IF NOT EXISTS idx_newsletter_status ON newsletter_subscribers(status);
         CREATE INDEX IF NOT EXISTS idx_newsletter_source ON newsletter_subscribers(source);
-        CREATE INDEX IF NOT EXISTS idx_newsletter_token ON newsletter_subscribers(verification_token);
+        CREATE INDEX IF NOT EXISTS idx_newsletter_token ON newsletter_subscribers(verificationToken);
       `);
     }
   } catch (migrationErr) {

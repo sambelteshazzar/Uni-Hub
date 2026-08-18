@@ -14,18 +14,17 @@ try {
 const FROM_EMAIL = process.env.NEWSLETTER_FROM_EMAIL || 'onboarding@resend.dev';
 const FRONTEND_URL = process.env.FRONTEND_URL?.split(',')[0]?.trim() || 'http://localhost:8000';
 
-function generateVerificationToken() {
+function generateVerificationToken () {
   return crypto.randomBytes(32).toString('hex');
 }
 
-async function sendVerificationEmail(email, token) {
+async function sendVerificationEmail (email, token) {
   const verifyUrl = `${FRONTEND_URL}/#newsletter/confirm?token=${token}`;
-  
+
   if (!resend) {
-    console.log('[Newsletter] Resend not configured, skipping verification email');
+    console.info('[Newsletter] Resend not configured, skipping verification email');
     return;
   }
-  
   await resend.emails.send({
     from: FROM_EMAIL,
     to: email,
@@ -56,9 +55,9 @@ async function sendVerificationEmail(email, token) {
   });
 }
 
-async function sendWelcomeEmail(email) {
+async function sendWelcomeEmail (email) {
   if (!resend) {
-    console.log('[Newsletter] Resend not configured, skipping welcome email');
+    console.info('[Newsletter] Resend not configured, skipping welcome email');
     return;
   }
   await resend.emails.send({
@@ -74,10 +73,10 @@ async function sendWelcomeEmail(email) {
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 20px; border-radius: 12px 12px 0 0; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 28px;">You\'re In! 🎉</h1>
+            <h1 style="color: white; margin: 0; font-size: 28px;">You're In! 🎉</h1>
           </div>
           <div style="background: #f9fafb; padding: 40px 20px; border-radius: 0 0 12px 12px;">
-            <p style="font-size: 16px; margin-bottom: 24px;">Your subscription is confirmed. You\'ll now receive the best deals, selling tips, and campus marketplace updates.</p>
+            <p style="font-size: 16px; margin-bottom: 24px;">Your subscription is confirmed. You'll now receive the best deals, selling tips, and campus marketplace updates.</p>
             <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center;">
               <p style="margin: 0 0 8px; font-size: 14px; color: #065f46;">Your welcome code:</p>
               <p style="margin: 0; font-size: 24px; font-weight: 700; color: #047857; letter-spacing: 2px;">WELCOME10</p>
@@ -127,10 +126,10 @@ exports.subscribe = asyncHandler(async (req, res) => {
       await db('newsletter_subscribers').updateById(existing.id, {
         status: 'pending',
         source: normalizedSource,
-        verification_token: generateVerificationToken(),
-        updated_at: new Date().toISOString(),
+        verificationToken: generateVerificationToken(),
+        updatedAt: new Date().toISOString(),
       });
-      await sendVerificationEmail(normalizedEmail, existing.verification_token);
+      await sendVerificationEmail(normalizedEmail, existing.verificationToken);
       return res.json({
         success: true,
         message: 'Re-subscription initiated. Please check your email to confirm.',
@@ -147,9 +146,9 @@ exports.subscribe = asyncHandler(async (req, res) => {
     email: normalizedEmail,
     source: normalizedSource,
     status: 'pending',
-    verification_token: verificationToken,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    verificationToken,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   });
 
   await sendVerificationEmail(normalizedEmail, verificationToken);
@@ -173,7 +172,7 @@ exports.confirm = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Verification token is required');
   }
 
-  const subscriber = await db('newsletter_subscribers').findOne({ verification_token: token });
+  const subscriber = await db('newsletter_subscribers').findOne({ verificationToken: token });
 
   if (!subscriber) {
     throw new ApiError(404, 'Invalid or expired verification link');
@@ -185,9 +184,9 @@ exports.confirm = asyncHandler(async (req, res) => {
 
   await db('newsletter_subscribers').updateById(subscriber.id, {
     status: 'active',
-    verification_token: null,
-    verified_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    verificationToken: null,
+    verifiedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   });
 
   await sendWelcomeEmail(subscriber.email);
@@ -207,9 +206,9 @@ exports.unsubscribe = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Email and verification token are required');
   }
 
-  const subscriber = await db('newsletter_subscribers').findOne({ 
+  const subscriber = await db('newsletter_subscribers').findOne({
     email: email.toLowerCase().trim(),
-    verification_token: token 
+    verificationToken: token,
   });
 
   if (!subscriber) {
@@ -218,8 +217,8 @@ exports.unsubscribe = asyncHandler(async (req, res) => {
 
   await db('newsletter_subscribers').updateById(subscriber.id, {
     status: 'unsubscribed',
-    verification_token: null,
-    updated_at: new Date().toISOString(),
+    verificationToken: null,
+    updatedAt: new Date().toISOString(),
   });
 
   res.json({
@@ -295,7 +294,7 @@ exports.sendCampaign = asyncHandler(async (req, res) => {
   for (let i = 0; i < emails.length; i += BATCH_SIZE) {
     const batch = emails.slice(i, i + BATCH_SIZE);
     try {
-      const result = await resend.emails.send({
+      const _result = await resend.emails.send({
         from: FROM_EMAIL,
         to: batch,
         subject,
@@ -311,11 +310,11 @@ exports.sendCampaign = asyncHandler(async (req, res) => {
   await db('email_campaigns').create({
     id: campaignId,
     subject,
-    html_content: htmlContent,
-    sent_at: new Date().toISOString(),
-    recipient_count: sent,
-    resend_id: null,
-    created_at: new Date().toISOString(),
+    htmlContent,
+    sentAt: new Date().toISOString(),
+    recipientCount: sent,
+    resendId: null,
+    createdAt: new Date().toISOString(),
   });
 
   res.json({
