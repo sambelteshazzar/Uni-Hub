@@ -5,18 +5,20 @@
 // Replaces the fragile polling-based module loader in index.html
 
 // Set API_URL for deployed environments (no backend)
-// On localhost, keep the default so backend calls work
-if (typeof window !== 'undefined' && !window.API_URL) {
-  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' && window.location.protocol !== 'file:') {
-    window.API_URL = 'https://uni-hub-bnxi.onrender.com/api';
-  } else {
-    window.API_URL = window.API_URL || 'https://uni-hub-bnxi.onrender.com/api';
+  // On localhost, keep the default so backend calls work
+  if (typeof window !== 'undefined' && !window.API_URL) {
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' && window.location.protocol !== 'file:') {
+      window.API_URL = 'https://uni-hub-bnxi.onrender.com/api';
+    } else {
+      window.API_URL = window.API_URL || 'https://uni-hub-bnxi.onrender.com/api';
+    }
   }
-}
 
-if (typeof window !== 'undefined' && !window.GOOGLE_CLIENT_ID) {
-  window.GOOGLE_CLIENT_ID = '';
-}
+  // GOOGLE_CLIENT_ID is now set in index.html before this script loads
+  // If not set, leave as empty string (Google Sign-In will be disabled)
+  if (typeof window !== 'undefined' && !window.GOOGLE_CLIENT_ID) {
+    window.GOOGLE_CLIENT_ID = '';
+  }
 
 /**
  * Module dependency graph - defines loading order
