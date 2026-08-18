@@ -16,7 +16,10 @@ const {
   refundPayment,
 } = require('../controllers/payment.controller');
 
-// All routes are protected
+// Webhook (no auth, raw body for signature verification) - MUST BE BEFORE protect()
+router.post('/webhook', express.raw({ type: 'application/json' }), handlePaystackWebhook);
+
+// All routes below are protected
 router.use(protect);
 
 router.post('/', requireVerified, initializePayment);
@@ -26,8 +29,5 @@ router.get('/:id', getPayment);
 
 // Admin refund
 router.post('/refund', requireVerified, refundPayment);
-
-// Webhook (no auth, raw body for signature verification)
-router.post('/webhook', express.raw({ type: 'application/json' }), handlePaystackWebhook);
 
 module.exports = router;
