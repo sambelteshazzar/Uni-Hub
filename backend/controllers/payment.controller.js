@@ -1,6 +1,7 @@
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { db, mapOrderRow, toBool, fromBool } = require('../utils/db');
 const { notifyPaymentVerified } = require('../utils/notificationHelper');
+const crypto = require('crypto');
 
 exports.initializePayment = asyncHandler(async (req, res) => {
   const { orderId, paymentMode } = req.body;
@@ -205,3 +206,154 @@ async function verifyTransactionWithProvider (payment, transactionId) {
   }
   return false;
 }
+
+exports.handlePaystackWebhook = asyncHandler(async (req, res) => {
+  const secret = process.env.PAYSTACK_SECRET_KEY;
+  if (!secret) {
+    console.error('PAYSTACK_SECRET_KEY not configured — webhook disabled');
+    return res.status(503).send('Payment gateway not configured');
+  }
+
+  const hash = crypto
+    .createHmac('sha512', secret)
+    .update(JSON.stringify(req.body))
+    .digest('hex');
+
+  if (hash !== req.headers['x-paystack-signature']) {
+    console.warn('Paystack webhook: invalid signature');
+    return res.status(400).send('Invalid signature');
+  }
+
+  const event = req.body;
+  if (event.event === 'charge.success') {
+    const data = event.data;
+    const reference = data.reference;
+    const amount = data.amount / 100; // pesewas to GHS
+    const channel = data.channel;
+    const paidAt = data.paid_at;
+
+    const payment = await db('payments').findOne({ transactionId: reference });
+
+    if (!payment) {
+      console.warn(`Paystack webhook: payment not found for reference ${reference}`);
+      return res.status(404).send('Payment not found');
+    }
+
+    if (payment.status === 'completed') {
+      console.info(`Paystack webhook: payment ${payment.id} already completed`);
+      return res.status(200).send('OK');
+    }
+
+    if (Math.abs(payment.amount - amount) > 0.01) {
+      console.error(`Paystack webhook: amount mismatch for ${reference}. Expected ${payment.amount}, got ${amount}`);
+      return res.status(400).send('Amount mismatch');
+    }
+
+    await db('payments').updateById(payment.id, {
+      status: 'completed',
+      transactionId: reference,
+      verifiedAt: new Date().toISOString(),
+      providerData: JSON.stringify({ channel, paidAt, ...data }),
+    });
+
+    const order = await db('orders').findById(payment.orderId);
+    if (order) {
+      await db('orders').updateById(order.id, {
+        payment_status: 'completed',
+        payment_transactionId: reference,
+        status: 'confirmed',
+      });
+
+      const io = req.app.get('io');
+      if (io) {
+        io.to(`user_${payment.userId}`).emit('payment:completed', {
+          paymentId: payment.id,
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+        });
+      }
+
+      notifyPaymentVerified(io, await db('payments').findById(payment.id), order);
+    }
+
+    console.info(`Paystack webhook: payment ${payment.id} verified via webhook`);
+  }
+
+  res.status(200).send('OK');
+});
+
+exports.refundPayment = asyncHandler(async (req, res) => {
+  const { paymentId, reason } = req.body;
+
+  if (!paymentId || !reason) {
+    throw new ApiError(400, 'Payment ID and reason are required');
+  }
+
+  const payment = await db('payments').findById(paymentId);
+  if (!payment) {
+    throw new ApiError(404, 'Payment not found');
+  }
+
+  if (payment.status !== 'completed') {
+    throw new ApiError(400, 'Only completed payments can be refunded');
+  }
+
+  const secret = process.env.PAYSTACK_SECRET_KEY;
+  if (!secret) {
+    throw new ApiError(503, 'Payment gateway not configured');
+  }
+
+  try {
+    const response = await fetch(`https://api.paystack.co/refund`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${secret}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        transaction: payment.transactionId,
+        amount: Math.round(payment.amount * 100),
+        customer_note: reason,
+        merchant_note: `Refund for payment ${paymentId}`,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.status === true) {
+      await db('payments').updateById(paymentId, {
+        status: 'refunded',
+        refundedAt: new Date().toISOString(),
+        refundReason: reason,
+        providerRefundData: JSON.stringify(data.data),
+      });
+
+      const order = await db('orders').findById(payment.orderId);
+      if (order) {
+        await db('orders').updateById(order.id, {
+          payment_status: 'refunded',
+          status: 'refunded',
+        });
+      }
+
+      const io = req.app.get('io');
+      if (io) {
+        io.to(`user_${payment.userId}`).emit('payment:refunded', {
+          paymentId: payment.id,
+          orderId: payment.orderId,
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: 'Refund processed successfully',
+        data: { refundId: data.data.id },
+      });
+    }
+
+    throw new ApiError(400, data.message || 'Refund failed');
+  } catch (err) {
+    console.error('Paystack refund error:', err);
+    throw new ApiError(500, 'Refund processing failed');
+  }
+});
