@@ -1,17 +1,20 @@
 const { db } = require('../utils/db');
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
-const { Resend } = require('resend');
 const crypto = require('crypto');
+const brevo = require('@getbrevo/brevo');
 
-let resend = null;
+let brevoApiInstance = null;
 try {
-  if (process.env.RESEND_API_KEY) {
-    resend = new Resend(process.env.RESEND_API_KEY);
+  if (process.env.BREVO_API_KEY) {
+    const apiInstance = new brevo.TransactionalEmailsApi();
+    apiInstance.authentications.apiKey.apiKey = process.env.BREVO_API_KEY;
+    brevoApiInstance = apiInstance;
   }
 } catch (err) {
-  console.warn('Resend not initialized:', err.message);
+  console.warn('Brevo not initialized:', err.message);
 }
-const FROM_EMAIL = process.env.NEWSLETTER_FROM_EMAIL || 'onboarding@resend.dev';
+const FROM_EMAIL = process.env.NEWSLETTER_FROM_EMAIL || 'noreply@unihub.local';
+const FROM_NAME = 'Uni-Hub';
 const FRONTEND_URL = process.env.FRONTEND_URL?.split(',')[0]?.trim() || 'http://localhost:8000';
 
 function generateVerificationToken () {
@@ -21,72 +24,74 @@ function generateVerificationToken () {
 async function sendVerificationEmail (email, token) {
   const verifyUrl = `${FRONTEND_URL}/#newsletter/confirm?token=${token}`;
 
-  if (!resend) {
-    console.info('[Newsletter] Resend not configured, skipping verification email');
+  if (!brevoApiInstance) {
+    console.info('[Newsletter] Brevo not configured, skipping verification email');
     return;
   }
-  await resend.emails.send({
-    from: FROM_EMAIL,
-    to: email,
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; border-radius: 12px 12px 0 0; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 28px;">Welcome to Uni-Hub! 🎓</h1>
+        </div>
+        <div style="background: #f9fafb; padding: 40px 20px; border-radius: 0 0 12px 12px;">
+          <p style="font-size: 16px; margin-bottom: 24px;">Thanks for subscribing to our newsletter! Please confirm your email address to start receiving updates.</p>
+          <div style="text-align: center; margin: 32px 0;">
+            <a href="${verifyUrl}" style="display: inline-block; background: #667eea; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px;">Confirm Subscription</a>
+          </div>
+          <p style="font-size: 14px; color: #6b7280; margin-top: 24px;">Or copy this link:<br><a href="${verifyUrl}" style="color: #667eea; word-break: break-all;">${verifyUrl}</a></p>
+          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
+          <p style="font-size: 12px; color: #9ca3af;">If you didn't subscribe, you can safely ignore this email.</p>
+        </div>
+      </body>
+    </html>
+  `;
+  await brevoApiInstance.sendTransacEmail({
+    sender: { email: FROM_EMAIL, name: FROM_NAME },
+    to: [{ email }],
     subject: 'Confirm your Uni-Hub newsletter subscription',
-    html: `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        </head>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; border-radius: 12px 12px 0 0; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 28px;">Welcome to Uni-Hub! 🎓</h1>
-          </div>
-          <div style="background: #f9fafb; padding: 40px 20px; border-radius: 0 0 12px 12px;">
-            <p style="font-size: 16px; margin-bottom: 24px;">Thanks for subscribing to our newsletter! Please confirm your email address to start receiving updates.</p>
-            <div style="text-align: center; margin: 32px 0;">
-              <a href="${verifyUrl}" style="display: inline-block; background: #667eea; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px;">Confirm Subscription</a>
-            </div>
-            <p style="font-size: 14px; color: #6b7280; margin-top: 24px;">Or copy this link:<br><a href="${verifyUrl}" style="color: #667eea; word-break: break-all;">${verifyUrl}</a></p>
-            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
-            <p style="font-size: 12px; color: #9ca3af;">If you didn't subscribe, you can safely ignore this email.</p>
-          </div>
-        </body>
-      </html>
-    `,
+    htmlContent,
   });
 }
 
 async function sendWelcomeEmail (email) {
-  if (!resend) {
-    console.info('[Newsletter] Resend not configured, skipping welcome email');
+  if (!brevoApiInstance) {
+    console.info('[Newsletter] Brevo not configured, skipping welcome email');
     return;
   }
-  await resend.emails.send({
-    from: FROM_EMAIL,
-    to: email,
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 20px; border-radius: 12px 12px 0 0; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 28px;">You're In! 🎉</h1>
+        </div>
+        <div style="background: #f9fafb; padding: 40px 20px; border-radius: 0 0 12px 12px;">
+          <p style="font-size: 16px; margin-bottom: 24px;">Your subscription is confirmed. You'll now receive the best deals, selling tips, and campus marketplace updates.</p>
+          <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center;">
+            <p style="margin: 0 0 8px; font-size: 14px; color: #065f46;">Your welcome code:</p>
+            <p style="margin: 0; font-size: 24px; font-weight: 700; color: #047857; letter-spacing: 2px;">WELCOME10</p>
+            <p style="margin: 8px 0 0; font-size: 12px; color: #065f46;">10% off your first purchase</p>
+          </div>
+          <p style="font-size: 14px; color: #6b7280;">Happy shopping (and selling)!<br>The Uni-Hub Team</p>
+        </div>
+      </body>
+    </html>
+  `;
+  await brevoApiInstance.sendTransacEmail({
+    sender: { email: FROM_EMAIL, name: FROM_NAME },
+    to: [{ email }],
     subject: 'You\'re confirmed! 🎉 Welcome to Uni-Hub',
-    html: `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        </head>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 20px; border-radius: 12px 12px 0 0; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 28px;">You're In! 🎉</h1>
-          </div>
-          <div style="background: #f9fafb; padding: 40px 20px; border-radius: 0 0 12px 12px;">
-            <p style="font-size: 16px; margin-bottom: 24px;">Your subscription is confirmed. You'll now receive the best deals, selling tips, and campus marketplace updates.</p>
-            <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center;">
-              <p style="margin: 0 0 8px; font-size: 14px; color: #065f46;">Your welcome code:</p>
-              <p style="margin: 0; font-size: 24px; font-weight: 700; color: #047857; letter-spacing: 2px;">WELCOME10</p>
-              <p style="margin: 8px 0 0; font-size: 12px; color: #065f46;">10% off your first purchase</p>
-            </div>
-            <p style="font-size: 14px; color: #6b7280;">Happy shopping (and selling)!<br>The Uni-Hub Team</p>
-          </div>
-        </body>
-      </html>
-    `,
+    htmlContent,
   });
 }
 
@@ -266,22 +271,22 @@ exports.sendCampaign = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Subject and HTML content are required');
   }
 
-  if (!resend) {
-    throw new ApiError(503, 'Email service not configured. Please set RESEND_API_KEY.');
+  if (!brevoApiInstance) {
+    throw new ApiError(503, 'Email service not configured. Please set BREVO_API_KEY.');
   }
 
   if (testEmail) {
-    await resend.emails.send({
-      from: FROM_EMAIL,
-      to: testEmail,
+    await brevoApiInstance.sendTransacEmail({
+      sender: { email: FROM_EMAIL, name: FROM_NAME },
+      to: [{ email: testEmail }],
       subject: `[TEST] ${subject}`,
-      html: htmlContent,
+      htmlContent,
     });
     return res.json({ success: true, message: 'Test email sent', data: { testEmail } });
   }
 
   const subscribers = await db('newsletter_subscribers').findAll({ status: 'active' });
-  const emails = subscribers.map(s => s.email);
+  const emails = subscribers.map(s => ({ email: s.email }));
 
   if (emails.length === 0) {
     return res.json({ success: true, message: 'No active subscribers', data: { sent: 0 } });
@@ -294,11 +299,11 @@ exports.sendCampaign = asyncHandler(async (req, res) => {
   for (let i = 0; i < emails.length; i += BATCH_SIZE) {
     const batch = emails.slice(i, i + BATCH_SIZE);
     try {
-      const _result = await resend.emails.send({
-        from: FROM_EMAIL,
+      await brevoApiInstance.sendTransacEmail({
+        sender: { email: FROM_EMAIL, name: FROM_NAME },
         to: batch,
         subject,
-        html: htmlContent,
+        htmlContent,
       });
       sent += batch.length;
     } catch (err) {
