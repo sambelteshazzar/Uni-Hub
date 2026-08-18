@@ -87,7 +87,7 @@ class _LandingPageLoader {
   // Newsletter form
   const form = document.getElementById('lp-newsletter-form');
   if (form) {
-    form.addEventListener('submit', e => {
+    form.addEventListener('submit', async e => {
       e.preventDefault();
       const input = form.querySelector('.lp-newsletter-input');
       const email = input?.value?.trim();
@@ -98,10 +98,31 @@ class _LandingPageLoader {
         return;
       }
 
-      // In production, this would POST to your mailing list API
-      input.value = '';
-      this.showFormMessage(form, 'Thanks for signing up!', 'success');
-      showToast('Thanks for signing up!', 'success');
+      try {
+        const response = await api.post('/newsletter/subscribe', { email, source: 'landing' });
+
+        if (response.success) {
+          input.value = '';
+          if (response.data?.status === 'already_subscribed') {
+            this.showFormMessage(form, 'You\'re already subscribed!', 'success');
+            showToast('You\'re already subscribed!', 'success');
+          } else if (response.data?.status === 'pending_confirmation') {
+            this.showFormMessage(form, 'Confirmation email already sent. Please check your inbox.', 'info');
+            showToast('Confirmation email already sent. Please check your inbox.', 'info');
+          } else if (response.data?.status === 'resubscribed') {
+            this.showFormMessage(form, 'Re-subscription initiated. Please check your email to confirm.', 'success');
+            showToast('Re-subscription initiated. Please check your email to confirm.', 'success');
+          } else {
+            this.showFormMessage(form, 'Thanks for signing up! Check your email to confirm.', 'success');
+            showToast('Thanks for signing up! Check your email to confirm.', 'success');
+          }
+        } else {
+          throw new Error(response.error || 'Subscription failed');
+        }
+      } catch (error) {
+        this.showFormMessage(form, 'Something went wrong. Please try again.', 'error');
+        showToast('Something went wrong. Please try again.', 'error');
+      }
     });
   }
   }

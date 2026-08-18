@@ -73,6 +73,16 @@ function csrfProtection (req, res, next) {
     return next();
   }
 
+  // Skip CSRF for public newsletter endpoints (no auth, no session)
+  const publicNewsletterEndpoints = [
+    '/api/newsletter/subscribe',
+    '/api/newsletter/confirm',
+    '/api/newsletter/unsubscribe',
+  ];
+  if (publicNewsletterEndpoints.includes(req.path)) {
+    return next();
+  }
+
   const csrfToken = req.headers['x-csrf-token'];
   if (!csrfToken) {
     return res.status(403).json({

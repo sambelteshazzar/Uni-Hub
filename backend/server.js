@@ -46,6 +46,7 @@ const deliveryRoutes = require('./routes/delivery.routes');
 const reportRoutes = require('./routes/report.routes');
 const messageRoutes = require('./routes/message.routes');
 const reviewRoutes = require('./routes/review.routes');
+const newsletterRoutes = require('./routes/newsletter.routes');
 const wishlistRoutes = require('./routes/wishlist.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const searchRoutes = require('./routes/search.routes');
@@ -347,6 +348,9 @@ app.use('/api/notifications', notificationRoutes);
 
 // Search routes (advanced search, suggestions, trending, history)
 app.use('/api/search', searchRoutes);
+
+// Newsletter routes
+app.use('/api/newsletter', newsletterRoutes);
 
 // ============================================
 // Error Handling

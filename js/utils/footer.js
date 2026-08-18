@@ -69,11 +69,27 @@ class FooterUtils {
     }
 
     try {
-      await this.simulateApiCall();
+      const source = form.id === 'footer-newsletter-form' ? 'footer' : 'landing';
+      const response = await api.post('/newsletter/subscribe', { email, source });
 
-      input.value = '';
-      this.showFormMessage(form, 'Thanks for subscribing! Check your email for confirmation.', 'success');
-      this.showNotification('Thanks for subscribing! 🎉 Check your email for confirmation.', 'success');
+      if (response.success) {
+        input.value = '';
+        if (response.data?.status === 'already_subscribed') {
+          this.showFormMessage(form, 'You\'re already subscribed!', 'success');
+          this.showNotification('You\'re already subscribed!', 'success');
+        } else if (response.data?.status === 'pending_confirmation') {
+          this.showFormMessage(form, 'Confirmation email already sent. Please check your inbox.', 'info');
+          this.showNotification('Confirmation email already sent. Please check your inbox.', 'info');
+        } else if (response.data?.status === 'resubscribed') {
+          this.showFormMessage(form, 'Re-subscription initiated. Please check your email to confirm.', 'success');
+          this.showNotification('Re-subscription initiated. Please check your email to confirm.', 'success');
+        } else {
+          this.showFormMessage(form, 'Thanks for subscribing! Check your email for confirmation.', 'success');
+          this.showNotification('Thanks for subscribing! 🎉 Check your email for confirmation.', 'success');
+        }
+      } else {
+        throw new Error(response.error || 'Subscription failed');
+      }
     } catch (error) {
       this.showFormMessage(form, 'Something went wrong. Please try again.', 'error');
       this.showNotification('Something went wrong. Please try again.', 'error');
@@ -83,15 +99,6 @@ class FooterUtils {
         submitBtn.textContent = originalText;
       }
     }
-  }
-
-  /**
-   * Simulate API call for demo purposes
-   */
-  simulateApiCall() {
-    return new Promise((resolve) => {
-      setTimeout(resolve, 1000);
-    });
   }
 
   /**

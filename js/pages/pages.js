@@ -195,6 +195,10 @@ class Pages {
     router.register('/track', () => this.renderTrackOrder());
     router.register('/verification', () => this.renderStudentVerification());
     router.register('/notifications', () => this.renderNotifications());
+    
+    // Newsletter
+    router.register('/newsletter/confirm', params => this.renderNewsletterConfirm(params));
+    router.register('/newsletter/confirmed', params => this.renderNewsletterConfirmed(params));
     console.log('✓ Main routes registered');
 
     // Product detail
@@ -217,6 +221,8 @@ class Pages {
     router.register('/admin/reports', () => this.renderAdminReports());
     router.register('/admin/activity', () => this.renderAdminActivity());
     router.register('/admin/regions', () => this.renderAdminRegions());
+
+    router.register('/admin/newsletter', () => this.renderAdminNewsletter());
 
     console.log('✓ All routes registered successfully');
   }
@@ -3860,6 +3866,12 @@ font-size: 0.8rem;
         icon: Icons.globe || Icons.chart,
         action: 'Pages.renderAdminRegions()',
       },
+      {
+        key: 'newsletter',
+        label: 'Newsletter',
+        icon: Icons.mail || Icons.email || '✉️',
+        action: 'Pages.renderAdminNewsletter()',
+      },
     ];
     return `
   <button class="admin-mobile-toggle" onclick="document.querySelector('.admin-sidebar').classList.toggle('open')">&#9776;</button>
@@ -5400,7 +5412,246 @@ font-size: 0.8rem;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, w, h);
                 resolve(canvas.toDataURL('image/jpeg', 0.6));
-              };
+};
+
+  /**
+   * Render Admin Newsletter Page
+   */
+  static async renderAdminNewsletter () {
+    if (!_requireAdmin()) {return;}
+    this.hideOriginalNavFooter();
+    document.body.style.background = '';
+    const mainContent = document.getElementById('main-content');
+
+    mainContent.innerHTML = `
+  <div class="admin-container">
+  ${this.getAdminSidebar('newsletter')}
+  <main class="admin-main">
+    <div class="admin-header">
+      <h1 class="admin-title">Newsletter Campaigns</h1>
+    </div>
+    <div id="newsletter-content" style="padding: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.25rem;">Subscriber Stats</h2>
+          <p style="color: #9ca3af; font-size: 0.875rem;">Manage your email subscribers and send campaigns</p>
+        </div>
+        <button class="btn btn-primary" onclick="Pages.showNewsletterCampaignModal()">Create Campaign</button>
+      </div>
+
+      <div class="admin-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        <div class="admin-stat-card" id="stat-total">
+          <div class="admin-stat-value">--</div>
+          <div class="admin-stat-label">Total Subscribers</div>
+        </div>
+        <div class="admin-stat-card" id="stat-active">
+          <div class="admin-stat-value">--</div>
+          <div class="admin-stat-label">Active</div>
+        </div>
+        <div class="admin-stat-card" id="stat-pending">
+          <div class="admin-stat-value">--</div>
+          <div class="admin-stat-label">Pending</div>
+        </div>
+        <div class="admin-stat-card" id="stat-unsubscribed">
+          <div class="admin-stat-value">--</div>
+          <div class="admin-stat-label">Unsubscribed</div>
+        </div>
+      </div>
+
+      <div class="admin-card" style="margin-bottom: 2rem;">
+        <div class="admin-card-header">
+          <h3>Recent Campaigns</h3>
+        </div>
+        <div style="padding: 1.5rem;">
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Subject</th>
+                  <th>Sent</th>
+                  <th>Recipients</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="campaigns-table-body">
+                <tr><td colspan="4" style="text-align: center; color: #9ca3af;">Loading campaigns...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <h3>Subscribers</h3>
+        </div>
+        <div style="padding: 1.5rem;">
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Source</th>
+                  <th>Status</th>
+                  <th>Subscribed</th>
+                </tr>
+              </thead>
+              <tbody id="subscribers-table-body">
+                <tr><td colspan="4" style="text-align: center; color: #9ca3af;">Loading subscribers...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  </div>
+`;
+
+    this._loadNewsletterStats();
+    this._loadNewsletterCampaigns();
+    this._loadNewsletterSubscribers();
+  }
+
+  static async _loadNewsletterStats () {
+    try {
+      const response = await api.get('/newsletter/stats');
+      if (response.success) {
+        const { total, active, pending, unsubscribed, bounced } = response.data;
+        document.getElementById('stat-total').querySelector('.admin-stat-value').textContent = total?.toLocaleString() || '0';
+        document.getElementById('stat-active').querySelector('.admin-stat-value').textContent = active?.toLocaleString() || '0';
+        document.getElementById('stat-pending').querySelector('.admin-stat-value').textContent = pending?.toLocaleString() || '0';
+        document.getElementById('stat-unsubscribed').querySelector('.admin-stat-value').textContent = (unsubscribed + bounced)?.toLocaleString() || '0';
+      }
+    } catch (error) {
+      console.error('Failed to load newsletter stats:', error);
+    }
+  }
+
+  static async _loadNewsletterCampaigns () {
+    try {
+      const response = await api.get('/newsletter/campaigns');
+      if (response.success) {
+        const tbody = document.getElementById('campaigns-table-body');
+        if (response.data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #9ca3af;">No campaigns sent yet</td></tr>';
+          return;
+        }
+        tbody.innerHTML = response.data.map(c => `
+          <tr>
+            <td>${c.subject}</td>
+            <td>${c.sent_at ? new Date(c.sent_at).toLocaleDateString() : '—'}</td>
+            <td>${(c.recipient_count || 0).toLocaleString()}</td>
+            <td><span class="status-badge status-delivered">Sent</span></td>
+          </tr>
+        `).join('');
+      }
+    } catch (error) {
+      console.error('Failed to load campaigns:', error);
+    }
+  }
+
+  static async _loadNewsletterSubscribers () {
+    try {
+      const response = await api.get('/newsletter/stats');
+      // We'll use the stats endpoint for now; a proper subscribers list endpoint would be better
+      const tbody = document.getElementById('subscribers-table-body');
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #9ca3af;">Use API for full subscriber list</td></tr>';
+    } catch (error) {
+      console.error('Failed to load subscribers:', error);
+    }
+  }
+
+  static showNewsletterCampaignModal () {
+    const modalHtml = `
+      <div class="modal-overlay" id="newsletter-campaign-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem;">
+        <div class="modal" style="background: white; border-radius: 12px; width: 100%; max-width: 700px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+          <div class="modal-header" style="padding: 1.5rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="font-size: 1.25rem; font-weight: 600;">Create Email Campaign</h2>
+            <button class="btn btn-ghost" onclick="Pages.closeNewsletterCampaignModal()" style="padding: 0.5rem;">${Icons.close || '×'}</button>
+          </div>
+          <div class="modal-body" style="padding: 1.5rem;">
+            <div style="margin-bottom: 1rem;">
+              <label style="display: block; font-weight: 500; margin-bottom: 0.5rem;">Subject *</label>
+              <input type="text" id="campaign-subject" class="input" placeholder="e.g., New Arrivals This Week!" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem;">
+            </div>
+            <div style="margin-bottom: 1rem;">
+              <label style="display: block; font-weight: 500; margin-bottom: 0.5rem;">HTML Content *</label>
+              <textarea id="campaign-content" class="input" placeholder="Enter HTML content..." style="width: 100%; min-height: 300px; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-family: monospace; font-size: 0.875rem; resize: vertical;"></textarea>
+            </div>
+            <div style="margin-bottom: 1rem;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: #6b7280;">
+                <input type="checkbox" id="campaign-test" style="width: 16px; height: 16px;"> Send test email to me first
+              </label>
+              <input type="email" id="campaign-test-email" class="input" placeholder="Test email address" style="width: 100%; max-width: 300px; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; margin-top: 0.5rem; display: none;">
+            </div>
+          </div>
+          <div class="modal-footer" style="padding: 1.5rem; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 1rem;">
+            <button class="btn btn-ghost" onclick="Pages.closeNewsletterCampaignModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="Pages.sendNewsletterCampaign()">Send Campaign</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const existing = document.getElementById('newsletter-campaign-modal');
+    if (existing) existing.remove();
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    document.getElementById('campaign-test').addEventListener('change', e => {
+      document.getElementById('campaign-test-email').style.display = e.target.checked ? 'block' : 'none';
+    });
+  }
+
+  static closeNewsletterCampaignModal () {
+    const modal = document.getElementById('newsletter-campaign-modal');
+    if (modal) modal.remove();
+  }
+
+  static async sendNewsletterCampaign () {
+    const subject = document.getElementById('campaign-subject').value.trim();
+    const htmlContent = document.getElementById('campaign-content').value.trim();
+    const isTest = document.getElementById('campaign-test').checked;
+    const testEmail = document.getElementById('campaign-test-email').value.trim();
+
+    if (!subject || !htmlContent) {
+      showToast('Please fill in all required fields', 'error');
+      return;
+    }
+
+    if (isTest && !testEmail) {
+      showToast('Please enter a test email address', 'error');
+      return;
+    }
+
+    const sendBtn = document.querySelector('#newsletter-campaign-modal .btn-primary');
+    const originalText = sendBtn.textContent;
+    sendBtn.disabled = true;
+    sendBtn.textContent = isTest ? 'Sending Test...' : 'Sending...';
+
+    try {
+      const response = await api.post('/newsletter/campaign', {
+        subject,
+        htmlContent,
+        testEmail: isTest ? testEmail : undefined,
+      });
+
+      if (response.success) {
+        showToast(isTest ? 'Test email sent!' : `Campaign sent to ${response.data.sent} subscribers`, 'success');
+        this.closeNewsletterCampaignModal();
+        this._loadNewsletterCampaigns();
+        this._loadNewsletterStats();
+      } else {
+        throw new Error(response.error || 'Failed to send campaign');
+      }
+    } catch (error) {
+      showToast('Failed to send campaign: ' + error.message, 'error');
+    } finally {
+      sendBtn.disabled = false;
+      sendBtn.textContent = originalText;
+    }
+  }
               img.onerror = () => resolve(reader.result);
               img.src = reader.result;
             };
@@ -6205,6 +6456,97 @@ font-size: 0.8rem;
         summary::-webkit-details-marker { display: none; }
         .faq-item[open] { border-color: var(--primary, #0046be); }
       </style>
+    `;
+
+    window.scrollTo(0, 0);
+  }
+
+  /**
+   * Render newsletter confirmation page (called when user clicks email link)
+   * @param {Object} params - Route params (includes token)
+   */
+  static async renderNewsletterConfirm (params) {
+    const mainContent = document.getElementById('main-content');
+    if (!mainContent) {
+      return;
+    }
+
+    const { token } = params;
+
+    if (!token) {
+      mainContent.innerHTML = `
+        <div class="container" style="max-width: 500px; margin: 0 auto; padding: 3rem 1.5rem; text-align: center;">
+          <div style="font-size: 4rem; margin-bottom: 1rem;">❌</div>
+          <h1 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-primary, #111827);">Invalid Link</h1>
+          <p style="color: var(--text-secondary, #6b7280); margin-bottom: 2rem;">This confirmation link is invalid or has expired.</p>
+          <button class="btn btn-primary" onclick="router.goToHash('/')">Go Home</button>
+        </div>
+      `;
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    mainContent.innerHTML = `
+      <div class="container" style="max-width: 500px; margin: 0 auto; padding: 3rem 1.5rem; text-align: center;">
+        <div style="font-size: 4rem; margin-bottom: 1rem;">⏳</div>
+        <h1 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-primary, #111827);">Confirming your subscription...</h1>
+        <p style="color: var(--text-secondary, #6b7280);">Please wait while we verify your email address.</p>
+      </div>
+    `;
+
+    window.scrollTo(0, 0);
+
+    try {
+      const response = await api.get('/newsletter/confirm', { token });
+      if (response.success) {
+        router.goToHash('/newsletter/confirmed?status=success');
+      } else {
+        router.goToHash('/newsletter/confirmed?status=error&message=' + encodeURIComponent(response.error || 'Confirmation failed'));
+      }
+    } catch (error) {
+      router.goToHash('/newsletter/confirmed?status=error&message=' + encodeURIComponent(error.message || 'Confirmation failed'));
+    }
+  }
+
+  /**
+   * Render newsletter confirmation result page
+   * @param {Object} params - Route params (includes status, message)
+   */
+  static renderNewsletterConfirmed (params) {
+    const mainContent = document.getElementById('main-content');
+    if (!mainContent) {
+      return;
+    }
+
+    const { status, message } = params;
+    let icon, title, description, buttonText, buttonAction;
+
+    if (status === 'success' || status === 'already_active') {
+      icon = '🎉';
+      title = status === 'already_active' ? 'Already Subscribed!' : 'Subscription Confirmed!';
+      description = status === 'already_active'
+        ? 'You\'re already on our newsletter list. Thanks for being part of Uni-Hub!'
+        : 'Welcome to Uni-Hub! You\'ll now receive the best deals, selling tips, and campus marketplace updates. Check your email for a welcome code!';
+      buttonText = 'Start Shopping';
+      buttonAction = "router.goToHash('/browse')";
+    } else {
+      icon = '❌';
+      title = 'Confirmation Failed';
+      description = message || 'Something went wrong. Please try subscribing again or contact support.';
+      buttonText = 'Try Again';
+      buttonAction = "router.goToHash('/')";
+    }
+
+    mainContent.innerHTML = `
+      <div class="container" style="max-width: 500px; margin: 0 auto; padding: 3rem 1.5rem; text-align: center;">
+        <div style="font-size: 4rem; margin-bottom: 1rem;">${icon}</div>
+        <h1 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-primary, #111827);">${title}</h1>
+        <p style="color: var(--text-secondary, #6b7280); margin-bottom: 2rem; line-height: 1.6;">${description}</p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+          <button class="btn btn-primary" onclick="${buttonAction}; return false;">${buttonText}</button>
+          <button class="btn btn-outline" onclick="router.goToHash('/')">Go Home</button>
+        </div>
+      </div>
     `;
 
     window.scrollTo(0, 0);
