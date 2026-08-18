@@ -169,15 +169,6 @@ class PaymentManager {
       handler.openIframe();
     });
   }
-          success: true,
-          message: 'Telecel Cash payment initiated',
-          paymentId: payment.id,
-          instructions: 'Enter your Telecel number to complete payment',
-          reference: `PAY-${Date.now()}`,
-        });
-      }, 1000);
-    });
-  }
 
   /**
    * Initiate Bank Transfer payment
