@@ -73,14 +73,15 @@ function csrfProtection (req, res, next) {
     return next();
   }
 
-  // Skip CSRF for public newsletter endpoints (no auth, no session)
-  const publicNewsletterEndpoints = [
+  // Skip CSRF for public endpoints (no auth, no session)
+  const publicEndpoints = [
     '/api/newsletter/subscribe',
     '/api/newsletter/confirm',
     '/api/newsletter/unsubscribe',
     '/api/payment/webhook',
+    '/api/auth/google/token',
   ];
-  if (publicNewsletterEndpoints.includes(req.path)) {
+  if (publicEndpoints.includes(req.path)) {
     return next();
   }
 
