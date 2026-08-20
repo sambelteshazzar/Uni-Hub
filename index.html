@@ -57,16 +57,17 @@
 <link rel="stylesheet" href="css/pages/seller.css?v=7" />
 <link rel="stylesheet" href="css/pages/bestbuy-auth.css?v=7" />
 <link rel="stylesheet" href="css/pages/bestbuy-dashboard.css?v=7" />
-  <link rel="stylesheet" href="css/pages/browse-modern.css?v=9" />
-
+<link rel="stylesheet" href="css/pages/browse-modern.css?v=9" />
+ 
   <!-- Sentry Loader Script - MUST BE FIRST -->
   <script
-    src="https://js.sentry-cdn.com/" crossorigin="anonymous"
+    src="https://js.sentry-cdn.com/"
+    crossorigin="anonymous"
+    data-dsn="{{SENTRY_DSN}}"
   ></script>
   
-  <!-- Configure Sentry public key before loader loads -->
+  <!-- Configure Sentry initialization -->
   <script>
-    window.SENTRY_DSN = window.SENTRY_PUBLIC_KEY || '';
     window.sentryOnLoad = function () {
       // Called when Sentry SDK finishes loading
       if (typeof window.initSentry === 'function') {
@@ -74,13 +75,7 @@
       }
     };
   </script>
-
-  <!-- Sentry Loader Script - MUST BE FIRST -->
-  <script
-    src="https://js.sentry-cdn.com/"
-    crossorigin="anonymous"
-  ></script>
-  
+ 
   <!-- Paystack Inline JS -->
   <script src="https://js.paystack.co/v1/inline.js"></script>
   <script src="js/config.js"></script>
