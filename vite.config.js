@@ -45,12 +45,18 @@ export default defineConfig({
   css: {
     devSourcemap: true,
   },
-  plugins: [
+plugins: [
     {
       name: 'static-app-build',
       closeBundle() {
         transpileDir(resolve(__dirname, 'js'), resolve(__dirname, 'dist/js'));
         cpSync(resolve(__dirname, 'css'), resolve(__dirname, 'dist/css'), { recursive: true });
+        cpSync(resolve(__dirname, 'public/components'), resolve(__dirname, 'dist/components'), { recursive: true });
+        // Only copy pages if it exists
+        const pagesSrc = resolve(__dirname, 'public/pages');
+        if (existsSync(pagesSrc)) {
+          cpSync(pagesSrc, resolve(__dirname, 'dist/pages'), { recursive: true });
+        }
 
         const srcHtmlPath = resolve(__dirname, 'index.html');
         const htmlPath = resolve(__dirname, 'dist/index.html');
