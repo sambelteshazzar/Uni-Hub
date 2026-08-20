@@ -1,22 +1,31 @@
-// Sentry Browser Instrumentation
-// Initialize Sentry as early as possible
+// Sentry Browser Instrumentation using Loader Script
+// This approach works without a bundler by using Sentry's Loader Script
 
-import * as Sentry from "@sentry/browser";
+// Global state for initialization
+let sentryCallbacks = [];
 
-export function initSentry() {
-  const dsn = import.meta.env.VITE_SENTRY_DSN;
-  
+// Called when Sentry Loader Script finishes loading
+window.sentryOnLoad = function () {
+  initSentryInternal();
+};
+
+function initSentryInternal() {
+  if (typeof Sentry === 'undefined') {
+    console.warn('Sentry: SDK not loaded yet');
+    return false;
+  }
+
+  const dsn = window.SENTRY_DSN || window.VITE_SENTRY_DSN;
   if (!dsn) {
-    console.log('Sentry: No VITE_SENTRY_DSN configured, skipping initialization');
+    console.log('Sentry: No SENTRY_DSN configured, skipping initialization');
     return false;
   }
 
   Sentry.init({
-    dsn: import.meta.env.VITE_SENTRY_DSN,
-    environment: import.meta.env.MODE,
-    release: import.meta.env.VITE_APP_VERSION || '1.0.0',
+    dsn: window.SENTRY_DSN || window.VITE_SENTRY_DSN,
+    environment: window.ENVIRONMENT || (window.location.hostname === 'localhost' ? 'development' : 'production'),
+    release: window.APP_VERSION || '1.0.0',
     
-    // Data collection
     dataCollection: {
       userInfo: true,
       httpHeaders: {
@@ -25,7 +34,6 @@ export function initSentry() {
       },
     },
 
-    // Integrations
     integrations: [
       Sentry.browserTracingIntegration(),
       Sentry.replayIntegration({
@@ -34,37 +42,37 @@ export function initSentry() {
       }),
     ],
 
-    // Tracing
-    tracesSampleRate: import.meta.env.MODE === 'development' ? 1.0 : 0.1,
+    tracesSampleRate: window.location.hostname === 'localhost' ? 1.0 : 0.1,
     tracePropagationTargets: ["localhost", /^https:\/\/uni-hub-bnxi\.onrender\.com/],
 
-    // Session Replay
-    replaysSessionSampleRate: import.meta.env.MODE === 'development' ? 1.0 : 0.1,
+    replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1.0,
-
-    // Logs
     enableLogs: true,
-
-    // Debug in development
-    debug: import.meta.env.MODE === 'development',
   });
 
   console.log('Sentry: Initialized successfully');
   return true;
 }
 
-export function captureException(error, context = {}) {
-  if (!import.meta.env.VITE_SENTRY_DSN) { return; }
+function initSentry() {
+  if (typeof Sentry !== 'undefined') {
+    return initSentryInternal();
+  }
+  return false;
+}
+
+function captureException(error, context = {}) {
+  if (typeof Sentry === 'undefined') return;
   Sentry.captureException(error, { extra: context });
 }
 
-export function captureMessage(message, level = 'info', context = {}) {
-  if (!import.meta.env.VITE_SENTRY_DSN) { return; }
+function captureMessage(message, level = 'info', context = {}) {
+  if (typeof Sentry === 'undefined') return;
   Sentry.captureMessage(message, { level, extra: context });
 }
 
-export function setUserContext(user) {
-  if (!user) { return; }
+function setUserContext(user) {
+  if (typeof Sentry === 'undefined' || !user) return;
   Sentry.setUser({
     id: user.id?.toString() || user._id?.toString(),
     email: user.email,
@@ -74,19 +82,33 @@ export function setUserContext(user) {
   });
 }
 
-export function clearUserContext() {
+function clearUserContext() {
+  if (typeof Sentry === 'undefined') return;
   Sentry.setUser(null);
 }
 
-export function addBreadcrumb(breadcrumb) {
+function addBreadcrumb(breadcrumb) {
+  if (typeof Sentry === 'undefined') return;
   Sentry.addBreadcrumb(breadcrumb);
 }
 
-export function startTransaction(name, op) {
+function startTransaction(name, op) {
+  if (typeof Sentry === 'undefined') return null;
   return Sentry.startSpan({ name, op });
 }
 
-export const sentry = Sentry;
+// Export functions for use by other modules
+export { 
+  initSentry,
+  captureException,
+  captureMessage,
+  setUserContext,
+  clearUserContext,
+  addBreadcrumb,
+  startTransaction
+};
+
+export const sentry = typeof Sentry !== 'undefined' ? Sentry : null;
 
 export default {
   initSentry,
@@ -96,5 +118,4 @@ export default {
   clearUserContext,
   addBreadcrumb,
   startTransaction,
-  sentry,
 };
