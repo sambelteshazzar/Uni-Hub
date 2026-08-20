@@ -59,26 +59,9 @@
 <link rel="stylesheet" href="css/pages/bestbuy-dashboard.css?v=7" />
 <link rel="stylesheet" href="css/pages/browse-modern.css?v=9" />
  
-  <!-- Sentry Loader Script - MUST BE FIRST -->
-  <script
-    src="https://js.sentry-cdn.com/"
-    crossorigin="anonymous"
-    data-dsn="{{SENTRY_DSN}}"
-  ></script>
-  
-  <!-- Configure Sentry initialization -->
-  <script>
-    window.sentryOnLoad = function () {
-      // Called when Sentry SDK finishes loading
-      if (typeof window.initSentry === 'function') {
-        window.initSentry();
-      }
-    };
-  </script>
- 
-  <!-- Paystack Inline JS -->
-  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <!-- Config -->
   <script src="js/config.js"></script>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
 </head>
 
 <body>

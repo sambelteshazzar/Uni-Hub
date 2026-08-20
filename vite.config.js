@@ -76,10 +76,7 @@ export default defineConfig({
         }
 
         // Replace Sentry DSN placeholder
-        const sentryDsn = process.env.SENTRY_DSN || 'https://public@o1.ingest.sentry.io/1';
-        if (sentryDsn) {
-          html = html.replace('{{SENTRY_DSN}}', sentryDsn);
-        }
+        // DSN is now in sentry.js, no placeholder replacement needed
 
         writeFileSync(htmlPath, html);
       },

@@ -1,30 +1,23 @@
-// Sentry Browser Instrumentation using Loader Script
-// This approach works without a bundler by using Sentry's Loader Script
+// Sentry Browser Instrumentation - npm package approach
+import * as Sentry from "@sentry/browser";
 
-// Global state for initialization
-let sentryCallbacks = [];
+// Global initialization state
+let sentryInitialized = false;
 
-// Called when Sentry Loader Script finishes loading
-window.sentryOnLoad = function () {
-  initSentryInternal();
-};
-
-function initSentryInternal() {
-  if (typeof Sentry === 'undefined') {
-    console.warn('Sentry: SDK not loaded yet');
-    return false;
-  }
-
-  const dsn = window.SENTRY_DSN || window.VITE_SENTRY_DSN;
+export function initSentry() {
+  if (sentryInitialized) return true;
+  
+  const dsn = import.meta.env.VITE_SENTRY_DSN || "https://743b5f1f6b5912894bb3278e60f6b7b5@o4509421306052608.ingest.us.sentry.io/4511942433964032";
+  
   if (!dsn) {
-    console.log('Sentry: No SENTRY_DSN configured, skipping initialization');
+    console.log('Sentry: No DSN configured, skipping initialization');
     return false;
   }
 
   Sentry.init({
-    dsn: window.SENTRY_DSN || window.VITE_SENTRY_DSN,
-    environment: window.ENVIRONMENT || (window.location.hostname === 'localhost' ? 'development' : 'production'),
-    release: window.APP_VERSION || '1.0.0',
+    dsn,
+    environment: import.meta.env.MODE || 'development',
+    release: import.meta.env.VITE_APP_VERSION || '1.0.0',
     
     dataCollection: {
       userInfo: true,
@@ -42,37 +35,30 @@ function initSentryInternal() {
       }),
     ],
 
-    tracesSampleRate: window.location.hostname === 'localhost' ? 1.0 : 0.1,
+    tracesSampleRate: import.meta.env.MODE === 'development' ? 1.0 : 0.1,
     tracePropagationTargets: ["localhost", /^https:\/\/uni-hub-bnxi\.onrender\.com/],
 
-    replaysSessionSampleRate: 0.1,
+    replaysSessionSampleRate: import.meta.env.MODE === 'development' ? 1.0 : 0.1,
     replaysOnErrorSampleRate: 1.0,
     enableLogs: true,
+    debug: import.meta.env.MODE === 'development',
   });
 
+  sentryInitialized = true;
   console.log('Sentry: Initialized successfully');
   return true;
 }
 
-function initSentry() {
-  if (typeof Sentry !== 'undefined') {
-    return initSentryInternal();
-  }
-  return false;
-}
-
-function captureException(error, context = {}) {
-  if (typeof Sentry === 'undefined') return;
+export function captureException(error, context = {}) {
   Sentry.captureException(error, { extra: context });
 }
 
-function captureMessage(message, level = 'info', context = {}) {
-  if (typeof Sentry === 'undefined') return;
+export function captureMessage(message, level = 'info', context = {}) {
   Sentry.captureMessage(message, { level, extra: context });
 }
 
-function setUserContext(user) {
-  if (typeof Sentry === 'undefined' || !user) return;
+export function setUserContext(user) {
+  if (!user) return;
   Sentry.setUser({
     id: user.id?.toString() || user._id?.toString(),
     email: user.email,
@@ -82,42 +68,100 @@ function setUserContext(user) {
   });
 }
 
-function clearUserContext() {
-  if (typeof Sentry === 'undefined') return;
+export function clearUserContext() {
   Sentry.setUser(null);
 }
 
-function addBreadcrumb(breadcrumb) {
-  if (typeof Sentry === 'undefined') return;
+export function addBreadcrumb(breadcrumb) {
   Sentry.addBreadcrumb(breadcrumb);
 }
 
-function startTransaction(name, op) {
-  if (typeof Sentry === 'undefined') return null;
+export function startTransaction(name, op) {
   return Sentry.startSpan({ name, op });
 }
 
-// Assign to window for global access (required by module loader)
-window.initSentry = initSentry;
-window.captureException = captureException;
-window.captureMessage = captureMessage;
-window.setUserContext = setUserContext;
-window.clearUserContext = clearUserContext;
-window.addBreadcrumb = addBreadcrumb;
-window.startTransaction = startTransaction;
+export function initSentry() {
+  if (sentryInitialized) return true;
+  return initSentryInternal();
+}
 
-// Export functions for use by other modules
-export { 
-  initSentry,
-  captureException,
-  captureMessage,
-  setUserContext,
-  clearUserContext,
-  addBreadcrumb,
-  startTransaction
-};
+function initSentryInternal() {
+  if (sentryInitialized) return true;
+  
+  const dsn = import.meta.env.VITE_SENTRY_DSN || "https://743b5f1f6b5912894bb3278e60f6b7b5@o4509421306052608.ingest.us.sentry.io/4511942433964032";
+  
+  if (!dsn) {
+    console.log('Sentry: No DSN configured, skipping initialization');
+    return false;
+  }
 
-export const sentry = typeof Sentry !== 'undefined' ? Sentry : null;
+  Sentry.init({
+    dsn,
+    environment: import.meta.env.MODE || 'development',
+    release: import.meta.env.VITE_APP_VERSION || '1.0.0',
+    
+    dataCollection: {
+      userInfo: true,
+      httpHeaders: {
+        request: true,
+        response: true,
+      },
+    },
+
+    integrations: [
+      Sentry.browserTracingIntegration(),
+      Sentry.replayIntegration({
+        maskAllText: true,
+        blockAllMedia: true,
+      }),
+    ],
+
+    tracesSampleRate: import.meta.env.MODE === 'development' ? 1.0 : 0.1,
+    tracePropagationTargets: ["localhost", /^https:\/\/uni-hub-bnxi\.onrender\.com/],
+
+    replaysSessionSampleRate: import.meta.env.MODE === 'development' ? 1.0 : 0.1,
+    replaysOnErrorSampleRate: 1.0,
+    enableLogs: true,
+    debug: import.meta.env.MODE === 'development',
+  });
+
+  sentryInitialized = true;
+  console.log('Sentry: Initialized successfully');
+  return true;
+}
+
+export function captureException(error, context = {}) {
+  Sentry.captureException(error, { extra: context });
+}
+
+export function captureMessage(message, level = 'info', context = {}) {
+  Sentry.captureMessage(message, { level, extra: context });
+}
+
+export function setUserContext(user) {
+  if (!user) return;
+  Sentry.setUser({
+    id: user.id?.toString() || user._id?.toString(),
+    email: user.email,
+    username: user.fullName,
+    university: user.university,
+    role: user.role,
+  });
+}
+
+export function clearUserContext() {
+  Sentry.setUser(null);
+}
+
+export function addBreadcrumb(breadcrumb) {
+  Sentry.addBreadcrumb(breadcrumb);
+}
+
+export function startTransaction(name, op) {
+  return Sentry.startSpan({ name, op });
+}
+
+export const sentry = Sentry;
 
 export default {
   initSentry,
