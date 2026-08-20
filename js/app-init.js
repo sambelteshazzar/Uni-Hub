@@ -33,7 +33,8 @@ const MODULE_DEPENDENCIES = {
     { name: 'formatters', file: 'js/utils/formatters.js', exposes: ['Formatter'] },
     { name: 'crypto', file: 'js/utils/crypto.js', exposes: ['CryptoUtil'] },
     { name: 'api', file: 'js/utils/api.js', exposes: ['api'] },
-      { name: 'footer', file: 'js/utils/footer.js', exposes: ['footerUtils'], required: false },
+    { name: 'sentry', file: 'js/utils/sentry.js', exposes: ['initSentry', 'captureException', 'captureMessage', 'setUserContext', 'clearUserContext', 'addBreadcrumb', 'startTransaction'] },
+    { name: 'footer', file: 'js/utils/footer.js', exposes: ['footerUtils'], required: false },
   ],
 
   // Level 2: Router and base app (depends on core)
