@@ -84,6 +84,13 @@ let io = null;
 // ============================================
 
 // Security headers
+const crypto = require('crypto');
+
+app.use((req, res, next) => {
+  res.locals.cspNonce = crypto.randomBytes(16).toString('base64');
+  next();
+});
+
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -91,14 +98,19 @@ app.use(
         defaultSrc: ['\'self\''],
         scriptSrc: [
           '\'self\'',
-          '\'unsafe-inline\'',
+          (req, res) => `'nonce-${res.locals.cspNonce}'`,
           'https://fonts.googleapis.com',
           'https://browser.sentry-cdn.com',
           'https://cdn.socket.io',
           'https://cdn.jsdelivr.net',
           'https://accounts.google.com',
+          'https://js.paystack.co',
         ],
-        styleSrc: ['\'self\'', '\'unsafe-inline\'', 'https://fonts.googleapis.com'],
+        styleSrc: [
+          '\'self\'',
+          (req, res) => `'nonce-${res.locals.cspNonce}'`,
+          'https://fonts.googleapis.com',
+        ],
         fontSrc: ['\'self\'', 'https://fonts.gstatic.com'],
         imgSrc: ['\'self\'', 'data:', 'https:', 'blob:'],
         connectSrc: [
@@ -113,6 +125,7 @@ app.use(
           'https://uni-hub-bnxi.onrender.com',
           'wss://uni-hub-bnxi.onrender.com',
           'https://api.cloudinary.com',
+          'https://api.paystack.co',
         ],
         frameAncestors: ['\'none\''],
         baseUri: ['\'self\''],

@@ -1,21 +1,16 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<meta
-name="description"
-content="JERTS CART - Buy and sell items within your university community"
-/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta
+    name="description"
+    content="JERTS CART - Buy and sell items within your university community"
+  />
   <meta name="theme-color" content="#0046be" />
- 
-
- <!-- Security Headers (Meta Tags) -->
- <!-- Note: frame-ancestors and X-Frame-Options cannot be set via <meta> — handled by vercel.json headers -->
- <!-- connect-src includes localhost:5000 + ws://localhost:5000 so dev and Playwright e2e can talk to the local backend at backend/server.js. Production deploys don't see localhost at runtime — the same CSP serves from the production origin and only ever talks to uni-hub-bnxi.onrender.com. -->
-   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.socket.io https://cdn.jsdelivr.net https://accounts.google.com https://js.paystack.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' http://localhost:5000 http://127.0.0.1:5000 ws://localhost:5000 ws://127.0.0.1:5000 https://uni-hub-bnxi.onrender.com wss://uni-hub-bnxi.onrender.com https://res.cloudinary.com https://cdn.jsdelivr.net https://cdn.socket.io https://accounts.google.com https://www.googleapis.com https://api.paystack.co; base-uri 'self'; form-action 'self';">
- <meta http-equiv="X-Content-Type-Options" content="nosniff">
- <meta name="referrer" content="strict-origin-when-cross-origin">
+  
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
 
     <link rel="icon" type="image/png" href="/favicon.png?v=8" />
     <title>JERTS CART - Student Marketplace</title>
@@ -66,10 +61,7 @@ content="JERTS CART - Buy and sell items within your university community"
 
   <!-- Paystack Inline JS -->
   <script src="https://js.paystack.co/v1/inline.js"></script>
-  <script>
-    // Set your Paystack public key here (or via build-time env replacement)
-    window.PAYSTACK_PUBLIC_KEY = 'pk_test_xxxxxxxxxxxx';
-  </script>
+  <script src="js/config.js"></script>
 </head>
 
 <body>
@@ -325,13 +317,7 @@ The global university marketplace for students to buy essentials.
 </footer>
 </div>
 
-<script>
-    // Google OAuth Client ID - Replace with your actual client ID from Google Cloud Console
-    window.GOOGLE_CLIENT_ID = '607049913987-rnvuedn1s20ima2rmam0lgvmolh2fr3t.apps.googleusercontent.com';
-    // Backend API URL - points to Render backend
-    window.API_URL = 'https://uni-hub-bnxi.onrender.com/api';
-  </script>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script type="module" src="js/app-init.js?v=17"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script type="module" src="js/app-init.js?v=17"></script>
 </body>
 </html>
