@@ -152,6 +152,7 @@ class PaymentManager {
           paymentId: payment.id,
           custom_fields: [
             { display_name: 'Payment Method', variable_name: 'payment_method', value: 'Telecel Cash' },
+            { display_name: 'Mobile Network', variable_name: 'mobile_network', value: 'Telecel' },
           ],
         },
         callback: (response) => {
@@ -215,10 +216,29 @@ class PaymentManager {
       };
     }
 
-    // Simulate payment verification
+    if (typeof api !== 'undefined') {
+      try {
+        const response = await api.post('/payment/verify', { paymentId, transactionId: payment.transactionId });
+        if (response.success) {
+          payment.status = 'completed';
+          payment.verifiedAt = new Date().toISOString();
+          this.updatePayment(payment);
+          return { success: true, message: 'Payment verified successfully', payment: payment };
+        } else {
+          payment.status = 'failed';
+          this.updatePayment(payment);
+          return { success: false, error: response.error || 'Payment verification failed' };
+        }
+      } catch (error) {
+        console.error('Payment verification error:', error);
+        return { success: false, error: error.message || 'Payment verification failed' };
+      }
+    }
+
+    // Offline fallback
     return new Promise(resolve => {
       setTimeout(() => {
-        const isSuccessful = Math.random() > 0.1; // 90% success rate
+        const isSuccessful = Math.random() > 0.1;
 
         if (isSuccessful) {
           payment.status = 'completed';

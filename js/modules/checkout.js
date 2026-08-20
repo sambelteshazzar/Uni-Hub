@@ -1092,6 +1092,24 @@ generateOrderNumber() {
       return { success: true, message: 'Cash payment confirmed - Pay on delivery', transactionId: `cash_${Date.now()}` };
     }
 
+    // Use real payment manager for MoMo, Telecel, Bank
+    if (typeof paymentManager !== 'undefined') {
+      try {
+        const paymentResult = await paymentManager.initializePayment(order, paymentMode);
+        if (paymentResult.success) {
+          // Payment initiated successfully - user will complete on Paystack
+          // The webhook will handle verification asynchronously
+          return { success: true, message: paymentResult.message, reference: paymentResult.reference, trans: paymentResult.trans };
+        } else {
+          return { success: false, error: paymentResult.error };
+        }
+      } catch (error) {
+        console.error('Payment initialization error:', error);
+        return { success: false, error: error.message || 'Payment initialization failed' };
+      }
+    }
+
+    // Fallback for offline mode
     return new Promise(resolve => {
       setTimeout(() => {
         const paymentSuccess = Math.random() > 0.1;
