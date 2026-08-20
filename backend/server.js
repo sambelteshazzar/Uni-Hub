@@ -257,6 +257,84 @@ const orderLimiter = rateLimit({
 });
 app.use('/api/orders/', orderLimiter);
 
+// Rate limiting for payment endpoints
+const paymentLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: 'Too many payment requests, please try again later.',
+  },
+});
+app.use('/api/payment/', paymentLimiter);
+
+// Rate limiting for product write endpoints (create/update/delete)
+const productWriteLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: 'Too many product changes, please try again later.',
+  },
+});
+app.use('/api/admin/products', productWriteLimiter);
+
+// Rate limiting for search endpoints
+const searchLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: 'Too many search requests, please slow down.',
+  },
+});
+app.use('/api/search/', searchLimiter);
+
+// Rate limiting for newsletter endpoints
+const newsletterLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: 'Too many subscription attempts, please try again later.',
+  },
+});
+app.use('/api/newsletter/subscribe', newsletterLimiter);
+
+// Rate limiting for admin endpoints (stricter)
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: 'Too many admin requests, please try again later.',
+  },
+});
+app.use('/api/admin/', adminLimiter);
+
+// Rate limiting for upload/file endpoints
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: 'Too many uploads, please try again later.',
+  },
+});
+app.use('/api/upload', uploadLimiter);
+
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));

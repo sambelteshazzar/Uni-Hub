@@ -18,7 +18,7 @@ function getPublicProfile (user) {
  * @access Public
  */
 exports.register = asyncHandler(async (req, res) => {
-  let { fullName, email, phone, password, university, level, hall } = req.body;
+  const { fullName, email, phone, password, university, level, hall } = req.body;
 
   if (!fullName && req.body.firstName && req.body.lastName) {
     fullName = req.body.firstName + ' ' + req.body.lastName;
