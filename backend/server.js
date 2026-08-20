@@ -184,7 +184,11 @@ app.use(
 // Stricter rate limiting for auth endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  // Production keeps the tight 20/15min guard. Development raises it so the
+  // documented `npx playwright test` suite (which makes ~20 auth calls for
+  // its login flows) can run against the local server without 429s.
+  // TODO: security review — confirm the dev/prod split below is acceptable.
+  max: process.env.NODE_ENV === 'production' ? 20 : 500,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -327,7 +331,13 @@ app.use('/api/upload', uploadLimiter);
 // Rate limiting - GENERAL (applied last, catches everything else)
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
+  // Production keeps a strict cap. Development relaxes it so the documented
+  // `npx playwright test` suite (which makes well over 100 /api calls) can
+  // run against the local server without tripping 429s.
+  // TODO: security review — confirm the dev/prod split below is acceptable.
+  max: process.env.NODE_ENV === 'production'
+    ? parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100
+    : 5000,
   standardHeaders: true,
   legacyHeaders: false,
   message: {

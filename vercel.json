@@ -75,10 +75,5 @@
         }
       ]
     }
-  ],
-  "functions": {
-    "src/api/**/*.js": {
-      "maxDuration": 30
-    }
-  }
+  ]
 }
