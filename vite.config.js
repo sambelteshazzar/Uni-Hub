@@ -52,33 +52,39 @@ export default defineConfig({
     {
       name: 'static-app-build',
       closeBundle() {
-      transpileDir(resolve(__dirname, 'js'), resolve(__dirname, 'dist/js'));
-      cpSync(resolve(__dirname, 'css'), resolve(__dirname, 'dist/css'), { recursive: true });
+        transpileDir(resolve(__dirname, 'js'), resolve(__dirname, 'dist/js'));
+        cpSync(resolve(__dirname, 'css'), resolve(__dirname, 'dist/css'), { recursive: true });
 
-      const srcHtmlPath = resolve(__dirname, 'index.html');
-      const htmlPath = resolve(__dirname, 'dist/index.html');
-      if (!existsSync(htmlPath)) {
-        cpSync(srcHtmlPath, htmlPath);
-      }
+        const srcHtmlPath = resolve(__dirname, 'index.html');
+        const htmlPath = resolve(__dirname, 'dist/index.html');
+        if (!existsSync(htmlPath)) {
+          cpSync(srcHtmlPath, htmlPath);
+        }
 
-      let html = readFileSync(htmlPath, 'utf-8');
-      const srcHtml = readFileSync(srcHtmlPath, 'utf-8');
+        let html = readFileSync(htmlPath, 'utf-8');
+        const srcHtml = readFileSync(srcHtmlPath, 'utf-8');
 
-      const viteBundleMatch = html.match(/<script[^>]*src="\/assets\/main-[^"]*\.js"[^>]*><\/script>/);
-      if (viteBundleMatch) {
-        html = html.replace(viteBundleMatch[0], '');
-      }
+        const viteBundleMatch = html.match(/<script[^>]*src="\/assets\/main-[^"]*\.js"[^>]*><\/script>/);
+        if (viteBundleMatch) {
+          html = html.replace(viteBundleMatch[0], '');
+        }
 
-      const cssLinks = srcHtml.match(/<link[^>]*href="css\/[^"]*"[^>]*\/?>/g);
-      if (cssLinks && !html.includes('css/variables.css')) {
-        html = html.replace('</head>', cssLinks.join('\n') + '\n</head>');
-      }
+        const cssLinks = srcHtml.match(/<link[^>]*href="css\/[^"]*"[^>]*\/?>/g);
+        if (cssLinks && !html.includes('css/variables.css')) {
+          html = html.replace('</head>', cssLinks.join('\n') + '\n</head>');
+        }
 
-      if (!html.includes('/js/app-init.js')) {
-        html = html.replace('</body>', appScripts.join('\n') + '\n</body>');
-      }
+        if (!html.includes('/js/app-init.js')) {
+          html = html.replace('</body>', appScripts.join('\n') + '\n</body>');
+        }
 
-      writeFileSync(htmlPath, html);
+        // Replace Sentry DSN placeholder
+        const sentryDsn = process.env.SENTRY_DSN || 'https://public@o1.ingest.sentry.io/1';
+        if (sentryDsn) {
+          html = html.replace('{{SENTRY_DSN}}', sentryDsn);
+        }
+
+        writeFileSync(htmlPath, html);
       },
     },
   ],
