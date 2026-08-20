@@ -16,11 +16,8 @@ function transpileDir(dir, outDir) {
     if (entry.isDirectory()) {
       transpileDir(src, dst);
     } else if (entry.name.endsWith('.js')) {
-      const { code } = transformSync(readFileSync(src, 'utf-8'), {
-        target: ['chrome80', 'safari13', 'firefox72'],
-        format: 'esm',
-      });
-      writeFileSync(dst, code);
+      // Copy JS files as-is since they're already ES modules
+      cpSync(src, dst);
     } else {
       cpSync(src, dst);
     }

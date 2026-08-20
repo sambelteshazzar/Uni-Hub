@@ -97,6 +97,15 @@ function startTransaction(name, op) {
   return Sentry.startSpan({ name, op });
 }
 
+// Assign to window for global access (required by module loader)
+window.initSentry = initSentry;
+window.captureException = captureException;
+window.captureMessage = captureMessage;
+window.setUserContext = setUserContext;
+window.clearUserContext = clearUserContext;
+window.addBreadcrumb = addBreadcrumb;
+window.startTransaction = startTransaction;
+
 // Export functions for use by other modules
 export { 
   initSentry,
