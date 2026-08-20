@@ -125,7 +125,7 @@ var socialBtnStyle =
   Pages._handleGoogleToken = async function (accessToken) {
     try {
       showToast('Signing in with Google...', 'info');
-      var res = await fetch('/api/auth/google/token', {
+      var res = await fetch((window.API_URL || '') + '/auth/google/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ access_token: accessToken })
