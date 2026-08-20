@@ -241,15 +241,8 @@ window.showToast = function (message, type, title, duration) {
 
 console.log('✓ Global modules and constants initialized');
 
-// ====================
-// SENTRY INITIALIZATION
-// ====================
-window.initSentry = function () {
-  if (typeof window.initSentry === 'function') {
-    // Already defined by sentry.js module
-    return window.initSentry();
-  }
-  console.log('Sentry: initSentry function not yet available');
-};
-
-console.log('✓ Global modules and constants initialized');
+// Sentry helpers (initSentry, captureException, captureMessage,
+// setUserContext, clearUserContext, addBreadcrumb, startTransaction) are
+// exposed on window by js/utils/sentry.js itself, which the module loader
+// requires. Do not re-declare them here — a stub that calls itself used to
+// cause infinite recursion on boot.
