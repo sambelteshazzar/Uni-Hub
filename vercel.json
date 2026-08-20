@@ -7,7 +7,9 @@
     { "source": "/favicon.png", "destination": "/public/favicon.png" },
     { "source": "/assets/(.*)", "destination": "/public/assets/$1" },
     { "source": "/data/(.*)", "destination": "/public/data/$1" },
-    { "source": "/((?!favicon\\.png|assets|data|css|js|public).*)", "destination": "/index.html" }
+    { "source": "/js/(.*)", "destination": "/public/js/$1" },
+    { "source": "/css/(.*)", "destination": "/public/css/$1" },
+    { "source": "/((?!favicon\\.png|assets|data|js|css|public).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
