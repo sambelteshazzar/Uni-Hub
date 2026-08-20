@@ -179,18 +179,7 @@ app.use(
   }),
 );
 
-// Rate limiting - general
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: {
-    success: false,
-    error: 'Too many requests, please try again later.',
-  },
-});
-app.use('/api/', limiter);
+// Rate limiting - SPECIFIC endpoints first (must come before general limiter)
 
 // Stricter rate limiting for auth endpoints
 const authLimiter = rateLimit({
@@ -334,6 +323,19 @@ const uploadLimiter = rateLimit({
   },
 });
 app.use('/api/upload', uploadLimiter);
+
+// Rate limiting - GENERAL (applied last, catches everything else)
+const limiter = rateLimit({
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: 'Too many requests, please try again later.',
+  },
+});
+app.use('/api/', limiter);
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
