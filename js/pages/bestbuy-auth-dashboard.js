@@ -133,7 +133,7 @@ var socialBtnStyle =
       var data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Google login failed');
       if (typeof authManager !== 'undefined') {
-        authManager.setSession(data.user, data.token);
+        authManager.saveSession(data.token, data.user);
       }
       showToast('Signed in with Google!', 'success');
       setTimeout(function () { window.location.hash = '#/browse'; }, 500);
