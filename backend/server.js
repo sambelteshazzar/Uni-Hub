@@ -175,7 +175,16 @@ app.use(
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-CSRF-Token',
+      // Sentry browser SDK injects these tracing headers on outgoing fetches
+      // (js/utils/sentry.js tracePropagationTargets). Without them, preflight
+      // fails and every sentry-traced request (e.g. Google sign-in) is blocked.
+      'sentry-trace',
+      'baggage',
+    ],
   }),
 );
 
