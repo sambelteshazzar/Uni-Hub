@@ -200,6 +200,12 @@ class ModuleLoader {
    * Initialize the application after modules are loaded
    */
   async initializeApp() {
+    // Initialize Sentry first
+    if (typeof window.initSentry === 'function') {
+      window.initSentry();
+      console.log('✓ Sentry initialized');
+    }
+
     // Initialize app - use window.* because ES6 module scope doesn't have bare globals
     if (window.app && window.app.init) {
       await window.app.init();

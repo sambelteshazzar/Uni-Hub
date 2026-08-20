@@ -9,14 +9,13 @@ function initSentry () {
   }
 
   Sentry.init({
-    dsn,
+    dsn: process.env.SENTRY_DSN,
     environment: process.env.NODE_ENV || 'development',
-    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.2 : 1.0,
-    replaysSessionSampleRate: 0.1,
-    replaysOnErrorSampleRate: 1.0,
+    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+    profilesSampleRate: 0.1,
+    enableLogs: true,
     integrations: [
-      Sentry.httpIntegration(),
-      Sentry.expressIntegration(),
+      new (require('@sentry/profiling-node')).nodeProfilingIntegration(),
     ],
   });
 
@@ -27,6 +26,7 @@ function initSentry () {
 
 function captureException (error, context = {}) {
   if (!process.env.SENTRY_DSN) { return; }
+  const Sentry = require('@sentry/node');
   Sentry.captureException(error, {
     extra: context,
   });
@@ -34,6 +34,7 @@ function captureException (error, context = {}) {
 
 function captureMessage (message, level = 'info', context = {}) {
   if (!process.env.SENTRY_DSN) { return; }
+  const Sentry = require('@sentry/node');
   Sentry.captureMessage(message, {
     level,
     extra: context,
@@ -42,8 +43,9 @@ function captureMessage (message, level = 'info', context = {}) {
 
 function setUserContext (user) {
   if (!process.env.SENTRY_DSN || !user) { return; }
+  const Sentry = require('@sentry/node');
   Sentry.setUser({
-    id: user._id?.toString(),
+    id: user._id?.toString() || user.id?.toString(),
     email: user.email,
     username: user.fullName,
     university: user.university,
@@ -55,6 +57,7 @@ function requestHandler () {
   if (!process.env.SENTRY_DSN) {
     return (req, res, next) => next();
   }
+  const Sentry = require('@sentry/node');
   return Sentry.setupExpressErrorHandler().requestHandler || ((req, res, next) => next());
 }
 
@@ -62,6 +65,7 @@ function errorHandler () {
   if (!process.env.SENTRY_DSN) {
     return (err, req, res, next) => next(err);
   }
+  const Sentry = require('@sentry/node');
   return Sentry.setupExpressErrorHandler().errorHandler || ((err, req, res, next) => next(err));
 }
 

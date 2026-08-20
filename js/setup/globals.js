@@ -240,3 +240,16 @@ window.showToast = function (message, type, title, duration) {
 };
 
 console.log('✓ Global modules and constants initialized');
+
+// ====================
+// SENTRY INITIALIZATION
+// ====================
+window.initSentry = function () {
+  if (typeof window.initSentry === 'function') {
+    // Already defined by sentry.js module
+    return window.initSentry();
+  }
+  console.log('Sentry: initSentry function not yet available');
+};
+
+console.log('✓ Global modules and constants initialized');

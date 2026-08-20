@@ -23,7 +23,8 @@
   "dependencies": {
     "@getbrevo/brevo": "^6.0.3",
     "@libsql/client": "^0.17.3",
-    "@sentry/node": "^10.50.0",
+    "@sentry/node": "^10.70.0",
+    "@sentry/profiling-node": "^10.70.0",
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^12.9.0",
     "cloudinary": "^2.10.0",

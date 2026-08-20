@@ -1,82 +1,100 @@
-/* exported sentryManager */
-class SentryManager {
-  constructor () {
-    this.initialized = false;
+// Sentry Browser Instrumentation
+// Initialize Sentry as early as possible
+
+import * as Sentry from "@sentry/browser";
+
+export function initSentry() {
+  const dsn = import.meta.env.VITE_SENTRY_DSN;
+  
+  if (!dsn) {
+    console.log('Sentry: No VITE_SENTRY_DSN configured, skipping initialization');
+    return false;
   }
 
-  init () {
-    const dsn = this._getDSN();
-    if (!dsn) {
-      console.log('Sentry: No DSN configured, skipping frontend init');
-      return;
-    }
+  Sentry.init({
+    dsn: import.meta.env.VITE_SENTRY_DSN,
+    environment: import.meta.env.MODE,
+    release: import.meta.env.VITE_APP_VERSION || '1.0.0',
+    
+    // Data collection
+    dataCollection: {
+      userInfo: true,
+      httpHeaders: {
+        request: true,
+        response: true,
+      },
+    },
 
-    try {
-      const Sentry = window.Sentry;
-      if (!Sentry) { return; }
+    // Integrations
+    integrations: [
+      Sentry.browserTracingIntegration(),
+      Sentry.replayIntegration({
+        maskAllText: true,
+        blockAllMedia: true,
+      }),
+    ],
 
-      Sentry.init({
-        dsn,
-        environment: this._getEnv(),
-        tracesSampleRate: this._getEnv() === 'production' ? 0.2 : 1.0,
-        replaysSessionSampleRate: 0.1,
-        replaysOnErrorSampleRate: 1.0,
-      });
+    // Tracing
+    tracesSampleRate: import.meta.env.MODE === 'development' ? 1.0 : 0.1,
+    tracePropagationTargets: ["localhost", /^https:\/\/uni-hub-bnxi\.onrender\.com/],
 
-      this.initialized = true;
-      console.log('Sentry: Frontend initialized');
-    } catch (error) {
-      console.error('Sentry: Failed to initialize', error);
-    }
-  }
+    // Session Replay
+    replaysSessionSampleRate: import.meta.env.MODE === 'development' ? 1.0 : 0.1,
+    replaysOnErrorSampleRate: 1.0,
 
-  setUser (user) {
-    if (!this.initialized || !window.Sentry) { return; }
-    try {
-      window.Sentry.setUser({
-        id: user._id || user.id,
-        email: user.email,
-        username: user.fullName,
-        university: user.university,
-        role: user.role,
-      });
-    } catch (e) { /* ignore */ }
-  }
+    // Logs
+    enableLogs: true,
 
-  clearUser () {
-    if (!this.initialized || !window.Sentry) { return; }
-    try {
-      window.Sentry.setUser(null);
-    } catch (e) { /* ignore */ }
-  }
+    // Debug in development
+    debug: import.meta.env.MODE === 'development',
+  });
 
-  captureException (error, context) {
-    if (!this.initialized || !window.Sentry) { return; }
-    try {
-      window.Sentry.captureException(error, { extra: context || {} });
-    } catch (e) { /* ignore */ }
-  }
-
-  captureMessage (message, level) {
-    if (!this.initialized || !window.Sentry) { return; }
-    try {
-      window.Sentry.captureMessage(message, level || 'info');
-    } catch (e) { /* ignore */ }
-  }
-
-  _getDSN () {
-    const meta = document.querySelector('meta[name="sentry-dsn"]');
-    if (meta) { return meta.getAttribute('content'); }
-    return window.__SENTRY_DSN__ || '';
-  }
-
-  _getEnv () {
-    return window.__NODE_ENV__ || 'development';
-  }
+  console.log('Sentry: Initialized successfully');
+  return true;
 }
 
-const sentryManager = new SentryManager();
-window.sentryManager = sentryManager;
-if (typeof window !== 'undefined' && typeof window.dispatchEvent !== 'undefined') {
-  window.dispatchEvent(new Event('module-loaded', { detail: 'SentryManager' }));
+export function captureException(error, context = {}) {
+  if (!import.meta.env.VITE_SENTRY_DSN) { return; }
+  Sentry.captureException(error, { extra: context });
 }
+
+export function captureMessage(message, level = 'info', context = {}) {
+  if (!import.meta.env.VITE_SENTRY_DSN) { return; }
+  Sentry.captureMessage(message, { level, extra: context });
+}
+
+export function setUserContext(user) {
+  if (!user) { return; }
+  Sentry.setUser({
+    id: user.id?.toString() || user._id?.toString(),
+    email: user.email,
+    username: user.fullName,
+    university: user.university,
+    role: user.role,
+  });
+}
+
+export function clearUserContext() {
+  Sentry.setUser(null);
+}
+
+export function addBreadcrumb(breadcrumb) {
+  Sentry.addBreadcrumb(breadcrumb);
+}
+
+export function startTransaction(name, op) {
+  return Sentry.startSpan({ name, op });
+}
+
+export const sentry = Sentry;
+
+export default {
+  initSentry,
+  captureException,
+  captureMessage,
+  setUserContext,
+  clearUserContext,
+  addBreadcrumb,
+  startTransaction,
+  sentry,
+};
