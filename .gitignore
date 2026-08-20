@@ -58,3 +58,4 @@ temp/
 /favicon.png
 /data
 .vercel
+.env*
