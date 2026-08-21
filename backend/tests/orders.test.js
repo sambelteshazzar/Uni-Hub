@@ -68,6 +68,21 @@ describe('Orders API — inventory state machine', () => {
       expect(second.status).toBe(400);
       expect(second.body.error).toMatch(/no longer available/i);
     });
+
+    it('rejects non-positive-integer quantities (total manipulation)', async () => {
+      for (const quantity of [0, -1, 2.5, 'x']) {
+        const res = await request(app)
+          .post('/api/orders')
+          .set('Authorization', `Bearer ${buyerToken}`)
+          .send({
+            items: [{ productId, quantity }],
+            delivery: { mode: 'inperson', address: 'test' },
+            payment: { mode: 'cash' },
+          });
+        expect(res.status).toBe(400);
+        expect(res.body.error).toMatch(/quantity/i);
+      }
+    });
   });
 
   describe('POST /api/orders/:id/payment', () => {
@@ -76,7 +91,18 @@ describe('Orders API — inventory state machine', () => {
       orderId = res.body.data.id || res.body.data._id;
     });
 
-    it('flips product from "reserved" to "sold" after cash payment', async () => {
+    // Real flow: payments must be initialized (creating a payments record)
+    // before completion can verify them.
+    const initPayment = async () =>
+      request(app)
+        .post('/api/payment')
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send({ orderId, paymentMode: 'cash' });
+
+    it('records cash payment as pending until confirmed on delivery', async () => {
+      const initRes = await initPayment();
+      expect(initRes.status).toBe(201);
+
       const payRes = await request(app)
         .post(`/api/orders/${orderId}/payment`)
         .set('Authorization', `Bearer ${buyerToken}`)
@@ -84,10 +110,49 @@ describe('Orders API — inventory state machine', () => {
 
       expect(payRes.status).toBe(200);
       expect(payRes.body.success).toBe(true);
+      expect(payRes.body.message).toMatch(/upon delivery/i);
+
+      // Cash settles out-of-band: inventory stays reserved and the order
+      // remains payment-pending until an admin closes it out on delivery.
+      const { getDb } = require('../config/database');
+      const product = getDb().prepare('SELECT status FROM products WHERE id = ?').get(productId);
+      expect(product.status).toBe('reserved');
+      const order = getDb().prepare('SELECT payment_status FROM orders WHERE id = ?').get(orderId);
+      expect(order.payment_status).toBe('pending');
+    });
+
+    it('rejects momo completion when provider verification is unavailable', async () => {
+      const initRes = await request(app)
+        .post('/api/payment')
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send({ orderId, paymentMode: 'momo' });
+      expect(initRes.status).toBe(201);
+
+      const payRes = await request(app)
+        .post(`/api/orders/${orderId}/payment`)
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send({ transactionId: 'MOMO-TEST-1' });
+
+      // No PAYSTACK_SECRET_KEY in tests -> cannot verify -> must fail closed.
+      expect(payRes.status).toBe(400);
+
+      const { getDb } = require('../config/database');
+      const order = getDb().prepare('SELECT payment_status FROM orders WHERE id = ?').get(orderId);
+      expect(order.payment_status).toBe('pending');
+    });
+
+    it('rejects completion when no payment was initialized (fail closed)', async () => {
+      const payRes = await request(app)
+        .post(`/api/orders/${orderId}/payment`)
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send({ transactionId: 'CASH-TEST-2' });
+
+      expect(payRes.status).toBe(404);
+      expect(payRes.body.success).toBe(false);
 
       const { getDb } = require('../config/database');
       const product = getDb().prepare('SELECT status FROM products WHERE id = ?').get(productId);
-      expect(product.status).toBe('sold');
+      expect(product.status).toBe('reserved');
     });
   });
 

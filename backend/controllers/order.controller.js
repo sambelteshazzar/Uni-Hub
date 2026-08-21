@@ -27,6 +27,20 @@ exports.createOrder = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Payment information is required');
   }
 
+  // TODO: security review — order input is untrusted; quantities must be
+  // positive integers or totals can be manipulated (e.g. negative quantity
+  // reduces grandTotal). Normalize here so all downstream math is safe.
+  for (const item of items) {
+    if (!item || typeof item.productId !== 'string' || !item.productId.trim()) {
+      throw new ApiError(400, 'Each order item must include a valid productId');
+    }
+    const quantity = Number(item.quantity);
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) {
+      throw new ApiError(400, 'Item quantity must be a whole number between 1 and 99');
+    }
+    item.quantity = quantity;
+  }
+
   const productIds = items.map(item => item.productId);
   const dbProducts = await db('products').find({ id: { $in: productIds } });
 
@@ -328,8 +342,16 @@ exports.completePayment = asyncHandler(async (req, res) => {
 
   const payments = await db('payments').find({ orderId: order.id });
   const payment = payments[0];
+
+  // TODO: security review — fail closed. Without an initialized payment
+  // record there is nothing to verify, so never fall through to marking the
+  // order as paid (previously missing records skipped all checks).
+  if (!payment) {
+    throw new ApiError(404, 'No payment has been initialized for this order');
+  }
+
   const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
-  if (payment && (payment.mode === 'momo' || payment.mode === 'telecel' || payment.mode === 'bank') && PAYSTACK_SECRET_KEY) {
+  if ((payment.mode === 'momo' || payment.mode === 'telecel' || payment.mode === 'bank') && PAYSTACK_SECRET_KEY) {
     try {
       const response = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(transactionId)}`, {
         headers: {
@@ -341,16 +363,25 @@ exports.completePayment = asyncHandler(async (req, res) => {
       if (!(data.status === true && data.data && data.data.status === 'success')) {
         throw new ApiError(400, 'Transaction could not be verified with the payment provider');
       }
+      // TODO: security review — verify the paid amount matches the order
+      // total. Paystack reports minor units (pesewas). Without this check a
+      // small successful transaction could be replayed to settle any order.
+      const paidAmount = data.data.amount / 100;
+      if (typeof paidAmount !== 'number' || Number.isNaN(paidAmount) ||
+        Math.abs(payment.amount - paidAmount) > 0.01) {
+        console.warn(`Payment amount mismatch for order ${order.id}: expected ${payment.amount}, got ${paidAmount}`);
+        throw new ApiError(400, 'Paid amount does not match the order total');
+      }
     } catch (err) {
       if (err instanceof ApiError) {throw err;}
       console.error('Paystack verification error:', err);
       throw new ApiError(400, 'Payment provider verification failed');
     }
-  } else if (payment && payment.mode !== 'cash') {
+  } else if (payment.mode !== 'cash') {
     throw new ApiError(400, 'Payment verification is required for this payment mode');
   }
 
-  if (payment && payment.mode === 'cash') {
+  if (payment.mode === 'cash') {
     await db('orders').updateById(order.id, {
       payment_status: 'pending',
       payment_transactionId: transactionId,
