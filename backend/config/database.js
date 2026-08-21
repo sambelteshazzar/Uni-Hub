@@ -16,6 +16,20 @@ const IS_TURSO = !!(TURSO_URL && TURSO_AUTH_TOKEN);
 let db = null;
 let tursoClient = null;
 
+// Single source of truth for the activity_logs action enum. Shared by the
+// base schema and by rebuild migrations (existing DBs keep their original
+// CHECK constraint — see migrateActivityLogs below).
+const ACTIVITY_LOGS_ACTIONS_SQL = [
+  'login', 'logout', 'signup', 'purchase',
+  'product_create', 'product_update', 'product_delete',
+  'review_create', 'message_send', 'wishlist_add',
+  'profile_update', 'password_change',
+  'admin_ban', 'admin_approve', 'admin_reject', 'search',
+  // Server-side audit trail + payouts (2026-08-21):
+  'admin_refund', 'payout_request', 'payout_approve', 'payout_reject',
+  'admin_adjustment', 'admin_order_status',
+].map(a => `'${a}'`).join(',');
+
 const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
@@ -287,7 +301,7 @@ CREATE TABLE IF NOT EXISTS activity_logs (
   userEmail TEXT,
   userName TEXT,
   userRole TEXT CHECK(userRole IN ('buyer','admin')),
-  action TEXT NOT NULL CHECK(action IN ('login','logout','signup','purchase','product_create','product_update','product_delete','review_create','message_send','wishlist_add','profile_update','password_change','admin_ban','admin_approve','admin_reject','search')),
+  action TEXT NOT NULL CHECK(action IN (${ACTIVITY_LOGS_ACTIONS_SQL})),
   details TEXT,
   ipAddress TEXT,
   userAgent TEXT,
@@ -805,6 +819,50 @@ async function runTursoMigrations () {
       console.error('Orders migration rollback failed:', rollbackErr.message);
     }
   }
+
+  // Migrate activity_logs for the extended audit-trail action enum.
+  // Same rebuild pattern as orders above (CHECK cannot be ALTERed).
+  try {
+    const activityResult = await tursoClient.execute(
+      'SELECT sql FROM sqlite_master WHERE name=\'activity_logs\'',
+    );
+    const activitySchemaSql = activityResult.rows[0]?.sql || '';
+    if (activitySchemaSql && !activitySchemaSql.includes('\'payout_approve\'')) {
+      console.log('Migrating activity_logs table for extended audit actions...');
+      await tursoClient.execute('ALTER TABLE activity_logs RENAME TO activity_logs_old');
+      await tursoClient.execute(`CREATE TABLE activity_logs (
+  id TEXT PRIMARY KEY,
+  user TEXT REFERENCES users(id),
+  userEmail TEXT,
+  userName TEXT,
+  userRole TEXT CHECK(userRole IN ('buyer','admin')),
+  action TEXT NOT NULL CHECK(action IN (${ACTIVITY_LOGS_ACTIONS_SQL})),
+  details TEXT,
+  ipAddress TEXT,
+  userAgent TEXT,
+  university TEXT,
+  severity TEXT DEFAULT 'info' CHECK(severity IN ('info','warning','critical')),
+  createdAt TEXT DEFAULT (datetime('now')),
+  updatedAt TEXT DEFAULT (datetime('now'))
+)`);
+      await tursoClient.execute('INSERT INTO activity_logs SELECT * FROM activity_logs_old');
+      await tursoClient.execute('DROP TABLE activity_logs_old');
+      console.log('Activity logs migration complete.');
+    }
+  } catch (activityMigrateErr) {
+    console.error('Activity logs migration failed:', activityMigrateErr.message);
+    try {
+      const hasOld = await tursoClient.execute(
+        'SELECT name FROM sqlite_master WHERE name=\'activity_logs_old\'',
+      );
+      if (hasOld.rows.length > 0) {
+        await tursoClient.execute('ALTER TABLE activity_logs_old RENAME TO activity_logs');
+        console.log('Rolled back activity_logs rename.');
+      }
+    } catch (rollbackErr) {
+      console.error('Activity logs rollback failed:', rollbackErr.message);
+    }
+  }
 }
 
 function connectLocal () {
@@ -820,6 +878,45 @@ function connectLocal () {
   db.pragma('foreign_keys = ON');
   db.pragma('busy_timeout = 5000');
   db.exec(SCHEMA_SQL);
+
+  // Rebuild activity_logs if an existing DB predates the audit-trail action
+  // enum extension (CHECK constraints cannot be ALTERed in SQLite).
+  try {
+    const activityTbl = db.prepare('SELECT sql FROM sqlite_master WHERE name = \'activity_logs\'').get();
+    if (activityTbl && activityTbl.sql && !activityTbl.sql.includes('\'payout_approve\'')) {
+      console.log('Migrating activity_logs table for extended audit actions...');
+      db.exec('ALTER TABLE activity_logs RENAME TO activity_logs_old');
+      db.exec(`CREATE TABLE activity_logs (
+        id TEXT PRIMARY KEY,
+        user TEXT REFERENCES users(id),
+        userEmail TEXT,
+        userName TEXT,
+        userRole TEXT CHECK(userRole IN ('buyer','admin')),
+        action TEXT NOT NULL CHECK(action IN (${ACTIVITY_LOGS_ACTIONS_SQL})),
+        details TEXT,
+        ipAddress TEXT,
+        userAgent TEXT,
+        university TEXT,
+        severity TEXT DEFAULT 'info' CHECK(severity IN ('info','warning','critical')),
+        createdAt TEXT DEFAULT (datetime('now')),
+        updatedAt TEXT DEFAULT (datetime('now'))
+      )`);
+      db.exec('INSERT INTO activity_logs SELECT * FROM activity_logs_old');
+      db.exec('DROP TABLE activity_logs_old');
+      console.log('Activity logs migration complete.');
+    }
+  } catch (activityMigrateErr) {
+    console.error('Activity logs migration failed:', activityMigrateErr.message);
+    try {
+      const hasOld = db.prepare('SELECT name FROM sqlite_master WHERE name = \'activity_logs_old\'').get();
+      if (hasOld) {
+        db.exec('ALTER TABLE activity_logs_old RENAME TO activity_logs');
+        console.log('Rolled back activity_logs rename.');
+      }
+    } catch (rollbackErr) {
+      console.error('Activity logs rollback failed:', rollbackErr.message);
+    }
+  }
 
   try {
     const productCols = db.prepare('PRAGMA table_info(products)').all();

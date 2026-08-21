@@ -10,10 +10,13 @@ const router = express.Router();
 const { protect, authorize } = require('../middleware/auth.middleware');
 const { asyncHandler } = require('../utils/errorHandler');
 const { validateObjectId } = require('../middleware/sanitize.middleware');
+const { auditMutation } = require('../middleware/audit.middleware');
 const adminController = require('../controllers/admin.controller');
 
 router.use(protect);
 router.use(authorize('admin'));
+// Server-side audit trail for every mutating admin request.
+router.use(auditMutation());
 
 router.get('/stats', asyncHandler(adminController.getDashboardStats));
 router.get('/products', asyncHandler(adminController.getAdminProducts));

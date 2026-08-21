@@ -6,7 +6,8 @@
 
 const express = require('express');
 const router = express.Router();
-const { protect, requireVerified } = require('../middleware/auth.middleware');
+const { protect, requireVerified, authorize } = require('../middleware/auth.middleware');
+const { auditMutation } = require('../middleware/audit.middleware');
 const {
   initializePayment,
   verifyPayment,
@@ -27,7 +28,8 @@ router.post('/verify', verifyPayment);
 router.get('/history', getPaymentHistory);
 router.get('/:id', getPayment);
 
-// Admin refund
-router.post('/refund', requireVerified, refundPayment);
+// Admin refund — admin-only (previously ANY verified user could trigger
+// Paystack refunds) and audited server-side.
+router.post('/refund', requireVerified, authorize('admin'), auditMutation('admin_refund'), refundPayment);
 
 module.exports = router;
