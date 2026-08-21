@@ -112,6 +112,33 @@ describe('Orders API — inventory state machine', () => {
       expect(res.status).toBe(400);
       expect(res.body.error).toMatch(/duplicate/i);
     });
+
+    it('generates CSPRNG tracking numbers and minimizes public track data', async () => {
+      const placed = await placeOrder(buyerToken, productId);
+      expect(placed.status).toBe(201);
+      const { trackingNumber } = placed.body.data;
+
+      // Unpredictable: UHT-YYMMDD- plus 10 uppercase hex chars (CSPRNG).
+      expect(trackingNumber).toMatch(/^UHT-\d{6}-[0-9A-F]{10}$/);
+
+      const trackRes = await request(app).get(`/api/orders/track/${trackingNumber}`);
+      expect(trackRes.status).toBe(200);
+      expect(trackRes.body.success).toBe(true);
+
+      const data = trackRes.body.data;
+      expect(data.status).toBeDefined();
+      expect(data.orderNumber).toBeDefined();
+      expect(Array.isArray(data.items)).toBe(true);
+
+      // Data minimization: public endpoint must not leak PII or secrets.
+      const serialized = JSON.stringify(trackRes.body);
+      expect(serialized).not.toMatch(/customer/i);
+      expect(serialized).not.toMatch(/address/i);
+      expect(data.customer).toBeUndefined();
+      expect(data.delivery).toBeUndefined();
+      expect(data.payment).toBeUndefined();
+      expect(data.transactionId).toBeUndefined();
+    });
   });
 
   describe('POST /api/orders/:id/payment', () => {

@@ -1,11 +1,14 @@
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { db, generateId, mapDeliveryRow } = require('../utils/db');
 const { notifyDeliveryCreated, notifyDeliveryStatusChanged } = require('../utils/notificationHelper');
+const crypto = require('crypto');
 
 function generateDeliveryNumber () {
   const now = new Date();
   const dateStr = now.toISOString().slice(2, 10).replace(/-/g, '');
-  const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+  // CSPRNG (not Math.random) — delivery numbers appear on public tracking
+  // surfaces and must not be guessable.
+  const rand = crypto.randomBytes(5).toString('hex').toUpperCase();
   return `DEL-${dateStr}-${rand}`;
 }
 

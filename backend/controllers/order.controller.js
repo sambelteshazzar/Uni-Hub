@@ -1,6 +1,7 @@
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { db, generateId, parseJson, mapOrderRow, toBool, fromBool } = require('../utils/db');
 const { notifyOrderCreated, notifyOrderStatusChanged, notifyPaymentCompleted, notifyOrderCancelled } = require('../utils/notificationHelper');
+const crypto = require('crypto');
 
 function getPublicOrder (order) {
   if (!order) {return null;}
@@ -90,8 +91,12 @@ exports.createOrder = asyncHandler(async (req, res) => {
     const mm = (now.getMonth() + 1).toString().padStart(2, '0');
     const dd = now.getDate().toString().padStart(2, '0');
     const datePart = `${yy}${mm}${dd}`;
-    const orderNum = `UH-${datePart}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
-    const trackNum = `UHT-${datePart}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+    // TODO: security review — identifiers must be unguessable: tracking
+    // numbers are accepted by a PUBLIC endpoint, so Math.random (a
+    // predictable PRNG) is not safe here. crypto.randomBytes draws from the
+    // OS CSPRNG; 10 hex chars ≈ 40 bits of entropy per day bucket.
+    const orderNum = `UH-${datePart}-${crypto.randomBytes(5).toString('hex').toUpperCase()}`;
+    const trackNum = `UHT-${datePart}-${crypto.randomBytes(5).toString('hex').toUpperCase()}`;
 
     const createdOrder = await db('orders').create({
       userId: req.user.id,
@@ -516,13 +521,25 @@ exports.trackByTrackingNumber = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'No order found with this tracking number');
   }
 
+  // TODO: security review — data minimization. This endpoint is PUBLIC and
+  // guarded only by the tracking number, so the response is allowlisted to
+  // exactly what a tracking page needs. The full order object would leak
+  // buyer PII (name/email/phone), delivery address/instructions, and the
+  // payment transaction id.
   const items = await db('order_items').find({ orderId: order.id });
-  order._items = items;
 
-  const statusHistory = await db('order_status_history').find({ orderId: order.id });
-
-  const publicOrder = getPublicOrder(order);
-  publicOrder.statusHistory = statusHistory;
-
-  res.json({ success: true, data: publicOrder });
+  res.json({
+    success: true,
+    data: {
+      id: order.id,
+      orderNumber: order.orderNumber,
+      trackingNumber: order.trackingNumber,
+      status: order.status,
+      deliveryStatus: order.delivery_status,
+      paymentStatus: order.payment_status,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+      items: items.map(i => ({ title: i.title, quantity: i.quantity })),
+    },
+  });
 });
