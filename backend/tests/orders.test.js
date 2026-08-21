@@ -83,6 +83,35 @@ describe('Orders API — inventory state machine', () => {
         expect(res.body.error).toMatch(/quantity/i);
       }
     });
+
+    it('rejects quantity > 1 (listings are one-off items)', async () => {
+      const res = await request(app)
+        .post('/api/orders')
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send({
+          items: [{ productId, quantity: 2 }],
+          delivery: { mode: 'inperson', address: 'test' },
+          payment: { mode: 'cash' },
+        });
+      expect(res.status).toBe(400);
+      expect(res.body.error).toMatch(/one-off/i);
+    });
+
+    it('rejects duplicate product lines in one order', async () => {
+      const res = await request(app)
+        .post('/api/orders')
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send({
+          items: [
+            { productId, quantity: 1 },
+            { productId, quantity: 1 },
+          ],
+          delivery: { mode: 'inperson', address: 'test' },
+          payment: { mode: 'cash' },
+        });
+      expect(res.status).toBe(400);
+      expect(res.body.error).toMatch(/duplicate/i);
+    });
   });
 
   describe('POST /api/orders/:id/payment', () => {

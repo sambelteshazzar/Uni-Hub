@@ -27,17 +27,23 @@ exports.createOrder = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Payment information is required');
   }
 
-  // TODO: security review — order input is untrusted; quantities must be
-  // positive integers or totals can be manipulated (e.g. negative quantity
-  // reduces grandTotal). Normalize here so all downstream math is safe.
+  // TODO: security review — order input is untrusted. Every listing is a
+  // one-off physical item with no stock count, so quantity must be exactly 1
+  // and each product may appear once per order (prevents paying N× for a
+  // single item and duplicate-line abuse).
+  const seenProductIds = new Set();
   for (const item of items) {
     if (!item || typeof item.productId !== 'string' || !item.productId.trim()) {
       throw new ApiError(400, 'Each order item must include a valid productId');
     }
     const quantity = Number(item.quantity);
-    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) {
-      throw new ApiError(400, 'Item quantity must be a whole number between 1 and 99');
+    if (!Number.isInteger(quantity) || quantity !== 1) {
+      throw new ApiError(400, 'Each listing is a one-off item — quantity must be 1');
     }
+    if (seenProductIds.has(item.productId)) {
+      throw new ApiError(400, 'Duplicate products in an order are not allowed');
+    }
+    seenProductIds.add(item.productId);
     item.quantity = quantity;
   }
 
@@ -124,8 +130,25 @@ exports.createOrder = asyncHandler(async (req, res) => {
       });
     }
 
-    for (const pid of productIds) {
-      await db('products').updateById(pid, { status: 'reserved' });
+    // TODO: security review — atomic reservation. The availability check
+    // earlier is advisory (fast-fail UX); THIS conditional UPDATE is the
+    // authoritative gate. The WHERE guard makes check-and-reserve one
+    // indivisible statement: if another buyer reserved/purchased first, the
+    // guard no longer matches, changes === 0, and the whole order aborts.
+    // Guard mirrors the advisory check above (behavior-preserving); note
+    // non-'active' statuses like 'pending' remain orderable — moderation
+    // policy tightening is tracked separately.
+    // batchWrite() is required because transaction() is not atomic on Turso
+    // (each HTTP call auto-commits — see utils/db.js).
+    const reserveResults = await db('products').batchWrite(
+      [...new Set(productIds)].map(pid => ({
+        sql: 'UPDATE products SET status = \'reserved\' WHERE id = ? AND status NOT IN (\'sold\', \'reserved\')',
+        args: [pid],
+      })),
+    );
+    const lostRace = reserveResults.some(r => !r || r.changes !== 1);
+    if (lostRace) {
+      throw new ApiError(409, 'One or more items in your order were just purchased or reserved by someone else');
     }
 
     await db('users').updateById(req.user.id, {
