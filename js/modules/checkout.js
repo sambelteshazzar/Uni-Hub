@@ -718,6 +718,9 @@ class CheckoutFlow {
             quantity: item.quantity,
             variant: item.variant || null,
           }));
+          // Replay protection: same key reused across retries of this
+          // submission attempt so a flaky network cannot duplicate orders.
+          orderData.idempotencyKey = this._getIdempotencyKey();
       const response = await _api.orders.create(orderData);
         if (response.success) {
           order = response.data;
@@ -783,6 +786,7 @@ if (!order) {
       }
 
       if (_cartManager) _cartManager.clear();
+      this._orderRequestId = null; // fresh key for the next order
 
       this.orderResult = order;
       this.completedSteps.add(2);
@@ -816,6 +820,20 @@ if (!order) {
     const day = date.getDate().toString().padStart(2, '0');
     const alpha = Math.random().toString(36).substring(2, 6).toUpperCase();
     return `UHT-${year}${month}${day}-${alpha}`;
+  }
+
+  // Idempotency key for order creation. Generated once per submission
+  // intent and reused across retries of the SAME attempt; cleared after a
+  // successful placement so the next order gets a fresh key.
+  _getIdempotencyKey() {
+    if (!this._orderRequestId) {
+      if (typeof CryptoUtil !== 'undefined' && CryptoUtil.generateSecureToken) {
+        this._orderRequestId = CryptoUtil.generateSecureToken(16);
+      } else {
+        this._orderRequestId = 'chk-' + Date.now() + '-' + Math.random().toString(36).slice(2, 12) + '-fallback';
+      }
+    }
+    return this._orderRequestId;
   }
 
   _saveOrderLocal(order) {
@@ -891,11 +909,13 @@ class CheckoutManager {
           paymentMode: checkoutData.paymentMode,
           phone: checkoutData.phone || currentUser.phone,
         };
+        orderData.idempotencyKey = this._getIdempotencyKey();
 
         const response = await _api.orders.create(orderData);
 
         if (response.success) {
           _cartManager.clear();
+          this._orderRequestId = null;
           return { success: true, message: 'Order placed successfully!', order: response.data };
         }
       } catch (error) { console.warn('checkout: placeOrder API failed, falling back to local:', error); }

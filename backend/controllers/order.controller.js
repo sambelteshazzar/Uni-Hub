@@ -2,6 +2,7 @@ const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { db, generateId, parseJson, mapOrderRow, toBool, fromBool } = require('../utils/db');
 const { notifyOrderCreated, notifyOrderStatusChanged, notifyPaymentCompleted, notifyOrderCancelled } = require('../utils/notificationHelper');
 const crypto = require('crypto');
+const ledger = require('../utils/ledger');
 
 function getPublicOrder (order) {
   if (!order) {return null;}
@@ -46,6 +47,85 @@ exports.createOrder = asyncHandler(async (req, res) => {
     }
     seenProductIds.add(item.productId);
     item.quantity = quantity;
+  }
+
+  // TODO: security review — idempotency-key handling. A client-supplied
+  // key makes order creation replay-safe (double-clicks, network retries):
+  // every repeat of the same key returns the FIRST final response instead
+  // of creating a duplicate order. Keys are scoped per user+endpoint,
+  // validated strictly, expire after 24h, and their reservation is
+  // released automatically when the request ends in an error response.
+  const IDEMPOTENCY_ENDPOINT = 'POST /api/orders';
+  const IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1000;
+  let idemKey = null;
+  const rawIdemKey = req.body.idempotencyKey;
+  if (rawIdemKey !== undefined && rawIdemKey !== null) {
+    // Strict format: 16-100 printable ASCII chars, no whitespace/control.
+    if (typeof rawIdemKey !== 'string' || !/^[\x21-\x7E]{16,100}$/.test(rawIdemKey)) {
+      throw new ApiError(400, 'idempotencyKey must be a string of 16-100 printable characters');
+    }
+    idemKey = rawIdemKey;
+
+    const cutoff = new Date(Date.now() - IDEMPOTENCY_TTL_MS).toISOString();
+    const existing = await db('idempotency_keys').rawGet(
+      'SELECT * FROM idempotency_keys WHERE "key" = ? AND userId = ? AND endpoint = ? AND createdAt > ?',
+      [idemKey, req.user.id, IDEMPOTENCY_ENDPOINT, cutoff],
+    );
+    if (existing && existing.status === 'completed') {
+      // Replay: return the stored original response byte-for-byte.
+      let stored;
+      try { stored = JSON.parse(existing.responseBody); } catch (_) { stored = null; }
+      if (stored) {
+        return res.status(existing.responseStatus || 201).json(stored);
+      }
+    }
+    if (existing) {
+      throw new ApiError(409, 'An identical request is still being processed');
+    }
+
+    // Lazily purge expired rows for this user, then reserve the key.
+    // UNIQUE(key, userId, endpoint) arbitrates concurrent duplicates: the
+    // loser of the insert race gets a constraint violation -> 409.
+    await db('idempotency_keys').rawRun(
+      'DELETE FROM idempotency_keys WHERE userId = ? AND createdAt <= ?',
+      [req.user.id, cutoff],
+    );
+    try {
+      await db('idempotency_keys').rawRun(
+        'INSERT INTO idempotency_keys (id, "key", userId, endpoint, status) VALUES (?, ?, ?, ?, \'processing\')',
+        [generateId(), idemKey, req.user.id, IDEMPOTENCY_ENDPOINT],
+      );
+    } catch (insertErr) {
+      if (insertErr && /UNIQUE/i.test(insertErr.message || '')) {
+        throw new ApiError(409, 'An identical request is still being processed');
+      }
+      throw insertErr;
+    }
+
+    // Intercept the outgoing response exactly once: a success payload is
+    // persisted for future replays; any non-2xx (including errors thrown
+    // later and rendered by the central error handler) releases the key
+    // reservation so the client can safely retry with the same key.
+    let idemStatusCode = 201;
+    const origJson = res.json.bind(res);
+    res.status = code => {
+      idemStatusCode = code;
+      res.statusCode = code; // preserve express's own status() side effect
+      return res;
+    };
+    res.json = payload => {
+      const finalize = (idemStatusCode >= 200 && idemStatusCode < 300)
+        ? db('idempotency_keys').rawRun(
+          'UPDATE idempotency_keys SET status = \'completed\', responseStatus = ?, responseBody = ? WHERE "key" = ? AND userId = ? AND endpoint = ?',
+          [idemStatusCode, JSON.stringify(payload), idemKey, req.user.id, IDEMPOTENCY_ENDPOINT],
+        )
+        : db('idempotency_keys').rawRun(
+          'DELETE FROM idempotency_keys WHERE "key" = ? AND userId = ? AND endpoint = ?',
+          [idemKey, req.user.id, IDEMPOTENCY_ENDPOINT],
+        );
+      finalize.catch(() => { /* best-effort bookkeeping */ });
+      return origJson(payload);
+    };
   }
 
   const productIds = items.map(item => item.productId);
@@ -311,6 +391,8 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
         refundReason: note || 'Order refunded',
       });
     }
+    // Ledger: escrowed entries -> reversed; released sales -> clawback.
+    await ledger.reverseOrderLedger(order.id);
   }
 
   if (status === 'cancelled' && order.status !== 'cancelled') {
@@ -358,6 +440,14 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
       if (p && p.status === 'reserved') {
         await db('products').updateById(item.productId, { status: 'sold' });
       }
+    }
+
+    // Ledger release: escrowed provider-paid entries become available;
+    // cash orders record informational released entries directly.
+    if (isCashOrder) {
+      await ledger.recordCashSale(order.id, orderItems);
+    } else {
+      await ledger.releaseOrderLedger(order.id);
     }
   }
 
@@ -475,6 +565,9 @@ exports.completePayment = asyncHandler(async (req, res) => {
   for (const item of paidItems) {
     await db('products').updateById(item.productId, { status: 'sold' });
   }
+
+  // Ledger capture: escrow the sale per item; released on delivery.
+  await ledger.recordEscrowedSale(order.id, paidItems);
 
   if (payment) {
     await db('payments').updateById(payment.id, {

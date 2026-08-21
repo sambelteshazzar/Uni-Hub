@@ -139,6 +139,78 @@ describe('Orders API — inventory state machine', () => {
       expect(data.payment).toBeUndefined();
       expect(data.transactionId).toBeUndefined();
     });
+
+    it('replays the original response for a repeated idempotency key', async () => {
+      const payload = () => ({
+        items: [{ productId, quantity: 1 }],
+        delivery: { mode: 'inperson', address: 'test' },
+        payment: { mode: 'cash' },
+        idempotencyKey: 'IDEM-TEST-KEY-0123456789',
+      });
+
+      const first = await request(app)
+        .post('/api/orders')
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send(payload());
+      expect(first.status).toBe(201);
+      const firstOrderId = first.body.data.id || first.body.data._id;
+
+      const second = await request(app)
+        .post('/api/orders')
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send(payload());
+      expect(second.status).toBe(201);
+      expect(second.body.data.id || second.body.data._id).toBe(firstOrderId);
+
+      const { getDb } = require('../config/database');
+      const orderCount = getDb()
+        .prepare('SELECT COUNT(*) as n FROM orders WHERE userId = ?')
+        .get(buyerId);
+      expect(orderCount.n).toBe(1);
+    });
+
+    it('rejects malformed idempotency keys', async () => {
+      for (const badKey of ['short', 'has space in it so invalid!!', 12345]) {
+        const res = await request(app)
+          .post('/api/orders')
+          .set('Authorization', `Bearer ${buyerToken}`)
+          .send({
+            items: [{ productId, quantity: 1 }],
+            delivery: { mode: 'inperson', address: 'test' },
+            payment: { mode: 'cash' },
+            idempotencyKey: badKey,
+          });
+        expect(res.status).toBe(400);
+        expect(res.body.error).toMatch(/idempotencykey/i);
+      }
+    });
+
+    it('releases the key after an error so the same key can be retried', async () => {
+      // Attempt 1: nonexistent product -> 400 AFTER the key is reserved.
+      const failed = await request(app)
+        .post('/api/orders')
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send({
+          items: [{ productId: 'no-such-product-id-xyz', quantity: 1 }],
+          delivery: { mode: 'inperson', address: 'test' },
+          payment: { mode: 'cash' },
+          idempotencyKey: 'RETRY-AFTER-ERROR-012345678',
+        });
+      expect(failed.status).toBe(400);
+
+      // Attempt 2: same key, now valid -> must NOT be blocked by the
+      // earlier failure.
+      const retried = await request(app)
+        .post('/api/orders')
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send({
+          items: [{ productId, quantity: 1 }],
+          delivery: { mode: 'inperson', address: 'test' },
+          payment: { mode: 'cash' },
+          idempotencyKey: 'RETRY-AFTER-ERROR-012345678',
+        });
+      expect(retried.status).toBe(201);
+    });
   });
 
   describe('POST /api/orders/:id/payment', () => {

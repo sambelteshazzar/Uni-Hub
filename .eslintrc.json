@@ -58,6 +58,7 @@
     "Validator": "readonly",
     "Formatter": "readonly",
     "CryptoUtil": "readonly",
+    "showToast": "readonly",
     "api": "readonly",
     "_api": "readonly",
     "router": "readonly",

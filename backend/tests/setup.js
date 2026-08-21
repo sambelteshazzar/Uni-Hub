@@ -48,6 +48,7 @@ afterEach(() => {
       'delivery_status_history', 'order_status_history', 'order_items',
       'verification_documents', 'message_deleted_by', 'conversation_participants',
       'search_history', 'activity_logs', 'wishlists', 'notifications',
+      'idempotency_keys', 'ledger_entries', 'payouts',
       'messages', 'conversations', 'deliveries', 'payments', 'reviews',
       'orders', 'products', 'student_verifications', 'users',
     ];

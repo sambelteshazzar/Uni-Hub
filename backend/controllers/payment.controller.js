@@ -1,6 +1,7 @@
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { db, mapOrderRow } = require('../utils/db');
 const { notifyPaymentVerified } = require('../utils/notificationHelper');
+const ledger = require('../utils/ledger');
 const crypto = require('crypto');
 
 exports.initializePayment = asyncHandler(async (req, res) => {
@@ -263,6 +264,11 @@ exports.handlePaystackWebhook = asyncHandler(async (req, res) => {
         payment_transactionId: reference,
         status: 'confirmed',
       });
+
+      // Ledger capture (escrow) — mirrors completePayment. Idempotent per
+      // order inside the ledger service.
+      const webhookItems = await db('order_items').find({ orderId: order.id });
+      await ledger.recordEscrowedSale(order.id, webhookItems);
 
       const io = req.app.get('io');
       if (io) {

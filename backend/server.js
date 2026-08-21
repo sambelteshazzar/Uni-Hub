@@ -47,6 +47,7 @@ const reportRoutes = require('./routes/report.routes');
 const messageRoutes = require('./routes/message.routes');
 const reviewRoutes = require('./routes/review.routes');
 const newsletterRoutes = require('./routes/newsletter.routes');
+const ledgerRoutes = require('./routes/ledger.routes');
 const wishlistRoutes = require('./routes/wishlist.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const searchRoutes = require('./routes/search.routes');
@@ -463,6 +464,9 @@ app.use('/api/search', searchRoutes);
 
 // Newsletter routes
 app.use('/api/newsletter', newsletterRoutes);
+
+// Ledger routes (seller escrow balance)
+app.use('/api/ledger', ledgerRoutes);
 
 // ============================================
 // Error Handling

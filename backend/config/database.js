@@ -327,6 +327,49 @@ CREATE TABLE IF NOT EXISTS verification_documents (
   uploadedAt TEXT DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS idempotency_keys (
+  id TEXT PRIMARY KEY,
+  key TEXT NOT NULL,
+  userId TEXT NOT NULL REFERENCES users(id),
+  endpoint TEXT NOT NULL,
+  responseStatus INTEGER,
+  responseBody TEXT,
+  status TEXT DEFAULT 'processing' CHECK(status IN ('processing','completed')),
+  createdAt TEXT DEFAULT (datetime('now')),
+  UNIQUE(key, userId, endpoint)
+);
+
+CREATE TABLE IF NOT EXISTS ledger_entries (
+  id TEXT PRIMARY KEY,
+  sellerId TEXT NOT NULL REFERENCES users(id),
+  orderId TEXT REFERENCES orders(id),
+  type TEXT NOT NULL CHECK(type IN ('sale','commission','payout','clawback','adjustment')),
+  amount REAL NOT NULL,
+  currency TEXT DEFAULT 'GHS',
+  status TEXT DEFAULT 'released' CHECK(status IN ('escrowed','released','reversed')),
+  note TEXT,
+  createdAt TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS payouts (
+  id TEXT PRIMARY KEY,
+  sellerId TEXT NOT NULL REFERENCES users(id),
+  amount REAL NOT NULL CHECK(amount > 0),
+  method TEXT NOT NULL CHECK(method IN ('momo','bank')),
+  destination TEXT NOT NULL,
+  paystackRecipientCode TEXT,
+  paystackTransferRef TEXT UNIQUE,
+  status TEXT DEFAULT 'requested' CHECK(status IN ('requested','approved','processing','paid','failed')),
+  failureReason TEXT,
+  requestedAt TEXT DEFAULT (datetime('now')),
+  processedAt TEXT
+);
+
+CREATE TABLE IF NOT EXISTS platform_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_university ON users(university);
 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
@@ -380,6 +423,12 @@ CREATE INDEX IF NOT EXISTS idx_verifications_studentId ON student_verifications(
 CREATE INDEX IF NOT EXISTS idx_verifications_email ON student_verifications(email);
 CREATE INDEX IF NOT EXISTS idx_verifications_status ON student_verifications(status, createdAt DESC);
 CREATE INDEX IF NOT EXISTS idx_verifications_userId ON student_verifications(userId);
+
+CREATE INDEX IF NOT EXISTS idx_idempotency_user_created ON idempotency_keys(userId, createdAt);
+
+CREATE INDEX IF NOT EXISTS idx_ledger_seller_status ON ledger_entries(sellerId, status);
+CREATE INDEX IF NOT EXISTS idx_ledger_order ON ledger_entries(orderId);
+CREATE INDEX IF NOT EXISTS idx_payouts_seller ON payouts(sellerId, requestedAt DESC);
 
 CREATE INDEX IF NOT EXISTS idx_product_colors_product_id ON product_colors(product_id);
 

@@ -19,6 +19,18 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
   const revenueRow = await db('orders').rawGet('SELECT SUM(pricing_grandTotal) as totalRevenue FROM orders WHERE payment_status = \'completed\'');
   const totalRevenue = revenueRow.totalRevenue || 0;
 
+  // Marketplace economics: totalRevenue above is GMV (everything flowing
+  // through), NOT platform income. True revenue = commission earned;
+  // escrowHeld = money owed to sellers but not yet released.
+  const commissionRow = await db('ledger_entries').rawGet(
+    'SELECT COALESCE(SUM(ABS(amount)), 0) as total FROM ledger_entries WHERE type = \'commission\' AND status = \'released\'',
+  );
+  const commissionEarned = commissionRow.total || 0;
+  const escrowRow = await db('ledger_entries').rawGet(
+    'SELECT COALESCE(SUM(amount), 0) as total FROM ledger_entries WHERE status = \'escrowed\'',
+  );
+  const escrowHeld = escrowRow.total || 0;
+
   const recentOrders = await db('orders').find({}, { sort: { createdAt: -1 }, limit: 10 });
 
   const ordersWithUser = await Promise.all(recentOrders.map(async (order) => {
@@ -37,6 +49,8 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
         totalProducts,
         totalOrders,
         totalRevenue,
+        commissionEarned,
+        escrowHeld,
         pendingVerifications,
       },
       recentOrders: ordersWithUser,
