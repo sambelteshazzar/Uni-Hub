@@ -212,6 +212,71 @@ describe('Orders API — inventory state machine', () => {
     });
   });
 
+  describe('PUT /api/orders/:id/status delivered (cash settlement)', () => {
+    let adminToken;
+
+    beforeEach(async () => {
+      const admin = {
+        ...global.testUtils.generateTestUser(),
+        role: 'admin',
+        email: `admin_${Date.now()}_${Math.random().toString(36).slice(2)}@test.com`,
+      };
+      const adminRes = await request(app).post('/api/auth/register').send(admin);
+      adminToken = adminRes.body.data.token;
+
+      const res = await placeOrder(buyerToken, productId);
+      orderId = res.body.data.id || res.body.data._id;
+
+      // Initialize + record the cash payment so settlement has a
+      // payments row to close out.
+      await request(app)
+        .post('/api/payment')
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send({ orderId, paymentMode: 'cash' });
+      await request(app)
+        .post(`/api/orders/${orderId}/payment`)
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send({ transactionId: 'CASH-DELIVERY-1' });
+    });
+
+    it('completes cash payment and flips product to sold on delivery', async () => {
+      const res = await request(app)
+        .put(`/api/orders/${orderId}/status`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ status: 'delivered' });
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+
+      const { getDb } = require('../config/database');
+      const product = getDb().prepare('SELECT status FROM products WHERE id = ?').get(productId);
+      expect(product.status).toBe('sold');
+
+      const order = getDb()
+        .prepare('SELECT status, payment_status, payment_paidAt FROM orders WHERE id = ?')
+        .get(orderId);
+      expect(order.status).toBe('delivered');
+      expect(order.payment_status).toBe('completed');
+      expect(order.payment_paidAt).toBeTruthy();
+    });
+
+    it('is idempotent when delivered is repeated', async () => {
+      await request(app)
+        .put(`/api/orders/${orderId}/status`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ status: 'delivered' });
+
+      const second = await request(app)
+        .put(`/api/orders/${orderId}/status`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ status: 'delivered' });
+      expect(second.status).toBe(200);
+
+      const { getDb } = require('../config/database');
+      const product = getDb().prepare('SELECT status FROM products WHERE id = ?').get(productId);
+      expect(product.status).toBe('sold');
+    });
+  });
+
   describe('PUT /api/orders/:id/cancel', () => {
     beforeEach(async () => {
       const res = await placeOrder(buyerToken, productId);

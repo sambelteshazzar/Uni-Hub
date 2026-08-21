@@ -324,6 +324,43 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
     }
   }
 
+  // TODO: security review — delivery settles cash-on-delivery orders and
+  // closes out inventory. Cash orders never pass through completePayment's
+  // sold-flip (that only runs for provider-verified payments), so without
+  // this transition their listings stayed 'reserved' forever. Idempotent:
+  // skipped on re-calls for an already-delivered order.
+  let settledCashPayment = false;
+  if (status === 'delivered' && order.status !== 'delivered') {
+    const isCashOrder = order.payment_mode === 'cash';
+    const payments = await db('payments').find({ orderId: order.id });
+    const payment = payments[0];
+
+    // Money changes hands at handoff, so marking the order delivered
+    // confirms a pending cash payment. Provider-paid orders were already
+    // settled in completePayment / the Paystack webhook.
+    if (isCashOrder && order.payment_status === 'pending') {
+      updates.payment_status = 'completed';
+      updates.payment_paidAt = new Date().toISOString();
+      settledCashPayment = true;
+      if (payment) {
+        await db('payments').updateById(payment.id, {
+          status: 'completed',
+          paidAt: updates.payment_paidAt,
+          verifiedAt: updates.payment_paidAt,
+        });
+      }
+    }
+
+    // Lock inventory as sold for anything still reserved (cash path;
+    // provider-paid items are typically already 'sold' via completePayment).
+    for (const item of orderItems) {
+      const p = await db('products').findById(item.productId);
+      if (p && p.status === 'reserved') {
+        await db('products').updateById(item.productId, { status: 'sold' });
+      }
+    }
+  }
+
   await db('orders').updateById(order.id, updates);
 
   await db('order_status_history').create({
@@ -339,6 +376,9 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
 
   const io = req.app.get('io');
   notifyOrderStatusChanged(io, updatedOrder, status, req.user);
+  if (settledCashPayment) {
+    notifyPaymentCompleted(io, updatedOrder);
+  }
 
   res.json({
     success: true,
