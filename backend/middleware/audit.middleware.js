@@ -23,7 +23,9 @@ function sanitizeDetails (body) {
   }
   const clean = {};
   for (const key of Object.keys(body)) {
-    clean[SENSITIVE_KEYS.has(key.toLowerCase()) ? `${key}_redacted` : key] = body[key];
+    // Redact BOTH the key name and the value for sensitive fields.
+    clean[SENSITIVE_KEYS.has(key.toLowerCase()) ? `${key}_redacted` : key] =
+      SENSITIVE_KEYS.has(key.toLowerCase()) ? '[REDACTED]' : body[key];
   }
   let json;
   try {
@@ -41,9 +43,13 @@ function sanitizeDetails (body) {
 // mutating routes are reported loudly (console.warn) instead of being
 // silently dropped from the audit trail.
 function deriveAction (req) {
-  const p = req.path.replace(/\/[^/]+\/(approve|reject|ban)$/u, '/:id/$1')
-    .replace(/\/[^/]+$/u, '/:id');
-  switch (`${req.method} ${p}`) {
+  const p = req.path;
+  // Normalize the trailing id segment FIRST, then compound-id routes;
+  // doing both unconditionally corrupted /users/:id/ban -> /users/:id/:id.
+  const normalized = /\/(approve|reject|ban)$/u.test(p)
+    ? p.replace(/\/[^/]+\/(approve|reject|ban)$/u, '/:id/$1')
+    : p.replace(/\/[^/]+$/u, '/:id');
+  switch (`${req.method} ${normalized}`) {
   case 'POST /products': return 'product_create';
   case 'PUT /products/:id': return 'product_update';
   case 'DELETE /products/:id': return 'product_delete';
@@ -64,9 +70,20 @@ function auditMutation (actionOverride) {
       return next();
     }
 
+    // Capture request context NOW, while we are still inside the mounted
+    // router: req.path here is router-relative. If an error propagates to
+    // the app-level handler, Express restores req.url to the full original
+    // path BEFORE 'finish' fires, which would break late derivation.
+    const action = actionOverride || deriveAction(req);
+    const actor = req.user
+      ? { id: req.user.id, email: req.user.email, fullName: req.user.fullName, role: req.user.role }
+      : null;
+    const details = sanitizeDetails(req.body);
+    const ipAddress = req.ip || null;
+    const userAgent = (req.headers['user-agent'] || '').slice(0, MAX_USER_AGENT_LENGTH) || null;
+
     res.on('finish', () => {
       try {
-        const action = actionOverride || deriveAction(req);
         const statusCode = res.statusCode;
         // Failed authorization attempts are exactly what an audit trail is
         // for — record them, but unmapped routes must be visible in logs.
@@ -79,23 +96,20 @@ function auditMutation (actionOverride) {
           ? 'critical'
           : (statusCode >= 400 || req.method === 'DELETE' ? 'warning' : 'info');
 
-        const details = sanitizeDetails(req.body);
-        const userAgent = (req.headers['user-agent'] || '').slice(0, MAX_USER_AGENT_LENGTH);
-
         db('activity_logs').rawRun(
           `INSERT INTO activity_logs
             (id, user, userEmail, userName, userRole, action, details, ipAddress, userAgent, severity)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             generateId(),
-            req.user ? req.user.id : null,
-            req.user ? req.user.email : null,
-            req.user ? req.user.fullName : null,
-            req.user ? req.user.role : null,
+            actor ? actor.id : null,
+            actor ? actor.email : null,
+            actor ? actor.fullName : null,
+            actor ? actor.role : null,
             action,
             details,
-            req.ip || null,
-            userAgent || null,
+            ipAddress,
+            userAgent,
             severity,
           ],
         ).catch(err => console.error('Audit write failed:', err.message));
