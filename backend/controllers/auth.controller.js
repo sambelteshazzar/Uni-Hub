@@ -3,8 +3,9 @@ const bcrypt = require('bcryptjs');
 const { db, mapUserRow } = require('../utils/db');
 const { generateToken, generateResetToken } = require('../utils/token.util');
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
-const { sendPasswordResetEmail } = require('../utils/emailService');
+const { sendPasswordResetEmail, sendEmail } = require('../utils/emailService');
 const logActivity = require('../utils/logActivity');
+const mfa = require('../utils/mfa');
 
 function getPublicProfile (user) {
   const { password: _, resetToken: __, resetTokenExpiry: ___, passwordChangedAt: ____, bannedBy: _____, ...profile } = user;
@@ -18,7 +19,12 @@ function getPublicProfile (user) {
  * @access Public
  */
 exports.register = asyncHandler(async (req, res) => {
-  const { fullName, email, phone, password, university, level, hall } = req.body;
+  // fullName is let (not const): clients may send firstName+lastName
+  // instead of a combined name — reassigned below. Previously `const`,
+  // which threw "Assignment to constant variable" (500) for split-name
+  // signups.
+  const { email, phone, password, university, level, hall } = req.body;
+  let { fullName } = req.body;
 
   if (!fullName && req.body.firstName && req.body.lastName) {
     fullName = req.body.firstName + ' ' + req.body.lastName;
@@ -130,11 +136,86 @@ exports.login = asyncHandler(async (req, res) => {
     throw new ApiError(401, 'Invalid credentials');
   }
 
+  // MFA gate: privileged roles must complete an emailed one-time code
+  // before a session token is issued. Buyers log in directly, unchanged.
+  if (['admin', 'moderator'].includes(mappedUser.role)) {
+    const challenge = await mfa.createChallenge(user);
+    await sendEmail(
+      mappedUser.email,
+      'JERTS CART admin login code',
+      `<p>Your JERTS CART admin login code is:</p>
+       <p style="font-size:28px;font-weight:700;letter-spacing:6px;">${challenge.devCode || '••••••'}</p>
+       <p>This code expires in 5 minutes. If you did not attempt to log in, change your password immediately.</p>`,
+    );
+    return res.json({
+      success: true,
+      message: 'Verification code sent to your email',
+      data: {
+        mfaRequired: true,
+        challengeId: challenge.id,
+        ...(challenge.devCode ? { devCode: challenge.devCode } : {}),
+      },
+    });
+  }
+
   await db('users').updateById(user.id, { lastLogin: new Date().toISOString() });
 
   const token = generateToken(mappedUser.id);
 
   await logActivity('login', mappedUser, { email: mappedUser.email }, 'info', req);
+
+  res.json({
+    success: true,
+    message: 'Login successful',
+    data: {
+      user: getPublicProfile(mappedUser),
+      token,
+    },
+  });
+});
+
+/**
+ * @desc Complete MFA for a privileged login
+ * @route POST /api/auth/mfa/verify
+ * @access Public (guarded by challengeId + code possession)
+ */
+exports.verifyMfa = asyncHandler(async (req, res) => {
+  const { challengeId, code } = req.body;
+
+  if (!challengeId || !code) {
+    throw new ApiError(400, 'Challenge ID and code are required');
+  }
+
+  const challenge = await db('admin_mfa_challenges').rawGet(
+    'SELECT * FROM admin_mfa_challenges WHERE id = ?',
+    [challengeId],
+  );
+  if (!challenge) {
+    throw new ApiError(404, 'Verification session not found — please log in again');
+  }
+
+  const result = await mfa.verifyChallenge(challengeId, challenge.userId, code);
+  if (!result.ok) {
+    const messages = {
+      wrong_code: 'Invalid verification code',
+      expired: 'Code expired — please log in again',
+      already_used: 'Code already used — please log in again',
+      too_many_attempts: 'Too many attempts — please log in again',
+      invalid_format: 'Code must be 6 digits',
+      not_found: 'Verification session not found — please log in again',
+    };
+    throw new ApiError(401, messages[result.reason] || 'Verification failed');
+  }
+
+  const user = await db('users').findById(challenge.userId);
+  if (!user || !user.isActive || user.isSuspended) {
+    throw new ApiError(403, 'Account is not permitted to log in');
+  }
+  const mappedUser = mapUserRow(user);
+
+  await db('users').updateById(user.id, { lastLogin: new Date().toISOString() });
+  const token = generateToken(mappedUser.id);
+  await logActivity('login', mappedUser, { email: mappedUser.email, mfa: true }, 'info', req);
 
   res.json({
     success: true,

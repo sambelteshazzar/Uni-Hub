@@ -389,6 +389,16 @@ CREATE TABLE IF NOT EXISTS platform_settings (
   value TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS admin_mfa_challenges (
+  id TEXT PRIMARY KEY,
+  userId TEXT NOT NULL REFERENCES users(id),
+  codeHash TEXT NOT NULL,
+  expiresAt TEXT NOT NULL,
+  attempts INTEGER DEFAULT 0,
+  consumedAt TEXT,
+  createdAt TEXT DEFAULT (datetime('now'))
+);
+
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_university ON users(university);
 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
@@ -448,6 +458,7 @@ CREATE INDEX IF NOT EXISTS idx_idempotency_user_created ON idempotency_keys(user
 CREATE INDEX IF NOT EXISTS idx_ledger_seller_status ON ledger_entries(sellerId, status);
 CREATE INDEX IF NOT EXISTS idx_ledger_order ON ledger_entries(orderId);
 CREATE INDEX IF NOT EXISTS idx_payouts_seller ON payouts(sellerId, requestedAt DESC);
+CREATE INDEX IF NOT EXISTS idx_mfa_user ON admin_mfa_challenges(userId, createdAt DESC);
 
 CREATE INDEX IF NOT EXISTS idx_product_colors_product_id ON product_colors(product_id);
 

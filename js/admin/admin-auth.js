@@ -30,50 +30,83 @@ class AdminAuthManager {
   async login (email, password) {
     try {
       const response = await api.admin.login(email, password);
+
+      // MFA: privileged logins get an emailed 6-digit code instead of a
+      // token on the first call. Complete via verifyMfa below.
+      if (response.success && response.data?.mfaRequired) {
+        const challengeId = response.data.challengeId;
+        let code = null;
+        if (typeof this.onMfaRequired === 'function') {
+          code = await this.onMfaRequired(response.data);
+        } else {
+          // Fallback prompt until a dedicated MFA form step exists.
+          code = window.prompt(`Enter the 6-digit code sent to ${email}:`);
+        }
+        if (!code) {
+          return { success: false, error: 'Verification cancelled' };
+        }
+
+        const verified = await api.auth.verifyMfa(challengeId, String(code).trim());
+        if (!verified.success || !verified.data?.token) {
+          return { success: false, error: verified.error || 'Invalid verification code' };
+        }
+        return this._completeLogin(verified.data, email);
+      }
+
       if (response.success && response.data?.user) {
-        const user = response.data.user;
-
-        // RBAC: admins have full access; moderators get read + moderation
-        // views. Backend routes enforce the same matrix authoritatively.
-        if (!['admin', 'moderator'].includes(user.role)) {
-          return { success: false, error: 'Access denied. Admin credentials required.' };
-        }
-
-        if (response.data.token) {
-          // Write to unihub_session (STORAGE_KEYS.CURRENT_USER) in the SAME
-          // SHAPE that AuthManager.loadSession (js/modules/auth.js:26-46)
-          // expects: { token, user, expiresAt }. If `expiresAt` is omitted,
-          // the next page load evaluates `parsed.expiresAt > Date.now()`
-          // (which is `undefined > Date.now()` === false) and silently
-          // wipes the session via clearSession(). After the wipe, every
-          // admin-API call sends no Authorization header -> 401 ->
-          // misleading "Session expired" error thrown by api.request.
-          // The 24h window matches adminAuthManager's own session expiry
-          // (admin-auth.js verifySession, ~24h).
-          // TODO: security review — admin session storage shape must stay
-          // in sync with AuthManager.saveSession in js/modules/auth.js. The
-          // real fix is to consolidate the two auth managers (see design
-          // doc: docs/superpowers/specs/2026-08-03-admin-block-and-email-
-          // verification-design.md, "Out of scope").
-          StorageManager.set(STORAGE_KEYS.CURRENT_USER, {
-            token: response.data.token,
-            user,
-            expiresAt: Date.now() + 24 * 60 * 60 * 1000,
-          });
-        }
-
-        const adminUser = { ...user, token: response.data.token, loginAt: new Date().toISOString() };
-        this.adminUser = adminUser;
-        StorageManager.set(this.ADMIN_STORAGE_KEY, adminUser);
-        this.logActivity('Admin login', { email });
-
-        return { success: true, message: 'Login successful', user: adminUser };
+        return this._completeLogin(response.data, email);
       }
 
       return { success: false, error: response.error || 'Login failed' };
     } catch (error) {
       return { success: false, error: 'Cannot connect to server. Please check your internet connection.' };
     }
+  }
+
+  /**
+   * Persist a completed login (password-only or password+MFA) as the
+   * admin session.
+   * @param {Object} data - { token, user } from the auth API
+   * @param {string} email - login email, for the activity log
+   */
+  _completeLogin (data, email) {
+    const user = data.user;
+
+    // RBAC: admins have full access; moderators get read + moderation
+    // views. Backend routes enforce the same matrix authoritatively.
+    if (!['admin', 'moderator'].includes(user.role)) {
+      return { success: false, error: 'Access denied. Admin credentials required.' };
+    }
+
+    if (data.token) {
+      // Write to unihub_session (STORAGE_KEYS.CURRENT_USER) in the SAME
+      // SHAPE that AuthManager.loadSession (js/modules/auth.js:26-46)
+      // expects: { token, user, expiresAt }. If `expiresAt` is omitted,
+      // the next page load evaluates `parsed.expiresAt > Date.now()`
+      // (which is `undefined > Date.now()` === false) and silently
+      // wipes the session via clearSession(). After the wipe, every
+      // admin-API call sends no Authorization header -> 401 ->
+      // misleading "Session expired" error thrown by api.request.
+      // The 24h window matches adminAuthManager's own session expiry
+      // (admin-auth.js verifySession, ~24h).
+      // TODO: security review — admin session storage shape must stay
+      // in sync with AuthManager.saveSession in js/modules/auth.js. The
+      // real fix is to consolidate the two auth managers (see design
+      // doc: docs/superpowers/specs/2026-08-03-admin-block-and-email-
+      // verification-design.md, "Out of scope").
+      StorageManager.set(STORAGE_KEYS.CURRENT_USER, {
+        token: data.token,
+        user,
+        expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+      });
+    }
+
+    const adminUser = { ...user, token: data.token, loginAt: new Date().toISOString() };
+    this.adminUser = adminUser;
+    StorageManager.set(this.ADMIN_STORAGE_KEY, adminUser);
+    this.logActivity('Admin login', { email });
+
+    return { success: true, message: 'Login successful', user: adminUser };
   }
 
   /**

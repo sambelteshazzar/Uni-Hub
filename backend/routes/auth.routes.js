@@ -5,6 +5,7 @@ const { protect } = require('../middleware/auth.middleware');
 const {
   register,
   login,
+  verifyMfa,
   getMe,
   updateProfile,
   changePassword,
@@ -69,6 +70,8 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 // Public routes
 router.post('/register', register);
 router.post('/login', login);
+// MFA completion — guarded by challengeId + emailed code possession.
+router.post('/mfa/verify', verifyMfa);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
 

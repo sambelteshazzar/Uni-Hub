@@ -301,6 +301,7 @@ class API {
   auth = {
     register: data => this.post('/auth/register', data),
     login: (email, password) => this.post('/auth/login', { email, password }),
+    verifyMfa: (challengeId, code) => this.post('/auth/mfa/verify', { challengeId, code }),
     getMe: () => this.get('/auth/me'),
     updateProfile: data => this.put('/auth/profile', data),
     changePassword: (currentPassword, newPassword) =>
