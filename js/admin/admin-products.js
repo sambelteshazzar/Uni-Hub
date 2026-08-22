@@ -165,6 +165,11 @@ class AdminProductsManager {
    * @returns {Object}
    */
   deleteProduct (productId) {
+    // RBAC: product deletion is admin-only (backend enforces too).
+    if (adminAuthManager.adminUser?.role === 'moderator') {
+      return { success: false, error: 'Moderators cannot delete products' };
+    }
+
     const product = this.getProductById(productId);
 
     if (!product) {

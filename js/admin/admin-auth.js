@@ -33,7 +33,9 @@ class AdminAuthManager {
       if (response.success && response.data?.user) {
         const user = response.data.user;
 
-        if (user.role !== 'admin') {
+        // RBAC: admins have full access; moderators get read + moderation
+        // views. Backend routes enforce the same matrix authoritatively.
+        if (!['admin', 'moderator'].includes(user.role)) {
           return { success: false, error: 'Access denied. Admin credentials required.' };
         }
 

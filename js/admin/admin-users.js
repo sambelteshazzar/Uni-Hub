@@ -178,6 +178,12 @@ class AdminUsersManager {
    * @returns {Object}
    */
   async suspendUser (userId, reason) {
+    // RBAC: bans are admin-only (backend enforces authoritatively; this
+    // guard just avoids a guaranteed 403 round-trip for moderators).
+    if (adminAuthManager.adminUser?.role === 'moderator') {
+      return { success: false, error: 'Moderators cannot ban users' };
+    }
+
     const user = this.getUserById(userId);
 
     if (!user) {

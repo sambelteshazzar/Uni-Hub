@@ -21,9 +21,9 @@ router.post('/', protect, submitVerification);
 router.get('/me', protect, getMyVerificationStatus);
 router.get('/status/:studentId/:university', getVerificationStatus);
 
-// Admin routes
-router.get('/pending', protect, authorize('admin'), getPendingVerifications);
-router.put('/:id/approve', protect, authorize('admin'), approveVerification);
-router.put('/:id/reject', protect, authorize('admin'), rejectVerification);
+// Admin + moderator routes (verification queue is moderator work)
+router.get('/pending', protect, authorize('admin', 'moderator'), getPendingVerifications);
+router.put('/:id/approve', protect, authorize('admin', 'moderator'), approveVerification);
+router.put('/:id/reject', protect, authorize('admin', 'moderator'), rejectVerification);
 
 module.exports = router;

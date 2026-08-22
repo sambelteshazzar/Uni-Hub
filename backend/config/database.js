@@ -30,6 +30,11 @@ const ACTIVITY_LOGS_ACTIONS_SQL = [
   'admin_adjustment', 'admin_order_status',
 ].map(a => `'${a}'`).join(',');
 
+// Role tiers (2026-08-21): buyer < moderator < admin. Moderators handle
+// product moderation and verification queues; bans/refunds/payouts stay
+// admin-only. Shared by users + activity_logs schemas and rebuilds.
+const USER_ROLES_SQL = "'buyer','moderator','admin'";
+
 const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
@@ -50,7 +55,7 @@ CREATE TABLE IF NOT EXISTS users (
   totalOrders INTEGER DEFAULT 0,
   totalSales INTEGER DEFAULT 0,
   totalReviews INTEGER DEFAULT 0,
-  role TEXT NOT NULL DEFAULT 'buyer' CHECK(role IN ('buyer','admin')),
+  role TEXT NOT NULL DEFAULT 'buyer' CHECK(role IN (${USER_ROLES_SQL})),
   isActive INTEGER DEFAULT 1,
   isSuspended INTEGER DEFAULT 0,
   banReason TEXT,
@@ -827,7 +832,7 @@ async function runTursoMigrations () {
       'SELECT sql FROM sqlite_master WHERE name=\'activity_logs\'',
     );
     const activitySchemaSql = activityResult.rows[0]?.sql || '';
-    if (activitySchemaSql && !activitySchemaSql.includes('\'payout_approve\'')) {
+    if (activitySchemaSql && !activitySchemaSql.includes('\'moderator\'')) {
       console.log('Migrating activity_logs table for extended audit actions...');
       await tursoClient.execute('ALTER TABLE activity_logs RENAME TO activity_logs_old');
       await tursoClient.execute(`CREATE TABLE activity_logs (
@@ -835,7 +840,7 @@ async function runTursoMigrations () {
   user TEXT REFERENCES users(id),
   userEmail TEXT,
   userName TEXT,
-  userRole TEXT CHECK(userRole IN ('buyer','admin')),
+  userRole TEXT CHECK(userRole IN (${USER_ROLES_SQL})),
   action TEXT NOT NULL CHECK(action IN (${ACTIVITY_LOGS_ACTIONS_SQL})),
   details TEXT,
   ipAddress TEXT,
@@ -863,6 +868,68 @@ async function runTursoMigrations () {
       console.error('Activity logs rollback failed:', rollbackErr.message);
     }
   }
+
+  // Migrate users for the moderator role tier.
+  try {
+    const usersResult = await tursoClient.execute(
+      'SELECT sql FROM sqlite_master WHERE name=\'users\'',
+    );
+    const usersSchemaSql = usersResult.rows[0]?.sql || '';
+    if (usersSchemaSql && !usersSchemaSql.includes('\'moderator\'')) {
+      console.log('Migrating users table for moderator role...');
+      await tursoClient.execute('ALTER TABLE users RENAME TO users_old');
+      await tursoClient.execute(`CREATE TABLE users (
+  id TEXT PRIMARY KEY,
+  fullName TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  phone TEXT NOT NULL,
+  university TEXT NOT NULL,
+  studentId TEXT,
+  level TEXT,
+  hall TEXT,
+  password TEXT NOT NULL,
+  avatar TEXT DEFAULT '',
+  bio TEXT,
+  isVerified INTEGER DEFAULT 0,
+  verificationMethod TEXT,
+  isPending INTEGER DEFAULT 0,
+  rating REAL DEFAULT 0,
+  totalOrders INTEGER DEFAULT 0,
+  totalSales INTEGER DEFAULT 0,
+  totalReviews INTEGER DEFAULT 0,
+  role TEXT NOT NULL DEFAULT 'buyer' CHECK(role IN (${USER_ROLES_SQL})),
+  isActive INTEGER DEFAULT 1,
+  isSuspended INTEGER DEFAULT 0,
+  banReason TEXT,
+  bannedAt TEXT,
+  bannedBy TEXT REFERENCES users(id),
+  lastLogin TEXT,
+  isOnline INTEGER DEFAULT 0,
+  passwordChangedAt TEXT,
+  resetToken TEXT,
+  resetTokenExpiry INTEGER,
+  googleId TEXT,
+  createdAt TEXT DEFAULT (datetime('now')),
+  updatedAt TEXT DEFAULT (datetime('now'))
+)`);
+      await tursoClient.execute('INSERT INTO users SELECT * FROM users_old');
+      await tursoClient.execute('DROP TABLE users_old');
+      console.log('Users role migration complete.');
+    }
+  } catch (usersMigrateErr) {
+    console.error('Users role migration failed:', usersMigrateErr.message);
+    try {
+      const hasOld = await tursoClient.execute(
+        'SELECT name FROM sqlite_master WHERE name=\'users_old\'',
+      );
+      if (hasOld.rows.length > 0) {
+        await tursoClient.execute('ALTER TABLE users_old RENAME TO users');
+        console.log('Rolled back users rename.');
+      }
+    } catch (rollbackErr) {
+      console.error('Users rollback failed:', rollbackErr.message);
+    }
+  }
 }
 
 function connectLocal () {
@@ -883,7 +950,7 @@ function connectLocal () {
   // enum extension (CHECK constraints cannot be ALTERed in SQLite).
   try {
     const activityTbl = db.prepare('SELECT sql FROM sqlite_master WHERE name = \'activity_logs\'').get();
-    if (activityTbl && activityTbl.sql && !activityTbl.sql.includes('\'payout_approve\'')) {
+    if (activityTbl && activityTbl.sql && !activityTbl.sql.includes('\'moderator\'')) {
       console.log('Migrating activity_logs table for extended audit actions...');
       db.exec('ALTER TABLE activity_logs RENAME TO activity_logs_old');
       db.exec(`CREATE TABLE activity_logs (
@@ -891,7 +958,7 @@ function connectLocal () {
         user TEXT REFERENCES users(id),
         userEmail TEXT,
         userName TEXT,
-        userRole TEXT CHECK(userRole IN ('buyer','admin')),
+        userRole TEXT CHECK(userRole IN (${USER_ROLES_SQL})),
         action TEXT NOT NULL CHECK(action IN (${ACTIVITY_LOGS_ACTIONS_SQL})),
         details TEXT,
         ipAddress TEXT,
@@ -915,6 +982,63 @@ function connectLocal () {
       }
     } catch (rollbackErr) {
       console.error('Activity logs rollback failed:', rollbackErr.message);
+    }
+  }
+
+  // Rebuild users if an existing DB predates the moderator role tier.
+  try {
+    const usersTbl = db.prepare('SELECT sql FROM sqlite_master WHERE name = \'users\'').get();
+    if (usersTbl && usersTbl.sql && !usersTbl.sql.includes('\'moderator\'')) {
+      console.log('Migrating users table for moderator role...');
+      db.exec('ALTER TABLE users RENAME TO users_old');
+      db.exec(`CREATE TABLE users (
+        id TEXT PRIMARY KEY,
+        fullName TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        phone TEXT NOT NULL,
+        university TEXT NOT NULL,
+        studentId TEXT,
+        level TEXT,
+        hall TEXT,
+        password TEXT NOT NULL,
+        avatar TEXT DEFAULT '',
+        bio TEXT,
+        isVerified INTEGER DEFAULT 0,
+        verificationMethod TEXT,
+        isPending INTEGER DEFAULT 0,
+        rating REAL DEFAULT 0,
+        totalOrders INTEGER DEFAULT 0,
+        totalSales INTEGER DEFAULT 0,
+        totalReviews INTEGER DEFAULT 0,
+        role TEXT NOT NULL DEFAULT 'buyer' CHECK(role IN (${USER_ROLES_SQL})),
+        isActive INTEGER DEFAULT 1,
+        isSuspended INTEGER DEFAULT 0,
+        banReason TEXT,
+        bannedAt TEXT,
+        bannedBy TEXT REFERENCES users(id),
+        lastLogin TEXT,
+        isOnline INTEGER DEFAULT 0,
+        passwordChangedAt TEXT,
+        resetToken TEXT,
+        resetTokenExpiry INTEGER,
+        googleId TEXT,
+        createdAt TEXT DEFAULT (datetime('now')),
+        updatedAt TEXT DEFAULT (datetime('now'))
+      )`);
+      db.exec('INSERT INTO users SELECT * FROM users_old');
+      db.exec('DROP TABLE users_old');
+      console.log('Users role migration complete.');
+    }
+  } catch (usersMigrateErr) {
+    console.error('Users role migration failed:', usersMigrateErr.message);
+    try {
+      const hasOld = db.prepare('SELECT name FROM sqlite_master WHERE name = \'users_old\'').get();
+      if (hasOld) {
+        db.exec('ALTER TABLE users_old RENAME TO users');
+        console.log('Rolled back users rename.');
+      }
+    } catch (rollbackErr) {
+      console.error('Users rollback failed:', rollbackErr.message);
     }
   }
 
