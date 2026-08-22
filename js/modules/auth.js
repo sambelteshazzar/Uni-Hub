@@ -28,6 +28,26 @@ class AuthManager {
       const session = localStorage.getItem('unihub_session');
       if (session) {
         const parsed = JSON.parse(session);
+
+        // Session separation (2026-08-21): a privileged account must never
+        // occupy the user session slot. Older builds copied the admin token
+        // here after admin-panel logins; migrate it to the dedicated admin
+        // store (if empty) and clear the user session so the main app does
+        // not act with admin credentials.
+        if (parsed.user && ['admin', 'moderator'].includes(parsed.user.role)) {
+          try {
+            const ADMIN_KEY = 'unihub_admin_session';
+            if (!localStorage.getItem(ADMIN_KEY)) {
+              localStorage.setItem(ADMIN_KEY, JSON.stringify({
+                ...parsed,
+                expiresAt: Math.min(parsed.expiresAt || 0, Date.now() + 24 * 60 * 60 * 1000),
+              }));
+            }
+          } catch (_e) { /* storage unavailable — just clear below */ }
+          this.clearSession();
+          return;
+        }
+
         if (parsed.token && parsed.user && parsed.expiresAt > Date.now()) {
           this.token = parsed.token;
           this.currentUser = parsed.user;

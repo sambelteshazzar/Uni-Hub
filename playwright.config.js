@@ -16,7 +16,21 @@ module.exports = defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
   ],
   webServer: [
-    { command: 'cd backend && node server.js', port: 5000, reuseExistingServer: true, timeout: 10000 },
-    { command: 'npx http-server . -p 8000 -c-1 --cors', port: 8000, reuseExistingServer: true, timeout: 10000 },
+    {
+      command: 'cd backend && node server.js',
+      port: 5000,
+      reuseExistingServer: true,
+      // Cold start includes better-sqlite3 load + migrations; give it room.
+      timeout: 60000,
+      // NODE_ENV=test makes the auth API return devCode for MFA challenges
+      // so e2e can complete privileged logins without a mailbox.
+      env: { ...process.env, NODE_ENV: 'test' },
+    },
+    {
+      command: 'npx http-server . -p 8000 -c-1 --cors',
+      port: 8000,
+      reuseExistingServer: true,
+      timeout: 60000,
+    },
   ],
 });

@@ -8,6 +8,7 @@
 const { db, mapUserRow, mapProductRow } = require('../utils/db');
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const logActivity = require('../utils/logActivity');
+const ledger = require('../utils/ledger');
 
 exports.getDashboardStats = asyncHandler(async (req, res) => {
   const totalUsers = await db('users').countDocuments();
@@ -454,5 +455,122 @@ exports.getAnalytics = asyncHandler(async (req, res) => {
       users: userRows.map(r => ({ date: r.date, count: r.count })),
       topProducts: topProducts.map(r => ({ productId: r.productId, title: r.title, sold: r.sold })),
     },
+  });
+});
+
+// ============================================
+// PAYOUT APPROVAL QUEUE (Phase 3)
+// ============================================
+
+/**
+ * @desc List payout requests for the approval queue
+ * @route GET /api/admin/payouts
+ * @access admin
+ */
+exports.getPayoutQueue = asyncHandler(async (req, res) => {
+  const { status, page = 1, limit = 50 } = req.query;
+
+  const query = {};
+  if (status) { query.status = status; }
+
+  const payouts = await db('payouts').find(query, {
+    sort: { requestedAt: -1 },
+    limit: Number(limit),
+    skip: (page - 1) * limit,
+  });
+
+  // Populate seller info for the queue view.
+  const populated = await Promise.all(payouts.map(async (p) => {
+    const seller = await db('users').findById(p.sellerId);
+    return {
+      ...p,
+      seller: seller
+        ? { id: seller.id, fullName: seller.fullName, email: seller.email, phone: seller.phone }
+        : null,
+    };
+  }));
+
+  const total = await db('payouts').countDocuments(query);
+
+  res.json({
+    success: true,
+    data: { payouts: populated, total, page: Number(page), pages: Math.ceil(total / limit) },
+  });
+});
+
+async function gateRequestedPayout (payoutId) {
+  // Status-guarded transition: only ONE approve/reject can win the move
+  // away from 'requested' (same conditional-update pattern as inventory
+  // reservation). Returns the payout row when this caller wins.
+  const payout = await db('payouts').findById(payoutId);
+  if (!payout) {
+    throw new ApiError(404, 'Payout request not found');
+  }
+  const { changes } = await db('payouts').rawRun(
+    'UPDATE payouts SET status = \'processing\', processedAt = ? WHERE id = ? AND status = \'requested\'',
+    [new Date().toISOString(), payoutId],
+  );
+  if (changes === 0) {
+    throw new ApiError(409, 'This payout request has already been handled');
+  }
+  return payout;
+}
+
+/**
+ * @desc Approve a payout — re-checks available funds, writes the negative
+ *   'payout' ledger entry and marks it paid (manual settlement in Phase 3;
+ *   Phase 4 automates via Paystack Transfers).
+ * @route PUT /api/admin/payouts/:id/approve
+ * @access admin
+ */
+exports.approvePayout = asyncHandler(async (req, res) => {
+  const payout = await gateRequestedPayout(req.params.id);
+
+  // Re-check funds at decision time — balance may have moved since request.
+  const balance = await ledger.getSellerBalance(payout.sellerId);
+  if (balance.available < payout.amount) {
+    // Fail closed: put it back to 'requested' so it can be retried/rejected.
+    await db('payouts').updateById(payout.id, { status: 'requested', processedAt: '' });
+    throw new ApiError(400, `Insufficient available balance (GHS ${balance.available.toFixed(2)}) — request left in queue`);
+  }
+
+  await ledger.recordPayout({
+    sellerId: payout.sellerId,
+    amount: payout.amount,
+    note: `manual payout via ${payout.method} to ${payout.destination}`,
+  });
+
+  await db('payouts').updateById(payout.id, { status: 'paid', processedAt: new Date().toISOString() });
+
+  res.json({
+    success: true,
+    message: 'Payout approved and marked paid (manual settlement)',
+    data: await db('payouts').findById(payout.id),
+  });
+});
+
+/**
+ * @desc Reject a payout request with a reason (no ledger effect)
+ * @route PUT /api/admin/payouts/:id/reject
+ * @access admin
+ */
+exports.rejectPayout = asyncHandler(async (req, res) => {
+  const { reason } = req.body;
+  if (!reason || typeof reason !== 'string' || reason.trim().length < 3) {
+    throw new ApiError(400, 'A rejection reason is required');
+  }
+
+  const payout = await gateRequestedPayout(req.params.id);
+
+  await db('payouts').updateById(payout.id, {
+    status: 'failed',
+    failureReason: reason.trim(),
+    processedAt: new Date().toISOString(),
+  });
+
+  res.json({
+    success: true,
+    message: 'Payout request rejected',
+    data: await db('payouts').findById(payout.id),
   });
 });

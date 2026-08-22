@@ -381,7 +381,9 @@ CREATE TABLE IF NOT EXISTS payouts (
   status TEXT DEFAULT 'requested' CHECK(status IN ('requested','approved','processing','paid','failed')),
   failureReason TEXT,
   requestedAt TEXT DEFAULT (datetime('now')),
-  processedAt TEXT
+  processedAt TEXT,
+  createdAt TEXT DEFAULT (datetime('now')),
+  updatedAt TEXT DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS platform_settings (

@@ -180,6 +180,19 @@ async function reverseOrderLedger (orderId) {
 }
 
 /**
+ * Record an approved payout: negative 'payout' entry reduces available.
+ */
+async function recordPayout ({ sellerId, amount, note = null }) {
+  await insertEntry({
+    sellerId,
+    orderId: null,
+    type: 'payout',
+    amount: -Math.abs(roundMoney(amount)),
+    note,
+  });
+}
+
+/**
  * Computed balances for one seller.
  */
 async function getSellerBalance (sellerId) {
@@ -209,4 +222,5 @@ module.exports = {
   recordCashSale,
   reverseOrderLedger,
   getSellerBalance,
+  recordPayout,
 };

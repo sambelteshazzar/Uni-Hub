@@ -1,28 +1,11 @@
 const { test, expect } = require('@playwright/test');
-
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@unihub.local';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin123!';
+const { injectAdminSession } = require('./helpers/admin-auth');
 
 test.describe('Admin Panel', () => {
   test.beforeEach(async ({ page }) => {
-    // Point at the local backend (Playwright's webServer on :5000) instead
-    // of the Render backend. Must run before config.js so it is not clobbered.
-    await page.addInitScript(() => {
-      window.API_URL = 'http://localhost:5000/api';
-    });
-
-    // Log in via the ADMIN login form (matches the regression specs).
-    await page.goto('/#/admin');
-    const emailInput = page.locator('#admin-email');
-    await emailInput.waitFor({ state: 'visible', timeout: 10000 });
-    await emailInput.fill(ADMIN_EMAIL);
-    await page.locator('#admin-password').fill(ADMIN_PASSWORD);
-    const loginRespPromise = page.waitForResponse(resp => resp.url().includes('/api/auth/login'), {
-      timeout: 15000,
-    });
-    await page.locator('#admin-login-form button[type="submit"]').click();
-    await loginRespPromise;
-    await page.waitForTimeout(1500);
+    // Authenticate via the API (handles the MFA step) and inject the
+    // separated admin session — see e2e/helpers/admin-auth.js.
+    await injectAdminSession(page);
   });
 
   test('admin dashboard loads', async ({ page }) => {

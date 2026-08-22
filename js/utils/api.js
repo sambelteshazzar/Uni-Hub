@@ -94,21 +94,54 @@ class API {
   }
 
   /**
-   * Get auth token from storage
-   * Note: auth.js uses 'unihub_session', NOT 'unihub_current_user'
+   * Read a stored session object ({ token, user, expiresAt }) if present
+   * and unexpired. Returns null otherwise.
+   */
+  _readSession (storageKey) {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) {return null;}
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.token && parsed.expiresAt > Date.now()) {
+        return parsed;
+      }
+    } catch (_e) { /* malformed session — treat as absent */ }
+    return null;
+  }
+
+  /**
+   * Get the auth token appropriate for a request.
+   *
+   * Sessions are SEPARATE: the admin panel authenticates from
+   * 'unihub_admin_session' and the main app from 'unihub_session'
+   * (AuthManager). Admin credentials must never leak into user-context
+   * requests and vice versa.
+   */
+  getTokenFor (url) {
+    const path = String(url || '')
+      .replace(/^https?:\/\/[^/]+/i, '')
+      .replace(this.baseURL || '', '')
+      .split('?')[0];
+    const inAdminPanel = typeof location !== 'undefined' &&
+      String(location.hash || '').startsWith('#/admin');
+    const isAdminUrl = /^\/(admin|users|verification)\b/.test(path) ||
+      path.startsWith('/payment/refund');
+
+    if (isAdminUrl || inAdminPanel) {
+      // Prefer the dedicated admin session; fall back to the user session
+      // only when no separate admin login exists (legacy single-session).
+      return this._readSession('unihub_admin_session')?.token ??
+        this._readSession('unihub_session')?.token ?? null;
+    }
+    return this._readSession('unihub_session')?.token ?? null;
+  }
+
+  /**
+   * Get auth token for the current (user) context.
+   * Note: auth.js uses 'unihub_session', NOT 'unihub_current_user'.
    */
   getToken () {
-    try {
-      // Use the same key as auth.js: 'unihub_session'
-      const session = localStorage.getItem('unihub_session');
-      if (session) {
-        const sessionData = JSON.parse(session);
-        return sessionData.token;
-      }
-    } catch (error) {
-      console.error('Error getting token:', error);
-    }
-    return null;
+    return this._readSession('unihub_session')?.token ?? null;
   }
 
   /**
@@ -124,7 +157,7 @@ class API {
     try {
       const fullUrl = url.startsWith('http') ? url : this.baseURL + url;
 
-      const token = this.getToken();
+      const token = this.getTokenFor(fullUrl);
 
       const isMutating = options.method && !['GET', 'HEAD', 'OPTIONS'].includes(options.method.toUpperCase());
       let csrfHeaders = {};
@@ -492,7 +525,7 @@ class API {
         formData.append('images', file);
       }
       const doUpload = async (csrfToken) => {
-        const token = this.getToken();
+        const token = this.getTokenFor(`${this.baseURL}/products/upload`);
         const headers = {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
           ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),

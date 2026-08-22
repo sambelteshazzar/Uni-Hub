@@ -37,4 +37,9 @@ router.get('/activity/stats', authorize(...MODERATOR_ACCESS), asyncHandler(admin
 router.get('/analytics', authorize(...MODERATOR_ACCESS), asyncHandler(adminController.getAnalytics));
 router.get('/online-users', authorize(...MODERATOR_ACCESS), asyncHandler(adminController.getOnlineUsers));
 
+// Payout approval queue — admin-only per the RBAC matrix (moderators: N).
+router.get('/payouts', authorize('admin'), asyncHandler(adminController.getPayoutQueue));
+router.put('/payouts/:id/approve', authorize('admin'), auditMutation('payout_approve'), asyncHandler(adminController.approvePayout));
+router.put('/payouts/:id/reject', authorize('admin'), auditMutation('payout_reject'), asyncHandler(adminController.rejectPayout));
+
 module.exports = router;

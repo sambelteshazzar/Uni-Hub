@@ -32,15 +32,16 @@ function generateCode () {
  */
 async function createChallenge (user) {
   const code = generateCode();
+  // Generate the id here and use it directly: looking the row back up by
+  // `ORDER BY createdAt DESC LIMIT 1` is ambiguous when two logins for the
+  // SAME account land within the same second (datetime('now') granularity),
+  // which cross-wires challenge ids and codes under concurrent logins.
+  const id = generateId();
   await db('admin_mfa_challenges').rawRun(
     'INSERT INTO admin_mfa_challenges (id, userId, codeHash, expiresAt) VALUES (?, ?, ?, ?)',
-    [generateId(), user.id, hashCode(user.id, code), new Date(Date.now() + CODE_TTL_MS).toISOString()],
+    [id, user.id, hashCode(user.id, code), new Date(Date.now() + CODE_TTL_MS).toISOString()],
   );
-  const row = await db('admin_mfa_challenges').rawGet(
-    'SELECT id FROM admin_mfa_challenges WHERE userId = ? ORDER BY createdAt DESC LIMIT 1',
-    [user.id],
-  );
-  const result = { id: row.id };
+  const result = { id };
   if (process.env.NODE_ENV === 'test') {
     result.devCode = code;
   }

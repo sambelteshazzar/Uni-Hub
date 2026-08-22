@@ -29,19 +29,15 @@
 //       (i.e. preventDefault is called and no GET-submit occurs).
 
 const { test, expect } = require('@playwright/test');
-
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@unihub.local';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin123!';
+const { injectAdminSession } = require('./helpers/admin-auth');
 
 test.describe('Admin Add Product form renders without crash (regression)', () => {
   test('renderAdminProductCreate wires submit + back button without null crash', async ({
     page,
   }) => {
-    // Point at the local backend (Playwright's webServer on :5000) instead
-    // of the production Render fallback baked into js/app-init.js:13.
-    await page.addInitScript(() => {
-      window.API_URL = 'http://localhost:5000/api';
-    });
+    // Authenticate via the API (handles the MFA step) and inject the
+    // separated admin session — see e2e/helpers/admin-auth.js.
+    await injectAdminSession(page);
 
     // Listen for the specific console error the bug produced.
     const consoleErrors = [];
@@ -59,22 +55,6 @@ test.describe('Admin Add Product form renders without crash (regression)', () =>
         consoleErrors.push(`[pageerror] ${err.message}`);
       }
     });
-
-    // Log in via the ADMIN login form (route: /#/admin while logged-out).
-    await page.goto('/#/admin');
-    const emailSelector = '#admin-email';
-    await page.locator(emailSelector).waitFor({ state: 'visible', timeout: 10000 });
-    await page.locator('#admin-email').fill(ADMIN_EMAIL);
-    await page.locator('#admin-password').fill(ADMIN_PASSWORD);
-    await expect(page.locator('#admin-email')).toHaveValue(ADMIN_EMAIL);
-    await expect(page.locator('#admin-password')).toHaveValue(ADMIN_PASSWORD);
-
-    const loginRespPromise = page.waitForResponse(resp => resp.url().includes('/api/auth/login'), {
-      timeout: 15000,
-    });
-    await page.locator('#admin-login-form button[type="submit"]').click();
-    const loginResp = await loginRespPromise;
-    expect(loginResp.status(), 'admin login succeeded').toBe(200);
 
     // Now run the function under test: navigate to Add Product.
     await page.goto('/#/admin/products/new');
