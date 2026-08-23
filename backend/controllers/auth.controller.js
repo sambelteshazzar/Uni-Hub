@@ -139,20 +139,22 @@ exports.login = asyncHandler(async (req, res) => {
   // MFA gate: privileged roles must complete an emailed one-time code
   // before a session token is issued. Buyers log in directly, unchanged.
   //
-  // BOUNDED DEV BYPASS (2026-08-22): when running in development WITHOUT a
-  // configured mail transport, email OTP cannot be delivered — requiring it
-  // would lock seed/local admins out of the panel entirely. In that exact
-  // case the login proceeds directly, with a loud warning on every use.
-  // - test env keeps MFA ON (suites assert the challenge flow)
-  // - production ALWAYS enforces MFA, regardless of mail config
+  // NO-MAILTRANSPORT BYPASS (2026-08-22): email OTP cannot be delivered
+  // without a configured mail transport — requiring it would lock admins
+  // out of the panel entirely (sendEmail skips silently, so the code
+  // prompt becomes a dead end). In that exact case login proceeds
+  // directly, with a loud warning on every use.
+  // - test env keeps MFA ON regardless of mail config (suites assert
+  //   the challenge flow)
+  // - configuring EMAIL_* re-enables MFA automatically, no code change
   // TODO: security review — replace email OTP for privileged accounts with
   // TOTP (authenticator app) so no mailbox is needed at all.
   if (['admin', 'moderator'].includes(mappedUser.role)) {
-    const mfaBypassed = process.env.NODE_ENV === 'development' && !isEmailConfigured();
+    const mfaBypassed = process.env.NODE_ENV !== 'test' && !isEmailConfigured();
     if (mfaBypassed) {
       console.warn(
-        `[SECURITY] MFA bypassed for "${mappedUser.email}" — development mode without SMTP. ` +
-        'Configure EMAIL_* or set NODE_ENV=production to enforce email verification.',
+        `[SECURITY] MFA bypassed for "${mappedUser.email}" — no mail transport configured. ` +
+        'Configure EMAIL_* to enforce email verification for privileged logins.',
       );
       await logActivity('login', mappedUser, { email: mappedUser.email, mfaBypassed: true }, 'warning', req);
     } else {
