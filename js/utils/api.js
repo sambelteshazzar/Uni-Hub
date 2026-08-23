@@ -440,6 +440,13 @@ class API {
       this.put(`/verification/${encodeURIComponent(id)}/approve`, { notes }),
     rejectVerification: (id, notes) =>
       this.put(`/verification/${encodeURIComponent(id)}/reject`, { notes }),
+    // Payout approval queue (escrow Phase 3). Approve re-checks seller
+    // funds server-side and writes the ledger entry; reject requires a
+    // reason (>=3 chars) which is stored as failureReason.
+    getPayouts: params => this.get('/admin/payouts', params),
+    approvePayout: id => this.put(`/admin/payouts/${encodeURIComponent(id)}/approve`),
+    rejectPayout: (id, reason) =>
+      this.put(`/admin/payouts/${encodeURIComponent(id)}/reject`, { reason }),
   };
 
   wishlist = {

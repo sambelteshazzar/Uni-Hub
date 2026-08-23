@@ -33,7 +33,7 @@ const ACTIVITY_LOGS_ACTIONS_SQL = [
 // Role tiers (2026-08-21): buyer < moderator < admin. Moderators handle
 // product moderation and verification queues; bans/refunds/payouts stay
 // admin-only. Shared by users + activity_logs schemas and rebuilds.
-const USER_ROLES_SQL = "'buyer','moderator','admin'";
+const USER_ROLES_SQL = ['buyer', 'moderator', 'admin'].map(r => `'${r}'`).join(',');
 
 const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS users (
@@ -943,6 +943,23 @@ async function runTursoMigrations () {
       console.error('Users rollback failed:', rollbackErr.message);
     }
   }
+
+  // Payouts timestamp columns for existing deployments — updateById()
+  // stamps updatedAt, so the column must exist.
+  try {
+    const payoutCols = await tursoClient.execute('PRAGMA table_info(payouts)');
+    const names = payoutCols.rows.map(r => r.name);
+    if (names.length > 0) {
+      if (!names.includes('createdAt')) {
+        await tursoClient.execute('ALTER TABLE payouts ADD COLUMN createdAt TEXT DEFAULT (datetime(\'now\'))');
+      }
+      if (!names.includes('updatedAt')) {
+        await tursoClient.execute('ALTER TABLE payouts ADD COLUMN updatedAt TEXT DEFAULT (datetime(\'now\'))');
+      }
+    }
+  } catch (payoutColErr) {
+    console.error('Payouts timestamp migration failed:', payoutColErr.message);
+  }
 }
 
 function connectLocal () {
@@ -1089,6 +1106,22 @@ function connectLocal () {
     if (!productColsAll.find(c => c.name === 'subcategory')) {
       db.prepare('ALTER TABLE products ADD COLUMN subcategory TEXT').run();
     }
+    // Payouts timestamps (2026-08-22): updateById() stamps updatedAt, so the
+    // columns must exist on pre-existing payouts tables.
+    try {
+      const payoutCols = db.prepare('PRAGMA table_info(payouts)').all();
+      if (payoutCols.length > 0) {
+        if (!payoutCols.find(c => c.name === 'createdAt')) {
+          db.prepare('ALTER TABLE payouts ADD COLUMN createdAt TEXT DEFAULT (datetime(\'now\'))').run();
+        }
+        if (!payoutCols.find(c => c.name === 'updatedAt')) {
+          db.prepare('ALTER TABLE payouts ADD COLUMN updatedAt TEXT DEFAULT (datetime(\'now\'))').run();
+        }
+      }
+    } catch (payoutColErr) {
+      console.error('Payouts timestamp migration failed:', payoutColErr.message);
+    }
+
     // Newsletter tables
     const newsletterCols = db.prepare('PRAGMA table_info(newsletter_subscribers)').all();
     if (newsletterCols.length === 0) {

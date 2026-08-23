@@ -559,6 +559,9 @@ class Db {
       activity_logs: ['id', 'action', 'severity', 'user', 'createdAt'],
       student_verifications: ['id', 'userId', 'status', 'createdAt', 'updatedAt'],
       order_items: ['id', 'orderId', 'productId', 'price', 'quantity'],
+      payouts: ['id', 'sellerId', 'amount', 'status', 'requestedAt', 'processedAt'],
+      ledger_entries: ['id', 'sellerId', 'orderId', 'type', 'status', 'createdAt'],
+      admin_mfa_challenges: ['id', 'userId', 'createdAt', 'expiresAt'],
     };
 
     const allowedFields = allowedSortFields[this.table] || [];

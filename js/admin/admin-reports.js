@@ -99,6 +99,12 @@ class AdminReportsManager {
         pendingProducts: pendingProducts,
         activeOrders: activeOrders,
         pendingVerifications: pendingVerifications,
+        // Marketplace economics (escrow Phase 1): totalRevenue is GMV —
+        // everything flowing through the platform. Real platform income is
+        // commissionEarned; escrowHeld is seller money not yet released.
+        // 0 in offline mode (ledger is server-authoritative).
+        commissionEarned: backendStats?.commissionEarned ?? 0,
+        escrowHeld: backendStats?.escrowHeld ?? 0,
       },
   today: {
   orders: todayOrders.length,

@@ -212,8 +212,17 @@ async function sendNewOrderEmail (email, order) {
   return sendEmail(email, `JERTS CART — New Order #${order.orderNumber || order._id}`, html);
 }
 
+/**
+ * Whether an SMTP transport is configured (EMAIL_HOST/USER/PASS present).
+ * Used by the auth layer to decide if email MFA can actually deliver.
+ */
+function isEmailConfigured () {
+  return !!getTransporter();
+}
+
 module.exports = {
   sendEmail,
+  isEmailConfigured,
   sendPasswordResetEmail,
   sendVerificationEmail,
   sendOrderConfirmationEmail,

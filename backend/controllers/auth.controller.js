@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const { db, mapUserRow } = require('../utils/db');
 const { generateToken, generateResetToken } = require('../utils/token.util');
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
-const { sendPasswordResetEmail, sendEmail } = require('../utils/emailService');
+const { sendPasswordResetEmail, sendEmail, isEmailConfigured } = require('../utils/emailService');
 const logActivity = require('../utils/logActivity');
 const mfa = require('../utils/mfa');
 
@@ -138,24 +138,42 @@ exports.login = asyncHandler(async (req, res) => {
 
   // MFA gate: privileged roles must complete an emailed one-time code
   // before a session token is issued. Buyers log in directly, unchanged.
+  //
+  // BOUNDED DEV BYPASS (2026-08-22): when running in development WITHOUT a
+  // configured mail transport, email OTP cannot be delivered — requiring it
+  // would lock seed/local admins out of the panel entirely. In that exact
+  // case the login proceeds directly, with a loud warning on every use.
+  // - test env keeps MFA ON (suites assert the challenge flow)
+  // - production ALWAYS enforces MFA, regardless of mail config
+  // TODO: security review — replace email OTP for privileged accounts with
+  // TOTP (authenticator app) so no mailbox is needed at all.
   if (['admin', 'moderator'].includes(mappedUser.role)) {
-    const challenge = await mfa.createChallenge(user);
-    await sendEmail(
-      mappedUser.email,
-      'JERTS CART admin login code',
-      `<p>Your JERTS CART admin login code is:</p>
-       <p style="font-size:28px;font-weight:700;letter-spacing:6px;">${challenge.devCode || '••••••'}</p>
-       <p>This code expires in 5 minutes. If you did not attempt to log in, change your password immediately.</p>`,
-    );
-    return res.json({
-      success: true,
-      message: 'Verification code sent to your email',
-      data: {
-        mfaRequired: true,
-        challengeId: challenge.id,
-        ...(challenge.devCode ? { devCode: challenge.devCode } : {}),
-      },
-    });
+    const mfaBypassed = process.env.NODE_ENV === 'development' && !isEmailConfigured();
+    if (mfaBypassed) {
+      console.warn(
+        `[SECURITY] MFA bypassed for "${mappedUser.email}" — development mode without SMTP. ` +
+        'Configure EMAIL_* or set NODE_ENV=production to enforce email verification.',
+      );
+      await logActivity('login', mappedUser, { email: mappedUser.email, mfaBypassed: true }, 'warning', req);
+    } else {
+      const challenge = await mfa.createChallenge(user);
+      await sendEmail(
+        mappedUser.email,
+        'JERTS CART admin login code',
+        `<p>Your JERTS CART admin login code is:</p>
+         <p style="font-size:28px;font-weight:700;letter-spacing:6px;">${challenge.devCode || '••••••'}</p>
+         <p>This code expires in 5 minutes. If you did not attempt to log in, change your password immediately.</p>`,
+      );
+      return res.json({
+        success: true,
+        message: 'Verification code sent to your email',
+        data: {
+          mfaRequired: true,
+          challengeId: challenge.id,
+          ...(challenge.devCode ? { devCode: challenge.devCode } : {}),
+        },
+      });
+    }
   }
 
   await db('users').updateById(user.id, { lastLogin: new Date().toISOString() });

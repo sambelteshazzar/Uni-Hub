@@ -218,6 +218,7 @@ class Pages {
     router.register('/admin/analytics', () => this.renderAdminAnalytics());
     router.register('/admin/users', () => this.renderAdminUsers());
     router.register('/admin/orders', () => this.renderAdminOrders());
+    router.register('/admin/payouts', () => this.renderAdminPayouts());
     router.register('/admin/reports', () => this.renderAdminReports());
     router.register('/admin/activity', () => this.renderAdminActivity());
     router.register('/admin/regions', () => this.renderAdminRegions());
@@ -3847,6 +3848,12 @@ font-size: 0.8rem;
         icon: Icons.clipboard,
         action: 'Pages.renderAdminOrders()',
       },
+      {
+        key: 'payouts',
+        label: 'Payouts',
+        icon: Icons.money,
+        action: 'Pages.renderAdminPayouts()',
+      },
       { key: 'reports', label: 'Reports', icon: Icons.chart, action: 'Pages.renderAdminReports()' },
       {
         key: 'analytics',
@@ -3958,6 +3965,17 @@ font-size: 0.8rem;
 
     const stats = await adminReportsManager.getDashboardOverview();
 
+    // Payout queue snapshot for the dashboard card. Non-fatal: if the
+    // endpoint is unavailable (offline/static deploy) the card still
+    // renders without a count badge.
+    let pendingPayoutCount = 0;
+    try {
+      const payoutsResp = await api.admin.getPayouts();
+      if (payoutsResp.success && Array.isArray(payoutsResp.data?.payouts)) {
+        pendingPayoutCount = payoutsResp.data.payouts.filter(p => p.status === 'requested').length;
+      }
+    } catch (_e) { /* queue unavailable */ }
+
     document.getElementById('admin-stats-grid').innerHTML = `
   <div class="admin-stat-card">
   <div class="admin-stat-header">
@@ -3989,7 +4007,21 @@ font-size: 0.8rem;
   <span class="admin-stat-change positive">+GHS ${stats.today.revenue.toLocaleString()} today</span>
   </div>
   <div class="admin-stat-value">${Formatter.formatPrice(stats.summary.totalRevenue)}</div>
-  <div class="admin-stat-label">Total Revenue</div>
+  <div class="admin-stat-label">GMV (Gross Sales)</div>
+  </div>
+  <div class="admin-stat-card" title="Platform commission on released escrow — actual revenue">
+  <div class="admin-stat-header">
+  <div class="admin-stat-icon primary">${Icons.money}</div>
+  </div>
+  <div class="admin-stat-value">${Formatter.formatPrice(stats.summary.commissionEarned || 0)}</div>
+  <div class="admin-stat-label">Commission Earned</div>
+  </div>
+  <div class="admin-stat-card" title="Seller funds held in escrow, not yet released">
+  <div class="admin-stat-header">
+  <div class="admin-stat-icon warning">${Icons.shield || Icons.clipboard}</div>
+  </div>
+  <div class="admin-stat-value">${Formatter.formatPrice(stats.summary.escrowHeld || 0)}</div>
+  <div class="admin-stat-label">Escrow Held</div>
   </div>
   <div class="admin-stat-card" style="cursor:pointer;" onclick="Pages.renderAdminVerifications()">
     <div class="admin-stat-header">
@@ -3999,7 +4031,28 @@ font-size: 0.8rem;
     <div class="admin-stat-value">${stats.summary.pendingVerifications || 0}</div>
     <div class="admin-stat-label">Pending Verifications</div>
   </div>
+  <div class="admin-stat-card" style="cursor:pointer;" data-nav-payouts role="button" tabindex="0" aria-label="Open payout queue" title="Seller payout approval queue">
+    <div class="admin-stat-header">
+      <div class="admin-stat-icon ${pendingPayoutCount > 0 ? '' : 'success'}" style="${pendingPayoutCount > 0 ? 'background:rgba(239,68,68,0.15);color:#ef4444;' : ''}">${Icons.money}</div>
+      ${pendingPayoutCount > 0 ? `<span class="admin-stat-change warning">${pendingPayoutCount} awaiting review</span>` : ''}
+    </div>
+    <div class="admin-stat-value">${pendingPayoutCount > 0 ? pendingPayoutCount : '—'}</div>
+    <div class="admin-stat-label">Payout Queue</div>
+  </div>
   `;
+
+    // Delegated navigation to the payout queue — replaces an inline
+    // onclick (CSP-friendly). Keyboard activation included for a11y.
+    const payoutCard = document.querySelector('[data-nav-payouts]');
+    if (payoutCard) {
+      payoutCard.addEventListener('click', () => { Pages.renderAdminPayouts(); });
+      payoutCard.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          Pages.renderAdminPayouts();
+        }
+      });
+    }
 
     const recentOrdersHtml =
       (stats.recentOrders || [])
@@ -4246,6 +4299,284 @@ font-size: 0.8rem;
         </div>
       </main>
     </div>`;
+  }
+
+  // ============================================
+  // PAYOUT APPROVAL QUEUE (escrow Phase 3)
+  // Seller withdrawal requests. Approve = funds check + ledger write +
+  // manual settlement mark; Reject = requires a stored reason.
+  // ============================================
+
+  static _payoutStatusClass (status) {
+    // Maps payout states onto existing admin-status-badge classes.
+    const badgeMap = {
+      paid: 'delivered',
+      failed: 'cancelled',
+      processing: 'in_transit',
+      approved: 'in_transit',
+    };
+    return badgeMap[status] || 'placed';
+  }
+
+  static async renderAdminPayouts (filter) {
+    if (!_requireAdmin()) {return;}
+    const adminUser =
+      (typeof adminAuthManager !== 'undefined' && adminAuthManager.getCurrentUser?.()) ||
+      null;
+    if (!adminUser) {
+      this.renderAdminLogin();
+      return;
+    }
+
+    this.hideOriginalNavFooter();
+    document.body.style.background = '';
+
+    const mainContent = document.getElementById('main-content');
+    mainContent.innerHTML = `
+      <div class="admin-container">
+        ${this.getAdminSidebar('payouts')}
+        <main class="admin-main">
+          <div class="admin-header">
+            <div>
+              <h1 class="admin-title">Seller Payouts</h1>
+              <p style="margin:0;color:#9ca3af;font-size:0.85rem;">Review and settle seller withdrawal requests</p>
+            </div>
+          </div>
+          <div class="admin-stat-card"><div class="admin-stat-value">--</div><div class="admin-stat-label">Loading...</div></div>
+        </main>
+      </div>
+    `;
+
+    // One fetch for the whole queue (backend caps page size); counts and
+    // filtering are derived client-side so tab switches don't refetch.
+    let payouts = [];
+    let loadError = null;
+    try {
+      const resp = await api.admin.getPayouts({ limit: 200 });
+      if (resp.success && Array.isArray(resp.data?.payouts)) {
+        payouts = resp.data.payouts;
+      } else {
+        loadError = resp.error || 'Failed to load payout queue.';
+      }
+    } catch (err) {
+      loadError = err.message || 'Failed to load payout queue.';
+    }
+
+    this._payoutFilter = filter || this._payoutFilter || 'requested';
+    const activeFilter = this._payoutFilter;
+
+    const counts = { requested: 0, paid: 0, failed: 0 };
+    for (const p of payouts) {
+      if (counts[p.status] !== undefined) { counts[p.status]++; }
+    }
+    const visible = activeFilter === 'all' ? payouts : payouts.filter(p => p.status === activeFilter);
+
+    const statusTabs = [
+      { key: 'requested', label: `Requested (${counts.requested})` },
+      { key: 'paid', label: `Paid (${counts.paid})` },
+      { key: 'failed', label: `Rejected (${counts.failed})` },
+      { key: 'all', label: `All (${payouts.length})` },
+    ]
+      .map(
+        t => `
+            <button class="btn btn-sm ${activeFilter === t.key ? 'btn-primary' : 'btn-ghost'}" data-payout-filter="${t.key}" style="font-size:0.75rem;">${t.label}</button>`,
+      )
+      .join('');
+
+    const rows =
+      visible
+        .map(
+          p => `
+                  <tr>
+                    <td>
+                      <div style="font-weight:600;color:#f9fafb;">${_pageEsc(p.seller?.fullName || 'Unknown seller')}</div>
+                      <div style="font-size:0.75rem;color:#9ca3af;">${_pageEsc(p.seller?.email || '')}</div>
+                      <div style="font-size:0.75rem;color:#6b7280;">${_pageEsc(p.seller?.phone || '')}</div>
+                    </td>
+                    <td style="font-weight:600;">${Formatter.formatPrice(p.amount || 0)}</td>
+                    <td>${_pageEsc(Formatter.capitalize(p.method || ''))}</td>
+                    <td style="font-family:monospace;font-size:0.8rem;color:#60a5fa;">${_pageEsc(p.destination || '')}</td>
+                    <td style="font-size:0.8rem;color:#9ca3af;">${Formatter.formatTimeAgo(p.requestedAt)}</td>
+                    <td>
+                      <span class="admin-status-badge ${this._payoutStatusClass(p.status)}" style="text-transform:capitalize;">${_pageEsc(p.status)}</span>
+                      ${p.failureReason ? `<div style="font-size:0.7rem;color:#f87171;margin-top:0.25rem;max-width:160px;">${_pageEsc(p.failureReason)}</div>` : ''}
+                      ${p.processedAt ? `<div style="font-size:0.7rem;color:#6b7280;margin-top:0.25rem;">${Formatter.formatTimeAgo(p.processedAt)}</div>` : ''}
+                    </td>
+                    <td>
+                      ${
+  p.status === 'requested'
+    ? `
+                        <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
+                          <button class="btn btn-sm" data-payout-action="approve" data-id="${_pageEsc(p.id)}" aria-label="Approve payout"
+                            style="padding:3px 8px;font-size:11px;background:#059669;color:#fff;border:none;cursor:pointer;">✓ Approve</button>
+                          <button class="btn btn-sm" data-payout-action="reject" data-id="${_pageEsc(p.id)}" aria-label="Reject payout"
+                            style="padding:3px 8px;font-size:11px;background:#dc2626;color:#fff;border:none;cursor:pointer;">✕ Reject</button>
+                        </div>
+                      `
+    : ''
+}
+                    </td>
+                  </tr>
+                  `,
+        )
+        .join('') ||
+      `<tr><td colspan="7" style="text-align:center;color:#6b7280;padding:2rem;">No ${activeFilter === 'all' ? '' : `${_pageEsc(activeFilter)} `}payout requests</td></tr>`;
+
+    mainContent.innerHTML = `
+      <div class="admin-container">
+        ${this.getAdminSidebar('payouts')}
+        <main class="admin-main">
+          <div class="admin-header">
+            <div>
+              <h1 class="admin-title">Seller Payouts</h1>
+              <p style="margin:0;color:#9ca3af;font-size:0.85rem;">
+                Approving marks the payout PAID for manual settlement and writes the ledger entry.
+              </p>
+            </div>
+          </div>
+
+          ${loadError ? `<div style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.4);color:#f87171;padding:0.75rem 1rem;border-radius:0.5rem;margin-bottom:1rem;font-size:0.85rem;">${_pageEsc(loadError)} Offline or server unreachable.</div>` : ''}
+
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3>Payout Requests</h3>
+              <div style="display:flex;gap:0.5rem;" id="admin-payout-filters">${statusTabs}</div>
+            </div>
+            <div class="admin-table-container" style="box-shadow:none;border-radius:0;" id="admin-payouts-table">
+              ${
+  visible.length === 0 && payouts.length > 0
+    ? `
+                <div style="text-align:center;padding:3rem;color:#6b7280;">
+                  <div style="font-size:2.5rem;margin-bottom:1rem;">💸</div>
+                  <p style="margin:0;font-size:1rem;">No ${activeFilter === 'all' ? '' : `${_pageEsc(activeFilter)} `}payout requests</p>
+                </div>
+              `
+    : `
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Seller</th>
+                      <th>Amount</th>
+                      <th>Method</th>
+                      <th>Destination</th>
+                      <th>Requested</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>${rows}</tbody>
+                </table>
+              `
+}
+            </div>
+          </div>
+        </main>
+      </div>
+    `;
+
+    // Event delegation on stable parents — no new inline handlers (CSP).
+    mainContent.querySelector('#admin-payout-filters').addEventListener('click', e => {
+      const btn = e.target.closest('[data-payout-filter]');
+      if (btn) { Pages.renderAdminPayouts(btn.dataset.payoutFilter); }
+    });
+
+    mainContent.querySelector('#admin-payouts-table').addEventListener('click', e => {
+      const btn = e.target.closest('[data-payout-action]');
+      if (!btn) { return; }
+      const id = btn.dataset.id;
+      if (btn.dataset.payoutAction === 'approve') {
+        void Pages._approvePayout(id);
+      } else if (btn.dataset.payoutAction === 'reject') {
+        Pages._openRejectPayoutModal(id);
+      }
+    });
+  }
+
+  static async _approvePayout (id) {
+    if (!_requireAdmin()) {return;}
+    // TODO: security review — money-moving action; confirm guards against
+    // accidental double-click but real protection is the backend's
+    // status-guarded transition (409 on already-handled requests).
+    if (!window.confirm('Approve this payout?\n\nIt will be marked PAID for manual settlement and a negative ledger entry will be recorded for the seller.')) {
+      return;
+    }
+    try {
+      const resp = await api.admin.approvePayout(id);
+      if (resp.success) {
+        showToast('Payout approved and marked paid', 'success');
+      } else {
+        showToast(resp.error || 'Failed to approve payout', 'error');
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to approve payout', 'error');
+    }
+    await this.renderAdminPayouts();
+  }
+
+  static _openRejectPayoutModal (id) {
+    if (!_requireAdmin()) {return;}
+
+    const overlay = document.createElement('div');
+    overlay.id = 'payout-reject-overlay';
+    overlay.style.cssText =
+      'position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:2000;padding:2rem;';
+    // Static markup only — no interpolated data, safe to build via HTML.
+    overlay.innerHTML = `
+      <div role="dialog" aria-modal="true" aria-labelledby="payout-reject-title" style="background:#111827;border:1px solid rgba(255,255,255,0.1);border-radius:0.75rem;max-width:420px;width:100%;padding:1.5rem;">
+        <h3 id="payout-reject-title" style="margin:0 0 0.5rem;color:#f9fafb;">Reject payout request</h3>
+        <p style="margin:0 0 1rem;color:#9ca3af;font-size:0.85rem;">Rejection is final — the seller would need to submit a new request. The reason is kept in the payout record.</p>
+        <textarea id="payout-reject-reason" maxlength="300" rows="3" placeholder="Reason (min 3 characters)"
+          style="width:100%;background:#1f2937;border:1px solid rgba(255,255,255,0.15);border-radius:0.5rem;color:#e5e7eb;padding:0.6rem;font-size:0.85rem;resize:vertical;"></textarea>
+        <p id="payout-reject-error" role="alert" style="display:none;color:#f87171;font-size:0.78rem;margin:0.5rem 0 0;"></p>
+        <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1rem;">
+          <button type="button" data-payout-modal-cancel class="btn btn-ghost btn-sm">Cancel</button>
+          <button type="button" id="payout-reject-confirm" class="btn btn-sm" style="background:#dc2626;color:#fff;border:none;">Reject request</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const close = () => {
+      document.removeEventListener('keydown', escListener);
+      overlay.remove();
+    };
+    const escListener = e => {
+      if (e.key === 'Escape') {close();}
+    };
+    document.addEventListener('keydown', escListener);
+
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) {close();}
+    });
+    overlay.querySelector('[data-payout-modal-cancel]').addEventListener('click', close);
+
+    const confirmBtn = overlay.querySelector('#payout-reject-confirm');
+    const errorEl = overlay.querySelector('#payout-reject-error');
+    confirmBtn.addEventListener('click', async () => {
+      const reason = overlay.querySelector('#payout-reject-reason').value.trim();
+      if (reason.length < 3) {
+        errorEl.textContent = 'Please enter a rejection reason of at least 3 characters.';
+        errorEl.style.display = 'block';
+        return;
+      }
+      confirmBtn.disabled = true;
+      try {
+        const resp = await api.admin.rejectPayout(id, reason);
+        if (resp.success) {
+          showToast('Payout request rejected', 'success');
+        } else {
+          showToast(resp.error || 'Failed to reject payout', 'error');
+        }
+        close();
+        await Pages.renderAdminPayouts();
+      } catch (err) {
+        confirmBtn.disabled = false;
+        errorEl.textContent = err.message || 'Failed to reject payout.';
+        errorEl.style.display = 'block';
+      }
+    });
+
+    overlay.querySelector('#payout-reject-reason').focus();
   }
 
   static viewVerificationDetail (id) {

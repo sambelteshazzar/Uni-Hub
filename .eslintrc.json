@@ -57,6 +57,7 @@
     "StorageManager": "readonly",
     "Validator": "readonly",
     "Formatter": "readonly",
+    "Icons": "readonly",
     "CryptoUtil": "readonly",
     "showToast": "readonly",
     "api": "readonly",
