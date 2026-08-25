@@ -49,3 +49,22 @@ describe('doc retention schema', () => {
     expect(count).toBe(0);
   });
 });
+
+describe('fileSignature.sniffDocumentType', () => {
+  const { sniffDocumentType } = require('../utils/fileSignature');
+
+  test('recognizes JPEG magic bytes', () => {
+    expect(sniffDocumentType(Buffer.from([0xFF, 0xD8, 0xFF, 0xE0]))).toBe('image/jpeg');
+  });
+  test('recognizes PNG magic bytes', () => {
+    expect(sniffDocumentType(Buffer.from([0x89, 0x50, 0x4E, 0x47]))).toBe('image/png');
+  });
+  test('recognizes PDF magic bytes', () => {
+    expect(sniffDocumentType(Buffer.from('%PDF-1.7'))).toBe('application/pdf');
+  });
+  test('rejects GIF, SVG/text and empty buffers', () => {
+    expect(sniffDocumentType(Buffer.from('GIF89a'))).toBeNull();
+    expect(sniffDocumentType(Buffer.from('<svg>'))).toBeNull();
+    expect(sniffDocumentType(Buffer.alloc(0))).toBeNull();
+  });
+});
