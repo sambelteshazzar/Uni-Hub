@@ -7,6 +7,8 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth.middleware');
+const { uploadVerificationDocs } = require('../middleware/upload.middleware');
+const { ApiError } = require('../utils/errorHandler');
 const {
   submitVerification,
   getPendingVerifications,
@@ -17,7 +19,17 @@ const {
 } = require('../controllers/verification.controller');
 
 // Authenticated routes
-router.post('/', protect, submitVerification);
+router.post('/', protect, (req, res, next) => {
+  uploadVerificationDocs(req, res, (err) => {
+    if (err instanceof require('multer').MulterError) {
+      next(new ApiError(400, err.message));
+    } else if (err) {
+      next(new ApiError(400, err.message));
+    } else {
+      next();
+    }
+  });
+}, submitVerification);
 router.get('/me', protect, getMyVerificationStatus);
 router.get('/status/:studentId/:university', getVerificationStatus);
 

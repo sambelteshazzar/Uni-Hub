@@ -5,6 +5,28 @@
 const request = require('supertest');
 const { createTestApp } = require('./test-server');
 
+jest.mock('../utils/cloudinary.util', () => {
+  const actual = jest.requireActual('../utils/cloudinary.util');
+  const stored = [];
+  return {
+    ...actual,
+    __storedAssets: stored,
+    uploadPrivateDocument: jest.fn(async (buffer, folder, mimeType) => {
+      const publicId = `${folder}/mock-${stored.length + 1}`;
+      stored.push({ publicId, mimeType, destroyed: false });
+      return { publicId, bytes: buffer.length };
+    }),
+    destroyDocument: jest.fn(async (publicId) => {
+      const asset = stored.find(a => a.publicId === publicId);
+      if (asset) { asset.destroyed = true; }
+      return { result: 'ok' };
+    }),
+    getSignedDocumentUrl: jest.fn(
+      publicId => `https://res.cloudinary.com/signed/${publicId}`,
+    ),
+  };
+});
+
 const app = createTestApp();
 
 async function registerUser (role = 'buyer', prefix = 'vdoc') {
@@ -66,5 +88,80 @@ describe('fileSignature.sniffDocumentType', () => {
     expect(sniffDocumentType(Buffer.from('GIF89a'))).toBeNull();
     expect(sniffDocumentType(Buffer.from('<svg>'))).toBeNull();
     expect(sniffDocumentType(Buffer.alloc(0))).toBeNull();
+  });
+});
+
+describe('multipart verification submit', () => {
+  let buyer;
+  beforeEach(async () => {
+    buyer = await registerUser('buyer', 'mpsub');
+    require('../utils/cloudinary.util').__storedAssets.length = 0;
+  });
+
+  const pngBuf = () => Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+
+  test('stores files as private assets with metadata rows', async () => {
+    const res = await request(app)
+      .post('/api/verification')
+      .set('Authorization', `Bearer ${buyer.token}`)
+      .field('studentId', '20651000')
+      .field('fullName', 'Doc Buyer')
+      .field('email', buyer.email)
+      .field('phone', '+233201000001')
+      .field('university', 'University of Ghana')
+      .field('level', '200')
+      .field('verificationMethod', 'document')
+      .attach('documents', pngBuf(), 'id.png')
+      .attach('documents', Buffer.from('%PDF-1.4 test'), 'letter.pdf');
+
+    expect(res.status).toBe(201);
+    const { getDb } = require('../config/database');
+    const rows = getDb().prepare(
+      'SELECT fileName, cloudinaryPublicId, sizeBytes, mimeType FROM verification_documents WHERE verificationId = ?',
+    ).all(res.body.data.id || res.body.data._id);
+    expect(rows).toHaveLength(2);
+    expect(rows[0].cloudinaryPublicId).toContain('uni-hub/verifications/');
+    expect(rows.find(r => r.mimeType === 'image/png')).toBeTruthy();
+    expect(rows.find(r => r.mimeType === 'application/pdf')).toBeTruthy();
+  });
+
+  test('rejects disallowed content types by magic bytes', async () => {
+    const res = await request(app)
+      .post('/api/verification')
+      .set('Authorization', `Bearer ${buyer.token}`)
+      .field('studentId', '20651001')
+      .field('fullName', 'Evil Buyer')
+      .field('email', buyer.email)
+      .field('phone', '+233201000002')
+      .field('university', 'University of Ghana')
+      .field('level', '200')
+      .field('verificationMethod', 'document')
+      .attach('documents', Buffer.from('GIF89a-not-allowed'), 'evil.gif');
+
+    expect(res.status).toBe(400);
+    expect(require('../utils/cloudinary.util').__storedAssets).toHaveLength(0);
+  });
+
+  test('rolls back uploaded assets when a later file fails validation', async () => {
+    const res = await request(app)
+      .post('/api/verification')
+      .set('Authorization', `Bearer ${buyer.token}`)
+      .field('studentId', '20651002')
+      .field('fullName', 'Rollback Buyer')
+      .field('email', buyer.email)
+      .field('phone', '+233201000003')
+      .field('university', 'University of Ghana')
+      .field('level', '200')
+      .field('verificationMethod', 'document')
+      .attach('documents', pngBuf(), 'good.png')
+      .attach('documents', Buffer.from('MZ-not-a-document'), 'fake.pdf');
+
+    expect(res.status).toBe(400);
+    const stored = require('../utils/cloudinary.util').__storedAssets;
+    // fake.pdf passes the multer extension filter but fails magic-byte
+    // sniffing in the controller — this exercises the ROLLBACK path:
+    // good.png was already uploaded and must have been destroyed.
+    expect(stored.length).toBeGreaterThanOrEqual(1);
+    expect(stored.filter(a => a.destroyed)).toHaveLength(stored.length);
   });
 });

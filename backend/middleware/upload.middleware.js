@@ -49,6 +49,21 @@ const uploadMemory = multer({
   fileFilter,
 });
 
+// Verification documents: PDF allowed alongside images. This transport-level
+// filter is convenience only — the controller validates real content via
+// magic bytes (spec 2026-08-23).
+const verificationFileFilter = (req, file, cb) => {
+  const ok = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'].includes(file.mimetype) ||
+    /\.(jpe?g|png|pdf)$/i.test(file.originalname);
+  if (ok) { cb(null, true); } else { cb(new Error('Only JPEG, PNG or PDF documents are allowed')); }
+};
+
+const uploadVerificationDocs = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024, files: 3 },
+  fileFilter: verificationFileFilter,
+}).array('documents', 3);
+
 // Export upload middleware
 module.exports = {
 // Upload single image
@@ -62,4 +77,7 @@ module.exports = {
 
   // Upload multiple fields
   uploadFields: (fields) => upload.fields(fields),
+
+  // Verification documents (jpg/png/pdf, ≤5 MB, ≤3 files)
+  uploadVerificationDocs,
 };

@@ -14,7 +14,7 @@ exports.submitVerification = asyncHandler(async (req, res) => {
     hall,
     verificationMethod,
     universityEmail,
-    documents,
+    documents: _documents,
   } = req.body;
 
   const existing = await db('student_verifications').findOne({
@@ -55,14 +55,40 @@ exports.submitVerification = asyncHandler(async (req, res) => {
 
   const verification = await db('student_verifications').create(verificationData);
 
-  if (documents && Array.isArray(documents)) {
-    for (const doc of documents) {
-      await db('verification_documents').create({
-        verificationId: verification.id,
-        fileName: doc.name || doc.fileName || 'document',
-        fileUrl: doc.url || doc.fileUrl || '',
-        fileType: doc.type || doc.fileType || 'image',
-      });
+  // Documents arrive as multipart files (memory storage). Metadata-only
+  // submissions from the legacy flow are ignored — real assets only.
+  // (`documents` from req.body is intentionally left unused.)
+  if (req.files && req.files.length > 0) {
+    const { sniffDocumentType } = require('../utils/fileSignature');
+    const { uploadPrivateDocument, destroyDocument } = require('../utils/cloudinary.util');
+    const folder = `uni-hub/verifications/${verification.id}`;
+    const uploaded = [];
+    try {
+      for (const file of req.files) {
+        const sniffed = sniffDocumentType(file.buffer);
+        if (!sniffed) {
+          throw new ApiError(400, `"${file.originalname}" is not a valid JPEG, PNG or PDF document`);
+        }
+        const asset = await uploadPrivateDocument(file.buffer, folder, sniffed);
+        uploaded.push({ file, sniffed, asset });
+      }
+      for (const u of uploaded) {
+        await db('verification_documents').create({
+          verificationId: verification.id,
+          fileName: u.file.originalname,
+          fileUrl: '',
+          fileType: u.sniffed,
+          cloudinaryPublicId: u.asset.publicId,
+          sizeBytes: u.file.size,
+          mimeType: u.sniffed,
+        });
+      }
+    } catch (err) {
+      // Roll back any stored assets so failures leave nothing behind.
+      for (const u of uploaded) {
+        try { await destroyDocument(u.asset.publicId, u.sniffed); } catch (_e) { /* sweep retries */ }
+      }
+      throw err instanceof ApiError ? err : new ApiError(500, 'Failed to store verification documents');
     }
   }
 
