@@ -105,4 +105,68 @@ const getPublicIdFromUrl = (url) => {
   return `uni-hub/products/${filename.split('.')[0]}`;
 };
 
-module.exports = { uploadImage, uploadStream, deleteImage, getPublicIdFromUrl };
+// ============================================
+// PRIVATE DOCUMENT HELPERS (verification docs)
+// ============================================
+// Verification documents are PII: uploaded PRIVATE (no unsigned delivery),
+// served only via freshly-signed short-TTL URLs issued by the backend, and
+// destroyed by the retention sweep. URLs are never persisted or logged.
+// TODO: security review — enable token-based auth on the Cloudinary account
+// so __cld_token__ expiry is enforced account-side, not just app-side.
+
+function resourceTypeForMime (mimeType) {
+  return mimeType === 'application/pdf' ? 'raw' : 'image';
+}
+
+const uploadPrivateDocument = (buffer, folder, mimeType) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        type: 'private',
+        resource_type: resourceTypeForMime(mimeType),
+      },
+      (error, result) => {
+        if (error) {
+          console.error('Cloudinary private upload error:', error.message);
+          reject(new Error('Failed to store document'));
+        } else {
+          resolve({ publicId: result.public_id, bytes: result.bytes });
+        }
+      },
+    );
+    stream.end(buffer);
+  });
+};
+
+function getSignedDocumentUrl (publicId, mimeType, ttlSeconds = 300) {
+  const options = {
+    type: 'private',
+    resource_type: resourceTypeForMime(mimeType),
+    secure: true,
+    sign_url: true,
+  };
+  try {
+    options.auth_token = {
+      key: process.env.CLOUDINARY_API_KEY,
+      secret: process.env.CLOUDINARY_API_SECRET,
+      start_time: Math.floor(Date.now() / 1000),
+      duration: ttlSeconds,
+    };
+  } catch (_e) { /* signature alone still keeps the asset private */ }
+  return cloudinary.url(publicId, options);
+}
+
+async function destroyDocument (publicId, mimeType) {
+  try {
+    return await cloudinary.uploader.destroy(publicId, {
+      type: 'private',
+      resource_type: resourceTypeForMime(mimeType),
+    });
+  } catch (error) {
+    console.error(`Cloudinary destroy failed (${publicId}):`, error.message);
+    throw error;
+  }
+}
+
+module.exports = { uploadImage, uploadStream, deleteImage, getPublicIdFromUrl, uploadPrivateDocument, getSignedDocumentUrl, destroyDocument };
