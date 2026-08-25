@@ -353,6 +353,17 @@ CREATE TABLE IF NOT EXISTS verification_documents (
   uploadedAt TEXT DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS consent_records (
+  id TEXT PRIMARY KEY,
+  userId TEXT NOT NULL REFERENCES users(id),
+  documentType TEXT NOT NULL DEFAULT 'terms_and_privacy'
+    CHECK(documentType IN ('terms_and_privacy')),
+  policyVersion TEXT NOT NULL,
+  method TEXT NOT NULL CHECK(method IN ('email_signup','google')),
+  ipAddress TEXT,
+  createdAt TEXT DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS idempotency_keys (
   id TEXT PRIMARY KEY,
   key TEXT NOT NULL,
@@ -461,6 +472,8 @@ CREATE INDEX IF NOT EXISTS idx_verifications_studentId ON student_verifications(
 CREATE INDEX IF NOT EXISTS idx_verifications_email ON student_verifications(email);
 CREATE INDEX IF NOT EXISTS idx_verifications_status ON student_verifications(status, createdAt DESC);
 CREATE INDEX IF NOT EXISTS idx_verifications_userId ON student_verifications(userId);
+
+CREATE INDEX IF NOT EXISTS idx_consent_userId ON consent_records(userId, createdAt);
 
 CREATE INDEX IF NOT EXISTS idx_idempotency_user_created ON idempotency_keys(userId, createdAt);
 
