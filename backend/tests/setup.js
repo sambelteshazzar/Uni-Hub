@@ -17,6 +17,7 @@ global.testUtils = {
     university: 'University of Ghana',
     level: '300',
     role: 'buyer',
+    acceptedTerms: true,
   }),
 
   generateTestProduct: (creatorId) => ({
@@ -45,6 +46,9 @@ afterEach(() => {
   try {
     const database = getDb();
     const tables = [
+      // consent_records references users(id); clear it first or the FK
+      // constraint aborts this loop before users gets cleared.
+      'consent_records',
       'delivery_status_history', 'order_status_history', 'order_items',
       'verification_documents', 'message_deleted_by', 'conversation_participants',
       'search_history', 'activity_logs', 'wishlists', 'notifications',

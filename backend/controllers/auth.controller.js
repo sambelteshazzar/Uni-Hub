@@ -6,12 +6,32 @@ const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { sendPasswordResetEmail, sendEmail, isEmailConfigured } = require('../utils/emailService');
 const logActivity = require('../utils/logActivity');
 const mfa = require('../utils/mfa');
+const { POLICY_VERSION } = require('../config/policies');
 
 function getPublicProfile (user) {
   const { password: _, resetToken: __, resetTokenExpiry: ___, passwordChangedAt: ____, bannedBy: _____, ...profile } = user;
   profile._id = profile.id;
   return profile;
 }
+
+/**
+ * Record a consent artifact for an account. Never throws: signup proceeds
+ * even if the write fails (warning flags the gap; spec trade-off).
+ */
+async function recordConsent (userId, method, ip) {
+  try {
+    await db('consent_records').create({
+      userId,
+      documentType: 'terms_and_privacy',
+      policyVersion: POLICY_VERSION,
+      method,
+      ipAddress: ip || null,
+    });
+  } catch (err) {
+    console.warn('[consent] failed to record consent:', err.message);
+  }
+}
+exports.recordConsentForTesting = recordConsent;
 
 /**
  * @desc Register new user
@@ -67,6 +87,12 @@ exports.register = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'This phone number is already registered');
   }
 
+  // Consent gate (spec 2026-08-23): server-side enforcement — the checkbox
+  // alone is UX. Rejected BEFORE any user record exists.
+  if (req.body.acceptedTerms !== true) {
+    throw new ApiError(400, 'You must accept the Terms of Service and Privacy Policy to create an account');
+  }
+
   const hashedPassword = await bcrypt.hash(password, 12);
 
   const user = await db('users').create({
@@ -86,6 +112,8 @@ exports.register = asyncHandler(async (req, res) => {
   const token = generateToken(mappedUser.id);
 
   await logActivity('signup', mappedUser, { email: mappedUser.email, university: mappedUser.university }, 'info', req);
+
+  await recordConsent(mappedUser.id, 'email_signup', req.ip);
 
   res.status(201).json({
     success: true,
@@ -481,6 +509,8 @@ exports.googleTokenLogin = asyncHandler(async (req, res) => {
     });
 
     await logActivity('signup', mapUserRow(user), { email, method: 'google', phone: syntheticPhone }, 'info', req);
+
+    await recordConsent(user.id, 'google', req.ip);
   } else {
     const mapped = mapUserRow(user);
     if (mapped.isSuspended) {
