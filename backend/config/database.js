@@ -333,6 +333,8 @@ CREATE TABLE IF NOT EXISTS student_verifications (
   reviewedBy TEXT REFERENCES users(id),
   reviewedAt TEXT,
   reviewNotes TEXT,
+  documentsPurgeAt TEXT,
+  documentsPurgedAt TEXT,
   createdAt TEXT DEFAULT (datetime('now')),
   updatedAt TEXT DEFAULT (datetime('now'))
 );
@@ -343,6 +345,9 @@ CREATE TABLE IF NOT EXISTS verification_documents (
   fileName TEXT,
   fileUrl TEXT,
   fileType TEXT,
+  cloudinaryPublicId TEXT,
+  sizeBytes INTEGER,
+  mimeType TEXT,
   uploadedAt TEXT DEFAULT (datetime('now'))
 );
 
@@ -960,6 +965,77 @@ async function runTursoMigrations () {
   } catch (payoutColErr) {
     console.error('Payouts timestamp migration failed:', payoutColErr.message);
   }
+
+  // Doc-retention columns (spec 2026-08-23): real uploads record the
+  // Cloudinary public id, byte size and MIME type per document; decisions
+  // stamp purge bookkeeping on the parent row.
+  try {
+    const docCols = await tursoClient.execute('PRAGMA table_info(verification_documents)');
+    const docNames = docCols.rows.map(r => r.name);
+    if (docNames.length > 0) {
+      if (!docNames.includes('cloudinaryPublicId')) {
+        await tursoClient.execute('ALTER TABLE verification_documents ADD COLUMN cloudinaryPublicId TEXT');
+      }
+      if (!docNames.includes('sizeBytes')) {
+        await tursoClient.execute('ALTER TABLE verification_documents ADD COLUMN sizeBytes INTEGER');
+      }
+      if (!docNames.includes('mimeType')) {
+        await tursoClient.execute('ALTER TABLE verification_documents ADD COLUMN mimeType TEXT');
+      }
+      // One-time cleanup: rows without an asset are dead weight from the
+      // old metadata-only flow.
+      await tursoClient.execute('DELETE FROM verification_documents WHERE cloudinaryPublicId IS NULL');
+    }
+    const parentCols = await tursoClient.execute('PRAGMA table_info(student_verifications)');
+    const parentNames = parentCols.rows.map(r => r.name);
+    if (parentNames.length > 0) {
+      if (!parentNames.includes('documentsPurgeAt')) {
+        await tursoClient.execute('ALTER TABLE student_verifications ADD COLUMN documentsPurgeAt TEXT');
+      }
+      if (!parentNames.includes('documentsPurgedAt')) {
+        await tursoClient.execute('ALTER TABLE student_verifications ADD COLUMN documentsPurgedAt TEXT');
+      }
+    }
+  } catch (docRetentionErr) {
+    console.error('Doc retention migration failed:', docRetentionErr.message);
+  }
+}
+
+/**
+ * Doc-retention migration (spec 2026-08-23): add retention columns and
+ * delete legacy asset-less rows once — they predate real uploads and hold
+ * nothing reviewable (fileName/size stubs).
+ */
+async function runDocRetentionMigration (handle) {
+  try {
+    const target = handle || db;
+    const docCols = target.prepare('PRAGMA table_info(verification_documents)').all();
+    if (docCols.length > 0) {
+      if (!docCols.find(c => c.name === 'cloudinaryPublicId')) {
+        target.prepare('ALTER TABLE verification_documents ADD COLUMN cloudinaryPublicId TEXT').run();
+      }
+      if (!docCols.find(c => c.name === 'sizeBytes')) {
+        target.prepare('ALTER TABLE verification_documents ADD COLUMN sizeBytes INTEGER').run();
+      }
+      if (!docCols.find(c => c.name === 'mimeType')) {
+        target.prepare('ALTER TABLE verification_documents ADD COLUMN mimeType TEXT').run();
+      }
+    }
+    const parentCols = target.prepare('PRAGMA table_info(student_verifications)').all();
+    if (parentCols.length > 0) {
+      if (!parentCols.find(c => c.name === 'documentsPurgeAt')) {
+        target.prepare('ALTER TABLE student_verifications ADD COLUMN documentsPurgeAt TEXT').run();
+      }
+      if (!parentCols.find(c => c.name === 'documentsPurgedAt')) {
+        target.prepare('ALTER TABLE student_verifications ADD COLUMN documentsPurgedAt TEXT').run();
+      }
+    }
+    // One-time cleanup: rows without an asset are dead weight from the old
+    // metadata-only flow.
+    target.prepare('DELETE FROM verification_documents WHERE cloudinaryPublicId IS NULL').run();
+  } catch (err) {
+    console.error('Doc retention migration failed:', err.message);
+  }
 }
 
 function connectLocal () {
@@ -1122,6 +1198,12 @@ function connectLocal () {
       console.error('Payouts timestamp migration failed:', payoutColErr.message);
     }
 
+    // Doc-retention migration (spec 2026-08-23). connectLocal is sync (getDb
+    // hands the handle straight to callers), but every statement in the
+    // migration body is a synchronous better-sqlite3 call, so this completes
+    // before connectLocal returns despite the async signature.
+    runDocRetentionMigration();
+
     // Newsletter tables
     const newsletterCols = db.prepare('PRAGMA table_info(newsletter_subscribers)').all();
     if (newsletterCols.length === 0) {
@@ -1183,3 +1265,4 @@ function isTurso () {
 }
 
 module.exports = { connectDatabase, getDb, getTursoClient, isTurso };
+module.exports.runDocRetentionMigration = runDocRetentionMigration;
