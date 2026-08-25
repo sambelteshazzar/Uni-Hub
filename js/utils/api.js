@@ -398,6 +398,68 @@ class API {
         `/verification/status/${encodeURIComponent(studentId)}/${encodeURIComponent(university)}`,
       ),
     getMyStatus: () => this.get('/verification/me'),
+    /**
+     * Multipart document upload (spec 2026-08-23). Mirrors upload()'s fetch
+     * pattern: FormData must NOT get a manual Content-Type header — the
+     * browser sets it with the correct boundary. request() cannot be used
+     * here because it forces 'Content-Type: application/json' onto every
+     * call and callers cannot unset it via the headers spread. CSRF is still
+     * attached manually via fetchCsrfToken() (same as upload()) because
+     * POST /verification is a CSRF-protected mutation.
+     */
+    submitDocuments: async formData => {
+      if (this.isStaticDeploy) {
+        return Promise.resolve({ success: false, data: null, isOffline: true });
+      }
+      const doPost = async csrfToken => {
+        const fullUrl = this.baseURL + '/verification';
+        const token = this.getTokenFor(fullUrl);
+        return Promise.race([
+          fetch(fullUrl, {
+            method: 'POST',
+            headers: {
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+            },
+            credentials: 'include',
+            body: formData,
+          }),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Request timeout')), this.timeout),
+          ),
+        ]);
+      };
+      const toJson = res =>
+        res.json().catch(() => ({ success: false, error: 'Malformed server response' }));
+      try {
+        let res = await doPost(await this.fetchCsrfToken());
+        if (res.status === 403) {
+          const forbidden = await toJson(res);
+          if (!String(forbidden.error || '').toLowerCase().includes('csrf')) {
+            return forbidden;
+          }
+          // Stale CSRF token — mint a fresh one and retry once.
+          this._csrfToken = null;
+          res = await doPost(await this.fetchCsrfToken());
+        }
+        const data = await toJson(res);
+        if (!res.ok) {
+          return { ...data, success: false, error: data.error || res.statusText };
+        }
+        return data;
+      } catch (error) {
+        if (
+          (error instanceof TypeError && error.message === 'Failed to fetch') ||
+          error.message === 'Request timeout'
+        ) {
+          return { success: false, data: null, isOffline: true };
+        }
+        console.error('API Error:', error);
+        return { success: false, error: error.message };
+      }
+    },
+    getDocuments: id => this.get(`/verification/${encodeURIComponent(id)}/documents`),
+    purgeDocuments: id => this.post(`/verification/${encodeURIComponent(id)}/purge-documents`),
   };
 
   /**
