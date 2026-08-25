@@ -1,6 +1,13 @@
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { db, generateId, toBool, fromBool } = require('../utils/db');
 const { sendVerificationEmail } = require('../utils/emailService');
+// TODO: security review — signed URLs must never be persisted or logged;
+// destroyDocument is consumed by the admin purge endpoint (Task 7).
+const {
+  getSignedDocumentUrl,
+  destroyDocument: _destroyDocument,
+} = require('../utils/cloudinary.util');
+const logActivity = require('../utils/logActivity');
 const crypto = require('crypto');
 
 exports.submitVerification = asyncHandler(async (req, res) => {
@@ -252,6 +259,46 @@ exports.getMyVerificationStatus = asyncHandler(async (req, res) => {
       submittedAt: latestVerification.createdAt,
       reviewedAt: latestVerification.reviewedAt,
       reviewNotes: latestVerification.reviewNotes,
+    },
+  });
+});
+
+/**
+ * @desc List verification documents with fresh signed URLs (PII access audited)
+ * @route GET /api/verification/:id/documents
+ * @access admin/moderator
+ */
+exports.getVerificationDocuments = asyncHandler(async (req, res) => {
+  const verification = await db('student_verifications').findById(req.params.id);
+  if (!verification) {
+    throw new ApiError(404, 'Verification request not found');
+  }
+
+  const docs = await db('verification_documents').find({ verificationId: verification.id });
+  const documents = docs
+    .filter(d => d.cloudinaryPublicId)
+    .map(d => ({
+      fileName: d.fileName,
+      mimeType: d.mimeType || d.fileType || 'application/octet-stream',
+      sizeBytes: d.sizeBytes || 0,
+      url: getSignedDocumentUrl(d.cloudinaryPublicId, d.mimeType || d.fileType, 300),
+    }));
+
+  // PII access logging — who viewed which student's documents, when.
+  // NEVER include the URLs themselves.
+  await logActivity('verification_docs_viewed', req.user, {
+    verificationId: verification.id,
+    studentId: verification.studentId,
+    documentCount: documents.length,
+  }, 'info', req);
+
+  res.set('Cache-Control', 'no-store');
+  res.json({
+    success: true,
+    data: {
+      documents,
+      purged: !!verification.documentsPurgedAt,
+      purgeScheduledFor: verification.documentsPurgeAt || null,
     },
   });
 });

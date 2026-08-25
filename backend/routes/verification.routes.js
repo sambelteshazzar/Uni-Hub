@@ -8,7 +8,7 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth.middleware');
 const { uploadVerificationDocs } = require('../middleware/upload.middleware');
-const { ApiError } = require('../utils/errorHandler');
+const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const {
   submitVerification,
   getPendingVerifications,
@@ -16,6 +16,7 @@ const {
   rejectVerification,
   getVerificationStatus,
   getMyVerificationStatus,
+  getVerificationDocuments,
 } = require('../controllers/verification.controller');
 
 // Authenticated routes
@@ -37,5 +38,7 @@ router.get('/status/:studentId/:university', getVerificationStatus);
 router.get('/pending', protect, authorize('admin', 'moderator'), getPendingVerifications);
 router.put('/:id/approve', protect, authorize('admin', 'moderator'), approveVerification);
 router.put('/:id/reject', protect, authorize('admin', 'moderator'), rejectVerification);
+// PII-bearing document listing — audited per call, short-lived signed URLs only.
+router.get('/:id/documents', protect, authorize('admin', 'moderator'), asyncHandler(getVerificationDocuments));
 
 module.exports = router;

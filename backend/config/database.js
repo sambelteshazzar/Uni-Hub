@@ -28,6 +28,8 @@ const ACTIVITY_LOGS_ACTIONS_SQL = [
   // Server-side audit trail + payouts (2026-08-21):
   'admin_refund', 'payout_request', 'payout_approve', 'payout_reject',
   'admin_adjustment', 'admin_order_status',
+  // Verification-document PII access (spec 2026-08-23):
+  'verification_docs_viewed',
 ].map(a => `'${a}'`).join(',');
 
 // Role tiers (2026-08-21): buyer < moderator < admin. Moderators handle
@@ -850,7 +852,8 @@ async function runTursoMigrations () {
       'SELECT sql FROM sqlite_master WHERE name=\'activity_logs\'',
     );
     const activitySchemaSql = activityResult.rows[0]?.sql || '';
-    if (activitySchemaSql && !activitySchemaSql.includes('\'moderator\'')) {
+    if (activitySchemaSql && (!activitySchemaSql.includes('\'moderator\'') ||
+      !activitySchemaSql.includes('\'verification_docs_viewed\''))) {
       console.log('Migrating activity_logs table for extended audit actions...');
       await tursoClient.execute('ALTER TABLE activity_logs RENAME TO activity_logs_old');
       await tursoClient.execute(`CREATE TABLE activity_logs (
@@ -1056,7 +1059,8 @@ function connectLocal () {
   // enum extension (CHECK constraints cannot be ALTERed in SQLite).
   try {
     const activityTbl = db.prepare('SELECT sql FROM sqlite_master WHERE name = \'activity_logs\'').get();
-    if (activityTbl && activityTbl.sql && !activityTbl.sql.includes('\'moderator\'')) {
+    if (activityTbl && activityTbl.sql && (!activityTbl.sql.includes('\'moderator\'') ||
+      !activityTbl.sql.includes('\'verification_docs_viewed\''))) {
       console.log('Migrating activity_logs table for extended audit actions...');
       db.exec('ALTER TABLE activity_logs RENAME TO activity_logs_old');
       db.exec(`CREATE TABLE activity_logs (

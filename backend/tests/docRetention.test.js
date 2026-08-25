@@ -203,3 +203,48 @@ describe('decision sets purge deadline', () => {
     expect(deltaDays).toBeLessThan(30.1);
   });
 });
+
+describe('document listing endpoint', () => {
+  test('issues signed URLs to moderators, denies buyers, audits the view', async () => {
+    const buyer = await registerUser('buyer', 'listb');
+    // Registration only honors 'admin' in NODE_ENV=test (auth.controller
+    // forces other roles to 'buyer'), so a registered admin exercises the
+    // privileged-viewer side of this behavior.
+    const reviewer = await registerUser('admin', 'lista');
+
+    const sub = await request(app)
+      .post('/api/verification')
+      .set('Authorization', `Bearer ${buyer.token}`)
+      .field('studentId', '20801000')
+      .field('fullName', 'List Buyer')
+      .field('email', buyer.email)
+      .field('phone', '+233203000001')
+      .field('university', 'University of Ghana')
+      .field('level', '100')
+      .field('verificationMethod', 'document')
+      .attach('documents', Buffer.from([0xFF, 0xD8, 0xFF, 0xDB]), 'snap.jpg');
+    const vid = sub.body.data.id || sub.body.data._id;
+
+    const denied = await request(app)
+      .get(`/api/verification/${vid}/documents`)
+      .set('Authorization', `Bearer ${buyer.token}`);
+    expect(denied.status).toBe(403);
+
+    const allowed = await request(app)
+      .get(`/api/verification/${vid}/documents`)
+      .set('Authorization', `Bearer ${reviewer.token}`);
+    expect(allowed.status).toBe(200);
+    expect(allowed.headers['cache-control']).toContain('no-store');
+    expect(allowed.body.data.documents).toHaveLength(1);
+    expect(allowed.body.data.documents[0].url).toContain('https://res.cloudinary.com/signed/');
+    expect(JSON.stringify(allowed.body)).not.toContain('__cld_token__');
+
+    // Audit entry written per call. activity_logs.action stores the action
+    // string directly (CHECK-constrained enum); details are JSON WITHOUT URLs.
+    const { getDb } = require('../config/database');
+    const logs = getDb().prepare(
+      'SELECT COUNT(*) AS n FROM activity_logs WHERE action LIKE \'%docs_viewed%\'',
+    ).get();
+    expect(logs.n).toBeGreaterThanOrEqual(1);
+  });
+});
