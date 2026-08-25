@@ -73,7 +73,7 @@ async function registerUser (overrides = {}, prefix = 'alc') {
     ...overrides,
   };
   const res = await request(app).post('/api/auth/register').send(user);
-  return { token: res.body.data.token, id: res.body.data.user._id, password: user.password };
+  return { token: res.body.data.token, id: res.body.data.user._id, password: user.password, email: user.email };
 }
 
 describe('data export', () => {
@@ -91,7 +91,9 @@ describe('data export', () => {
       expect(body).toHaveProperty(k);
     });
     expect(JSON.stringify(body)).not.toMatch(/LifecyclePass1!/);
-    expect(body.profile.email).toMatch(new RegExp(u.id.slice(-8)));
+    // Account is live at export time: profile carries the REAL email.
+    expect(body.profile.email).toBe(u.email || undefined);
+    expect(body.profile.password).toBeUndefined();
   });
 
   test('requires authentication', async () => {
