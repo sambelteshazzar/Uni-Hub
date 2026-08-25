@@ -715,6 +715,7 @@ const AuthPageMethods = {
   </svg>
   </button>
   </div>
+  <p class="social-consent-note" style="font-size:0.72rem;color:#9ca3af;text-align:center;margin-top:0.5rem;">By continuing with Google, you agree to our Terms of Service and Privacy Policy.</p>
 
     <div class="divider">
     <div class="divider-line"><span></span></div>
@@ -1096,6 +1097,7 @@ const AuthPageMethods = {
         </svg>
       </button>
       </div>
+      <p class="social-consent-note" style="font-size:0.72rem;color:#9ca3af;text-align:center;margin-top:0.5rem;">By continuing with Google, you agree to our Terms of Service and Privacy Policy.</p>
 
       <div class="auth-footer-links">
     <p>
@@ -1120,6 +1122,9 @@ const AuthPageMethods = {
     password: form.password.value,
     confirmPassword: form.confirmPassword.value,
     university: selectedUniversity,
+      // Server-enforced consent (spec 2026-08-23). Checkbox is required
+      // client-side; this makes the agreement explicit in the API contract.
+      acceptedTerms: form.terms.checked === true,
   };
 
   const result = await authManager.register(userData);
