@@ -4154,6 +4154,8 @@ font-size: 0.8rem;
 
   static async renderAdminVerifications (filter = 'pending') {
     if (!_requireAdmin()) {return;}
+    // Remember the active tab so post-purge re-renders return to it.
+    Pages._verifFilter = filter;
     const adminUser =
       (typeof adminAuthManager !== 'undefined' && adminAuthManager.getCurrentUser?.()) ||
       (typeof authManager !== 'undefined' && authManager.getCurrentUser?.()) ||
@@ -4579,7 +4581,7 @@ font-size: 0.8rem;
     overlay.querySelector('#payout-reject-reason').focus();
   }
 
-  static viewVerificationDetail (id) {
+  static async viewVerificationDetail (id) {
     if (typeof adminVerificationsManager === 'undefined') {
       showToast('Verification module not loaded', 'error');
       return;
@@ -4590,31 +4592,52 @@ font-size: 0.8rem;
       return;
     }
 
+    // Fresh signed URLs on EVERY open — never cached, never persisted.
+    let docsState = { documents: [], purged: false, purgeScheduledFor: null };
+    try {
+      const resp = await api.verification.getDocuments(v.id);
+      if (resp.success && resp.data) {
+        docsState = resp.data;
+      }
+    } catch (_) { /* non-fatal: render modal without doc section */ }
+
+    const esc = v2 => _pageEsc(String(v2 === null || v2 === undefined ? '' : v2));
+    let docsSection;
+    if (docsState.purged || (!docsState.documents.length && docsState.purgeScheduledFor)) {
+      docsSection = `
+        <div style="padding:1rem;text-align:center;color:#6b7280;border:1px dashed rgba(255,255,255,0.15);border-radius:0.5rem;">
+          🗑 Documents permanently deleted${v.reviewedAt ? ` (decision ${esc(Formatter.formatDate(v.reviewedAt))})` : ''}
+        </div>`;
+    } else if (docsState.documents.length > 0) {
+      const items = docsState.documents.map(d => {
+        if (d.mimeType === 'application/pdf') {
+          return `<a href="${esc(d.url)}" target="_blank" rel="noopener noreferrer" data-doc-link style="display:block;padding:0.5rem;background:#1f2937;border-radius:0.5rem;color:#60a5fa;font-size:0.85rem;">📄 ${esc(d.fileName)}</a>`;
+        }
+        return `<img src="${esc(d.url)}" alt="${esc(d.fileName)}" style="max-width:100%;max-height:280px;display:block;margin:0.5rem auto;border-radius:0.5rem;" />`;
+      }).join('');
+      const purgeNote = docsState.purgeScheduledFor
+        ? `<div style="font-size:0.75rem;color:#f59e0b;margin-top:0.5rem;">⏳ Auto-deletes ${esc(Formatter.formatDate(docsState.purgeScheduledFor))}</div>`
+        : '';
+      const purgeBtn = adminAuthManager.getCurrentUser()?.role === 'admin'
+        ? `<button type="button" data-purge-docs="${esc(v.id)}" style="margin-top:0.5rem;padding:4px 10px;font-size:11px;background:#dc2626;color:#fff;border:none;border-radius:4px;cursor:pointer;">🗑 Purge now</button>`
+        : '';
+      docsSection = `
+        <div style="border:1px solid rgba(255,255,255,0.1);border-radius:0.5rem;padding:0.75rem;">
+          ${items}
+          ${purgeNote}
+          ${purgeBtn}
+        </div>`;
+    } else {
+      docsSection = `
+        <div style="padding:1rem;text-align:center;color:#6b7280;border:1px dashed rgba(255,255,255,0.15);border-radius:0.5rem;">
+          No documents attached to this request
+        </div>`;
+    }
+
     const overlay = document.createElement('div');
     overlay.id = 'vrf-detail-overlay';
     overlay.style.cssText =
       'position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:2000;padding:2rem;';
-    overlay.onclick = e => {
-      if (e.target === overlay) {overlay.remove();}
-    };
-
-    const docsHtml =
-      v.documents && v.documents.length > 0
-        ? v.documents
-          .map(d =>
-            d.dataUrl
-              ? `<div style="border:1px solid rgba(255,255,255,0.1);border-radius:0.5rem;overflow:hidden;">
-            <div style="padding:0.5rem 0.75rem;background:#111827;font-size:0.75rem;color:#9ca3af;border-bottom:1px solid rgba(255,255,255,0.1);">${d.name} (${(d.size / 1024).toFixed(1)} KB)</div>
-            ${
-  d.type && d.type.startsWith('image/')
-    ? `<img src="${d.dataUrl}" style="max-width:100%;max-height:300px;display:block;margin:0.5rem auto;" alt="${d.name}" />`
-    : `<div style="padding:1rem;text-align:center;color:#6b7280;">📄 ${d.name}</div>`
-}
-          </div>`
-              : `<div style="padding:0.5rem 0.75rem;background:#111827;border-radius:0.5rem;font-size:0.75rem;color:#9ca3af;border:1px solid rgba(255,255,255,0.1);">${d.name} (${(d.size / 1024).toFixed(1)} KB)</div>`,
-          )
-          .join('')
-        : '<div style="color:#6b7280;font-size:0.85rem;">No documents uploaded</div>';
 
     overlay.innerHTML = `
     <div style="background:#1f2937;border:1px solid rgba(255,255,255,0.1);border-radius:1rem;width:100%;max-width:600px;max-height:85vh;overflow-y:auto;padding:2rem;">
@@ -4641,8 +4664,8 @@ font-size: 0.8rem;
       </div>
 
       <div style="margin-bottom:1.5rem;">
-        <div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">Uploaded Documents</div>
-        <div style="display:flex;flex-direction:column;gap:0.5rem;">${docsHtml}</div>
+        <h4 style="color:#f9fafb;margin:0 0 0.5rem;font-size:0.95rem;">Verification documents</h4>
+        ${docsSection}
       </div>
 
       ${
@@ -4663,6 +4686,41 @@ font-size: 0.8rem;
     </div>`;
 
     document.body.appendChild(overlay);
+
+    // Signed URLs expire after 300s; refetch fresh ones once on load error.
+    // (Capture phase — IMG error events do not bubble.)
+    let refetched = false;
+    overlay.addEventListener('error', e => {
+      if (refetched || e.target.tagName !== 'IMG') { return; }
+      refetched = true;
+      void Pages.viewVerificationDetail(id);
+    }, true);
+
+    // Single delegated handler for the whole overlay: backdrop click-to-close
+    // (merged from the former inline onclick) plus the admin "Purge now"
+    // action. No new inline handlers (CSP).
+    overlay.addEventListener('click', async e => {
+      if (e.target === overlay) { overlay.remove(); return; }
+      const purgeBtn = e.target.closest('[data-purge-docs]');
+      if (!purgeBtn) { return; }
+      const vid = purgeBtn.dataset.purgeDocs;
+      if (!window.confirm('Permanently delete all documents for this request now? This cannot be undone.')) { return; }
+      purgeBtn.disabled = true;
+      try {
+        const resp = await api.verification.purgeDocuments(vid);
+        if (resp.success) {
+          showToast('Documents permanently deleted', 'success');
+          overlay.remove();
+          Pages.renderAdminVerifications(Pages._verifFilter || 'pending');
+        } else {
+          showToast(resp.error || 'Failed to delete documents', 'error');
+          purgeBtn.disabled = false;
+        }
+      } catch (err) {
+        showToast(err.message || 'Failed to delete documents', 'error');
+        purgeBtn.disabled = false;
+      }
+    });
   }
 
   static approveVerification (id) {
