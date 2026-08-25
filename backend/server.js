@@ -468,6 +468,14 @@ app.use('/api/newsletter', newsletterRoutes);
 // Ledger routes (seller escrow balance)
 app.use('/api/ledger', ledgerRoutes);
 
+// Verification-document retention sweep (spec 2026-08-23): destroys assets
+// 30 days after decision. Hourly; failures retry next pass.
+const { purgeExpiredVerificationDocs } = require('./services/docRetention');
+setInterval(() => {
+  purgeExpiredVerificationDocs().catch(err =>
+    console.error('[docRetention] sweep failed:', err.message));
+}, 60 * 60 * 1000).unref();
+
 // ============================================
 // Error Handling
 // ============================================

@@ -105,6 +105,10 @@ exports.submitVerification = asyncHandler(async (req, res) => {
 });
 
 exports.getPendingVerifications = asyncHandler(async (req, res) => {
+  // Opportunistic sweep so low-uptime deployments still converge.
+  require('../services/docRetention').purgeExpiredVerificationDocs()
+    .catch(() => { /* logged inside service */ });
+
   const verifications = await db('student_verifications').find(
     { status: 'pending' },
     { sort: { createdAt: -1 } },

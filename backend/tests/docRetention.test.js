@@ -312,3 +312,69 @@ describe('early purge endpoint', () => {
     expect(listing.body.data.purged).toBe(true);
   });
 });
+
+// NOTE: this MUST stay the last describe block in the file — its
+// mockImplementation replaces the shared cloudinary mock for everything
+// that runs after it.
+describe('retention sweep', () => {
+  test('destroys expired assets, stamps parents, retries failures next run', async () => {
+    const { getDb } = require('../config/database');
+    const dbh = getDb();
+    const past = new Date(Date.now() - 1000).toISOString();
+
+    // userId REFERENCES users(id) and foreign_keys = ON, so 'seed-admin'
+    // cannot be used directly — register a real admin row instead.
+    const seedAdmin = await registerUser('admin', 'sweepa');
+    const mkParent = (id) => dbh.prepare(
+      'INSERT INTO student_verifications (id, userId, studentId, fullName, email, phone, university, level, verificationMethod, status, documentsPurgeAt) VALUES (?, ?, ?, \'Sweep\', \'s@test.com\', \'+233205000000\', \'University of Ghana\', \'200\', \'document\', \'approved\', ?)',
+    ).run(id, seedAdmin.id, `SWEEP-${id}`, past);
+    const mkDoc = (id, parentId, mime) => dbh.prepare(
+      'INSERT INTO verification_documents (id, verificationId, fileName, cloudinaryPublicId, mimeType, sizeBytes) VALUES (?, ?, ?, ?, ?, 10)',
+    ).run(id, parentId, `${id}.bin`, `uni-hub/verifications/${parentId}/${id}`, mime);
+
+    mkParent('sweep-A');
+    mkDoc('sweep-A-1', 'sweep-A', 'image/png');
+    mkParent('sweep-B');
+    mkDoc('sweep-B-1', 'sweep-B', 'application/pdf');
+
+    // Seed the mock asset registry so destroy-tracking works for these ids.
+    const cUtil = require('../utils/cloudinary.util');
+    ['sweep-A-1', 'sweep-B-1'].forEach((n, i) => {
+      const parentId = i === 0 ? 'sweep-A' : 'sweep-B';
+      const mime = i === 0 ? 'image/png' : 'application/pdf';
+      if (!cUtil.__storedAssets.find(a => a.publicId === `uni-hub/verifications/${parentId}/${n}`)) {
+        cUtil.__storedAssets.push({ publicId: `uni-hub/verifications/${parentId}/${n}`, mimeType: mime, destroyed: false });
+      }
+    });
+
+    // First run: sweep-B's destroy fails exactly once.
+    let bFailed = true;
+    cUtil.destroyDocument.mockImplementation(async (publicId) => {
+      if (publicId.includes('sweep-B') && bFailed) {
+        bFailed = false;
+        throw new Error('simulated cloudinary outage');
+      }
+      const asset = cUtil.__storedAssets.find(a => a.publicId === publicId);
+      if (asset) { asset.destroyed = true; }
+      return { result: 'ok' };
+    });
+
+    const { purgeExpiredVerificationDocs } = require('../services/docRetention');
+    const first = await purgeExpiredVerificationDocs();
+    expect(first.sweptParents).toBe(1);
+
+    expect(dbh.prepare(
+      'SELECT documentsPurgedAt FROM student_verifications WHERE id = ?',
+    ).get('sweep-A').documentsPurgedAt).toBeTruthy();
+    expect(dbh.prepare(
+      'SELECT documentsPurgedAt FROM student_verifications WHERE id = ?',
+    ).get('sweep-B').documentsPurgedAt).toBeNull();
+
+    // Second run: B succeeds now.
+    const second = await purgeExpiredVerificationDocs();
+    expect(second.destroyedAssets).toBeGreaterThanOrEqual(1);
+    expect(dbh.prepare(
+      'SELECT documentsPurgedAt FROM student_verifications WHERE id = ?',
+    ).get('sweep-B').documentsPurgedAt).toBeTruthy();
+  });
+});
