@@ -24,6 +24,8 @@ const ACTIVITY_LOGS_ACTIONS_SQL = [
   'product_create', 'product_update', 'product_delete',
   'review_create', 'message_send', 'wishlist_add',
   'profile_update', 'password_change',
+  // Self-service account lifecycle (spec 2026-08-23):
+  'account_deleted',
   'admin_ban', 'admin_approve', 'admin_reject', 'search',
   // Server-side audit trail + payouts (2026-08-21):
   'admin_refund', 'payout_request', 'payout_approve', 'payout_reject',
@@ -865,9 +867,10 @@ async function runTursoMigrations () {
       'SELECT sql FROM sqlite_master WHERE name=\'activity_logs\'',
     );
     const activitySchemaSql = activityResult.rows[0]?.sql || '';
-    if (activitySchemaSql && (!activitySchemaSql.includes('\'moderator\'') ||
+    if (activityResult.rows.length > 0 && activitySchemaSql && (!activitySchemaSql.includes('\'moderator\'') ||
       !activitySchemaSql.includes('\'verification_docs_viewed\'') ||
-      !activitySchemaSql.includes('\'verification_docs_purge\''))) {
+      !activitySchemaSql.includes('\'verification_docs_purge\'') ||
+      !activitySchemaSql.includes('\'account_deleted\''))) {
       console.log('Migrating activity_logs table for extended audit actions...');
       await tursoClient.execute('ALTER TABLE activity_logs RENAME TO activity_logs_old');
       await tursoClient.execute(`CREATE TABLE activity_logs (
@@ -1075,7 +1078,8 @@ function connectLocal () {
     const activityTbl = db.prepare('SELECT sql FROM sqlite_master WHERE name = \'activity_logs\'').get();
     if (activityTbl && activityTbl.sql && (!activityTbl.sql.includes('\'moderator\'') ||
       !activityTbl.sql.includes('\'verification_docs_viewed\'') ||
-      !activityTbl.sql.includes('\'verification_docs_purge\''))) {
+      !activityTbl.sql.includes('\'verification_docs_purge\'') ||
+      !activityTbl.sql.includes('\'account_deleted\''))) {
       console.log('Migrating activity_logs table for extended audit actions...');
       db.exec('ALTER TABLE activity_logs RENAME TO activity_logs_old');
       db.exec(`CREATE TABLE activity_logs (
