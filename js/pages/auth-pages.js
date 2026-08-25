@@ -250,6 +250,7 @@ const AuthPageMethods = {
     </div>
     <div id="file-list" class="file-list"></div>
     <small class="form-hint">Upload clear photos/scans of your admission documents</small>
+    <small class="form-hint" style="display:block;margin-top:0.25rem;">Documents are viewable only by moderators and are permanently deleted 30 days after your review.</small>
     </div>
 
     <div class="form-check">
@@ -377,7 +378,7 @@ const AuthPageMethods = {
     event.preventDefault();
     const form = document.getElementById('verification-form-document');
     const selectedUniversity = StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
-    const files = document.getElementById('doc-files').files;
+    const files = Array.from(form.docFiles.files || []);
 
     // Validate files
     if (files.length === 0) {
@@ -393,45 +394,45 @@ const AuthPageMethods = {
       }
     }
 
-    const verificationData = {
-      universityId: selectedUniversity,
-      verificationMethod: 'document',
-      personalEmail: form.docEmail.value,
-      studentId: form.docStudentId.value,
-      fullName: form.docFullName.value,
-      phone: form.docPhone.value,
-      level: form.docLevel.value,
-      documents: Array.from(files).map(f => ({ name: f.name, size: f.size })),
-      isVerified: false,
-      isPending: true,
-      submittedAt: new Date().toISOString(),
-    };
-
     // Submit to backend API for proper verification
     try {
       const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
       if (api && session?.token) {
-        const response = await api.verification.submit({
-          studentId: verificationData.studentId,
-          fullName: verificationData.fullName,
-          email: verificationData.personalEmail,
-          phone: verificationData.phone,
-          university: selectedUniversity,
-          level: verificationData.level,
-          verificationMethod: 'document',
-          documents: verificationData.documents,
-        });
+        if (files.length === 0) {
+          showToast('Please attach at least one admission document.', 'warning');
+          return;
+        }
+        // Multipart submission (spec 2026-08-23): files travel as binary
+        // parts under the 'documents' field expected by the backend's
+        // multer config; text fields mirror POST /verification's JSON body.
+        const fd = new FormData();
+        fd.append('studentId', form.docStudentId.value.trim());
+        fd.append('fullName', form.docFullName.value.trim());
+        fd.append('email', form.docEmail.value.trim());
+        fd.append('phone', form.docPhone.value.trim());
+        fd.append('university', selectedUniversity);
+        fd.append('level', form.docLevel.value);
+        fd.append('verificationMethod', 'document');
+        files.forEach(f => fd.append('documents', f));
+
+        const response = await api.verification.submitDocuments(fd);
 
         if (response.success) {
-          StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verificationData);
-          showToast(`Verification Submitted! Thank you, ${verificationData.fullName}! Your documents have been submitted for verification. You will be notified within 24-48 hours once your student status is confirmed. You must be verified before making any purchases.`, 'success');
-          // Also populate the admin queue so admin can see pending verification
-          if (typeof adminVerificationsManager !== 'undefined') {
-            adminVerificationsManager.submit(verificationData);
-          }
+          // PII-minimal local cache (spec 2026-08-23): no documents list,
+          // no phone number.
+          StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, {
+            universityId: selectedUniversity,
+            verificationMethod: 'document',
+            isVerified: false,
+            isPending: true,
+            submittedAt: new Date().toISOString(),
+          });
+          showToast(`Verification Submitted! Thank you, ${form.docFullName.value.trim()}! Your documents have been submitted for verification. You will be notified within 24-48 hours once your student status is confirmed. You must be verified before making any purchases.`, 'success');
           Pages.renderBrowse();
           return;
         }
+        showToast(response.error || 'Document upload failed. Please check your files and try again.', 'error');
+        return;
       }
     } catch (e) {
       console.warn('auth-pages: document verification API unreachable:', e);
