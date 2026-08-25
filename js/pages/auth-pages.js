@@ -358,10 +358,6 @@ const AuthPageMethods = {
           verificationData.submittedAt = new Date().toISOString();
           StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verificationData);
           showToast(`Verification Submitted! A verification code has been sent to ${verificationData.studentEmail}. Your account will be verified once confirmed.`, 'info');
-          // Also populate the admin queue so admin can see pending verification
-          if (typeof adminVerificationsManager !== 'undefined') {
-            adminVerificationsManager.submit(verificationData);
-          }
           Pages.renderBrowse();
           return;
         }

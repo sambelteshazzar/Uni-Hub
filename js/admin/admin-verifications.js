@@ -96,26 +96,6 @@ class AdminVerificationsManager {
     };
   }
 
-  submit (data) {
-    const entry = {
-      id: 'vrf_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
-      ...data,
-      status: 'pending',
-      submittedAt: new Date().toISOString(),
-      reviewedBy: null,
-      reviewedAt: null,
-      reviewNotes: null,
-    };
-    this.queue.push(entry);
-    this._persist();
-
-    if (typeof adminAuthManager !== 'undefined' && adminAuthManager.logActivity) {
-      adminAuthManager.logActivity('Verification submitted', { id: entry.id, method: data.verificationMethod, studentId: data.studentId });
-    }
-
-    return { success: true, data: entry };
-  }
-
   approve (id, notes) {
     const entry = this.getById(id);
     if (!entry) return { success: false, error: 'Verification not found' };
