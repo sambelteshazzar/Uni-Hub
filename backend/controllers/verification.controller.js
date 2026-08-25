@@ -1,11 +1,9 @@
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { db, generateId, toBool, fromBool } = require('../utils/db');
 const { sendVerificationEmail } = require('../utils/emailService');
-// TODO: security review — signed URLs must never be persisted or logged;
-// destroyDocument is consumed by the admin purge endpoint (Task 7).
 const {
   getSignedDocumentUrl,
-  destroyDocument: _destroyDocument,
+  destroyDocument,
 } = require('../utils/cloudinary.util');
 const logActivity = require('../utils/logActivity');
 const crypto = require('crypto');
@@ -301,4 +299,44 @@ exports.getVerificationDocuments = asyncHandler(async (req, res) => {
       purgeScheduledFor: verification.documentsPurgeAt || null,
     },
   });
+});
+
+/**
+ * @desc Immediately destroy remaining verification documents (DPA erasure)
+ * @route POST /api/verification/:id/purge-documents
+ * @access admin
+ */
+// TODO: security review — irreversible PII destruction; confirm retention
+// policy sign-off before production enablement.
+exports.purgeVerificationDocuments = asyncHandler(async (req, res) => {
+  const verification = await db('student_verifications').findById(req.params.id);
+  if (!verification) {
+    throw new ApiError(404, 'Verification request not found');
+  }
+
+  const docs = await db('verification_documents').find({ verificationId: verification.id });
+  let destroyed = 0;
+  let failures = 0;
+  for (const d of docs) {
+    if (!d.cloudinaryPublicId) { continue; }
+    try {
+      await destroyDocument(d.cloudinaryPublicId, d.mimeType || d.fileType);
+      destroyed++;
+    } catch (_e) {
+      failures++;
+    }
+  }
+  if (failures > 0) {
+    throw new ApiError(502, `Failed to destroy ${failures} asset(s) — retry shortly`);
+  }
+
+  await db('verification_documents').rawRun(
+    'DELETE FROM verification_documents WHERE verificationId = ?',
+    [verification.id],
+  );
+  await db('student_verifications').updateById(verification.id, {
+    documentsPurgedAt: new Date().toISOString(),
+  });
+
+  res.json({ success: true, message: 'Documents permanently deleted', data: { destroyed } });
 });

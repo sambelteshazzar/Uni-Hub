@@ -39,6 +39,14 @@ async function registerUser (role = 'buyer', prefix = 'vdoc') {
   return { token: res.body.data.token, id: res.body.data.user._id, email: user.email };
 }
 
+// Registration only honors 'admin' in NODE_ENV=test (auth.controller forces
+// other roles to 'buyer'), so promote in the DB directly (payout.test.js
+// setRole pattern) when a test needs a non-admin privileged role.
+const setRole = (userId, role) => {
+  const { getDb } = require('../config/database');
+  getDb().prepare('UPDATE users SET role = ? WHERE id = ?').run(role, userId);
+};
+
 describe('doc retention schema', () => {
   test('new columns exist on both tables', async () => {
     const { getDb } = require('../config/database');
@@ -246,5 +254,61 @@ describe('document listing endpoint', () => {
       'SELECT COUNT(*) AS n FROM activity_logs WHERE action LIKE \'%docs_viewed%\'',
     ).get();
     expect(logs.n).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('early purge endpoint', () => {
+  test('admin destroys assets immediately; moderator denied; listing reflects purge', async () => {
+    const buyer = await registerUser('buyer', 'purgb');
+    // Moderators cannot be registered via the API in NODE_ENV=test —
+    // promote a normal user in the DB so the authorize() 403 is genuine.
+    const mod = await registerUser('buyer', 'purgm');
+    setRole(mod.id, 'moderator');
+    const admin = await registerUser('admin', 'purga');
+
+    const sub = await request(app)
+      .post('/api/verification')
+      .set('Authorization', `Bearer ${buyer.token}`)
+      .field('studentId', '20901000')
+      .field('fullName', 'Purge Buyer')
+      .field('email', buyer.email)
+      .field('phone', '+233204000001')
+      .field('university', 'University of Ghana')
+      .field('level', '400')
+      .field('verificationMethod', 'document')
+      .attach('documents', Buffer.from([0x89, 0x50, 0x4E, 0x47]), 'one.png')
+      .attach('documents', Buffer.from([0x89, 0x50, 0x4E, 0x47]), 'two.png');
+    const vid = sub.body.data.id || sub.body.data._id;
+
+    const denied = await request(app)
+      .post(`/api/verification/${vid}/purge-documents`)
+      .set('Authorization', `Bearer ${mod.token}`);
+    expect(denied.status).toBe(403);
+
+    const done = await request(app)
+      .post(`/api/verification/${vid}/purge-documents`)
+      .set('Authorization', `Bearer ${admin.token}`);
+    expect(done.status).toBe(200);
+
+    const stored = require('../utils/cloudinary.util').__storedAssets
+      .filter(a => a.publicId.includes(vid));
+    expect(stored.length).toBe(2);
+    expect(stored.every(a => a.destroyed)).toBe(true);
+
+    const { getDb } = require('../config/database');
+    const dbh = getDb();
+    const remaining = dbh.prepare(
+      'SELECT COUNT(*) AS n FROM verification_documents WHERE verificationId = ?',
+    ).get(vid).n;
+    expect(remaining).toBe(0);
+    expect(dbh.prepare(
+      'SELECT documentsPurgedAt FROM student_verifications WHERE id = ?',
+    ).get(vid).documentsPurgedAt).toBeTruthy();
+
+    const listing = await request(app)
+      .get(`/api/verification/${vid}/documents`)
+      .set('Authorization', `Bearer ${mod.token}`);
+    expect(listing.body.data.documents).toHaveLength(0);
+    expect(listing.body.data.purged).toBe(true);
   });
 });

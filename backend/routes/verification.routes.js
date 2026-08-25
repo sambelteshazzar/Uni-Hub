@@ -8,6 +8,7 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth.middleware');
 const { uploadVerificationDocs } = require('../middleware/upload.middleware');
+const { auditMutation } = require('../middleware/audit.middleware');
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const {
   submitVerification,
@@ -17,6 +18,7 @@ const {
   getVerificationStatus,
   getMyVerificationStatus,
   getVerificationDocuments,
+  purgeVerificationDocuments,
 } = require('../controllers/verification.controller');
 
 // Authenticated routes
@@ -40,5 +42,7 @@ router.put('/:id/approve', protect, authorize('admin', 'moderator'), approveVeri
 router.put('/:id/reject', protect, authorize('admin', 'moderator'), rejectVerification);
 // PII-bearing document listing — audited per call, short-lived signed URLs only.
 router.get('/:id/documents', protect, authorize('admin', 'moderator'), asyncHandler(getVerificationDocuments));
+// Admin-only immediate purge (DPA erasure) — audited mutation.
+router.post('/:id/purge-documents', protect, authorize('admin'), auditMutation('verification_docs_purge'), asyncHandler(purgeVerificationDocuments));
 
 module.exports = router;
