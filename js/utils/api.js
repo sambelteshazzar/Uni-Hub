@@ -282,10 +282,14 @@ class API {
   }
 
   /**
-   * DELETE request
+   * DELETE request. `body` is optional; existing zero-body callers are
+   * unaffected (verified: all in-repo call sites pass URL only).
    */
-  async delete (url) {
-    return this.request(url, { method: 'DELETE' });
+  async delete (url, body) {
+    return this.request(url, {
+      method: 'DELETE',
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
   }
 
   /**
@@ -471,6 +475,14 @@ class API {
     getAll: params => this.get('/users', params), // Admin only
     update: (id, data) => this.put(`/users/${encodeURIComponent(id)}`, data), // Admin only
     delete: id => this.delete(`/users/${encodeURIComponent(id)}`), // Admin only
+  };
+
+  /**
+   * Self-service account lifecycle (spec 2026-08-23).
+   */
+  account = {
+    exportData: () => this.request('/users/me/export', { method: 'GET' }),
+    deleteMe: (confirmText, password) => this.delete('/users/me', { confirmText, password }),
   };
 
   /**

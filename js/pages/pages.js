@@ -3565,6 +3565,13 @@ font-size: 0.8rem;
                   <label class="dv-form-label">Role</label>
                   <input type="text" class="dv-form-input" value="${currentUser.role ? currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1) : 'Buyer'}" disabled />
                 </div>
+                <div class="dv-form-group" style="margin-top:1.5rem;">
+                  <label class="dv-form-label">Your data</label>
+                  <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                    <button type="button" class="dv-btn dv-btn-outline" data-action="export-my-data">⬇ Download my data</button>
+                    <button type="button" class="dv-btn dv-btn-outline" data-action="show-delete-modal" style="color:#ef4444;border-color:rgba(239,68,68,0.5);">🗑 Delete account…</button>
+                  </div>
+                </div>
                 <div style="margin-top:2rem;display:flex;flex-direction:column;gap:0.75rem;">
                   <button class="dv-btn dv-btn-outline" onclick="Pages.handleLogout();">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
@@ -3577,6 +3584,47 @@ font-size: 0.8rem;
         </div>
       </div>
     `;
+
+    // "Your data" actions (Settings panel) — delegated so the handlers
+    // survive re-renders of sibling panels and no inline onclick is used.
+    const panel = document.getElementById('dv-panel-settings');
+    if (panel) {
+      panel.addEventListener('click', async e => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) {
+          return;
+        }
+        if (btn.dataset.action === 'export-my-data') {
+          btn.disabled = true;
+          try {
+            const resp = await api.account.exportData();
+            if (!resp || !resp.exportedAt) {
+              showToast('Could not export your data right now.', 'error');
+              return;
+            }
+            const blob = new Blob([JSON.stringify(resp, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            // Locally-generated blob: URL — sanitizeUrl would strip it, so
+            // assign directly (no untrusted input in this value).
+            a.href = url;
+            a.download = 'unihub-my-data.json';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+          } catch (_err) {
+            showToast('Export failed. Please try again.', 'error');
+          } finally {
+            btn.disabled = false;
+          }
+        }
+      });
+      const deleteBtn = panel.querySelector('[data-action="show-delete-modal"]');
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => Pages._openDeleteAccountModal());
+      }
+    }
   }
 
   /**
@@ -3592,6 +3640,87 @@ font-size: 0.8rem;
     document.querySelectorAll('.dv-panel').forEach(panel => {
       panel.classList.toggle('active', panel.id === `dv-panel-${tabId}`);
     });
+  }
+
+  /**
+   * Delete-account confirmation modal. All markup is a static template
+   * literal — no user-derived data is interpolated into innerHTML; input
+   * values are read back via .value and errors set via textContent.
+   * TODO: security review — destructive account action; requires human
+   * review pass per AGENTS.md before merge.
+   */
+  static _openDeleteAccountModal () {
+    const overlay = document.createElement('div');
+    overlay.id = 'delete-account-overlay';
+    overlay.style.cssText =
+      'position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:2000;padding:2rem;';
+    overlay.innerHTML = `
+      <div role="dialog" aria-modal="true" aria-labelledby="del-acct-title" style="background:#111827;border:1px solid rgba(239,68,68,0.4);border-radius:0.75rem;max-width:420px;width:100%;padding:1.5rem;">
+        <h3 id="del-acct-title" style="margin:0 0 0.5rem;color:#f9fafb;">Delete your account?</h3>
+        <p style="margin:0 0 1rem;color:#9ca3af;font-size:0.85rem;">This permanently removes your personal information. Your past orders remain as anonymous records for accounting. This cannot be undone.</p>
+        <input id="del-acct-confirm" maxlength="10" placeholder="Type DELETE to confirm" autocomplete="off"
+          style="width:100%;background:#1f2937;border:1px solid rgba(255,255,255,0.15);border-radius:0.5rem;color:#e5e7eb;padding:0.6rem;font-size:0.9rem;margin-bottom:0.6rem;" />
+        <input id="del-acct-password" type="password" placeholder="Current password" autocomplete="current-password"
+          style="width:100%;background:#1f2937;border:1px solid rgba(255,255,255,0.15);border-radius:0.5rem;color:#e5e7eb;padding:0.6rem;font-size:0.9rem;" />
+        <p id="del-acct-error" role="alert" style="display:none;color:#f87171;font-size:0.78rem;margin:0.5rem 0 0;"></p>
+        <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1rem;">
+          <button type="button" data-del-cancel class="btn btn-ghost btn-sm">Cancel</button>
+          <button type="button" id="del-acct-go" class="btn btn-sm" style="background:#dc2626;color:#fff;border:none;">Delete forever</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+
+    const close = () => {
+      document.removeEventListener('keydown', esc);
+      overlay.remove();
+    };
+    const esc = ev => {
+      if (ev.key === 'Escape') {
+        close();
+      }
+    };
+    document.addEventListener('keydown', esc);
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) {
+        close();
+      }
+    });
+    overlay.querySelector('[data-del-cancel]').addEventListener('click', close);
+
+    overlay.querySelector('#del-acct-go').addEventListener('click', async () => {
+      const confirmText = overlay.querySelector('#del-acct-confirm').value.trim();
+      const password = overlay.querySelector('#del-acct-password').value;
+      const errEl = overlay.querySelector('#del-acct-error');
+      if (confirmText !== 'DELETE') {
+        errEl.textContent = 'Please type DELETE exactly.';
+        errEl.style.display = 'block';
+        return;
+      }
+      const goBtn = overlay.querySelector('#del-acct-go');
+      goBtn.disabled = true;
+      try {
+        // Google-only accounts may leave the password blank; backend decides.
+        const resp = await api.account.deleteMe(confirmText, password);
+        if (resp && resp.success) {
+          close();
+          authManager.clearSession();
+          StorageManager.remove(STORAGE_KEYS.STUDENT_VERIFICATION);
+          showToast('Your account has been deleted.', 'success');
+          window.location.hash = '#/';
+          Pages.renderLanding();
+        } else {
+          errEl.textContent = (resp && resp.error) || 'Could not delete your account.';
+          errEl.style.display = 'block';
+          goBtn.disabled = false;
+        }
+      } catch (err2) {
+        errEl.textContent = err2.message || 'Could not delete your account.';
+        errEl.style.display = 'block';
+        goBtn.disabled = false;
+      }
+    });
+
+    overlay.querySelector('#del-acct-confirm').focus();
   }
 
   /**
