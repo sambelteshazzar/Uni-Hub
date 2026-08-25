@@ -165,3 +165,41 @@ describe('multipart verification submit', () => {
     expect(stored.filter(a => a.destroyed)).toHaveLength(stored.length);
   });
 });
+
+describe('decision sets purge deadline', () => {
+  test('approve stamps documentsPurgeAt ~30 days out', async () => {
+    const buyer = await registerUser('buyer', 'stampb');
+    // Registration only honors 'admin' in NODE_ENV=test (auth.controller
+    // forces other roles to 'buyer'), so an admin performs the approval.
+    const reviewer = await registerUser('admin', 'stampa');
+
+    const sub = await request(app)
+      .post('/api/verification')
+      .set('Authorization', `Bearer ${buyer.token}`)
+      .field('studentId', '20701000')
+      .field('fullName', 'Stamp Buyer')
+      .field('email', buyer.email)
+      .field('phone', '+233202000001')
+      .field('university', 'University of Ghana')
+      .field('level', '300')
+      .field('verificationMethod', 'document')
+      .attach('documents', Buffer.from([0x89, 0x50, 0x4E, 0x47]), 'id.png');
+    const vid = sub.body.data.id || sub.body.data._id;
+
+    const before = Date.now();
+    const appr = await request(app)
+      .put(`/api/verification/${vid}/approve`)
+      .set('Authorization', `Bearer ${reviewer.token}`)
+      .send({ notes: 'looks legit' });
+    expect(appr.status).toBe(200);
+
+    const { getDb } = require('../config/database');
+    const row = getDb().prepare(
+      'SELECT documentsPurgeAt FROM student_verifications WHERE id = ?',
+    ).get(vid);
+    expect(row.documentsPurgeAt).toBeTruthy();
+    const deltaDays = (new Date(row.documentsPurgeAt).getTime() - before) / 86400000;
+    expect(deltaDays).toBeGreaterThan(29.9);
+    expect(deltaDays).toBeLessThan(30.1);
+  });
+});

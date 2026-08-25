@@ -137,6 +137,9 @@ exports.approveVerification = asyncHandler(async (req, res) => {
     reviewedBy: req.user.id,
     reviewedAt: new Date().toISOString(),
     reviewNotes: notes || '',
+    // Documents are PII: schedule their destruction 30 days out (spec
+    // 2026-08-23). The retention sweep reads this column.
+    documentsPurgeAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
   });
 
   const userId = verification.userId || verification.studentId;
@@ -172,6 +175,8 @@ exports.rejectVerification = asyncHandler(async (req, res) => {
     reviewedBy: req.user.id,
     reviewedAt: new Date().toISOString(),
     reviewNotes: notes || '',
+    // Same retention rule as approval — rejected docs are destroyed too.
+    documentsPurgeAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
   });
 
   res.json({
