@@ -3652,20 +3652,18 @@ font-size: 0.8rem;
   static _openDeleteAccountModal () {
     const overlay = document.createElement('div');
     overlay.id = 'delete-account-overlay';
-    overlay.style.cssText =
-      'position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:2000;padding:2rem;';
+    overlay.className = 'admin-modal-light-backdrop';
     overlay.innerHTML = `
-      <div role="dialog" aria-modal="true" aria-labelledby="del-acct-title" style="background:#111827;border:1px solid rgba(239,68,68,0.4);border-radius:0.75rem;max-width:420px;width:100%;padding:1.5rem;">
-        <h3 id="del-acct-title" style="margin:0 0 0.5rem;color:#f9fafb;">Delete your account?</h3>
-        <p style="margin:0 0 1rem;color:#9ca3af;font-size:0.85rem;">This permanently removes your personal information. Your past orders remain as anonymous records for accounting. This cannot be undone.</p>
-        <input id="del-acct-confirm" maxlength="10" placeholder="Type DELETE to confirm" autocomplete="off"
-          style="width:100%;background:#1f2937;border:1px solid rgba(255,255,255,0.15);border-radius:0.5rem;color:#e5e7eb;padding:0.6rem;font-size:0.9rem;margin-bottom:0.6rem;" />
-        <input id="del-acct-password" type="password" placeholder="Current password" autocomplete="current-password"
-          style="width:100%;background:#1f2937;border:1px solid rgba(255,255,255,0.15);border-radius:0.5rem;color:#e5e7eb;padding:0.6rem;font-size:0.9rem;" />
-        <p id="del-acct-error" role="alert" style="display:none;color:#f87171;font-size:0.78rem;margin:0.5rem 0 0;"></p>
-        <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1rem;">
+      <div role="dialog" aria-modal="true" aria-labelledby="del-acct-title" class="admin-modal-light" style="position:relative;">
+        <button type="button" data-del-cancel class="admin-modal-light-close" aria-label="Close">&times;</button>
+        <h3 id="del-acct-title" class="admin-modal-light-title">Delete your account?</h3>
+        <p class="admin-modal-light-text admin-modal-light-text--muted">This permanently removes your personal information. Your past orders remain as anonymous records for accounting. This cannot be undone.</p>
+        <input id="del-acct-confirm" class="admin-modal-light-field" maxlength="10" placeholder="Type DELETE to confirm" autocomplete="off" style="margin-bottom:var(--space-sm);" />
+        <input id="del-acct-password" type="password" class="admin-modal-light-field" placeholder="Current password" autocomplete="current-password" />
+        <p id="del-acct-error" class="admin-modal-light-error" role="alert"></p>
+        <div class="admin-modal-light-actions">
           <button type="button" data-del-cancel class="btn btn-ghost btn-sm">Cancel</button>
-          <button type="button" id="del-acct-go" class="btn btn-sm" style="background:#dc2626;color:#fff;border:none;">Delete forever</button>
+          <button type="button" id="del-acct-go" class="btn btn-sm" style="background:var(--color-danger);color:#fff;border:none;font-weight:var(--font-medium);">Delete forever</button>
         </div>
       </div>`;
     document.body.appendChild(overlay);
@@ -3685,7 +3683,9 @@ font-size: 0.8rem;
         close();
       }
     });
-    overlay.querySelector('[data-del-cancel]').addEventListener('click', close);
+    overlay.querySelectorAll('[data-del-cancel]').forEach(btn => {
+      btn.addEventListener('click', close);
+    });
 
     overlay.querySelector('#del-acct-go').addEventListener('click', async () => {
       const confirmText = overlay.querySelector('#del-acct-confirm').value.trim();
