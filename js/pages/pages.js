@@ -4733,80 +4733,109 @@ font-size: 0.8rem;
     let docsSection;
     if (docsState.purged || (!docsState.documents.length && docsState.purgeScheduledFor)) {
       docsSection = `
-        <div style="padding:1rem;text-align:center;color:#6b7280;border:1px dashed rgba(255,255,255,0.15);border-radius:0.5rem;">
-          🗑 Documents permanently deleted${v.reviewedAt ? ` (decision ${esc(Formatter.formatDate(v.reviewedAt))})` : ''}
+        <div class="admin-modal-light-text admin-modal-light-text--muted" style="text-align:center;padding:1rem;border:1px dashed var(--neutral-300);border-radius:var(--radius-md);">
+          Documents permanently deleted${v.reviewedAt ? ` (decision ${esc(Formatter.formatDate(v.reviewedAt))})` : ''}
         </div>`;
     } else if (docsState.documents.length > 0) {
       const items = docsState.documents.map(d => {
         if (d.mimeType === 'application/pdf') {
-          return `<a href="${esc(d.url)}" target="_blank" rel="noopener noreferrer" data-doc-link style="display:block;padding:0.5rem;background:#1f2937;border-radius:0.5rem;color:#60a5fa;font-size:0.85rem;">📄 ${esc(d.fileName)}</a>`;
+          return `<a href="${esc(d.url)}" target="_blank" rel="noopener noreferrer" data-doc-link class="admin-modal-light-text" style="display:block;padding:0.5rem;background:var(--neutral-50);border-radius:var(--radius-md);color:var(--primary);font-size:0.85rem;text-decoration:none;border:1px solid var(--neutral-200);">${Icons.clipboard || ''} ${esc(d.fileName)}</a>`;
         }
-        return `<img src="${esc(d.url)}" alt="${esc(d.fileName)}" style="max-width:100%;max-height:280px;display:block;margin:0.5rem auto;border-radius:0.5rem;" />`;
+        return `<img src="${esc(d.url)}" alt="${esc(d.fileName)}" style="max-width:100%;max-height:280px;display:block;margin:0.5rem auto;border-radius:var(--radius-md);" />`;
       }).join('');
       const purgeNote = docsState.purgeScheduledFor
-        ? `<div style="font-size:0.75rem;color:#f59e0b;margin-top:0.5rem;">⏳ Auto-deletes ${esc(Formatter.formatDate(docsState.purgeScheduledFor))}</div>`
+        ? `<div style="font-size:0.75rem;color:var(--color-warning);margin-top:0.5rem;">Auto-deletes ${esc(Formatter.formatDate(docsState.purgeScheduledFor))}</div>`
         : '';
       const purgeBtn = adminAuthManager.getCurrentUser()?.role === 'admin'
-        ? `<button type="button" data-purge-docs="${esc(v.id)}" style="margin-top:0.5rem;padding:4px 10px;font-size:11px;background:#dc2626;color:#fff;border:none;border-radius:4px;cursor:pointer;">🗑 Purge now</button>`
+        ? `<button type="button" data-purge-docs="${esc(v.id)}" class="btn btn-sm" style="margin-top:0.5rem;background:var(--color-danger);color:#fff;border:none;font-weight:var(--font-medium);">Purge now</button>`
         : '';
       docsSection = `
-        <div style="border:1px solid rgba(255,255,255,0.1);border-radius:0.5rem;padding:0.75rem;">
+        <div style="border:1px solid var(--neutral-200);border-radius:var(--radius-md);padding:0.75rem;background:var(--bg-primary);">
           ${items}
           ${purgeNote}
           ${purgeBtn}
         </div>`;
     } else {
       docsSection = `
-        <div style="padding:1rem;text-align:center;color:#6b7280;border:1px dashed rgba(255,255,255,0.15);border-radius:0.5rem;">
+        <div class="admin-modal-light-text admin-modal-light-text--muted" style="text-align:center;padding:1rem;border:1px dashed var(--neutral-300);border-radius:var(--radius-md);">
           No documents attached to this request
         </div>`;
     }
 
+    const statusClass = v.status === 'approved'
+      ? 'admin-status-badge delivered'
+      : v.status === 'rejected'
+        ? 'admin-status-badge cancelled'
+        : 'admin-status-badge placed';
+
     const overlay = document.createElement('div');
     overlay.id = 'vrf-detail-overlay';
-    overlay.style.cssText =
-      'position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:2000;padding:2rem;';
+    overlay.className = 'admin-modal-light-backdrop';
 
     overlay.innerHTML = `
-    <div style="background:#1f2937;border:1px solid rgba(255,255,255,0.1);border-radius:1rem;width:100%;max-width:600px;max-height:85vh;overflow-y:auto;padding:2rem;">
-      <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:1.5rem;">
+    <div class="admin-modal-light admin-modal-light--wide" style="position:relative;">
+      <button type="button" data-vrf-close class="admin-modal-light-close" aria-label="Close">&times;</button>
+      <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:1.5rem;padding-right:2rem;">
         <div>
-          <h2 style="color:#f9fafb;margin:0 0 0.25rem;font-size:1.25rem;">Verification Details</h2>
-          <span class="admin-status-badge ${v.status === 'approved' ? 'delivered' : v.status === 'rejected' ? 'cancelled' : 'placed'}" style="text-transform:capitalize;">${v.status}</span>
+          <h2 class="admin-modal-light-title">Verification Details</h2>
+          <span class="${statusClass}" style="text-transform:capitalize;">${esc(v.status)}</span>
         </div>
-        <button onclick="document.getElementById('vrf-detail-overlay').remove()" style="background:transparent;border:none;color:#9ca3af;cursor:pointer;font-size:1.25rem;padding:0.25rem;">✕</button>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
-        <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Full Name</div><div style="color:#f9fafb;font-weight:500;">${_pageEsc(v.fullName || 'N/A')}</div></div>
-        <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Student ID</div><div style="color:#60a5fa;font-family:monospace;font-weight:500;">${_pageEsc(v.studentId || 'N/A')}</div></div>
-        <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Email</div><div style="color:#f9fafb;">${v.personalEmail || v.universityEmail || v.email || 'N/A'}</div></div>
-        <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Phone</div><div style="color:#f9fafb;">${v.phone || 'N/A'}</div></div>
-        <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Level</div><div style="color:#f9fafb;">Level ${v.level || 'N/A'}</div></div>
-        <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Hall</div><div style="color:#f9fafb;">${v.hall || 'N/A'}</div></div>
-        <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Method</div><div style="color:#f9fafb;">${v.verificationMethod === 'email' ? '📧 University Email' : '📄 Document Upload'}</div></div>
-        <div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Submitted</div><div style="color:#f9fafb;font-size:0.85rem;">${Formatter.formatDate(v.submittedAt)}</div></div>
-        ${v.reviewedBy ? `<div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Reviewed By</div><div style="color:#f9fafb;">${v.reviewedBy}</div></div>` : ''}
-        ${v.reviewedAt ? `<div><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Reviewed At</div><div style="color:#f9fafb;font-size:0.85rem;">${Formatter.formatDate(v.reviewedAt)}</div></div>` : ''}
-        ${v.reviewNotes ? `<div style="grid-column:1/-1;"><div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Review Notes</div><div style="color:#f9fafb;background:#111827;padding:0.75rem;border-radius:0.5rem;font-size:0.85rem;">${_pageEsc(v.reviewNotes)}</div></div>` : ''}
+      <div class="admin-modal-light-detail-grid">
+        <div>
+          <div class="admin-modal-light-kv-label">Full Name</div>
+          <div class="admin-modal-light-kv-value">${_pageEsc(v.fullName || 'N/A')}</div>
+        </div>
+        <div>
+          <div class="admin-modal-light-kv-label">Student ID</div>
+          <div class="admin-modal-light-kv-value admin-modal-light-kv-value--mono">${_pageEsc(v.studentId || 'N/A')}</div>
+        </div>
+        <div>
+          <div class="admin-modal-light-kv-label">Email</div>
+          <div class="admin-modal-light-kv-value">${_pageEsc(v.personalEmail || v.universityEmail || v.email || 'N/A')}</div>
+        </div>
+        <div>
+          <div class="admin-modal-light-kv-label">Phone</div>
+          <div class="admin-modal-light-kv-value">${_pageEsc(v.phone || 'N/A')}</div>
+        </div>
+        <div>
+          <div class="admin-modal-light-kv-label">Level</div>
+          <div class="admin-modal-light-kv-value">Level ${_pageEsc(v.level || 'N/A')}</div>
+        </div>
+        <div>
+          <div class="admin-modal-light-kv-label">Hall</div>
+          <div class="admin-modal-light-kv-value">${_pageEsc(v.hall || 'N/A')}</div>
+        </div>
+        <div>
+          <div class="admin-modal-light-kv-label">Method</div>
+          <div class="admin-modal-light-kv-value">${v.verificationMethod === 'email' ? 'University Email' : 'Document Upload'}</div>
+        </div>
+        <div>
+          <div class="admin-modal-light-kv-label">Submitted</div>
+          <div class="admin-modal-light-kv-value">${esc(Formatter.formatDate(v.submittedAt))}</div>
+        </div>
+        ${v.reviewedBy ? `<div><div class="admin-modal-light-kv-label">Reviewed By</div><div class="admin-modal-light-kv-value">${esc(v.reviewedBy)}</div></div>` : ''}
+        ${v.reviewedAt ? `<div><div class="admin-modal-light-kv-label">Reviewed At</div><div class="admin-modal-light-kv-value">${esc(Formatter.formatDate(v.reviewedAt))}</div></div>` : ''}
+        ${v.reviewNotes ? `<div style="grid-column:1/-1;"><div class="admin-modal-light-kv-label">Review Notes</div><div class="admin-modal-light-kv-value admin-modal-light-kv-value--notes">${esc(v.reviewNotes)}</div></div>` : ''}
       </div>
 
       <div style="margin-bottom:1.5rem;">
-        <h4 style="color:#f9fafb;margin:0 0 0.5rem;font-size:0.95rem;">Verification documents</h4>
+        <h4 class="admin-modal-light-title" style="font-size:0.95rem;">Verification documents</h4>
         ${docsSection}
       </div>
 
       ${
   v.status === 'pending'
     ? `
-      <div style="border-top:1px solid rgba(255,255,255,0.1);padding-top:1.5rem;">
+      <div class="admin-modal-light-divider">
         <div style="margin-bottom:1rem;">
-          <label style="font-size:0.8rem;color:#9ca3af;display:block;margin-bottom:0.35rem;">Review Notes (optional)</label>
-          <textarea id="vrf-review-notes-${v.id}" rows="3" placeholder="Add notes about this verification..." style="width:100%;background:#111827;border:1px solid rgba(255,255,255,0.1);border-radius:0.5rem;color:#f9fafb;padding:0.75rem;font-size:0.85rem;resize:vertical;font-family:inherit;"></textarea>
+          <label class="admin-modal-light-kv-label" style="display:block;margin-bottom:var(--space-xs);">Review Notes (optional)</label>
+          <textarea id="vrf-review-notes-${esc(v.id)}" class="admin-modal-light-field" rows="3" placeholder="Add notes about this verification..."></textarea>
         </div>
-        <div style="display:flex;gap:0.75rem;">
-          <button onclick="Pages.approveVerification('${v.id}'); document.getElementById('vrf-detail-overlay').remove();" style="flex:1;padding:0.75rem;background:#059669;color:#fff;border:none;border-radius:0.5rem;cursor:pointer;font-weight:600;font-size:0.9rem;">✓ Approve Verification</button>
-          <button onclick="Pages.rejectVerification('${v.id}'); document.getElementById('vrf-detail-overlay').remove();" style="flex:1;padding:0.75rem;background:#dc2626;color:#fff;border:none;border-radius:0.5rem;cursor:pointer;font-weight:600;font-size:0.9rem;">✕ Reject Verification</button>
+        <div style="display:flex;gap:var(--space-sm);">
+          <button type="button" data-vrf-action="approve" data-vrf-id="${esc(v.id)}" class="btn btn-sm" style="flex:1;padding:0.75rem;background:var(--color-success);color:#fff;border:none;font-weight:var(--font-semibold);font-size:0.9rem;">Approve Verification</button>
+          <button type="button" data-vrf-action="reject" data-vrf-id="${esc(v.id)}" class="btn btn-sm" style="flex:1;padding:0.75rem;background:var(--color-danger);color:#fff;border:none;font-weight:var(--font-semibold);font-size:0.9rem;">Reject Verification</button>
         </div>
       </div>`
     : ''
@@ -4816,7 +4845,6 @@ font-size: 0.8rem;
     document.body.appendChild(overlay);
 
     // Signed URLs expire after 300s; refetch fresh ones once on load error.
-    // (Capture phase — IMG error events do not bubble.)
     let refetched = false;
     overlay.addEventListener('error', e => {
       if (refetched || e.target.tagName !== 'IMG') { return; }
@@ -4824,11 +4852,24 @@ font-size: 0.8rem;
       void Pages.viewVerificationDetail(id);
     }, true);
 
-    // Single delegated handler for the whole overlay: backdrop click-to-close
-    // (merged from the former inline onclick) plus the admin "Purge now"
-    // action. No new inline handlers (CSP).
+    // Single delegated handler: backdrop click-to-close, close button,
+    // approve/reject buttons, purge button. No new inline handlers.
     overlay.addEventListener('click', async e => {
       if (e.target === overlay) { overlay.remove(); return; }
+
+      const closeBtn = e.target.closest('[data-vrf-close]');
+      if (closeBtn) { overlay.remove(); return; }
+
+      const actionBtn = e.target.closest('[data-vrf-action]');
+      if (actionBtn) {
+        const vid = actionBtn.dataset.vrfId;
+        const action = actionBtn.dataset.vrfAction;
+        if (action === 'approve') { Pages.approveVerification(vid); }
+        else if (action === 'reject') { Pages.rejectVerification(vid); }
+        overlay.remove();
+        return;
+      }
+
       const purgeBtn = e.target.closest('[data-purge-docs]');
       if (!purgeBtn) { return; }
       const vid = purgeBtn.dataset.purgeDocs;
