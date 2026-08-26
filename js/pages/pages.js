@@ -4647,19 +4647,18 @@ font-size: 0.8rem;
 
     const overlay = document.createElement('div');
     overlay.id = 'payout-reject-overlay';
-    overlay.style.cssText =
-      'position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:2000;padding:2rem;';
+    overlay.className = 'admin-modal-light-backdrop';
     // Static markup only — no interpolated data, safe to build via HTML.
     overlay.innerHTML = `
-      <div role="dialog" aria-modal="true" aria-labelledby="payout-reject-title" style="background:#111827;border:1px solid rgba(255,255,255,0.1);border-radius:0.75rem;max-width:420px;width:100%;padding:1.5rem;">
-        <h3 id="payout-reject-title" style="margin:0 0 0.5rem;color:#f9fafb;">Reject payout request</h3>
-        <p style="margin:0 0 1rem;color:#9ca3af;font-size:0.85rem;">Rejection is final — the seller would need to submit a new request. The reason is kept in the payout record.</p>
-        <textarea id="payout-reject-reason" maxlength="300" rows="3" placeholder="Reason (min 3 characters)"
-          style="width:100%;background:#1f2937;border:1px solid rgba(255,255,255,0.15);border-radius:0.5rem;color:#e5e7eb;padding:0.6rem;font-size:0.85rem;resize:vertical;"></textarea>
-        <p id="payout-reject-error" role="alert" style="display:none;color:#f87171;font-size:0.78rem;margin:0.5rem 0 0;"></p>
-        <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1rem;">
+      <div role="dialog" aria-modal="true" aria-labelledby="payout-reject-title" class="admin-modal-light" style="position:relative;">
+        <button type="button" data-payout-modal-cancel class="admin-modal-light-close" aria-label="Close">&times;</button>
+        <h3 id="payout-reject-title" class="admin-modal-light-title">Reject payout request</h3>
+        <p class="admin-modal-light-text admin-modal-light-text--muted">Rejection is final — the seller would need to submit a new request. The reason is kept in the payout record.</p>
+        <textarea id="payout-reject-reason" class="admin-modal-light-field" maxlength="300" rows="3" placeholder="Reason (min 3 characters)"></textarea>
+        <p id="payout-reject-error" class="admin-modal-light-error" role="alert"></p>
+        <div class="admin-modal-light-actions">
           <button type="button" data-payout-modal-cancel class="btn btn-ghost btn-sm">Cancel</button>
-          <button type="button" id="payout-reject-confirm" class="btn btn-sm" style="background:#dc2626;color:#fff;border:none;">Reject request</button>
+          <button type="button" id="payout-reject-confirm" class="btn btn-sm" style="background:var(--color-danger);color:#fff;border:none;font-weight:var(--font-medium);">Reject request</button>
         </div>
       </div>
     `;
@@ -4677,7 +4676,9 @@ font-size: 0.8rem;
     overlay.addEventListener('click', e => {
       if (e.target === overlay) {close();}
     });
-    overlay.querySelector('[data-payout-modal-cancel]').addEventListener('click', close);
+    overlay.querySelectorAll('[data-payout-modal-cancel]').forEach(btn => {
+      btn.addEventListener('click', close);
+    });
 
     const confirmBtn = overlay.querySelector('#payout-reject-confirm');
     const errorEl = overlay.querySelector('#payout-reject-error');
