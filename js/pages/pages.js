@@ -5606,8 +5606,8 @@ font-size: 0.8rem;
             <td>${_pageEsc(new Date(a.timestamp).toLocaleString())}</td>
             <td>Admin</td>
             <td>${_pageEsc(a.action)}</td>
-            <td>${_pageEsc(JSON.stringify(a.details || {}).substring(0, 80))}</td>
-            <td><span style="padding:2px 8px;border-radius:4px;font-size:0.75rem;background:rgba(0,70,190,0.15);color:#93c5fd;">info</span></td>
+            <td>${Pages._renderActivityDetails(a.details || {})}</td>
+            <td><span class="admin-status-pill admin-status-pill--info">info</span></td>
           </tr>
         `,
           )
@@ -5650,11 +5650,61 @@ font-size: 0.8rem;
     }
   }
 
+  // Render a server-side activity-log `details` payload as a compact,
+  // human-readable list. Falls back to JSON.stringify for unknown shapes.
+  // All values are escaped via `_pageEsc` before insertion.
+  static _renderActivityDetails (details) {
+    if (details === null || details === undefined) {return '<span style="color:var(--neutral-500);">—</span>';}
+    // The backend may ship details as a pre-stringified JSON string.
+    // Try to parse it so we can render the same nice key/value list.
+    if (typeof details === 'string') {
+      const trimmed = details.trim();
+      if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (parsed && typeof parsed === 'object') {
+            return Pages._renderActivityDetails(parsed);
+          }
+        } catch (_) { /* not JSON, fall through */ }
+      }
+      return _pageEsc(details) || '<span style="color:var(--neutral-500);">—</span>';
+    }
+    if (typeof details !== 'object') {return _pageEsc(String(details));}
+
+    // Order keys by importance for the most common actions.
+    const keyOrder = ['email', 'name', 'productTitle', 'productId', 'orderNumber', 'amount', 'role', 'status', 'reason', 'mfaBypassed', 'ip', 'userAgent'];
+    const sortedKeys = Object.keys(details).sort((a, b) => {
+      const ai = keyOrder.indexOf(a);
+      const bi = keyOrder.indexOf(b);
+      if (ai === -1 && bi === -1) {return a.localeCompare(b);}
+      if (ai === -1) {return 1;}
+      if (bi === -1) {return -1;}
+      return ai - bi;
+    });
+
+    const items = sortedKeys.map(k => {
+      const v = details[k];
+      if (v === null || v === undefined || v === '') {return '';}
+      const prettyKey = k.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase());
+      let prettyVal;
+      if (typeof v === 'boolean') {prettyVal = v ? 'Yes' : 'No';}
+      else if (typeof v === 'object') {prettyVal = JSON.stringify(v);}
+      else {prettyVal = String(v);}
+      return `<div style="display:flex;gap:var(--space-sm);align-items:baseline;line-height:1.5;">
+        <span style="color:var(--neutral-500);min-width:90px;flex-shrink:0;">${_pageEsc(prettyKey)}</span>
+        <span style="color:var(--neutral-800);">${_pageEsc(prettyVal)}</span>
+      </div>`;
+    }).filter(Boolean).join('');
+
+    if (!items) {return '<span style="color:var(--neutral-500);">—</span>';}
+    return `<div style="font-size:0.8rem;">${items}</div>`;
+  }
+
   static _renderActivityRows (logs, tbody, append = false) {
-    const severityColors = {
-      info: 'background:rgba(0,70,190,0.15);color:#93c5fd;',
-      warning: 'background:rgba(245,158,11,0.15);color:#fbbf24;',
-      critical: 'background:rgba(239,68,68,0.15);color:#f87171;',
+    const severityToModifier = {
+      info: 'admin-status-pill--info',
+      warning: 'admin-status-pill--warning',
+      critical: 'admin-status-pill--danger',
     };
 
     const actionLabels = {
@@ -5681,16 +5731,16 @@ font-size: 0.8rem;
         const time = new Date(log.createdAt).toLocaleString();
         const user = log.userName || log.userEmail || 'System';
         const action = actionLabels[log.action] || log.action;
-        const details = log.details ? JSON.stringify(log.details).substring(0, 100) : '-';
+        const details = log.details ? Pages._renderActivityDetails(log.details) : '<span style="color:var(--neutral-500);">—</span>';
         const severity = log.severity || 'info';
-        const sevStyle = severityColors[severity] || severityColors.info;
+        const sevModifier = severityToModifier[severity] || 'admin-status-pill--neutral';
 
         return `<tr>
         <td style="white-space:nowrap;font-size:0.85rem;">${_pageEsc(time)}</td>
         <td>${_pageEsc(user)}</td>
         <td><strong>${_pageEsc(action)}</strong></td>
-        <td style="font-size:0.85rem;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${_pageEsc(details)}">${_pageEsc(details)}</td>
-        <td><span style="padding:2px 8px;border-radius:4px;font-size:0.75rem;${sevStyle}">${_pageEsc(severity)}</span></td>
+        <td style="font-size:0.85rem;max-width:320px;">${details}</td>
+        <td><span class="admin-status-pill ${sevModifier}">${_pageEsc(severity)}</span></td>
       </tr>`;
       })
       .join('');
