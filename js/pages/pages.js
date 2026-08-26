@@ -5215,45 +5215,51 @@ font-size: 0.8rem;
 
     const card = document.querySelector('.admin-card');
     if (card) {
+      const tableHead = `
+        <thead>
+          <tr>
+            <th>Order #</th>
+            <th>Tracking</th>
+            <th>Customer</th>
+            <th>Total</th>
+            <th>Payment</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+      `;
+
+      const tableBody = orders.length === 0
+        ? `<tr class="admin-table-empty-row"><td colspan="8">
+            <div class="admin-table-empty-icon" aria-hidden="true">${Icons.clipboard || ''}</div>
+            <p class="admin-table-empty-title">No orders yet</p>
+            <p class="admin-table-empty-msg">When buyers place orders they will appear here.</p>
+          </td></tr>`
+        : `<tbody>${orders.map(order => `
+          <tr>
+            <td><strong>${_pageEsc(order.orderNumber || '')}</strong></td>
+            <td class="admin-modal-light-kv-value admin-modal-light-kv-value--mono" style="font-size:0.8rem;">${_pageEsc(order.trackingNumber || '—')}</td>
+            <td>${_pageEsc(order.customer?.name || 'N/A')}</td>
+            <td>${Formatter.formatPrice(order.pricing?.grandTotal ?? 0)}</td>
+            <td>${_pageEsc(Formatter.capitalize(order.payment?.mode || '') || '—')}</td>
+            <td><span class="admin-status-badge ${_pageEsc(order.status || '')}">${_pageEsc(Formatter.capitalize(order.status || '') || '—')}</span></td>
+            <td>${Formatter.formatDate(order.createdAt)}</td>
+            <td>
+              <div class="table-actions">
+                <button class="table-action-btn view" title="View">${Icons.view}</button>
+              </div>
+            </td>
+          </tr>
+        `).join('')}</tbody>`;
+
       card.outerHTML = `
-  <div class="admin-table-container">
-  <table class="admin-table">
-  <thead>
-  <tr>
-          <th>Order #</th>
-          <th>Tracking</th>
-          <th>Customer</th>
-  <th>Total</th>
-  <th>Payment</th>
-  <th>Status</th>
-  <th>Date</th>
-  <th>Actions</th>
-  </tr>
-  </thead>
-  <tbody>
-  ${orders
-    .map(
-      order => `
-  <tr>
-  <td><strong>${_pageEsc(order.orderNumber || '')}</strong></td>
-<td style="font-family:monospace;font-size:0.8rem;color:#0046be;">${_pageEsc(order.trackingNumber || '—')}</td>
-  <td>${_pageEsc(order.customer?.name || 'N/A')}</td>
-  <td>${Formatter.formatPrice(order.pricing?.grandTotal ?? 0)}</td>
-  <td>${_pageEsc(Formatter.capitalize(order.payment?.mode || '') || '—')}</td>
-  <td><span class="admin-status-badge ${_pageEsc(order.status || '')}">${_pageEsc(Formatter.capitalize(order.status || '') || '—')}</span></td>
-  <td>${Formatter.formatDate(order.createdAt)}</td>
-  <td>
-  <div class="table-actions">
-  <button class="table-action-btn view" title="View">${Icons.view}</button>
-  </div>
-  </td>
-  </tr>
-  `,
-    )
-    .join('')}
-  </tbody>
-  </table>
-  </div>`;
+        <div class="admin-table-container">
+          <table class="admin-table">
+            ${tableHead}
+            ${tableBody}
+          </table>
+        </div>`;
     }
   }
 
