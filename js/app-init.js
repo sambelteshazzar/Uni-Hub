@@ -76,6 +76,7 @@ const MODULE_DEPENDENCIES = {
     { name: 'landing-page-methods', file: 'js/pages/landing-page-methods.js', exposes: ['LandingPageMethods'] },
     { name: 'auth-pages', file: 'js/pages/auth-pages.js', exposes: ['AuthPageMethods'] },
     { name: 'browse-pages', file: 'js/pages/browse-pages.js', exposes: ['BrowsePageMethods'] },
+    { name: 'policies-content', file: 'js/content/policies.js', exposes: ['POLICIES'] },
     { name: 'static-pages', file: 'js/pages/static-pages.js', exposes: ['StaticPageMethods'] },
     { name: 'pages', file: 'js/pages/pages.js', exposes: ['Pages'] },
   { name: 'bestbuy-auth-dashboard', file: 'js/pages/bestbuy-auth-dashboard.js', exposes: [] },

@@ -1066,7 +1066,7 @@ const AuthPageMethods = {
 
     <div class="form-check-modern">
     <input type="checkbox" id="terms" name="terms" required />
-    <label for="terms">I agree to the <a href="#" class="auth-link">Terms of Service</a> and <a href="#" class="auth-link">Privacy Policy</a></label>
+    <label for="terms">I agree to the <a href="#/terms" class="auth-link">Terms of Service</a> and <a href="#/privacy" class="auth-link">Privacy Policy</a></label>
     </div>
 
       <button type="submit" class="submit-btn submit-btn-primary">Create Account</button>

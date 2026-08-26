@@ -53,6 +53,7 @@
     "ERROR_MESSAGES": "readonly",
     "SUCCESS_MESSAGES": "readonly",
     "PAGINATION": "readonly",
+    "POLICIES": "readonly",
     "TIME": "readonly",
     "StorageManager": "readonly",
     "Validator": "readonly",
