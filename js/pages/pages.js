@@ -6727,27 +6727,27 @@ font-size: 0.8rem;
           <div class="admin-header">
             <h1 class="admin-title">Analytics</h1>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;max-width:1100px;">
-            <div style="background:#1f2937;border-radius:8px;padding:1.25rem;">
-              <h3 style="margin:0 0 .75rem;font-size:.95rem;color:#d1d5db;">Revenue (Last 30 Days)</h3>
-              <canvas id="analytics-revenue-chart" height="220"></canvas>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:1.5rem;max-width:1100px;">
+            <div class="admin-chart-area">
+              <div class="admin-chart-header"><h3>Revenue (Last 30 Days)</h3></div>
+              <div class="admin-chart-body"><canvas id="analytics-revenue-chart" height="220"></canvas></div>
             </div>
-            <div style="background:#1f2937;border-radius:8px;padding:1.25rem;">
-              <h3 style="margin:0 0 .75rem;font-size:.95rem;color:#d1d5db;">Orders by Status</h3>
-              <canvas id="analytics-orders-chart" height="220"></canvas>
+            <div class="admin-chart-area">
+              <div class="admin-chart-header"><h3>Orders by Status</h3></div>
+              <div class="admin-chart-body"><canvas id="analytics-orders-chart" height="220"></canvas></div>
             </div>
-            <div style="background:#1f2937;border-radius:8px;padding:1.25rem;">
-              <h3 style="margin:0 0 .75rem;font-size:.95rem;color:#d1d5db;">Products by Category</h3>
-              <canvas id="analytics-categories-chart" height="220"></canvas>
+            <div class="admin-chart-area">
+              <div class="admin-chart-header"><h3>Products by Category</h3></div>
+              <div class="admin-chart-body"><canvas id="analytics-categories-chart" height="220"></canvas></div>
             </div>
-            <div style="background:#1f2937;border-radius:8px;padding:1.25rem;">
-              <h3 style="margin:0 0 .75rem;font-size:.95rem;color:#d1d5db;">New Users (Last 30 Days)</h3>
-              <canvas id="analytics-users-chart" height="220"></canvas>
+            <div class="admin-chart-area">
+              <div class="admin-chart-header"><h3>New Users (Last 30 Days)</h3></div>
+              <div class="admin-chart-body"><canvas id="analytics-users-chart" height="220"></canvas></div>
             </div>
           </div>
-          <div style="background:#1f2937;border-radius:8px;padding:1.25rem;max-width:1100px;margin-top:1.5rem;">
-            <h3 style="margin:0 0 .75rem;font-size:.95rem;color:#d1d5db;">Top Selling Products</h3>
-            <div id="analytics-top-products" style="color:#9ca3af;font-size:.85rem;">Loading...</div>
+          <div class="admin-chart-area" style="max-width:1100px;margin-top:1.5rem;">
+            <div class="admin-chart-header"><h3>Top Selling Products</h3></div>
+            <div class="admin-chart-body" id="analytics-top-products" style="color:var(--neutral-500);font-size:0.85rem;">Loading...</div>
           </div>
         </main>
       </div>
@@ -6800,9 +6800,9 @@ font-size: 0.8rem;
           ).map(p => ({ title: p.title, sold: Math.floor(Math.random() * 10 + 1) })),
         };
       }
-      const chartFont = { family: '\'Inter\', sans-serif' };
-      const gridColor = 'rgba(75,85,99,0.3)';
-      const tickColor = '#9ca3af';
+      const chartFont = { family: 'var(--font-family-sans)' };
+      const gridColor = 'rgba(0, 0, 0, 0.08)';
+      const tickColor = '#6b7280';
 
       new Chart(document.getElementById('analytics-revenue-chart'), {
         type: 'line',
