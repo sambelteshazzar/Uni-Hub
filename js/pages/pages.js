@@ -4520,18 +4520,18 @@ font-size: 0.8rem;
           p => `
                   <tr>
                     <td>
-                      <div style="font-weight:600;color:#f9fafb;">${_pageEsc(p.seller?.fullName || 'Unknown seller')}</div>
-                      <div style="font-size:0.75rem;color:#9ca3af;">${_pageEsc(p.seller?.email || '')}</div>
-                      <div style="font-size:0.75rem;color:#6b7280;">${_pageEsc(p.seller?.phone || '')}</div>
+                      <div style="font-weight:600;color:var(--neutral-800);">${_pageEsc(p.seller?.fullName || 'Unknown seller')}</div>
+                      <div style="font-size:0.75rem;color:var(--neutral-500);">${_pageEsc(p.seller?.email || '')}</div>
+                      <div style="font-size:0.75rem;color:var(--neutral-500);">${_pageEsc(p.seller?.phone || '')}</div>
                     </td>
-                    <td style="font-weight:600;">${Formatter.formatPrice(p.amount || 0)}</td>
-                    <td>${_pageEsc(Formatter.capitalize(p.method || ''))}</td>
-                    <td style="font-family:monospace;font-size:0.8rem;color:#60a5fa;">${_pageEsc(p.destination || '')}</td>
-                    <td style="font-size:0.8rem;color:#9ca3af;">${Formatter.formatTimeAgo(p.requestedAt)}</td>
+                    <td style="font-weight:600;color:var(--neutral-800);">${Formatter.formatPrice(p.amount || 0)}</td>
+                    <td style="color:var(--neutral-700);">${_pageEsc(Formatter.capitalize(p.method || ''))}</td>
+                    <td class="admin-modal-light-kv-value admin-modal-light-kv-value--mono" style="font-size:0.8rem;">${_pageEsc(p.destination || '')}</td>
+                    <td style="font-size:0.8rem;color:var(--neutral-500);">${Formatter.formatTimeAgo(p.requestedAt)}</td>
                     <td>
                       <span class="admin-status-badge ${this._payoutStatusClass(p.status)}" style="text-transform:capitalize;">${_pageEsc(p.status)}</span>
-                      ${p.failureReason ? `<div style="font-size:0.7rem;color:#f87171;margin-top:0.25rem;max-width:160px;">${_pageEsc(p.failureReason)}</div>` : ''}
-                      ${p.processedAt ? `<div style="font-size:0.7rem;color:#6b7280;margin-top:0.25rem;">${Formatter.formatTimeAgo(p.processedAt)}</div>` : ''}
+                      ${p.failureReason ? `<div style="font-size:0.7rem;color:var(--color-danger);margin-top:0.25rem;max-width:160px;">${_pageEsc(p.failureReason)}</div>` : ''}
+                      ${p.processedAt ? `<div style="font-size:0.7rem;color:var(--neutral-500);margin-top:0.25rem;">${Formatter.formatTimeAgo(p.processedAt)}</div>` : ''}
                     </td>
                     <td>
                       ${
@@ -4539,9 +4539,9 @@ font-size: 0.8rem;
     ? `
                         <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
                           <button class="btn btn-sm" data-payout-action="approve" data-id="${_pageEsc(p.id)}" aria-label="Approve payout"
-                            style="padding:3px 8px;font-size:11px;background:#059669;color:#fff;border:none;cursor:pointer;">✓ Approve</button>
+                            style="padding:4px 10px;font-size:11px;background:var(--color-success);color:#fff;border:none;cursor:pointer;border-radius:var(--radius-sm);font-weight:var(--font-medium);">Approve</button>
                           <button class="btn btn-sm" data-payout-action="reject" data-id="${_pageEsc(p.id)}" aria-label="Reject payout"
-                            style="padding:3px 8px;font-size:11px;background:#dc2626;color:#fff;border:none;cursor:pointer;">✕ Reject</button>
+                            style="padding:4px 10px;font-size:11px;background:var(--color-danger);color:#fff;border:none;cursor:pointer;border-radius:var(--radius-sm);font-weight:var(--font-medium);">Reject</button>
                         </div>
                       `
     : ''
@@ -4550,8 +4550,7 @@ font-size: 0.8rem;
                   </tr>
                   `,
         )
-        .join('') ||
-      `<tr><td colspan="7" style="text-align:center;color:#6b7280;padding:2rem;">No ${activeFilter === 'all' ? '' : `${_pageEsc(activeFilter)} `}payout requests</td></tr>`;
+        .join('');
 
     mainContent.innerHTML = `
       <div class="admin-container">
@@ -4574,31 +4573,30 @@ font-size: 0.8rem;
               <div style="display:flex;gap:0.5rem;" id="admin-payout-filters">${statusTabs}</div>
             </div>
             <div class="admin-table-container" style="box-shadow:none;border-radius:0;" id="admin-payouts-table">
-              ${
-  visible.length === 0 && payouts.length > 0
-    ? `
-                <div style="text-align:center;padding:3rem;color:#6b7280;">
-                  <div style="font-size:2.5rem;margin-bottom:1rem;">💸</div>
-                  <p style="margin:0;font-size:1rem;">No ${activeFilter === 'all' ? '' : `${_pageEsc(activeFilter)} `}payout requests</p>
-                </div>
-              `
-    : `
-                <table class="admin-table">
-                  <thead>
-                    <tr>
-                      <th>Seller</th>
-                      <th>Amount</th>
-                      <th>Method</th>
-                      <th>Destination</th>
-                      <th>Requested</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>${rows}</tbody>
-                </table>
-              `
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Seller</th>
+                    <th>Amount</th>
+                    <th>Method</th>
+                    <th>Destination</th>
+                    <th>Requested</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${
+  visible.length === 0
+    ? `<tr class="admin-table-empty-row"><td colspan="7">
+                          <div class="admin-table-empty-icon" aria-hidden="true">${Icons.money || ''}</div>
+                          <p class="admin-table-empty-title">No payout requests</p>
+                          <p class="admin-table-empty-msg">There are no ${activeFilter === 'all' ? '' : `${_pageEsc(activeFilter)} `}payout requests right now.</p>
+                        </td></tr>`
+    : rows
 }
+                </tbody>
+              </table>
             </div>
           </div>
         </main>
