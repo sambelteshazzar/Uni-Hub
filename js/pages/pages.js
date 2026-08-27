@@ -62,6 +62,347 @@ const _requireAdmin = () => {
   return false;
 };
 
+// ============================================
+// ADMIN UI — shared helpers for the admin panel
+// Pure HTML-string builders, no side effects, no
+// direct DOM access. Pages compose these in their
+// render methods; interactions are wired with
+// delegated listeners installed once per page.
+// ============================================
+class AdminUI {
+  // ---- Brand mark (top of sidebar) ----
+  static brand () {
+    return `
+      <div class="adm-brand">
+        <div class="adm-brand-mark">J</div>
+        <div>
+          <div class="adm-brand-name">JERTS CART</div>
+          <div class="adm-brand-tag">Admin</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // ---- Profile chip (under brand) ----
+  static profile (user) {
+    const initials = (user?.fullName || 'A').split(' ').map(s => s[0]).slice(0, 2).join('').toUpperCase() || 'A';
+    return `
+      <div class="adm-profile">
+        <div class="adm-avatar-md">${_pageEsc(initials)}</div>
+        <div style="flex:1; min-width:0;">
+          <div class="adm-profile-name">${_pageEsc(user?.fullName || 'Admin')}</div>
+          <div class="adm-profile-email">${_pageEsc(user?.email || '')}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // ---- Single nav item ----
+  static navItem (item, isActive) {
+    const cls = isActive ? 'adm-nav-item is-active' : 'adm-nav-item';
+    const badge = item.badge ? `<span class="adm-nav-badge">${_pageEsc(String(item.badge))}</span>` : '';
+    return `
+      <a href="#" class="${cls}" data-adm-nav="${_pageEsc(item.key)}" data-action="nav">
+        ${item.icon || ''}
+        <span>${_pageEsc(item.label)}</span>
+        ${badge}
+      </a>
+    `;
+  }
+
+  // ---- Section label ----
+  static navSection (label) {
+    return `<div class="adm-nav-section-label">${_pageEsc(label)}</div>`;
+  }
+
+  // ---- Full sidebar ----
+  static sidebar (activeItem) {
+    const user = (typeof adminAuthManager !== 'undefined' && adminAuthManager.getCurrentUser?.())
+      || (typeof authManager !== 'undefined' && authManager.getCurrentUser?.())
+      || null;
+    const sections = [
+      {
+        label: 'Operations',
+        items: [
+          { key: 'dashboard',     label: 'Dashboard',     icon: Icons.chart },
+          { key: 'verifications', label: 'Verifications', icon: Icons.shield || Icons.verification || Icons.check },
+          { key: 'users',         label: 'Users',         icon: Icons.users },
+          { key: 'products',      label: 'Products',      icon: Icons.package },
+          { key: 'orders',        label: 'Orders',        icon: Icons.clipboard },
+          { key: 'payouts',       label: 'Payouts',       icon: Icons.money },
+        ],
+      },
+      {
+        label: 'Insights',
+        items: [
+          { key: 'reports',   label: 'Reports',   icon: Icons.chart },
+          { key: 'analytics', label: 'Analytics', icon: Icons.chart },
+          { key: 'activity',  label: 'Activity',  icon: Icons.clock || Icons.chart },
+          { key: 'regions',   label: 'Regions',   icon: Icons.globe || Icons.chart },
+          { key: 'newsletter',label: 'Newsletter',icon: Icons.mail || Icons.email || '' },
+        ],
+      },
+    ];
+    const itemsHtml = sections.map(s => `
+      ${AdminUI.navSection(s.label)}
+      ${s.items.map(i => AdminUI.navItem(i, i.key === activeItem)).join('')}
+    `).join('');
+    return `
+      <aside class="adm-sidebar">
+        ${AdminUI.brand()}
+        ${AdminUI.profile(user)}
+        <nav class="adm-sidebar-nav" id="adm-sidebar-nav">
+          ${itemsHtml}
+        </nav>
+        <div class="adm-sidebar-footer">
+          <button type="button" class="adm-sidebar-link" data-action="toggle-dark">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            <span id="adm-dark-label">Dark mode</span>
+          </button>
+          <button type="button" class="adm-sidebar-link" data-action="logout">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+            Log out
+          </button>
+        </div>
+      </aside>
+    `;
+  }
+
+  // ---- Top utility bar (breadcrumb + search + actions) ----
+  // pageKey is the current route key (matches `data-adm-nav` value).
+  // pageActions is HTML for the right-side action area (search + buttons).
+  // The wrapper does NOT include sidebar — the page's render method
+  // composes both.
+  static topbar (pageLabel, pageActions) {
+    return `
+      <div class="adm-topbar">
+        <div class="adm-breadcrumb">
+          <a href="#/admin">Admin</a>
+          <span class="adm-breadcrumb-sep">/</span>
+          <span class="adm-breadcrumb-current">${_pageEsc(pageLabel)}</span>
+        </div>
+        <div class="adm-topbar-actions">
+          ${pageActions || ''}
+        </div>
+      </div>
+    `;
+  }
+
+  // ---- Page header (title + sub + right actions like period selector) ----
+  static pageHeader (title, sub, rightActions) {
+    return `
+      <header class="adm-page-header">
+        <div>
+          <h1 class="adm-page-title">${_pageEsc(title)}</h1>
+          <p class="adm-page-sub">${sub ? _pageEsc(sub) : ''}</p>
+        </div>
+        ${rightActions ? `<div class="adm-actions">${rightActions}</div>` : ''}
+      </header>
+    `;
+  }
+
+  // ---- Stat card (one stat) ----
+  static statCard ({ label, value, delta, deltaKind }) {
+    const deltaClass = deltaKind ? `adm-stat-delta--${deltaKind}` : 'adm-stat-delta--muted';
+    return `
+      <div class="adm-stat">
+        <div class="adm-stat-label">${_pageEsc(label)}</div>
+        <div class="adm-stat-value">${value}</div>
+        ${delta ? `<div class="adm-stat-delta ${deltaClass}">${_pageEsc(delta)}</div>` : ''}
+      </div>
+    `;
+  }
+
+  // ---- Stat grid (wraps stat cards) ----
+  static statGrid (cards) {
+    return `<section class="adm-stats">${cards.join('')}</section>`;
+  }
+
+  // ---- Pill group (flat filter tabs) ----
+  // tabs = [{ key, label }]; activeKey is the highlighted one.
+  // groupClass optional — pass 'adm-pill-group--inverse' to make active dark.
+  // dataAttr optional — defaults to 'data-adm-pill'.
+  static pillGroup (tabs, activeKey, groupClass, dataAttr) {
+    const data = dataAttr || 'data-adm-pill';
+    const pills = tabs.map(t => {
+      const active = t.key === activeKey ? ' is-active' : '';
+      return `<button type="button" class="adm-pill${active}" ${data}="${_pageEsc(t.key)}">${_pageEsc(t.label)}</button>`;
+    }).join('');
+    return `<div class="adm-pill-group${groupClass ? ' ' + groupClass : ''}">${pills}</div>`;
+  }
+
+  // ---- Card surface (with optional header) ----
+  static card (titleHtml, bodyHtml, headerActionsHtml) {
+    return `
+      <section class="adm-card">
+        ${titleHtml ? `
+          <header class="adm-card-header">
+            <div>${titleHtml}</div>
+            ${headerActionsHtml ? `<div>${headerActionsHtml}</div>` : ''}
+          </header>
+        ` : ''}
+        <div class="adm-table-wrap">${bodyHtml}</div>
+      </section>
+    `;
+  }
+
+  // ---- Table from column defs + rows ----
+  // columns: [{ label, render(row) -> string }]; render emits raw HTML.
+  // rows: array of objects. emptyHtml is shown when rows is empty.
+  static table ({ columns, rows, emptyHtml, footerHtml, rowAttr }) {
+    const thead = `<thead><tr>${columns.map(c => `<th class="adm-th">${_pageEsc(c.label)}</th>`).join('')}</tr></thead>`;
+    const tbody = rows.length === 0
+      ? (emptyHtml || `<tr><td class="adm-td" colspan="${columns.length}"><div class="adm-empty"><div class="adm-empty-title">No records</div></div></td></tr>`)
+      : rows.map(row => {
+        const attrs = rowAttr ? rowAttr(row) : '';
+        return `<tr${attrs}>${columns.map(c => `<td class="adm-td">${c.render(row)}</td>`).join('')}</tr>`;
+      }).join('');
+    return `<table class="adm-table">${thead}<tbody>${tbody}</tbody></table>${footerHtml || ''}`;
+  }
+
+  // ---- Empty state (page-level, outside a table) ----
+  static emptyState ({ icon, title, body, actions }) {
+    return `
+      <div class="adm-empty">
+        <div class="adm-empty-icon" aria-hidden="true">${icon || ''}</div>
+        <h2 class="adm-empty-title">${_pageEsc(title)}</h2>
+        <p class="adm-empty-body">${_pageEsc(body || '')}</p>
+        ${actions ? `<div class="adm-empty-actions">${actions}</div>` : ''}
+      </div>
+    `;
+  }
+
+  // ---- Modal (open + delegated listener; returns the overlay element) ----
+  // Caller appends to document.body and wires the delegated handler
+  // (see AdminUI.wireModal for the standard pattern).
+  static modalHtml ({ id, title, sub, body, footer, size }) {
+    const sizeClass = size ? ` adm-modal--${size}` : '';
+    return `
+      <div id="${id}" class="adm-modal-backdrop" role="dialog" aria-modal="true">
+        <div class="adm-modal${sizeClass}">
+          <div class="adm-modal-header">
+            <div>
+              <h2 class="adm-modal-title">${_pageEsc(title)}</h2>
+              ${sub ? `<p class="adm-modal-sub">${_pageEsc(sub)}</p>` : ''}
+            </div>
+            <button type="button" class="adm-modal-close" data-adm-modal-close aria-label="Close">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="adm-modal-body">${body}</div>
+          <div class="adm-modal-actions">${footer || ''}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // ---- Standard modal wiring: close on backdrop, close button, Esc ----
+  // handlers = { onClose: () => void, onAction: (key) => void }
+  // Buttons inside .adm-modal-actions with data-adm-modal-action=KEY
+  // are routed to handlers.onAction.
+  static wireModal (overlay, handlers) {
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) { handlers.onClose?.(); return; }
+      const closeBtn = e.target.closest('[data-adm-modal-close]');
+      if (closeBtn) { handlers.onClose?.(); return; }
+      const actionBtn = e.target.closest('[data-adm-modal-action]');
+      if (actionBtn) {
+        handlers.onAction?.(actionBtn.dataset.admModalAction, actionBtn);
+      }
+    });
+    const escHandler = e => { if (e.key === 'Escape') { handlers.onClose?.(); document.removeEventListener('keydown', escHandler); } };
+    document.addEventListener('keydown', escHandler);
+  }
+
+  // ---- Standard sidebar wiring: nav clicks, dark toggle, logout ----
+  // activeItem is the current page key (so clicking it is a no-op).
+  // onNavigate: (key) => void — caller decides how to route.
+  static wireSidebar (onNavigate) {
+    const nav = document.getElementById('adm-sidebar-nav');
+    if (nav) {
+      nav.addEventListener('click', e => {
+        const item = e.target.closest('[data-adm-nav]');
+        if (!item) { return; }
+        e.preventDefault();
+        const key = item.dataset.admNav;
+        // Update active class optimistically
+        nav.querySelectorAll('.adm-nav-item').forEach(a => a.classList.remove('is-active'));
+        item.classList.add('is-active');
+        onNavigate?.(key);
+      });
+    }
+    const sidebar = document.querySelector('.adm-sidebar');
+    if (sidebar) {
+      sidebar.addEventListener('click', e => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) { return; }
+        const action = btn.dataset.action;
+        if (action === 'toggle-dark') {
+          const label = document.getElementById('adm-dark-label');
+          const on = label && label.textContent === 'Dark mode';
+          if (label) { label.textContent = on ? 'Light mode' : 'Dark mode'; }
+          // Dark mode itself is a separate spec; we just toggle the label.
+        } else if (action === 'logout') {
+          if (typeof adminAuthManager !== 'undefined') {
+            adminAuthManager.logout?.();
+            window.location.hash = '#/';
+            if (typeof Pages !== 'undefined' && Pages.renderLanding) { Pages.renderLanding(); }
+          }
+        }
+      });
+    }
+  }
+
+  // ---- Standard topbar search wiring ----
+  // inputEl: the search <input> element.
+  // onSearch: (value) => void — caller filters the current page.
+  static wireSearch (inputEl, onSearch) {
+    if (!inputEl) { return; }
+    let timer = null;
+    inputEl.addEventListener('input', e => {
+      clearTimeout(timer);
+      const v = e.target.value;
+      timer = setTimeout(() => onSearch?.(v), 120);
+    });
+  }
+
+  // ---- Standard pill group wiring ----
+  // groupEl: the .adm-pill-group element.
+  // onChange: (key) => void.
+  static wirePillGroup (groupEl, onChange) {
+    if (!groupEl) { return; }
+    groupEl.addEventListener('click', e => {
+      const pill = e.target.closest('[data-adm-pill]');
+      if (!pill) { return; }
+      groupEl.querySelectorAll('.adm-pill').forEach(p => p.classList.remove('is-active'));
+      pill.classList.add('is-active');
+      onChange?.(pill.dataset.admPill);
+    });
+  }
+
+  // ---- Toast (light) ----
+  static toast (message, kind) {
+    let host = document.getElementById('adm-toast-host');
+    if (!host) {
+      host = document.createElement('div');
+      host.id = 'adm-toast-host';
+      host.className = 'adm-toast-host';
+      document.body.appendChild(host);
+    }
+    const t = document.createElement('div');
+    t.className = 'adm-toast' + (kind ? ` adm-toast--${kind}` : '');
+    t.textContent = message;
+    host.appendChild(t);
+    requestAnimationFrame(() => t.classList.add('is-visible'));
+    setTimeout(() => {
+      t.classList.remove('is-visible');
+      setTimeout(() => t.remove(), 200);
+    }, 2400);
+  }
+}
+
+if (typeof window !== 'undefined') { window.AdminUI = AdminUI; }
+
 class Pages {
   // Admin product-form category metadata. Mirrors public/data/categories.json
   // so the form does not require a runtime fetch (and stays correct offline).
