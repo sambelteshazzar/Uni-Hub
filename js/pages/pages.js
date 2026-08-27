@@ -5497,99 +5497,181 @@ font-size: 0.8rem;
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
 
+    const topbarActions = `
+      <div class="adm-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search users by name, email, or university" aria-label="Search users" id="admin-users-search" />
+      </div>
+      <button type="button" class="adm-btn adm-btn--primary" data-adm-action="invite-user">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19M5 12h14"/></svg>
+        Add user
+      </button>
+    `;
+
     mainContent.innerHTML = `
-  <div class="admin-container">
-  ${this.getAdminSidebar('users')}
-  <main class="admin-main">
-  <div class="admin-header">
-  <h1 class="admin-title">User Management</h1>
-  </div>
-  <div class="admin-card">
-  <div class="admin-card-header"><h3>Loading users...</h3></div>
-  <div style="padding:2rem;text-align:center;color:#9ca3af;">Loading...</div>
-  </div>
-  </main>
-  </div>`;
+      <div class="adm-layout">
+        ${AdminUI.sidebar('users')}
+        <div class="adm-main">
+          ${AdminUI.topbar('Users', topbarActions)}
+          <div class="adm-page">
+            ${AdminUI.pageHeader('User Management', 'Manage all user accounts on the platform.', null)}
 
-    await adminUsersManager.loadUsers();
-    const users = adminUsersManager.getAllUsers();
+            <div id="admin-users-card-host"></div>
+          </div>
+        </div>
+      </div>
+    `;
 
-    const tableBody = document.querySelector('.admin-card');
-    if (tableBody) {
-      tableBody.outerHTML = `
-  <div class="admin-table-container">
-  <table class="admin-table">
-  <thead>
-  <tr>
-  <th>User</th>
-  <th>Email</th>
-  <th>University</th>
-  <th>Role</th>
-  <th>Status</th>
-  <th>Actions</th>
-  </tr>
-  </thead>
-  <tbody>
-  ${users
-    .map(
-      user => `
-  <tr>
-  <td>
-  <div class="user-cell">
-  <div class="admin-user-avatar-sm">${_pageEsc((user.fullName || 'U').charAt(0).toUpperCase())}</div>
-  <div class="user-info">
-  <div class="user-name">${_pageEsc(user.fullName)}</div>
-  </div>
-  </div>
-  </td>
-  <td>${_pageEsc(user.email)}</td>
-  <td>${_pageEsc(user.university || '-')}</td>
-  <td><span class="admin-role-badge ${_pageEsc(user.role)}">${_pageEsc(user.role)}</span></td>
-  <td>
-  <span class="admin-status-badge ${user.isSuspended ? 'cancelled' : 'delivered'}">
-  ${user.isSuspended ? 'Suspended' : 'Active'}
-  </span>
-  </td>
-  <td>
-  <div class="table-actions">
-  ${
-  user.role === 'admin'
-    ? ''
-    : user.isSuspended
-      ? `<button class="btn btn-sm btn-success" style="padding: 4px 8px; font-size: 12px;" data-action="admin-unban" data-user-id="${_pageEsc(user.id)}">Unban</button>`
-      : `<button class="btn btn-sm btn-danger" style="padding: 4px 8px; font-size: 12px;" data-action="admin-ban" data-user-id="${_pageEsc(user.id)}">Ban</button>`
-}
-  </div>
-  </td>
-  </tr>
-  `,
-    )
-    .join('')}
-  </tbody>
-  </table>
-  </div>`;
+    AdminUI.wireSidebar(key => {
+      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
+      if (typeof Pages[method] === 'function') {Pages[method]();}
+    });
 
-    // Delegated click handler for the Ban/Unban buttons. Replaces the
-    // old inline onclick="Pages.adminBanUser('${user.id}')" pattern,
-    // which interpolated a raw backend string into a JS string literal
-    // inside an HTML attribute — triple context-breakout risk.
-    // tableBody was replaced via outerHTML above, so re-query the fresh
-    // .admin-table-container node (the original reference is detached).
-    const freshTable = mainContent.querySelector('.admin-table-container');
-    if (freshTable) {
-      freshTable.addEventListener('click', ev => {
-        const btn = ev.target.closest('[data-action]');
+    const topbarEl = mainContent.querySelector('.adm-topbar');
+    if (topbarEl) {
+      topbarEl.addEventListener('click', e => {
+        const btn = e.target.closest('[data-adm-action]');
         if (!btn) {return;}
+        const action = btn.dataset.admAction;
+        if (action === 'invite-user') {
+          AdminUI.toast('User invite flow not yet available', 'info');
+        }
+      });
+    }
+
+    let users = [];
+    try {
+      await adminUsersManager.loadUsers();
+      users = adminUsersManager.getAllUsers() || [];
+    } catch (_e) {
+      users = [];
+    }
+
+    const roleToBadgeKind = {
+      admin: 'primary',
+      seller: 'warning',
+      buyer: 'info',
+    };
+
+    const userColumns = [
+      {
+        label: 'User',
+        render: u => {
+          const initials = ((u.fullName || 'U').trim().charAt(0) || 'U').toUpperCase();
+          return `
+            <div class="adm-user-cell">
+              <div class="adm-avatar-sm">${_pageEsc(initials)}</div>
+              <span class="adm-text-strong">${_pageEsc(u.fullName || 'Unknown')}</span>
+            </div>
+          `;
+        },
+      },
+      { label: 'Email', render: u => _pageEsc(u.email || '—') },
+      { label: 'University', render: u => _pageEsc(u.university || '—') },
+      {
+        label: 'Role',
+        render: u => {
+          const kind = roleToBadgeKind[u.role] || 'neutral';
+          return `<span class="adm-badge adm-badge--${kind}">${_pageEsc(u.role || 'user')}</span>`;
+        },
+      },
+      {
+        label: 'Status',
+        render: u => {
+          const suspended = u.isSuspended === true || u.status === 'suspended' || u.status === 'banned';
+          const kind = suspended ? 'neutral' : 'success';
+          const label = suspended ? (u.status === 'banned' ? 'Banned' : 'Suspended') : 'Active';
+          return `<span class="adm-badge adm-badge--${kind}">${label}</span>`;
+        },
+      },
+      {
+        label: 'Actions',
+        render: u => {
+          if (u.role === 'admin') {return '<span class="adm-text-muted">—</span>';}
+          const suspended = u.isSuspended === true || u.status === 'suspended' || u.status === 'banned';
+          if (suspended) {
+            return `<button type="button" class="adm-btn adm-btn--sm" data-user-action="unban" data-user-id="${_pageEsc(u.id)}">Unban</button>`;
+          }
+          return `<button type="button" class="adm-btn adm-btn--sm adm-btn--danger" data-user-action="ban" data-user-id="${_pageEsc(u.id)}">Ban</button>`;
+        },
+      },
+    ];
+
+    const total = users.length;
+    const cardTitle = `<h3 class="adm-card-title">All users</h3><p class="adm-card-sub">Showing ${total} account${total === 1 ? '' : 's'}</p>`;
+
+    const emptyHtml = `<tr><td class="adm-td" colspan="${userColumns.length}">${AdminUI.emptyState({
+      icon: Icons.users || '',
+      title: 'No users yet',
+      body: 'When people sign up they will appear here. Manage roles, ban accounts, and review verification status from this page.',
+    })}</td></tr>`;
+
+    const footerHtml = `
+      <div class="adm-pagination">
+        <span class="adm-pagination-info">Showing ${total} of ${total}</span>
+        <div class="adm-pagination-actions">
+          <button type="button" class="adm-btn adm-btn--sm" disabled>Previous</button>
+          <button type="button" class="adm-btn adm-btn--sm" disabled>Next</button>
+        </div>
+      </div>
+    `;
+
+    const tableHtml = AdminUI.table({
+      columns: userColumns,
+      rows: users,
+      emptyHtml,
+      footerHtml,
+    });
+
+    const cardHost = document.getElementById('admin-users-card-host');
+    if (cardHost) {
+      cardHost.outerHTML = AdminUI.card(cardTitle, tableHtml);
+    }
+
+    // Delegated handler for ban/unban actions. Installed on the page
+    // wrapper so it survives any future table re-renders. The actual
+    // prompt/confirm + API call + re-render lives in Pages.adminBanUser
+    // / Pages.adminUnbanUser (kept identical to the prior implementation).
+    const page = mainContent.querySelector('.adm-page');
+    if (page) {
+      page.addEventListener('click', e => {
+        const btn = e.target.closest('[data-user-action]');
+        if (!btn) {return;}
+        const action = btn.dataset.userAction;
         const userId = btn.dataset.userId || '';
-        if (btn.dataset.action === 'admin-ban') {
+        if (!userId) {return;}
+        if (action === 'ban') {
           Pages.adminBanUser(userId);
-        } else if (btn.dataset.action === 'admin-unban') {
+        } else if (action === 'unban') {
           Pages.adminUnbanUser(userId);
         }
       });
     }
+
+    // Client-side search filter (decorative — the data is small). Wired
+    // against the input rendered in the topbar.
+    const searchInput = document.getElementById('admin-users-search');
+    if (searchInput) {
+      AdminUI.wireSearch(searchInput, value => {
+        const q = (value || '').trim().toLowerCase();
+        const tbody = mainContent.querySelector('.adm-table tbody');
+        if (!tbody) {return;}
+        let shown = 0;
+        const trs = tbody.querySelectorAll('tr');
+        trs.forEach(tr => {
+          if (!tr.dataset.userId && tr.children.length < 2) {
+            return;
+          }
+          const text = tr.textContent.toLowerCase();
+          const match = !q || text.includes(q);
+          tr.style.display = match ? '' : 'none';
+          if (match) {shown += 1;}
+        });
+        const info = mainContent.querySelector('.adm-pagination-info');
+        if (info) {info.textContent = `Showing ${shown} of ${total}`;}
+      });
+    }
   }
-}
 
   /**
    * Render Admin Products Page
