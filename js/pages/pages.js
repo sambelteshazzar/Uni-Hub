@@ -5282,31 +5282,40 @@ font-size: 0.8rem;
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `
-  <div class="admin-container" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;">
-    <div style="background:var(--admin-bg-elev2,#1f2937);border:1px solid var(--admin-border,rgba(255,255,255,0.1));border-radius:var(--radius-xl,1rem);padding:var(--space-2xl,2rem);width:100%;max-width:400px;box-shadow:var(--shadow-xl);">
-      <div style="text-align:center;margin-bottom:2rem;">
-        <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--primary,#0046be),var(--primary-hover,#003399));color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.25rem;margin-bottom:1rem;">U</div>
-        <h2 style="color:var(--admin-text-strong,#f9fafb);margin:0;">Admin Login</h2>
-        <p style="color:var(--admin-text-muted,#9ca3af);margin:0.5rem 0 0;font-size:0.875rem;">Sign in to access the admin panel</p>
+      <div class="adm-auth">
+        <aside class="adm-auth-side">
+          <div class="adm-auth-brand">
+            <div class="adm-auth-brand-mark">J</div>
+            <div class="adm-auth-brand-name">JERTS CART</div>
+          </div>
+          <div class="adm-auth-side-content">
+            <h1 class="adm-auth-tagline">Run your <span class="adm-auth-tagline-accent">student marketplace</span></h1>
+            <p class="adm-auth-description">The JERTS CART admin panel lets you manage verifications, products, orders, payouts, and seller activity across the marketplace. Sign in with your admin credentials to continue.</p>
+          </div>
+          <div class="adm-auth-meta">© JERTS CART · Internal use only</div>
+        </aside>
+        <main class="adm-auth-form">
+          <div class="adm-auth-form-inner">
+            <h2 class="adm-auth-form-title">Sign in</h2>
+            <p class="adm-auth-form-sub">Use your admin email and password to access the panel.</p>
+            <form id="admin-login-form" novalidate>
+              <div class="adm-form-group">
+                <label for="admin-email" class="adm-form-label adm-form-label--required">Email</label>
+                <input type="email" id="admin-email" name="email" class="adm-form-input" required autocomplete="username" />
+              </div>
+              <div class="adm-form-group">
+                <label for="admin-password" class="adm-form-label adm-form-label--required">Password</label>
+                <input type="password" id="admin-password" name="password" class="adm-form-input" required autocomplete="current-password" />
+              </div>
+              <button type="submit" class="adm-btn adm-btn--primary adm-form-btn">Sign in</button>
+            </form>
+            <div class="adm-form-footer">
+              <a href="#/">← Back to marketplace</a>
+            </div>
+          </div>
+        </main>
       </div>
-      <form id="admin-login-form">
-        <div class="form-group">
-          <label for="admin-email" class="required" style="color:var(--admin-text,#d1d5db);">Email</label>
-          <input type="email" id="admin-email" name="email" class="form-control" required style="background:var(--admin-bg,#111827);border-color:var(--admin-border-strong,rgba(255,255,255,0.1));color:var(--admin-text-strong,#f9fafb);" />
-        </div>
-        <div class="form-group">
-          <label for="admin-password" class="required" style="color:var(--admin-text,#d1d5db);">Password</label>
-          <input type="password" id="admin-password" name="password" class="form-control" required style="background:var(--admin-bg,#111827);border-color:var(--admin-border-strong,rgba(255,255,255,0.1));color:var(--admin-text-strong,#f9fafb);" />
-        </div>
-        <button type="submit" class="btn btn-primary btn-block" style="background:var(--primary,#0046be);border-color:var(--primary,#0046be);">Login as Admin</button>
-      </form>
-      <div style="text-align:center;margin-top:1.5rem;">
-        <a href="#/" style="color:var(--admin-text-muted,#9ca3af);font-size:0.875rem;">Back to Home</a>
-      </div>
-    </div>
-  </div>
-  `;
-    // Wire submit via addEventListener (no inline handler — CSP-friendly).
+    `;
     const form = document.getElementById('admin-login-form');
     if (form) {
       form.addEventListener('submit', e => Pages.handleAdminLogin(e));
