@@ -4954,20 +4954,32 @@ font-size: 0.8rem;
     document.body.style.background = '';
 
     const mainContent = document.getElementById('main-content');
-    mainContent.innerHTML = `
-      <div class="admin-container">
-        ${this.getAdminSidebar('payouts')}
-        <main class="admin-main">
-          <div class="admin-header">
-            <div>
-              <h1 class="admin-title">Seller Payouts</h1>
-              <p style="margin:0;color:#9ca3af;font-size:0.85rem;">Review and settle seller withdrawal requests</p>
-            </div>
-          </div>
-          <div class="admin-stat-card"><div class="admin-stat-value">--</div><div class="admin-stat-label">Loading...</div></div>
-        </main>
+
+    const topbarActions = `
+      <div class="adm-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search payouts by seller, amount, or destination" aria-label="Search payouts" id="admin-payouts-search" />
       </div>
     `;
+
+    mainContent.innerHTML = `
+      <div class="adm-layout">
+        ${AdminUI.sidebar('payouts')}
+        <div class="adm-main">
+          ${AdminUI.topbar('Payouts', topbarActions)}
+          <div class="adm-page">
+            ${AdminUI.pageHeader('Seller Payouts', 'Approve and reject seller withdrawal requests.', null)}
+
+            <div id="admin-payouts-card-host"></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    AdminUI.wireSidebar(key => {
+      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
+      if (typeof Pages[method] === 'function') {Pages[method]();}
+    });
 
     // One fetch for the whole queue (backend caps page size); counts and
     // filtering are derived client-side so tab switches don't refetch.
@@ -4993,123 +5005,147 @@ font-size: 0.8rem;
     }
     const visible = activeFilter === 'all' ? payouts : payouts.filter(p => p.status === activeFilter);
 
-    const statusTabs = [
+    const statusToBadgeKind = {
+      requested: 'warning',
+      paid: 'success',
+      failed: 'danger',
+    };
+
+    const pillTabs = [
       { key: 'requested', label: `Requested (${counts.requested})` },
       { key: 'paid', label: `Paid (${counts.paid})` },
       { key: 'failed', label: `Rejected (${counts.failed})` },
       { key: 'all', label: `All (${payouts.length})` },
-    ]
-      .map(
-        t => `
-            <button class="btn btn-sm ${activeFilter === t.key ? 'btn-primary' : 'btn-ghost'}" data-payout-filter="${t.key}" style="font-size:0.75rem;">${t.label}</button>`,
-      )
-      .join('');
+    ];
+    const pillSelector = AdminUI.pillGroup(pillTabs, activeFilter, 'adm-pill-group--inverse', 'data-payout-filter');
 
-    const rows =
-      visible
-        .map(
-          p => `
-                  <tr>
-                    <td>
-                      <div style="font-weight:600;color:var(--neutral-800);">${_pageEsc(p.seller?.fullName || 'Unknown seller')}</div>
-                      <div style="font-size:0.75rem;color:var(--neutral-500);">${_pageEsc(p.seller?.email || '')}</div>
-                      <div style="font-size:0.75rem;color:var(--neutral-500);">${_pageEsc(p.seller?.phone || '')}</div>
-                    </td>
-                    <td style="font-weight:600;color:var(--neutral-800);">${Formatter.formatPrice(p.amount || 0)}</td>
-                    <td style="color:var(--neutral-700);">${_pageEsc(Formatter.capitalize(p.method || ''))}</td>
-                    <td class="admin-modal-light-kv-value admin-modal-light-kv-value--mono" style="font-size:0.8rem;">${_pageEsc(p.destination || '')}</td>
-                    <td style="font-size:0.8rem;color:var(--neutral-500);">${Formatter.formatTimeAgo(p.requestedAt)}</td>
-                    <td>
-                      <span class="admin-status-badge ${this._payoutStatusClass(p.status)}" style="text-transform:capitalize;">${_pageEsc(p.status)}</span>
-                      ${p.failureReason ? `<div style="font-size:0.7rem;color:var(--color-danger);margin-top:0.25rem;max-width:160px;">${_pageEsc(p.failureReason)}</div>` : ''}
-                      ${p.processedAt ? `<div style="font-size:0.7rem;color:var(--neutral-500);margin-top:0.25rem;">${Formatter.formatTimeAgo(p.processedAt)}</div>` : ''}
-                    </td>
-                    <td>
-                      ${
-  p.status === 'requested'
-    ? `
-                        <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
-                          <button class="btn btn-sm" data-payout-action="approve" data-id="${_pageEsc(p.id)}" aria-label="Approve payout"
-                            style="padding:4px 10px;font-size:11px;background:var(--color-success);color:#fff;border:none;cursor:pointer;border-radius:var(--radius-sm);font-weight:var(--font-medium);">Approve</button>
-                          <button class="btn btn-sm" data-payout-action="reject" data-id="${_pageEsc(p.id)}" aria-label="Reject payout"
-                            style="padding:4px 10px;font-size:11px;background:var(--color-danger);color:#fff;border:none;cursor:pointer;border-radius:var(--radius-sm);font-weight:var(--font-medium);">Reject</button>
-                        </div>
-                      `
-    : ''
-}
-                    </td>
-                  </tr>
-                  `,
-        )
-        .join('');
-
-    mainContent.innerHTML = `
-      <div class="admin-container">
-        ${this.getAdminSidebar('payouts')}
-        <main class="admin-main">
-          <div class="admin-header">
-            <div>
-              <h1 class="admin-title">Seller Payouts</h1>
-              <p style="margin:0;color:#9ca3af;font-size:0.85rem;">
-                Approving marks the payout PAID for manual settlement and writes the ledger entry.
-              </p>
+    const payoutColumns = [
+      {
+        label: 'Seller',
+        render: p => {
+          const name = p.seller?.fullName || 'Unknown seller';
+          const initials = ((name || 'U').trim().charAt(0) || 'U').toUpperCase();
+          return `
+            <div class="adm-user-cell">
+              <div class="adm-avatar-sm">${_pageEsc(initials)}</div>
+              <div>
+                <div class="adm-text-strong">${_pageEsc(name)}</div>
+                <div class="adm-text-muted" style="font-size:0.75rem;">${_pageEsc(p.seller?.email || '')}</div>
+                <div class="adm-text-muted" style="font-size:0.75rem;">${_pageEsc(p.seller?.phone || '')}</div>
+              </div>
             </div>
-          </div>
-
-          ${loadError ? `<div style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.4);color:#f87171;padding:0.75rem 1rem;border-radius:0.5rem;margin-bottom:1rem;font-size:0.85rem;">${_pageEsc(loadError)} Offline or server unreachable.</div>` : ''}
-
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <h3>Payout Requests</h3>
-              <div style="display:flex;gap:0.5rem;" id="admin-payout-filters">${statusTabs}</div>
+          `;
+        },
+      },
+      { label: 'Amount', render: p => `<span class="adm-text-strong">${_pageEsc(Formatter.formatPrice(p.amount || 0))}</span>` },
+      { label: 'Method', render: p => _pageEsc(Formatter.capitalize(p.method || '')) },
+      { label: 'Destination', render: p => `<span class="adm-text-mono">${_pageEsc(p.destination || '')}</span>` },
+      { label: 'Requested', render: p => _pageEsc(Formatter.formatTimeAgo(p.requestedAt)) },
+      {
+        label: 'Status',
+        render: p => {
+          const kind = statusToBadgeKind[p.status] || 'neutral';
+          const label = p.status ? Formatter.capitalize(p.status) : '—';
+          const failureNote = p.failureReason
+            ? `<div class="adm-text-muted" style="font-size:0.7rem;margin-top:0.25rem;max-width:160px;">${_pageEsc(p.failureReason)}</div>`
+            : '';
+          const processedNote = p.processedAt
+            ? `<div class="adm-text-muted" style="font-size:0.7rem;margin-top:0.25rem;">${_pageEsc(Formatter.formatTimeAgo(p.processedAt))}</div>`
+            : '';
+          return `<span class="adm-badge adm-badge--${kind}">${_pageEsc(label)}</span>${failureNote}${processedNote}`;
+        },
+      },
+      {
+        label: 'Actions',
+        render: p => {
+          if (p.status !== 'requested') {return '<span class="adm-text-muted">—</span>';}
+          const id = _pageEsc(p.id || '');
+          return `
+            <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
+              <button type="button" class="adm-btn adm-btn--sm" data-payout-action="approve" data-payout-id="${id}" style="background:var(--color-success);color:#fff;border-color:var(--color-success);">Approve</button>
+              <button type="button" class="adm-btn adm-btn--sm adm-btn--danger" data-payout-action="reject" data-payout-id="${id}">Reject</button>
             </div>
-            <div class="admin-table-container" style="box-shadow:none;border-radius:0;" id="admin-payouts-table">
-              <table class="admin-table">
-                <thead>
-                  <tr>
-                    <th>Seller</th>
-                    <th>Amount</th>
-                    <th>Method</th>
-                    <th>Destination</th>
-                    <th>Requested</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${
-  visible.length === 0
-    ? `<tr class="admin-table-empty-row"><td colspan="7">
-                          <div class="admin-table-empty-icon" aria-hidden="true">${Icons.money || ''}</div>
-                          <p class="admin-table-empty-title">No payout requests</p>
-                          <p class="admin-table-empty-msg">There are no ${activeFilter === 'all' ? '' : `${_pageEsc(activeFilter)} `}payout requests right now.</p>
-                        </td></tr>`
-    : rows
-}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </main>
+          `;
+        },
+      },
+    ];
+
+    const cardTitle = `<h3 class="adm-card-title">Payout Requests</h3><p class="adm-card-sub">Showing ${visible.length} request${visible.length === 1 ? '' : 's'}</p>`;
+
+    const emptyHtml = `<tr><td class="adm-td" colspan="${payoutColumns.length}">${AdminUI.emptyState({
+      icon: Icons.money || '',
+      title: 'No payout requests',
+      body: loadError
+        ? `${loadError} Offline or server unreachable.`
+        : `There are no ${activeFilter === 'all' ? '' : `${activeFilter} `}payout requests right now.`,
+    })}</td></tr>`;
+
+    const footerHtml = `
+      <div class="adm-pagination">
+        <span class="adm-pagination-info">Showing ${visible.length} of ${payouts.length}</span>
+        <div class="adm-pagination-actions">
+          <button type="button" class="adm-btn adm-btn--sm" disabled>Previous</button>
+          <button type="button" class="adm-btn adm-btn--sm" disabled>Next</button>
+        </div>
       </div>
     `;
 
-    // Event delegation on stable parents — no new inline handlers (CSP).
-    mainContent.querySelector('#admin-payout-filters').addEventListener('click', e => {
-      const btn = e.target.closest('[data-payout-filter]');
-      if (btn) { Pages.renderAdminPayouts(btn.dataset.payoutFilter); }
+    const tableHtml = AdminUI.table({
+      columns: payoutColumns,
+      rows: visible,
+      emptyHtml,
+      footerHtml,
     });
 
-    mainContent.querySelector('#admin-payouts-table').addEventListener('click', e => {
-      const btn = e.target.closest('[data-payout-action]');
-      if (!btn) { return; }
-      const id = btn.dataset.id;
-      if (btn.dataset.payoutAction === 'approve') {
-        void Pages._approvePayout(id);
-      } else if (btn.dataset.payoutAction === 'reject') {
-        Pages._openRejectPayoutModal(id);
-      }
-    });
+    const cardHtml = AdminUI.card(cardTitle, tableHtml, pillSelector);
+    const cardHost = document.getElementById('admin-payouts-card-host');
+    if (cardHost) {
+      cardHost.outerHTML = cardHtml;
+    }
+
+    // Delegated handlers — installed on the page wrapper so they survive
+    // any future table re-renders. Pill group drives filter changes;
+    // approve/reject actions go through Pages._approvePayout / the modal.
+    const page = mainContent.querySelector('.adm-page');
+    if (page) {
+      AdminUI.wirePillGroup(page.querySelector('.adm-pill-group'), key => {
+        Pages.renderAdminPayouts(key);
+      });
+
+      page.addEventListener('click', e => {
+        const btn = e.target.closest('[data-payout-action]');
+        if (!btn) {return;}
+        const id = btn.dataset.payoutId;
+        if (!id) {return;}
+        if (btn.dataset.payoutAction === 'approve') {
+          void Pages._approvePayout(id);
+        } else if (btn.dataset.payoutAction === 'reject') {
+          Pages._openRejectPayoutModal(id);
+        }
+      });
+    }
+
+    // Client-side search filter (decorative — the data is small). Wired
+    // against the input rendered in the topbar.
+    const searchInput = document.getElementById('admin-payouts-search');
+    if (searchInput) {
+      AdminUI.wireSearch(searchInput, value => {
+        const q = (value || '').trim().toLowerCase();
+        const tbody = mainContent.querySelector('.adm-table tbody');
+        if (!tbody) {return;}
+        let shown = 0;
+        const trs = tbody.querySelectorAll('tr');
+        trs.forEach(tr => {
+          if (!tr.children || tr.children.length < 2) {return;}
+          const text = tr.textContent.toLowerCase();
+          const match = !q || text.includes(q);
+          tr.style.display = match ? '' : 'none';
+          if (match) {shown += 1;}
+        });
+        const info = mainContent.querySelector('.adm-pagination-info');
+        if (info) {info.textContent = `Showing ${shown} of ${payouts.length}`;}
+      });
+    }
   }
 
   static async _approvePayout (id) {
@@ -5138,66 +5174,46 @@ font-size: 0.8rem;
 
     const overlay = document.createElement('div');
     overlay.id = 'payout-reject-overlay';
-    overlay.className = 'admin-modal-light-backdrop';
-    // Static markup only — no interpolated data, safe to build via HTML.
-    overlay.innerHTML = `
-      <div role="dialog" aria-modal="true" aria-labelledby="payout-reject-title" class="admin-modal-light" style="position:relative;">
-        <button type="button" data-payout-modal-cancel class="admin-modal-light-close" aria-label="Close">&times;</button>
-        <h3 id="payout-reject-title" class="admin-modal-light-title">Reject payout request</h3>
-        <p class="admin-modal-light-text admin-modal-light-text--muted">Rejection is final — the seller would need to submit a new request. The reason is kept in the payout record.</p>
-        <textarea id="payout-reject-reason" class="admin-modal-light-field" maxlength="300" rows="3" placeholder="Reason (min 3 characters)"></textarea>
-        <p id="payout-reject-error" class="admin-modal-light-error" role="alert"></p>
-        <div class="admin-modal-light-actions">
-          <button type="button" data-payout-modal-cancel class="btn btn-ghost btn-sm">Cancel</button>
-          <button type="button" id="payout-reject-confirm" class="btn btn-sm" style="background:var(--color-danger);color:#fff;border:none;font-weight:var(--font-medium);">Reject request</button>
-        </div>
-      </div>
-    `;
+    overlay.innerHTML = AdminUI.modalHtml({
+      id: 'payout-reject-overlay',
+      title: 'Reject payout request',
+      sub: 'Rejection is final — the seller would need to submit a new request. The reason is kept in the payout record.',
+      body: '<textarea id="payout-reject-reason" class="adm-modal-field" maxlength="300" rows="3" placeholder="Reason (min 3 characters)"></textarea><p id="payout-reject-error" class="adm-modal-error" role="alert"></p>',
+      footer: '<button type="button" data-adm-modal-cancel data-adm-modal-close class="adm-btn">Cancel</button><button type="button" data-adm-modal-action="confirm" class="adm-btn adm-btn--danger">Reject request</button>',
+    });
     document.body.appendChild(overlay);
 
-    const close = () => {
-      document.removeEventListener('keydown', escListener);
-      overlay.remove();
-    };
-    const escListener = e => {
-      if (e.key === 'Escape') {close();}
-    };
-    document.addEventListener('keydown', escListener);
-
-    overlay.addEventListener('click', e => {
-      if (e.target === overlay) {close();}
-    });
-    overlay.querySelectorAll('[data-payout-modal-cancel]').forEach(btn => {
-      btn.addEventListener('click', close);
-    });
-
-    const confirmBtn = overlay.querySelector('#payout-reject-confirm');
     const errorEl = overlay.querySelector('#payout-reject-error');
-    confirmBtn.addEventListener('click', async () => {
-      const reason = overlay.querySelector('#payout-reject-reason').value.trim();
-      if (reason.length < 3) {
-        errorEl.textContent = 'Please enter a rejection reason of at least 3 characters.';
-        errorEl.style.display = 'block';
-        return;
-      }
-      confirmBtn.disabled = true;
-      try {
-        const resp = await api.admin.rejectPayout(id, reason);
-        if (resp.success) {
-          showToast('Payout request rejected', 'success');
-        } else {
-          showToast(resp.error || 'Failed to reject payout', 'error');
+    const reasonEl = overlay.querySelector('#payout-reject-reason');
+    const confirmBtn = overlay.querySelector('[data-adm-modal-action="confirm"]');
+
+    AdminUI.wireModal(overlay, {
+      onClose: () => overlay.remove(),
+      onAction: async key => {
+        if (key !== 'confirm') {return;}
+        const reason = reasonEl.value.trim();
+        if (reason.length < 3) {
+          errorEl.textContent = 'Please enter a rejection reason of at least 3 characters.';
+          return;
         }
-        close();
-        await Pages.renderAdminPayouts();
-      } catch (err) {
-        confirmBtn.disabled = false;
-        errorEl.textContent = err.message || 'Failed to reject payout.';
-        errorEl.style.display = 'block';
-      }
+        confirmBtn.disabled = true;
+        try {
+          const resp = await api.admin.rejectPayout(id, reason);
+          if (resp.success) {
+            showToast('Payout request rejected', 'success');
+          } else {
+            showToast(resp.error || 'Failed to reject payout', 'error');
+          }
+          overlay.remove();
+          await Pages.renderAdminPayouts();
+        } catch (err) {
+          confirmBtn.disabled = false;
+          errorEl.textContent = err.message || 'Failed to reject payout.';
+        }
+      },
     });
 
-    overlay.querySelector('#payout-reject-reason').focus();
+    if (reasonEl) {reasonEl.focus();}
   }
 
   static async viewVerificationDetail (id) {
