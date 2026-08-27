@@ -5699,75 +5699,180 @@ font-size: 0.8rem;
         console.warn('pages: mergeLocalProducts failed:', _);
       }
     }
+
     this.hideOriginalNavFooter();
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
 
+    const topbarActions = `
+      <div class="adm-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search products by title or seller" aria-label="Search products" id="admin-products-search" />
+      </div>
+      <button type="button" class="adm-btn adm-btn--primary" data-adm-action="add-product">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19M5 12h14"/></svg>
+        Add Product
+      </button>
+    `;
+
     mainContent.innerHTML = `
-  <div class="admin-container">
-  ${this.getAdminSidebar('products')}
-  <main class="admin-main">
-  <div class="admin-header">
-  <h1 class="admin-title">Product Management</h1>
-  <div class="admin-actions">
-  <button class="btn btn-primary" onclick="Pages.renderAdminProductCreate()" style="padding:0.5rem 1.25rem;font-size:0.875rem;">+ Add Product</button>
-  </div>
-  </div>
-  <div class="admin-table-container">
-  <table class="admin-table">
-  <thead>
-  <tr>
-  <th>Product</th>
-  <th>Category</th>
-  <th>Price</th>
-  <th>Seller</th>
-  <th>Status</th>
-  <th>Actions</th>
-  </tr>
-  </thead>
-  <tbody>
-  ${products
-    .map(
-      product => `
-  <tr>
-  <td>
-  <div class="product-cell">
-  <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" class="product-image-small" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
-  <span>${_pageEsc(product.title)}</span>
-  </div>
-  </td>
-  <td>${Formatter.capitalize(product.category)}</td>
-  <td>${Formatter.formatPrice(product.price)}</td>
-  <td>${_pageEsc(product.seller?.fullName || product.sellerName || product.seller?.name || product.seller || 'Unknown')}</td>
-  <td>
-  <span class="admin-status-badge ${product.status === 'pending' ? 'placed' : 'delivered'}">
-  ${product.status || 'active'}
-  </span>
-  </td>
-              <td>
-                <div class="table-actions">
-                  ${
-  product.status === 'pending'
-    ? `
-                  <button class="btn btn-sm btn-success" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminApproveProduct('${product.id}')">Approve</button>
-                  <button class="btn btn-sm btn-danger" style="padding: 4px 8px; font-size: 12px;" onclick="Pages.adminRejectProduct('${product.id}')">Reject</button>
-                  `
-    : ''
-}
-                  <button class="btn btn-sm" style="padding:4px 8px;font-size:12px;background:#2563eb;color:#fff;border:none;" onclick="Pages.renderAdminProductEdit('${product.id}')">Edit</button>
-                  <button class="btn btn-sm btn-danger" style="padding: 4px 8px; font-size: 12px; background:#dc2626; color:#fff; border:none;" onclick="Pages.adminDeleteProduct('${product.id}')">Delete</button>
-                </div>
-              </td>
-  </tr>
-  `,
-    )
-    .join('')}
-  </tbody>
-  </table>
-  </div>
-  </main>
-  </div>
-  `;
+      <div class="adm-layout">
+        ${AdminUI.sidebar('products')}
+        <div class="adm-main">
+          ${AdminUI.topbar('Products', topbarActions)}
+          <div class="adm-page">
+            ${AdminUI.pageHeader('Product Management', 'Manage the marketplace catalog.', null)}
+
+            <div id="admin-products-card-host"></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    AdminUI.wireSidebar(key => {
+      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
+      if (typeof Pages[method] === 'function') {Pages[method]();}
+    });
+
+    const topbarEl = mainContent.querySelector('.adm-topbar');
+    if (topbarEl) {
+      topbarEl.addEventListener('click', e => {
+        const btn = e.target.closest('[data-adm-action]');
+        if (!btn) {return;}
+        const action = btn.dataset.admAction;
+        if (action === 'add-product') {
+          if (typeof Pages.renderAdminProductCreate === 'function') {
+            Pages.renderAdminProductCreate();
+          }
+        }
+      });
+    }
+
+    const statusToBadgeKind = {
+      active: 'success',
+      approved: 'success',
+      published: 'success',
+      pending: 'warning',
+      draft: 'neutral',
+      sold: 'neutral',
+      rejected: 'danger',
+      blocked: 'danger',
+    };
+
+    const productColumns = [
+      {
+        label: 'Product',
+        render: p => {
+          const img = (p.images && p.images[0]) || '/assets/images/products/no-image.svg';
+          return `
+            <div class="product-cell">
+              <img src="${_pageSafeUrl(img)}" alt="${_pageEsc(p.title || '')}" class="product-image-small" loading="lazy" onerror="this.onerror=null;this.src='/assets/images/products/no-image.svg';" />
+              <span class="adm-text-strong">${_pageEsc(p.title || 'Untitled')}</span>
+            </div>
+          `;
+        },
+      },
+      { label: 'Category', render: p => _pageEsc(Formatter.capitalize(p.category || '—')) },
+      { label: 'Price', render: p => _pageEsc(Formatter.formatPrice(p.price ?? 0)) },
+      {
+        label: 'Seller',
+        render: p => _pageEsc(p.seller?.fullName || p.sellerName || p.seller?.name || p.seller || 'Unknown'),
+      },
+      {
+        label: 'Status',
+        render: p => {
+          const status = (p.status || 'active').toLowerCase();
+          const kind = statusToBadgeKind[status] || 'neutral';
+          const label = status || 'active';
+          return `<span class="adm-badge adm-badge--${kind}">${_pageEsc(label)}</span>`;
+        },
+      },
+      {
+        label: 'Actions',
+        render: p => {
+          const id = _pageEsc(p.id || '');
+          let html = '';
+          if (p.status === 'pending') {
+            html += `<button type="button" class="adm-btn adm-btn--sm" data-product-action="approve" data-product-id="${id}">Approve</button> `;
+            html += `<button type="button" class="adm-btn adm-btn--sm adm-btn--danger" data-product-action="reject" data-product-id="${id}">Reject</button> `;
+          }
+          html += `<button type="button" class="adm-btn adm-btn--sm adm-btn--primary" data-product-action="edit" data-product-id="${id}">Edit</button> `;
+          html += `<button type="button" class="adm-btn adm-btn--sm adm-btn--danger" data-product-action="delete" data-product-id="${id}">Delete</button>`;
+          return html;
+        },
+      },
+    ];
+
+    const total = products.length;
+    const cardTitle = `<h3 class="adm-card-title">All products</h3><p class="adm-card-sub">Showing ${total} item${total === 1 ? '' : 's'}</p>`;
+
+    const emptyHtml = `<tr><td class="adm-td" colspan="${productColumns.length}">${AdminUI.emptyState({
+      icon: Icons.package || '',
+      title: 'No products yet',
+      body: 'When sellers add products they will appear here. Review listings, approve submissions, and manage the catalog from this page.',
+    })}</td></tr>`;
+
+    const footerHtml = `
+      <div class="adm-pagination">
+        <span class="adm-pagination-info">Showing ${total} of ${total}</span>
+        <div class="adm-pagination-actions">
+          <button type="button" class="adm-btn adm-btn--sm" disabled>Previous</button>
+          <button type="button" class="adm-btn adm-btn--sm" disabled>Next</button>
+        </div>
+      </div>
+    `;
+
+    const tableHtml = AdminUI.table({
+      columns: productColumns,
+      rows: products,
+      emptyHtml,
+      footerHtml,
+    });
+
+    const cardHost = document.getElementById('admin-products-card-host');
+    if (cardHost) {
+      cardHost.outerHTML = AdminUI.card(cardTitle, tableHtml);
+    }
+
+    const page = mainContent.querySelector('.adm-page');
+    if (page) {
+      page.addEventListener('click', e => {
+        const btn = e.target.closest('[data-product-action]');
+        if (!btn) {return;}
+        const action = btn.dataset.productAction;
+        const productId = btn.dataset.productId || '';
+        if (!productId) {return;}
+        if (action === 'edit') {
+          Pages.renderAdminProductEdit(productId);
+        } else if (action === 'delete') {
+          Pages.adminDeleteProduct(productId);
+        } else if (action === 'approve') {
+          Pages.adminApproveProduct(productId);
+        } else if (action === 'reject') {
+          Pages.adminRejectProduct(productId);
+        }
+      });
+    }
+
+    const searchInput = document.getElementById('admin-products-search');
+    if (searchInput) {
+      AdminUI.wireSearch(searchInput, value => {
+        const q = (value || '').trim().toLowerCase();
+        const tbody = mainContent.querySelector('.adm-table tbody');
+        if (!tbody) {return;}
+        let shown = 0;
+        const trs = tbody.querySelectorAll('tr');
+        trs.forEach(tr => {
+          if (!tr.children || tr.children.length < 2) {return;}
+          const text = tr.textContent.toLowerCase();
+          const match = !q || text.includes(q);
+          tr.style.display = match ? '' : 'none';
+          if (match) {shown += 1;}
+        });
+        const info = mainContent.querySelector('.adm-pagination-info');
+        if (info) {info.textContent = `Showing ${shown} of ${total}`;}
+      });
+    }
   }
 
   /**
