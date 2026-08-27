@@ -399,6 +399,42 @@ class AdminUI {
       setTimeout(() => t.remove(), 200);
     }, 2400);
   }
+
+  // ---- Shared error / 404 / 500 / 403 / logout page (split brand layout) ----
+  // Reuses the adm-auth split layout from the login page for visual
+  // consistency. The side panel is the same brand panel; the right
+  // side shows the error message + primary action.
+  static renderErrorPage ({ code, title, body, primaryAction }) {
+    const primary = primaryAction
+      ? `<a href="${_pageEsc(primaryAction.href)}" class="adm-btn adm-btn--primary">${_pageEsc(primaryAction.label)}</a>`
+      : '';
+    return `
+      <div class="adm-auth">
+        <aside class="adm-auth-side">
+          <div class="adm-auth-brand">
+            <div class="adm-auth-brand-mark">J</div>
+            <div class="adm-auth-brand-name">JERTS CART</div>
+          </div>
+          <div class="adm-auth-side-content">
+            <h1 class="adm-auth-tagline">Something's <span class="adm-auth-tagline-accent">off</span>.</h1>
+            <p class="adm-auth-description">The page you were looking for isn't here. It may have moved, been renamed, or never existed. Use the action below to get back on track.</p>
+          </div>
+          <div class="adm-auth-meta">© JERTS CART · Error ${_pageEsc(code || '404')}</div>
+        </aside>
+        <main class="adm-auth-form">
+          <div class="adm-auth-form-inner">
+            <h2 style="font-size:48px;font-weight:700;color:var(--neutral-900);margin:0 0 8px;letter-spacing:-0.02em;line-height:1;">${_pageEsc(code || '404')}</h2>
+            <h3 class="adm-auth-form-title">${_pageEsc(title || 'Page not found')}</h3>
+            <p class="adm-auth-form-sub">${_pageEsc(body || 'The page you are looking for does not exist or has been moved.')}</p>
+            <div style="margin-top:24px;display:flex;gap:8px;flex-wrap:wrap;">
+              ${primary}
+              <a href="#/" class="adm-btn">Go to marketplace</a>
+            </div>
+          </div>
+        </main>
+      </div>
+    `;
+  }
 }
 
 if (typeof window !== 'undefined') { window.AdminUI = AdminUI; }

@@ -215,19 +215,12 @@ class Router {
   async show404() {
     const mainContent = document.getElementById('main-content');
     if (mainContent) {
-      mainContent.innerHTML = `
-        <div class="container" style="padding: 3rem 1rem; text-align: center; min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-          <div style="font-size: 6rem; margin-bottom: 1rem;">404</div>
-          <h1 style="font-size: 2rem; margin-bottom: 1rem;">Page Not Found</h1>
-          <p style="color: var(--neutral-600); margin-bottom: 2rem;">
-            The page you're looking for doesn't exist or has been moved.
-          </p>
-          <div style="display: flex; gap: 1rem;">
-            <button class="btn btn-outline" onclick="router.back()">Go Back</button>
-            <button class="btn btn-primary" onclick="router.goToHash('/')">Go Home</button>
-          </div>
-        </div>
-      `;
+      mainContent.innerHTML = AdminUI.renderErrorPage({
+        code: '404',
+        title: 'Page not found',
+        body: 'The page you are looking for does not exist or has been moved.',
+        primaryAction: { label: 'Back to dashboard', href: '#/admin' },
+      });
     }
   }
 
@@ -237,13 +230,12 @@ class Router {
   showError(message) {
     const mainContent = document.getElementById('main-content');
     if (mainContent) {
-      mainContent.innerHTML = `
-        <div class="container" style="padding: 3rem 1rem; text-align: center;">
-          <h1>Error</h1>
-          <p>${message}</p>
-          <button class="btn btn-primary" onclick="router.goToHash('/')">Go Home</button>
-        </div>
-      `;
+      mainContent.innerHTML = AdminUI.renderErrorPage({
+        code: '500',
+        title: 'Something went wrong',
+        body: message || 'An unexpected error occurred. Please try again.',
+        primaryAction: { label: 'Back to dashboard', href: '#/admin' },
+      });
     }
   }
 
