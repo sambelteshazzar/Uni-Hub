@@ -5884,69 +5884,140 @@ font-size: 0.8rem;
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
 
+    const topbarActions = `
+      <div class="adm-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search orders by number, customer, or tracking" aria-label="Search orders" id="admin-orders-search" />
+      </div>
+    `;
+
     mainContent.innerHTML = `
-  <div class="admin-container">
-  ${this.getAdminSidebar('orders')}
-  <main class="admin-main">
-  <div class="admin-header">
-  <h1 class="admin-title">Order Management</h1>
-  </div>
-  <div class="admin-card">
-  <div class="admin-card-header"><h3>Loading orders...</h3></div>
-  <div style="padding:2rem;text-align:center;color:#9ca3af;">Loading...</div>
-  </div>
-  </main>
-  </div>`;
+      <div class="adm-layout">
+        ${AdminUI.sidebar('orders')}
+        <div class="adm-main">
+          ${AdminUI.topbar('Orders', topbarActions)}
+          <div class="adm-page">
+            ${AdminUI.pageHeader('Order Management', 'Track and manage orders across the marketplace.', null)}
+
+            <div id="admin-orders-card-host"></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    AdminUI.wireSidebar(key => {
+      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
+      if (typeof Pages[method] === 'function') {Pages[method]();}
+    });
 
     const orders = await adminOrdersManager.getAllOrders();
 
-    const card = document.querySelector('.admin-card');
-    if (card) {
-      const tableHead = `
-        <thead>
-          <tr>
-            <th>Order #</th>
-            <th>Tracking</th>
-            <th>Customer</th>
-            <th>Total</th>
-            <th>Payment</th>
-            <th>Status</th>
-            <th>Date</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-      `;
+    const statusToBadgeKind = {
+      placed: 'info',
+      confirmed: 'primary',
+      'in-transit': 'warning',
+      delivered: 'success',
+      cancelled: 'danger',
+      refunded: 'neutral',
+    };
 
-      const tableBody = orders.length === 0
-        ? `<tr class="admin-table-empty-row"><td colspan="8">
-            <div class="admin-table-empty-icon" aria-hidden="true">${Icons.clipboard || ''}</div>
-            <p class="admin-table-empty-title">No orders yet</p>
-            <p class="admin-table-empty-msg">When buyers place orders they will appear here.</p>
-          </td></tr>`
-        : `<tbody>${orders.map(order => `
-          <tr>
-            <td><strong>${_pageEsc(order.orderNumber || '')}</strong></td>
-            <td class="admin-modal-light-kv-value admin-modal-light-kv-value--mono" style="font-size:0.8rem;">${_pageEsc(order.trackingNumber || '—')}</td>
-            <td>${_pageEsc(order.customer?.name || 'N/A')}</td>
-            <td>${Formatter.formatPrice(order.pricing?.grandTotal ?? 0)}</td>
-            <td>${_pageEsc(Formatter.capitalize(order.payment?.mode || '') || '—')}</td>
-            <td><span class="admin-status-badge ${_pageEsc(order.status || '')}">${_pageEsc(Formatter.capitalize(order.status || '') || '—')}</span></td>
-            <td>${Formatter.formatDate(order.createdAt)}</td>
-            <td>
-              <div class="table-actions">
-                <button class="table-action-btn view" title="View">${Icons.view}</button>
-              </div>
-            </td>
-          </tr>
-        `).join('')}</tbody>`;
+    const orderColumns = [
+      {
+        label: 'Order #',
+        render: o => `<span class="adm-text-strong">${_pageEsc(o.orderNumber || '—')}</span>`,
+      },
+      {
+        label: 'Tracking',
+        render: o => `<span class="adm-text-mono">${_pageEsc(o.trackingNumber || '—')}</span>`,
+      },
+      { label: 'Customer', render: o => _pageEsc(o.customer?.name || 'N/A') },
+      { label: 'Total', render: o => _pageEsc(Formatter.formatPrice(o.pricing?.grandTotal ?? 0)) },
+      {
+        label: 'Payment',
+        render: o => _pageEsc(Formatter.capitalize(o.payment?.mode || '') || '—'),
+      },
+      {
+        label: 'Status',
+        render: o => {
+          const status = (o.status || '').toLowerCase();
+          const kind = statusToBadgeKind[status] || 'neutral';
+          const label = status ? Formatter.capitalize(status.replace(/-/g, ' ')) : '—';
+          return `<span class="adm-badge adm-badge--${kind}">${_pageEsc(label)}</span>`;
+        },
+      },
+      { label: 'Date', render: o => _pageEsc(Formatter.formatDate(o.createdAt)) },
+      {
+        label: 'Actions',
+        render: o => {
+          const id = _pageEsc(o.id || '');
+          return `<button type="button" class="adm-btn adm-btn--sm" data-order-action="view" data-order-id="${id}">View</button>`;
+        },
+      },
+    ];
 
-      card.outerHTML = `
-        <div class="admin-table-container">
-          <table class="admin-table">
-            ${tableHead}
-            ${tableBody}
-          </table>
-        </div>`;
+    const total = orders.length;
+    const cardTitle = `<h3 class="adm-card-title">All orders</h3><p class="adm-card-sub">Showing ${total} order${total === 1 ? '' : 's'}</p>`;
+
+    const emptyHtml = `<tr><td class="adm-td" colspan="${orderColumns.length}">${AdminUI.emptyState({
+      icon: Icons.clipboard || '',
+      title: 'No orders yet',
+      body: 'When buyers place orders they will appear here. Track payment status, manage fulfillment, and resolve disputes from this page.',
+    })}</td></tr>`;
+
+    const footerHtml = `
+      <div class="adm-pagination">
+        <span class="adm-pagination-info">Showing ${total} of ${total}</span>
+        <div class="adm-pagination-actions">
+          <button type="button" class="adm-btn adm-btn--sm" disabled>Previous</button>
+          <button type="button" class="adm-btn adm-btn--sm" disabled>Next</button>
+        </div>
+      </div>
+    `;
+
+    const tableHtml = AdminUI.table({
+      columns: orderColumns,
+      rows: orders,
+      emptyHtml,
+      footerHtml,
+    });
+
+    const cardHost = document.getElementById('admin-orders-card-host');
+    if (cardHost) {
+      cardHost.outerHTML = AdminUI.card(cardTitle, tableHtml);
+    }
+
+    const page = mainContent.querySelector('.adm-page');
+    if (page) {
+      page.addEventListener('click', e => {
+        const btn = e.target.closest('[data-order-action]');
+        if (!btn) {return;}
+        const action = btn.dataset.orderAction;
+        const orderId = btn.dataset.orderId || '';
+        if (!orderId) {return;}
+        if (action === 'view') {
+          Pages.viewOrderDetails(orderId);
+        }
+      });
+    }
+
+    const searchInput = document.getElementById('admin-orders-search');
+    if (searchInput) {
+      AdminUI.wireSearch(searchInput, value => {
+        const q = (value || '').trim().toLowerCase();
+        const tbody = mainContent.querySelector('.adm-table tbody');
+        if (!tbody) {return;}
+        let shown = 0;
+        const trs = tbody.querySelectorAll('tr');
+        trs.forEach(tr => {
+          if (!tr.children || tr.children.length < 2) {return;}
+          const text = tr.textContent.toLowerCase();
+          const match = !q || text.includes(q);
+          tr.style.display = match ? '' : 'none';
+          if (match) {shown += 1;}
+        });
+        const info = mainContent.querySelector('.adm-pagination-info');
+        if (info) {info.textContent = `Showing ${shown} of ${total}`;}
+      });
     }
   }
 
