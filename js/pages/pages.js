@@ -6996,90 +6996,101 @@ font-size: 0.8rem;
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
 
+    const topbarActions = `
+      <div class="adm-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search subscribers or campaigns" aria-label="Search newsletter" />
+      </div>
+      <button type="button" class="adm-btn adm-btn--primary" data-adm-action="new-campaign">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19M5 12h14"/></svg>
+        Create campaign
+      </button>
+    `;
+
+    const statsHtml = `
+      <div id="newsletter-stats-host">
+        ${AdminUI.statGrid([
+          AdminUI.statCard({ label: 'Total subscribers', value: '—', delta: 'All statuses', deltaKind: 'muted' }),
+          AdminUI.statCard({ label: 'Active', value: '—', delta: 'Confirmed', deltaKind: 'muted' }),
+          AdminUI.statCard({ label: 'Pending', value: '—', delta: 'Awaiting confirmation', deltaKind: 'muted' }),
+          AdminUI.statCard({ label: 'Unsubscribed', value: '—', delta: 'Opted out', deltaKind: 'muted' }),
+        ])}
+      </div>
+    `;
+
     mainContent.innerHTML = `
-  <div class="admin-container">
-  ${this.getAdminSidebar('newsletter')}
-  <main class="admin-main">
-    <div class="admin-header">
-      <h1 class="admin-title">Newsletter Campaigns</h1>
-    </div>
-    <div id="newsletter-content" style="padding: 1.5rem;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-        <div>
-          <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.25rem;">Subscriber Stats</h2>
-          <p style="color: #9ca3af; font-size: 0.875rem;">Manage your email subscribers and send campaigns</p>
-        </div>
-        <button class="btn btn-primary" onclick="Pages.showNewsletterCampaignModal()">Create Campaign</button>
-      </div>
+      <div class="adm-layout">
+        ${AdminUI.sidebar('newsletter')}
+        <div class="adm-main">
+          ${AdminUI.topbar('Newsletter', topbarActions)}
+          <div class="adm-page">
+            ${AdminUI.pageHeader('Newsletter Campaigns', 'Manage your email subscribers and send campaigns.', null)}
+            ${statsHtml}
 
-      <div class="admin-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-        <div class="admin-stat-card" id="stat-total">
-          <div class="admin-stat-value">--</div>
-          <div class="admin-stat-label">Total Subscribers</div>
-        </div>
-        <div class="admin-stat-card" id="stat-active">
-          <div class="admin-stat-value">--</div>
-          <div class="admin-stat-label">Active</div>
-        </div>
-        <div class="admin-stat-card" id="stat-pending">
-          <div class="admin-stat-value">--</div>
-          <div class="admin-stat-label">Pending</div>
-        </div>
-        <div class="admin-stat-card" id="stat-unsubscribed">
-          <div class="admin-stat-value">--</div>
-          <div class="admin-stat-label">Unsubscribed</div>
-        </div>
-      </div>
+            <section class="adm-card">
+              <header class="adm-card-header">
+                <div><h3 class="adm-card-title">Recent campaigns</h3><p class="adm-card-sub">Last 5 campaigns sent</p></div>
+              </header>
+              <div class="adm-table-wrap">
+                <table class="adm-table">
+                  <thead>
+                    <tr>
+                      <th class="adm-th">Subject</th>
+                      <th class="adm-th">Sent</th>
+                      <th class="adm-th">Recipients</th>
+                      <th class="adm-th">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="campaigns-table-body">
+                    <tr><td class="adm-td" colspan="4" style="text-align:center;padding:2rem;">Loading campaigns…</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
 
-      <div class="admin-card" style="margin-bottom: 2rem;">
-        <div class="admin-card-header">
-          <h3>Recent Campaigns</h3>
-        </div>
-        <div style="padding: 1.5rem;">
-          <div class="admin-table-container">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>Subject</th>
-                  <th>Sent</th>
-                  <th>Recipients</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody id="campaigns-table-body">
-                <tr><td colspan="4" style="text-align: center; color: #9ca3af;">Loading campaigns...</td></tr>
-              </tbody>
-            </table>
+            <section class="adm-card">
+              <header class="adm-card-header">
+                <div><h3 class="adm-card-title">Subscribers</h3><p class="adm-card-sub">All registered subscribers</p></div>
+              </header>
+              <div class="adm-table-wrap">
+                <table class="adm-table">
+                  <thead>
+                    <tr>
+                      <th class="adm-th">Email</th>
+                      <th class="adm-th">Source</th>
+                      <th class="adm-th">Status</th>
+                      <th class="adm-th">Subscribed</th>
+                    </tr>
+                  </thead>
+                  <tbody id="subscribers-table-body">
+                    <tr><td class="adm-td" colspan="4" style="text-align:center;padding:2rem;">Loading subscribers…</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
           </div>
         </div>
       </div>
+    `;
 
-      <div class="admin-card">
-        <div class="admin-card-header">
-          <h3>Subscribers</h3>
-        </div>
-        <div style="padding: 1.5rem;">
-          <div class="admin-table-container">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>Email</th>
-                  <th>Source</th>
-                  <th>Status</th>
-                  <th>Subscribed</th>
-                </tr>
-              </thead>
-              <tbody id="subscribers-table-body">
-                <tr><td colspan="4" style="text-align: center; color: #9ca3af;">Loading subscribers...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
-  </div>
-`;
+    AdminUI.wireSidebar(key => {
+      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
+      if (typeof Pages[method] === 'function') {Pages[method]();}
+    });
+
+    // Wire the topbar primary action: "Create campaign" opens the existing modal.
+    const topbar = mainContent.querySelector('.adm-topbar');
+    if (topbar) {
+      topbar.addEventListener('click', e => {
+        const btn = e.target.closest('[data-adm-action]');
+        if (!btn) {return;}
+        if (btn.dataset.admAction === 'new-campaign') {
+          if (typeof Pages.showNewsletterCampaignModal === 'function') {
+            Pages.showNewsletterCampaignModal();
+          }
+        }
+      });
+    }
 
     this._loadNewsletterStats();
     this._loadNewsletterCampaigns();
