@@ -14,15 +14,15 @@ test.describe('admin verifications with document states', () => {
   test('verifications page loads with sidebar and stats', async ({ page }) => {
     await page.goto('/#/admin/verifications');
     await page.waitForTimeout(1500);
-    const titleEl = page.locator('.admin-title').first();
+    const titleEl = page.locator('.adm-page-title').first();
     await expect(titleEl).toContainText(/Verifications/i, { timeout: 10000 });
-    await expect(page.locator('.admin-sidebar')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('.adm-sidebar')).toBeVisible({ timeout: 10000 });
   });
 
   test('payouts page still loads (adjacent admin surface regression)', async ({ page }) => {
     await page.goto('/#/admin/payouts');
     await page.waitForTimeout(1500);
-    const titleEl = page.locator('.admin-title').first();
+    const titleEl = page.locator('.adm-page-title').first();
     await expect(titleEl).toContainText(/Payouts/i, { timeout: 10000 });
   });
 });
