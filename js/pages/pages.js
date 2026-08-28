@@ -6130,46 +6130,58 @@ font-size: 0.8rem;
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
 
-    mainContent.innerHTML = `
-  <div class="admin-container">
-  ${this.getAdminSidebar('regions')}
-  <main class="admin-main">
-          <div class="admin-header">
-            <h1 class="admin-title">Regional Management</h1>
-          </div>
-          <div class="admin-table-container">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>Region</th>
-                  <th>Capital</th>
-                  <th>Universities</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${regions
-    .map(
-      region => `
-                  <tr>
-                    <td>${region.name}</td>
-                    <td>${region.capital}</td>
-                    <td>${region.universities.length}</td>
-                    <td>
-                      <div class="table-actions">
-                        <button class="table-action-btn edit" title="Edit">${Icons.edit}</button>
-                      </div>
-                    </td>
-                  </tr>
-                `,
-    )
-    .join('')}
-              </tbody>
-            </table>
-          </div>
-        </main>
+    const topbarActions = `
+      <div class="adm-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search regions" aria-label="Search regions" />
       </div>
     `;
+
+    const regionColumns = [
+      { label: 'Region', render: r => `<span class="adm-text-strong">${_pageEsc(r.name || '')}</span>` },
+      { label: 'Capital', render: r => _pageEsc(r.capital || '') },
+      { label: 'Universities', render: r => String((r.universities && r.universities.length) || 0) },
+      {
+        label: 'Actions',
+        render: r => '<button type="button" class="adm-btn adm-btn--sm">Edit</button>',
+      },
+    ];
+
+    const cardHtml = AdminUI.card(
+      '<h3 class="adm-card-title">Regions</h3><p class="adm-card-sub">Showing ' + regions.length + ' regions</p>',
+      AdminUI.table({
+        columns: regionColumns,
+        rows: regions,
+        emptyHtml: `<tr><td class="adm-td" colspan="${regionColumns.length}">${AdminUI.emptyState({ icon: Icons.globe || '', title: 'No regions', body: 'Regions will appear here once they are configured.' })}</td></tr>`,
+        footerHtml: `
+          <div class="adm-pagination">
+            <span class="adm-pagination-info">Showing ${regions.length} of ${regions.length}</span>
+            <div class="adm-pagination-actions">
+              <button type="button" class="adm-btn adm-btn--sm" disabled>Previous</button>
+              <button type="button" class="adm-btn adm-btn--sm" disabled>Next</button>
+            </div>
+          </div>
+        `,
+      }),
+    );
+
+    mainContent.innerHTML = `
+      <div class="adm-layout">
+        ${AdminUI.sidebar('regions')}
+        <div class="adm-main">
+          ${AdminUI.topbar('Regions', topbarActions)}
+          <div class="adm-page">
+            ${AdminUI.pageHeader('Regional Management', 'Manage the universities and regions on the platform.', null)}
+            ${cardHtml}
+          </div>
+        </div>
+      </div>
+    `;
+
+    AdminUI.wireSidebar(key => {
+      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
+      if (typeof Pages[method] === 'function') {Pages[method]();}
+    });
   }
 
   /**
