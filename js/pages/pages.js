@@ -7787,8 +7787,6 @@ font-size: 0.8rem;
     });
 
     try {
-
-    try {
       let d;
       if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
         const result = await api.admin.getAnalytics();
