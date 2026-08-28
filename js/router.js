@@ -215,7 +215,14 @@ class Router {
   async show404() {
     const mainContent = document.getElementById('main-content');
     if (mainContent) {
-      mainContent.innerHTML = AdminUI.renderErrorPage({
+      // The pages.js module defines AdminUI; it loads in the pages group
+      // after the router. If the user lands on a 404 route during initial
+      // boot (before pages.js has finished loading), AdminUI may be
+      // undefined. Fall back to a minimal page until AdminUI is ready.
+      const render = typeof AdminUI !== 'undefined' && AdminUI.renderErrorPage
+        ? AdminUI.renderErrorPage
+        : (props) => `<div class="adm-auth"><aside class="adm-auth-side"><div class="adm-auth-brand"><div class="adm-auth-brand-mark">J</div><div class="adm-auth-brand-name">JERTS CART</div></div></aside><main class="adm-auth-form"><div class="adm-auth-form-inner"><h2 class="adm-auth-form-title" style="font-size:48px;font-weight:700;margin:0 0 8px;letter-spacing:-0.02em;">${props.code || '404'}</h2><h3 class="adm-auth-form-title">${props.title || 'Page not found'}</h3><p class="adm-auth-form-sub">${props.body || ''}</p><div style="margin-top:24px;"><a href="${(props.primaryAction && props.primaryAction.href) || '#/'}" class="adm-btn adm-btn--primary">${(props.primaryAction && props.primaryAction.label) || 'Go home'}</a></div></div></main></div>`;
+      mainContent.innerHTML = render({
         code: '404',
         title: 'Page not found',
         body: 'The page you are looking for does not exist or has been moved.',
@@ -230,7 +237,11 @@ class Router {
   showError(message) {
     const mainContent = document.getElementById('main-content');
     if (mainContent) {
-      mainContent.innerHTML = AdminUI.renderErrorPage({
+      // See show404 for the AdminUI-load-order note.
+      const render = typeof AdminUI !== 'undefined' && AdminUI.renderErrorPage
+        ? AdminUI.renderErrorPage
+        : (props) => `<div class="adm-auth"><aside class="adm-auth-side"><div class="adm-auth-brand"><div class="adm-auth-brand-mark">J</div><div class="adm-auth-brand-name">JERTS CART</div></div></aside><main class="adm-auth-form"><div class="adm-auth-form-inner"><h2 class="adm-auth-form-title" style="font-size:48px;font-weight:700;margin:0 0 8px;letter-spacing:-0.02em;">${props.code || '500'}</h2><h3 class="adm-auth-form-title">${props.title || 'Error'}</h3><p class="adm-auth-form-sub">${props.body || ''}</p><div style="margin-top:24px;"><a href="${(props.primaryAction && props.primaryAction.href) || '#/'}" class="adm-btn adm-btn--primary">${(props.primaryAction && props.primaryAction.label) || 'Go home'}</a></div></div></main></div>`;
+      mainContent.innerHTML = render({
         code: '500',
         title: 'Something went wrong',
         body: message || 'An unexpected error occurred. Please try again.',
