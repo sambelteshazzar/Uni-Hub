@@ -7729,38 +7729,53 @@ font-size: 0.8rem;
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
 
-    mainContent.innerHTML = `
-      <div class="admin-container">
-        ${this.getAdminSidebar('analytics')}
-        <main class="admin-main">
-          <div class="admin-header">
-            <h1 class="admin-title">Analytics</h1>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:1.5rem;max-width:1100px;">
-            <div class="admin-chart-area">
-              <div class="admin-chart-header"><h3>Revenue (Last 30 Days)</h3></div>
-              <div class="admin-chart-body"><canvas id="analytics-revenue-chart" height="220"></canvas></div>
-            </div>
-            <div class="admin-chart-area">
-              <div class="admin-chart-header"><h3>Orders by Status</h3></div>
-              <div class="admin-chart-body"><canvas id="analytics-orders-chart" height="220"></canvas></div>
-            </div>
-            <div class="admin-chart-area">
-              <div class="admin-chart-header"><h3>Products by Category</h3></div>
-              <div class="admin-chart-body"><canvas id="analytics-categories-chart" height="220"></canvas></div>
-            </div>
-            <div class="admin-chart-area">
-              <div class="admin-chart-header"><h3>New Users (Last 30 Days)</h3></div>
-              <div class="admin-chart-body"><canvas id="analytics-users-chart" height="220"></canvas></div>
-            </div>
-          </div>
-          <div class="admin-chart-area" style="max-width:1100px;margin-top:1.5rem;">
-            <div class="admin-chart-header"><h3>Top Selling Products</h3></div>
-            <div class="admin-chart-body" id="analytics-top-products" style="color:var(--neutral-500);font-size:0.85rem;">Loading...</div>
-          </div>
-        </main>
+    const topbarActions = `
+      <div class="adm-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search analytics" aria-label="Search analytics" />
       </div>
     `;
+
+    mainContent.innerHTML = `
+      <div class="adm-layout">
+        ${AdminUI.sidebar('analytics')}
+        <div class="adm-main">
+          ${AdminUI.topbar('Analytics', topbarActions)}
+          <div class="adm-page">
+            ${AdminUI.pageHeader('Analytics', '30-day trend analysis across revenue, orders, products, and users.', null)}
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:1.5rem;max-width:1100px;">
+              <div class="admin-chart-area">
+                <div class="admin-chart-header"><h3>Revenue (Last 30 Days)</h3></div>
+                <div class="admin-chart-body"><canvas id="analytics-revenue-chart" height="220"></canvas></div>
+              </div>
+              <div class="admin-chart-area">
+                <div class="admin-chart-header"><h3>Orders by Status</h3></div>
+                <div class="admin-chart-body"><canvas id="analytics-orders-chart" height="220"></canvas></div>
+              </div>
+              <div class="admin-chart-area">
+                <div class="admin-chart-header"><h3>Products by Category</h3></div>
+                <div class="admin-chart-body"><canvas id="analytics-categories-chart" height="220"></canvas></div>
+              </div>
+              <div class="admin-chart-area">
+                <div class="admin-chart-header"><h3>New Users (Last 30 Days)</h3></div>
+                <div class="admin-chart-body"><canvas id="analytics-users-chart" height="220"></canvas></div>
+              </div>
+            </div>
+            <div class="admin-chart-area" style="max-width:1100px;margin-top:1.5rem;">
+              <div class="admin-chart-header"><h3>Top Selling Products</h3></div>
+              <div class="admin-chart-body" id="analytics-top-products" style="color:var(--neutral-500);font-size:0.85rem;">Loading...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    AdminUI.wireSidebar(key => {
+      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
+      if (typeof Pages[method] === 'function') {Pages[method]();}
+    });
+
+    try {
 
     try {
       let d;
