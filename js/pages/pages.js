@@ -6354,58 +6354,115 @@ font-size: 0.8rem;
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
 
+    const topbarActions = `
+      <div class="adm-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search activity" aria-label="Search activity" id="admin-activity-search" />
+      </div>
+      <select id="activity-filter-action" class="adm-form-input" style="width:auto;padding:7px 10px;font-size:13px;">
+        <option value="">All Actions</option>
+        <option value="login">Login</option>
+        <option value="signup">Signup</option>
+        <option value="purchase">Purchase</option>
+        <option value="product_create">Product Created</option>
+        <option value="product_update">Product Updated</option>
+        <option value="product_delete">Product Deleted</option>
+        <option value="admin_ban">User Banned</option>
+        <option value="admin_approve">Product Approved</option>
+        <option value="admin_reject">Product Rejected</option>
+        <option value="password_change">Password Change</option>
+      </select>
+      <select id="activity-filter-severity" class="adm-form-input" style="width:auto;padding:7px 10px;font-size:13px;">
+        <option value="">All Severity</option>
+        <option value="info">Info</option>
+        <option value="warning">Warning</option>
+        <option value="critical">Critical</option>
+      </select>
+    `;
+
+    const pillTabs = [
+      { key: 'all', label: 'All' },
+      { key: 'orders', label: 'Orders' },
+      { key: 'payouts', label: 'Payouts' },
+      { key: 'logins', label: 'Logins' },
+    ];
+    const pillSelector = AdminUI.pillGroup(pillTabs, 'all', 'adm-pill-group--inverse', 'data-activity-filter');
+
     mainContent.innerHTML = `
-  <div class="admin-container">
-  ${this.getAdminSidebar('activity')}
-  <main class="admin-main">
-          <div class="admin-header">
-            <h1 class="admin-title">Activity Monitor</h1>
-            <div class="admin-actions">
-              <select id="activity-filter-action" onchange="Pages._loadActivityLogs()" class="admin-select-filter">
-                <option value="">All Actions</option>
-                <option value="login">Login</option>
-                <option value="signup">Signup</option>
-                <option value="purchase">Purchase</option>
-                <option value="product_create">Product Created</option>
-                <option value="product_update">Product Updated</option>
-                <option value="product_delete">Product Deleted</option>
-                <option value="admin_ban">User Banned</option>
-                <option value="admin_approve">Product Approved</option>
-                <option value="admin_reject">Product Rejected</option>
-                <option value="password_change">Password Change</option>
-              </select>
-              <select id="activity-filter-severity" onchange="Pages._loadActivityLogs()" class="admin-select-filter">
-                <option value="">All Severity</option>
-                <option value="info">Info</option>
-                <option value="warning">Warning</option>
-                <option value="critical">Critical</option>
-              </select>
+      <div class="adm-layout">
+        ${AdminUI.sidebar('activity')}
+        <div class="adm-main">
+          ${AdminUI.topbar('Activity', topbarActions)}
+          <div class="adm-page">
+            ${AdminUI.pageHeader('Activity Monitor', 'Live across orders, verifications, and payouts.', null)}
+
+            <div id="activity-stats-host"></div>
+
+            <div id="admin-activity-card-host">
+              <section class="adm-card">
+                <header class="adm-card-header">
+                  <div><h3 class="adm-card-title">Recent activity</h3><p class="adm-card-sub">Loading activity logs…</p></div>
+                  <div>${pillSelector}</div>
+                </header>
+                <div class="adm-table-wrap">
+                  <table class="adm-table">
+                    <thead>
+                      <tr>
+                        <th class="adm-th">Time</th>
+                        <th class="adm-th">User</th>
+                        <th class="adm-th">Action</th>
+                        <th class="adm-th">Details</th>
+                        <th class="adm-th">Severity</th>
+                      </tr>
+                    </thead>
+                    <tbody id="activity-logs-tbody">
+                      <tr><td class="adm-td" colspan="5" style="text-align:center;padding:2rem;">Loading…</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
             </div>
           </div>
-          <div id="activity-stats-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem;"></div>
-          <div class="admin-table-container">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>Time</th>
-                  <th>User</th>
-                  <th>Action</th>
-                  <th>Details</th>
-                  <th>Severity</th>
-                </tr>
-              </thead>
-              <tbody id="activity-logs-tbody">
-                <tr><td colspan="5" style="text-align:center;padding:2rem;">Loading activity logs...</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <div style="margin-top:1rem;text-align:center;">
-            <button class="btn btn-outline" onclick="Pages._loadActivityLogs()" style="margin-right:0.5rem;">Refresh</button>
-            <button class="btn btn-outline" id="activity-load-more" onclick="Pages._loadMoreActivity()" style="display:none;">Load More</button>
-          </div>
-        </main>
+        </div>
       </div>
     `;
+
+    AdminUI.wireSidebar(key => {
+      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
+      if (typeof Pages[method] === 'function') {Pages[method]();}
+    });
+
+    // Re-wire the topbar selects (previously inline onchange) to the
+    // standard reload method via delegation.
+    const topbar = mainContent.querySelector('.adm-topbar');
+    if (topbar) {
+      topbar.addEventListener('change', e => {
+        if (e.target.id === 'activity-filter-action' || e.target.id === 'activity-filter-severity') {
+          Pages._loadActivityLogs();
+        }
+      });
+    }
+
+    // Wire the activity filter pill group (client-side filter on data-cat).
+    const page = mainContent.querySelector('.adm-page');
+    if (page) {
+      AdminUI.wirePillGroup(page.querySelector('.adm-pill-group'), () => {
+        const activePill = page.querySelector('.adm-pill.is-active');
+        const filter = activePill ? activePill.dataset.activityFilter : 'all';
+        const tbody = mainContent.querySelector('.adm-table tbody');
+        if (!tbody) {return;}
+        const trs = tbody.querySelectorAll('tr');
+        let shown = 0;
+        trs.forEach(tr => {
+          const cat = tr.dataset.cat || 'all';
+          const show = filter === 'all' || cat === filter;
+          tr.style.display = show ? '' : 'none';
+          if (show) {shown += 1;}
+        });
+        const info = mainContent.querySelector('.adm-pagination-info');
+        if (info) {info.textContent = `Showing ${shown} of ${trs.length}`;}
+      });
+    }
 
     this._activityPage = 1;
     this._loadActivityLogs();
@@ -6415,7 +6472,7 @@ font-size: 0.8rem;
     const actionFilter = document.getElementById('activity-filter-action')?.value || '';
     const severityFilter = document.getElementById('activity-filter-severity')?.value || '';
     const tbody = document.getElementById('activity-logs-tbody');
-    const statsCards = document.getElementById('activity-stats-cards');
+    const statsHost = document.getElementById('activity-stats-host');
 
     if (!tbody) {
       return;
@@ -6437,13 +6494,15 @@ font-size: 0.8rem;
         api.admin.getOnlineUsers().catch(() => ({ success: false })),
       ]);
 
-      if (statsRes.success && statsRes.data) {
+      if (statsRes.success && statsRes.data && statsHost) {
         const s = statsRes.data;
-        statsCards.innerHTML = `
-          <div class="admin-stat-card"><div class="admin-stat-value">${s.totalToday || 0}</div><div class="admin-stat-label">Events Today</div></div>
-          <div class="admin-stat-card"><div class="admin-stat-value">${s.totalThisWeek || 0}</div><div class="admin-stat-label">Events This Week</div></div>
-          <div class="admin-stat-card"><div class="admin-stat-value">${onlineRes.success ? onlineRes.data.onlineCount : '?'}</div><div class="admin-stat-label">Online Now</div></div>
-        `;
+        const onlineVal = onlineRes.success ? (onlineRes.data.onlineCount ?? 0) : '?';
+        const statCards = [
+          AdminUI.statCard({ label: 'Events Today', value: String(s.totalToday || 0), delta: 'Across all actions', deltaKind: 'muted' }),
+          AdminUI.statCard({ label: 'Events This Week', value: String(s.totalThisWeek || 0), delta: 'Last 7 days', deltaKind: 'muted' }),
+          AdminUI.statCard({ label: 'Online Now', value: String(onlineVal), delta: 'Active sessions', deltaKind: 'muted' }),
+        ];
+        statsHost.innerHTML = AdminUI.statGrid(statCards);
       }
 
       if (logsRes.success && logsRes.data) {
