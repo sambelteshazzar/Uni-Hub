@@ -6181,49 +6181,80 @@ font-size: 0.8rem;
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
 
+    const topbarActions = `
+      <div class="adm-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search reports" aria-label="Search reports" />
+      </div>
+    `;
+
     mainContent.innerHTML = `
-  <div class="admin-container">
-  ${this.getAdminSidebar('reports')}
-  <main class="admin-main">
-  <div class="admin-header">
-  <h1 class="admin-title">Analytics & Reports</h1>
-  </div>
-  <div style="padding:2rem;text-align:center;color:#9ca3af;">Loading reports...</div>
-  </main>
-  </div>`;
+      <div class="adm-layout">
+        ${AdminUI.sidebar('reports')}
+        <div class="adm-main">
+          ${AdminUI.topbar('Reports', topbarActions)}
+          <div class="adm-page">
+            ${AdminUI.pageHeader('Analytics & Reports', 'Sales, user, and product reports.', null)}
+            <div id="admin-reports-cards-host">
+              <div class="adm-empty"><div class="adm-empty-title">Loading reports…</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
 
-    const stats = await adminReportsManager.getDashboardOverview();
+    AdminUI.wireSidebar(key => {
+      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
+      if (typeof Pages[method] === 'function') {Pages[method]();}
+    });
 
-    const mainEl = document.querySelector('.admin-main');
-    if (mainEl) {
-      mainEl.innerHTML = `
-  <div class="admin-header">
-  <h1 class="admin-title">Analytics & Reports</h1>
-  </div>
-  <div class="admin-dashboard-grid">
-  <div class="admin-card">
-  <div class="admin-card-header"><h3>Sales Report</h3></div>
-  <div style="padding:20px;">
-  <div class="admin-health-row"><span>Total Revenue</span><span class="admin-health-val good">GHS ${stats.summary.totalRevenue.toLocaleString()}</span></div>
-  <div class="admin-health-row"><span>Total Orders</span><span class="admin-health-val good">${stats.summary.totalOrders}</span></div>
-  <div class="admin-health-row"><span>Avg Order Value</span><span class="admin-health-val good">GHS ${stats.summary.totalOrders > 0 ? Math.round(stats.summary.totalRevenue / stats.summary.totalOrders).toLocaleString() : 0}</span></div>
-  </div>
-  </div>
-  <div class="admin-card">
-  <div class="admin-card-header"><h3>User Report</h3></div>
-  <div style="padding:20px;">
-  <div class="admin-health-row"><span>Total Users</span><span class="admin-health-val good">${stats.summary.totalUsers}</span></div>
-  <div class="admin-health-row"><span>New This Month</span><span class="admin-health-val good">${stats.thisMonth.newUsers || 0}</span></div>
-  </div>
-  </div>
-  <div class="admin-card">
-  <div class="admin-card-header"><h3>Product Report</h3></div>
-  <div style="padding:20px;">
-  <div class="admin-health-row"><span>Total Products</span><span class="admin-health-val good">${stats.summary.totalProducts}</span></div>
-  <div class="admin-health-row"><span>Pending Approval</span><span class="admin-health-val warning">${stats.summary.pendingProducts || 0}</span></div>
-  </div>
-  </div>
-  </div>`;
+    let stats;
+    try {
+      stats = await adminReportsManager.getDashboardOverview();
+    } catch (_) {
+      stats = { summary: { totalRevenue: 0, totalOrders: 0, totalUsers: 0, totalProducts: 0, pendingProducts: 0 }, thisMonth: { newUsers: 0 } };
+    }
+
+    const summary = stats.summary || {};
+    const avgOrderValue = summary.totalOrders > 0
+      ? Math.round(summary.totalRevenue / summary.totalOrders)
+      : 0;
+
+    const reportCard = (title, rows) => `
+      <section class="adm-card">
+        <header class="adm-card-header"><div><h3 class="adm-card-title">${_pageEsc(title)}</h3></div></header>
+        <div class="adm-table-wrap"><table class="adm-table">
+          <tbody>
+            ${rows.map(([k, v, kind]) => `
+              <tr>
+                <td class="adm-td">${_pageEsc(k)}</td>
+                <td class="adm-td adm-text-right adm-text-strong">${v}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table></div>
+      </section>
+    `;
+
+    const cards = [
+      reportCard('Sales Report', [
+        ['Total revenue', `GHS ${(summary.totalRevenue || 0).toLocaleString()}`],
+        ['Total orders', String(summary.totalOrders || 0)],
+        ['Avg order value', `GHS ${avgOrderValue.toLocaleString()}`],
+      ]),
+      reportCard('User Report', [
+        ['Total users', String(summary.totalUsers || 0)],
+        ['New this month', String((stats.thisMonth && stats.thisMonth.newUsers) || 0)],
+      ]),
+      reportCard('Product Report', [
+        ['Total products', String(summary.totalProducts || 0)],
+        ['Pending approval', String(summary.pendingProducts || 0)],
+      ]),
+    ].join('');
+
+    const host = document.getElementById('admin-reports-cards-host');
+    if (host) {
+      host.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;">${cards}</div>`;
     }
   }
 
