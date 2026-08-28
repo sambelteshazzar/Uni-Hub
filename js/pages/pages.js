@@ -4807,120 +4807,210 @@ font-size: 0.8rem;
             ? adminVerificationsManager.getRejected()
             : adminVerificationsManager.getPending();
 
+    const topbarActions = `
+      <div class="adm-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search verifications by name, email, or student ID" aria-label="Search verifications" id="admin-verifications-search" />
+      </div>
+    `;
+
+    const statCards = [
+      AdminUI.statCard({
+        label: 'Pending',
+        value: _pageEsc(String(stats.pending)),
+        delta: stats.pending > 0 ? 'Awaiting review' : 'Queue clear',
+        deltaKind: stats.pending > 0 ? 'warning' : 'muted',
+      }),
+      AdminUI.statCard({
+        label: 'Approved',
+        value: _pageEsc(String(stats.approved)),
+        delta: 'All-time',
+        deltaKind: 'success',
+      }),
+      AdminUI.statCard({
+        label: 'Rejected',
+        value: _pageEsc(String(stats.rejected)),
+        delta: 'All-time',
+        deltaKind: 'danger',
+      }),
+      AdminUI.statCard({
+        label: 'Total',
+        value: _pageEsc(String(stats.total)),
+        delta: 'Across all statuses',
+        deltaKind: 'muted',
+      }),
+    ];
+
     mainContent.innerHTML = `
-    <div class="admin-container">
-      ${this.getAdminSidebar('verifications')}
-      <main class="admin-main">
-        <div class="admin-header">
-          <div>
-            <h1 class="admin-title">Student Verifications</h1>
-            <p style="margin:0;color:#9ca3af;font-size:0.85rem;">Review and manage student verification requests</p>
+      <div class="adm-layout">
+        ${AdminUI.sidebar('verifications')}
+        <div class="adm-main">
+          ${AdminUI.topbar('Verifications', topbarActions)}
+          <div class="adm-page">
+            ${AdminUI.pageHeader('Student Verifications', 'Review and approve student ID verifications.', null)}
+
+            <div id="admin-verifications-stats-host">${AdminUI.statGrid(statCards)}</div>
+
+            <div id="admin-verifications-card-host"></div>
           </div>
         </div>
+      </div>
+    `;
 
-        <div class="admin-stats" style="grid-template-columns:repeat(4,1fr);">
-          <div class="admin-stat-card" style="cursor:pointer;" onclick="Pages.renderAdminVerifications('pending')">
-            <div class="admin-stat-value" style="color:#f59e0b;">${stats.pending}</div>
-            <div class="admin-stat-label">Pending</div>
-          </div>
-          <div class="admin-stat-card" style="cursor:pointer;" onclick="Pages.renderAdminVerifications('approved')">
-            <div class="admin-stat-value" style="color:#10b981;">${stats.approved}</div>
-            <div class="admin-stat-label">Approved</div>
-          </div>
-          <div class="admin-stat-card" style="cursor:pointer;" onclick="Pages.renderAdminVerifications('rejected')">
-            <div class="admin-stat-value" style="color:#ef4444;">${stats.rejected}</div>
-            <div class="admin-stat-label">Rejected</div>
-          </div>
-          <div class="admin-stat-card" style="cursor:pointer;" onclick="Pages.renderAdminVerifications('all')">
-            <div class="admin-stat-value">${stats.total}</div>
-            <div class="admin-stat-label">Total</div>
-          </div>
-        </div>
+    AdminUI.wireSidebar(key => {
+      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
+      if (typeof Pages[method] === 'function') {Pages[method]();}
+    });
 
-        <div class="admin-card" style="margin-top:1.5rem;">
-          <div class="admin-card-header">
-            <h3>${filter === 'all' ? 'All Verifications' : filter === 'approved' ? 'Approved Verifications' : filter === 'rejected' ? 'Rejected Verifications' : 'Pending Verifications'}</h3>
-            <div style="display:flex;gap:0.5rem;">
-              <button class="btn btn-sm ${filter === 'pending' ? 'btn-primary' : 'btn-ghost'}" onclick="Pages.renderAdminVerifications('pending')" style="font-size:0.75rem;">Pending (${stats.pending})</button>
-              <button class="btn btn-sm ${filter === 'approved' ? 'btn-primary' : 'btn-ghost'}" onclick="Pages.renderAdminVerifications('approved')" style="font-size:0.75rem;">Approved</button>
-              <button class="btn btn-sm ${filter === 'rejected' ? 'btn-primary' : 'btn-ghost'}" onclick="Pages.renderAdminVerifications('rejected')" style="font-size:0.75rem;">Rejected</button>
-              <button class="btn btn-sm ${filter === 'all' ? 'btn-primary' : 'btn-ghost'}" onclick="Pages.renderAdminVerifications('all')" style="font-size:0.75rem;">All</button>
-            </div>
-          </div>
-          <div class="admin-table-container" style="box-shadow:none;border-radius:0;">
-            ${
-  allItems.length === 0
-    ? `
-              <div style="text-align:center;padding:3rem;color:#6b7280;">
-                <div style="font-size:2.5rem;margin-bottom:1rem;">📋</div>
-                <p style="margin:0;font-size:1rem;">No ${filter} verifications found</p>
+    const filterLabel = filter === 'all'
+      ? 'All Verifications'
+      : filter === 'approved'
+        ? 'Approved Verifications'
+        : filter === 'rejected'
+          ? 'Rejected Verifications'
+          : 'Pending Verifications';
+
+    const pillTabs = [
+      { key: 'pending', label: `Pending (${stats.pending})` },
+      { key: 'approved', label: 'Approved' },
+      { key: 'rejected', label: 'Rejected' },
+      { key: 'all', label: 'All' },
+    ];
+    const pillSelector = AdminUI.pillGroup(pillTabs, filter, null, 'data-verif-filter');
+
+    const statusToBadgeKind = {
+      pending: 'warning',
+      approved: 'success',
+      rejected: 'danger',
+    };
+
+    const verifColumns = [
+      {
+        label: 'Student',
+        render: v => {
+          const name = v.fullName || 'N/A';
+          const initials = ((name || 'U').trim().charAt(0) || 'U').toUpperCase();
+          const studentId = v.studentId || 'N/A';
+          return `
+            <div class="adm-user-cell">
+              <div class="adm-avatar-sm">${_pageEsc(initials)}</div>
+              <div>
+                <div class="adm-text-strong">${_pageEsc(name)}</div>
+                <div class="adm-text-mono" style="font-size:0.75rem;">${_pageEsc(studentId)}</div>
               </div>
-            `
-    : `
-              <table class="admin-table">
-                <thead>
-                  <tr>
-                    <th>Student</th>
-                    <th>Student ID</th>
-                    <th>Method</th>
-                    <th>Submitted</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${allItems
-    .map(
-      v => `
-                  <tr id="vrf-row-${v.id}">
-                    <td>
-                      <div style="font-weight:600;color:#f9fafb;">${_pageEsc(v.fullName || 'N/A')}</div>
-                      <div style="font-size:0.75rem;color:#9ca3af;">${v.personalEmail || v.universityEmail || v.email || ''}</div>
-                      <div style="font-size:0.75rem;color:#6b7280;">${v.phone || ''}</div>
-                    </td>
-                    <td style="font-family:monospace;color:#60a5fa;">${v.studentId || 'N/A'}</td>
-                    <td>
-                      <span style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.25rem 0.5rem;border-radius:9999px;font-size:0.7rem;font-weight:600;
-                        ${
-  v.verificationMethod === 'email'
-    ? 'background:rgba(59,130,246,0.15);color:#60a5fa;'
-    : 'background:rgba(245,158,11,0.15);color:#f59e0b;'
-}">
-                        ${v.verificationMethod === 'email' ? '📧 Email' : '📄 Document'}
-                      </span>
-                      <div style="font-size:0.7rem;color:#6b7280;margin-top:0.25rem;">Level ${v.level || 'N/A'}${v.hall ? ' · ' + v.hall : ''}</div>
-                    </td>
-                    <td style="font-size:0.8rem;color:#9ca3af;">${Formatter.formatTimeAgo(v.submittedAt)}</td>
-                    <td>
-                      <span class="admin-status-badge ${v.status === 'approved' ? 'delivered' : v.status === 'rejected' ? 'cancelled' : 'placed'}"
-                        style="text-transform:capitalize;">${v.status}</span>
-                      ${v.reviewNotes ? `<div style="font-size:0.7rem;color:#9ca3af;margin-top:0.25rem;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${v.reviewNotes.replace(/"/g, '&quot;')}">💬 ${_pageEsc(v.reviewNotes)}</div>` : ''}
-                    </td>
-                    <td>
-                      <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
-                        <button class="btn btn-sm" onclick="Pages.viewVerificationDetail('${v.id}')" style="padding:3px 8px;font-size:11px;background:#374151;color:#e5e7eb;border:none;cursor:pointer;">👁 View</button>
-                        ${
-  v.status === 'pending'
-    ? `
-                          <button class="btn btn-sm" onclick="Pages.approveVerification('${v.id}')" style="padding:3px 8px;font-size:11px;background:#059669;color:#fff;border:none;cursor:pointer;">✓ Approve</button>
-                          <button class="btn btn-sm" onclick="Pages.rejectVerification('${v.id}')" style="padding:3px 8px;font-size:11px;background:#dc2626;color:#fff;border:none;cursor:pointer;">✕ Reject</button>
-                        `
-    : ''
-}
-                      </div>
-                    </td>
-                  </tr>
-                  `,
-    )
-    .join('')}
-                </tbody>
-              </table>
-            `
-}
-          </div>
+            </div>
+          `;
+        },
+      },
+      {
+        label: 'Email',
+        render: v => {
+          const email = v.personalEmail || v.universityEmail || v.email || '—';
+          return `<span class="adm-text-muted">${_pageEsc(email)}</span>`;
+        },
+      },
+      {
+        label: 'University',
+        render: v => `<span class="adm-text-strong">${_pageEsc(v.university || v.universityName || '—')}</span>`,
+      },
+      {
+        label: 'Method',
+        render: v => {
+          const isEmail = v.verificationMethod === 'email';
+          const kind = isEmail ? 'info' : 'warning';
+          const label = isEmail ? 'Email' : 'Document';
+          return `<span class="adm-badge adm-badge--${kind}">${_pageEsc(label)}</span>`;
+        },
+      },
+      { label: 'Submitted', render: v => _pageEsc(Formatter.formatTimeAgo(v.submittedAt)) },
+      {
+        label: 'Status',
+        render: v => {
+          const status = v.status || 'pending';
+          const kind = statusToBadgeKind[status] || 'neutral';
+          const label = status ? Formatter.capitalize(status) : '—';
+          const notes = v.reviewNotes
+            ? `<div class="adm-text-muted" style="font-size:0.7rem;margin-top:0.25rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${_pageEsc(v.reviewNotes)}">${_pageEsc(v.reviewNotes)}</div>`
+            : '';
+          return `<span class="adm-badge adm-badge--${kind}">${_pageEsc(label)}</span>${notes}`;
+        },
+      },
+      {
+        label: 'Actions',
+        render: v => {
+          const id = _pageEsc(v.id || '');
+          return `<button type="button" class="adm-btn adm-btn--sm adm-btn--primary" data-verif-action="view" data-verif-id="${id}">Review</button>`;
+        },
+      },
+    ];
+
+    const cardTitle = `<h3 class="adm-card-title">${_pageEsc(filterLabel)}</h3><p class="adm-card-sub">Showing ${allItems.length} verification${allItems.length === 1 ? '' : 's'}</p>`;
+
+    const emptyHtml = `<tr><td class="adm-td" colspan="${verifColumns.length}">${AdminUI.emptyState({
+      icon: Icons.shield || '',
+      title: 'No verifications to show',
+      body: `There are no ${filter} verifications right now.`,
+    })}</td></tr>`;
+
+    const footerHtml = `
+      <div class="adm-pagination">
+        <span class="adm-pagination-info">Showing ${allItems.length} of ${stats.total}</span>
+        <div class="adm-pagination-actions">
+          <button type="button" class="adm-btn adm-btn--sm" disabled>Previous</button>
+          <button type="button" class="adm-btn adm-btn--sm" disabled>Next</button>
         </div>
-      </main>
-    </div>`;
+      </div>
+    `;
+
+    const tableHtml = AdminUI.table({
+      columns: verifColumns,
+      rows: allItems,
+      emptyHtml,
+      footerHtml,
+    });
+
+    const cardHtml = AdminUI.card(cardTitle, tableHtml, pillSelector);
+    const cardHost = document.getElementById('admin-verifications-card-host');
+    if (cardHost) {
+      cardHost.outerHTML = cardHtml;
+    }
+
+    const page = mainContent.querySelector('.adm-page');
+    if (page) {
+      AdminUI.wirePillGroup(page.querySelector('.adm-pill-group'), key => {
+        Pages.renderAdminVerifications(key);
+      });
+
+      page.addEventListener('click', e => {
+        const btn = e.target.closest('[data-verif-action]');
+        if (!btn) {return;}
+        const id = btn.dataset.verifId;
+        if (!id) {return;}
+        if (btn.dataset.verifAction === 'view') {
+          void Pages.viewVerificationDetail(id);
+        }
+      });
+    }
+
+    const searchInput = document.getElementById('admin-verifications-search');
+    if (searchInput) {
+      AdminUI.wireSearch(searchInput, value => {
+        const q = (value || '').trim().toLowerCase();
+        const tbody = mainContent.querySelector('.adm-table tbody');
+        if (!tbody) {return;}
+        let shown = 0;
+        const trs = tbody.querySelectorAll('tr');
+        trs.forEach(tr => {
+          if (!tr.children || tr.children.length < 2) {return;}
+          const text = tr.textContent.toLowerCase();
+          const match = !q || text.includes(q);
+          tr.style.display = match ? '' : 'none';
+          if (match) {shown += 1;}
+        });
+        const info = mainContent.querySelector('.adm-pagination-info');
+        if (info) {info.textContent = `Showing ${shown} of ${stats.total}`;}
+      });
+    }
   }
 
   // ============================================
@@ -5217,6 +5307,7 @@ font-size: 0.8rem;
   }
 
   static async viewVerificationDetail (id) {
+    if (!_requireAdmin()) {return;}
     if (typeof adminVerificationsManager === 'undefined') {
       showToast('Verification module not loaded', 'error');
       return;
@@ -5240,21 +5331,21 @@ font-size: 0.8rem;
     let docsSection;
     if (docsState.purged || (!docsState.documents.length && docsState.purgeScheduledFor)) {
       docsSection = `
-        <div class="admin-modal-light-text admin-modal-light-text--muted" style="text-align:center;padding:1rem;border:1px dashed var(--neutral-300);border-radius:var(--radius-md);">
+        <div style="text-align:center;padding:1rem;border:1px dashed var(--neutral-300);border-radius:var(--radius-md);color:var(--neutral-600);font-size:0.85rem;">
           Documents permanently deleted${v.reviewedAt ? ` (decision ${esc(Formatter.formatDate(v.reviewedAt))})` : ''}
         </div>`;
     } else if (docsState.documents.length > 0) {
       const items = docsState.documents.map(d => {
         if (d.mimeType === 'application/pdf') {
-          return `<a href="${esc(d.url)}" target="_blank" rel="noopener noreferrer" data-doc-link class="admin-modal-light-text" style="display:block;padding:0.5rem;background:var(--neutral-50);border-radius:var(--radius-md);color:var(--primary);font-size:0.85rem;text-decoration:none;border:1px solid var(--neutral-200);">${Icons.clipboard || ''} ${esc(d.fileName)}</a>`;
+          return `<a href="${esc(d.url)}" target="_blank" rel="noopener noreferrer" data-doc-link class="adm-text-strong" style="display:block;padding:0.5rem;background:var(--neutral-50);border-radius:var(--radius-md);color:var(--primary);font-size:0.85rem;text-decoration:none;border:1px solid var(--neutral-200);">${Icons.clipboard || ''} ${esc(d.fileName)}</a>`;
         }
         return `<img src="${esc(d.url)}" alt="${esc(d.fileName)}" style="max-width:100%;max-height:280px;display:block;margin:0.5rem auto;border-radius:var(--radius-md);" />`;
       }).join('');
       const purgeNote = docsState.purgeScheduledFor
-        ? `<div style="font-size:0.75rem;color:var(--color-warning);margin-top:0.5rem;">Auto-deletes ${esc(Formatter.formatDate(docsState.purgeScheduledFor))}</div>`
+        ? `<div class="adm-text-muted" style="font-size:0.75rem;margin-top:0.5rem;color:var(--warning);">Auto-deletes ${esc(Formatter.formatDate(docsState.purgeScheduledFor))}</div>`
         : '';
       const purgeBtn = adminAuthManager.getCurrentUser()?.role === 'admin'
-        ? `<button type="button" data-purge-docs="${esc(v.id)}" class="btn btn-sm" style="margin-top:0.5rem;background:var(--color-danger);color:#fff;border:none;font-weight:var(--font-medium);">Purge now</button>`
+        ? `<button type="button" data-vrf-action="purge" data-vrf-id="${esc(v.id)}" class="adm-btn adm-btn--sm adm-btn--danger" style="margin-top:0.5rem;">Purge now</button>`
         : '';
       docsSection = `
         <div style="border:1px solid var(--neutral-200);border-radius:var(--radius-md);padding:0.75rem;background:var(--bg-primary);">
@@ -5264,91 +5355,91 @@ font-size: 0.8rem;
         </div>`;
     } else {
       docsSection = `
-        <div class="admin-modal-light-text admin-modal-light-text--muted" style="text-align:center;padding:1rem;border:1px dashed var(--neutral-300);border-radius:var(--radius-md);">
+        <div style="text-align:center;padding:1rem;border:1px dashed var(--neutral-300);border-radius:var(--radius-md);color:var(--neutral-600);font-size:0.85rem;">
           No documents attached to this request
         </div>`;
     }
 
-    const statusClass = v.status === 'approved'
-      ? 'admin-status-badge delivered'
-      : v.status === 'rejected'
-        ? 'admin-status-badge cancelled'
-        : 'admin-status-badge placed';
+    const statusToBadgeKind = {
+      pending: 'warning',
+      approved: 'success',
+      rejected: 'danger',
+    };
+    const statusKind = statusToBadgeKind[v.status] || 'neutral';
+    const statusLabel = v.status ? Formatter.capitalize(v.status) : '—';
+    const badgeHTML = `<span class="adm-badge adm-badge--${statusKind}">${_pageEsc(statusLabel)}</span>`;
+
+    const detailGrid = `
+      <div class="adm-modal-detail-grid">
+        <div>
+          <div class="adm-modal-kv-label">Full Name</div>
+          <div class="adm-modal-kv-value">${_pageEsc(v.fullName || 'N/A')}</div>
+        </div>
+        <div>
+          <div class="adm-modal-kv-label">Student ID</div>
+          <div class="adm-modal-kv-value adm-modal-kv-value--mono">${_pageEsc(v.studentId || 'N/A')}</div>
+        </div>
+        <div>
+          <div class="adm-modal-kv-label">Email</div>
+          <div class="adm-modal-kv-value">${_pageEsc(v.personalEmail || v.universityEmail || v.email || 'N/A')}</div>
+        </div>
+        <div>
+          <div class="adm-modal-kv-label">Phone</div>
+          <div class="adm-modal-kv-value">${_pageEsc(v.phone || 'N/A')}</div>
+        </div>
+        <div>
+          <div class="adm-modal-kv-label">Level</div>
+          <div class="adm-modal-kv-value">Level ${_pageEsc(v.level || 'N/A')}</div>
+        </div>
+        <div>
+          <div class="adm-modal-kv-label">Hall</div>
+          <div class="adm-modal-kv-value">${_pageEsc(v.hall || 'N/A')}</div>
+        </div>
+        <div>
+          <div class="adm-modal-kv-label">Method</div>
+          <div class="adm-modal-kv-value">${v.verificationMethod === 'email' ? 'University Email' : 'Document Upload'}</div>
+        </div>
+        <div>
+          <div class="adm-modal-kv-label">Submitted</div>
+          <div class="adm-modal-kv-value">${esc(Formatter.formatDate(v.submittedAt))}</div>
+        </div>
+        ${v.reviewedBy ? `<div><div class="adm-modal-kv-label">Reviewed By</div><div class="adm-modal-kv-value">${esc(v.reviewedBy)}</div></div>` : ''}
+        ${v.reviewedAt ? `<div><div class="adm-modal-kv-label">Reviewed At</div><div class="adm-modal-kv-value">${esc(Formatter.formatDate(v.reviewedAt))}</div></div>` : ''}
+        ${v.reviewNotes ? `<div style="grid-column:1/-1;"><div class="adm-modal-kv-label">Review Notes</div><div class="adm-modal-kv-value">${esc(v.reviewNotes)}</div></div>` : ''}
+      </div>
+    `;
+
+    const documentsSection = `
+      <div style="margin-bottom:1.25rem;">
+        <h3 class="adm-modal-kv-label" style="font-size:0.95rem;color:var(--neutral-900);text-transform:none;letter-spacing:0;">Verification documents</h3>
+        ${docsSection}
+      </div>
+    `;
+
+    const approveRejectBlock = v.status === 'pending'
+      ? `
+        <div class="adm-modal-divider">
+          <div class="adm-modal-field-group">
+            <label class="adm-modal-field-label" for="vrf-review-notes-${esc(v.id)}">Review Notes (optional)</label>
+            <textarea id="vrf-review-notes-${esc(v.id)}" class="adm-modal-field" rows="3" placeholder="Add notes about this verification..."></textarea>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button type="button" data-vrf-action="approve" data-vrf-id="${esc(v.id)}" class="adm-btn" style="flex:1;background:var(--color-success);color:#fff;border-color:var(--color-success);">Approve Verification</button>
+            <button type="button" data-vrf-action="reject" data-vrf-id="${esc(v.id)}" class="adm-btn adm-btn--danger" style="flex:1;">Reject Verification</button>
+          </div>
+        </div>`
+      : '';
 
     const overlay = document.createElement('div');
     overlay.id = 'vrf-detail-overlay';
-    overlay.className = 'admin-modal-light-backdrop';
-
-    overlay.innerHTML = `
-    <div class="admin-modal-light admin-modal-light--wide" style="position:relative;">
-      <button type="button" data-vrf-close class="admin-modal-light-close" aria-label="Close">&times;</button>
-      <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:1.5rem;padding-right:2rem;">
-        <div>
-          <h2 class="admin-modal-light-title">Verification Details</h2>
-          <span class="${statusClass}" style="text-transform:capitalize;">${esc(v.status)}</span>
-        </div>
-      </div>
-
-      <div class="admin-modal-light-detail-grid">
-        <div>
-          <div class="admin-modal-light-kv-label">Full Name</div>
-          <div class="admin-modal-light-kv-value">${_pageEsc(v.fullName || 'N/A')}</div>
-        </div>
-        <div>
-          <div class="admin-modal-light-kv-label">Student ID</div>
-          <div class="admin-modal-light-kv-value admin-modal-light-kv-value--mono">${_pageEsc(v.studentId || 'N/A')}</div>
-        </div>
-        <div>
-          <div class="admin-modal-light-kv-label">Email</div>
-          <div class="admin-modal-light-kv-value">${_pageEsc(v.personalEmail || v.universityEmail || v.email || 'N/A')}</div>
-        </div>
-        <div>
-          <div class="admin-modal-light-kv-label">Phone</div>
-          <div class="admin-modal-light-kv-value">${_pageEsc(v.phone || 'N/A')}</div>
-        </div>
-        <div>
-          <div class="admin-modal-light-kv-label">Level</div>
-          <div class="admin-modal-light-kv-value">Level ${_pageEsc(v.level || 'N/A')}</div>
-        </div>
-        <div>
-          <div class="admin-modal-light-kv-label">Hall</div>
-          <div class="admin-modal-light-kv-value">${_pageEsc(v.hall || 'N/A')}</div>
-        </div>
-        <div>
-          <div class="admin-modal-light-kv-label">Method</div>
-          <div class="admin-modal-light-kv-value">${v.verificationMethod === 'email' ? 'University Email' : 'Document Upload'}</div>
-        </div>
-        <div>
-          <div class="admin-modal-light-kv-label">Submitted</div>
-          <div class="admin-modal-light-kv-value">${esc(Formatter.formatDate(v.submittedAt))}</div>
-        </div>
-        ${v.reviewedBy ? `<div><div class="admin-modal-light-kv-label">Reviewed By</div><div class="admin-modal-light-kv-value">${esc(v.reviewedBy)}</div></div>` : ''}
-        ${v.reviewedAt ? `<div><div class="admin-modal-light-kv-label">Reviewed At</div><div class="admin-modal-light-kv-value">${esc(Formatter.formatDate(v.reviewedAt))}</div></div>` : ''}
-        ${v.reviewNotes ? `<div style="grid-column:1/-1;"><div class="admin-modal-light-kv-label">Review Notes</div><div class="admin-modal-light-kv-value admin-modal-light-kv-value--notes">${esc(v.reviewNotes)}</div></div>` : ''}
-      </div>
-
-      <div style="margin-bottom:1.5rem;">
-        <h4 class="admin-modal-light-title" style="font-size:0.95rem;">Verification documents</h4>
-        ${docsSection}
-      </div>
-
-      ${
-  v.status === 'pending'
-    ? `
-      <div class="admin-modal-light-divider">
-        <div style="margin-bottom:1rem;">
-          <label class="admin-modal-light-kv-label" style="display:block;margin-bottom:var(--space-xs);">Review Notes (optional)</label>
-          <textarea id="vrf-review-notes-${esc(v.id)}" class="admin-modal-light-field" rows="3" placeholder="Add notes about this verification..."></textarea>
-        </div>
-        <div style="display:flex;gap:var(--space-sm);">
-          <button type="button" data-vrf-action="approve" data-vrf-id="${esc(v.id)}" class="btn btn-sm" style="flex:1;padding:0.75rem;background:var(--color-success);color:#fff;border:none;font-weight:var(--font-semibold);font-size:0.9rem;">Approve Verification</button>
-          <button type="button" data-vrf-action="reject" data-vrf-id="${esc(v.id)}" class="btn btn-sm" style="flex:1;padding:0.75rem;background:var(--color-danger);color:#fff;border:none;font-weight:var(--font-semibold);font-size:0.9rem;">Reject Verification</button>
-        </div>
-      </div>`
-    : ''
-}
-    </div>`;
-
+    overlay.innerHTML = AdminUI.modalHtml({
+      id: 'vrf-detail-overlay',
+      size: 'lg',
+      title: 'Verification Details',
+      sub: badgeHTML,
+      body: detailGrid + documentsSection + approveRejectBlock,
+      footer: '',
+    });
     document.body.appendChild(overlay);
 
     // Signed URLs expire after 300s; refetch fresh ones once on load error.
@@ -5359,43 +5450,35 @@ font-size: 0.8rem;
       void Pages.viewVerificationDetail(id);
     }, true);
 
-    // Single delegated handler: backdrop click-to-close, close button,
-    // approve/reject buttons, purge button. No new inline handlers.
-    overlay.addEventListener('click', async e => {
-      if (e.target === overlay) { overlay.remove(); return; }
-
-      const closeBtn = e.target.closest('[data-vrf-close]');
-      if (closeBtn) { overlay.remove(); return; }
-
-      const actionBtn = e.target.closest('[data-vrf-action]');
-      if (actionBtn) {
-        const vid = actionBtn.dataset.vrfId;
-        const action = actionBtn.dataset.vrfAction;
-        if (action === 'approve') { Pages.approveVerification(vid); }
-        else if (action === 'reject') { Pages.rejectVerification(vid); }
-        overlay.remove();
-        return;
-      }
-
-      const purgeBtn = e.target.closest('[data-purge-docs]');
-      if (!purgeBtn) { return; }
-      const vid = purgeBtn.dataset.purgeDocs;
-      if (!window.confirm('Permanently delete all documents for this request now? This cannot be undone.')) { return; }
-      purgeBtn.disabled = true;
-      try {
-        const resp = await api.verification.purgeDocuments(vid);
-        if (resp.success) {
-          showToast('Documents permanently deleted', 'success');
+    AdminUI.wireModal(overlay, {
+      onClose: () => overlay.remove(),
+      onAction: async (key, btn) => {
+        const vid = btn.dataset.vrfId || id;
+        if (key === 'approve') {
+          Pages.approveVerification(vid);
           overlay.remove();
-          Pages.renderAdminVerifications(Pages._verifFilter || 'pending');
-        } else {
-          showToast(resp.error || 'Failed to delete documents', 'error');
-          purgeBtn.disabled = false;
+        } else if (key === 'reject') {
+          Pages.rejectVerification(vid);
+          overlay.remove();
+        } else if (key === 'purge') {
+          if (!window.confirm('Permanently delete all documents for this request now? This cannot be undone.')) { return; }
+          btn.disabled = true;
+          try {
+            const resp = await api.verification.purgeDocuments(vid);
+            if (resp.success) {
+              showToast('Documents permanently deleted', 'success');
+              overlay.remove();
+              Pages.renderAdminVerifications(Pages._verifFilter || 'pending');
+            } else {
+              showToast(resp.error || 'Failed to delete documents', 'error');
+              btn.disabled = false;
+            }
+          } catch (err) {
+            showToast(err.message || 'Failed to delete documents', 'error');
+            btn.disabled = false;
+          }
         }
-      } catch (err) {
-        showToast(err.message || 'Failed to delete documents', 'error');
-        purgeBtn.disabled = false;
-      }
+      },
     });
   }
 
