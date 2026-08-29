@@ -75,6 +75,10 @@ class AdminVerificationsManager {
     return this.queue.filter(v => v.status === 'approved');
   }
 
+  getApprovedPendingUser () {
+    return this.queue.filter(v => v.status === 'approved_pending_user');
+  }
+
   getRejected () {
     return this.queue.filter(v => v.status === 'rejected');
   }
@@ -91,6 +95,7 @@ class AdminVerificationsManager {
     return {
       total: this.queue.length,
       pending: this.getPending().length,
+      approvedPendingUser: this.getApprovedPendingUser().length,
       approved: this.getApproved().length,
       rejected: this.getRejected().length,
     };
@@ -99,9 +104,11 @@ class AdminVerificationsManager {
   approve (id, notes) {
     const entry = this.getById(id);
     if (!entry) return { success: false, error: 'Verification not found' };
-    if (entry.status !== 'pending') return { success: false, error: 'Verification already reviewed' };
+    if (entry.status !== 'pending') {return { success: false, error: 'Verification already reviewed' };}
 
-    entry.status = 'approved';
+    // Optimistic local state — backend is the source of truth but we
+    // update the local cache immediately so the UI does not stutter.
+    entry.status = 'approved_pending_user';
     entry.reviewedBy = typeof adminAuthManager !== 'undefined' && adminAuthManager.getCurrentUser
       ? adminAuthManager.getCurrentUser()?.fullName || 'Admin'
       : 'Admin';
@@ -109,11 +116,13 @@ class AdminVerificationsManager {
     entry.reviewNotes = notes || null;
     this._persist();
 
-    this._syncUserVerification(entry, true);
+    // The user is NOT marked verified locally — they still need to
+    // click the magic link. Only the backend's confirm endpoint
+    // promotes them to fully verified.
     this._syncBackendAction(id, 'approve', notes);
 
     if (typeof adminAuthManager !== 'undefined' && adminAuthManager.logActivity) {
-      adminAuthManager.logActivity('Verification approved', { id, studentId: entry.studentId, fullName: entry.fullName });
+      adminAuthManager.logActivity('Verification approved (awaiting user confirmation)', { id, studentId: entry.studentId, fullName: entry.fullName });
     }
 
     return { success: true, data: entry };
@@ -146,12 +155,13 @@ class AdminVerificationsManager {
     try {
       if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable !== false) {
         if (action === 'approve') {
-          await api.admin.approveVerification(id, notes);
+          return await api.admin.approveVerification(id, notes);
         } else if (action === 'reject') {
-          await api.admin.rejectVerification(id, notes);
+          return await api.admin.rejectVerification(id, notes);
         }
       }
     } catch (_) { console.warn('verifications: backend sync failed:', _); }
+    return null;
   }
 
   _syncUserVerification (entry, isVerified) {

@@ -32,6 +32,8 @@ const ACTIVITY_LOGS_ACTIONS_SQL = [
   'admin_adjustment', 'admin_order_status',
   // Verification-document PII access (spec 2026-08-23):
   'verification_docs_viewed', 'verification_docs_purge',
+  // Magic-link confirmation flow (2026-08-29):
+  'verification_confirmed',
 ].map(a => `'${a}'`).join(',');
 
 // Role tiers (2026-08-21): buyer < moderator < admin. Moderators handle
@@ -333,12 +335,16 @@ CREATE TABLE IF NOT EXISTS student_verifications (
   verificationMethod TEXT NOT NULL CHECK(verificationMethod IN ('email','document')),
   universityEmail TEXT,
   verificationCode TEXT,
-  status TEXT DEFAULT 'pending' CHECK(status IN ('pending','approved','rejected')),
+  status TEXT DEFAULT 'pending' CHECK(status IN ('pending','approved_pending_user','approved','rejected')),
   reviewedBy TEXT REFERENCES users(id),
   reviewedAt TEXT,
   reviewNotes TEXT,
   documentsPurgeAt TEXT,
   documentsPurgedAt TEXT,
+  confirmationTokenHash TEXT,
+  confirmationTokenExpiresAt TEXT,
+  confirmationTokenUsedAt TEXT,
+  confirmedAt TEXT,
   createdAt TEXT DEFAULT (datetime('now')),
   updatedAt TEXT DEFAULT (datetime('now'))
 );
@@ -618,6 +624,26 @@ async function runTursoMigrations () {
       alter: 'ALTER TABLE student_verifications ADD COLUMN userId TEXT REFERENCES users(id)',
     },
     {
+      check: 'PRAGMA table_info(student_verifications)',
+      find: 'confirmationTokenHash',
+      alter: 'ALTER TABLE student_verifications ADD COLUMN confirmationTokenHash TEXT',
+    },
+    {
+      check: 'PRAGMA table_info(student_verifications)',
+      find: 'confirmationTokenExpiresAt',
+      alter: 'ALTER TABLE student_verifications ADD COLUMN confirmationTokenExpiresAt TEXT',
+    },
+    {
+      check: 'PRAGMA table_info(student_verifications)',
+      find: 'confirmationTokenUsedAt',
+      alter: 'ALTER TABLE student_verifications ADD COLUMN confirmationTokenUsedAt TEXT',
+    },
+    {
+      check: 'PRAGMA table_info(student_verifications)',
+      find: 'confirmedAt',
+      alter: 'ALTER TABLE student_verifications ADD COLUMN confirmedAt TEXT',
+    },
+    {
       check: 'PRAGMA table_info(order_status_history)',
       find: 'updatedBy',
       alter: 'ALTER TABLE order_status_history ADD COLUMN updatedBy TEXT REFERENCES users(id)',
@@ -745,6 +771,77 @@ async function runTursoMigrations () {
       }
     } catch (rollbackErr) {
       console.error('Products migration rollback failed:', rollbackErr.message);
+    }
+  }
+
+  // Magic-link approval flow (2026-08-29): add 'approved_pending_user' to the
+  // student_verifications status CHECK and add the confirmation-token
+  // columns. CHECK constraints cannot be ALTERed in SQLite, so we rebuild
+  // the table in place. Idempotent: only runs when the existing schema is
+  // missing the new status value.
+  try {
+    const checkResult = await tursoClient.execute(
+      'SELECT sql FROM sqlite_master WHERE name=\'student_verifications\'',
+    );
+    const schemaSql = checkResult.rows[0]?.sql || '';
+    if (schemaSql && !schemaSql.includes('\'approved_pending_user\'')) {
+      console.log('Migrating student_verifications for approved_pending_user status...');
+      await tursoClient.execute(
+        'ALTER TABLE student_verifications RENAME TO student_verifications_old',
+      );
+      await tursoClient.execute(`CREATE TABLE student_verifications (
+        id TEXT PRIMARY KEY,
+        userId TEXT REFERENCES users(id),
+        studentId TEXT NOT NULL,
+        fullName TEXT NOT NULL,
+        email TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        university TEXT NOT NULL,
+        level TEXT NOT NULL CHECK(level IN ('100','200','300','400','500','postgrad','phd')),
+        hall TEXT,
+        verificationMethod TEXT NOT NULL CHECK(verificationMethod IN ('email','document')),
+        universityEmail TEXT,
+        verificationCode TEXT,
+        status TEXT DEFAULT 'pending' CHECK(status IN ('pending','approved_pending_user','approved','rejected')),
+        reviewedBy TEXT REFERENCES users(id),
+        reviewedAt TEXT,
+        reviewNotes TEXT,
+        documentsPurgeAt TEXT,
+        documentsPurgedAt TEXT,
+        confirmationTokenHash TEXT,
+        confirmationTokenExpiresAt TEXT,
+        confirmationTokenUsedAt TEXT,
+        confirmedAt TEXT,
+        createdAt TEXT DEFAULT (datetime('now')),
+        updatedAt TEXT DEFAULT (datetime('now'))
+      )`);
+      await tursoClient.execute(`INSERT INTO student_verifications (
+        id, userId, studentId, fullName, email, phone, university, level, hall,
+        verificationMethod, universityEmail, verificationCode, status, reviewedBy,
+        reviewedAt, reviewNotes, documentsPurgeAt, documentsPurgedAt, createdAt, updatedAt
+      )
+      SELECT
+        id, userId, studentId, fullName, email, phone, university, level, hall,
+        verificationMethod, universityEmail, verificationCode, status, reviewedBy,
+        reviewedAt, reviewNotes, documentsPurgeAt, documentsPurgedAt, createdAt, updatedAt
+      FROM student_verifications_old`);
+      await tursoClient.execute('DROP TABLE student_verifications_old');
+      console.log('student_verifications status migration complete.');
+    }
+  } catch (err) {
+    console.warn('student_verifications status migration warning:', err.message);
+    try {
+      const hasOld = await tursoClient.execute(
+        'SELECT name FROM sqlite_master WHERE name=\'student_verifications_old\'',
+      );
+      if (hasOld.rows.length > 0) {
+        await tursoClient.execute(
+          'ALTER TABLE student_verifications_old RENAME TO student_verifications',
+        );
+        console.log('Rolled back student_verifications rename.');
+      }
+    } catch (rollbackErr) {
+      console.error('student_verifications migration rollback failed:', rollbackErr.message);
     }
   }
 
@@ -1058,6 +1155,77 @@ async function runDocRetentionMigration (handle) {
   }
 }
 
+// Magic-link approval flow (2026-08-29): adds 'approved_pending_user' to the
+// status CHECK constraint. CHECK constraints cannot be ALTERed in SQLite, so
+// we rename the old table, recreate it with the new constraint and
+// confirmation-token columns, copy data, and drop the old table. Idempotent:
+// only runs when the existing table is missing the new status value.
+function runStudentVerificationStatusRebuild (target) {
+  try {
+    target = target || db;
+    const tbl = target
+      .prepare('SELECT sql FROM sqlite_master WHERE name = \'student_verifications\'')
+      .get();
+    if (!tbl || !tbl.sql) {return;}
+    if (tbl.sql.includes('\'approved_pending_user\'')) {return;}
+    console.log('Migrating student_verifications for approved_pending_user status...');
+    target.exec('ALTER TABLE student_verifications RENAME TO student_verifications_old');
+    target.exec(`CREATE TABLE student_verifications (
+      id TEXT PRIMARY KEY,
+      userId TEXT REFERENCES users(id),
+      studentId TEXT NOT NULL,
+      fullName TEXT NOT NULL,
+      email TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      university TEXT NOT NULL,
+      level TEXT NOT NULL CHECK(level IN ('100','200','300','400','500','postgrad','phd')),
+      hall TEXT,
+      verificationMethod TEXT NOT NULL CHECK(verificationMethod IN ('email','document')),
+      universityEmail TEXT,
+      verificationCode TEXT,
+      status TEXT DEFAULT 'pending' CHECK(status IN ('pending','approved_pending_user','approved','rejected')),
+      reviewedBy TEXT REFERENCES users(id),
+      reviewedAt TEXT,
+      reviewNotes TEXT,
+      documentsPurgeAt TEXT,
+      documentsPurgedAt TEXT,
+      confirmationTokenHash TEXT,
+      confirmationTokenExpiresAt TEXT,
+      confirmationTokenUsedAt TEXT,
+      confirmedAt TEXT,
+      createdAt TEXT DEFAULT (datetime('now')),
+      updatedAt TEXT DEFAULT (datetime('now'))
+    )`);
+    // Copy columns that exist in the old table; the new columns are nullable
+    // and will be NULL until approval/confirmation populates them.
+    target.exec(`INSERT INTO student_verifications (
+      id, userId, studentId, fullName, email, phone, university, level, hall,
+      verificationMethod, universityEmail, verificationCode, status, reviewedBy,
+      reviewedAt, reviewNotes, documentsPurgeAt, documentsPurgedAt, createdAt, updatedAt
+    )
+    SELECT
+      id, userId, studentId, fullName, email, phone, university, level, hall,
+      verificationMethod, universityEmail, verificationCode, status, reviewedBy,
+      reviewedAt, reviewNotes, documentsPurgeAt, documentsPurgedAt, createdAt, updatedAt
+    FROM student_verifications_old`);
+    target.exec('DROP TABLE student_verifications_old');
+    console.log('student_verifications status migration complete.');
+  } catch (err) {
+    console.error('student_verifications status migration failed:', err.message);
+    try {
+      const hasOld = target
+        .prepare('SELECT name FROM sqlite_master WHERE name = \'student_verifications_old\'')
+        .get();
+      if (hasOld) {
+        target.exec('ALTER TABLE student_verifications_old RENAME TO student_verifications');
+        console.log('Rolled back student_verifications rename.');
+      }
+    } catch (rollbackErr) {
+      console.error('student_verifications rollback failed:', rollbackErr.message);
+    }
+  }
+}
+
 function connectLocal () {
   const Database = require('better-sqlite3');
   const DB_PATH = process.env.SQLITE_PATH || path.join(__dirname, '..', 'data', 'unihub.db');
@@ -1186,6 +1354,32 @@ function connectLocal () {
         'ALTER TABLE student_verifications ADD COLUMN userId TEXT REFERENCES users(id)',
       ).run();
     }
+    // Magic-link confirmation columns (2026-08-29): only added if missing
+    // so the migration is idempotent across boots.
+    if (!verificationCols.find(c => c.name === 'confirmationTokenHash')) {
+      db.prepare(
+        'ALTER TABLE student_verifications ADD COLUMN confirmationTokenHash TEXT',
+      ).run();
+    }
+    if (!verificationCols.find(c => c.name === 'confirmationTokenExpiresAt')) {
+      db.prepare(
+        'ALTER TABLE student_verifications ADD COLUMN confirmationTokenExpiresAt TEXT',
+      ).run();
+    }
+    if (!verificationCols.find(c => c.name === 'confirmationTokenUsedAt')) {
+      db.prepare(
+        'ALTER TABLE student_verifications ADD COLUMN confirmationTokenUsedAt TEXT',
+      ).run();
+    }
+    if (!verificationCols.find(c => c.name === 'confirmedAt')) {
+      db.prepare(
+        'ALTER TABLE student_verifications ADD COLUMN confirmedAt TEXT',
+      ).run();
+    }
+    // Rebuild student_verifications if it predates the 'approved_pending_user'
+    // status. SQLite cannot ALTER a CHECK constraint, so we rename, recreate
+    // with the new constraint, copy data, and drop the old table.
+    runStudentVerificationStatusRebuild();
     const statusHistCols = db.prepare('PRAGMA table_info(order_status_history)').all();
     if (!statusHistCols.find(c => c.name === 'updatedBy')) {
       db.prepare(

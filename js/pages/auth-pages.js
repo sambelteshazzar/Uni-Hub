@@ -357,7 +357,7 @@ const AuthPageMethods = {
           verificationData.isPending = true;
           verificationData.submittedAt = new Date().toISOString();
           StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verificationData);
-          showToast(`Verification Submitted! A verification code has been sent to ${verificationData.studentEmail}. Your account will be verified once confirmed.`, 'info');
+          showToast('Verification submitted! An admin will review your details. Once approved, we will email you a confirmation link to activate your account.', 'info');
           Pages.renderBrowse();
           return;
         }
@@ -423,7 +423,7 @@ const AuthPageMethods = {
             isPending: true,
             submittedAt: new Date().toISOString(),
           });
-          showToast(`Verification Submitted! Thank you, ${form.docFullName.value.trim()}! Your documents have been submitted for verification. You will be notified within 24-48 hours once your student status is confirmed. You must be verified before making any purchases.`, 'success');
+          showToast('Verification submitted! An admin will review your documents. Once approved, we will email you a confirmation link to activate your account.', 'info');
           Pages.renderBrowse();
           return;
         }
@@ -1295,6 +1295,159 @@ const AuthPageMethods = {
       submitBtn.textContent = 'Reset Password';
     }
   },
+
+  /**
+   * Magic-link verification confirmation (2026-08-29). The user lands here
+   * after clicking the link in their approval email. We read the token
+   * from the URL hash query string, call the public confirm endpoint, and
+   * render success / failure UI. The token itself is not stored or logged
+   * after the call returns.
+   */
+  async renderVerifyConfirmation () {
+    const mainContent = document.getElementById('main-content');
+    if (!mainContent) {return;}
+
+    // The router has already parsed the query string into params, but the
+    // token contains characters that router.parseQueryString() will have
+    // HTML-escaped. Read it from the raw hash instead so we get the
+    // unescaped value for the API call.
+    const rawHash = String(window.location.hash || '');
+    const queryStart = rawHash.indexOf('?');
+    const rawQuery = queryStart >= 0 ? rawHash.slice(queryStart + 1) : '';
+    const rawParams = new URLSearchParams(rawQuery);
+    const token = rawParams.get('token') || '';
+
+    const esc = (s) => {
+      const e = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ||
+        (window.SecurityUtils && window.SecurityUtils.escapeHtml);
+      return e ? e(s) : String(s);
+    };
+
+    // Initial "confirming..." state — show before the network call so
+    // the user gets immediate feedback.
+    mainContent.innerHTML = `
+      <div class="auth-container" style="max-width: 520px; margin: 4rem auto;">
+        <div class="auth-card verification-card" style="text-align: center; padding: 2.5rem 2rem;">
+          <div class="verification-icon" style="font-size: 3rem;">${_Icons.graduation}</div>
+          <h2 id="verify-title" style="margin: 1rem 0 0.5rem;">Confirming your verification…</h2>
+          <p id="verify-subtitle" style="color: var(--neutral-600, #6b7280);">Please wait while we activate your student account.</p>
+          <div id="verify-spinner" style="margin: 1.5rem auto 0; width: 32px; height: 32px; border: 3px solid #e5e7eb; border-top-color: #0046be; border-radius: 50%; animation: unihub-spin 0.9s linear infinite;"></div>
+          <div id="verify-actions" style="margin-top: 1.5rem;"></div>
+        </div>
+      </div>
+      <style>@keyframes unihub-spin { to { transform: rotate(360deg); } }</style>
+    `;
+
+    if (!token) {
+      this._renderVerifyFailure(mainContent, 'Missing token',
+        'This confirmation link is invalid. Please use the link from your verification email, or contact support.',
+        'verify-actions');
+      return;
+    }
+
+    try {
+      const resp = await api.verification.confirm(token);
+      if (resp && resp.success && resp.data && resp.data.isVerified) {
+        // Update the local cache so the auth-aware UI (checkout gates,
+        // profile badge) flips to "verified" without a hard reload.
+        if (typeof StorageManager !== 'undefined' && typeof STORAGE_KEYS !== 'undefined') {
+          const existing = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true) || {};
+          StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, {
+            ...existing,
+            isVerified: true,
+            isPending: false,
+            status: 'approved',
+            confirmedAt: new Date().toISOString(),
+            university: resp.data.university || existing.university,
+            studentId: resp.data.studentId || existing.studentId,
+          });
+        }
+        // If the user is signed in, refresh the in-memory user so the
+        // auth-aware UI updates immediately.
+        if (typeof authManager !== 'undefined' && authManager.refresh) {
+          try { await authManager.refresh(); } catch (_e) { /* non-fatal */ }
+        }
+        this._renderVerifySuccess(mainContent, resp.data);
+        return;
+      }
+      this._renderVerifyFailure(mainContent,
+        esc(resp?.error || 'Could not confirm verification'),
+        'The link may have expired or already been used. If you need help, contact support and include the email your verification was sent to.',
+        'verify-actions');
+    } catch (err) {
+      console.warn('verify: confirm call failed:', err);
+      this._renderVerifyFailure(mainContent, 'Network error',
+        'We could not reach the server. Please check your connection and try the link again.',
+        'verify-actions');
+    }
+  },
+
+  _renderVerifySuccess (mainContent, data) {
+    const esc = (s) => {
+      const e = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ||
+        (window.SecurityUtils && window.SecurityUtils.escapeHtml);
+      return e ? e(s) : String(s);
+    };
+    mainContent.innerHTML = `
+      <div class="auth-container" style="max-width: 520px; margin: 4rem auto;">
+        <div class="auth-card verification-card" style="text-align: center; padding: 2.5rem 2rem;">
+          <div style="font-size: 3rem; color: #10b981;">✓</div>
+          <h2 style="margin: 1rem 0 0.5rem;">You are verified!</h2>
+          <p style="color: var(--neutral-600, #6b7280);">
+            Your student account at <strong>${esc(data.university || 'your university')}</strong>
+            is now active. You can buy and sell on JERTS CART.
+          </p>
+          <div id="verify-actions" style="margin-top: 1.5rem; display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+            <button class="btn btn-primary" data-action="browse">Start shopping</button>
+            <button class="btn btn-ghost" data-action="dashboard">Go to my dashboard</button>
+          </div>
+        </div>
+      </div>
+    `;
+    if (typeof showToast === 'function') {
+      showToast('Verification confirmed — welcome to JERTS CART!', 'success');
+    }
+    const root = mainContent.querySelector('#verify-actions');
+    if (root) {
+      root.addEventListener('click', (e) => {
+        const action = e.target.closest('[data-action]')?.getAttribute('data-action');
+        if (action === 'browse' && typeof Pages !== 'undefined' && Pages.renderBrowse) {
+          Pages.renderBrowse();
+        } else if (action === 'dashboard' && typeof Pages !== 'undefined' && Pages.renderDashboard) {
+          Pages.renderDashboard();
+        }
+      });
+    }
+  },
+
+  _renderVerifyFailure (mainContent, title, body, actionsContainerId) {
+    const esc = (s) => {
+      const e = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ||
+        (window.SecurityUtils && window.SecurityUtils.escapeHtml);
+      return e ? e(s) : String(s);
+    };
+    const titleEl = mainContent.querySelector('#verify-title');
+    const subtitleEl = mainContent.querySelector('#verify-subtitle');
+    const spinnerEl = mainContent.querySelector('#verify-spinner');
+    if (titleEl) {titleEl.textContent = esc(title);}
+    if (subtitleEl) {subtitleEl.textContent = '';}
+    if (spinnerEl) {spinnerEl.remove();}
+    const actionsRoot = mainContent.querySelector(`#${actionsContainerId}`);
+    if (actionsRoot) {
+      actionsRoot.innerHTML = `
+        <p style="color: var(--neutral-700, #374151);">${esc(body)}</p>
+        <div style="display: flex; gap: 0.75rem; justify-content: center; margin-top: 1rem; flex-wrap: wrap;">
+          <button class="btn btn-ghost" data-action="home">Go to home</button>
+        </div>
+      `;
+      actionsRoot.addEventListener('click', (e) => {
+        const action = e.target.closest('[data-action]')?.getAttribute('data-action');
+        if (action === 'home' && typeof Pages !== 'undefined' && Pages.renderLanding) {
+          Pages.renderLanding();
+        }
+      });
+    }
+  },
 };
 
 window.AuthPageMethods = AuthPageMethods;
@@ -1311,5 +1464,6 @@ window.AuthPageMethods = AuthPageMethods;
       Pages.handleResetPassword = AuthPageMethods.handleResetPassword;
       Pages.closeAuthOverlay = AuthPageMethods.closeAuthOverlay;
       Pages.switchAuthModal = AuthPageMethods.switchAuthModal;
+      Pages.renderVerifyConfirmation = AuthPageMethods.renderVerifyConfirmation;
   }, 50);
 })();

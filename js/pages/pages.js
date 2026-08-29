@@ -576,6 +576,13 @@ class Pages {
     // Newsletter
     router.register('/newsletter/confirm', params => this.renderNewsletterConfirm(params));
     router.register('/newsletter/confirmed', params => this.renderNewsletterConfirmed(params));
+
+    // Magic-link verification confirmation (2026-08-29). The user lands
+    // here from the link in the approval email. The token is read from
+    // the raw URL hash inside the handler — the router's parsed params
+    // are HTML-escaped and not safe to pass to the API.
+    router.register('/verify', () => this.renderVerifyConfirmation());
+
     console.log('✓ Main routes registered');
 
     // Product detail
@@ -4805,7 +4812,9 @@ font-size: 0.8rem;
           ? adminVerificationsManager.getApproved()
           : filter === 'rejected'
             ? adminVerificationsManager.getRejected()
-            : adminVerificationsManager.getPending();
+            : filter === 'approved_pending_user'
+              ? adminVerificationsManager.getApprovedPendingUser()
+              : adminVerificationsManager.getPending();
 
     const topbarActions = `
       <div class="adm-search">
@@ -4866,20 +4875,24 @@ font-size: 0.8rem;
       ? 'All Verifications'
       : filter === 'approved'
         ? 'Approved Verifications'
-        : filter === 'rejected'
-          ? 'Rejected Verifications'
-          : 'Pending Verifications';
+        : filter === 'approved_pending_user'
+          ? 'Awaiting User Confirmation'
+          : filter === 'rejected'
+            ? 'Rejected Verifications'
+            : 'Pending Verifications';
 
     const pillTabs = [
       { key: 'pending', label: `Pending (${stats.pending})` },
-      { key: 'approved', label: 'Approved' },
-      { key: 'rejected', label: 'Rejected' },
+      { key: 'approved_pending_user', label: `Awaiting Confirmation (${stats.approvedPendingUser || 0})` },
+      { key: 'approved', label: `Approved (${stats.approved})` },
+      { key: 'rejected', label: `Rejected (${stats.rejected})` },
       { key: 'all', label: 'All' },
     ];
     const pillSelector = AdminUI.pillGroup(pillTabs, filter, null, 'data-verif-filter');
 
     const statusToBadgeKind = {
       pending: 'warning',
+      approved_pending_user: 'info',
       approved: 'success',
       rejected: 'danger',
     };
@@ -5482,7 +5495,7 @@ font-size: 0.8rem;
     });
   }
 
-  static approveVerification (id) {
+  static async approveVerification (id) {
     if (typeof adminVerificationsManager === 'undefined') {
       showToast('Verification module not loaded', 'error');
       return;
@@ -5490,12 +5503,84 @@ font-size: 0.8rem;
     const notesEl = document.getElementById(`vrf-review-notes-${id}`);
     const notes = notesEl ? notesEl.value.trim() : '';
     const result = adminVerificationsManager.approve(id, notes);
-    if (result.success) {
-      showToast(`Student ${result.data.fullName} has been verified successfully!`, 'success');
-      this.renderAdminVerifications();
-    } else {
+    if (!result.success) {
       showToast(result.error || 'Failed to approve verification', 'error');
+      return;
     }
+
+    // Wait for the backend approval + magic-link generation + email send.
+    // When email is not configured (or send failed), the backend returns
+    // `confirmationLink` so we can surface it to the admin in a copyable
+    // box — this is the dev-mode escape hatch.
+    const backendResp = await adminVerificationsManager._syncBackendAction(id, 'approve', notes);
+    const confirmationLink = backendResp && backendResp.confirmationLink;
+    const reason = backendResp && backendResp.confirmationLinkReason;
+
+    if (confirmationLink) {
+      showToast('Approved — email not sent. Copy the link below to share with the user.', 'info', 8000);
+      Pages._showConfirmationLinkBox(id, result.data.fullName, confirmationLink, reason);
+    } else {
+      showToast(`Student ${result.data.fullName} approved — confirmation link emailed.`, 'success');
+    }
+    this.renderAdminVerifications();
+  }
+
+  /**
+   * Dev-mode helper: when SMTP is not configured, show a copyable box
+   * with the magic-link the admin can paste into the user's email by
+   * hand, or open in a private browser to complete the confirmation.
+   */
+  static _showConfirmationLinkBox (id, fullName, link, reason) {
+    const esc = (s) => {
+      const e = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ||
+        (window.SecurityUtils && window.SecurityUtils.escapeHtml);
+      return e ? e(s) : String(s);
+    };
+    const existing = document.getElementById('confirm-link-box');
+    if (existing) {existing.remove();}
+    const safeName = esc(fullName);
+    const safeLink = esc(link);
+    const safeReason = esc(reason || 'email service not configured');
+    const box = document.createElement('div');
+    box.id = 'confirm-link-box';
+    box.style.cssText = 'position: fixed; right: 24px; bottom: 24px; max-width: 480px; z-index: 9999; background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.12);';
+    box.innerHTML = `
+      <div style="display: flex; align-items: flex-start; gap: 12px;">
+        <div style="flex: 1;">
+          <div style="font-weight: 600; margin-bottom: 4px;">Approval link for ${safeName}</div>
+          <div style="font-size: 12px; color: #92400e; margin-bottom: 8px;">Email not sent (${safeReason}). Share this link with the user so they can confirm their verification:</div>
+          <textarea readonly data-confirm-link style="width: 100%; min-height: 64px; font-family: monospace; font-size: 12px; padding: 8px; border: 1px solid #fcd34d; border-radius: 4px; resize: vertical; word-break: break-all; overflow-wrap: anywhere; background: #fff;">${safeLink}</textarea>
+          <div style="display: flex; gap: 8px; margin-top: 8px;">
+            <button type="button" data-action="copy" class="btn btn-primary btn-sm">Copy link</button>
+            <button type="button" data-action="open" class="btn btn-ghost btn-sm">Open in new tab</button>
+            <button type="button" data-action="dismiss" class="btn btn-ghost btn-sm">Dismiss</button>
+          </div>
+        </div>
+      </div>
+    `;
+    box.addEventListener('click', (e) => {
+      const action = e.target.closest('[data-action]')?.getAttribute('data-action');
+      if (action === 'copy') {
+        const ta = box.querySelector('[data-confirm-link]');
+        if (ta) {
+          ta.select();
+          try {
+            navigator.clipboard.writeText(ta.value).then(
+              () => showToast('Link copied to clipboard', 'success'),
+              () => showToast('Copy failed — please copy manually', 'error'),
+            );
+          } catch (_) {
+            // Older browsers — execCommand fallback
+            try { document.execCommand('copy'); } catch (__) { /* nothing */ }
+          }
+        }
+      } else if (action === 'open') {
+        window.open(link, '_blank', 'noopener,noreferrer');
+      } else if (action === 'dismiss') {
+        box.remove();
+      }
+    });
+    document.body.appendChild(box);
   }
 
   static rejectVerification (id) {

@@ -19,6 +19,7 @@ const {
   getMyVerificationStatus,
   getVerificationDocuments,
   purgeVerificationDocuments,
+  confirmVerification,
 } = require('../controllers/verification.controller');
 
 // Authenticated routes
@@ -35,6 +36,11 @@ router.post('/', protect, (req, res, next) => {
 }, submitVerification);
 router.get('/me', protect, getMyVerificationStatus);
 router.get('/status/:studentId/:university', getVerificationStatus);
+
+// Magic-link confirmation (2026-08-29): public, token-in-URL is the
+// credential. GETs are auto-exempt from CSRF, and the verification
+// rate-limiter explicitly skips this path (see server.js).
+router.get('/confirm', confirmVerification);
 
 // Admin + moderator routes (verification queue is moderator work)
 router.get('/pending', protect, authorize('admin', 'moderator'), getPendingVerifications);

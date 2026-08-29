@@ -220,9 +220,76 @@ function isEmailConfigured () {
   return !!getTransporter();
 }
 
+// HTML-escape interpolated values to defuse any HTML in user-controlled
+// fields. `escapeHtml` is intentionally minimal — we control all other
+// interpolation here, and the user values are names/IDs that should never
+// contain markup but we never trust input.
+function escapeHtml (value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Build the magic-link URL the user clicks to confirm verification. Routed
+ * through the SPA so the click lands on a friendly /verify?token=... page
+ * that then calls the API.
+ *
+ * Priority for the base URL:
+ *   1. APP_PUBLIC_URL (explicit, recommended for production)
+ *   2. FRONTEND_URL (first entry if CSV)
+ *   3. http://localhost:8000 (dev fallback)
+ */
+function buildConfirmationLink (token) {
+  let base = process.env.APP_PUBLIC_URL;
+  if (!base && process.env.FRONTEND_URL) {
+    base = String(process.env.FRONTEND_URL).split(',')[0].trim();
+  }
+  if (!base) {base = 'http://localhost:8000';}
+  // Strip trailing slash; route is a hash route on the SPA.
+  base = base.replace(/\/+$/, '');
+  return `${base}/#/verify?token=${encodeURIComponent(token)}`;
+}
+
+/**
+ * Approval-link email (2026-08-29). Sent to the user's personal email
+ * (not their .edu.gh address) when an admin approves their verification.
+ * The user clicks the link in the email to land on a confirmation page in
+ * the SPA, which calls the backend to flip the verification to 'approved'.
+ */
+async function sendApprovalLinkEmail (email, token, user) {
+  const confirmUrl = buildConfirmationLink(token);
+  const safeName = escapeHtml(user?.fullName || 'there');
+  const safeUniversity = escapeHtml(user?.university || 'your university');
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #0046be;">JERTS CART — Verification Approved</h2>
+      <p>Hi ${safeName},</p>
+      <p>Great news — an admin has approved your student verification at <strong>${safeUniversity}</strong>.</p>
+      <p>To finish, click the button below to confirm and activate your account. This link expires in 24 hours and can be used only once.</p>
+      <a href="${confirmUrl}" style="display: inline-block; padding: 12px 24px; background: #10b981; color: white; text-decoration: none; border-radius: 6px; margin: 16px 0;">
+        Confirm My Verification
+      </a>
+      <p>If the button does not work, paste this link into your browser:</p>
+      <p style="word-break: break-all; background: #f3f4f6; padding: 12px; border-radius: 6px; font-size: 13px;">${confirmUrl}</p>
+      <p>If you did not request this, you can safely ignore this email.</p>
+      <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+      <p style="color: #6b7280; font-size: 13px;">JERTS CART — Student Marketplace for Ghanaian Universities</p>
+    </div>
+  `;
+
+  return sendEmail(email, 'JERTS CART — Confirm Your Student Verification', html);
+}
+
 module.exports = {
   sendEmail,
   isEmailConfigured,
+  buildConfirmationLink,
+  sendApprovalLinkEmail,
   sendPasswordResetEmail,
   sendVerificationEmail,
   sendOrderConfirmationEmail,

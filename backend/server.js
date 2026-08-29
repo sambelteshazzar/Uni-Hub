@@ -208,7 +208,10 @@ const authLimiter = rateLimit({
 });
 app.use('/api/auth/', authLimiter);
 
-// Rate limiting for verification endpoints
+// Rate limiting for verification endpoints. Skips the public magic-link
+// confirm path (GET /api/verification/confirm) so a user clicking the
+// link from email is not affected by the 5/hour cap, and so that
+// email-client URL prefetching does not lock out the actual click.
 const verificationLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 5,
@@ -218,6 +221,7 @@ const verificationLimiter = rateLimit({
     success: false,
     error: 'Too many verification attempts, please try again later.',
   },
+  skip: (req) => req.path === '/confirm' || req.path.startsWith('/confirm?'),
 });
 app.use('/api/verification/', verificationLimiter);
 

@@ -464,6 +464,40 @@ class API {
     },
     getDocuments: id => this.get(`/verification/${encodeURIComponent(id)}/documents`),
     purgeDocuments: id => this.post(`/verification/${encodeURIComponent(id)}/purge-documents`),
+    /**
+     * Magic-link confirmation (2026-08-29). Public endpoint, the token in
+     * the URL is the credential. We deliberately do NOT route this through
+     * `this.get` because `getTokenFor` would otherwise attach the admin
+     * session token (it matches /^\/verification\b/) — we want a clean,
+     * unauthenticated request so the backend's public handler sees no
+     * Authorization header.
+     */
+    confirm: async (token) => {
+      if (this.isStaticDeploy) {
+        return { success: false, data: null, isOffline: true };
+      }
+      try {
+        const fullUrl = `${this.baseURL}/verification/confirm?token=${encodeURIComponent(token)}`;
+        const response = await Promise.race([
+          fetch(fullUrl, {
+            method: 'GET',
+            credentials: 'include',
+            headers: { Accept: 'application/json' },
+          }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 30000)),
+        ]);
+        const data = await response.json().catch(() => ({}));
+        return {
+          success: response.ok,
+          status: response.status,
+          data: data?.data ?? null,
+          error: response.ok ? null : (data?.error || `HTTP ${response.status}`),
+        };
+      } catch (error) {
+        console.error('API Error:', error);
+        return { success: false, error: error.message };
+      }
+    },
   };
 
   /**
