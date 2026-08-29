@@ -6855,108 +6855,136 @@ font-size: 0.8rem;
     const categories = Pages.ADMIN_CATEGORY_META;
     const conditions = Pages.ADMIN_CONDITIONS;
 
+    const topbarActions = `
+      <div class="adm-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search products by title or seller" aria-label="Search products" id="admin-products-search" />
+      </div>
+      <button type="button" class="adm-btn" data-action="back-to-products">← Back to Products</button>
+      <button type="submit" form="admin-product-form" class="adm-btn adm-btn--primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19M5 12h14"/></svg>
+        Create product
+      </button>
+    `;
+
     mainContent.innerHTML = `
-  <div class="admin-container">
-  ${this.getAdminSidebar('products')}
-  <main class="admin-main">
-          <div class="admin-header">
-            <h1 class="admin-title">Add New Product</h1>
-            <button class="btn btn-outline" data-action="back-to-products">Back to Products</button>
+      <div class="adm-layout">
+        ${AdminUI.sidebar('products')}
+        <div class="adm-main">
+          ${AdminUI.topbar('Add product', topbarActions)}
+          <div class="adm-page">
+            ${AdminUI.pageHeader('Add new product', 'Create a product listing on the marketplace.', null)}
+            <form id="admin-product-form" style="max-width:760px;">
+              <section class="adm-card">
+                <div class="adm-card-header"><h3 class="adm-card-title">Basics</h3></div>
+                <div class="adm-table-wrap" style="padding:20px;display:grid;gap:14px;">
+                  <div>
+                    <label class="adm-form-label adm-form-label--required">Title</label>
+                    <input type="text" name="title" required class="adm-form-input" placeholder="e.g. MacBook Pro 2021" />
+                  </div>
+                  <div>
+                    <label class="adm-form-label adm-form-label--required">Description</label>
+                    <textarea name="description" required rows="4" class="adm-form-input" placeholder="Describe the item..."></textarea>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                    <div>
+                      <label class="adm-form-label adm-form-label--required">Price (GHS)</label>
+                      <input type="number" name="price" required min="1" class="adm-form-input" placeholder="0" />
+                    </div>
+                    <div>
+                      <label class="adm-form-label adm-form-label--required">Category</label>
+                      <select name="category" required class="adm-form-input">
+                        ${categories.map(c => `<option value="${_pageEsc(c.id)}">${_pageEsc(c.label)}</option>`).join('')}
+                      </select>
+                    </div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                    <div>
+                      <label class="adm-form-label adm-form-label--required">Condition</label>
+                      <select name="condition" required class="adm-form-input">
+                        ${conditions.map(c => `<option value="${_pageEsc(c)}">${c.charAt(0).toUpperCase() + c.slice(1)}</option>`).join('')}
+                      </select>
+                    </div>
+                    <div>
+                      <label class="adm-form-label">University</label>
+                      <input type="text" name="university" class="adm-form-input" placeholder="Leave blank for your university" />
+                    </div>
+                  </div>
+                  <div id="admin-sub-options-host"></div>
+                </div>
+              </section>
+
+              <section class="adm-card">
+                <div class="adm-card-header"><h3 class="adm-card-title">Images</h3><p class="adm-card-sub">PNG, JPG, WEBP — max 5 files</p></div>
+                <div class="adm-table-wrap" style="padding:20px;">
+                  <div id="image-drop-zone" style="border:2px dashed var(--neutral-300);border-radius:8px;padding:32px 16px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:var(--neutral-50);">
+                    <input type="file" id="image-file-input" multiple accept="image/png,image/jpeg,image/webp,image/gif" style="display:none" />
+                    <svg style="width:32px;height:32px;margin:0 auto 8px;display:block;color:var(--neutral-400);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <p style="margin:0;color:var(--neutral-700);font-size:13px;">Drag &amp; drop images here, or <span style="color:var(--primary);text-decoration:underline;">browse</span></p>
+                  </div>
+                  <div id="image-preview-grid" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"></div>
+                  <input type="hidden" name="images" id="image-urls-input" />
+                  <details style="margin-top:12px;">
+                    <summary style="cursor:pointer;color:var(--neutral-600);font-size:12px;">Or paste image URLs manually</summary>
+                    <textarea id="image-url-textarea" rows="3" class="adm-form-input" style="margin-top:8px;" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"></textarea>
+                  </details>
+                </div>
+              </section>
+
+              <section class="adm-card">
+                <div class="adm-card-header"><h3 class="adm-card-title">Delivery &amp; payment</h3></div>
+                <div class="adm-table-wrap" style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+                  <div>
+                    <label class="adm-form-label">Delivery modes</label>
+                    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:4px;">
+                      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="deliveryModes" value="bolt" /> Bolt</label>
+                      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="deliveryModes" value="yango" /> Yango</label>
+                      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="deliveryModes" value="inperson" /> In-Person</label>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="adm-form-label">Payment modes</label>
+                    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:4px;">
+                      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="paymentModes" value="momo" /> MoMo</label>
+                      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="paymentModes" value="telecel" /> Telecel</label>
+                      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="paymentModes" value="bank" /> Bank</label>
+                      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="paymentModes" value="cash" /> Cash</label>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </form>
           </div>
-          <form id="admin-product-form" style="max-width:700px;">
-            <div style="display:grid;gap:1rem;">
-              <div>
-                <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Title *</label>
-                <input type="text" name="title" required class="admin-form-input" placeholder="e.g. MacBook Pro 2021">
-              </div>
-              <div>
-                <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Description *</label>
-                <textarea name="description" required rows="4" class="admin-form-input" placeholder="Describe the item..."></textarea>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-                <div>
-                  <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Price (GHS) *</label>
-                  <input type="number" name="price" required min="1" class="admin-form-input" placeholder="0">
-                </div>
-                <div>
-                  <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Category *</label>
-                  <select name="category" required class="admin-form-select">
-                    ${categories.map(c => `<option value="${_pageEsc(c.id)}">${_pageEsc(c.label)}</option>`).join('')}
-                  </select>
-                </div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-                <div>
-                  <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Condition *</label>
-                  <select name="condition" required class="admin-form-select">
-                    ${conditions.map(c => `<option value="${_pageEsc(c)}">${c.charAt(0).toUpperCase() + c.slice(1)}</option>`).join('')}
-                  </select>
-                </div>
-                <div>
-                  <label style="display:block;margin-bottom:0.25rem;font-weight:600;">University</label>
-                  <input type="text" name="university" class="admin-form-input" placeholder="Leave blank for your university">
-                </div>
-              </div>
-              <div id="admin-sub-options-host"></div>
-              <div>
-                <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Product Images</label>
-                <div id="image-drop-zone" style="border:2px dashed var(--admin-border,#4b5563);border-radius:8px;padding:2rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;position:relative;">
-                  <input type="file" id="image-file-input" multiple accept="image/png,image/jpeg,image/webp,image/gif" style="display:none">
-                  <svg style="width:2rem;height:2rem;margin:0 auto .5rem;display:block;opacity:.5;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                  <p style="margin:0;color:var(--admin-muted,#9ca3af);font-size:.9rem;">Drag & drop images here, or <span style="color:var(--primary,#3b82f6);text-decoration:underline;">browse</span></p>
-                  <p style="margin:.25rem 0 0;color:var(--admin-muted,#6b7280);font-size:.75rem;">PNG, JPG, WEBP — max 5 files</p>
-                </div>
-                <div id="image-preview-grid" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem;"></div>
-                <input type="hidden" name="images" id="image-urls-input">
-                <details style="margin-top:.75rem;">
-                  <summary style="cursor:pointer;color:var(--admin-muted,#9ca3af);font-size:.8rem;">Or paste image URLs manually</summary>
-                  <textarea id="image-url-textarea" rows="3" class="admin-form-input" style="margin-top:.5rem;" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"></textarea>
-                </details>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-                <div>
-                  <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Delivery Modes</label>
-                  <div style="display:flex;gap:1rem;flex-wrap:wrap;">
-                    <label><input type="checkbox" name="deliveryModes" value="bolt"> Bolt</label>
-                    <label><input type="checkbox" name="deliveryModes" value="yango"> Yango</label>
-                    <label><input type="checkbox" name="deliveryModes" value="inperson"> In-Person</label>
-                  </div>
-                </div>
-                <div>
-                  <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Payment Modes</label>
-                  <div style="display:flex;gap:1rem;flex-wrap:wrap;">
-                    <label><input type="checkbox" name="paymentModes" value="momo"> MoMo</label>
-                    <label><input type="checkbox" name="paymentModes" value="telecel"> Telecel</label>
-                    <label><input type="checkbox" name="paymentModes" value="bank"> Bank</label>
-                    <label><input type="checkbox" name="paymentModes" value="cash"> Cash</label>
-                  </div>
-                </div>
-              </div>
-              <div style="margin-top:1rem;">
-                <button type="submit" class="btn btn-primary" style="padding:0.75rem 2rem;">Create Product</button>
-              </div>
-            </div>
-          </form>
-        </main>
+        </div>
       </div>
     `;
+
     const form = document.getElementById('admin-product-form');
     this._wireAdminProductForm(form);
-    // The "Back to Products" button (pages.js:5260) lives in the
-    // `admin-header` div which is a SIBLING of the form, not a descendant.
-    // `form.querySelector('[data-action="back-to-products"]')` returns null
-    // (it only matches descendants) and `null.addEventListener(...)` throws
-    // `Cannot read properties of null (reading 'addEventListener')`. That
-    // crash also prevents the form's submit handler at line ~5344 from being
-    // wired, so clicking "Create Product" falls back to the form's default
-    // GET-submit which pollinates the URL bar with `?title=...&images=`
-    // and reloads the page ad infinitum. Fix: query from `mainContent`
-    // (the parent that contains BOTH the admin-header and the form) instead
-    // of from `form`.
-    mainContent
-      .querySelector('[data-action="back-to-products"]')
-      .addEventListener('click', () => Pages.renderAdminProducts());
-    form.addEventListener('submit', e => Pages._handleAdminProductCreate(e));
+    // The "Back to Products" button now lives in the topbar; delegated
+    // through the topbar action handler.
+    AdminUI.wireSidebar(key => {
+      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
+      if (typeof Pages[method] === 'function') {Pages[method]();}
+    });
+    // Wire topbar actions (back to products, search).
+    const topbar = mainContent.querySelector('.adm-topbar');
+    if (topbar) {
+      topbar.addEventListener('click', e => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) {return;}
+        if (btn.dataset.action === 'back-to-products') {
+          Pages.renderAdminProducts();
+        }
+      });
+    }
+    const searchInput = document.getElementById('admin-products-search');
+    if (searchInput) {
+      AdminUI.wireSearch(searchInput, () => { /* products list page handles search */ });
+    }
+    if (form) {
+      form.addEventListener('submit', e => Pages._handleAdminProductCreate(e));
+    }
   }
 
   static _pendingImageFiles = [];
@@ -7505,85 +7533,107 @@ font-size: 0.8rem;
     const deliveryChecked = mode => ((product.deliveryModes || []).includes(mode) ? 'checked' : '');
     const paymentChecked = mode => ((product.paymentModes || []).includes(mode) ? 'checked' : '');
 
+    const topbarActions = `
+      <div class="adm-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search products by title or seller" aria-label="Search products" id="admin-products-search" />
+      </div>
+      <button type="button" class="adm-btn" data-action="back-to-products">← Back to Products</button>
+      <button type="submit" form="admin-product-edit-form" class="adm-btn adm-btn--primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save changes
+      </button>
+    `;
+
     mainContent.innerHTML = `
-      <div class="admin-container">
-        ${this.getAdminSidebar('products')}
-        <div class="admin-main">
-          <div class="admin-header">
-            <h1 class="admin-title">Edit Product</h1>
-            <button class="btn btn-outline" data-action="back-to-products">Back to Products</button>
+      <div class="adm-layout">
+        ${AdminUI.sidebar('products')}
+        <div class="adm-main">
+          ${AdminUI.topbar('Edit product', topbarActions)}
+          <div class="adm-page">
+            ${AdminUI.pageHeader('Edit product', 'Update this product listing on the marketplace.', null)}
+            <form id="admin-product-edit-form" data-product-id="${safeProductId}" style="max-width:760px;">
+              <section class="adm-card">
+                <div class="adm-card-header"><h3 class="adm-card-title">Basics</h3></div>
+                <div class="adm-table-wrap" style="padding:20px;display:grid;gap:14px;">
+                  <div>
+                    <label class="adm-form-label adm-form-label--required">Title</label>
+                    <input type="text" name="title" required class="adm-form-input" value="${_pageEsc(product.title || '')}" />
+                  </div>
+                  <div>
+                    <label class="adm-form-label adm-form-label--required">Description</label>
+                    <textarea name="description" required rows="4" class="adm-form-input">${_pageEsc(product.description || '')}</textarea>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                    <div>
+                      <label class="adm-form-label adm-form-label--required">Price (GHS)</label>
+                      <input type="number" name="price" required min="1" class="adm-form-input" value="${_pageEsc(product.price || '')}" />
+                    </div>
+                    <div>
+                      <label class="adm-form-label adm-form-label--required">Category</label>
+                      <select name="category" required class="adm-form-input">
+                        ${categories.map(c => `<option value="${_pageEsc(c.id)}" ${product.category === c.id ? 'selected' : ''}>${_pageEsc(c.label)}</option>`).join('')}
+                      </select>
+                    </div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                    <div>
+                      <label class="adm-form-label adm-form-label--required">Condition</label>
+                      <select name="condition" required class="adm-form-input">
+                        ${conditions.map(c => `<option value="${_pageEsc(c)}" ${product.condition === c ? 'selected' : ''}>${c.charAt(0).toUpperCase() + c.slice(1)}</option>`).join('')}
+                      </select>
+                    </div>
+                    <div>
+                      <label class="adm-form-label">University</label>
+                      <input type="text" name="university" class="adm-form-input" value="${_pageEsc(product.university || '')}" />
+                    </div>
+                  </div>
+                  <div id="admin-sub-options-host"></div>
+                </div>
+              </section>
+
+              <section class="adm-card">
+                <div class="adm-card-header"><h3 class="adm-card-title">Current images</h3></div>
+                <div class="adm-table-wrap" style="padding:20px;">
+                  <div id="existing-images-grid" style="display:flex;flex-wrap:wrap;">${existingImages || '<span style="color:var(--neutral-500);font-size:13px;">No images</span>'}</div>
+                </div>
+              </section>
+
+              <section class="adm-card">
+                <div class="adm-card-header"><h3 class="adm-card-title">Add new images</h3><p class="adm-card-sub">PNG, JPG, WEBP — max 5 files</p></div>
+                <div class="adm-table-wrap" style="padding:20px;">
+                  <div id="image-drop-zone" style="border:2px dashed var(--neutral-300);border-radius:8px;padding:32px 16px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:var(--neutral-50);">
+                    <input type="file" id="image-file-input" multiple accept="image/png,image/jpeg,image/webp,image/gif" style="display:none" />
+                    <p style="margin:0;color:var(--neutral-700);font-size:13px;">Drag &amp; drop images here, or <span style="color:var(--primary);text-decoration:underline;">browse</span></p>
+                  </div>
+                  <div id="image-preview-grid" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"></div>
+                </div>
+              </section>
+
+              <section class="adm-card">
+                <div class="adm-card-header"><h3 class="adm-card-title">Delivery &amp; payment</h3></div>
+                <div class="adm-table-wrap" style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+                  <div>
+                    <label class="adm-form-label">Delivery modes</label>
+                    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:4px;">
+                      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="deliveryModes" value="bolt" ${deliveryChecked('bolt')} /> Bolt</label>
+                      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="deliveryModes" value="yango" ${deliveryChecked('yango')} /> Yango</label>
+                      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="deliveryModes" value="inperson" ${deliveryChecked('inperson')} /> In-Person</label>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="adm-form-label">Payment modes</label>
+                    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:4px;">
+                      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="paymentModes" value="momo" ${paymentChecked('momo')} /> MoMo</label>
+                      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="paymentModes" value="telecel" ${paymentChecked('telecel')} /> Telecel</label>
+                      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="paymentModes" value="bank" ${paymentChecked('bank')} /> Bank</label>
+                      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="paymentModes" value="cash" ${paymentChecked('cash')} /> Cash</label>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </form>
           </div>
-          <form id="admin-product-edit-form" data-product-id="${safeProductId}" style="max-width:700px;">
-            <div style="display:grid;gap:1rem;">
-              <div>
-                <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Title *</label>
-                <input type="text" name="title" required class="admin-form-input" value="${_pageEsc(product.title || '')}">
-              </div>
-              <div>
-                <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Description *</label>
-                <textarea name="description" required rows="4" class="admin-form-input">${_pageEsc(product.description || '')}</textarea>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-                <div>
-                  <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Price (GHS) *</label>
-                  <input type="number" name="price" required min="1" class="admin-form-input" value="${_pageEsc(product.price || '')}">
-                </div>
-                <div>
-                  <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Category *</label>
-                  <select name="category" required class="admin-form-select">
-                    ${categories.map(c => `<option value="${_pageEsc(c.id)}" ${product.category === c.id ? 'selected' : ''}>${_pageEsc(c.label)}</option>`).join('')}
-                  </select>
-                </div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-                <div>
-                  <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Condition *</label>
-                  <select name="condition" required class="admin-form-select">
-                    ${conditions.map(c => `<option value="${_pageEsc(c)}" ${product.condition === c ? 'selected' : ''}>${c.charAt(0).toUpperCase() + c.slice(1)}</option>`).join('')}
-                  </select>
-                </div>
-                <div>
-                  <label style="display:block;margin-bottom:0.25rem;font-weight:600;">University</label>
-                  <input type="text" name="university" class="admin-form-input" value="${_pageEsc(product.university || '')}">
-                </div>
-              </div>
-              <div id="admin-sub-options-host"></div>
-              <div>
-                <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Current Images</label>
-                <div id="existing-images-grid">${existingImages || '<span style="color:var(--admin-muted,#6b7280);font-size:.85rem;">No images</span>'}</div>
-              </div>
-              <div>
-                <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Add New Images</label>
-                <div id="image-drop-zone" style="border:2px dashed var(--admin-border,#4b5563);border-radius:8px;padding:2rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;">
-                  <input type="file" id="image-file-input" multiple accept="image/png,image/jpeg,image/webp,image/gif" style="display:none">
-                  <p style="margin:0;color:var(--admin-muted,#9ca3af);font-size:.9rem;">Drag & drop or <span style="color:var(--primary,#3b82f6);text-decoration:underline;">browse</span> to add more images</p>
-                </div>
-                <div id="image-preview-grid" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem;"></div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-                <div>
-                  <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Delivery Modes</label>
-                  <div style="display:flex;gap:1rem;flex-wrap:wrap;">
-                    <label><input type="checkbox" name="deliveryModes" value="bolt" ${deliveryChecked('bolt')}> Bolt</label>
-                    <label><input type="checkbox" name="deliveryModes" value="yango" ${deliveryChecked('yango')}> Yango</label>
-                    <label><input type="checkbox" name="deliveryModes" value="inperson" ${deliveryChecked('inperson')}> In-Person</label>
-                  </div>
-                </div>
-                <div>
-                  <label style="display:block;margin-bottom:0.25rem;font-weight:600;">Payment Modes</label>
-                  <div style="display:flex;gap:1rem;flex-wrap:wrap;">
-                    <label><input type="checkbox" name="paymentModes" value="momo" ${paymentChecked('momo')}> MoMo</label>
-                    <label><input type="checkbox" name="paymentModes" value="telecel" ${paymentChecked('telecel')}> Telecel</label>
-                    <label><input type="checkbox" name="paymentModes" value="bank" ${paymentChecked('bank')}> Bank</label>
-                    <label><input type="checkbox" name="paymentModes" value="cash" ${paymentChecked('cash')}> Cash</label>
-                  </div>
-                </div>
-              </div>
-              <div style="margin-top:1rem;">
-                <button type="submit" class="btn btn-primary" style="padding:0.75rem 2rem;">Save Changes</button>
-              </div>
-            </div>
-          </form>
         </div>
       </div>
     `;
@@ -7609,12 +7659,24 @@ font-size: 0.8rem;
       refreshSub();
     }
     Pages._wireImageDropZone(form);
-    // Same null-querySelector bug as renderAdminProductCreate (pages.js:5341-5343):
-    // the [data-action="back-to-products"] button lives in admin-header (a
-    // sibling of the form), so query it from `mainContent` not `form`.
-    mainContent
-      .querySelector('[data-action="back-to-products"]')
-      .addEventListener('click', () => Pages.renderAdminProducts());
+    // Sidebar + topbar wiring for the new adm-* layout.
+    AdminUI.wireSidebar(key => {
+      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
+      if (typeof Pages[method] === 'function') {Pages[method]();}
+    });
+    const topbar = mainContent.querySelector('.adm-topbar');
+    if (topbar) {
+      topbar.addEventListener('click', e => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) {return;}
+        if (btn.dataset.action === 'back-to-products') {
+          Pages.renderAdminProducts();
+        }
+      });
+    }
+    // Same null-queryselector bug as renderAdminProductCreate (pages.js:5341-5343):
+    // (the [data-action="back-to-products"] button is now wired in the topbar
+    // handler above; no need to query it from mainContent here).
     // Delegated removal of existing (already-uploaded) images.
     const existingGrid = form.querySelector('#existing-images-grid');
     if (existingGrid) {
