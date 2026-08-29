@@ -7505,11 +7505,11 @@ font-size: 0.8rem;
 
     let product;
     try {
-      const res = await api.products.get(productId);
+      const res = await api.products.getById(productId);
       product = res.data || res;
     } catch (e) {
       mainContent.innerHTML =
-        '<div class="admin-container" style="padding:2rem;color:var(--admin-danger,#f87171);">Failed to load product.</div>';
+        '<div class="adm-empty"><div class="adm-empty-title">Failed to load product</div><p class="adm-empty-body">' + (e.message || 'Product not found.') + '</p></div>';
       return;
     }
 
