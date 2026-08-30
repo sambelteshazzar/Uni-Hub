@@ -148,7 +148,7 @@
 <!-- User menu (when logged in) -->
 <div id="navbar-user-menu" style="display: none">
 <button class="btn btn-ghost" onclick="typeof Pages!=='undefined'&&Pages.renderDashboard()">Dashboard</button>
-<button class="btn btn-ghost" onclick="typeof router!=='undefined'&&router.navigate('/verification-status')">Verification status</button>
+<button class="btn btn-ghost" onclick="typeof window.router!=='undefined'&&window.router.navigate('/verification-status')">Verification status</button>
 <button class="btn btn-ghost" onclick="typeof Pages!=='undefined'&&Pages.handleLogout()">Log out</button>
 </div>
 
@@ -210,7 +210,7 @@
 </div>
 <div id="navbar-drawer-user" style="display: none">
 <button class="btn btn-primary" onclick="typeof Pages!=='undefined'&&Pages.renderDashboard();typeof Pages!=='undefined'&&Pages.closeMobileMenu()">Dashboard</button>
-<button class="btn btn-ghost" onclick="typeof router!=='undefined'&&router.navigate('/verification-status');typeof Pages!=='undefined'&&Pages.closeMobileMenu()" style="margin-top: var(--space-sm);">Verification status</button>
+<button class="btn btn-ghost" onclick="typeof window.router!=='undefined'&&window.router.navigate('/verification-status');typeof Pages!=='undefined'&&Pages.closeMobileMenu()" style="margin-top: var(--space-sm);">Verification status</button>
 </div>
 </div>
 </div>

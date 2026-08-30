@@ -42,8 +42,21 @@ const AuthPageMethods = {
       if (card) {
         card.addEventListener('click', (e) => {
           const a = e.target.closest('[data-action]')?.getAttribute('data-action');
-          if (a === 'pick-uni' && Pages.renderLanding) {Pages.renderLanding();}
-          else if (a === 'status' && Pages.renderVerificationStatus) {Pages.renderVerificationStatus();}
+          if (a === 'pick-uni' && Pages.renderLanding) {
+            if (typeof window.router !== 'undefined' && window.router.navigate) {
+              router.navigate('/');
+            } else {
+              window.location.hash = '#/';
+            }
+            Pages.renderLanding();
+          } else if (a === 'status' && Pages.renderVerificationStatus) {
+            if (typeof window.router !== 'undefined' && window.router.navigate) {
+              router.navigate('/verification-status');
+            } else {
+              window.location.hash = '#/verification-status';
+            }
+            Pages.renderVerificationStatus();
+          }
         });
       }
       return;
@@ -214,7 +227,7 @@ const AuthPageMethods = {
     </div>
 
     <div class="verification-actions">
-    <button type="button" class="btn btn-ghost" onclick="Pages.renderLanding()">
+    <button type="button" class="btn btn-ghost" onclick="typeof window.router!=='undefined'&&window.router.navigate('/');Pages.renderLanding();">
     ← Back to Universities
     </button>
     <button type="submit" class="btn btn-primary">
@@ -349,7 +362,7 @@ const AuthPageMethods = {
         // Send the user to the status page, not browse. The status page
         // is where they will see "Awaiting admin review" and get a real
         // answer to "did it work?". They can also bookmark it.
-        if (typeof router !== 'undefined' && router.navigate) {
+        if (typeof window.router !== 'undefined' && window.router.navigate) {
           router.navigate('/verification-status');
         } else {
           window.location.hash = '#/verification-status';
@@ -750,7 +763,7 @@ const AuthPageMethods = {
   // Force redirect to browse page using multiple methods for reliability
       try {
         // Method 1: Use router if available
-        if (typeof router !== 'undefined' && router.navigate) {
+        if (typeof window.router !== 'undefined' && window.router.navigate) {
           router.navigate('/browse');
         }
         // Method 2: Direct hash change (always works)
@@ -1068,7 +1081,7 @@ const AuthPageMethods = {
   if (result.success) {
         showToast(result.message, 'success');
     try {
-    if (typeof router !== 'undefined' && router.navigate) {
+    if (typeof window.router !== 'undefined' && window.router.navigate) {
       router.navigate('/browse');
     }
     window.location.hash = '#/browse';
@@ -1348,8 +1361,20 @@ const AuthPageMethods = {
       root.addEventListener('click', (e) => {
         const action = e.target.closest('[data-action]')?.getAttribute('data-action');
         if (action === 'browse' && typeof Pages !== 'undefined' && Pages.renderBrowse) {
+          // Update the URL hash so back button / bookmark / reload
+          // work as the user expects.
+          if (typeof window.router !== 'undefined' && window.router.navigate) {
+            router.navigate('/browse');
+          } else {
+            window.location.hash = '#/browse';
+          }
           Pages.renderBrowse();
         } else if (action === 'dashboard' && typeof Pages !== 'undefined' && Pages.renderDashboard) {
+          if (typeof window.router !== 'undefined' && window.router.navigate) {
+            router.navigate('/dashboard');
+          } else {
+            window.location.hash = '#/dashboard';
+          }
           Pages.renderDashboard();
         }
       });
@@ -1379,6 +1404,11 @@ const AuthPageMethods = {
       actionsRoot.addEventListener('click', (e) => {
         const action = e.target.closest('[data-action]')?.getAttribute('data-action');
         if (action === 'home' && typeof Pages !== 'undefined' && Pages.renderLanding) {
+          if (typeof window.router !== 'undefined' && window.router.navigate) {
+            router.navigate('/');
+          } else {
+            window.location.hash = '#/';
+          }
           Pages.renderLanding();
         }
       });
@@ -1475,8 +1505,21 @@ const AuthPageMethods = {
     if (card) {
       card.addEventListener('click', (e) => {
         const a = e.target.closest('[data-action]')?.getAttribute('data-action');
-        if (a === 'browse' && Pages.renderBrowse) {Pages.renderBrowse();}
-        else if (a === 'dashboard' && Pages.renderDashboard) {Pages.renderDashboard();}
+        if (a === 'browse' && Pages.renderBrowse) {
+          if (typeof window.router !== 'undefined' && window.router.navigate) {
+            router.navigate('/browse');
+          } else {
+            window.location.hash = '#/browse';
+          }
+          Pages.renderBrowse();
+        } else if (a === 'dashboard' && Pages.renderDashboard) {
+          if (typeof window.router !== 'undefined' && window.router.navigate) {
+            router.navigate('/dashboard');
+          } else {
+            window.location.hash = '#/dashboard';
+          }
+          Pages.renderDashboard();
+        }
       });
     }
   },
@@ -1510,7 +1553,14 @@ const AuthPageMethods = {
     if (card) {
       card.addEventListener('click', (e) => {
         const a = e.target.closest('[data-action]')?.getAttribute('data-action');
-        if (a === 'home' && Pages.renderLanding) {Pages.renderLanding();}
+        if (a === 'home' && Pages.renderLanding) {
+          if (typeof window.router !== 'undefined' && window.router.navigate) {
+            router.navigate('/');
+          } else {
+            window.location.hash = '#/';
+          }
+          Pages.renderLanding();
+        }
       });
     }
   },
@@ -1538,7 +1588,14 @@ const AuthPageMethods = {
     if (card) {
       card.addEventListener('click', (e) => {
         const a = e.target.closest('[data-action]')?.getAttribute('data-action');
-        if (a === 'home' && Pages.renderLanding) {Pages.renderLanding();}
+        if (a === 'home' && Pages.renderLanding) {
+          if (typeof window.router !== 'undefined' && window.router.navigate) {
+            router.navigate('/');
+          } else {
+            window.location.hash = '#/';
+          }
+          Pages.renderLanding();
+        }
       });
     }
   },
@@ -1565,7 +1622,14 @@ const AuthPageMethods = {
       card.addEventListener('click', (e) => {
         const a = e.target.closest('[data-action]')?.getAttribute('data-action');
         if (a === 'resubmit' && Pages.renderStudentVerification) {Pages.renderStudentVerification();}
-        else if (a === 'home' && Pages.renderLanding) {Pages.renderLanding();}
+        else if (a === 'home' && Pages.renderLanding) {
+          if (typeof window.router !== 'undefined' && window.router.navigate) {
+            router.navigate('/');
+          } else {
+            window.location.hash = '#/';
+          }
+          Pages.renderLanding();
+        }
       });
     }
   },

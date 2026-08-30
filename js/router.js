@@ -222,11 +222,29 @@ class Router {
       const render = typeof AdminUI !== 'undefined' && AdminUI.renderErrorPage
         ? AdminUI.renderErrorPage
         : (props) => `<div class="adm-auth"><aside class="adm-auth-side"><div class="adm-auth-brand"><div class="adm-auth-brand-mark">J</div><div class="adm-auth-brand-name">JERTS CART</div></div></aside><main class="adm-auth-form"><div class="adm-auth-form-inner"><h2 class="adm-auth-form-title" style="font-size:48px;font-weight:700;margin:0 0 8px;letter-spacing:-0.02em;">${props.code || '404'}</h2><h3 class="adm-auth-form-title">${props.title || 'Page not found'}</h3><p class="adm-auth-form-sub">${props.body || ''}</p><div style="margin-top:24px;"><a href="${(props.primaryAction && props.primaryAction.href) || '#/'}" class="adm-btn adm-btn--primary">${(props.primaryAction && props.primaryAction.label) || 'Go home'}</a></div></div></main></div>`;
+
+      // Pick a sensible destination based on the current viewer. Sending
+      // every 404 to '#/admin' (the previous behavior) was wrong: a regular
+      // user clicking "Back to dashboard" was bounced to the admin login
+      // and concluded the site had mis-routed them. Send admins to the
+      // admin panel, send everyone else to the marketplace.
+      const isAdmin = typeof adminAuthManager !== 'undefined'
+        && adminAuthManager.isLoggedIn
+        && adminAuthManager.isLoggedIn();
+      const isUser = typeof authManager !== 'undefined'
+        && authManager.isLoggedIn
+        && authManager.isLoggedIn();
+      const primaryAction = isAdmin
+        ? { label: 'Back to admin dashboard', href: '#/admin' }
+        : isUser
+          ? { label: 'Back to my dashboard', href: '#/dashboard' }
+          : { label: 'Go to marketplace', href: '#/' };
+
       mainContent.innerHTML = render({
         code: '404',
         title: 'Page not found',
         body: 'The page you are looking for does not exist or has been moved.',
-        primaryAction: { label: 'Back to dashboard', href: '#/admin' },
+        primaryAction,
       });
     }
   }
