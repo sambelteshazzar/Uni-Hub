@@ -345,8 +345,15 @@ const AuthPageMethods = {
           status: 'pending',
           submittedAt: new Date().toISOString(),
         });
-        showToast('Verification submitted! An admin will review your details within 24-48 hours. Once approved, we will email you a confirmation link to activate your account.', 'info', 8000);
-        Pages.renderBrowse();
+        showToast('Verification submitted! Taking you to your status page…', 'success', 4000);
+        // Send the user to the status page, not browse. The status page
+        // is where they will see "Awaiting admin review" and get a real
+        // answer to "did it work?". They can also bookmark it.
+        if (typeof router !== 'undefined' && router.navigate) {
+          router.navigate('/verification-status');
+        } else {
+          window.location.hash = '#/verification-status';
+        }
         return;
       }
       showToast(response?.error || 'Submission failed. Please try again.', 'error');
