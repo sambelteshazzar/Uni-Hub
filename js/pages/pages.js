@@ -583,6 +583,11 @@ class Pages {
     // are HTML-escaped and not safe to pass to the API.
     router.register('/verify', () => this.renderVerifyConfirmation());
 
+    // My verification status (2026-08-30). The user checks here to see
+    // whether their submission is pending, approved (waiting for the
+    // email click), or fully verified.
+    router.register('/verification-status', () => this.renderVerificationStatus());
+
     console.log('✓ Main routes registered');
 
     // Product detail
@@ -4850,6 +4855,16 @@ font-size: 0.8rem;
       }),
     ];
 
+    const sync = adminVerificationsManager.getLastSyncStatus
+      ? adminVerificationsManager.getLastSyncStatus()
+      : { ok: null, error: null };
+    const syncBanner = sync.ok === false
+      ? `<div id="admin-verifications-sync-banner" style="margin: 0.75rem 0 1rem; padding: 0.75rem 1rem; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; color: #92400e; font-size: 0.9rem;">
+          <strong>Backend sync failed.</strong> Showing cached data. ${sync.error ? 'Last error: ' + _pageEsc(sync.error) : ''}
+          <button type="button" data-action="retry-sync" class="btn btn-ghost btn-sm" style="margin-left: 0.5rem;">Retry</button>
+        </div>`
+      : '';
+
     mainContent.innerHTML = `
       <div class="adm-layout">
         ${AdminUI.sidebar('verifications')}
@@ -4858,6 +4873,8 @@ font-size: 0.8rem;
           <div class="adm-page">
             ${AdminUI.pageHeader('Student Verifications', 'Review and approve student ID verifications.', null)}
 
+            ${syncBanner}
+
             <div id="admin-verifications-stats-host">${AdminUI.statGrid(statCards)}</div>
 
             <div id="admin-verifications-card-host"></div>
@@ -4865,6 +4882,16 @@ font-size: 0.8rem;
         </div>
       </div>
     `;
+
+    const retryBtn = mainContent.querySelector('[data-action="retry-sync"]');
+    if (retryBtn) {
+      retryBtn.addEventListener('click', async () => {
+        retryBtn.disabled = true;
+        retryBtn.textContent = 'Retrying…';
+        await adminVerificationsManager._fetchFromBackend();
+        Pages.renderAdminVerifications(Pages._verifFilter || 'pending');
+      });
+    }
 
     AdminUI.wireSidebar(key => {
       const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);

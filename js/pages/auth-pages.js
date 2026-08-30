@@ -47,6 +47,7 @@ const AuthPageMethods = {
       return;
     }
 
+    // Honest info banner (no more "instant verification" lie).
     mainContent.innerHTML = `
     <div class="auth-container">
     <div class="auth-card verification-card">
@@ -56,44 +57,30 @@ const AuthPageMethods = {
     <p class="verification-subtitle">Confirm you're a student at <span class="verification-university-name">${universityName}</span></p>
     </div>
 
-    <!-- Verification Method Tabs -->
-    <div class="verification-tabs">
-    <button class="verification-tab active" data-tab="email" onclick="Pages.switchVerificationTab('email')">
-    <span class="tab-icon">${_Icons.email}</span>
-    <span class="tab-label">University Email</span>
-    <span class="tab-desc">For continuing students</span>
-    </button>
-    <button class="verification-tab" data-tab="document" onclick="Pages.switchVerificationTab('document')">
-    <span class="tab-icon">${_Icons.document}</span>
-    <span class="tab-label">Admission Documents</span>
-    <span class="tab-desc">For new students</span>
-    </button>
+    <div class="verification-info" style="margin-bottom: 1.5rem;">
+      <p><strong>${_Icons.clipboard} How this works:</strong> submit your details (and your admission letter or student ID if you have one). An admin reviews your submission and, if approved, emails you a one-time confirmation link. Click the link in the email to activate your account. Review usually takes 24-48 hours.</p>
     </div>
 
-    <!-- Email Verification Form -->
-    <form id="verification-form-email" class="verification-form active" onsubmit="Pages.handleStudentVerification(event)">
-    <div class="verification-info">
-    <p><strong>${_Icons.graduation} For Continuing Students:</strong> Use your official university email address for instant verification.</p>
-    </div>
-
+    <!-- Unified Verification Form -->
+    <form id="verification-form" class="verification-form active" onsubmit="Pages.handleVerification(event)">
     <div class="form-group">
-    <label for="student-email" class="required">University Email Address</label>
-    <input
-    type="email"
-    id="student-email"
-    name="studentEmail"
-    class="form-control"
-    placeholder="e.g., student@ug.edu.gh"
-    required
-    />
-    <small class="form-hint">Enter your official university email address (e.g., @ug.edu.gh, @knust.edu.gh)</small>
-    </div>
-
-    <div class="form-group">
-    <label for="student-id" class="required">Student ID Number</label>
+    <label for="v-full-name" class="required">Full Name</label>
     <input
     type="text"
-    id="student-id"
+    id="v-full-name"
+    name="fullName"
+    class="form-control"
+    placeholder="As it appears on your student ID"
+    autocomplete="name"
+    required
+    />
+    </div>
+
+    <div class="form-group">
+    <label for="v-student-id" class="required">Student ID Number</label>
+    <input
+    type="text"
+    id="v-student-id"
     name="studentId"
     class="form-control"
     placeholder="e.g., 10234567"
@@ -103,33 +90,48 @@ const AuthPageMethods = {
     </div>
 
     <div class="form-group">
-    <label for="full-name" class="required">Full Name</label>
+    <label for="v-personal-email" class="required">Personal Email Address</label>
     <input
-    type="text"
-    id="full-name"
-    name="fullName"
+    type="email"
+    id="v-personal-email"
+    name="personalEmail"
     class="form-control"
-    placeholder="As it appears on your student ID"
+    placeholder="e.g., yourname@gmail.com"
+    autocomplete="email"
     required
     />
+    <small class="form-hint">We'll email your verification confirmation link here. Use an address you can access right now.</small>
     </div>
 
     <div class="form-group">
-    <label for="phone" class="required">Phone Number</label>
+    <label for="v-university-email" class="optional">University Email (Optional)</label>
+    <input
+    type="email"
+    id="v-university-email"
+    name="universityEmail"
+    class="form-control"
+    placeholder="e.g., student@ug.edu.gh"
+    />
+    <small class="form-hint">Helps admins verify continuing students faster. Not required.</small>
+    </div>
+
+    <div class="form-group">
+    <label for="v-phone" class="required">Phone Number</label>
     <input
     type="tel"
-    id="phone"
+    id="v-phone"
     name="phone"
     class="form-control"
     placeholder="e.g., +233 50 123 4567"
+    autocomplete="tel"
     required
     />
     <small class="form-hint">Ghana phone number for contact</small>
     </div>
 
     <div class="form-group">
-    <label for="level" class="required">Current Level</label>
-    <select id="level" name="level" class="form-control" required>
+    <label for="v-level" class="required">Current Level</label>
+    <select id="v-level" name="level" class="form-control" required>
     <option value="">Select your level</option>
     <option value="100">Level 100 (First Year)</option>
     <option value="200">Level 200 (Second Year)</option>
@@ -142,10 +144,10 @@ const AuthPageMethods = {
     </div>
 
     <div class="form-group">
-    <label for="hall" class="optional">Hall/Residence (Optional)</label>
+    <label for="v-hall" class="optional">Hall/Residence (Optional)</label>
     <input
     type="text"
-    id="hall"
+    id="v-hall"
     name="hall"
     class="form-control"
     placeholder="e.g., Commonwealth Hall, Katanga"
@@ -153,117 +155,29 @@ const AuthPageMethods = {
     <small class="form-hint">Your hall of residence or off-campus address</small>
     </div>
 
+    <div class="form-group">
+    <label class="optional">Upload Admission Letter or Student ID (Optional, speeds up review)</label>
+    <div class="file-upload-area" onclick="document.getElementById('v-files').click()">
+    <div class="upload-icon">${_Icons.upload}</div>
+    <div class="upload-text">Click to upload or drag and drop</div>
+    <div class="upload-hint">JPG, PNG or PDF. Max 5MB each. Multiple files allowed.</div>
+    <input type="file" id="v-files" name="files" multiple accept=".jpg,.jpeg,.png,.pdf" style="display: none;" onchange="Pages.handleFileSelect(event)" />
+    </div>
+    <div id="file-list" class="file-list"></div>
+    <small class="form-hint" style="display:block;margin-top:0.25rem;">Documents are visible only to moderators and are deleted 30 days after review.</small>
+    </div>
+
     <div class="form-check">
-    <input type="checkbox" id="verify-declaration-email" name="verifyDeclaration" required />
-    <label for="verify-declaration-email">
+    <input type="checkbox" id="v-declaration" name="declaration" required />
+    <label for="v-declaration">
     I declare that I am a currently enrolled student at ${universityName} and the information provided is accurate.
     </label>
     </div>
 
-    <div class="verification-actions">
-    <button type="button" class="btn btn-ghost" onclick="Pages.renderLanding()">
-    ← Back to Universities
-    </button>
-    <button type="submit" class="btn btn-primary">
-    Verify with Email →
-    </button>
-    </div>
-    </form>
-
-    <!-- Document Verification Form -->
-    <form id="verification-form-document" class="verification-form" onsubmit="Pages.handleDocumentVerification(event)">
-    <div class="verification-info warning">
-    <p><strong>${_Icons.clipboard} For New/Level 100 Students:</strong> Upload your admission letter or student ID for manual verification. This may take 24-48 hours.</p>
-    </div>
-
-    <div class="form-group">
-    <label for="doc-email" class="required">Personal Email Address (Gmail, etc.)</label>
-    <input
-    type="email"
-    id="doc-email"
-    name="docEmail"
-    class="form-control"
-    placeholder="e.g., yourname@gmail.com"
-    required
-    />
-    <small class="form-hint">We'll send verification updates to this email</small>
-    </div>
-
-    <div class="form-group">
-    <label for="doc-student-id" class="required">Student ID Number</label>
-    <input
-    type="text"
-    id="doc-student-id"
-    name="docStudentId"
-    class="form-control"
-    placeholder="e.g., 10234567"
-    required
-    />
-    <small class="form-hint">Your university student ID number</small>
-    </div>
-
-    <div class="form-group">
-    <label for="doc-full-name" class="required">Full Name</label>
-    <input
-    type="text"
-    id="doc-full-name"
-    name="docFullName"
-    class="form-control"
-    placeholder="As it appears on your admission letter"
-    required
-    />
-    </div>
-
-    <div class="form-group">
-    <label for="doc-phone" class="required">Phone Number</label>
-    <input
-    type="tel"
-    id="doc-phone"
-    name="docPhone"
-    class="form-control"
-    placeholder="e.g., +233 50 123 4567"
-    required
-    />
-    </div>
-
-    <div class="form-group">
-    <label for="doc-level" class="required">Current Level</label>
-    <select id="doc-level" name="docLevel" class="form-control" required>
-    <option value="">Select your level</option>
-    <option value="100" selected>Level 100 (First Year)</option>
-    <option value="200">Level 200 (Second Year)</option>
-    <option value="300">Level 300 (Third Year)</option>
-    <option value="400">Level 400 (Fourth Year)</option>
-    <option value="500">Level 500+ (Fifth Year or above)</option>
-    <option value="postgrad">Postgraduate</option>
-    <option value="phd">PhD Student</option>
-    </select>
-    </div>
-
-    <div class="form-group">
-    <label class="required">Upload Admission Documents</label>
-    <div class="file-upload-area" onclick="document.getElementById('doc-files').click()">
-    <div class="upload-icon">${_Icons.upload}</div>
-    <div class="upload-text">Click to upload or drag and drop</div>
-    <div class="upload-hint">Accepted: Admission Letter, Student ID, Acceptance Letter (JPG, PNG, PDF - Max 5MB each)</div>
-    <input type="file" id="doc-files" name="docFiles" multiple accept=".jpg,.jpeg,.png,.pdf" style="display: none;" required onchange="Pages.handleFileSelect(event)" />
-    </div>
-    <div id="file-list" class="file-list"></div>
-    <small class="form-hint">Upload clear photos/scans of your admission documents</small>
-    <small class="form-hint" style="display:block;margin-top:0.25rem;">Documents are viewable only by moderators and are permanently deleted 30 days after your review.</small>
-    </div>
-
-    <div class="form-check">
-    <input type="checkbox" id="verify-declaration-document" name="verifyDeclaration" required />
-    <label for="verify-declaration-document">
-    I declare that I am a newly admitted student at ${universityName} and the documents provided are authentic.
-    </label>
-    </div>
-
     <div class="form-check warning-check">
-    <input type="checkbox" id="verify-wait-time" name="verifyWaitTime" required />
-    <label for="verify-wait-time">
-    I understand that document verification takes 24-48 hours and I will be notified via email.
+    <input type="checkbox" id="v-wait-time" name="waitTime" required />
+    <label for="v-wait-time">
+    I understand that an admin will review my submission within 24-48 hours, and that I must click the confirmation link emailed to me to activate my account.
     </label>
     </div>
 
@@ -280,10 +194,9 @@ const AuthPageMethods = {
     <div class="verification-help">
     <h4>Need Help?</h4>
     <ul>
-    <li><strong>Continuing students:</strong> Use your university email for instant verification</li>
-    <li><strong>New students:</strong> Upload admission letter or student ID card</li>
-    <li><strong>Not sure?</strong> Contact your university's IT support</li>
-    <li><strong>Need assistance?</strong> Email <a href="mailto:unihubsupport@gmail.com">unihubsupport@gmail.com</a></li>
+    <li><strong>How long does review take?</strong> 24-48 hours, often faster.</li>
+    <li><strong>Where do I check status?</strong> <a href="#/verification-status" data-action="status">Check your verification status</a> anytime.</li>
+    <li><strong>Didn't get the email?</strong> Check spam, or contact <a href="mailto:unihubsupport@gmail.com">unihubsupport@gmail.com</a></li>
     </ul>
     </div>
     </div>
@@ -291,14 +204,11 @@ const AuthPageMethods = {
     `;
   },
 
-  switchVerificationTab (tab) {
-    // Update tab buttons
-    document.querySelectorAll('.verification-tab').forEach(t => t.classList.remove('active'));
-    document.querySelector(`.verification-tab[data-tab="${tab}"]`).classList.add('active');
-
-    // Update forms
-    document.querySelectorAll('.verification-form').forEach(f => f.classList.remove('active'));
-    document.getElementById(`verification-form-${tab}`).classList.add('active');
+  // Legacy tab switcher kept as a no-op so any stale onclick="..." in the
+  // DOM doesn't throw. Safe to remove once we're sure no cached HTML still
+  // references it.
+  switchVerificationTab (_tab) {
+    /* intentionally empty — unified form has no tabs */
   },
 
   handleFileSelect (event) {
@@ -315,74 +225,58 @@ const AuthPageMethods = {
     }
   },
 
-  async handleStudentVerification (event) {
+  /**
+   * Unified verification submit handler (2026-08-30). Replaces the old
+   * tab-split email/document handlers. Same backend endpoint either way;
+   * if files are attached, multipart is used; otherwise plain JSON.
+   * The user's `email` field is the personal address we will use to send
+   * the approval confirmation link; `universityEmail` (optional) is
+   * collected only as a hint for the admin reviewer.
+   */
+  async handleVerification (event) {
     event.preventDefault();
-    const form = document.getElementById('verification-form-email');
-    const selectedUniversity = StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
+    const form = document.getElementById('verification-form');
+    if (!form) {return;}
 
-    const verificationData = {
-      universityId: selectedUniversity,
-      verificationMethod: 'email',
-      studentEmail: form.studentEmail.value,
-      studentId: form.studentId.value,
-      fullName: form.fullName.value,
-      phone: form.phone.value,
-      level: form.level.value,
-      hall: form.hall.value || null,
-    };
-
-    // Validate student email domain (basic validation)
-    const emailDomain = verificationData.studentEmail.split('@')[1];
-    const config = await api.loadJSON('data/config.json').catch(() => ({ universities: [] }));
-    const university = config.universities.find(u => u.id === selectedUniversity);
-
-    // Submit to backend API for proper verification
-    try {
-      const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
-      if (api && session?.token) {
-        const response = await api.verification.submit({
-          studentId: verificationData.studentId,
-          fullName: verificationData.fullName,
-          email: verificationData.studentEmail,
-          phone: verificationData.phone,
-          university: selectedUniversity,
-          level: verificationData.level,
-          hall: verificationData.hall,
-          verificationMethod: 'email',
-          universityEmail: verificationData.studentEmail,
-        });
-
-        if (response.success) {
-          verificationData.isVerified = false;
-          verificationData.isPending = true;
-          verificationData.submittedAt = new Date().toISOString();
-          StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, verificationData);
-          showToast('Verification submitted! An admin will review your details. Once approved, we will email you a confirmation link to activate your account.', 'info');
-          Pages.renderBrowse();
-          return;
-        }
-      }
-    } catch (e) {
-      console.warn('auth-pages: verification API unreachable:', e);
-    }
-
-    showToast('Cannot connect to server. Please check your internet connection and try again.', 'error');
-    return;
-  },
-
-  async handleDocumentVerification (event) {
-    event.preventDefault();
-    const form = document.getElementById('verification-form-document');
-    const selectedUniversity = StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
-    const files = Array.from(form.docFiles.files || []);
-
-    // Validate files
-    if (files.length === 0) {
-        showToast('Please upload at least one document (admission letter or student ID)', 'warning');
+    const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
+    if (!api || !session?.token) {
+      showToast('You must be logged in to submit verification. Please log in and try again.', 'warning');
       return;
     }
 
-    // Validate file sizes (max 5MB each)
+    const selectedUniversity = StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
+
+    const data = {
+      fullName: form.fullName.value.trim(),
+      studentId: form.studentId.value.trim(),
+      email: form.personalEmail.value.trim(),
+      universityEmail: form.universityEmail.value.trim() || null,
+      phone: form.phone.value.trim(),
+      university: selectedUniversity,
+      level: form.level.value,
+      hall: form.hall.value.trim() || null,
+      verificationMethod: 'document', // server-side, see controller
+    };
+
+    // Local validation
+    if (!data.fullName || !data.studentId || !data.email || !data.phone || !data.level) {
+      showToast('Please fill in all required fields.', 'warning');
+      return;
+    }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.email)) {
+      showToast('Please enter a valid personal email address.', 'warning');
+      return;
+    }
+    if (data.universityEmail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.universityEmail)) {
+      showToast('University email is not a valid email address — leave it blank if you do not have one.', 'warning');
+      return;
+    }
+    if (!/^[\d\s+\-()]{7,15}$/.test(data.phone)) {
+      showToast('Please enter a valid phone number.', 'warning');
+      return;
+    }
+
+    const files = Array.from(form.files?.files || []);
     for (const file of files) {
       if (file.size > 5 * 1024 * 1024) {
         showToast(`File "${file.name}" is too large. Maximum size is 5MB.`, 'warning');
@@ -390,53 +284,56 @@ const AuthPageMethods = {
       }
     }
 
-    // Submit to backend API for proper verification
-    try {
-      const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
-      if (api && session?.token) {
-        if (files.length === 0) {
-          showToast('Please attach at least one admission document.', 'warning');
-          return;
-        }
-        // Multipart submission (spec 2026-08-23): files travel as binary
-        // parts under the 'documents' field expected by the backend's
-        // multer config; text fields mirror POST /verification's JSON body.
-        const fd = new FormData();
-        fd.append('studentId', form.docStudentId.value.trim());
-        fd.append('fullName', form.docFullName.value.trim());
-        fd.append('email', form.docEmail.value.trim());
-        fd.append('phone', form.docPhone.value.trim());
-        fd.append('university', selectedUniversity);
-        fd.append('level', form.docLevel.value);
-        fd.append('verificationMethod', 'document');
-        files.forEach(f => fd.append('documents', f));
-
-        const response = await api.verification.submitDocuments(fd);
-
-        if (response.success) {
-          // PII-minimal local cache (spec 2026-08-23): no documents list,
-          // no phone number.
-          StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, {
-            universityId: selectedUniversity,
-            verificationMethod: 'document',
-            isVerified: false,
-            isPending: true,
-            submittedAt: new Date().toISOString(),
-          });
-          showToast('Verification submitted! An admin will review your documents. Once approved, we will email you a confirmation link to activate your account.', 'info');
-          Pages.renderBrowse();
-          return;
-        }
-        showToast(response.error || 'Document upload failed. Please check your files and try again.', 'error');
-        return;
-      }
-    } catch (e) {
-      console.warn('auth-pages: document verification API unreachable:', e);
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting…';
     }
 
-    showToast('Cannot connect to server. Please check your internet connection and try again.', 'error');
-    return;
+    try {
+      let response;
+      if (files.length > 0) {
+        const fd = new FormData();
+        Object.entries(data).forEach(([k, v]) => {
+          if (v !== null && v !== undefined) {fd.append(k, v);}
+        });
+        files.forEach(f => fd.append('documents', f));
+        response = await api.verification.submitDocuments(fd);
+      } else {
+        response = await api.verification.submit(data);
+      }
+
+      if (response && response.success) {
+        // PII-minimal local cache (no phone, no documents list).
+        StorageManager.set(STORAGE_KEYS.STUDENT_VERIFICATION, {
+          universityId: selectedUniversity,
+          verificationMethod: 'document',
+          isVerified: false,
+          isPending: true,
+          status: 'pending',
+          submittedAt: new Date().toISOString(),
+        });
+        showToast('Verification submitted! An admin will review your details within 24-48 hours. Once approved, we will email you a confirmation link to activate your account.', 'info', 8000);
+        Pages.renderBrowse();
+        return;
+      }
+      showToast(response?.error || 'Submission failed. Please try again.', 'error');
+    } catch (err) {
+      console.warn('auth-pages: verification submit error:', err);
+      showToast('Cannot connect to server. Please check your internet connection and try again.', 'error');
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit for Verification →';
+      }
+    }
   },
+
+  // Legacy handlers kept as thin shims so any stale inline onsubmit="..."
+  // references (e.g. in cached HTML) don't throw. Real form is wired to
+  // handleVerification above.
+  async handleStudentVerification (event) { return Pages.handleVerification(event); },
+  async handleDocumentVerification (event) { return Pages.handleVerification(event); },
 
   renderLogin () {
     // Don't hide navbar/footer - show as overlay on landing page
@@ -1448,6 +1345,269 @@ const AuthPageMethods = {
       });
     }
   },
+
+  /**
+   * My verification status (2026-08-30). The user lands here from the
+   * dashboard or a "Check status" link. Reads from /api/verification/me
+   * and shows one of four clear states with appropriate next-action
+   * buttons. No PII in the local cache is read.
+   */
+  async renderVerificationStatus () {
+    const mainContent = document.getElementById('main-content');
+    if (!mainContent) {return;}
+
+    const esc = (s) => {
+      const e = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ||
+        (window.SecurityUtils && window.SecurityUtils.escapeHtml);
+      return e ? e(s) : String(s);
+    };
+
+    // Loading shell — same spinner as the confirm page.
+    mainContent.innerHTML = `
+      <div class="auth-container" style="max-width: 560px; margin: 3rem auto;">
+        <div class="auth-card" style="text-align: center; padding: 2.5rem 2rem;">
+          <div style="font-size: 2.5rem;">${_Icons.graduation}</div>
+          <h2 style="margin: 1rem 0 0.5rem;">Checking your verification status…</h2>
+          <div style="margin: 1.5rem auto 0; width: 32px; height: 32px; border: 3px solid #e5e7eb; border-top-color: #0046be; border-radius: 50%; animation: unihub-spin 0.9s linear infinite;"></div>
+        </div>
+      </div>
+      <style>@keyframes unihub-spin { to { transform: rotate(360deg); } }</style>
+    `;
+
+    if (typeof api === 'undefined' || api.isStaticDeploy) {
+      this._renderStatusNotConnected(mainContent, esc);
+      return;
+    }
+
+    const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
+    if (!session || !session.token) {
+      // Not logged in — show a sign-in CTA.
+      this._renderStatusNotLoggedIn(mainContent, esc);
+      return;
+    }
+
+    try {
+      // We don't have a dedicated client wrapper, so call the API
+      // directly through the existing auth-aware request helper.
+      const resp = await api.request('/verification/me');
+      if (!resp || !resp.success) {
+        this._renderStatusError(mainContent, esc, resp?.error || 'Could not load your verification status.');
+        return;
+      }
+      const data = resp.data || {};
+      const status = data.status || 'not_submitted';
+      if (status === 'approved' || data.isVerified) {
+        this._renderStatusApproved(mainContent, esc, data);
+      } else if (status === 'approved_pending_user') {
+        this._renderStatusAwaitingConfirmation(mainContent, esc, data);
+      } else if (status === 'pending') {
+        this._renderStatusPending(mainContent, esc, data);
+      } else if (status === 'rejected') {
+        this._renderStatusRejected(mainContent, esc, data);
+      } else {
+        this._renderStatusNotSubmitted(mainContent, esc);
+      }
+    } catch (err) {
+      console.warn('verify-status: fetch failed:', err);
+      this._renderStatusError(mainContent, esc, 'Network error. Please try again.');
+    }
+  },
+
+  _renderStatusApproved (root, esc, data) {
+    root.innerHTML = `
+      <div class="auth-container" style="max-width: 560px; margin: 3rem auto;">
+        <div class="auth-card" style="text-align: center; padding: 2.5rem 2rem;">
+          <div style="font-size: 3rem; color: #10b981;">✓</div>
+          <h2 style="margin: 1rem 0 0.5rem;">You're verified!</h2>
+          <p style="color: var(--neutral-600, #6b7280);">
+            Your student account at <strong>${esc(data.university || 'your university')}</strong> is active.
+            You can buy and sell on Uni-Hub.
+          </p>
+          ${data.confirmedAt ? `<p style="font-size: 0.85rem; color: var(--neutral-500, #9ca3af);">Confirmed on ${esc(new Date(data.confirmedAt).toLocaleString())}</p>` : ''}
+          <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+            <button class="btn btn-primary" data-action="browse">Start shopping</button>
+            <button class="btn btn-ghost" data-action="dashboard">Go to my dashboard</button>
+          </div>
+        </div>
+      </div>
+    `;
+    root.querySelector('#main-content') || root;
+    const card = root.querySelector('.auth-card');
+    if (card) {
+      card.addEventListener('click', (e) => {
+        const a = e.target.closest('[data-action]')?.getAttribute('data-action');
+        if (a === 'browse' && Pages.renderBrowse) {Pages.renderBrowse();}
+        else if (a === 'dashboard' && Pages.renderDashboard) {Pages.renderDashboard();}
+      });
+    }
+  },
+
+  _renderStatusAwaitingConfirmation (root, esc, data) {
+    root.innerHTML = `
+      <div class="auth-container" style="max-width: 560px; margin: 3rem auto;">
+        <div class="auth-card" style="text-align: center; padding: 2.5rem 2rem;">
+          <div style="font-size: 2.5rem; color: #3b82f6;">✉</div>
+          <h2 style="margin: 1rem 0 0.5rem;">Almost there — check your email</h2>
+          <p style="color: var(--neutral-600, #6b7280);">
+            An admin has approved your verification at <strong>${esc(data.university || 'your university')}</strong>.
+            We sent a one-time confirmation link to your personal email. Click the link to activate your account.
+          </p>
+          <p style="font-size: 0.85rem; color: var(--neutral-500, #9ca3af);">The link expires in 24 hours and can only be used once.</p>
+          <div style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--neutral-700, #374151); text-align: left; background: #f3f4f6; padding: 1rem; border-radius: 8px;">
+            <strong>Didn't get the email?</strong>
+            <ul style="margin: 0.5rem 0 0 1.25rem; padding: 0;">
+              <li>Check your spam / junk folder</li>
+              <li>Make sure you submitted a working personal email</li>
+              <li>Wait 5 minutes — it can take a moment to arrive</li>
+            </ul>
+          </div>
+          <div style="margin-top: 1.5rem;">
+            <button class="btn btn-ghost" data-action="home">Back to home</button>
+          </div>
+        </div>
+      </div>
+    `;
+    const card = root.querySelector('.auth-card');
+    if (card) {
+      card.addEventListener('click', (e) => {
+        const a = e.target.closest('[data-action]')?.getAttribute('data-action');
+        if (a === 'home' && Pages.renderLanding) {Pages.renderLanding();}
+      });
+    }
+  },
+
+  _renderStatusPending (root, esc, data) {
+    root.innerHTML = `
+      <div class="auth-container" style="max-width: 560px; margin: 3rem auto;">
+        <div class="auth-card" style="text-align: center; padding: 2.5rem 2rem;">
+          <div style="font-size: 2.5rem; color: #f59e0b;">⏳</div>
+          <h2 style="margin: 1rem 0 0.5rem;">Awaiting admin review</h2>
+          <p style="color: var(--neutral-600, #6b7280);">
+            Your verification submission is in the queue. An admin will review it within 24-48 hours.
+          </p>
+          ${data.submittedAt ? `<p style="font-size: 0.85rem; color: var(--neutral-500, #9ca3af);">Submitted on ${esc(new Date(data.submittedAt).toLocaleString())}</p>` : ''}
+          <p style="font-size: 0.85rem; color: var(--neutral-500, #9ca3af); margin-top: 1rem;">
+            Once approved, we'll email you a one-time confirmation link. Click it to activate your account.
+          </p>
+          <div style="margin-top: 1.5rem;">
+            <button class="btn btn-ghost" data-action="home">Back to home</button>
+          </div>
+        </div>
+      </div>
+    `;
+    const card = root.querySelector('.auth-card');
+    if (card) {
+      card.addEventListener('click', (e) => {
+        const a = e.target.closest('[data-action]')?.getAttribute('data-action');
+        if (a === 'home' && Pages.renderLanding) {Pages.renderLanding();}
+      });
+    }
+  },
+
+  _renderStatusRejected (root, esc, data) {
+    root.innerHTML = `
+      <div class="auth-container" style="max-width: 560px; margin: 3rem auto;">
+        <div class="auth-card" style="text-align: center; padding: 2.5rem 2rem;">
+          <div style="font-size: 2.5rem; color: #ef4444;">✕</div>
+          <h2 style="margin: 1rem 0 0.5rem;">Verification was not approved</h2>
+          ${data.reviewNotes ? `<p style="background: #fef2f2; border: 1px solid #fecaca; padding: 0.75rem 1rem; border-radius: 8px; color: #991b1b;">${esc(data.reviewNotes)}</p>` : ''}
+          <p style="color: var(--neutral-600, #6b7280);">
+            You can submit a new verification with corrected details.
+          </p>
+          <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+            <button class="btn btn-primary" data-action="resubmit">Submit again</button>
+            <button class="btn btn-ghost" data-action="home">Back to home</button>
+          </div>
+        </div>
+      </div>
+    `;
+    const card = root.querySelector('.auth-card');
+    if (card) {
+      card.addEventListener('click', (e) => {
+        const a = e.target.closest('[data-action]')?.getAttribute('data-action');
+        if (a === 'resubmit' && Pages.renderStudentVerification) {Pages.renderStudentVerification();}
+        else if (a === 'home' && Pages.renderLanding) {Pages.renderLanding();}
+      });
+    }
+  },
+
+  _renderStatusNotSubmitted (root, esc) {
+    root.innerHTML = `
+      <div class="auth-container" style="max-width: 560px; margin: 3rem auto;">
+        <div class="auth-card" style="text-align: center; padding: 2.5rem 2rem;">
+          <div style="font-size: 2.5rem;">${_Icons.graduation}</div>
+          <h2 style="margin: 1rem 0 0.5rem;">You haven't submitted verification yet</h2>
+          <p style="color: var(--neutral-600, #6b7280);">
+            Submit your student details to start buying and selling on Uni-Hub.
+          </p>
+          <div style="margin-top: 1.5rem;">
+            <button class="btn btn-primary" data-action="verify">Start verification</button>
+          </div>
+        </div>
+      </div>
+    `;
+    const card = root.querySelector('.auth-card');
+    if (card) {
+      card.addEventListener('click', (e) => {
+        const a = e.target.closest('[data-action]')?.getAttribute('data-action');
+        if (a === 'verify' && Pages.renderStudentVerification) {Pages.renderStudentVerification();}
+      });
+    }
+  },
+
+  _renderStatusNotLoggedIn (root, esc) {
+    root.innerHTML = `
+      <div class="auth-container" style="max-width: 560px; margin: 3rem auto;">
+        <div class="auth-card" style="text-align: center; padding: 2.5rem 2rem;">
+          <h2 style="margin: 1rem 0 0.5rem;">Please log in to check your status</h2>
+          <p style="color: var(--neutral-600, #6b7280);">We need to know who you are before we can show your verification status.</p>
+          <div style="margin-top: 1.5rem;">
+            <button class="btn btn-primary" data-action="login">Log in</button>
+          </div>
+        </div>
+      </div>
+    `;
+    const card = root.querySelector('.auth-card');
+    if (card) {
+      card.addEventListener('click', (e) => {
+        const a = e.target.closest('[data-action]')?.getAttribute('data-action');
+        if (a === 'login' && Pages.renderLogin) {Pages.renderLogin();}
+      });
+    }
+  },
+
+  _renderStatusNotConnected (root, esc) {
+    root.innerHTML = `
+      <div class="auth-container" style="max-width: 560px; margin: 3rem auto;">
+        <div class="auth-card" style="text-align: center; padding: 2.5rem 2rem;">
+          <h2 style="margin: 1rem 0 0.5rem;">Offline mode</h2>
+          <p style="color: var(--neutral-600, #6b7280);">Running in offline mode. Verification status is not available offline.</p>
+        </div>
+      </div>
+    `;
+  },
+
+  _renderStatusError (root, esc, message) {
+    root.innerHTML = `
+      <div class="auth-container" style="max-width: 560px; margin: 3rem auto;">
+        <div class="auth-card" style="text-align: center; padding: 2.5rem 2rem;">
+          <div style="font-size: 2.5rem; color: #ef4444;">!</div>
+          <h2 style="margin: 1rem 0 0.5rem;">Couldn't load your status</h2>
+          <p style="color: var(--neutral-600, #6b7280);">${esc(message)}</p>
+          <div style="margin-top: 1.5rem;">
+            <button class="btn btn-primary" data-action="retry">Try again</button>
+          </div>
+        </div>
+      </div>
+    `;
+    const card = root.querySelector('.auth-card');
+    if (card) {
+      card.addEventListener('click', (e) => {
+        const a = e.target.closest('[data-action]')?.getAttribute('data-action');
+        if (a === 'retry' && Pages.renderVerificationStatus) {Pages.renderVerificationStatus();}
+      });
+    }
+  },
 };
 
 window.AuthPageMethods = AuthPageMethods;
@@ -1464,6 +1624,8 @@ window.AuthPageMethods = AuthPageMethods;
       Pages.handleResetPassword = AuthPageMethods.handleResetPassword;
       Pages.closeAuthOverlay = AuthPageMethods.closeAuthOverlay;
       Pages.switchAuthModal = AuthPageMethods.switchAuthModal;
+      Pages.handleVerification = AuthPageMethods.handleVerification;
       Pages.renderVerifyConfirmation = AuthPageMethods.renderVerifyConfirmation;
+      Pages.renderVerificationStatus = AuthPageMethods.renderVerificationStatus;
   }, 50);
 })();

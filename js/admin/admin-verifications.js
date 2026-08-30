@@ -11,9 +11,20 @@ class AdminVerificationsManager {
   }
 
   async init () {
-    if (this._initialized) return;
+    if (this._initialized) {return;}
     this._initialized = true;
+    this._lastSyncOk = null;
+    this._lastSyncError = null;
     await this._fetchFromBackend();
+    // Auto-refresh every 30s so new submissions appear without a manual
+    // reload. The interval is kept on the instance so the admin can
+    // cancel it (not currently used, but cheap insurance).
+    if (!this._refreshTimer) {
+      this._refreshTimer = setInterval(() => {
+        if (typeof document !== 'undefined' && document.hidden) {return;}
+        this._fetchFromBackend();
+      }, 30000);
+    }
   }
 
   _loadQueue () {
@@ -53,12 +64,35 @@ class AdminVerificationsManager {
                 reviewNotes: backendItem.reviewNotes,
                 userId: backendItem.userId,
               });
+            } else {
+              // Update status if backend has newer state (e.g. moved from
+              // 'pending' to 'approved_pending_user' after an admin
+              // approved it on a different machine).
+              if (backendItem.status && exists.status !== backendItem.status) {
+                exists.status = backendItem.status;
+                exists.reviewedBy = backendItem.reviewedBy;
+                exists.reviewedAt = backendItem.reviewedAt;
+                exists.reviewNotes = backendItem.reviewNotes;
+              }
             }
           }
+          this._lastSyncOk = true;
+          this._lastSyncError = null;
           this._persist();
+        } else {
+          this._lastSyncOk = false;
+          this._lastSyncError = resp?.error || 'No data returned';
         }
       }
-    } catch (_) { console.warn('verifications: backend fetch failed:', _); }
+    } catch (err) {
+      this._lastSyncOk = false;
+      this._lastSyncError = (err && err.message) || String(err);
+      console.warn('verifications: backend fetch failed:', err);
+    }
+  }
+
+  getLastSyncStatus () {
+    return { ok: this._lastSyncOk, error: this._lastSyncError };
   }
 
   _persist () {

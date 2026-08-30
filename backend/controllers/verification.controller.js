@@ -38,9 +38,28 @@ exports.submitVerification = asyncHandler(async (req, res) => {
     level,
     hall,
     verificationMethod,
-    universityEmail: _universityEmail,
+    universityEmail,
     documents: _documents,
   } = req.body;
+
+  // Validation — the unified form (2026-08-30) requires these. A personal
+  // email is mandatory because the magic-link approval confirmation is
+  // sent there. universityEmail is optional.
+  if (!studentId || !fullName || !email || !phone || !university || !level) {
+    throw new ApiError(400, 'Missing required field(s)');
+  }
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(email))) {
+    throw new ApiError(400, 'Invalid personal email address');
+  }
+  if (universityEmail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(universityEmail))) {
+    throw new ApiError(400, 'Invalid university email address');
+  }
+  if (!/^[\d\s+\-()]{7,15}$/.test(String(phone))) {
+    throw new ApiError(400, 'Invalid phone number');
+  }
+  if (!['100', '200', '300', '400', '500', 'postgrad', 'phd'].includes(String(level))) {
+    throw new ApiError(400, 'Invalid level');
+  }
 
   // Block re-submission if the same studentId + university is already
   // either fully approved OR waiting for the user to click the link
@@ -56,12 +75,14 @@ exports.submitVerification = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'This student ID is already verified or awaiting confirmation');
   }
 
-  // The legacy 'email' method (which sent a 6-digit code to the .edu.gh
-  // address) has been removed in 2026-08-29. Both submission forms are
-  // now treated identically: documents uploaded (if any) go to admin
-  // review, then admin approval triggers a magic-link email to the
-  // user's personal email.
-  if (!['email', 'document'].includes(verificationMethod)) {
+  // Backward compat: legacy 'email' method (sent a 6-digit code to the
+  // .edu.gh address) was removed in 2026-08-29. We accept it as a no-op
+  // alias for 'document' so any old client still works. The frontend
+  // now uses a single 'document' method with optional file upload.
+  const method = (verificationMethod === 'email' || verificationMethod === 'document')
+    ? 'document'
+    : null;
+  if (!method) {
     throw new ApiError(400, 'Invalid verification method');
   }
 
@@ -75,8 +96,8 @@ exports.submitVerification = asyncHandler(async (req, res) => {
     university,
     level,
     hall,
-    verificationMethod,
-    universityEmail: null,
+    verificationMethod: method,
+    universityEmail: universityEmail || null,
     status: 'pending',
   };
 
