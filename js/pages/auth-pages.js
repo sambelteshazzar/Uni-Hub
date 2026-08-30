@@ -17,6 +17,38 @@ const AuthPageMethods = {
     const selectedUniversity = StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
     const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true);
 
+    // Guard: if the user reached this route without picking a university
+    // (e.g. via a deep link, a stale tab, or a session reset), show a
+    // clear "pick a university" prompt instead of rendering a form with
+    // a blank university name that would 400 on submit.
+    if (!selectedUniversity) {
+      mainContent.innerHTML = `
+        <div class="auth-container" style="max-width: 520px; margin: 4rem auto;">
+          <div class="auth-card verification-card" style="text-align: center; padding: 2.5rem 2rem;">
+            <div class="verification-icon" style="font-size: 3rem;">${_Icons.graduation}</div>
+            <h2 style="margin: 1rem 0 0.5rem;">Pick your university first</h2>
+            <p style="color: var(--neutral-600, #6b7280);">
+              You need to pick which university you're enrolled at before you can submit
+              your student verification.
+            </p>
+            <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+              <button class="btn btn-primary" data-action="pick-uni">Choose a university</button>
+              <button class="btn btn-ghost" data-action="status">Check existing status</button>
+            </div>
+          </div>
+        </div>
+      `;
+      const card = mainContent.querySelector('.auth-card');
+      if (card) {
+        card.addEventListener('click', (e) => {
+          const a = e.target.closest('[data-action]')?.getAttribute('data-action');
+          if (a === 'pick-uni' && Pages.renderLanding) {Pages.renderLanding();}
+          else if (a === 'status' && Pages.renderVerificationStatus) {Pages.renderVerificationStatus();}
+        });
+      }
+      return;
+    }
+
     // Get university name and check active status
     let universityName = 'your university';
     api
@@ -1612,20 +1644,30 @@ const AuthPageMethods = {
 
 window.AuthPageMethods = AuthPageMethods;
 
+// Attach all AuthPageMethods onto the global `Pages` class so inline
+// `onclick="Pages.foo()"` and router handlers like
+// `router.register('/x', () => this.foo())` resolve to the right `this`.
+// CRITICAL: must `.bind(AuthPageMethods)` — the method bodies use
+// `this._renderX()` style helpers, and without a bind, `this` is the
+// `Pages` class instance (no helpers) and the call throws
+// "this._renderStatusNotLoggedIn is not a function".
 (function attachAuthPageMethods () {
   const waitForPages = setInterval(function () {
     if (typeof Pages === 'undefined') {
       return;
     }
     clearInterval(waitForPages);
-      Pages.handleRegister = AuthPageMethods.handleRegister;
-      Pages.handleLogin = AuthPageMethods.handleLogin;
-      Pages.handleForgotPassword = AuthPageMethods.handleForgotPassword;
-      Pages.handleResetPassword = AuthPageMethods.handleResetPassword;
-      Pages.closeAuthOverlay = AuthPageMethods.closeAuthOverlay;
-      Pages.switchAuthModal = AuthPageMethods.switchAuthModal;
-      Pages.handleVerification = AuthPageMethods.handleVerification;
-      Pages.renderVerifyConfirmation = AuthPageMethods.renderVerifyConfirmation;
-      Pages.renderVerificationStatus = AuthPageMethods.renderVerificationStatus;
+    const bind = (k) => { Pages[k] = AuthPageMethods[k].bind(AuthPageMethods); };
+    [
+      'handleRegister',
+      'handleLogin',
+      'handleForgotPassword',
+      'handleResetPassword',
+      'closeAuthOverlay',
+      'switchAuthModal',
+      'handleVerification',
+      'renderVerifyConfirmation',
+      'renderVerificationStatus',
+    ].forEach(bind);
   }, 50);
 })();

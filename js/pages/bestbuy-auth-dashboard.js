@@ -335,6 +335,15 @@ var socialBtnStyle =
       var password = document.getElementById('reg-password').value;
       var phone = document.getElementById('reg-phone').value;
       var university = document.getElementById('reg-university').value;
+      var acceptedTerms = document.getElementById('reg-terms').checked === true;
+
+      // Client-side guard: the backend rejects with 400 if acceptedTerms is
+      // false, so block submission before hitting the network. The user
+      // has to actually tick the checkbox.
+      if (!acceptedTerms) {
+        showToast('Please accept the Terms of Service and Privacy Policy to continue.', 'warning');
+        return;
+      }
 
       var result = await authManager.register({
         fullName: firstName + ' ' + lastName,
@@ -342,6 +351,7 @@ var socialBtnStyle =
         password: password,
         phone: phone,
         university: university,
+        acceptedTerms: true,
       });
 
       if (result.success) {

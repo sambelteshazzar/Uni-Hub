@@ -53,10 +53,12 @@ const LandingPageMethods = {
   },
 
   showUniversityComingSoon (universityName) {
-    if (typeof Toast !== 'undefined') {
+    // toastManager is the real global; the older `Toast` symbol was a stale
+    // reference that always fell through to alert(). Use the real one.
+    if (typeof showToast === 'function') {
       showToast(`${universityName} is coming soon! We're currently available at Accra Technical University (ATU).`, 'info');
     } else {
-      alert(`${universityName} is coming soon! We're currently available at Accra Technical University (ATU).`);
+      console.log(`[coming-soon] ${universityName} — not yet available`);
     }
   },
 

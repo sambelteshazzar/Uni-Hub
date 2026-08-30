@@ -7,10 +7,14 @@ class AdminUsersManager {
   constructor () {
     this.USERS_STORAGE_KEY = `${STORAGE_KEY_PREFIX}users`;
     this.users = [];
-    // Only load if both api and StorageManager are available
-    if (typeof api !== 'undefined' && typeof StorageManager !== 'undefined' && typeof StorageManager.get === 'function') {
-      this.loadUsers();
-    }
+    // Don't auto-load on construction. The previous behavior hit
+    // /api/users?limit=200 for every user on every page load, returning
+    // 401 + a "Session expired" log noise for unauthenticated visitors.
+    // Loading is now driven by:
+    //   - app-init reinitializeManagers() (which only calls this when
+    //     an admin session exists), or
+    //   - the admin page itself when it mounts.
+  }
   }
 
   /**

@@ -10,7 +10,11 @@ class StorageManager {
    */
   static set (key, value) {
     try {
-      const data = typeof value === 'string' ? value : JSON.stringify(value);
+      // Always JSON-encode so round-tripping through get(parse=true) works.
+      // (Previously a bare string was written as-is, which JSON.parse on
+      // read would reject as 'Corrupted data' for non-JSON values like
+      // 'atu'.)
+      const data = JSON.stringify(value);
       localStorage.setItem(key, data);
       return true;
     } catch (error) {

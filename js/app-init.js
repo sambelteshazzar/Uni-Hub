@@ -224,6 +224,17 @@ class ModuleLoader {
       console.error('✗ Pages class not found on window - routes NOT registered');
     }
 
+    // Wire LandingPageMethods onto Pages (so inline onclick="Pages.selectUniversity('atu')"
+    // and friends resolve to real functions). Without this, the landing
+    // page's university cards throw `Pages.selectUniversity is not a function`
+    // on click and the verification flow is unreachable.
+    if (window.Pages && window.LandingPageMethods) {
+      const lpm = window.LandingPageMethods;
+      const wire = (k) => { if (typeof lpm[k] === 'function' && !window.Pages[k]) { window.Pages[k] = lpm[k].bind(window.Pages); } };
+      ['selectUniversity', 'showUniversityComingSoon', 'filterCategoryTab'].forEach(wire);
+      console.log('✓ LandingPageMethods wired onto Pages');
+    }
+
     // Initialize and start router
     if (window.router) {
       if (window.router.init) { window.router.init(); }
@@ -244,18 +255,31 @@ class ModuleLoader {
    * Reinitialize managers that need DOM/content ready
    */
   async reinitializeManagers() {
+    // Only initialize admin managers when an admin session is present.
+    // Otherwise the unauthenticated 401 floods the console on every page
+    // load and triggers the "Session expired" toast.
+    let hasAdminSession = false;
+    try {
+      const adminSession = window.localStorage?.getItem('unihub_admin_session');
+      if (adminSession) {
+        const parsed = JSON.parse(adminSession);
+        hasAdminSession = !!(parsed && parsed.token && parsed.expiresAt > Date.now());
+      }
+    } catch (_) { /* no admin session */ }
+
     const managers = [
       { name: 'authManager', load: m => m.loadUser?.() },
       { name: 'cartManager', load: m => m.load?.() },
       { name: 'searchManager', load: m => m.loadHistory?.() },
       { name: 'notificationManager', load: m => m.load?.() },
-      { name: 'adminAuthManager', load: m => m.load?.() },
-      { name: 'adminUsersManager', load: m => m.loadUsers?.() },
+      { name: 'adminAuthManager', load: m => m.load?.(), requireAdmin: true },
+      { name: 'adminUsersManager', load: m => m.loadUsers?.(), requireAdmin: true },
       { name: 'messageManager', load: m => m.init?.() },
     ];
 
     const promises = [];
-    for (const { name, load } of managers) {
+    for (const { name, load, requireAdmin } of managers) {
+      if (requireAdmin && !hasAdminSession) {continue;}
       const manager = window[name];
       if (manager && typeof manager === 'object') {
         try {
