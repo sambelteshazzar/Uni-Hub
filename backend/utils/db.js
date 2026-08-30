@@ -387,17 +387,20 @@ class Db {
     return this._runAggregate(pipeline);
   }
 
-  async rawAll (sql, params = []) {
-    return this._all(sql, Array.isArray(params) ? params : [params]);
+  async rawAll (sql, ...paramsOrArray) {
+    const params = Array.isArray(paramsOrArray[0]) ? paramsOrArray[0] : paramsOrArray;
+    return this._all(sql, params);
   }
 
-  async rawGet (sql, params = []) {
-    const { row } = await this._get(sql, Array.isArray(params) ? params : [params]);
+  async rawGet (sql, ...paramsOrArray) {
+    const params = Array.isArray(paramsOrArray[0]) ? paramsOrArray[0] : paramsOrArray;
+    const { row } = await this._get(sql, params);
     return row;
   }
 
-  async rawRun (sql, params = []) {
-    return this._runWrite(sql, Array.isArray(params) ? params : [params]);
+  async rawRun (sql, ...paramsOrArray) {
+    const params = Array.isArray(paramsOrArray[0]) ? paramsOrArray[0] : paramsOrArray;
+    return this._runWrite(sql, params);
   }
 
   async transaction (fn) {

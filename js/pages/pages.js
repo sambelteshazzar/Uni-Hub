@@ -600,6 +600,7 @@ class Pages {
     // TODO: security review CSP — most admin routes below render forms with
     // inline handlers; migrate to addEventListener / data-action delegation.
     router.register('/admin', () => this.renderAdminDashboard());
+    router.register('/admin/login', () => this.renderAdminLogin());
     router.register('/admin/verifications', () => this.renderAdminVerifications());
     router.register('/admin/products', () => this.renderAdminProducts());
     router.register('/admin/products/new', () => this.renderAdminProductCreate());
@@ -613,6 +614,35 @@ class Pages {
     router.register('/admin/regions', () => this.renderAdminRegions());
 
     router.register('/admin/newsletter', () => this.renderAdminNewsletter());
+
+    // Delegated click handler for product cards. Replaces a broken inline
+    // `onclick="cartManager.add(${JSON.stringify(product).replace(...))"`
+    // handler that truncated when product descriptions contained a `"`,
+    // leaving an unparseable attribute and a `cart-badge` that never
+    // updated. Install once, fire on any matching click.
+    if (!Pages._addToCartHandlerInstalled) {
+      document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('[data-action="add-to-cart"]');
+        if (!btn) {return;}
+        e.stopPropagation();
+        const productId = btn.getAttribute('data-product-id');
+        if (!productId || typeof productsManager === 'undefined') {return;}
+        const product = productsManager.getById
+          ? productsManager.getById(productId)
+          : (productsManager.getAll() || []).find(p => p.id === productId);
+        if (!product) {return;}
+        try {
+          if (typeof cartManager !== 'undefined' && cartManager.add) {
+            await cartManager.add(product, 1);
+          }
+        } catch (e) { /* cartManager may not be available yet */ }
+        if (typeof Pages.updateCartBadge === 'function') {Pages.updateCartBadge();}
+        if (typeof showToast === 'function') {
+          showToast(`Added "${product.title || 'item'}" to cart`, 'success', 2500);
+        }
+      });
+      Pages._addToCartHandlerInstalled = true;
+    }
 
     console.log('✓ All routes registered successfully');
   }
@@ -1178,7 +1208,7 @@ ${product.seller?.rating >= 4.5 ? '<span class="trust-badge trust-badge-top-sell
 ${product.seller?.verified ? '<span class="trust-badge trust-badge-verified"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>Verified</span>' : ''}
 </div>
         </div>
-        <button class="quick-add-btn" onclick="event.stopPropagation(); cartManager?.add(${JSON.stringify(product).replace(/"/g, '&quot;')}); Pages.updateCartBadge();" title="Add to cart">
+        <button class="quick-add-btn" data-action="add-to-cart" data-product-id="${product.id}" title="Add to cart">
           <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
           </svg>
@@ -1278,7 +1308,7 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
 
         <!-- Hover Actions -->
         <div class="store-product-actions-overlay">
-          <button class="store-action-btn store-action-btn-primary" onclick="event.stopPropagation(); cartManager.add(${JSON.stringify(product).replace(/"/g, '&quot;')}); Pages.updateCartBadge();">${Icons.cart} Add to Cart</button>
+          <button class="store-action-btn store-action-btn-primary" data-action="add-to-cart" data-product-id="${product.id}">${Icons.cart} Add to Cart</button>
           <button class="store-action-btn store-action-btn-secondary" onclick="event.stopPropagation(); Pages.renderProductDetail('${product.id}')">View</button>
         </div>
       </div>

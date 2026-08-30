@@ -15,7 +15,6 @@ class AdminUsersManager {
     //     an admin session exists), or
     //   - the admin page itself when it mounts.
   }
-  }
 
   /**
    * Load users from JSON and storage

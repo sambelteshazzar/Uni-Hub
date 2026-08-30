@@ -210,7 +210,7 @@ exports.getUserConversations = asyncHandler(async (req, res) => {
     `SELECT COUNT(*) as count FROM conversations c
     JOIN conversation_participants cp ON cp.conversationId = c.id
     WHERE cp.userId = ? AND c.status = ?`,
-    req.user.id, status,
+    [req.user.id, status],
   );
 
   const rows = await db('conversations').rawAll(
@@ -219,7 +219,7 @@ exports.getUserConversations = asyncHandler(async (req, res) => {
     WHERE cp.userId = ? AND c.status = ?
     ORDER BY c.lastActivity DESC
     LIMIT ? OFFSET ?`,
-    req.user.id, status, limitNum, offset,
+    [req.user.id, status, limitNum, offset],
   );
 
   const conversations = [];

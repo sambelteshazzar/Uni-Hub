@@ -661,7 +661,7 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
           <span class="browse-product-seller-name">${_browseEsc(product.seller?.fullName || product.sellerName || product.seller?.name || 'Unknown')}</span>
           ${sellerRating ? `<span class="browse-product-seller-rating">${Icons.star || ''} ${_browseEsc(sellerRating)}</span>` : ''}
         </div>
-        <button class="browse-product-add-cart-btn" onclick="event.stopPropagation(); cartManager?.add(${JSON.stringify(product).replace(/"/g, '"')}); Pages.updateCartBadge();">Add to Cart</button>
+        <button class="browse-product-add-cart-btn" data-action="add-to-cart" data-product-id="${product.id}">Add to Cart</button>
       </div>
     </div>`;
   }
