@@ -208,22 +208,28 @@ const authLimiter = rateLimit({
 });
 app.use('/api/auth/', authLimiter);
 
-// Rate limiting for verification endpoints. Skips the public magic-link
-// confirm path (GET /api/verification/confirm) so a user clicking the
-// link from email is not affected by the 5/hour cap, and so that
-// email-client URL prefetching does not lock out the actual click.
-const verificationLimiter = rateLimit({
+// Rate limiting for verification endpoints. Goals:
+//   - Stop a malicious actor from spamming POST /api/verification (real
+//     submit abuse — burn our SQLite, fill up the audit log).
+//   - NOT lock out a legitimate user who opens the status page a few
+//     times while waiting for admin review. (Old: 5/hour for the whole
+//     /api/verification/* namespace, which fired on the third page load.)
+//   - NOT block admins who hit the admin endpoints frequently.
+//   - NOT block the magic-link confirm path (email-client prefetching).
+const verificationSubmitLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 5,
+  max: 10,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
     success: false,
-    error: 'Too many verification attempts, please try again later.',
+    error: 'You have submitted too many times. Please wait an hour and try again.',
   },
-  skip: (req) => req.path === '/confirm' || req.path.startsWith('/confirm?'),
+  // Only rate-limit the submit endpoint. GETs (status page, admin views)
+  // are cheap and should be allowed freely.
+  skip: (req) => req.method !== 'POST',
 });
-app.use('/api/verification/', verificationLimiter);
+app.use('/api/verification/', verificationSubmitLimiter);
 
 // Rate limiting for review endpoints
 const reviewLimiter = rateLimit({

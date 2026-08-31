@@ -1364,14 +1364,14 @@ const AuthPageMethods = {
           // Update the URL hash so back button / bookmark / reload
           // work as the user expects.
           if (typeof window.router !== 'undefined' && window.router.navigate) {
-            router.navigate('/browse');
+            window.router.navigate('/browse');
           } else {
             window.location.hash = '#/browse';
           }
           Pages.renderBrowse();
         } else if (action === 'dashboard' && typeof Pages !== 'undefined' && Pages.renderDashboard) {
           if (typeof window.router !== 'undefined' && window.router.navigate) {
-            router.navigate('/dashboard');
+            window.router.navigate('/dashboard');
           } else {
             window.location.hash = '#/dashboard';
           }
@@ -1405,7 +1405,7 @@ const AuthPageMethods = {
         const action = e.target.closest('[data-action]')?.getAttribute('data-action');
         if (action === 'home' && typeof Pages !== 'undefined' && Pages.renderLanding) {
           if (typeof window.router !== 'undefined' && window.router.navigate) {
-            router.navigate('/');
+            window.router.navigate('/');
           } else {
             window.location.hash = '#/';
           }
@@ -1507,14 +1507,14 @@ const AuthPageMethods = {
         const a = e.target.closest('[data-action]')?.getAttribute('data-action');
         if (a === 'browse' && Pages.renderBrowse) {
           if (typeof window.router !== 'undefined' && window.router.navigate) {
-            router.navigate('/browse');
+            window.router.navigate('/browse');
           } else {
             window.location.hash = '#/browse';
           }
           Pages.renderBrowse();
         } else if (a === 'dashboard' && Pages.renderDashboard) {
           if (typeof window.router !== 'undefined' && window.router.navigate) {
-            router.navigate('/dashboard');
+            window.router.navigate('/dashboard');
           } else {
             window.location.hash = '#/dashboard';
           }
@@ -1555,7 +1555,7 @@ const AuthPageMethods = {
         const a = e.target.closest('[data-action]')?.getAttribute('data-action');
         if (a === 'home' && Pages.renderLanding) {
           if (typeof window.router !== 'undefined' && window.router.navigate) {
-            router.navigate('/');
+            window.router.navigate('/');
           } else {
             window.location.hash = '#/';
           }
@@ -1590,7 +1590,7 @@ const AuthPageMethods = {
         const a = e.target.closest('[data-action]')?.getAttribute('data-action');
         if (a === 'home' && Pages.renderLanding) {
           if (typeof window.router !== 'undefined' && window.router.navigate) {
-            router.navigate('/');
+            window.router.navigate('/');
           } else {
             window.location.hash = '#/';
           }
@@ -1624,7 +1624,7 @@ const AuthPageMethods = {
         if (a === 'resubmit' && Pages.renderStudentVerification) {Pages.renderStudentVerification();}
         else if (a === 'home' && Pages.renderLanding) {
           if (typeof window.router !== 'undefined' && window.router.navigate) {
-            router.navigate('/');
+            window.router.navigate('/');
           } else {
             window.location.hash = '#/';
           }
