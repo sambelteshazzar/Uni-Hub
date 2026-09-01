@@ -238,12 +238,6 @@ var socialBtnStyle =
     Pages.renderRegister = async function () {
       Pages.showOriginalNavFooter();
       var mainContent = document.getElementById('main-content');
-      var config = { universities: [] };
-      try { config = await api.loadJSON('data/config.json'); } catch (e) { /* empty */ }
-
-      var uniOptions = config.universities
-        .map(function (u) { return '<option value="' + u.id + '">' + u.name + '</option>'; })
-        .join('');
 
       mainContent.innerHTML =
         '<div class="bb-auth-page">' +
@@ -299,13 +293,6 @@ var socialBtnStyle =
         '<input type="tel" id="reg-phone" name="phone" class="bb-form-input" placeholder="+233 50 123 4567" required />' +
         '</div>' +
         '<div class="bb-form-group">' +
-        '<label for="reg-university" class="bb-form-label">University <span class="required-star">*</span></label>' +
-        '<select id="reg-university" name="university" class="bb-form-input" required>' +
-        '<option value="" disabled selected>Select your university</option>' +
-        uniOptions +
-        '</select>' +
-        '</div>' +
-        '<div class="bb-form-group">' +
         '<label class="bb-checkbox-label">' +
         '<input type="checkbox" id="reg-terms" name="terms" required />' +
         '<span>I agree to the <a href="#" style="color: var(--primary); text-decoration: underline;">Terms of Service</a> and <a href="#" style="color: var(--primary); text-decoration: underline;">Privacy Policy</a></span>' +
@@ -334,38 +321,119 @@ var socialBtnStyle =
       var email = document.getElementById('reg-email').value;
       var password = document.getElementById('reg-password').value;
       var phone = document.getElementById('reg-phone').value;
-      var university = document.getElementById('reg-university').value;
       var acceptedTerms = document.getElementById('reg-terms').checked === true;
 
-      // Client-side guard: the backend rejects with 400 if acceptedTerms is
-      // false, so block submission before hitting the network. The user
-      // has to actually tick the checkbox.
       if (!acceptedTerms) {
         showToast('Please accept the Terms of Service and Privacy Policy to continue.', 'warning');
         return;
       }
 
-      var result = await authManager.register({
+      // Step 2: show the university picker in the same form panel. The
+      // user picks a university, then we POST register. We avoid
+      // sending university to the API until the user has actually
+      // picked one. The picker replaces the form's content; on save
+      // we restore the form with the chosen university hidden in the
+      // payload.
+      var formPanel = document.querySelector('#register-form-bb');
+      if (!formPanel) {return;}
+      var panelParent = formPanel.parentNode;
+      // Save the form HTML so we can restore on back.
+      var originalFormHtml = formPanel.outerHTML;
+      var identity = {
         fullName: firstName + ' ' + lastName,
         email: email,
         password: password,
         phone: phone,
-        university: university,
-        acceptedTerms: true,
+      };
+      var pickerHost = document.createElement('div');
+      pickerHost.id = 'bb-register-picker-host';
+      pickerHost.className = 'bb-form-group';
+      var step2Html =
+        '<div style="margin-bottom: 1rem;">' +
+          '<h2 class="bb-auth-form-title" style="font-size: 1.25rem; margin: 0 0 0.5rem;">Pick your university</h2>' +
+          '<p class="bb-auth-form-sub" style="margin: 0; font-size: 0.9rem;">Choose where you\'re enrolled. You can change it later from your profile.</p>' +
+        '</div>';
+      pickerHost.outerHTML = step2Html;
+      // Replace the form with the picker host + a Save/Back row.
+      formPanel.outerHTML =
+        '<div id="bb-register-step2">' +
+        step2Html +
+        '<div id="bb-register-picker-host"></div>' +
+        '<div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">' +
+          '<button type="button" class="bb-submit-btn bb-submit-btn-secondary" id="bb-register-back" style="flex: 1;">Back</button>' +
+          '<button type="button" class="bb-submit-btn" id="bb-register-create" disabled style="flex: 2;">Create Account</button>' +
+        '</div>' +
+        '</div>';
+      var pickerMount = document.getElementById('bb-register-picker-host');
+      var createBtn = document.getElementById('bb-register-create');
+      var backBtn = document.getElementById('bb-register-back');
+      var chosenUniversity = null;
+
+      window.UniversitiesPage.renderPicker(pickerMount, {
+        onSelect: function (id) {
+          chosenUniversity = id;
+          if (createBtn) {createBtn.disabled = false;}
+        },
       });
 
-      if (result.success) {
-        Pages.updateNavbar();
-        showToast('Account created! Welcome, ' + firstName + '!', 'success');
-        window.location.hash = '#/browse';
-        Pages.renderBrowse();
-      } else if (result.isOffline) {
-        Pages.updateNavbar();
-        showToast('Registered in offline mode. You can now browse with demo data.', 'info');
-        window.location.hash = '#/browse';
-        Pages.renderBrowse();
-      } else {
-        showToast('Registration failed: ' + result.error, 'error');
+      if (backBtn) {
+        backBtn.addEventListener('click', function () {
+          // Restore the original form and let user adjust their input.
+          var step2 = document.getElementById('bb-register-step2');
+          if (step2 && step2.parentNode) {
+            step2.outerHTML = originalFormHtml;
+          }
+        });
+      }
+
+      if (createBtn) {
+        createBtn.addEventListener('click', async function () {
+          if (!chosenUniversity) {return;}
+          createBtn.disabled = true;
+          createBtn.textContent = 'Creating account…';
+          try {
+            var payload = Object.assign({}, identity, {
+              university: chosenUniversity,
+              acceptedTerms: true,
+            });
+            var result = await authManager.register(payload);
+            if (result.success) {
+              Pages.updateNavbar();
+              showToast('Account created! Welcome, ' + firstName + '!', 'success');
+              if (typeof window.router !== 'undefined' && window.router.navigate) {
+                window.router.navigate('/verification');
+              } else {
+                window.location.hash = '#/verification';
+              }
+              setTimeout(function () {
+                if (typeof Pages !== 'undefined' && Pages.renderStudentVerification) {
+                  Pages.renderStudentVerification();
+                }
+              }, 50);
+            } else if (result.isOffline) {
+              Pages.updateNavbar();
+              showToast('Registered in offline mode. You can now browse with demo data.', 'info');
+              if (typeof window.router !== 'undefined' && window.router.navigate) {
+                window.router.navigate('/verification');
+              } else {
+                window.location.hash = '#/verification';
+              }
+              setTimeout(function () {
+                if (typeof Pages !== 'undefined' && Pages.renderStudentVerification) {
+                  Pages.renderStudentVerification();
+                }
+              }, 50);
+            } else {
+              createBtn.disabled = false;
+              createBtn.textContent = 'Create Account';
+              showToast('Registration failed: ' + result.error, 'error');
+            }
+          } catch (err) {
+            createBtn.disabled = false;
+            createBtn.textContent = 'Create Account';
+            showToast('Network error. Please try again.', 'error');
+          }
+        });
       }
     };
 

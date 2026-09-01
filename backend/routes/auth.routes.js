@@ -13,6 +13,8 @@ const {
   resetPassword,
   googleTokenLogin,
   googleRedirect,
+  listUniversities,
+  setMyUniversity,
 } = require('../controllers/auth.controller');
 
 // Google OAuth strategy — only register when env vars are configured
@@ -70,6 +72,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 // Public routes
 router.post('/register', register);
 router.post('/login', login);
+router.get('/universities', listUniversities);
 // MFA completion — guarded by challengeId + emailed code possession.
 router.post('/mfa/verify', verifyMfa);
 router.post('/forgot-password', forgotPassword);
@@ -80,6 +83,7 @@ router.post('/google/token', googleTokenLogin);
 
 // Protected routes
 router.get('/me', protect, getMe);
+router.post('/me/university', protect, setMyUniversity);
 router.put('/profile', protect, updateProfile);
 router.put('/change-password', protect, changePassword);
 

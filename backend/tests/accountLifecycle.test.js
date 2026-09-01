@@ -14,7 +14,7 @@ async function registerUser (overrides = {}, prefix = 'alc') {
     email: `${prefix}_${suffix}@test.com`,
     phone: `+23324${String(1000000 + Math.floor(Math.random() * 8999999))}`,
     password: 'LifecyclePass1!',
-    university: 'University of Ghana',
+    university: 'atu',
     level: '200',
     // Server-side consent gate rejects signups without explicit acceptance.
     acceptedTerms: true,

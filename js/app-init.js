@@ -72,17 +72,18 @@ const MODULE_DEPENDENCIES = {
 
   // Level 5: Pages (depends on everything)
   pages: [
-{ name: 'bestbuy-landing', file: 'js/pages/bestbuy-landing.js', exposes: [] },
+    { name: 'bestbuy-landing', file: 'js/pages/bestbuy-landing.js', exposes: [] },
     { name: 'landing-page-methods', file: 'js/pages/landing-page-methods.js', exposes: ['LandingPageMethods'] },
+    { name: 'universities-page', file: 'js/pages/universities-page.js', exposes: ['UniversitiesPage'] },
     { name: 'auth-pages', file: 'js/pages/auth-pages.js', exposes: ['AuthPageMethods'] },
     { name: 'browse-pages', file: 'js/pages/browse-pages.js', exposes: ['BrowsePageMethods'] },
     { name: 'policies-content', file: 'js/content/policies.js', exposes: ['POLICIES'] },
     { name: 'static-pages', file: 'js/pages/static-pages.js', exposes: ['StaticPageMethods'] },
     { name: 'pages', file: 'js/pages/pages.js', exposes: ['Pages'] },
-  { name: 'bestbuy-auth-dashboard', file: 'js/pages/bestbuy-auth-dashboard.js', exposes: [] },
-  { name: 'messages', file: 'js/pages/messages.js', exposes: ['messagesPage'] },
-  { name: 'landing-page-loader', file: 'js/pages/landing-page-loader.js', exposes: [] },
-],
+    { name: 'bestbuy-auth-dashboard', file: 'js/pages/bestbuy-auth-dashboard.js', exposes: [] },
+    { name: 'messages', file: 'js/pages/messages.js', exposes: ['messagesPage'] },
+    { name: 'landing-page-loader', file: 'js/pages/landing-page-loader.js', exposes: [] },
+  ],
 
   // Level 6: Globals exposure
   setup: [
@@ -222,17 +223,6 @@ class ModuleLoader {
       console.log('✓ Routes registered');
     } else {
       console.error('✗ Pages class not found on window - routes NOT registered');
-    }
-
-    // Wire LandingPageMethods onto Pages (so inline onclick="Pages.selectUniversity('atu')"
-    // and friends resolve to real functions). Without this, the landing
-    // page's university cards throw `Pages.selectUniversity is not a function`
-    // on click and the verification flow is unreachable.
-    if (window.Pages && window.LandingPageMethods) {
-      const lpm = window.LandingPageMethods;
-      const wire = (k) => { if (typeof lpm[k] === 'function' && !window.Pages[k]) { window.Pages[k] = lpm[k].bind(window.Pages); } };
-      ['selectUniversity', 'showUniversityComingSoon', 'filterCategoryTab'].forEach(wire);
-      console.log('✓ LandingPageMethods wired onto Pages');
     }
 
     // Initialize and start router

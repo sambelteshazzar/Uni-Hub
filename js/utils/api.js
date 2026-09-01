@@ -343,6 +343,8 @@ class API {
     updateProfile: data => this.put('/auth/profile', data),
     changePassword: (currentPassword, newPassword) =>
       this.put('/auth/change-password', { currentPassword, newPassword }),
+    listUniversities: () => this.get('/auth/universities'),
+    setUniversity: university => this.post('/auth/me/university', { university }),
   };
 
   /**

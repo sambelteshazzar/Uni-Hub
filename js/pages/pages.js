@@ -588,6 +588,11 @@ class Pages {
     // email click), or fully verified.
     router.register('/verification-status', () => this.renderVerificationStatus());
 
+    // University info page (public, no auth) and onboarding picker
+    // (auth-gated by renderOnboarding). See js/pages/universities-page.js.
+    router.register('/universities', () => window.UniversitiesPage.renderUniversities());
+    router.register('/onboarding', () => window.UniversitiesPage.renderOnboarding());
+
     console.log('✓ Main routes registered');
 
     // Product detail
@@ -5820,9 +5825,20 @@ font-size: 0.8rem;
         label: 'Status',
         render: u => {
           const suspended = u.isSuspended === true || u.status === 'suspended' || u.status === 'banned';
-          const kind = suspended ? 'neutral' : 'success';
-          const label = suspended ? (u.status === 'banned' ? 'Banned' : 'Suspended') : 'Active';
-          return `<span class="adm-badge adm-badge--${kind}">${label}</span>`;
+          // 2026-08-30: legacy users (e.g. pre-fix Google signups) have
+          // an empty university and needsUniversityPick: true. Surface
+          // this so admins can chase them down.
+          const needsUni = u.needsUniversityPick === true;
+          let kind = 'success';
+          let label = 'Active';
+          if (suspended) {
+            kind = 'neutral';
+            label = u.status === 'banned' ? 'Banned' : 'Suspended';
+          } else if (needsUni) {
+            kind = 'warning';
+            label = 'Needs university';
+          }
+          return `<span class="adm-badge adm-badge--${kind}">${_pageEsc(label)}</span>`;
         },
       },
       {

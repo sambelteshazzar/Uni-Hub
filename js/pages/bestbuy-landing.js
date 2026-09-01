@@ -21,52 +21,6 @@
       console.error('Error loading config:', error);
     }
 
-// Build universities HTML
-    let universitiesHTML = '';
-    if (config.universities && config.universities.length > 0) {
-      universitiesHTML = config.universities
-        .map(function (uni, i) {
-          const isActive = uni.active !== false;
-          const clickHandler = isActive
-            ? 'Pages.selectUniversity(\'' + uni.id + '\'); return false;'
-            : 'Pages.showUniversityComingSoon(\'' + uni.name + '\'); return false;';
-          const comingSoonBadge = isActive ? '' : '<span style="position:absolute;top:0.5rem;right:0.5rem;background:#eab308;color:#000;font-size:0.65rem;font-weight:600;padding:0.2rem 0.4rem;border-radius:0.25rem;text-transform:uppercase;letter-spacing:0.05em;">Coming Soon</span>';
-          const countText = isActive ? (100 + i * 50) + '+ items' : 'Not yet available';
-
-          // Use real logo if available, fallback to generated SVG
-          let uniIcon;
-          let bgStyle = '';
-          if (uni.logo) {
-            uniIcon = '<img src="' + uni.logo + '" alt="' + uni.name + ' logo" width="28" height="28" style="display:block;object-fit:contain;" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'block\';" />' +
-                      '<svg viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.8" width="28" height="28" style="display:none;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>';
-            bgStyle = 'background:rgba(0,70,190,0.08)';
-          } else {
-            const uniColors = ['#0046be', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899', '#ef4444', '#6b7280'];
-            const uniColor = uniColors[i % uniColors.length];
-            uniIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="' + uniColor + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>';
-            const uniBg = uniColor.replace('#', '');
-            const r = parseInt(uniBg.substring(0,2),16);
-            const g = parseInt(uniBg.substring(2,4),16);
-            const b = parseInt(uniBg.substring(4,6),16);
-            bgStyle = 'background:rgba(' + r + ',' + g + ',' + b + ',0.1)';
-          }
-
-          return (
-            '<div class="bb-category-card" style="position:relative;' + (isActive ? '' : 'opacity:0.7;cursor:default;') + '" onclick="' + clickHandler + '">' +
-            comingSoonBadge +
-            '<div class="bb-category-icon" style="' + bgStyle + '">' + uniIcon + '</div>' +
-            '<p class="bb-category-name">' +
-            uni.name +
-            '</p>' +
-            '<p class="bb-category-count">' +
-            countText +
-            '</p>' +
-            '</div>'
-          );
-        })
-        .join('');
-    }
-
     // Build categories HTML
     let categoriesHTML = '';
     if (config.categories && config.categories.length > 0) {
@@ -220,21 +174,10 @@
       '<!-- University Selection -->' +
       '<section class="bb-categories" id="universities">' +
       '<div class="bb-container">' +
-      '<div class="bb-section-header">' +
-      '<h2 class="bb-section-title">Choose Your University</h2>' +
-      '<p class="bb-section-subtitle">Browse items from verified students at your campus</p>' +
-      '</div>' +
-      '<div class="bb-categories-grid">' +
-(universitiesHTML ||
-'<div class="bb-category-card" onclick="Pages.renderBrowse(); return false;"><div class="bb-category-icon" style="background:rgba(0,70,190,0.1)"><img src="/assets/logos/ug-logo.jpg" alt="University of Ghana logo" width="28" height="28" style="display:block;object-fit:contain;" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'block\';" /><svg viewBox="0 0 24 24" fill="none" stroke="#0046be" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28" style="display:none;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg></div><p class="bb-category-name">University of Ghana</p><p class="bb-category-count">350+ items</p></div>' +
-'<div class="bb-category-card" onclick="Pages.renderBrowse(); return false;"><div class="bb-category-icon" style="background:rgba(139,92,246,0.1)"><img src="/assets/logos/knust-logo.jpg" alt="KNUST logo" width="28" height="28" style="display:block;object-fit:contain;" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'block\';" /><svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28" style="display:none;"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 21v-6h6v6"/><path d="M10 9h4"/><path d="M10 13h4"/></svg></div><p class="bb-category-name">KNUST</p><p class="bb-category-count">220+ items</p></div>' +
-'<div class="bb-category-card" onclick="Pages.renderBrowse(); return false;"><div class="bb-category-icon" style="background:rgba(16,185,129,0.1)"><img src="/assets/logos/ucc-logo.jpg" alt="University of Cape Coast logo" width="28" height="28" style="display:block;object-fit:contain;" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'block\';" /><svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28" style="display:none;"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div><p class="bb-category-name">University of Cape Coast</p><p class="bb-category-count">180+ items</p></div>' +
-'<div class="bb-category-card" onclick="Pages.renderBrowse(); return false;"><div class="bb-category-icon" style="background:rgba(245,158,11,0.1)"><img src="/assets/logos/ashesi-logo.jpg" alt="Ashesi University logo" width="28" height="28" style="display:block;object-fit:contain;" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'block\';" /><svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28" style="display:none;"><path d="M12 2L2 8l10 6 10-6-10-6z"/><path d="M2 17l10 6 10-6"/><path d="M2 12l10 6 10-6"/></svg></div><p class="bb-category-name">Ashesi University</p><p class="bb-category-count">95+ items</p></div>') +
-      '<div class="bb-category-card" onclick="Pages.renderBrowse(); return false;" style="border: 2px dashed var(--primary);">' +
-      '<div class="bb-category-icon" style="background:rgba(0,70,190,0.08);font-size:var(--text-xl);color:var(--primary);font-weight:700;">+</div>' +
-      '<p class="bb-category-name" style="color: var(--primary);">View All Universities</p>' +
-      '<p class="bb-category-count">7 total</p>' +
-      '</div>' +
+      '<div class="bb-section-header" style="text-align: center;">' +
+      '<h2 class="bb-section-title">Universities on Uni-Hub</h2>' +
+      '<p class="bb-section-subtitle">You\'ll pick your university during signup. Browse the full list anytime.</p>' +
+      '<a href="#/universities" class="bb-btn bb-btn-outline" style="margin-top: 1rem; display: inline-block; text-decoration: none;">Browse all universities</a>' +
       '</div>' +
       '</div>' +
       '</section>' +

@@ -46,23 +46,19 @@ const LandingPageMethods = {
     }, 50);
   },
 
-
-    selectUniversity (universityId) {
-    StorageManager.set(STORAGE_KEYS.SELECTED_UNIVERSITY, universityId);
-    Pages.renderStudentVerification();
-  },
-
   showUniversityComingSoon (universityName) {
-    // toastManager is the real global; the older `Toast` symbol was a stale
-    // reference that always fell through to alert(). Use the real one.
+    // The "coming soon" toast used by the now-removed landing-page
+    // university cards. Kept as a no-op stub in case any other surface
+    // still calls it. University pickers are now driven by the active
+    // list returned from /api/auth/universities.
     if (typeof showToast === 'function') {
-      showToast(`${universityName} is coming soon! We're currently available at Accra Technical University (ATU).`, 'info');
+      showToast(`${universityName} is coming soon!`, 'info');
     } else {
       console.log(`[coming-soon] ${universityName} — not yet available`);
     }
   },
 
-    filterCategoryTab (category, button) {
+  filterCategoryTab (category, button) {
     // Update tab buttons
     document.querySelectorAll('.category-tab').forEach(tab => {
       tab.style.background = 'transparent';
@@ -79,7 +75,7 @@ const LandingPageMethods = {
     if (category === 'all') {
       Pages.renderBrowse();
     } else {
-      Pages.renderBrowse({ category: category });
+      Pages.renderBrowse({ category });
     }
   },
 };

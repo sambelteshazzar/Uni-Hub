@@ -15,7 +15,7 @@ async function registerViaApi (overrides = {}) {
     email: `consent_${suffix}@test.com`,
     phone: `+23320${String(1000000 + Math.floor(Math.random() * 8999999))}`,
     password: 'ConsentPass1!',
-    university: 'University of Ghana',
+    university: 'atu',
     level: '200',
     ...overrides,
   };

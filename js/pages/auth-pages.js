@@ -14,7 +14,11 @@ const _Icons = typeof Icons !== 'undefined' ? Icons : {
 const AuthPageMethods = {
   renderStudentVerification () {
     const mainContent = document.getElementById('main-content');
-    const selectedUniversity = StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
+    // University now lives on the user record (set at signup) — there's
+    // no separate localStorage copy. Fall back to the stored user object.
+    const currentUser = (typeof authManager !== 'undefined' && authManager.getCurrentUser)
+      ? authManager.getCurrentUser() : null;
+    const selectedUniversity = currentUser?.university || '';
     const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true);
 
     // Guard: if the user reached this route without picking a university
@@ -70,7 +74,6 @@ const AuthPageMethods = {
       const uni = config.universities.find(u => u.id === selectedUniversity);
       if (uni) {
         if (uni.active === false) {
-          StorageManager.remove(STORAGE_KEYS.SELECTED_UNIVERSITY);
           Pages.renderLanding();
         showToast(`${uni.name} is coming soon! We're currently available at Accra Technical University (ATU).`, 'info');
           return;
@@ -241,6 +244,7 @@ const AuthPageMethods = {
     <ul>
     <li><strong>How long does review take?</strong> 24-48 hours, often faster.</li>
     <li><strong>Where do I check status?</strong> <a href="#/verification-status" data-action="status">Check your verification status</a> anytime.</li>
+    <li><strong>Wrong university?</strong> <a href="#" data-action="change-uni" onclick="event.preventDefault();Pages.openChangeUniversityOverlay();">Change your university</a> at any time.</li>
     <li><strong>Didn't get the email?</strong> Check spam, or contact <a href="mailto:unihubsupport@gmail.com">unihubsupport@gmail.com</a></li>
     </ul>
     </div>
@@ -289,7 +293,23 @@ const AuthPageMethods = {
       return;
     }
 
-    const selectedUniversity = StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
+    // University lives on the user record. If it's missing, send the
+    // user through the onboarding picker before they can verify.
+    const currentUser = (typeof authManager !== 'undefined' && authManager.getCurrentUser)
+      ? authManager.getCurrentUser() : null;
+    const selectedUniversity = currentUser?.university || '';
+    if (!selectedUniversity) {
+      showToast('Please pick your university first.', 'warning');
+      if (typeof window.router !== 'undefined' && window.router.navigate) {
+        window.router.navigate('/onboarding');
+      } else {
+        window.location.hash = '#/onboarding';
+      }
+      if (typeof Pages !== 'undefined' && Pages.renderOnboarding) {
+        Pages.renderOnboarding();
+      }
+      return;
+    }
 
     const data = {
       fullName: form.fullName.value.trim(),
@@ -386,6 +406,90 @@ const AuthPageMethods = {
   // handleVerification above.
   async handleStudentVerification (event) { return Pages.handleVerification(event); },
   async handleDocumentVerification (event) { return Pages.handleVerification(event); },
+
+  /**
+   * Open an overlay with the university picker so the user can change
+   * their university without leaving the verification form. On save, the
+   * user record is updated and the form's header re-renders.
+   */
+  async openChangeUniversityOverlay () {
+    // If one is already open, dismiss it.
+    const existing = document.getElementById('change-uni-overlay');
+    if (existing) {existing.remove();}
+
+    const overlay = document.createElement('div');
+    overlay.id = 'change-uni-overlay';
+    overlay.className = 'auth-overlay';
+    overlay.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1100; padding: 1rem;';
+    overlay.innerHTML = `
+      <div class="auth-card verification-card" style="max-width: 480px; width: 100%; max-height: 90vh; overflow: auto; padding: 1.5rem;">
+        <h3 style="margin: 0 0 0.25rem;">Change your university</h3>
+        <p style="margin: 0 0 1rem; color: var(--neutral-600); font-size: 0.9rem;">Pick where you're currently enrolled. You can change this again later.</p>
+        <div id="change-uni-picker-host"></div>
+        <div style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: flex-end;">
+          <button type="button" class="btn btn-ghost" id="change-uni-cancel">Cancel</button>
+          <button type="button" class="btn btn-primary" id="change-uni-save" disabled>Save</button>
+        </div>
+      </div>
+    `;
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {overlay.remove();}
+    });
+    document.body.appendChild(overlay);
+
+    const currentUser = (typeof authManager !== 'undefined' && authManager.getCurrentUser)
+      ? authManager.getCurrentUser() : null;
+    const currentId = currentUser?.university || null;
+
+    const host = overlay.querySelector('#change-uni-picker-host');
+    const saveBtn = overlay.querySelector('#change-uni-save');
+    const cancelBtn = overlay.querySelector('#change-uni-cancel');
+    let chosen = null;
+
+    await window.UniversitiesPage.renderPicker(host, {
+      selectedId: currentId,
+      onSelect: (id) => {
+        chosen = id;
+        if (saveBtn) {saveBtn.disabled = !id || id === currentId;}
+      },
+    });
+
+    if (cancelBtn) {cancelBtn.addEventListener('click', () => overlay.remove());}
+
+    if (saveBtn) {
+      saveBtn.addEventListener('click', async () => {
+        if (!chosen || chosen === currentId) {return;}
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving…';
+        try {
+          const resp = await api.auth.setUniversity(chosen);
+          if (resp && resp.success) {
+            const updated = resp.data || resp.user;
+            if (typeof authManager !== 'undefined' && authManager.setCurrentUser) {
+              authManager.setCurrentUser(updated);
+            }
+            if (typeof showToast === 'function') {showToast('University updated.', 'success');}
+            overlay.remove();
+            // Re-render the verification form so the header reflects the
+            // new university.
+            if (typeof Pages !== 'undefined' && Pages.renderStudentVerification) {
+              Pages.renderStudentVerification();
+            }
+          } else {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save';
+            if (typeof showToast === 'function') {
+              showToast(resp?.error || 'Could not save university.', 'error');
+            }
+          }
+        } catch (err) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Save';
+          if (typeof showToast === 'function') {showToast('Network error. Please try again.', 'error');}
+        }
+      });
+    }
+  },
 
   renderLogin () {
     // Don't hide navbar/footer - show as overlay on landing page
@@ -760,6 +864,21 @@ const AuthPageMethods = {
   notificationManager.requestBrowserPermission();
   }
 
+  // If the user has no university yet (e.g. legacy Google signup before
+  // the picker was enforced), send them to /#/onboarding first. Their
+  // existing session is fine; they just need to pick a university.
+  const currentUser = (typeof authManager !== 'undefined' && authManager.getCurrentUser)
+    ? authManager.getCurrentUser() : null;
+  if (currentUser && currentUser.needsUniversityPick) {
+    if (typeof window.router !== 'undefined' && window.router.navigate) {
+      window.router.navigate('/onboarding');
+    } else {
+      window.location.hash = '#/onboarding';
+    }
+    if (typeof Pages !== 'undefined' && Pages.renderOnboarding) {Pages.renderOnboarding();}
+    return;
+  }
+
   // Force redirect to browse page using multiple methods for reliability
       try {
         // Method 1: Use router if available
@@ -798,7 +917,9 @@ const AuthPageMethods = {
     Pages.hideOriginalNavFooter();
 
     const mainContent = document.getElementById('main-content');
-    const selectedUniversity = StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
+    const currentUser = (typeof authManager !== 'undefined' && authManager.getCurrentUser)
+      ? authManager.getCurrentUser() : null;
+    const selectedUniversity = currentUser?.university || '';
 
     mainContent.innerHTML = `
     <style>
@@ -1060,42 +1181,120 @@ const AuthPageMethods = {
   },
 
   async handleRegister (event) {
-  event.preventDefault();
-  const form = document.getElementById('register-form');
-  const selectedUniversity = StorageManager.get(STORAGE_KEYS.SELECTED_UNIVERSITY);
+    event.preventDefault();
+    const form = document.getElementById('register-form');
+    if (!form) {return;}
 
-  const userData = {
-    fullName: form.fullName.value,
-    email: form.email.value,
-    phone: form.phone.value,
-    password: form.password.value,
-    confirmPassword: form.confirmPassword.value,
-    university: selectedUniversity,
-      // Server-enforced consent (spec 2026-08-23). Checkbox is required
-      // client-side; this makes the agreement explicit in the API contract.
+    // Capture identity fields from step 1.
+    const identity = {
+      fullName: form.fullName.value.trim(),
+      email: form.email.value.trim(),
+      phone: form.phone.value.trim(),
+      password: form.password.value,
+      confirmPassword: form.confirmPassword.value,
       acceptedTerms: form.terms.checked === true,
-  };
-
-  const result = await authManager.register(userData);
-
-  if (result.success) {
-        showToast(result.message, 'success');
-    try {
-    if (typeof window.router !== 'undefined' && window.router.navigate) {
-      router.navigate('/browse');
+    };
+    if (!identity.acceptedTerms) {
+      showToast('Please accept the Terms of Service and Privacy Policy to continue.', 'warning');
+      return;
     }
-    window.location.hash = '#/browse';
-    setTimeout(() => {
-      Pages.renderBrowse();
-    }, 50);
-    } catch (e) {
-    console.error('Navigation error:', e);
-    window.location.hash = '#/browse';
-    Pages.renderBrowse();
+
+    // Validate step 1 fields locally before showing step 2.
+    if (!identity.fullName || !identity.email || !identity.phone ||
+        !identity.password || !identity.confirmPassword) {
+      showToast('Please fill in all required fields.', 'warning');
+      return;
     }
-  } else {
-      showToast('Registration failed: ' + result.error, 'error');
-  }
+    if (identity.password !== identity.confirmPassword) {
+      showToast('Passwords do not match.', 'warning');
+      return;
+    }
+    if (identity.password.length < 8) {
+      showToast('Password must be at least 8 characters.', 'warning');
+      return;
+    }
+
+    // Step 2: show the university picker in the same overlay. When the
+    // user picks, submit the register call with the chosen id.
+    this._showRegisterUniversityStep(identity);
+  },
+
+  // Renders step 2 (university picker) inside the register overlay. The
+  // overlay is the .auth-card-modern element created in renderRegister.
+  // We replace its body with the picker UI and a back/submit pair.
+  _showRegisterUniversityStep (identity) {
+    const overlay = document.querySelector('.auth-card-modern');
+    if (!overlay) {return;}
+
+    overlay.innerHTML = `
+      <div class="auth-card-header">
+        <div class="auth-icon-wrapper">
+          <img src="/favicon.png" alt="JERTS CART" />
+        </div>
+        <h1 class="auth-title">Pick your university</h1>
+        <p class="auth-subtitle">Choose where you're enrolled. You'll see the right campus marketplace.</p>
+      </div>
+      <div id="register-picker-host"></div>
+      <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
+        <button type="button" class="submit-btn submit-btn-secondary" id="register-back" style="flex: 1;">Back</button>
+        <button type="button" class="submit-btn submit-btn-primary" id="register-create" disabled style="flex: 2;">Create Account</button>
+      </div>
+    `;
+
+    const host = overlay.querySelector('#register-picker-host');
+    const createBtn = overlay.querySelector('#register-create');
+    const backBtn = overlay.querySelector('#register-back');
+    let chosenUniversity = null;
+
+    window.UniversitiesPage.renderPicker(host, {
+      onSelect: (id) => {
+        chosenUniversity = id;
+        if (createBtn) {createBtn.disabled = false;}
+      },
+    });
+
+    if (backBtn) {
+      backBtn.addEventListener('click', () => {
+        // Re-render the identity step from scratch so the user can
+        // adjust their input.
+        this.renderRegister();
+      });
+    }
+
+    if (createBtn) {
+      createBtn.addEventListener('click', async () => {
+        if (!chosenUniversity) {return;}
+        createBtn.disabled = true;
+        createBtn.textContent = 'Creating account…';
+        try {
+          const userData = { ...identity, university: chosenUniversity };
+          const result = await authManager.register(userData);
+          if (result.success) {
+            showToast(result.message, 'success');
+            // Close the register overlay and route to verification.
+            this.closeAuthOverlay();
+            if (typeof window.router !== 'undefined' && window.router.navigate) {
+              window.router.navigate('/verification');
+            } else {
+              window.location.hash = '#/verification';
+            }
+            setTimeout(() => {
+              if (typeof Pages !== 'undefined' && Pages.renderStudentVerification) {
+                Pages.renderStudentVerification();
+              }
+            }, 50);
+          } else {
+            createBtn.disabled = false;
+            createBtn.textContent = 'Create Account';
+            showToast('Registration failed: ' + (result.error || 'Unknown error'), 'error');
+          }
+        } catch (err) {
+          createBtn.disabled = false;
+          createBtn.textContent = 'Create Account';
+          showToast('Network error. Please try again.', 'error');
+        }
+      });
+    }
   },
 
   renderForgotPassword () {
@@ -1739,6 +1938,7 @@ window.AuthPageMethods = AuthPageMethods;
       'handleVerification',
       'renderVerifyConfirmation',
       'renderVerificationStatus',
+      'openChangeUniversityOverlay',
     ].forEach(bind);
   }, 50);
 })();

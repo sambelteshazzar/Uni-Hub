@@ -6,6 +6,7 @@ const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { sendPasswordResetEmail, sendEmail, isEmailConfigured } = require('../utils/emailService');
 const logActivity = require('../utils/logActivity');
 const mfa = require('../utils/mfa');
+const universities = require('../config/universities');
 const { POLICY_VERSION } = require('../config/policies');
 
 function getPublicProfile (user) {
@@ -72,6 +73,11 @@ exports.register = asyncHandler(async (req, res) => {
   if (!university || typeof university !== 'string') {
     throw new ApiError(400, 'University is required');
   }
+  // Validate against the active universities list. Reject placeholders
+  // like 'Not Set' and ids whose active flag is false in data/config.json.
+  if (!universities.isActiveId(university)) {
+    throw new ApiError(400, 'University is not currently available. Please pick an active university.');
+  }
 
   if (!phone || typeof phone !== 'string' || !/^[\d\s+\-()]{7,15}$/.test(phone)) {
     throw new ApiError(400, 'A valid phone number is required');
@@ -122,6 +128,48 @@ exports.register = asyncHandler(async (req, res) => {
       user: getPublicProfile(mappedUser),
       token,
     },
+  });
+});
+
+/**
+ * @desc Get the list of active universities for the picker.
+ * Public so the registration page can render options without a session.
+ * @route GET /api/auth/universities
+ * @access Public
+ */
+exports.listUniversities = asyncHandler(async (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      universities: universities.loadActive(),
+    },
+  });
+});
+
+/**
+ * @desc Set the current user's university (post-signup onboarding,
+ * or to change an existing one). Validates against the active list.
+ * @route POST /api/auth/me/university
+ * @access Authenticated
+ */
+exports.setMyUniversity = asyncHandler(async (req, res) => {
+  const { university } = req.body;
+  if (!university || typeof university !== 'string') {
+    throw new ApiError(400, 'University is required');
+  }
+  if (!universities.isActiveId(university)) {
+    throw new ApiError(400, 'University is not currently available.');
+  }
+  const userId = req.user.id;
+  const updated = await db('users').updateById(userId, {
+    university,
+    needsUniversityPick: 0,
+  });
+  const mapped = mapUserRow(updated);
+  res.json({
+    success: true,
+    message: 'University updated',
+    data: getPublicProfile(mapped),
   });
 });
 
@@ -501,7 +549,10 @@ exports.googleTokenLogin = asyncHandler(async (req, res) => {
       email,
       phone: syntheticPhone,
       password: hashedPassword,
-      university: 'Not Set',
+      // No university chosen yet. The user will be routed to
+      // /#/onboarding after this response so they can pick one.
+      university: '',
+      needsUniversityPick: 1,
       role: 'buyer',
       isVerified: googleUser.email_verified ? 1 : 0,
       avatar,

@@ -654,6 +654,11 @@ async function runTursoMigrations () {
       alter: 'ALTER TABLE users ADD COLUMN googleId TEXT',
     },
     {
+      check: 'PRAGMA table_info(users)',
+      find: 'needsUniversityPick',
+      alter: 'ALTER TABLE users ADD COLUMN needsUniversityPick INTEGER DEFAULT 0',
+    },
+    {
       check: 'PRAGMA table_info(reviews)',
       find: 'detailedRatings_accuracy',
       alter: 'ALTER TABLE reviews ADD COLUMN detailedRatings_accuracy INTEGER',
@@ -1300,10 +1305,11 @@ function connectLocal () {
         password TEXT NOT NULL,
         avatar TEXT DEFAULT '',
         bio TEXT,
-        isVerified INTEGER DEFAULT 0,
-        verificationMethod TEXT,
-        isPending INTEGER DEFAULT 0,
-        rating REAL DEFAULT 0,
+  isVerified INTEGER DEFAULT 0,
+  verificationMethod TEXT,
+  isPending INTEGER DEFAULT 0,
+  needsUniversityPick INTEGER DEFAULT 0,
+  rating REAL DEFAULT 0,
         totalOrders INTEGER DEFAULT 0,
         totalSales INTEGER DEFAULT 0,
         totalReviews INTEGER DEFAULT 0,
@@ -1389,6 +1395,17 @@ function connectLocal () {
     const userCols = db.prepare('PRAGMA table_info(users)').all();
     if (!userCols.find(c => c.name === 'googleId')) {
       db.prepare('ALTER TABLE users ADD COLUMN googleId TEXT').run();
+    }
+    // 2026-08-30: university picker is now mandatory at signup, but legacy
+    // Google signups may have university='' or 'Not Set'. Track those
+    // users so the post-login guard can route them to /#/onboarding.
+    if (!userCols.find(c => c.name === 'needsUniversityPick')) {
+      db.prepare('ALTER TABLE users ADD COLUMN needsUniversityPick INTEGER DEFAULT 0').run();
+      // Mark any existing user with an empty / placeholder university
+      // so they get the onboarding prompt on next login.
+      db.prepare(
+        "UPDATE users SET needsUniversityPick = 1 WHERE university IS NULL OR university = '' OR university = 'Not Set'",
+      ).run();
     }
     // gender + subcategory columns power the Fashion and Gadgets
     // sub-options on the admin product form. Both are nullable.

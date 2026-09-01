@@ -13,7 +13,6 @@ const STORAGE_KEY_PREFIX = 'unihub_';
 const STORAGE_KEYS = {
   CURRENT_USER: `${STORAGE_KEY_PREFIX}session`,
   SESSION: `${STORAGE_KEY_PREFIX}session`,
-  SELECTED_UNIVERSITY: `${STORAGE_KEY_PREFIX}selected_university`,
   STUDENT_VERIFICATION: `${STORAGE_KEY_PREFIX}student_verification`,
   VERIFICATION_QUEUE: `${STORAGE_KEY_PREFIX}verification_queue`,
   USERS: `${STORAGE_KEY_PREFIX}users`,
