@@ -585,6 +585,36 @@ min-height: 44px;
   }
 }
 
+/* Phones (<= 480px): collapse the footer link columns to 2-up so the
+   footer doesn't dominate every page, and bump the small footer links
+   to a 44px touch target (Apple HIG) without changing typography. */
+@media (max-width: 480px) {
+  .footer-links-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem 1rem;
+  }
+  /* On a 2-up grid the brand column should span both columns and sit
+     at the top so the link columns read as a tidy 2x2 block below. */
+  .footer-brand-col {
+    grid-column: 1 / -1;
+  }
+  .footer-links-col {
+    min-width: 0;
+  }
+  /* 14px-tall <a> tags are the smallest hit area in the app. Inflate
+     the hit area with vertical padding while keeping the text size. */
+  .footer-link {
+    display: inline-block;
+    padding: 0.65rem 0;
+    min-height: 44px;
+    line-height: 1.2;
+  }
+  .footer-links-list {
+    gap: 0;
+  }
+}
+
 /* ============================================
    DARK MODE OVERRIDES
    ============================================ */

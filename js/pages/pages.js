@@ -3419,6 +3419,20 @@ ${order.items
     // Check auth using authManager (which uses unihub_session)
     const isLoggedIn = typeof authManager !== 'undefined' && authManager.isLoggedIn();
 
+    // Hide the "Sign up" CTA when the user is already on an auth page —
+    // showing a Sign up button on /login or /register is redundant, and
+    // on mobile the navbar only renders the "Sign up" button anyway
+    // (the ghost "Log in" button is hidden at <768px), so a user
+    // landing on /login sees only "Sign up" which is confusing UX.
+    const hash = (typeof window !== 'undefined' && window.location && window.location.hash) || '';
+    const onAuthRoute =
+      hash.startsWith('#/login') ||
+      hash.startsWith('#/register') ||
+      hash.startsWith('#/forgot-password') ||
+      hash.startsWith('#/reset-password') ||
+      hash.startsWith('#/verify') ||
+      hash.startsWith('#/onboarding');
+
     if (isLoggedIn) {
       // Desktop navbar - logged in
       if (authButtons) {authButtons.style.display = 'none';}
@@ -3432,12 +3446,12 @@ ${order.items
     } else {
       // Desktop navbar - logged out
       if (authButtons) {
-        authButtons.style.display = 'flex';
+        authButtons.style.display = onAuthRoute ? 'none' : 'flex';
         authButtons.style.gap = 'var(--space-sm)';
       }
       if (userMenu) {userMenu.style.display = 'none';}
       // Mobile drawer - logged out
-      if (drawerAuth) {drawerAuth.style.display = 'block';}
+      if (drawerAuth) {drawerAuth.style.display = onAuthRoute ? 'none' : 'block';}
       if (drawerUser) {drawerUser.style.display = 'none';}
     }
   }
