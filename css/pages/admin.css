@@ -2722,6 +2722,48 @@
   .adm-auth-tagline { font-size: 24px; }
 }
 
+/* Mobile (<= 480px): the side panel is a marketing hero that pushed
+   the form below the fold on phones. Reorder the form to the top and
+   collapse the side panel to a compact brand strip. */
+@media (max-width: 480px) {
+  .adm-auth { flex-direction: column; }
+  .adm-auth-side {
+    order: 2;
+    padding: 16px 20px;
+    min-height: 0;
+  }
+  .adm-auth-side-content {
+    /* Hide marketing copy on phones — only the brand row stays. */
+    display: none;
+  }
+  .adm-auth-brand {
+    margin-bottom: 0;
+  }
+  .adm-auth-brand-mark {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+    border-radius: 6px;
+  }
+  .adm-auth-brand-name {
+    font-size: 14px;
+  }
+  .adm-auth-meta {
+    /* Tucked into the brand row, shown smaller. */
+    position: static;
+    margin-top: 8px;
+    text-align: center;
+    font-size: 11px;
+  }
+  .adm-auth-form {
+    order: 1;
+    padding: 28px 20px 32px;
+  }
+  .adm-auth-form-title { font-size: 22px; }
+  .adm-form-input { font-size: 16px; } /* 16px prevents iOS zoom on focus */
+  .adm-form-btn { font-size: 15px; min-height: 44px; } /* 44px touch target */
+}
+
 /* ---- Toast (light, brand) ---- */
 .adm-toast-host {
   position: fixed;
