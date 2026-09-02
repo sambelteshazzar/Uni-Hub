@@ -106,7 +106,7 @@ echo "╚═══════════════════════�
 echo ""
 echo -e "${GREEN}Frontend:${NC} http://localhost:8000"
 echo -e "${GREEN}Backend API:${NC} http://localhost:5000/api"
-echo -e "${GREEN}Database:${NC} SQLite (backend/data/unihub.db)"
+echo -e "${GREEN}Database:${NC} SQLite (backend/data/jertscart.db)"
 echo ""
 echo -e "${YELLOW}Logs:${NC}"
 echo " Backend: tail -f backend.log"

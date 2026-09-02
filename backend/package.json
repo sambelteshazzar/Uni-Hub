@@ -1,5 +1,5 @@
 {
-  "name": "uni-hub-backend",
+  "name": "jertscart-backend",
   "version": "1.0.1",
   "description": "Backend API for JERTS CART Student Marketplace",
   "main": "server.js",
@@ -14,7 +14,7 @@
   "keywords": [
     "marketplace",
     "students",
-    "uni-hub",
+    "jertscart",
     "e-commerce",
     "ghana"
   ],

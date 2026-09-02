@@ -392,7 +392,7 @@ class AdminUsersManager {
     ]);
 
     const csvContent = [headers, ...rows].map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
-    this._downloadCSV(csvContent, 'uni-hub-users.csv');
+    this._downloadCSV(csvContent, 'jertscart-users.csv');
     return csvContent;
   }
 

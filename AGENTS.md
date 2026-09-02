@@ -1,6 +1,6 @@
-# AGENTS.md — Rules for AI assistants editing Uni-Hub
+# AGENTS.md — Rules for AI assistants editing JERTS CART (formerly Uni-Hub)
 
-Uni-Hub (a.k.a. JERTS CART) is a Ghana university student marketplace: a vanilla-JS
+JERTS CART (formerly Uni-Hub) is a Ghana university student marketplace: a vanilla-JS
 SPA frontend talking to an Express + SQLite/libSQL backend in this same repo.
 This file is the high-signal context an agent would otherwise get wrong.
 
@@ -20,13 +20,13 @@ npm install                              # frontend (root)
 ( cd backend && npm install )            # backend
 ```
 
-If the root install fails on peer deps, `start-uni-hub.sh` falls back to
+If the root install fails on peer deps, `start-jertscart.sh` falls back to
 `npm install --legacy-peer-deps`.
 
 Run both services at once (installs deps if missing, starts both, tails logs):
 
 ```bash
-./start-uni-hub.sh        # frontend :8000, backend :5000
+./start-jertscart.sh        # frontend :8000, backend :5000
 ```
 
 Frontend dev / build (root):
@@ -116,11 +116,11 @@ Browser :8000  ──HTTP/CORS──>  Backend :5000  ──>  SQLite (dev) / Tu
 - **`backend/.env` is not committed** — copy from `backend/.env.example` and fill
   in `JWT_SECRET`, `ADMIN_PASSWORD`, Cloudinary, Paystack, nodemailer, Google
   OAuth as needed. **Never commit real secrets.**
-- **SQLite is zero-setup**: `backend/data/unihub.db` is auto-created on first
+- **SQLite is zero-setup**: `backend/data/jertscart.db` is auto-created on first
   run. For production, set `TURSO_URL` + `TURSO_AUTH_TOKEN` to use shared libSQL.
-- **`npm install --legacy-peer-deps`** is used by `start-uni-hub.sh` as a
+- **`npm install --legacy-peer-deps`** is used by `start-jertscart.sh` as a
   fallback — if a clean `npm install` errors on peer deps, use the flag.
-- **Test credentials** (from `start-uni-hub.sh`): admin `admin@unihub.local` /
+- **Test credentials** (from `start-jertscart.sh`): admin `admin@unihub.local` /
   `Admin123!`; seller `john@student.ug.edu.gh` / `Student123!`; buyer
   `sarah@student.upsa.edu.gh` / `Student123!`. Seed data (`npm run seed` in
   `backend/`) populates these. Useful when wiring e2e/tests but never commit
@@ -150,7 +150,7 @@ non-default in places:
 
 ## Security — reuse existing utilities, do not reinvent
 
-Uni-Hub already has security infrastructure. Reuse it:
+JERTS CART already has security infrastructure. Reuse it:
 
 - `js/utils/security.js` — `SecurityUtils.escapeHtml`, `sanitizeInput`,
   `sanitizeObject`, `sanitizeUrl` (blocks `javascript:`/`data:`/`vbscript:`),

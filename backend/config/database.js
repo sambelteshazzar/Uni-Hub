@@ -1233,7 +1233,7 @@ function runStudentVerificationStatusRebuild (target) {
 
 function connectLocal () {
   const Database = require('better-sqlite3');
-  const DB_PATH = process.env.SQLITE_PATH || path.join(__dirname, '..', 'data', 'unihub.db');
+  const DB_PATH = process.env.SQLITE_PATH || path.join(__dirname, '..', 'data', 'jertscart.db');
   const dir = path.dirname(DB_PATH);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });

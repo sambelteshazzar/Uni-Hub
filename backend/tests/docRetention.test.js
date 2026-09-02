@@ -128,7 +128,7 @@ describe('multipart verification submit', () => {
       'SELECT fileName, cloudinaryPublicId, sizeBytes, mimeType FROM verification_documents WHERE verificationId = ?',
     ).all(res.body.data.id || res.body.data._id);
     expect(rows).toHaveLength(2);
-    expect(rows[0].cloudinaryPublicId).toContain('uni-hub/verifications/');
+    expect(rows[0].cloudinaryPublicId).toContain('jertscart/verifications/');
     expect(rows.find(r => r.mimeType === 'image/png')).toBeTruthy();
     expect(rows.find(r => r.mimeType === 'application/pdf')).toBeTruthy();
   });
@@ -330,7 +330,7 @@ describe('retention sweep', () => {
     ).run(id, seedAdmin.id, `SWEEP-${id}`, past);
     const mkDoc = (id, parentId, mime) => dbh.prepare(
       'INSERT INTO verification_documents (id, verificationId, fileName, cloudinaryPublicId, mimeType, sizeBytes) VALUES (?, ?, ?, ?, ?, 10)',
-    ).run(id, parentId, `${id}.bin`, `uni-hub/verifications/${parentId}/${id}`, mime);
+    ).run(id, parentId, `${id}.bin`, `jertscart/verifications/${parentId}/${id}`, mime);
 
     mkParent('sweep-A');
     mkDoc('sweep-A-1', 'sweep-A', 'image/png');
@@ -342,8 +342,8 @@ describe('retention sweep', () => {
     ['sweep-A-1', 'sweep-B-1'].forEach((n, i) => {
       const parentId = i === 0 ? 'sweep-A' : 'sweep-B';
       const mime = i === 0 ? 'image/png' : 'application/pdf';
-      if (!cUtil.__storedAssets.find(a => a.publicId === `uni-hub/verifications/${parentId}/${n}`)) {
-        cUtil.__storedAssets.push({ publicId: `uni-hub/verifications/${parentId}/${n}`, mimeType: mime, destroyed: false });
+      if (!cUtil.__storedAssets.find(a => a.publicId === `jertscart/verifications/${parentId}/${n}`)) {
+        cUtil.__storedAssets.push({ publicId: `jertscart/verifications/${parentId}/${n}`, mimeType: mime, destroyed: false });
       }
     });
 

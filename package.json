@@ -1,5 +1,5 @@
 {
-  "name": "uni-hub",
+  "name": "jertscart",
   "version": "1.0.0",
   "description": "JERTS CART — student marketplace for buying and selling items within university communities",
   "main": "index.html",
@@ -20,7 +20,6 @@
     "marketplace",
     "students",
     "jerts-cart",
-    "uni-hub",
     "e-commerce"
   ],
   "author": "JERTS CART Team",

@@ -18,8 +18,8 @@ The `.env` file is already created with development defaults. You can modify if 
 ```bash
 # Default settings (already in .env):
 PORT=5000
-SQLITE_PATH=./data/uni-hub.db
-JWT_SECRET=uni-hub-dev-secret-key-change-in-production-2026
+SQLITE_PATH=./data/jertscart.db
+JWT_SECRET=jertscart-dev-secret-key-change-in-production-2026
 ```
 
 ## Step 4: Seed the Database

@@ -175,7 +175,7 @@
       '<section class="bb-categories" id="universities">' +
       '<div class="bb-container">' +
       '<div class="bb-section-header" style="text-align: center;">' +
-      '<h2 class="bb-section-title">Universities on Uni-Hub</h2>' +
+      '<h2 class="bb-section-title">Universities on JERTS CART</h2>' +
       '<p class="bb-section-subtitle">You\'ll pick your university during signup. Browse the full list anytime.</p>' +
       '<a href="#/universities" class="bb-btn bb-btn-outline" style="margin-top: 1rem; display: inline-block; text-decoration: none;">Browse all universities</a>' +
       '</div>' +

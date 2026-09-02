@@ -216,7 +216,7 @@ npm run lint
 ```env
 NODE_ENV=production
 PORT=5000
-SQLITE_PATH=./data/uni-hub.db
+SQLITE_PATH=./data/jertscart.db
 JWT_SECRET=your-super-secret-key-min-32-chars
 FRONTEND_URL=https://your-domain.com
 ```

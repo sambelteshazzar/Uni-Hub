@@ -53,7 +53,7 @@
 ## 📁 Project Structure
 
 ```
-uni-hub/
+jertscart/
 ├── index.html                    ← Main entry point (in root folder)
 ├── package.json                  ← Dependencies & scripts
 ├── README.md                     ← Project overview

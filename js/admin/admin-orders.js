@@ -247,7 +247,7 @@ class AdminOrdersManager {
   ]);
 
   const csvContent = [headers, ...rows].map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
-  this._downloadCSV(csvContent, 'uni-hub-orders.csv');
+  this._downloadCSV(csvContent, 'jertscart-orders.csv');
   return csvContent;
   }
 

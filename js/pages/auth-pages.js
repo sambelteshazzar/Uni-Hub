@@ -1479,11 +1479,11 @@ const AuthPageMethods = {
           <div class="verification-icon" style="font-size: 3rem;">${_Icons.graduation}</div>
           <h2 id="verify-title" style="margin: 1rem 0 0.5rem;">Confirming your verification…</h2>
           <p id="verify-subtitle" style="color: var(--neutral-600, #6b7280);">Please wait while we activate your student account.</p>
-          <div id="verify-spinner" style="margin: 1.5rem auto 0; width: 32px; height: 32px; border: 3px solid #e5e7eb; border-top-color: #0046be; border-radius: 50%; animation: unihub-spin 0.9s linear infinite;"></div>
+          <div id="verify-spinner" style="margin: 1.5rem auto 0; width: 32px; height: 32px; border: 3px solid #e5e7eb; border-top-color: #0046be; border-radius: 50%; animation: jertscart-spin 0.9s linear infinite;"></div>
           <div id="verify-actions" style="margin-top: 1.5rem;"></div>
         </div>
       </div>
-      <style>@keyframes unihub-spin { to { transform: rotate(360deg); } }</style>
+      <style>@keyframes jertscart-spin { to { transform: rotate(360deg); } }</style>
     `;
 
     if (!token) {
@@ -1636,10 +1636,10 @@ const AuthPageMethods = {
         <div class="auth-card" style="text-align: center; padding: 2.5rem 2rem;">
           <div style="font-size: 2.5rem;">${_Icons.graduation}</div>
           <h2 style="margin: 1rem 0 0.5rem;">Checking your verification status…</h2>
-          <div style="margin: 1.5rem auto 0; width: 32px; height: 32px; border: 3px solid #e5e7eb; border-top-color: #0046be; border-radius: 50%; animation: unihub-spin 0.9s linear infinite;"></div>
+          <div style="margin: 1.5rem auto 0; width: 32px; height: 32px; border: 3px solid #e5e7eb; border-top-color: #0046be; border-radius: 50%; animation: jertscart-spin 0.9s linear infinite;"></div>
         </div>
       </div>
-      <style>@keyframes unihub-spin { to { transform: rotate(360deg); } }</style>
+      <style>@keyframes jertscart-spin { to { transform: rotate(360deg); } }</style>
     `;
 
     if (typeof api === 'undefined' || api.isStaticDeploy) {
@@ -1689,7 +1689,7 @@ const AuthPageMethods = {
           <h2 style="margin: 1rem 0 0.5rem;">You're verified!</h2>
           <p style="color: var(--neutral-600, #6b7280);">
             Your student account at <strong>${esc(data.university || 'your university')}</strong> is active.
-            You can buy and sell on Uni-Hub.
+            You can buy and sell on JERTS CART.
           </p>
           ${data.confirmedAt ? `<p style="font-size: 0.85rem; color: var(--neutral-500, #9ca3af);">Confirmed on ${esc(new Date(data.confirmedAt).toLocaleString())}</p>` : ''}
           <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">

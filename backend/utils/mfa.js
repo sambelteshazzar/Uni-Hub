@@ -16,7 +16,7 @@ const CODE_TTL_MS = 5 * 60 * 1000;
 const MAX_ATTEMPTS = 3;
 
 function hashCode (userId, code) {
-  const pepper = process.env.JWT_SECRET || 'uni-hub-dev-pepper';
+  const pepper = process.env.JWT_SECRET || 'jertscart-dev-pepper';
   return crypto.createHash('sha256').update(`${userId}:${code}:${pepper}`).digest('hex');
 }
 

@@ -132,7 +132,7 @@ class App {
       timestamp: Date.now(),
       cart: cartManager?.getSummary?.() || null,
     };
-    try { sessionStorage.setItem('uni-hub-state', JSON.stringify(state)); } catch(e) { console.warn('sessionStorage unavailable:', e); }
+    try { sessionStorage.setItem('jertscart-state', JSON.stringify(state)); } catch(e) { console.warn('sessionStorage unavailable:', e); }
   }
 
   /**

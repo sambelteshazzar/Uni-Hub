@@ -10,7 +10,7 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=5000
-      - SQLITE_PATH=/app/data/unihub.db
+      - SQLITE_PATH=/app/data/jertscart.db
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRE=${JWT_EXPIRE:-7d}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5000}

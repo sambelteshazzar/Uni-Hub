@@ -150,7 +150,7 @@ exports.exportMyData = asyncHandler(async (req, res) => {
 
   res.set({
     'Content-Type': 'application/json',
-    'Content-Disposition': 'attachment; filename="unihub-my-data.json"',
+    'Content-Disposition': 'attachment; filename="jertscart-my-data.json"',
     'Cache-Control': 'no-store',
   });
   res.json({

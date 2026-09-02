@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: uni-hub-api
+    name: jertscart-api
     runtime: node
     rootDir: backend
     buildCommand: npm install
@@ -57,7 +57,7 @@ services:
         sync: false
 
   - type: web
-    name: uni-hub-frontend
+    name: jertscart-frontend
     runtime: static
     buildFilter:
       paths:

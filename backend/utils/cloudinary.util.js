@@ -23,7 +23,7 @@ cloudinary.config({
 const uploadImage = async (filePath, options = {}) => {
   try {
     const result = await cloudinary.uploader.upload(filePath, {
-      folder: 'uni-hub/products',
+      folder: 'jertscart/products',
       resource_type: 'auto',
       transformation: [
         { quality: 'auto', fetch_format: 'auto' },
@@ -49,7 +49,7 @@ const uploadStream = (buffer, options = {}) => {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
-        folder: 'uni-hub/products',
+        folder: 'jertscart/products',
         resource_type: 'auto',
         transformation: [
           { quality: 'auto', fetch_format: 'auto' },
@@ -102,7 +102,7 @@ const deleteImage = async (publicId) => {
 const getPublicIdFromUrl = (url) => {
   const parts = url.split('/');
   const filename = parts[parts.length - 1];
-  return `uni-hub/products/${filename.split('.')[0]}`;
+  return `jertscart/products/${filename.split('.')[0]}`;
 };
 
 // ============================================

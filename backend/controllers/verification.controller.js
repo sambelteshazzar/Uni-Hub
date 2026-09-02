@@ -109,7 +109,7 @@ exports.submitVerification = asyncHandler(async (req, res) => {
   if (req.files && req.files.length > 0) {
     const { sniffDocumentType } = require('../utils/fileSignature');
     const { uploadPrivateDocument, destroyDocument } = require('../utils/cloudinary.util');
-    const folder = `uni-hub/verifications/${verification.id}`;
+    const folder = `jertscart/verifications/${verification.id}`;
     const uploaded = [];
     try {
       for (const file of req.files) {

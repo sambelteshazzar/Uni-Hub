@@ -4032,7 +4032,7 @@ font-size: 0.8rem;
             // Locally-generated blob: URL — sanitizeUrl would strip it, so
             // assign directly (no untrusted input in this value).
             a.href = url;
-            a.download = 'unihub-my-data.json';
+            a.download = 'jertscart-my-data.json';
             document.body.appendChild(a);
             a.click();
             a.remove();
@@ -8332,8 +8332,8 @@ font-size: 0.8rem;
       icon = '🎉';
       title = status === 'already_active' ? 'Already Subscribed!' : 'Subscription Confirmed!';
       description = status === 'already_active'
-        ? 'You\'re already on our newsletter list. Thanks for being part of Uni-Hub!'
-        : 'Welcome to Uni-Hub! You\'ll now receive the best deals, selling tips, and campus marketplace updates. Check your email for a welcome code!';
+        ? 'You\'re already on our newsletter list. Thanks for being part of JERTS CART!'
+        : 'Welcome to JERTS CART! You\'ll now receive the best deals, selling tips, and campus marketplace updates. Check your email for a welcome code!';
       buttonText = 'Start Shopping';
       buttonAction = "router.goToHash('/browse')";
     } else {

@@ -12,10 +12,10 @@ A web-based student marketplace for buying and selling used items on university 
 
 ```bash
 # Make the startup script executable
-chmod +x start-uni-hub.sh
+chmod +x start-jertscart.sh
 
 # Start both frontend and backend
-./start-uni-hub.sh
+./start-jertscart.sh
 ```
 
 Then open: **http://localhost:8000**
@@ -54,7 +54,7 @@ JERTS CART/
 ├── assets/                 # Images, fonts, videos
 ├── docs/                   # Documentation
 ├── index.html              # Main entry point
-└── start-uni-hub.sh        # Startup script
+└── start-jertscart.sh        # Startup script
 ```
 
 ## Features

@@ -32,7 +32,7 @@ const UniversitiesPage = {
     main.innerHTML = `
       <div class="auth-container" style="max-width: 1100px; margin: 3rem auto; padding: 0 1.5rem;">
         <div style="text-align: center; margin-bottom: 2rem;">
-          <h1 style="font-size: 2rem; font-weight: 700; margin: 0 0 0.5rem;">Universities on Uni-Hub</h1>
+          <h1 style="font-size: 2rem; font-weight: 700; margin: 0 0 0.5rem;">Universities on JERTS CART</h1>
           <p style="color: var(--neutral-600); margin: 0;">
             Browse all universities. Pick one during signup to join its campus marketplace.
           </p>
@@ -248,7 +248,7 @@ const UniversitiesPage = {
             if (typeof authManager !== 'undefined' && authManager.setCurrentUser) {
               authManager.setCurrentUser(resp.data || resp.user);
             }
-            if (typeof showToast === 'function') {showToast('University saved. Welcome to Uni-Hub!', 'success');}
+            if (typeof showToast === 'function') {showToast('University saved. Welcome to JERTS CART!', 'success');}
             if (typeof window.router !== 'undefined' && window.router.navigate) {
               window.router.navigate('/browse');
             } else {
