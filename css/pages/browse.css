@@ -1616,6 +1616,20 @@ RESPONSIVE
     height: 40px;
   }
 
+  /* The global @media (hover:none) (pointer:coarse) rule in
+     responsive.css forces all <a> tags to min-height: 48px so they
+     meet Apple HIG touch-target size. On the breadcrumb that inflates
+     each link to 48px, but the list container is only 40px tall, so the
+     first 3 items overflow the container (clipping the top of the text
+     under the navbar) and the last item — a non-link span — sits at a
+     different vertical position. Reset the link's min-height/min-width
+     so the breadcrumb row stays one line. */
+  .browse-breadcrumb-link,
+  .browse-breadcrumb-current {
+    min-height: 0;
+    min-width: 0;
+  }
+
   .browse-categories-scroll {
     padding: 0 var(--space-md);
   }
