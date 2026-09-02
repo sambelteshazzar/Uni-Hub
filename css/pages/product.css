@@ -508,7 +508,7 @@
     grid-template-columns: 1fr;
   }
 
-  .browse-sidebar {
+  .browse-container > .browse-sidebar {
     position: fixed;
     top: 0;
     left: 0;
@@ -521,7 +521,7 @@
     overflow-y: auto;
   }
 
-  .browse-sidebar.active {
+  .browse-container > .browse-sidebar.active {
     transform: translateX(0);
   }
 

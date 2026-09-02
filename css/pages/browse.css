@@ -1381,6 +1381,13 @@ MOBILE DRAWER
   padding: var(--space-lg);
   position: static;
   max-height: none;
+  /* Defensive: page-level stylesheet (e.g. product.css) may set
+     `transform: translateX(-100%)` on the generic .browse-sidebar to
+     hide a separate off-canvas panel. The sidebar inside this drawer
+     is the same element but must always be visible when the drawer
+     is open — reset transform + transition explicitly. */
+  transform: none;
+  transition: none;
 }
 
 /* ---- Mobile Filter Button ---- */
