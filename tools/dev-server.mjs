@@ -61,6 +61,12 @@ function tryServe(absPath, res) {
   return true;
 }
 
+const INDEX_PATH = resolve(ROOT, 'index.html');
+// Paths that should be treated as files (not SPA routes). Same list
+// Vite serves directly: anything in /public/ or with a known static
+// extension lives at a real URL.
+const HAS_EXTENSION = /\.[a-z0-9]{1,8}$/i;
+
 const server = createServer((req, res) => {
   // Strip query string, decode URI, drop leading slash.
   let urlPath;
@@ -78,6 +84,17 @@ const server = createServer((req, res) => {
   // 2. Fall back to the project root (so js/, css/, dist/ still work).
   const rootPath = safeJoin(ROOT, urlPath);
   if (rootPath && tryServe(rootPath, res)) return;
+
+  // 3. SPA fallback: GET requests for paths that don't have a file
+  // extension (i.e. clean URLs like /browse, /product/abc) get the
+  // app's index.html. This lets the History API router (or the legacy
+  // hash router, which both live in index.html) take over. Mirrors
+  // `vercel.json` and `render.yaml` production rewrites.
+  //   - POST/PUT/DELETE/etc. still 404 (no API here).
+  //   - File-shaped paths (e.g. /foo.png) still 404.
+  if (req.method === 'GET' && !HAS_EXTENSION.test(urlPath) && existsSync(INDEX_PATH)) {
+    return tryServe(INDEX_PATH, res);
+  }
 
   send(res, 404, 'Not Found');
 });

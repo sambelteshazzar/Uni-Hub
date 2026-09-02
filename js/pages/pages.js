@@ -3424,14 +3424,18 @@ ${order.items
     // on mobile the navbar only renders the "Sign up" button anyway
     // (the ghost "Log in" button is hidden at <768px), so a user
     // landing on /login sees only "Sign up" which is confusing UX.
+    // The router runs in either 'history' (clean URLs) or 'hash' (legacy
+    // #/login) mode — see js/router.js. Read both URL representations
+    // so this works regardless of the active mode.
     const hash = (typeof window !== 'undefined' && window.location && window.location.hash) || '';
+    const path = (typeof window !== 'undefined' && window.location && window.location.pathname) || '';
     const onAuthRoute =
-      hash.startsWith('#/login') ||
-      hash.startsWith('#/register') ||
-      hash.startsWith('#/forgot-password') ||
-      hash.startsWith('#/reset-password') ||
-      hash.startsWith('#/verify') ||
-      hash.startsWith('#/onboarding');
+      hash.startsWith('#/login') || path.startsWith('/login') ||
+      hash.startsWith('#/register') || path.startsWith('/register') ||
+      hash.startsWith('#/forgot-password') || path.startsWith('/forgot-password') ||
+      hash.startsWith('#/reset-password') || path.startsWith('/reset-password') ||
+      hash.startsWith('#/verify') || path.startsWith('/verify') ||
+      hash.startsWith('#/onboarding') || path.startsWith('/onboarding');
 
     if (isLoggedIn) {
       // Desktop navbar - logged in
