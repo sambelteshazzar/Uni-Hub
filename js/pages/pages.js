@@ -133,13 +133,19 @@ class AdminUI {
         ],
       },
       {
+        label: 'Marketing',
+        items: [
+          { key: 'coupons',    label: 'Coupons',     icon: Icons.gift || Icons.tag || Icons.chart },
+          { key: 'newsletter', label: 'Newsletter',  icon: Icons.mail || Icons.email || '' },
+        ],
+      },
+      {
         label: 'Insights',
         items: [
           { key: 'reports',   label: 'Reports',   icon: Icons.chart },
           { key: 'analytics', label: 'Analytics', icon: Icons.chart },
           { key: 'activity',  label: 'Activity',  icon: Icons.clock || Icons.chart },
           { key: 'regions',   label: 'Regions',   icon: Icons.globe || Icons.chart },
-          { key: 'newsletter',label: 'Newsletter',icon: Icons.mail || Icons.email || '' },
         ],
       },
     ];
@@ -619,6 +625,7 @@ class Pages {
     router.register('/admin/regions', () => this.renderAdminRegions());
 
     router.register('/admin/newsletter', () => this.renderAdminNewsletter());
+    router.register('/admin/coupons', () => this.renderAdminCoupons());
 
     // Delegated click handler for product cards. Replaces a broken inline
     // `onclick="cartManager.add(${JSON.stringify(product).replace(...))"`
@@ -2708,8 +2715,16 @@ Copy Link
       return;
     }
 
-    // Update URL hash for proper routing
-    window.location.hash = '/checkout';
+// Update URL hash for proper routing — but only if the hash isn't already
+// the checkout route. Setting `location.hash` always fires a `hashchange`
+// event, even when the value is the same as the current hash; without this
+// guard the router re-navigates and re-invokes `renderCheckout`, which
+// recurses until the call stack overflows. (Regression surfaced after the
+// coupon editor added DOM-query code that deepened the stack frames just
+// enough to trip the V8 limit.)
+    if (window.location.hash.replace(/^#/, '') !== '/checkout') {
+      window.location.hash = '/checkout';
+    }
 
     const deliveryOptions = checkoutManager.getDeliveryModeOptions();
     const paymentOptions = checkoutManager.getPaymentModeOptions();
@@ -2845,6 +2860,20 @@ Copy Link
                 <span id="delivery-fee">GHS 0</span>
               </div>
 
+              <div class="summary-row" id="coupon-row" style="display:none;">
+                <span>
+                  Discount
+                  <button type="button" id="coupon-remove" class="adm-btn adm-btn--sm" style="margin-left:8px;padding:2px 8px;font-size:11px;">Remove</button>
+                </span>
+                <span id="coupon-discount" style="color:var(--success);">-GHS 0</span>
+              </div>
+
+              <div id="coupon-input-block" style="display:flex;gap:8px;margin:8px 0 4px;">
+                <input type="text" id="coupon-code-input" placeholder="Coupon code" maxlength="40" style="flex:1;padding:8px 10px;border:1px solid var(--neutral-200);border-radius:6px;font-size:14px;text-transform:uppercase;" />
+                <button type="button" id="coupon-apply" class="adm-btn adm-btn--sm adm-btn--primary" style="padding:8px 14px;">Apply</button>
+              </div>
+              <div id="coupon-message" style="font-size:12px;min-height:1em;margin-bottom:8px;"></div>
+
               <div class="summary-row total">
                 <span>Total</span>
                 <span id="grand-total">${Formatter.formatPrice(summary.grandTotal)}</span>
@@ -2858,6 +2887,99 @@ Copy Link
         </form>
       </div>
     `;
+
+    // Reset coupon state whenever the checkout view renders.
+    Pages._appliedCoupon = null;
+    const applyBtn = document.getElementById('coupon-apply');
+    const removeBtn = document.getElementById('coupon-remove');
+    const codeInput = document.getElementById('coupon-code-input');
+    if (applyBtn && codeInput) {
+      applyBtn.addEventListener('click', () => Pages._applyCheckoutCoupon());
+      codeInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          Pages._applyCheckoutCoupon();
+        }
+      });
+    }
+    if (removeBtn) {
+      removeBtn.addEventListener('click', () => Pages._removeCheckoutCoupon());
+    }
+  }
+
+  // Module-scoped applied coupon (reset on each checkout render).
+  static _appliedCoupon = null;
+
+  static async _applyCheckoutCoupon () {
+    const codeInput = document.getElementById('coupon-code-input');
+    const msg = document.getElementById('coupon-message');
+    const code = (codeInput?.value || '').trim();
+    if (!code) {
+      if (msg) {msg.textContent = 'Enter a coupon code first';}
+      return;
+    }
+    const subtotal = (typeof cartManager !== 'undefined' && cartManager.getSummary)
+      ? cartManager.getSummary().subtotal
+      : 0;
+    try {
+      const res = await api.coupons.validate(code, subtotal);
+      if (res && res.success && res.data) {
+        Pages._appliedCoupon = res.data;
+        Pages._renderCheckoutCoupon(res.data);
+        if (msg) {
+          msg.style.color = 'var(--success)';
+          msg.textContent = `${res.data.code} applied — saved GHS ${Number(res.data.discount).toFixed(2)}`;
+        }
+      } else {
+        Pages._removeCheckoutCoupon();
+        if (msg) {
+          msg.style.color = 'var(--danger)';
+          msg.textContent = (res && res.error) || 'Coupon not valid';
+        }
+      }
+    } catch (e) {
+      Pages._removeCheckoutCoupon();
+      if (msg) {
+        msg.style.color = 'var(--danger)';
+        msg.textContent = e.message || 'Failed to validate coupon';
+      }
+    }
+  }
+
+  static _removeCheckoutCoupon () {
+    Pages._appliedCoupon = null;
+    const couponRow = document.getElementById('coupon-row');
+    const codeInput = document.getElementById('coupon-code-input');
+    if (couponRow) {couponRow.style.display = 'none';}
+    if (codeInput) {codeInput.value = '';}
+    Pages._renderCheckoutCoupon(null);
+    const msg = document.getElementById('coupon-message');
+    if (msg) {msg.textContent = '';}
+  }
+
+  // Update the discount row + grand total from the applied coupon (or clear).
+  static _renderCheckoutCoupon (coupon) {
+    const couponRow = document.getElementById('coupon-row');
+    const couponDiscount = document.getElementById('coupon-discount');
+    const grandTotalEl = document.getElementById('grand-total');
+    const deliveryFeeText = document.getElementById('delivery-fee')?.textContent || 'GHS 0';
+    const deliveryFeeNum = Number(deliveryFeeText.replace(/[^0-9.]/g, '')) || 0;
+    const subtotal = (typeof cartManager !== 'undefined' && cartManager.getSummary)
+      ? cartManager.getSummary().subtotal
+      : 0;
+    if (coupon && coupon.discount > 0) {
+      if (couponRow) {couponRow.style.display = 'flex';}
+      if (couponDiscount) {couponDiscount.textContent = `-${Formatter.formatPrice(coupon.discount)}`;}
+      if (grandTotalEl) {
+        const total = Math.max(0, subtotal + deliveryFeeNum - coupon.discount);
+        grandTotalEl.textContent = Formatter.formatPrice(total);
+      }
+    } else {
+      if (couponRow) {couponRow.style.display = 'none';}
+      if (grandTotalEl) {
+        grandTotalEl.textContent = Formatter.formatPrice(subtotal + deliveryFeeNum);
+      }
+    }
   }
 
   /**
@@ -2882,9 +3004,13 @@ Copy Link
     );
     document.getElementById('delivery-fee').textContent = Formatter.formatPrice(deliveryFee);
 
-    // Update grand total
+    // Update grand total — keep any applied coupon discount in the displayed
+    // total so changing delivery mode doesn't silently clobber the discount.
     const subtotal = cartManager.getSummary().subtotal;
-    const grandTotal = subtotal + deliveryFee;
+    const couponDiscount = Pages._appliedCoupon && Pages._appliedCoupon.discount > 0
+      ? Pages._appliedCoupon.discount
+      : 0;
+    const grandTotal = Math.max(0, subtotal + deliveryFee - couponDiscount);
     document.getElementById('grand-total').textContent = Formatter.formatPrice(grandTotal);
   }
 
@@ -2973,6 +3099,9 @@ Copy Link
       deliveryAddress,
       phone,
       deliveryInstructions,
+      // Forward the validated coupon code so the backend can apply it
+      // and bump the coupon's used_count. Empty string is a no-op.
+      couponCode: Pages._appliedCoupon ? Pages._appliedCoupon.code : '',
     };
 
     try {
@@ -6299,6 +6428,315 @@ font-size: 0.8rem;
   /**
    * Render Admin Regions Page
    */
+  static async renderAdminCoupons () {
+    if (!_requireAdmin()) {return;}
+    this.hideOriginalNavFooter();
+    document.body.style.background = '';
+    const mainContent = document.getElementById('main-content');
+
+    const topbarActions = `
+      <div class="adm-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search coupons" aria-label="Search coupons" id="admin-coupons-search" />
+      </div>
+      <button type="button" class="adm-btn adm-btn--primary" id="admin-coupons-new">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New coupon
+      </button>
+    `;
+
+    mainContent.innerHTML = `
+      <div class="adm-layout">
+        ${AdminUI.sidebar('coupons')}
+        <div class="adm-main">
+          ${AdminUI.topbar('Coupons', topbarActions)}
+          <div class="adm-page">
+            ${AdminUI.pageHeader(
+              'Coupons',
+              'Promotional codes buyers can apply at checkout. Percent and fixed discounts supported.',
+              null
+            )}
+            <div id="admin-coupons-host">
+              <div class="adm-empty"><div class="adm-empty-title">Loading coupons…</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    AdminUI.wireSidebar(key => {
+      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
+      if (typeof Pages[method] === 'function') {Pages[method]();}
+    });
+
+    // Delegate clicks on the host so row-action buttons keep working
+    // after the table is re-rendered (e.g. after a toggle or delete).
+    const host = document.getElementById('admin-coupons-host');
+    if (host) {
+      host.addEventListener('click', ev => {
+        const btn = ev.target.closest('[data-coupon-action]');
+        if (!btn) {return;}
+        const id = btn.getAttribute('data-coupon-id');
+        const action = btn.dataset.couponAction;
+        if (action === 'toggle') {
+          Pages._toggleAdminCoupon(id, btn);
+        } else if (action === 'delete') {
+          Pages._deleteAdminCoupon(id);
+        }
+      });
+    }
+
+    // New coupon button opens an inline form below the header.
+    const newBtn = document.getElementById('admin-coupons-new');
+    if (newBtn) {
+      newBtn.addEventListener('click', () => Pages._showAdminCouponForm(null));
+    }
+
+    // Filter box — currently a no-op stub; the page list is small enough
+    // that client-side filter is enough; the input is wired so the search
+    // icon doesn't look dead.
+    const searchInput = document.getElementById('admin-coupons-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', () => Pages._renderAdminCouponsList());
+    }
+
+    await Pages._renderAdminCouponsList();
+  }
+
+  // Internal: load coupons from API and render the table.
+  static async _renderAdminCouponsList () {
+    const host = document.getElementById('admin-coupons-host');
+    if (!host) {return;}
+    let coupons = [];
+    let loadError = null;
+    try {
+      const res = await api.admin.listCoupons();
+      if (res && res.success) {
+        coupons = Array.isArray(res.data) ? res.data : [];
+      } else if (res && res.error) {
+        loadError = res.error;
+      }
+    } catch (e) {
+      loadError = e.message || 'Failed to load coupons';
+    }
+    if (loadError) {
+      host.innerHTML = `
+        <div class="adm-card">
+          <div class="adm-table-wrap" style="padding:20px;">
+            <div class="adm-empty">
+              <div class="adm-empty-title">Failed to load coupons</div>
+              <p class="adm-empty-body">${_pageEsc(loadError)}</p>
+            </div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+    const search = (document.getElementById('admin-coupons-search')?.value || '').toLowerCase().trim();
+    const filtered = search
+      ? coupons.filter(c =>
+          (c.code || '').toLowerCase().includes(search) ||
+          (c.description || '').toLowerCase().includes(search)
+        )
+      : coupons;
+    const columns = [
+      {
+        label: 'Code',
+        render: c => `<span class="adm-text-strong" style="font-family:var(--font-family-mono);">${_pageEsc(c.code)}</span>`,
+      },
+      {
+        label: 'Discount',
+        render: c => c.type === 'percent'
+          ? `${_pageEsc(String(c.value))}%`
+          : `GHS ${Number(c.value || 0).toFixed(2)}`,
+      },
+      {
+        label: 'Min order',
+        render: c => c.min_order && c.min_order > 0 ? `GHS ${Number(c.min_order).toFixed(2)}` : '—',
+      },
+      {
+        label: 'Uses',
+        render: c => {
+          const max = c.max_uses && c.max_uses > 0 ? ` / ${_pageEsc(String(c.max_uses))}` : '';
+          return `<span class="adm-text-strong">${_pageEsc(String(c.used_count || 0))}</span>${max}`;
+        },
+      },
+      {
+        label: 'Status',
+        render: c => c.active
+          ? '<span class="adm-badge adm-badge--success">Active</span>'
+          : '<span class="adm-badge adm-badge--muted">Disabled</span>',
+      },
+      {
+        label: 'Description',
+        render: c => _pageEsc(c.description || '—'),
+      },
+      {
+        label: 'Actions',
+        render: c => `
+          <div style="display:flex;gap:6px;justify-content:flex-end;">
+            <button type="button" class="adm-btn adm-btn--sm" data-coupon-action="toggle" data-coupon-id="${_pageEsc(c.id)}">
+              ${c.active ? 'Disable' : 'Enable'}
+            </button>
+            <button type="button" class="adm-btn adm-btn--sm adm-btn--danger" data-coupon-action="delete" data-coupon-id="${_pageEsc(c.id)}">
+              Delete
+            </button>
+          </div>
+        `,
+      },
+    ];
+    host.innerHTML = `
+      <div class="adm-card">
+        ${AdminUI.table({
+          columns,
+          rows: filtered,
+          emptyHtml: `<tr><td class="adm-td" colspan="${columns.length}">${AdminUI.emptyState({ icon: Icons.gift || Icons.tag || '', title: 'No coupons yet', body: 'Click "New coupon" to create one. Buyers will be able to apply the code at checkout.' })}</td></tr>`,
+        })}
+      </div>
+    `;
+  }
+
+  // Internal: inline create/edit form for a coupon.
+  static _showAdminCouponForm (existing) {
+    const isEdit = !!existing;
+    const host = document.getElementById('admin-coupons-host');
+    if (!host) {return;}
+    const c = existing || { type: 'percent', value: 10, active: 1 };
+    const formHtml = `
+      <div class="adm-card" style="margin-bottom:16px;">
+        <div class="adm-card-header">
+          <h3 class="adm-card-title">${isEdit ? 'Edit coupon' : 'New coupon'}</h3>
+        </div>
+        <div class="adm-table-wrap" style="padding:20px;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));">
+          <div>
+            <label class="adm-form-label adm-form-label--required">Code</label>
+            <input type="text" id="adm-coupon-code" class="adm-form-input" placeholder="WELCOME10" value="${_pageEsc(c.code || '')}" maxlength="40" style="text-transform:uppercase;" ${isEdit ? 'disabled' : ''} />
+          </div>
+          <div>
+            <label class="adm-form-label">Type</label>
+            <select id="adm-coupon-type" class="adm-form-input">
+              <option value="percent" ${c.type === 'percent' ? 'selected' : ''}>Percent off</option>
+              <option value="fixed" ${c.type === 'fixed' ? 'selected' : ''}>Fixed amount (GHS)</option>
+            </select>
+          </div>
+          <div>
+            <label class="adm-form-label adm-form-label--required">Value</label>
+            <input type="number" id="adm-coupon-value" class="adm-form-input" min="1" step="1" value="${_pageEsc(String(c.value || ''))}" />
+          </div>
+          <div>
+            <label class="adm-form-label">Min order (GHS)</label>
+            <input type="number" id="adm-coupon-min" class="adm-form-input" min="0" step="1" value="${_pageEsc(String(c.min_order || 0))}" />
+          </div>
+          <div>
+            <label class="adm-form-label">Max uses (0 = unlimited)</label>
+            <input type="number" id="adm-coupon-max" class="adm-form-input" min="0" step="1" value="${_pageEsc(String(c.max_uses || 0))}" />
+          </div>
+          <div>
+            <label class="adm-form-label">Active</label>
+            <select id="adm-coupon-active" class="adm-form-input">
+              <option value="1" ${c.active ? 'selected' : ''}>Active</option>
+              <option value="0" ${!c.active ? 'selected' : ''}>Disabled</option>
+            </select>
+          </div>
+          <div style="grid-column:1/-1;">
+            <label class="adm-form-label">Description</label>
+            <input type="text" id="adm-coupon-desc" class="adm-form-input" placeholder="10% off orders over GHS 50" value="${_pageEsc(c.description || '')}" maxlength="200" />
+          </div>
+          <div style="grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end;">
+            <button type="button" class="adm-btn" id="adm-coupon-cancel">Cancel</button>
+            <button type="button" class="adm-btn adm-btn--primary" id="adm-coupon-save">
+              ${isEdit ? 'Save changes' : 'Create coupon'}
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    host.insertAdjacentHTML('afterbegin', formHtml);
+
+    document.getElementById('adm-coupon-cancel').addEventListener('click', () => Pages._renderAdminCouponsList());
+    document.getElementById('adm-coupon-save').addEventListener('click', async () => {
+      const payload = {
+        type: document.getElementById('adm-coupon-type').value,
+        value: Number(document.getElementById('adm-coupon-value').value),
+        min_order: Number(document.getElementById('adm-coupon-min').value) || 0,
+        max_uses: Number(document.getElementById('adm-coupon-max').value) || 0,
+        active: document.getElementById('adm-coupon-active').value === '1',
+        description: document.getElementById('adm-coupon-desc').value.trim(),
+      };
+      if (isEdit) {
+        // code + active toggle live in the same payload for the backend.
+        Pages._saveAdminCouponEdit(existing.id, payload);
+      } else {
+        payload.code = document.getElementById('adm-coupon-code').value.trim();
+        Pages._saveAdminCouponCreate(payload);
+      }
+    });
+  }
+
+  static async _saveAdminCouponCreate (payload) {
+    try {
+      const res = await api.admin.createCoupon(payload);
+      if (res && res.success) {
+        showToast('Coupon created', 'success');
+        await Pages._renderAdminCouponsList();
+      } else {
+        showToast(res?.error || 'Failed to create coupon', 'error');
+      }
+    } catch (e) {
+      showToast(e.message || 'Failed to create coupon', 'error');
+    }
+  }
+
+  static async _saveAdminCouponEdit (id, payload) {
+    try {
+      const res = await api.admin.updateCoupon(id, payload);
+      if (res && res.success) {
+        showToast('Coupon updated', 'success');
+        await Pages._renderAdminCouponsList();
+      } else {
+        showToast(res?.error || 'Failed to update coupon', 'error');
+      }
+    } catch (e) {
+      showToast(e.message || 'Failed to update coupon', 'error');
+    }
+  }
+
+  static async _toggleAdminCoupon (id, btn) {
+    const row = btn.closest('tr');
+    const currentActive = btn.textContent.trim() === 'Disable';
+    btn.disabled = true;
+    try {
+      const res = await api.admin.updateCoupon(id, { active: !currentActive });
+      if (res && res.success) {
+        showToast(currentActive ? 'Coupon disabled' : 'Coupon enabled', 'success');
+        await Pages._renderAdminCouponsList();
+      } else {
+        showToast(res?.error || 'Failed to update coupon', 'error');
+        btn.disabled = false;
+      }
+    } catch (e) {
+      showToast(e.message || 'Failed to update coupon', 'error');
+      btn.disabled = false;
+    }
+  }
+
+  static async _deleteAdminCoupon (id) {
+    if (!confirm('Delete this coupon? Orders already placed with it will keep their discount.')) {
+      return;
+    }
+    try {
+      const res = await api.admin.deleteCoupon(id);
+      if (res && res.success) {
+        showToast('Coupon deleted', 'success');
+        await Pages._renderAdminCouponsList();
+      } else {
+        showToast(res?.error || 'Failed to delete coupon', 'error');
+      }
+    } catch (e) {
+      showToast(e.message || 'Failed to delete coupon', 'error');
+    }
+  }
+
   static renderAdminRegions () {
     if (!_requireAdmin()) {return;}
     const regions = regionManager.getAllRegions();
@@ -6954,6 +7392,100 @@ font-size: 0.8rem;
     Pages._wireImageDropZone(form);
   }
 
+  // Render the variants editor card. `variants` is an array of
+  //   {label, value, price} (price is a +GHS delta over the base price;
+  //   negative is allowed for "discounted" variants like a smaller size).
+  // Returns the HTML to drop into the form. The host element must have
+  // id="admin-variants-host" so _wireVariantEditor can find it.
+  static _renderAdminVariantsCard (variants) {
+    const list = Array.isArray(variants) ? variants : [];
+    const rows = list
+      .map(
+        (v, i) => `
+        <tr class="adm-variant-row" data-variant-index="${i}">
+          <td><input type="text" class="adm-form-input adm-variant-label" placeholder="Size" value="${_pageEsc(v.label || '')}" maxlength="40" /></td>
+          <td><input type="text" class="adm-form-input adm-variant-value" placeholder="Large" value="${_pageEsc(v.value || '')}" maxlength="60" /></td>
+          <td><input type="number" class="adm-form-input adm-variant-price" placeholder="0" step="1" value="${typeof v.price === 'number' ? v.price : 0}" /></td>
+          <td style="text-align:right;"><button type="button" class="adm-btn adm-btn--sm adm-btn--danger adm-variant-remove" aria-label="Remove variant">&times;</button></td>
+        </tr>`
+      )
+      .join('');
+    return `
+      <section class="adm-card" id="admin-variants-card">
+        <div class="adm-card-header">
+          <h3 class="adm-card-title">Variants</h3>
+          <p class="adm-card-sub">Optional. Add size, color, storage, etc. Each variant adds its price to the base price.</p>
+        </div>
+        <div class="adm-table-wrap" style="padding:20px;">
+          <table class="adm-variant-table" style="width:100%;border-collapse:collapse;">
+            <thead>
+              <tr style="text-align:left;font-size:12px;color:var(--neutral-600);">
+                <th style="padding:0 8px 8px 0;width:30%;">Label</th>
+                <th style="padding:0 8px 8px 0;width:35%;">Value</th>
+                <th style="padding:0 8px 8px 0;width:20%;">Price delta (GHS)</th>
+                <th style="padding:0 0 8px;width:15%;"></th>
+              </tr>
+            </thead>
+            <tbody id="admin-variants-tbody">${rows ||
+              '<tr><td colspan="4" style="padding:8px 0;color:var(--neutral-500);font-size:13px;">No variants yet — leave empty to sell as one SKU.</td></tr>'}</tbody>
+          </table>
+          <button type="button" class="adm-btn adm-btn--sm" id="admin-variants-add" style="margin-top:12px;">
+            + Add variant
+          </button>
+        </div>
+      </section>
+    `;
+  }
+
+  // Wire add/remove delegation for the variant editor. Reads existing rows
+  // from the DOM so it works for both create and edit forms (call after
+  // injecting _renderAdminVariantsCard).
+  static _wireVariantEditor (form) {
+    const tbody = form.querySelector('#admin-variants-tbody');
+    const addBtn = form.querySelector('#admin-variants-add');
+    if (!tbody || !addBtn) {return;}
+
+    const newRow = () => `
+      <tr class="adm-variant-row" data-variant-index="${tbody.querySelectorAll('.adm-variant-row').length}">
+        <td><input type="text" class="adm-form-input adm-variant-label" placeholder="Size" maxlength="40" /></td>
+        <td><input type="text" class="adm-form-input adm-variant-value" placeholder="Large" maxlength="60" /></td>
+        <td><input type="number" class="adm-form-input adm-variant-price" placeholder="0" step="1" value="0" /></td>
+        <td style="text-align:right;"><button type="button" class="adm-btn adm-btn--sm adm-btn--danger adm-variant-remove" aria-label="Remove variant">&times;</button></td>
+      </tr>`;
+
+    addBtn.addEventListener('click', () => {
+      // Strip the empty-state row on first add.
+      const empty = tbody.querySelector('tr:not(.adm-variant-row)');
+      if (empty) {empty.remove();}
+      tbody.insertAdjacentHTML('beforeend', newRow());
+    });
+
+    tbody.addEventListener('click', e => {
+      const btn = e.target.closest('.adm-variant-remove');
+      if (!btn) {return;}
+      const row = btn.closest('.adm-variant-row');
+      if (row) {row.remove();}
+    });
+  }
+
+  // Collect variants from the variant editor rows. Skips rows where both
+  // label and value are empty (avoids persisting placeholder rows that the
+  // seller added but never filled in).
+  static _collectAdminVariants (form) {
+    const rows = form.querySelectorAll('#admin-variants-tbody .adm-variant-row');
+    const out = [];
+    rows.forEach(row => {
+      const label = row.querySelector('.adm-variant-label')?.value.trim() || '';
+      const value = row.querySelector('.adm-variant-value')?.value.trim() || '';
+      const priceRaw = row.querySelector('.adm-variant-price')?.value;
+      const price = priceRaw === '' || priceRaw == null ? 0 : Number(priceRaw);
+      if (!label && !value) {return;}
+      if (Number.isNaN(price)) {return;}
+      out.push({ label, value, price });
+    });
+    return out;
+  }
+
   // Attach event listeners to the drop-zone + file input + image-preview
   // grid + manual-URL textarea inside an admin product form. Replaces the
   // previous inline onclick/ondrag*/onchange/oninput handlers (CSP: a
@@ -7129,6 +7661,8 @@ font-size: 0.8rem;
                   </div>
                 </div>
               </section>
+
+              ${Pages._renderAdminVariantsCard([])}
             </form>
           </div>
         </div>
@@ -7137,6 +7671,7 @@ font-size: 0.8rem;
 
     const form = document.getElementById('admin-product-form');
     this._wireAdminProductForm(form);
+    Pages._wireVariantEditor(form);
     // The "Back to Products" button now lives in the topbar; delegated
     // through the topbar action handler.
     AdminUI.wireSidebar(key => {
@@ -7611,6 +8146,7 @@ font-size: 0.8rem;
             : ['/assets/images/products/no-image.svg'],
       deliveryModes,
       paymentModes,
+      variants: Pages._collectAdminVariants(form),
       seller: currentUser?.id || 'admin',
       sellerName: currentUser?.fullName || currentUser?.name || 'Admin',
       sellerRating: currentUser?.rating || 5,
@@ -7620,6 +8156,9 @@ font-size: 0.8rem;
     // Remove empty optional fields so the backend doesn't persist "undefined".
     if (!data.gender) {delete data.gender;}
     if (!data.subcategory) {delete data.subcategory;}
+    // Always send `variants` as an array (even empty) so the backend can
+    // distinguish "no variants" from "uninitialized".
+    if (!Array.isArray(data.variants)) {data.variants = [];}
 
     if (uploadAborted && this._pendingImageFiles.length > 0 && manualUrls.length === 0) {
       if (!confirm('Image upload failed. Create product without images?')) {
@@ -7808,6 +8347,8 @@ font-size: 0.8rem;
                   </div>
                 </div>
               </section>
+
+              ${Pages._renderAdminVariantsCard(product.variants || [])}
             </form>
           </div>
         </div>
@@ -7835,6 +8376,7 @@ font-size: 0.8rem;
       refreshSub();
     }
     Pages._wireImageDropZone(form);
+    Pages._wireVariantEditor(form);
     // Sidebar + topbar wiring for the new adm-* layout.
     AdminUI.wireSidebar(key => {
       const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
@@ -7920,11 +8462,16 @@ font-size: 0.8rem;
       images: images.length > 0 ? images : ['/assets/images/products/no-image.svg'],
       deliveryModes,
       paymentModes,
+      variants: Pages._collectAdminVariants(form),
     };
     // Drop empty optional fields so the backend can distinguish "unset"
     // from "explicitly cleared".
     if (!data.gender) {delete data.gender;}
     if (!data.subcategory) {delete data.subcategory;}
+    // Always send `variants` as an array. Previously the edit handler
+    // silently dropped variants, so re-saving a product wiped them — this
+    // restores parity with the create handler.
+    if (!Array.isArray(data.variants)) {data.variants = [];}
 
     const university = formData.get('university')?.trim();
     if (university) {

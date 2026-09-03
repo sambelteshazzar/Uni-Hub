@@ -909,6 +909,12 @@ class CheckoutManager {
           paymentMode: checkoutData.paymentMode,
           phone: checkoutData.phone || currentUser.phone,
         };
+        // Pass the applied coupon code (if any) to the backend so the
+        // server-side order creation can validate + apply it and bump
+        // used_count. Empty string clears any prior code.
+        if (checkoutData.couponCode) {
+          orderData.couponCode = checkoutData.couponCode;
+        }
         orderData.idempotencyKey = this._getIdempotencyKey();
 
         const response = await _api.orders.create(orderData);

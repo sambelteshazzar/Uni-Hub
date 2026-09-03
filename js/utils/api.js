@@ -557,6 +557,20 @@ class API {
     approvePayout: id => this.put(`/admin/payouts/${encodeURIComponent(id)}/approve`),
     rejectPayout: (id, reason) =>
       this.put(`/admin/payouts/${encodeURIComponent(id)}/reject`, { reason }),
+    // Coupon CRUD (admin). Buyers call /coupons/validate on checkout —
+    // that's a separate method below to avoid any chance of admin-side
+    // mutation leaking into the buyer flow.
+    listCoupons: params => this.get('/admin/coupons', params),
+    createCoupon: data => this.post('/admin/coupons', data),
+    updateCoupon: (id, data) => this.put(`/admin/coupons/${encodeURIComponent(id)}`, data),
+    deleteCoupon: id => this.delete(`/admin/coupons/${encodeURIComponent(id)}`),
+  };
+
+  // Coupon validation from cart/checkout. Returns { code, type, value,
+  // discount, description } — does NOT consume the coupon (used_count
+  // is bumped by order placement, not by validation).
+  coupons = {
+    validate: (code, subtotal) => this.post('/coupons/validate', { code, subtotal }),
   };
 
   wishlist = {
