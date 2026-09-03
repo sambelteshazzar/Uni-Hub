@@ -132,10 +132,39 @@ class BrowsePage {
 
     mainContent.innerHTML = this.renderHTML(paginatedData);
 
+    // Suppress product-card hover transforms while the page is scrolling
+    // so the cursor passing over a card during a scroll gesture doesn't
+    // lift/snap cards (a common "UI glitch" reported when scrolling). The
+    // listener is debounced via rAF + a 120ms idle window; it auto-cleans
+    // when the user navigates away (listener is on the .browse-page node
+    // which is replaced by the next page render).
+    this._bindScrollHoverGuard();
+
     if (filters.search) {
       const searchInput = document.getElementById('browse-search-input');
       if (searchInput) searchInput.value = filters.search;
     }
+  }
+
+  _bindScrollHoverGuard() {
+    const root = document.querySelector('.browse-page');
+    if (!root) return;
+    let frame = 0;
+    let idleTimer = 0;
+    const markScrolling = () => {
+      if (!frame) {
+        root.classList.add('is-scrolling');
+        frame = requestAnimationFrame(() => {
+          frame = 0;
+        });
+      }
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        root.classList.remove('is-scrolling');
+      }, 120);
+    };
+    root.addEventListener('scroll', markScrolling, { passive: true });
+    window.addEventListener('scroll', markScrolling, { passive: true });
   }
 
   _syncFiltersFromManager() {

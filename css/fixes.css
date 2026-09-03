@@ -183,26 +183,12 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Fix mobile menu */
-.navbar-menu {
-  position: fixed;
-  top: 64px;
-  left: 0;
-  right: 0;
-  background: var(--bg-primary);
-  padding: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transform: translateY(-100%);
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
-}
-
-.navbar-menu.active {
-  transform: translateY(0);
-  opacity: 1;
-  visibility: visible;
-}
+/* Desktop nav-menu is rendered in the navbar (Home/Browse/Messages/FAQ)
+   and toggled by responsive.css per breakpoint. The previous rule forced
+   `position: fixed; visibility: hidden` at every viewport, which made the
+   desktop links invisible (and reserved a 53px hidden block under the
+   navbar that contributed to scroll-jump artifacts). The mobile drawer
+   nav is .navbar-drawer-nav, not .navbar-menu, so no fallback is needed. */
 
 /* Fix product badge positioning */
 .product-card-badge {

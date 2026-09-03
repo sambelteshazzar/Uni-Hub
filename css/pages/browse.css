@@ -832,6 +832,21 @@ PRODUCT GRID — Luxury Card Design
   z-index: 1;
 }
 
+/* Disable the card lift while the page is being scrolled — otherwise the
+   cursor passing over a card during a scroll gesture triggers the hover
+   transform mid-scroll, producing a "card lifts and snaps back" jitter.
+   The class is toggled by a passive scroll listener. */
+.browse-page.is-scrolling .browse-product-card:hover {
+  transform: none;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.02),
+    0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.browse-page.is-scrolling .browse-product-card:hover .browse-product-image-wrap img {
+  transform: none;
+}
+
 .browse-product-card:hover .browse-product-image-wrap img {
   transform: scale(1.06);
 }

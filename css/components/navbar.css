@@ -3,16 +3,25 @@
    Inspired by modern blog/retail headers
    ============================================ */
 
-/* Main Navbar - Clean white with backdrop blur */
+/* Main Navbar - Clean white with subtle backdrop blur.
+   The background is near-opaque so content scrolling underneath doesn't
+   bleed through as visible blur/ghost artifacts (a common cause of "UI
+   glitches when scrolling" reports on integrated GPUs). The very small
+   translucency keeps a modern feel without the smearing. */
 .navbar {
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: saturate(180%) blur(8px);
+  -webkit-backdrop-filter: saturate(180%) blur(8px);
   border-bottom: 1px solid var(--neutral-200);
   height: 64px;
+  /* Composite the navbar on its own layer so the browser can promote it
+     and avoid repainting it on every scroll frame (fixes flicker/jank on
+     long product lists). */
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .navbar-container {
@@ -663,5 +672,5 @@ color: var(--danger, #ef4444);
 }
 
 [data-theme="dark"] .navbar {
-  background: rgba(24, 24, 27, 0.85);
+  background: rgba(24, 24, 27, 0.98);
 }

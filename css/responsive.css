@@ -1515,3 +1515,63 @@ border-color: var(--neutral-200);
     display: none;
   }
 }
+
+/* ============================================================
+   RESPONSIVENESS POLISH — applied across breakpoints
+   ============================================================ */
+
+/* Use momentum scrolling on iOS for any internal scroll containers.
+   Without `-webkit-overflow-scrolling: touch` the user gets a janky
+   scroll on the browse sidebar, navbar categories bar, and admin table. */
+.browse-sidebar,
+.browse-categories-scroll,
+.navbar-categories-container,
+.admin-table-container,
+.search-autocomplete,
+.browse-mobile-drawer,
+.navbar-drawer-nav {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent the page from "jumping" sideways during scroll on Android
+   when a transient horizontal overflow (e.g. a wide tooltip, the
+   `no-scrollbar` autocompletes, or the navbar-categories horizontal
+   scroll) momentarily extends the document width. `overflow-x: clip`
+   clips without creating a scroll container, so it doesn't break
+   `position: sticky` on the navbar/browse sidebar. */
+@media (max-width: 1024px) {
+  html,
+  body {
+    overflow-x: clip;
+  }
+}
+
+/* Reduce oversized hero text on the landing page below 360px — clamp()
+   already keeps it readable, but the explicit floor prevents one
+   short word like "Made" from becoming bigger than the surrounding
+   body copy on tiny screens. */
+@media (max-width: 360px) {
+  .hero-title {
+    line-height: 1.15;
+  }
+}
+
+/* Tablet (769–1024): tighten browse sidebar and product grid so the
+   3-up grid doesn't leave a wide right gutter with the 220px sidebar. */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .browse-page-inner {
+    gap: var(--space-lg);
+  }
+  .browse-product-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Long product / category names inside sticky bars shouldn't push
+   horizontal scroll on small phones. */
+@media (max-width: 576px) {
+  .navbar-categories-container {
+    scroll-padding-inline: var(--space-md);
+    overscroll-behavior-x: contain;
+  }
+}
