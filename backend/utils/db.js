@@ -75,6 +75,8 @@ function mapOrderRow (row) {
       deliveryFee: row.pricing_deliveryFee,
       grandTotal: row.pricing_grandTotal,
       currency: row.pricing_currency,
+      couponCode: row.pricing_couponCode || null,
+      discount: row.pricing_discount || 0,
     },
     delivery: {
       mode: row.delivery_mode,
@@ -150,6 +152,7 @@ const TABLE_MAP = {
   search_history: 'search_history',
   activity_logs: 'activity_logs',
   student_verifications: 'student_verifications',
+  coupons: 'coupons',
 };
 
 const MAPPER_MAP = {
@@ -566,6 +569,7 @@ class Db {
       payouts: ['id', 'sellerId', 'amount', 'status', 'requestedAt', 'processedAt'],
       ledger_entries: ['id', 'sellerId', 'orderId', 'type', 'status', 'createdAt'],
       admin_mfa_challenges: ['id', 'userId', 'createdAt', 'expiresAt'],
+      coupons: ['id', 'code', 'type', 'value', 'used_count', 'active', 'createdAt', 'updatedAt'],
     };
 
     const allowedFields = allowedSortFields[this.table] || [];

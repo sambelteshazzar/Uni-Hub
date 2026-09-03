@@ -117,6 +117,8 @@ CREATE TABLE IF NOT EXISTS orders (
   pricing_deliveryFee REAL DEFAULT 0,
   pricing_grandTotal REAL NOT NULL,
   pricing_currency TEXT DEFAULT 'GHS',
+  pricing_couponCode TEXT,
+  pricing_discount REAL DEFAULT 0,
   delivery_mode TEXT NOT NULL CHECK(delivery_mode IN ('bolt','yango','inperson')),
   delivery_address TEXT NOT NULL,
   delivery_instructions TEXT,
@@ -129,6 +131,27 @@ CREATE TABLE IF NOT EXISTS orders (
   createdAt TEXT DEFAULT (datetime('now')),
   updatedAt TEXT DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS coupons (
+  id TEXT PRIMARY KEY,
+  code TEXT UNIQUE NOT NULL,
+  type TEXT NOT NULL CHECK(type IN ('percent','fixed')),
+  value REAL NOT NULL CHECK(value > 0),
+  min_order REAL DEFAULT 0,
+  max_uses INTEGER DEFAULT 0,
+  used_count INTEGER DEFAULT 0,
+  valid_from TEXT,
+  valid_until TEXT,
+  seller_id TEXT REFERENCES users(id),
+  active INTEGER DEFAULT 1,
+  description TEXT,
+  created_by TEXT REFERENCES users(id),
+  createdAt TEXT DEFAULT (datetime('now')),
+  updatedAt TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_coupons_code ON coupons(code);
+CREATE INDEX IF NOT EXISTS idx_coupons_active ON coupons(active);
 
 CREATE TABLE IF NOT EXISTS product_colors (
   id TEXT PRIMARY KEY,
@@ -1415,6 +1438,15 @@ function connectLocal () {
     }
     if (!productColsAll.find(c => c.name === 'subcategory')) {
       db.prepare('ALTER TABLE products ADD COLUMN subcategory TEXT').run();
+    }
+    // Coupon support (2026-09-02): coupon code + discount are persisted
+    // on the order so refunds / reporting can show what was applied.
+    const orderCols = db.prepare('PRAGMA table_info(orders)').all();
+    if (!orderCols.find(c => c.name === 'pricing_couponCode')) {
+      db.prepare('ALTER TABLE orders ADD COLUMN pricing_couponCode TEXT').run();
+    }
+    if (!orderCols.find(c => c.name === 'pricing_discount')) {
+      db.prepare('ALTER TABLE orders ADD COLUMN pricing_discount REAL DEFAULT 0').run();
     }
     // Payouts timestamps (2026-08-22): updateById() stamps updatedAt, so the
     // columns must exist on pre-existing payouts tables.

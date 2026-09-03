@@ -48,6 +48,7 @@ const messageRoutes = require('./routes/message.routes');
 const reviewRoutes = require('./routes/review.routes');
 const newsletterRoutes = require('./routes/newsletter.routes');
 const ledgerRoutes = require('./routes/ledger.routes');
+const couponRoutes = require('./routes/coupon.routes');
 const wishlistRoutes = require('./routes/wishlist.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const searchRoutes = require('./routes/search.routes');
@@ -477,6 +478,9 @@ app.use('/api/newsletter', newsletterRoutes);
 
 // Ledger routes (seller escrow balance)
 app.use('/api/ledger', ledgerRoutes);
+
+// Coupon routes — POST /api/coupons/validate (buyer), admin CRUD via /api/admin/coupons
+app.use('/api/coupons', couponRoutes);
 
 // Verification-document retention sweep (spec 2026-08-23): destroys assets
 // 30 days after decision. Hourly; failures retry next pass.

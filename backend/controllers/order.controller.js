@@ -163,7 +163,29 @@ exports.createOrder = asyncHandler(async (req, res) => {
   }
 
   const deliveryFee = delivery.mode === 'inperson' ? 0 : delivery.mode === 'yango' ? 12 : 15;
-  const grandTotal = subtotal + deliveryFee;
+
+  // Coupon support (2026-09-02): if the client sent a coupon code, look it
+  // up, validate it against the subtotal, and subtract the discount from
+  // the grand total. The applied code + discount are persisted on the order
+  // (orders.pricing_couponCode / pricing_discount) so refunds and reporting
+  // can show what was applied. used_count is incremented after the order
+  // commits — if the order fails downstream, the coupon is NOT consumed.
+  let pricingCouponCode = null;
+  let pricingDiscount = 0;
+  if (req.body.couponCode && typeof req.body.couponCode === 'string') {
+    const couponController = require('./coupon.controller');
+    const normalizedCode = req.body.couponCode.trim().toUpperCase();
+    const coupon = await db('coupons').findOne({ code: normalizedCode });
+    if (!coupon || !couponController.isCouponLive(coupon)) {
+      throw new ApiError(400, 'Coupon is no longer valid');
+    }
+    if (coupon.min_order && subtotal < coupon.min_order) {
+      throw new ApiError(400, `Minimum order of GHS ${coupon.min_order.toFixed(2)} required for this coupon`);
+    }
+    pricingDiscount = couponController.computeDiscount(coupon, subtotal);
+    pricingCouponCode = coupon.code;
+  }
+  const grandTotal = Math.max(0, subtotal + deliveryFee - pricingDiscount);
 
   const order = await db('orders').transaction(async () => {
     const now = new Date();
@@ -188,6 +210,8 @@ exports.createOrder = asyncHandler(async (req, res) => {
       pricing_deliveryFee: deliveryFee,
       pricing_grandTotal: grandTotal,
       pricing_currency: 'GHS',
+      pricing_couponCode: pricingCouponCode,
+      pricing_discount: pricingDiscount,
       delivery_mode: delivery.mode,
       delivery_address: delivery.address || '',
       delivery_instructions: delivery.instructions || '',
@@ -239,6 +263,17 @@ exports.createOrder = asyncHandler(async (req, res) => {
     await db('users').updateById(req.user.id, {
       totalOrders: (req.user.totalOrders || 0) + 1,
     });
+
+    // Increment coupon used_count only after the order commits successfully
+    // so a downstream failure (e.g. payment) doesn't burn the coupon.
+    if (pricingCouponCode) {
+      const couponRow = await db('coupons').findOne({ code: pricingCouponCode });
+      if (couponRow) {
+        await db('coupons').updateById(couponRow.id, {
+          used_count: (couponRow.used_count || 0) + 1,
+        });
+      }
+    }
 
     return createdOrder;
   });

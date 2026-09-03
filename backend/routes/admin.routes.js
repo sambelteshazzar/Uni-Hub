@@ -12,6 +12,7 @@ const { asyncHandler } = require('../utils/errorHandler');
 const { validateObjectId } = require('../middleware/sanitize.middleware');
 const { auditMutation } = require('../middleware/audit.middleware');
 const adminController = require('../controllers/admin.controller');
+const couponController = require('../controllers/coupon.controller');
 
 // RBAC tiers (2026-08-21): moderators may read admin data and moderate
 // products + verifications; bans, product write/delete and refunds remain
@@ -37,9 +38,16 @@ router.get('/activity/stats', authorize(...MODERATOR_ACCESS), asyncHandler(admin
 router.get('/analytics', authorize(...MODERATOR_ACCESS), asyncHandler(adminController.getAnalytics));
 router.get('/online-users', authorize(...MODERATOR_ACCESS), asyncHandler(adminController.getOnlineUsers));
 
+// Coupon CRUD — admin only per the RBAC matrix. Code reads coupons via
+// the /api/coupons/validate route, not these endpoints.
+router.get('/coupons', authorize('admin'), asyncHandler(couponController.list));
+router.post('/coupons', authorize('admin'), auditMutation('coupon_create'), asyncHandler(couponController.create));
+router.put('/coupons/:id', validateObjectId, authorize('admin'), auditMutation('coupon_update'), asyncHandler(couponController.update));
+router.delete('/coupons/:id', validateObjectId, authorize('admin'), auditMutation('coupon_delete'), asyncHandler(couponController.remove));
+
 // Payout approval queue — admin-only per the RBAC matrix (moderators: N).
 router.get('/payouts', authorize('admin'), asyncHandler(adminController.getPayoutQueue));
-router.put('/payouts/:id/approve', authorize('admin'), auditMutation('payout_approve'), asyncHandler(adminController.approvePayout));
-router.put('/payouts/:id/reject', authorize('admin'), auditMutation('payout_reject'), asyncHandler(adminController.rejectPayout));
+router.put('/payouts/:id/approve', validateObjectId, authorize('admin'), auditMutation('payout_approve'), asyncHandler(adminController.approvePayout));
+router.put('/payouts/:id/reject', validateObjectId, authorize('admin'), auditMutation('payout_reject'), asyncHandler(adminController.rejectPayout));
 
 module.exports = router;

@@ -27,6 +27,7 @@ const wishlistRoutes = require('../routes/wishlist.routes');
 const notificationRoutes = require('../routes/notification.routes');
 const searchRoutes = require('../routes/search.routes');
 const ledgerRoutes = require('../routes/ledger.routes');
+const couponRoutes = require('../routes/coupon.routes');
 
 // Create test app
 const createTestApp = () => {
@@ -90,6 +91,7 @@ const createTestApp = () => {
   app.use('/api/search', searchRoutes);
 
   app.use('/api/ledger', ledgerRoutes);
+  app.use('/api/coupons', couponRoutes);
   // 404 handler
   app.use((_req, res) => {
     res.status(404).json({ success: false, error: 'Route not found' });
