@@ -20,17 +20,29 @@ Ensures all SVG icons have consistent sizing
   flex-shrink: 0;
 }
 
-.icon-sm { width: 16px; height: 16px; }
-.icon-md { width: 20px; height: 20px; }
-.icon-lg { width: 24px; height: 24px; }
-.icon-xl { width: 32px; height: 32px; }
+.icon-sm {
+  width: 16px;
+  height: 16px;
+}
+.icon-md {
+  width: 20px;
+  height: 20px;
+}
+.icon-lg {
+  width: 24px;
+  height: 24px;
+}
+.icon-xl {
+  width: 32px;
+  height: 32px;
+}
 
 /* Category and feature icons */
 .category-icon svg,
 .feature-icon svg,
 .bb-category-icon svg {
-width: 28px;
-height: 28px;
+  width: 28px;
+  height: 28px;
 }
 
 /* Button icons */
@@ -213,7 +225,8 @@ a:hover {
 }
 
 @keyframes bounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(-25%);
     animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
   }
@@ -390,9 +403,9 @@ img {
 }
 
 .footer-newsletter-input {
-width: 100%;
-min-height: 44px;
-padding: 0.625rem 1rem 0.625rem 3rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.625rem 1rem 0.625rem 3rem;
   color: var(--neutral-500);
   background: var(--bg-primary);
   outline: none;
@@ -402,8 +415,8 @@ padding: 0.625rem 1rem 0.625rem 3rem;
 }
 
 .footer-newsletter-btn {
-padding: 0.625rem 1.25rem;
-min-height: 44px;
+  padding: 0.625rem 1.25rem;
+  min-height: 44px;
   font-weight: 600;
   font-size: 0.875rem;
   color: #ffffff;
@@ -618,28 +631,28 @@ min-height: 44px;
 /* ============================================
    DARK MODE OVERRIDES
    ============================================ */
-[data-theme="dark"] {
+[data-theme='dark'] {
   --heading-color: var(--neutral-800);
 }
 
-[data-theme="dark"] ::-webkit-scrollbar-track {
+[data-theme='dark'] ::-webkit-scrollbar-track {
   background: var(--neutral-100);
 }
 
-[data-theme="dark"] ::-webkit-scrollbar-thumb {
+[data-theme='dark'] ::-webkit-scrollbar-thumb {
   background: var(--neutral-300);
 }
 
-[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+[data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
   background: var(--neutral-400);
 }
 
-[data-theme="dark"] ::selection {
+[data-theme='dark'] ::selection {
   background: var(--primary);
   color: #ffffff;
 }
 
-[data-theme="dark"] ::-moz-selection {
+[data-theme='dark'] ::-moz-selection {
   background: var(--primary);
   color: #ffffff;
 }

@@ -20,7 +20,12 @@ DM Serif Display headline, animated reveals, blue marquee ticker
   --covered-photo-radius: 1.25rem;
   padding: 0;
   background: var(--covered-bg);
-  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family:
+    'DM Sans',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   overflow: hidden;
 }
 
@@ -173,7 +178,9 @@ DM Serif Display headline, animated reveals, blue marquee ticker
     0 4px 6px -1px rgba(0, 70, 190, 0.06),
     0 12px 24px -4px rgba(0, 70, 190, 0.08),
     0 0 0 1px rgba(0, 70, 190, 0.04);
-  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.5s ease;
+  transition:
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.5s ease;
 }
 
 .bb-covered-photo:hover {
@@ -234,7 +241,12 @@ DM Serif Display headline, animated reveals, blue marquee ticker
   left: 0;
   right: 0;
   padding: 1rem 1.25rem 0.9rem;
-  background: linear-gradient(to top, rgba(0, 70, 190, 0.8) 0%, rgba(0, 70, 190, 0.3) 55%, transparent 100%);
+  background: linear-gradient(
+    to top,
+    rgba(0, 70, 190, 0.8) 0%,
+    rgba(0, 70, 190, 0.3) 55%,
+    transparent 100%
+  );
   font-family: 'DM Sans', sans-serif;
   font-size: 0.75rem;
   font-weight: 700;
@@ -466,8 +478,8 @@ DM Serif Display headline, animated reveals, blue marquee ticker
   }
 }
 
-[data-theme="dark"] .bb-covered-photo--top,
-[data-theme="dark"] .bb-covered-photo--bottom {
+[data-theme='dark'] .bb-covered-photo--top,
+[data-theme='dark'] .bb-covered-photo--bottom {
   border-color: var(--bg-primary);
 }
 

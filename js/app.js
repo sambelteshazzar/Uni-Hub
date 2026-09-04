@@ -2,13 +2,12 @@
 // APP INITIALIZATION - MAIN APPLICATION ENTRY POINT
 // ============================================
 
-
 /**
  * Initialize the JERTS CART application
  * Sets up global event listeners and initializes core modules
  */
 class App {
-  constructor () {
+  constructor() {
     this.initialized = false;
     this.version = '1.0.0';
   }
@@ -16,7 +15,7 @@ class App {
   /**
    * Initialize the application
    */
-  async init () {
+  async init() {
     if (this.initialized) {
       return;
     }
@@ -41,7 +40,7 @@ class App {
   /**
    * Initialize core modules
    */
-  async initCoreModules () {
+  async initCoreModules() {
     // Initialize toast manager
     if (typeof toastManager !== 'undefined') {
       toastManager.init();
@@ -66,7 +65,7 @@ class App {
   /**
    * Set up global event listeners
    */
-  setupEventListeners () {
+  setupEventListeners() {
     // Handle online/offline status
     window.addEventListener('online', () => this.handleOnlineStatus(true));
     window.addEventListener('offline', () => this.handleOnlineStatus(false));
@@ -81,7 +80,7 @@ class App {
   /**
    * Initialize UI components
    */
-  initUIComponents () {
+  initUIComponents() {
     // Update cart badge
     if (typeof Pages !== 'undefined') {
       Pages.updateCartBadge();
@@ -93,7 +92,7 @@ class App {
    * Handle online/offline status
    * @param {boolean} isOnline
    */
-  handleOnlineStatus (isOnline) {
+  handleOnlineStatus(isOnline) {
     if (isOnline) {
       // App online status logged
       // Sync any pending data
@@ -107,7 +106,7 @@ class App {
    * Handle keyboard shortcuts
    * @param {KeyboardEvent} e
    */
-  handleKeyboardShortcuts (e) {
+  handleKeyboardShortcuts(e) {
     // Ctrl/Cmd + K - Search (future feature)
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
       e.preventDefault();
@@ -126,19 +125,23 @@ class App {
   /**
    * Save application state before unload
    */
-  saveAppState () {
+  saveAppState() {
     // Save current state to sessionStorage
     const state = {
       timestamp: Date.now(),
       cart: cartManager?.getSummary?.() || null,
     };
-    try { sessionStorage.setItem('jertscart-state', JSON.stringify(state)); } catch(e) { console.warn('sessionStorage unavailable:', e); }
+    try {
+      sessionStorage.setItem('jertscart-state', JSON.stringify(state));
+    } catch (e) {
+      console.warn('sessionStorage unavailable:', e);
+    }
   }
 
   /**
    * Sync pending data when coming back online
    */
-  async syncPendingData () {
+  async syncPendingData() {
     // Future: Sync any pending orders, cart updates, etc.
   }
 
@@ -146,7 +149,7 @@ class App {
    * Get app version
    * @returns {string}
    */
-  getVersion () {
+  getVersion() {
     return this.version;
   }
 
@@ -154,7 +157,7 @@ class App {
    * Check if app is initialized
    * @returns {boolean}
    */
-  isInitialized () {
+  isInitialized() {
     return this.initialized;
   }
 }

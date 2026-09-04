@@ -576,6 +576,6 @@
   }
 }
 
-[data-theme="dark"] .seller-dashboard {
+[data-theme='dark'] .seller-dashboard {
   background: var(--bg-secondary);
 }

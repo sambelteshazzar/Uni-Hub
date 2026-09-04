@@ -15,8 +15,9 @@ HERO BANNER - Best Buy Style
 Large promotional area with deals/featured
 ============================================ */
 .bb-hero {
-  background: linear-gradient(135deg, rgba(0, 70, 190, 0.92), rgba(0, 51, 153, 0.95)),
-              url('/assets/images/hero-students.jpg') center/cover no-repeat;
+  background:
+    linear-gradient(135deg, rgba(0, 70, 190, 0.92), rgba(0, 51, 153, 0.95)),
+    url('/assets/images/hero-students.jpg') center/cover no-repeat;
   padding: var(--space-4xl) 0;
   position: relative;
   overflow: hidden;
@@ -348,7 +349,8 @@ Added background image for "Choose Your University" section
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(ellipse at 30% 50%, rgba(255, 206, 0, 0.08) 0%, transparent 60%),
+  background:
+    radial-gradient(ellipse at 30% 50%, rgba(255, 206, 0, 0.08) 0%, transparent 60%),
     radial-gradient(ellipse at 70% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
   opacity: 0.3;
   z-index: 0;
@@ -524,29 +526,29 @@ Added background image for "Choose Your University" section
     white-space: normal !important;
   }
 
-  .bb-hero .bb-hero-container > div > div[style*="display: grid"] {
+  .bb-hero .bb-hero-container > div > div[style*='display: grid'] {
     grid-template-columns: 1fr !important;
   }
 
-  .bb-hero div[style*="gap: 2.5rem"] {
+  .bb-hero div[style*='gap: 2.5rem'] {
     gap: 1.5rem !important;
     flex-wrap: wrap !important;
   }
 
-  .bb-hero div[style*="font-size: 1.75rem"] {
+  .bb-hero div[style*='font-size: 1.75rem'] {
     font-size: 1.25rem !important;
   }
 
-  .bb-hero div[style*="font-size: 1.125rem"][style*="line-height: 1.8"] {
+  .bb-hero div[style*='font-size: 1.125rem'][style*='line-height: 1.8'] {
     font-size: 1rem !important;
     max-width: 100% !important;
   }
 
-  section[style*="padding: 5rem 2rem"] {
+  section[style*='padding: 5rem 2rem'] {
     padding: 3rem 1rem !important;
   }
 
-  section[style*="padding: 5rem 2rem"] h2[style*="font-size: 1.875rem"] {
+  section[style*='padding: 5rem 2rem'] h2[style*='font-size: 1.875rem'] {
     font-size: 1.5rem !important;
   }
 }
@@ -603,8 +605,8 @@ Scale-in effect for "Buy & sell with students like you"
 }
 
 /* Preserve the yellow color for "students like you" */
-#hero-animated-text > span[style*="color:#ffce00"],
-#hero-animated-text > span[style*="color: #ffce00"] {
+#hero-animated-text > span[style*='color:#ffce00'],
+#hero-animated-text > span[style*='color: #ffce00'] {
   color: #ffce00 !important;
   /* Prevent line breaks in yellow text */
   white-space: nowrap;
@@ -612,7 +614,7 @@ Scale-in effect for "Buy & sell with students like you"
 }
 
 /* Ensure yellow text characters inherit color */
-#hero-animated-text > span[style*="color:#ffce00"] .hero-char,
-#hero-animated-text > span[style*="color: #ffce00"] .hero-char {
+#hero-animated-text > span[style*='color:#ffce00'] .hero-char,
+#hero-animated-text > span[style*='color: #ffce00'] .hero-char {
   color: #ffce00 !important;
 }

@@ -9,7 +9,7 @@ class _LandingPageLoader {
    * @param {string} path - Relative path from project root
    * @returns {Promise<string>}
    */
-  static async fetchComponent (path) {
+  static async fetchComponent(path) {
     try {
       // Cache-bust: append a version query so the browser fetches a fresh
       // copy after updates. Bump COMPONENT_VERSION whenever any landing
@@ -31,7 +31,7 @@ class _LandingPageLoader {
    * Load all landing page components and assemble them
    * @returns {Promise<string>} Combined HTML string
    */
-  static async loadAll () {
+  static async loadAll() {
     const components = [
       'components/landing-page/hero.html',
       'components/landing-page/features.html',
@@ -54,7 +54,7 @@ class _LandingPageLoader {
    * - Testimonial carousel
    * - Newsletter form handler
    */
-  static attachBehaviors () {
+  static attachBehaviors() {
     // FAQ accordion
     const faqButtons = document.querySelectorAll('.lp-faq-question');
     faqButtons.forEach(button => {
@@ -84,53 +84,68 @@ class _LandingPageLoader {
     // Testimonial carousel
     this.initTestimonialCarousel();
 
-  // Newsletter form
-  const form = document.getElementById('lp-newsletter-form');
-  if (form) {
-    form.addEventListener('submit', async e => {
-      e.preventDefault();
-      const input = form.querySelector('.lp-newsletter-input');
-      const email = input?.value?.trim();
+    // Newsletter form
+    const form = document.getElementById('lp-newsletter-form');
+    if (form) {
+      form.addEventListener('submit', async e => {
+        e.preventDefault();
+        const input = form.querySelector('.lp-newsletter-input');
+        const email = input?.value?.trim();
 
-      if (!email || !this.isValidEmail(email)) {
-        this.showFormMessage(form, 'Please enter a valid email address.', 'error');
-        showToast('Please enter a valid email address.', 'warning');
-        return;
-      }
-
-      try {
-        const response = await api.post('/newsletter/subscribe', { email, source: 'landing' });
-
-        if (response.success) {
-          input.value = '';
-          if (response.data?.status === 'already_subscribed') {
-            this.showFormMessage(form, 'You\'re already subscribed!', 'success');
-            showToast('You\'re already subscribed!', 'success');
-          } else if (response.data?.status === 'pending_confirmation') {
-            this.showFormMessage(form, 'Confirmation email already sent. Please check your inbox.', 'info');
-            showToast('Confirmation email already sent. Please check your inbox.', 'info');
-          } else if (response.data?.status === 'resubscribed') {
-            this.showFormMessage(form, 'Re-subscription initiated. Please check your email to confirm.', 'success');
-            showToast('Re-subscription initiated. Please check your email to confirm.', 'success');
-          } else {
-            this.showFormMessage(form, 'Thanks for signing up! Check your email to confirm.', 'success');
-            showToast('Thanks for signing up! Check your email to confirm.', 'success');
-          }
-        } else {
-          throw new Error(response.error || 'Subscription failed');
+        if (!email || !this.isValidEmail(email)) {
+          this.showFormMessage(form, 'Please enter a valid email address.', 'error');
+          showToast('Please enter a valid email address.', 'warning');
+          return;
         }
-      } catch (error) {
-        this.showFormMessage(form, 'Something went wrong. Please try again.', 'error');
-        showToast('Something went wrong. Please try again.', 'error');
-      }
-    });
-  }
+
+        try {
+          const response = await api.post('/newsletter/subscribe', { email, source: 'landing' });
+
+          if (response.success) {
+            input.value = '';
+            if (response.data?.status === 'already_subscribed') {
+              this.showFormMessage(form, "You're already subscribed!", 'success');
+              showToast("You're already subscribed!", 'success');
+            } else if (response.data?.status === 'pending_confirmation') {
+              this.showFormMessage(
+                form,
+                'Confirmation email already sent. Please check your inbox.',
+                'info'
+              );
+              showToast('Confirmation email already sent. Please check your inbox.', 'info');
+            } else if (response.data?.status === 'resubscribed') {
+              this.showFormMessage(
+                form,
+                'Re-subscription initiated. Please check your email to confirm.',
+                'success'
+              );
+              showToast(
+                'Re-subscription initiated. Please check your email to confirm.',
+                'success'
+              );
+            } else {
+              this.showFormMessage(
+                form,
+                'Thanks for signing up! Check your email to confirm.',
+                'success'
+              );
+              showToast('Thanks for signing up! Check your email to confirm.', 'success');
+            }
+          } else {
+            throw new Error(response.error || 'Subscription failed');
+          }
+        } catch (error) {
+          this.showFormMessage(form, 'Something went wrong. Please try again.', 'error');
+          showToast('Something went wrong. Please try again.', 'error');
+        }
+      });
+    }
   }
 
   /**
    * Initialize the testimonial carousel with nav and dots
    */
-  static initTestimonialCarousel () {
+  static initTestimonialCarousel() {
     const track = document.querySelector('.lp-testimonials-track');
     if (!track) {
       return;
@@ -188,14 +203,14 @@ class _LandingPageLoader {
   /**
    * Simple email validation
    */
-  static isValidEmail (email) {
+  static isValidEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
   /**
    * Show inline message below a form
    */
-  showFormMessage (form, message, type = 'info') {
+  showFormMessage(form, message, type = 'info') {
     let msgEl = form.querySelector('.lp-form-message');
     if (!msgEl) {
       msgEl = document.createElement('p');
@@ -205,6 +220,10 @@ class _LandingPageLoader {
     }
     msgEl.textContent = message;
     msgEl.style.color = type === 'error' ? '#dc2626' : '#16a34a';
-    setTimeout(() => { if (msgEl.parentNode) msgEl.remove(); }, 5000);
+    setTimeout(() => {
+      if (msgEl.parentNode) {
+        msgEl.remove();
+      }
+    }, 5000);
   }
 }

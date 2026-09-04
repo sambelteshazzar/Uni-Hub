@@ -328,10 +328,10 @@
   }
 }
 
-[data-theme="dark"] .dashboard-container {
+[data-theme='dark'] .dashboard-container {
   background: var(--bg-secondary);
 }
 
-[data-theme="dark"] .profile-overview {
+[data-theme='dark'] .profile-overview {
   background: var(--bg-secondary);
 }

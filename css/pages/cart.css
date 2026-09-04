@@ -304,6 +304,6 @@
   }
 }
 
-[data-theme="dark"] .cart-notification {
+[data-theme='dark'] .cart-notification {
   color: var(--warning);
 }

@@ -7,43 +7,67 @@
  */
 
 class ReviewManager {
-  constructor () {
+  constructor() {
     this.currentSellerId = null;
-    this._storageKey = (typeof STORAGE_KEY_PREFIX !== 'undefined' ? STORAGE_KEY_PREFIX : 'unihub_') + 'reviews';
-    this._myReviewsKey = (typeof STORAGE_KEY_PREFIX !== 'undefined' ? STORAGE_KEY_PREFIX : 'unihub_') + 'my_reviews';
+    this._storageKey =
+      (typeof STORAGE_KEY_PREFIX !== 'undefined' ? STORAGE_KEY_PREFIX : 'unihub_') + 'reviews';
+    this._myReviewsKey =
+      (typeof STORAGE_KEY_PREFIX !== 'undefined' ? STORAGE_KEY_PREFIX : 'unihub_') + 'my_reviews';
   }
 
-  _isOffline () {
+  _isOffline() {
     return window._backendAvailable === false;
   }
 
-  _getLocalReviews () {
-    try { return StorageManager.get(this._storageKey) || []; } catch (_e) { return []; }
+  _getLocalReviews() {
+    try {
+      return StorageManager.get(this._storageKey) || [];
+    } catch (_e) {
+      return [];
+    }
   }
 
-  _saveLocalReviews (reviews) {
-    try { StorageManager.set(this._storageKey, reviews); } catch (_e) { console.warn('reviews: saveLocalReviews failed:', _e); }
+  _saveLocalReviews(reviews) {
+    try {
+      StorageManager.set(this._storageKey, reviews);
+    } catch (_e) {
+      console.warn('reviews: saveLocalReviews failed:', _e);
+    }
   }
 
-  _getMyLocalReviews () {
-    try { return StorageManager.get(this._myReviewsKey) || []; } catch (_e) { return []; }
+  _getMyLocalReviews() {
+    try {
+      return StorageManager.get(this._myReviewsKey) || [];
+    } catch (_e) {
+      return [];
+    }
   }
 
-  _saveMyLocalReviews (reviews) {
-    try { StorageManager.set(this._myReviewsKey, reviews); } catch (_e) { console.warn('reviews: saveMyLocalReviews failed:', _e); }
+  _saveMyLocalReviews(reviews) {
+    try {
+      StorageManager.set(this._myReviewsKey, reviews);
+    } catch (_e) {
+      console.warn('reviews: saveMyLocalReviews failed:', _e);
+    }
   }
 
-  async _fetchWithCsrf (url, options = {}) {
+  async _fetchWithCsrf(url, options = {}) {
     if (typeof api !== 'undefined' && api.isStaticDeploy) {
-      const offlineBody = JSON.stringify({ success: false, error: 'Not available in offline mode' });
+      const offlineBody = JSON.stringify({
+        success: false,
+        error: 'Not available in offline mode',
+      });
       return new Response(offlineBody, { status: 503, statusText: 'Offline' });
     }
     const token = typeof StorageManager !== 'undefined' ? StorageManager.getAuthToken() : null;
-    const isMutating = options.method && !['GET', 'HEAD', 'OPTIONS'].includes(options.method.toUpperCase());
+    const isMutating =
+      options.method && !['GET', 'HEAD', 'OPTIONS'].includes(options.method.toUpperCase());
     let csrfHeaders = {};
     if (isMutating && typeof api !== 'undefined' && api.fetchCsrfToken) {
       const csrfToken = await api.fetchCsrfToken();
-      if (csrfToken) { csrfHeaders = { 'X-CSRF-Token': csrfToken }; }
+      if (csrfToken) {
+        csrfHeaders = { 'X-CSRF-Token': csrfToken };
+      }
     }
     return fetch(url, {
       ...options,
@@ -57,51 +81,74 @@ class ReviewManager {
     });
   }
 
-  async submitReview (data) {
+  async submitReview(data) {
     try {
       const { sellerId, rating, comment, productId, orderId, detailedRatings } = data;
-      if (!sellerId || !rating) { throw new Error('Seller ID and rating are required'); }
-
-      if (this._isOffline()) {
-        throw new Error('Cannot connect to server. Please check your internet connection and try again.');
+      if (!sellerId || !rating) {
+        throw new Error('Seller ID and rating are required');
       }
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews`, {
-        method: 'POST',
-        body: JSON.stringify({ sellerId, rating, comment, productId, orderId, detailedRatings }),
-      });
+      if (this._isOffline()) {
+        throw new Error(
+          'Cannot connect to server. Please check your internet connection and try again.'
+        );
+      }
+
+      const response = await this._fetchWithCsrf(
+        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ sellerId, rating, comment, productId, orderId, detailedRatings }),
+        }
+      );
       const result = await response.json();
-      if (!response.ok) { throw new Error(result.error || 'Failed to submit review'); }
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to submit review');
+      }
       showToast('Review submitted successfully!', 'success');
-return result.data;
+      return result.data;
     } catch (error) {
       throw error;
     }
   }
 
-  async getSellerReviews (sellerId, options = {}) {
+  async getSellerReviews(sellerId, options = {}) {
     try {
       if (this._isOffline()) {
         const reviews = this._getLocalReviews().filter(r => r.sellerId === sellerId);
         const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = -1 } = options;
         const sorted = [...reviews].sort((a, b) => {
-          const valA = a[sortBy], valB = b[sortBy];
-          if (typeof valA === 'string') return sortOrder * valA.localeCompare(valB);
+          const valA = a[sortBy],
+            valB = b[sortBy];
+          if (typeof valA === 'string') {
+            return sortOrder * valA.localeCompare(valB);
+          }
           return sortOrder * ((valA || 0) - (valB || 0));
         });
         const start = (page - 1) * limit;
         return {
           reviews: sorted.slice(start, start + limit),
-          pagination: { page, limit, total: reviews.length, pages: Math.ceil(reviews.length / limit) },
+          pagination: {
+            page,
+            limit,
+            total: reviews.length,
+            pages: Math.ceil(reviews.length / limit),
+          },
         };
       }
 
       const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = -1, productId } = options;
       const params = new URLSearchParams({ page, limit, sortBy, sortOrder });
-      if (productId) params.append('productId', productId);
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/seller/${sellerId}?${params}`);
+      if (productId) {
+        params.append('productId', productId);
+      }
+      const response = await this._fetchWithCsrf(
+        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/seller/${sellerId}?${params}`
+      );
       const result = await response.json();
-      if (!response.ok) { throw new Error(result.error || 'Failed to fetch reviews'); }
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to fetch reviews');
+      }
       return result.data;
     } catch (error) {
       console.warn('reviews: getSellerReviews failed:', error);
@@ -109,22 +156,36 @@ return result.data;
     }
   }
 
-  async getRatingSummary (sellerId, productId = null) {
+  async getRatingSummary(sellerId, productId = null) {
     try {
       if (this._isOffline()) {
-        const reviews = this._getLocalReviews().filter(r => r.sellerId === sellerId && (!productId || r.productId === productId));
+        const reviews = this._getLocalReviews().filter(
+          r => r.sellerId === sellerId && (!productId || r.productId === productId)
+        );
         const total = reviews.length;
         const avgRating = total > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / total : 0;
         const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-        reviews.forEach(r => { distribution[r.rating] = (distribution[r.rating] || 0) + 1; });
-        return { averageRating: Math.round(avgRating * 10) / 10, totalReviews: total, distribution };
+        reviews.forEach(r => {
+          distribution[r.rating] = (distribution[r.rating] || 0) + 1;
+        });
+        return {
+          averageRating: Math.round(avgRating * 10) / 10,
+          totalReviews: total,
+          distribution,
+        };
       }
 
       const params = new URLSearchParams();
-      if (productId) params.append('productId', productId);
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/seller/${sellerId}/summary?${params}`);
+      if (productId) {
+        params.append('productId', productId);
+      }
+      const response = await this._fetchWithCsrf(
+        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/seller/${sellerId}/summary?${params}`
+      );
       const result = await response.json();
-      if (!response.ok) { throw new Error(result.error || 'Failed to fetch rating summary'); }
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to fetch rating summary');
+      }
       return result.data;
     } catch (error) {
       console.warn('reviews: getRatingSummary failed:', error);
@@ -132,7 +193,7 @@ return result.data;
     }
   }
 
-  async getMyReviews (options = {}) {
+  async getMyReviews(options = {}) {
     try {
       if (this._isOffline()) {
         const reviews = this._getMyLocalReviews();
@@ -140,15 +201,24 @@ return result.data;
         const start = (page - 1) * limit;
         return {
           reviews: reviews.slice(start, start + limit),
-          pagination: { page, limit, total: reviews.length, pages: Math.ceil(reviews.length / limit) },
+          pagination: {
+            page,
+            limit,
+            total: reviews.length,
+            pages: Math.ceil(reviews.length / limit),
+          },
         };
       }
 
       const { page = 1, limit = 10 } = options;
       const params = new URLSearchParams({ page, limit });
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/my-reviews?${params}`);
+      const response = await this._fetchWithCsrf(
+        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/my-reviews?${params}`
+      );
       const result = await response.json();
-      if (!response.ok) { throw new Error(result.error || 'Failed to fetch reviews'); }
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to fetch reviews');
+      }
       return result.data;
     } catch (error) {
       console.warn('reviews: getMyReviews failed:', error);
@@ -156,16 +226,25 @@ return result.data;
     }
   }
 
-  async updateReview (reviewId, data) {
+  async updateReview(reviewId, data) {
     try {
-      if (this._isOffline()) { throw new Error('Cannot connect to server. Please check your internet connection and try again.'); }
+      if (this._isOffline()) {
+        throw new Error(
+          'Cannot connect to server. Please check your internet connection and try again.'
+        );
+      }
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/${reviewId}`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      });
+      const response = await this._fetchWithCsrf(
+        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/${reviewId}`,
+        {
+          method: 'PUT',
+          body: JSON.stringify(data),
+        }
+      );
       const result = await response.json();
-      if (!response.ok) { throw new Error(result.error || 'Failed to update review'); }
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update review');
+      }
       showToast('Review updated successfully!', 'success');
       return result.data;
     } catch (error) {
@@ -173,13 +252,22 @@ return result.data;
     }
   }
 
-  async deleteReview (reviewId) {
+  async deleteReview(reviewId) {
     try {
-      if (this._isOffline()) { throw new Error('Cannot connect to server. Please check your internet connection and try again.'); }
+      if (this._isOffline()) {
+        throw new Error(
+          'Cannot connect to server. Please check your internet connection and try again.'
+        );
+      }
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/${reviewId}`, { method: 'DELETE' });
+      const response = await this._fetchWithCsrf(
+        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/${reviewId}`,
+        { method: 'DELETE' }
+      );
       const result = await response.json();
-      if (!response.ok) { throw new Error(result.error || 'Failed to delete review'); }
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to delete review');
+      }
       showToast('Review deleted', 'info');
       return result;
     } catch (error) {
@@ -187,26 +275,44 @@ return result.data;
     }
   }
 
-  async markHelpful (reviewId) {
+  async markHelpful(reviewId) {
     try {
-      if (this._isOffline()) { throw new Error('Cannot connect to server. Please check your internet connection and try again.'); }
+      if (this._isOffline()) {
+        throw new Error(
+          'Cannot connect to server. Please check your internet connection and try again.'
+        );
+      }
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/${reviewId}/helpful`, { method: 'POST' });
+      const response = await this._fetchWithCsrf(
+        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/${reviewId}/helpful`,
+        { method: 'POST' }
+      );
       const result = await response.json();
-      if (!response.ok) { throw new Error(result.error || 'Failed to mark as helpful'); }
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to mark as helpful');
+      }
       return result.data;
     } catch (error) {
       throw error;
     }
   }
 
-  async reportReview (reviewId) {
+  async reportReview(reviewId) {
     try {
-      if (this._isOffline()) { throw new Error('Cannot connect to server. Please check your internet connection and try again.'); }
+      if (this._isOffline()) {
+        throw new Error(
+          'Cannot connect to server. Please check your internet connection and try again.'
+        );
+      }
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/${reviewId}/report`, { method: 'POST' });
+      const response = await this._fetchWithCsrf(
+        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/${reviewId}/report`,
+        { method: 'POST' }
+      );
       const result = await response.json();
-      if (!response.ok) { throw new Error(result.error || 'Failed to report review'); }
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to report review');
+      }
       showToast('Review reported', 'info');
       return result;
     } catch (error) {
@@ -214,16 +320,25 @@ return result.data;
     }
   }
 
-  async respondToReview (reviewId, comment) {
+  async respondToReview(reviewId, comment) {
     try {
-      if (this._isOffline()) { throw new Error('Cannot connect to server. Please check your internet connection and try again.'); }
+      if (this._isOffline()) {
+        throw new Error(
+          'Cannot connect to server. Please check your internet connection and try again.'
+        );
+      }
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/${reviewId}/respond`, {
-        method: 'POST',
-        body: JSON.stringify({ comment }),
-      });
+      const response = await this._fetchWithCsrf(
+        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/${reviewId}/respond`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ comment }),
+        }
+      );
       const result = await response.json();
-      if (!response.ok) { throw new Error(result.error || 'Failed to respond'); }
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to respond');
+      }
       showToast('Response added', 'success');
       return result.data;
     } catch (error) {
@@ -231,36 +346,53 @@ return result.data;
     }
   }
 
-  generateStars (rating, _size = 16) {
+  generateStars(rating, _size = 16) {
     const fullStars = Math.floor(rating);
     const hasHalf = rating % 1 >= 0.5;
     const emptyStars = 5 - fullStars - (hasHalf ? 1 : 0);
     let html = `<div class="star-rating" style="font-size: ${_size}px; display: inline-flex; gap: 2px;">`;
-    for (let i = 0; i < fullStars; i++) { html += '<span class="star full">★</span>'; }
-    if (hasHalf) { html += '<span class="star half">★</span>'; }
-    for (let i = 0; i < emptyStars; i++) { html += '<span class="star empty">☆</span>'; }
+    for (let i = 0; i < fullStars; i++) {
+      html += '<span class="star full">★</span>';
+    }
+    if (hasHalf) {
+      html += '<span class="star half">★</span>';
+    }
+    for (let i = 0; i < emptyStars; i++) {
+      html += '<span class="star empty">☆</span>';
+    }
     html += '</div>';
     return html;
   }
 
-  generateStarInput (currentRating = 0, onChange) {
+  generateStarInput(currentRating = 0, onChange) {
     const containerId = `star-input-${Date.now()}`;
     setTimeout(() => {
       const container = document.getElementById(containerId);
-      if (!container) return;
+      if (!container) {
+        return;
+      }
       const stars = container.querySelectorAll('.star-input');
       stars.forEach((star, index) => {
         star.addEventListener('click', () => {
           const rating = index + 1;
-          stars.forEach((s, i) => { s.classList.toggle('active', i < rating); });
-          if (onChange) onChange(rating);
+          stars.forEach((s, i) => {
+            s.classList.toggle('active', i < rating);
+          });
+          if (onChange) {
+            onChange(rating);
+          }
         });
         star.addEventListener('mouseenter', () => {
-          stars.forEach((s, i) => { s.classList.toggle('hover', i <= index); });
+          stars.forEach((s, i) => {
+            s.classList.toggle('hover', i <= index);
+          });
         });
       });
       container.addEventListener('mouseleave', () => {
-        stars.forEach((s, i) => { s.classList.remove('hover'); s.classList.toggle('active', i < currentRating); });
+        stars.forEach((s, i) => {
+          s.classList.remove('hover');
+          s.classList.toggle('active', i < currentRating);
+        });
       });
     }, 0);
     let html = `<div id="${containerId}" class="star-input-container" style="display: inline-flex; gap: 4px; font-size: 24px; cursor: pointer;">`;

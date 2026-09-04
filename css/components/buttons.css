@@ -89,7 +89,7 @@
 .btn-danger:active:not(:disabled) {
   transform: translateY(0);
 }
-  .btn-ghost {
+.btn-ghost {
   background: transparent;
   border-color: transparent;
   color: var(--neutral-900);
@@ -200,8 +200,8 @@
   background-color: var(--btn-shadow);
   color: var(--btn-shadow);
   transition:
-  transform var(--transition-base),
-  box-shadow var(--transition-base);
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
   text-align: center;
   box-shadow:
     0.5px 0.5px 0 0 var(--btn-shadow),

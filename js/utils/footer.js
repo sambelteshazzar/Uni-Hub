@@ -33,10 +33,12 @@ class FooterUtils {
    */
   setupNewsletterForm() {
     const form = document.querySelector('.footer-newsletter-form');
-    if (!form) return;
+    if (!form) {
+      return;
+    }
 
     form.removeAttribute('onsubmit');
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', async e => {
       e.preventDefault();
       await this.handleNewsletterSubmit(form);
     });
@@ -75,17 +77,38 @@ class FooterUtils {
       if (response.success) {
         input.value = '';
         if (response.data?.status === 'already_subscribed') {
-          this.showFormMessage(form, 'You\'re already subscribed!', 'success');
-          this.showNotification('You\'re already subscribed!', 'success');
+          this.showFormMessage(form, "You're already subscribed!", 'success');
+          this.showNotification("You're already subscribed!", 'success');
         } else if (response.data?.status === 'pending_confirmation') {
-          this.showFormMessage(form, 'Confirmation email already sent. Please check your inbox.', 'info');
-          this.showNotification('Confirmation email already sent. Please check your inbox.', 'info');
+          this.showFormMessage(
+            form,
+            'Confirmation email already sent. Please check your inbox.',
+            'info'
+          );
+          this.showNotification(
+            'Confirmation email already sent. Please check your inbox.',
+            'info'
+          );
         } else if (response.data?.status === 'resubscribed') {
-          this.showFormMessage(form, 'Re-subscription initiated. Please check your email to confirm.', 'success');
-          this.showNotification('Re-subscription initiated. Please check your email to confirm.', 'success');
+          this.showFormMessage(
+            form,
+            'Re-subscription initiated. Please check your email to confirm.',
+            'success'
+          );
+          this.showNotification(
+            'Re-subscription initiated. Please check your email to confirm.',
+            'success'
+          );
         } else {
-          this.showFormMessage(form, 'Thanks for subscribing! Check your email for confirmation.', 'success');
-          this.showNotification('Thanks for subscribing! 🎉 Check your email for confirmation.', 'success');
+          this.showFormMessage(
+            form,
+            'Thanks for subscribing! Check your email for confirmation.',
+            'success'
+          );
+          this.showNotification(
+            'Thanks for subscribing! 🎉 Check your email for confirmation.',
+            'success'
+          );
         }
       } else {
         throw new Error(response.error || 'Subscription failed');
@@ -134,32 +157,24 @@ class FooterUtils {
     }
     msgEl.textContent = message;
     msgEl.style.color = type === 'error' ? '#dc2626' : '#16a34a';
-    setTimeout(() => { if (msgEl.parentNode) msgEl.remove(); }, 5000);
+    setTimeout(() => {
+      if (msgEl.parentNode) {
+        msgEl.remove();
+      }
+    }, 5000);
   }
 
   /**
    * Setup footer links that don't have pages yet
    */
   setupFooterLinks() {
-    // Links that need "Coming Soon" message
-    const comingSoonLinks = [
-      { selector: 'a[href="#"]', text: 'Terms' },
-      { selector: 'a[href="#"]', text: 'Privacy' },
-      { selector: 'a[href="#"]', text: 'License' },
-      { selector: 'a[href="#"]', text: 'About Us' },
-      { selector: 'a[href="#"]', text: 'Blog' },
-      { selector: 'a[href="#"]', text: 'Roadmap' },
-      { selector: 'a[href="#"]', text: 'Universities' },
-      { selector: 'a[href="#"]', text: 'Team' },
-      { selector: 'a[href="#"]', text: 'Careers' },
-      { selector: 'a[href="#"]', text: 'Partners' },
-    ];
-
     // Find all links with href="#" and add click handlers
     const allLinks = document.querySelectorAll('a[href="#"]');
     allLinks.forEach(link => {
       // Skip if already has a click handler
-      if (link.getAttribute('data-has-handler')) return;
+      if (link.getAttribute('data-has-handler')) {
+        return;
+      }
 
       const linkText = link.textContent?.trim();
 
@@ -169,7 +184,7 @@ class FooterUtils {
 
       if (isFooterLink && !isSocialLink) {
         link.setAttribute('data-has-handler', 'true');
-        link.addEventListener('click', (e) => {
+        link.addEventListener('click', e => {
           e.preventDefault();
           this.showNotification(`${linkText} page coming soon!`, 'info');
         });
@@ -181,7 +196,7 @@ class FooterUtils {
           link.setAttribute('rel', 'noopener noreferrer');
         } else {
           link.setAttribute('data-has-handler', 'true');
-          link.addEventListener('click', (e) => {
+          link.addEventListener('click', e => {
             e.preventDefault();
             const platform = link.getAttribute('aria-label') || 'Social';
             this.showNotification(`Follow us on ${platform} - Coming soon!`, 'info');
@@ -193,9 +208,12 @@ class FooterUtils {
     // Also handle the contact link if it doesn't have a proper page
     const contactLink = document.querySelector('a[href="#contact"]');
     if (contactLink) {
-      contactLink.addEventListener('click', (e) => {
+      contactLink.addEventListener('click', e => {
         e.preventDefault();
-        this.showNotification('Contact page coming soon! For now, email us at unihubsupport@gmail.com', 'info');
+        this.showNotification(
+          'Contact page coming soon! For now, email us at unihubsupport@gmail.com',
+          'info'
+        );
       });
     }
   }

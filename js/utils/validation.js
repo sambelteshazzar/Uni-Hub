@@ -1,33 +1,32 @@
-
 // ============================================
 // FORM VALIDATION UTILITIES
 // ============================================
 
 class Validator {
-  static _getPatterns () {
-    return (typeof VALIDATION_PATTERNS !== 'undefined') ? VALIDATION_PATTERNS : {};
+  static _getPatterns() {
+    return typeof VALIDATION_PATTERNS !== 'undefined' ? VALIDATION_PATTERNS : {};
   }
 
-  static _getMessages () {
-    return (typeof ERROR_MESSAGES !== 'undefined') ? ERROR_MESSAGES : {};
+  static _getMessages() {
+    return typeof ERROR_MESSAGES !== 'undefined' ? ERROR_MESSAGES : {};
   }
 
-  static isValidEmail (email) {
+  static isValidEmail(email) {
     const patterns = this._getPatterns();
     return patterns.EMAIL ? patterns.EMAIL.test(email) : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
-  static isValidPhone (phone) {
+  static isValidPhone(phone) {
     const patterns = this._getPatterns();
     return patterns.PHONE ? patterns.PHONE.test(phone) : /^(\+233|0)\d{9}$/.test(phone);
   }
 
-  static isValidPassword (password) {
+  static isValidPassword(password) {
     const patterns = this._getPatterns();
     return patterns.PASSWORD ? patterns.PASSWORD.test(password) : password.length >= 8;
   }
 
-  static isValidUrl (url) {
+  static isValidUrl(url) {
     const patterns = this._getPatterns();
     return patterns.URL ? patterns.URL.test(url) : /^https?:\/\/.+/.test(url);
   }
@@ -37,7 +36,7 @@ class Validator {
    * @param {string} value
    * @returns {boolean}
    */
-  static isEmpty (value) {
+  static isEmpty(value) {
     return !value || value.trim().length === 0;
   }
 
@@ -47,7 +46,7 @@ class Validator {
    * @param {number} minLength
    * @returns {boolean}
    */
-  static isMinLength (value, minLength) {
+  static isMinLength(value, minLength) {
     return value && value.length >= minLength;
   }
 
@@ -57,7 +56,7 @@ class Validator {
    * @param {number} maxLength
    * @returns {boolean}
    */
-  static isMaxLength (value, maxLength) {
+  static isMaxLength(value, maxLength) {
     return !value || value.length <= maxLength;
   }
 
@@ -67,7 +66,7 @@ class Validator {
    * @param {any} value2
    * @returns {boolean}
    */
-  static isMatch (value1, value2) {
+  static isMatch(value1, value2) {
     return value1 === value2;
   }
 
@@ -76,7 +75,7 @@ class Validator {
    * @param {number|string} price
    * @returns {boolean}
    */
-  static isValidPrice (price) {
+  static isValidPrice(price) {
     const num = Number(price);
     return !isNaN(num) && num > 0;
   }
@@ -87,7 +86,7 @@ class Validator {
    * @param {Object} rules - Validation rules
    * @returns {Object} - Errors object
    */
-  static validateForm (fields, rules) {
+  static validateForm(fields, rules) {
     const errors = {};
     const msgs = this._getMessages();
 

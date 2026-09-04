@@ -1,7 +1,7 @@
 // Landing Page Methods
 
 const LandingPageMethods = {
-    hideOriginalNavFooter () {
+  hideOriginalNavFooter() {
     const navbar = document.getElementById('navbar');
     const footer = document.getElementById('footer');
     if (navbar) {
@@ -14,7 +14,7 @@ const LandingPageMethods = {
     }
   },
 
-    showOriginalNavFooter () {
+  showOriginalNavFooter() {
     const navbar = document.getElementById('navbar');
     const footer = document.getElementById('footer');
     if (navbar && navbar.getAttribute('data-hidden') === 'true') {
@@ -28,15 +28,15 @@ const LandingPageMethods = {
     Pages.updateNavbar();
   },
 
-
-  async renderLanding () {
+  async renderLanding() {
     if (typeof window.renderBestBuyLanding === 'function') {
       return window.renderBestBuyLanding();
     }
     Pages.hideOriginalNavFooter();
     const mainContent = document.getElementById('main-content');
     if (mainContent) {
-      mainContent.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0046be;color:#fff;text-align:center;padding:2rem;"><div><h2>Loading JERTS CART...</h2><p>Please wait.</p></div></div>';
+      mainContent.innerHTML =
+        '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0046be;color:#fff;text-align:center;padding:2rem;"><div><h2>Loading JERTS CART...</h2><p>Please wait.</p></div></div>';
     }
     const check = setInterval(() => {
       if (typeof window.renderBestBuyLanding === 'function') {
@@ -46,7 +46,7 @@ const LandingPageMethods = {
     }, 50);
   },
 
-  showUniversityComingSoon (universityName) {
+  showUniversityComingSoon(universityName) {
     // The "coming soon" toast used by the now-removed landing-page
     // university cards. Kept as a no-op stub in case any other surface
     // still calls it. University pickers are now driven by the active
@@ -54,11 +54,11 @@ const LandingPageMethods = {
     if (typeof showToast === 'function') {
       showToast(`${universityName} is coming soon!`, 'info');
     } else {
-      console.log(`[coming-soon] ${universityName} — not yet available`);
+      console.info(`[coming-soon] ${universityName} — not yet available`);
     }
   },
 
-  filterCategoryTab (category, button) {
+  filterCategoryTab(category, button) {
     // Update tab buttons
     document.querySelectorAll('.category-tab').forEach(tab => {
       tab.style.background = 'transparent';

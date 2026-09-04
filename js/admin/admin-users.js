@@ -4,7 +4,7 @@
 // ============================================
 
 class AdminUsersManager {
-  constructor () {
+  constructor() {
     this.USERS_STORAGE_KEY = `${STORAGE_KEY_PREFIX}users`;
     this.users = [];
     // Don't auto-load on construction. The previous behavior hit
@@ -19,7 +19,7 @@ class AdminUsersManager {
   /**
    * Load users from JSON and storage
    */
-  async loadUsers () {
+  async loadUsers() {
     try {
       if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable !== false) {
         const resp = await api.users.getAll({ limit: 200 });
@@ -29,7 +29,9 @@ class AdminUsersManager {
           return;
         }
       }
-    } catch (_) { console.warn('admin-users: backend fetch failed, using cache:', _); }
+    } catch (_) {
+      console.warn('admin-users: backend fetch failed, using cache:', _);
+    }
 
     this.users = StorageManager.get(this.USERS_STORAGE_KEY, true) || [];
   }
@@ -38,7 +40,7 @@ class AdminUsersManager {
    * Get all users
    * @returns {Array}
    */
-  getAllUsers () {
+  getAllUsers() {
     // Also include currently logged in users from sessions (authManager format)
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
@@ -53,7 +55,7 @@ class AdminUsersManager {
    * @param {string} userId - User ID
    * @returns {Object|null}
    */
-  getUserById (userId) {
+  getUserById(userId) {
     return this.users.find(u => u.id === userId) || null;
   }
 
@@ -62,7 +64,7 @@ class AdminUsersManager {
    * @param {string} email - User email
    * @returns {Object|null}
    */
-  getUserByEmail (email) {
+  getUserByEmail(email) {
     return this.users.find(u => u.email === email) || null;
   }
 
@@ -71,12 +73,12 @@ class AdminUsersManager {
    * @param {string} query - Search query
    * @returns {Array}
    */
-  searchUsers (query) {
+  searchUsers(query) {
     const normalizedQuery = query.toLowerCase();
     return this.users.filter(
       u =>
         u.fullName.toLowerCase().includes(normalizedQuery) ||
-        u.email.toLowerCase().includes(normalizedQuery),
+        u.email.toLowerCase().includes(normalizedQuery)
     );
   }
 
@@ -85,7 +87,7 @@ class AdminUsersManager {
    * @param {string} university - University ID
    * @returns {Array}
    */
-  getUsersByUniversity (university) {
+  getUsersByUniversity(university) {
     return this.users.filter(u => u.university === university);
   }
 
@@ -94,7 +96,7 @@ class AdminUsersManager {
    * @param {string} role - User role
    * @returns {Array}
    */
-  getUsersByRole (role) {
+  getUsersByRole(role) {
     return this.users.filter(u => u.role === role);
   }
 
@@ -104,7 +106,7 @@ class AdminUsersManager {
    * @param {string} newRole - New role
    * @returns {Object}
    */
-  async updateRole (userId, newRole) {
+  async updateRole(userId, newRole) {
     const user = this.getUserById(userId);
 
     if (!user) {
@@ -142,7 +144,7 @@ class AdminUsersManager {
    * @param {string} userId - User ID
    * @returns {Object}
    */
-  async verifyUser (userId) {
+  async verifyUser(userId) {
     const user = this.getUserById(userId);
 
     if (!user) {
@@ -180,7 +182,7 @@ class AdminUsersManager {
    * @param {string} reason - Suspension reason
    * @returns {Object}
    */
-  async suspendUser (userId, reason) {
+  async suspendUser(userId, reason) {
     // RBAC: bans are admin-only (backend enforces authoritatively; this
     // guard just avoids a guaranteed 403 round-trip for moderators).
     if (adminAuthManager.adminUser?.role === 'moderator') {
@@ -224,7 +226,7 @@ class AdminUsersManager {
    * @param {string} userId - User ID
    * @returns {Object}
    */
-  async unsuspendUser (userId) {
+  async unsuspendUser(userId) {
     const user = this.getUserById(userId);
 
     if (!user) {
@@ -262,7 +264,7 @@ class AdminUsersManager {
    * @param {string} userId - User ID
    * @returns {Object}
    */
-  async deleteUser (userId) {
+  async deleteUser(userId) {
     const index = this.users.findIndex(u => u.id === userId);
 
     if (index === -1) {
@@ -294,7 +296,7 @@ class AdminUsersManager {
     };
   }
 
-  _persistUser (user) {
+  _persistUser(user) {
     const index = this.users.findIndex(u => u.id === user.id);
     if (index !== -1) {
       this.users[index] = user;
@@ -302,17 +304,17 @@ class AdminUsersManager {
     this._persistUsersList();
   }
 
-  _persistUsersList () {
+  _persistUsersList() {
     if (typeof StorageManager !== 'undefined' && typeof StorageManager.set === 'function') {
       StorageManager.set(this.USERS_STORAGE_KEY, this.users, true);
     }
   }
 
   /**
- * Get user statistics
- * @returns {Object}
- */
-  getStats () {
+   * Get user statistics
+   * @returns {Object}
+   */
+  getStats() {
     const users = this.getAllUsers();
 
     const roleCount = {};
@@ -345,7 +347,7 @@ class AdminUsersManager {
    * @param {number} limit - Number of users
    * @returns {Array}
    */
-  getRecentUsers (limit = 10) {
+  getRecentUsers(limit = 10) {
     return this.getAllUsers()
       .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
       .slice(0, limit);
@@ -356,7 +358,7 @@ class AdminUsersManager {
    * @param {number} limit - Number of sellers
    * @returns {Array}
    */
-  getTopSellers (limit = 10) {
+  getTopSellers(limit = 10) {
     return this.getUsersByRole('seller')
       .sort((a, b) => (b.totalSales || 0) - (a.totalSales || 0))
       .slice(0, limit);
@@ -367,7 +369,7 @@ class AdminUsersManager {
    * @param {number} limit - Number of buyers
    * @returns {Array}
    */
-  getTopBuyers (limit = 10) {
+  getTopBuyers(limit = 10) {
     return this.getUsersByRole('buyer')
       .sort((a, b) => (b.totalOrders || 0) - (a.totalOrders || 0))
       .slice(0, limit);
@@ -377,7 +379,7 @@ class AdminUsersManager {
    * Export users to CSV (placeholder)
    * @returns {string}
    */
-  exportToCSV () {
+  exportToCSV() {
     const users = this.getAllUsers();
     const headers = ['ID', 'Name', 'Email', 'Phone', 'University', 'Role', 'Verified', 'Joined'];
     const rows = users.map(u => [
@@ -391,12 +393,14 @@ class AdminUsersManager {
       u.createdAt || u.joinedDate,
     ]);
 
-    const csvContent = [headers, ...rows].map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','))
+      .join('\n');
     this._downloadCSV(csvContent, 'jertscart-users.csv');
     return csvContent;
   }
 
-  _downloadCSV (csvContent, filename) {
+  _downloadCSV(csvContent, filename) {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -414,7 +418,7 @@ class AdminUsersManager {
    * @param {Array} userIds - User IDs to verify
    * @returns {Object}
    */
-  bulkVerify (userIds) {
+  bulkVerify(userIds) {
     let verified = 0;
     let failed = 0;
 

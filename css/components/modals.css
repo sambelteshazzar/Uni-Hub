@@ -249,17 +249,17 @@
 }
 
 .toast-close {
-background: none;
-border: none;
-font-size: var(--text-lg);
-color: var(--neutral-400);
-cursor: pointer;
-padding: var(--space-xs);
-min-width: 44px;
-min-height: 44px;
-display: flex;
-align-items: center;
-justify-content: center;
+  background: none;
+  border: none;
+  font-size: var(--text-lg);
+  color: var(--neutral-400);
+  cursor: pointer;
+  padding: var(--space-xs);
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Toast Variants */
@@ -323,10 +323,10 @@ justify-content: center;
 
   .toast-container {
     left: var(--space-lg);
-     right: var(--space-lg);
-   }
- }
+    right: var(--space-lg);
+  }
+}
 
-[data-theme="dark"] .modal-overlay {
+[data-theme='dark'] .modal-overlay {
   background: rgba(0, 0, 0, 0.7);
 }

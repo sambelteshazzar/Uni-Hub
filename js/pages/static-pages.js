@@ -1,6 +1,5 @@
 const StaticPageMethods = {
-
-  renderTerms () {
+  renderTerms() {
     const mainContent = document.getElementById('main-content');
     Pages.showOriginalNavFooter();
     mainContent.innerHTML = `
@@ -9,18 +8,20 @@ const StaticPageMethods = {
         <p style="color: var(--text-secondary); margin-bottom: 2rem;">Version ${POLICIES.VERSION} · Last updated: ${POLICIES.LAST_UPDATED}</p>
 
         ${(POLICIES.terms || [])
-    .map(s => `
+          .map(
+            s => `
         <section style="margin-bottom: 2rem;">
           <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem;">${s.heading}</h2>
           <div style="line-height: 1.7; color: var(--text-secondary);">${s.body}</div>
-        </section>`)
-    .join('')}
+        </section>`
+          )
+          .join('')}
       </div>
     `;
     window.scrollTo(0, 0);
   },
 
-  renderPrivacy () {
+  renderPrivacy() {
     const mainContent = document.getElementById('main-content');
     Pages.showOriginalNavFooter();
     mainContent.innerHTML = `
@@ -29,18 +30,20 @@ const StaticPageMethods = {
         <p style="color: var(--text-secondary); margin-bottom: 2rem;">Version ${POLICIES.VERSION} · Last updated: ${POLICIES.LAST_UPDATED}</p>
 
         ${(POLICIES.privacy || [])
-    .map(s => `
+          .map(
+            s => `
         <section style="margin-bottom: 2rem;">
           <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem;">${s.heading}</h2>
           <div style="line-height: 1.7; color: var(--text-secondary);">${s.body}</div>
-        </section>`)
-    .join('')}
+        </section>`
+          )
+          .join('')}
       </div>
     `;
     window.scrollTo(0, 0);
   },
 
-  renderAbout () {
+  renderAbout() {
     const mainContent = document.getElementById('main-content');
     Pages.showOriginalNavFooter();
     mainContent.innerHTML = `
@@ -78,7 +81,7 @@ const StaticPageMethods = {
     window.scrollTo(0, 0);
   },
 
-  renderContact () {
+  renderContact() {
     const mainContent = document.getElementById('main-content');
     Pages.showOriginalNavFooter();
     mainContent.innerHTML = `
@@ -137,7 +140,7 @@ const StaticPageMethods = {
     window.scrollTo(0, 0);
   },
 
-  _handleContactForm (event) {
+  _handleContactForm(event) {
     event.preventDefault();
     if (typeof toastManager !== 'undefined') {
       showToast('Message sent! We will get back to you within 24 hours.', 'success');

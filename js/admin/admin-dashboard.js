@@ -1,5 +1,5 @@
 class AdminDashboard {
-  constructor () {
+  constructor() {
     this.period = 'week';
     this.stats = null;
     this.recentOrders = [];
@@ -8,12 +8,12 @@ class AdminDashboard {
     this._bound = {};
   }
 
-  init () {
+  init() {
     this._loadData();
     this._bindPeriodSelector();
   }
 
-  async _loadData () {
+  async _loadData() {
     try {
       this.stats = await adminReportsManager.getDashboardOverview();
       this.recentOrders = this.stats.recentOrders || [];
@@ -28,9 +28,11 @@ class AdminDashboard {
     }
   }
 
-  renderStats () {
+  renderStats() {
     const grid = document.getElementById('admin-stats-grid');
-    if (!grid || !this.stats) return;
+    if (!grid || !this.stats) {
+      return;
+    }
 
     const s = this.stats.summary;
     const t = this.stats.today;
@@ -71,16 +73,19 @@ class AdminDashboard {
     `;
   }
 
-  renderChart () {
+  renderChart() {
     const container = document.getElementById('admin-chart-container');
-    if (!container) return;
+    if (!container) {
+      return;
+    }
 
     this.chartData = this._generateChartData();
     const maxVal = Math.max(...this.chartData.map(d => d.value), 1);
 
-    const bars = this.chartData.map(d => {
-      const heightPct = (d.value / maxVal) * 100;
-      return `
+    const bars = this.chartData
+      .map(d => {
+        const heightPct = (d.value / maxVal) * 100;
+        return `
         <div class="admin-css-chart-bar-group">
           <div class="admin-css-chart-bar" style="height:${Math.max(heightPct, 2)}%">
             <span class="admin-css-chart-bar-tooltip">GHS ${d.value.toLocaleString()}</span>
@@ -88,7 +93,8 @@ class AdminDashboard {
           <span class="admin-css-chart-label">${d.label}</span>
         </div>
       `;
-    }).join('');
+      })
+      .join('');
 
     container.innerHTML = `
       <div class="admin-chart-area">
@@ -116,7 +122,7 @@ class AdminDashboard {
     this._bindPeriodSelector();
   }
 
-  _generateChartData () {
+  _generateChartData() {
     const orders = adminReportsManager._ordersCache || [];
 
     if (this.period === 'today') {
@@ -124,9 +130,15 @@ class AdminDashboard {
       for (let h = 0; h < 24; h += 3) {
         const hourOrders = orders.filter(o => {
           const d = new Date(o.createdAt);
-          return d.toDateString() === new Date().toDateString() && d.getHours() >= h && d.getHours() < h + 3;
+          return (
+            d.toDateString() === new Date().toDateString() &&
+            d.getHours() >= h &&
+            d.getHours() < h + 3
+          );
         });
-        const revenue = hourOrders.filter(o => o.payment?.status === 'completed').reduce((sum, o) => sum + (o.pricing?.grandTotal || 0), 0);
+        const revenue = hourOrders
+          .filter(o => o.payment?.status === 'completed')
+          .reduce((sum, o) => sum + (o.pricing?.grandTotal || 0), 0);
         hours.push({ label: `${h}:00`, value: revenue });
       }
       return hours;
@@ -140,7 +152,9 @@ class AdminDashboard {
         date.setDate(date.getDate() - i);
         const dateStr = date.toDateString();
         const dayOrders = orders.filter(o => new Date(o.createdAt).toDateString() === dateStr);
-        const revenue = dayOrders.filter(o => o.payment?.status === 'completed').reduce((sum, o) => sum + (o.pricing?.grandTotal || 0), 0);
+        const revenue = dayOrders
+          .filter(o => o.payment?.status === 'completed')
+          .reduce((sum, o) => sum + (o.pricing?.grandTotal || 0), 0);
         days.push({ label: dayNames[date.getDay()], value: revenue });
       }
       return days;
@@ -158,7 +172,9 @@ class AdminDashboard {
           const d = new Date(o.createdAt);
           return d >= start && d < end;
         });
-        const revenue = weekOrders.filter(o => o.payment?.status === 'completed').reduce((sum, o) => sum + (o.pricing?.grandTotal || 0), 0);
+        const revenue = weekOrders
+          .filter(o => o.payment?.status === 'completed')
+          .reduce((sum, o) => sum + (o.pricing?.grandTotal || 0), 0);
         weeks.push({ label: `W${4 - w}`, value: revenue });
       }
       return weeks;
@@ -166,7 +182,20 @@ class AdminDashboard {
 
     if (this.period === 'year') {
       const months = [];
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const monthNames = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
       for (let i = 11; i >= 0; i--) {
         const date = new Date();
         date.setMonth(date.getMonth() - i);
@@ -175,7 +204,9 @@ class AdminDashboard {
           const d = new Date(o.createdAt);
           return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === monthKey;
         });
-        const revenue = monthOrders.filter(o => o.payment?.status === 'completed').reduce((sum, o) => sum + (o.pricing?.grandTotal || 0), 0);
+        const revenue = monthOrders
+          .filter(o => o.payment?.status === 'completed')
+          .reduce((sum, o) => sum + (o.pricing?.grandTotal || 0), 0);
         months.push({ label: monthNames[date.getMonth()], value: revenue });
       }
       return months;
@@ -184,11 +215,16 @@ class AdminDashboard {
     return [];
   }
 
-  renderRecentOrders () {
+  renderRecentOrders() {
     const container = document.getElementById('admin-recent-orders');
-    if (!container) return;
+    if (!container) {
+      return;
+    }
 
-    const rows = (this.recentOrders || []).map(o => `
+    const rows =
+      (this.recentOrders || [])
+        .map(
+          o => `
       <tr>
         <td style="font-weight:var(--font-semibold);">#${o.orderNumber || (o.id || '').slice(-6)}</td>
         <td>${o.customer?.name || 'N/A'}</td>
@@ -206,7 +242,10 @@ class AdminDashboard {
           </div>
         </td>
       </tr>
-    `).join('') || '<tr><td colspan="6" style="text-align:center;color:#6b7280;padding:2rem;">No orders yet</td></tr>';
+    `
+        )
+        .join('') ||
+      '<tr><td colspan="6" style="text-align:center;color:#6b7280;padding:2rem;">No orders yet</td></tr>';
 
     container.innerHTML = `
       <div class="admin-table-container">
@@ -235,9 +274,11 @@ class AdminDashboard {
     `;
   }
 
-  renderActivityFeed () {
+  renderActivityFeed() {
     const container = document.getElementById('admin-activity-feed');
-    if (!container) return;
+    if (!container) {
+      return;
+    }
 
     let activities = [];
 
@@ -274,7 +315,10 @@ class AdminDashboard {
       .sort((a, b) => new Date(b.time) - new Date(a.time))
       .slice(0, 8);
 
-    const items = allActivities.map(a => `
+    const items =
+      allActivities
+        .map(
+          a => `
       <li class="admin-activity-item">
         <div class="admin-activity-icon ${this._esc(a.icon)}">${this._getActivityIconSvg(a.icon)}</div>
         <div class="admin-activity-body">
@@ -282,7 +326,10 @@ class AdminDashboard {
           <div class="admin-activity-time">${a.time ? Formatter.formatTimeAgo(a.time) : 'Just now'}</div>
         </div>
       </li>
-    `).join('') || '<li style="padding:2rem;text-align:center;color:#6b7280;">No recent activity</li>';
+    `
+        )
+        .join('') ||
+      '<li style="padding:2rem;text-align:center;color:#6b7280;">No recent activity</li>';
 
     container.innerHTML = `
       <div class="admin-card">
@@ -300,25 +347,37 @@ class AdminDashboard {
   // helpers resolve to SecurityUtils when available and fall back to
   // identity string conversion otherwise so the render doesn't crash if
   // a module-load race leaves SecurityUtils undefined.
-  _esc (v) {
+  _esc(v) {
     if (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) {
       return SecurityUtils.escapeHtml(String(v === null || v === undefined ? '' : v));
     }
     return String(v === null || v === undefined ? '' : v);
   }
 
-  _getActivityIcon (action) {
-    if (!action) return 'order';
+  _getActivityIcon(action) {
+    if (!action) {
+      return 'order';
+    }
     const lower = action.toLowerCase();
-    if (lower.includes('order') || lower.includes('purchase')) return 'order';
-    if (lower.includes('user') || lower.includes('login') || lower.includes('signup')) return 'user';
-    if (lower.includes('product')) return 'product';
-    if (lower.includes('ban') || lower.includes('reject') || lower.includes('delete')) return 'alert';
-    if (lower.includes('payment') || lower.includes('refund')) return 'payment';
+    if (lower.includes('order') || lower.includes('purchase')) {
+      return 'order';
+    }
+    if (lower.includes('user') || lower.includes('login') || lower.includes('signup')) {
+      return 'user';
+    }
+    if (lower.includes('product')) {
+      return 'product';
+    }
+    if (lower.includes('ban') || lower.includes('reject') || lower.includes('delete')) {
+      return 'alert';
+    }
+    if (lower.includes('payment') || lower.includes('refund')) {
+      return 'payment';
+    }
     return 'order';
   }
 
-  _getActivityIconSvg (type) {
+  _getActivityIconSvg(type) {
     switch (type) {
       case 'order':
         return Icons.clipboard || '&#9776;';
@@ -335,10 +394,10 @@ class AdminDashboard {
     }
   }
 
-  _bindPeriodSelector () {
+  _bindPeriodSelector() {
     const btns = document.querySelectorAll('.admin-period-btn');
     btns.forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', e => {
         this.period = e.target.dataset.period;
         document.querySelectorAll('.admin-period-btn').forEach(b => b.classList.remove('active'));
         e.target.classList.add('active');
@@ -347,14 +406,15 @@ class AdminDashboard {
     });
   }
 
-  _renderError () {
+  _renderError() {
     const grid = document.getElementById('admin-stats-grid');
     if (grid) {
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#f87171;">Failed to load dashboard data. Please try again.</div>';
+      grid.innerHTML =
+        '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#f87171;">Failed to load dashboard data. Please try again.</div>';
     }
   }
 
-  static showToast (message, type = 'info') {
+  static showToast(message, type = 'info') {
     let container = document.querySelector('.admin-toast');
     if (!container) {
       container = document.createElement('div');
@@ -386,9 +446,11 @@ class AdminDashboard {
     }, 4000);
   }
 
-  static showModal (title, bodyHtml, footerHtml) {
+  static showModal(title, bodyHtml, footerHtml) {
     let backdrop = document.querySelector('.admin-modal-backdrop');
-    if (backdrop) backdrop.remove();
+    if (backdrop) {
+      backdrop.remove();
+    }
 
     backdrop = document.createElement('div');
     backdrop.className = 'admin-modal-backdrop';
@@ -406,12 +468,14 @@ class AdminDashboard {
     document.body.appendChild(backdrop);
     requestAnimationFrame(() => backdrop.classList.add('visible'));
 
-    backdrop.addEventListener('click', (e) => {
-      if (e.target === backdrop) AdminDashboard.hideModal();
+    backdrop.addEventListener('click', e => {
+      if (e.target === backdrop) {
+        AdminDashboard.hideModal();
+      }
     });
   }
 
-  static hideModal () {
+  static hideModal() {
     const backdrop = document.querySelector('.admin-modal-backdrop');
     if (backdrop) {
       backdrop.classList.remove('visible');
@@ -419,15 +483,19 @@ class AdminDashboard {
     }
   }
 
-  static initTableSort (tableSelector) {
+  static initTableSort(tableSelector) {
     const table = document.querySelector(tableSelector);
-    if (!table) return;
+    if (!table) {
+      return;
+    }
 
     const headers = table.querySelectorAll('th.sortable');
     headers.forEach((th, colIndex) => {
       th.addEventListener('click', () => {
         const tbody = table.querySelector('tbody');
-        if (!tbody) return;
+        if (!tbody) {
+          return;
+        }
 
         const rows = Array.from(tbody.querySelectorAll('tr'));
         const isAsc = th.classList.contains('asc');

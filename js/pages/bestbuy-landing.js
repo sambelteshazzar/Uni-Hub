@@ -24,38 +24,42 @@
     // Build categories HTML
     let categoriesHTML = '';
     if (config.categories && config.categories.length > 0) {
-  const categoryImages = {
-      textbooks: 'https://files.catbox.moe/823h9l.jpg',
-      electronics: 'https://files.catbox.moe/1imqtj.jpg',
-      'hostel-items': 'https://files.catbox.moe/gckfc2.jpg',
-      accessories: 'https://files.catbox.moe/pbrhk5.jpg',
-      fashion: 'https://files.catbox.moe/33juh8.jpg',
-      appliances: 'https://files.catbox.moe/ov8039.jpg',
-      thrifts: 'https://files.catbox.moe/ov8039.jpg'
-    };
-    categoriesHTML = config.categories
-      .map(function (cat) {
-        var imgSrc = categoryImages[cat.id];
-        var iconContent = imgSrc
-          ? '<img src="' + imgSrc + '" alt="' + cat.name + '" loading="lazy" onerror="this.parentElement.innerHTML=\'<svg viewBox=\\\'0 0 24 24\\\' fill=\\\'none\\\' stroke=\\\'#6b7280\\\' stroke-width=\\\'1.8\\\' stroke-linecap=\\\'round\\\' stroke-linejoin=\\\'round\\\' width=\\\'28\\\' height=\\\'28\\\'><circle cx=\\\'12\\\' cy=\\\'12\\\' r=\\\'10\\\'/></svg>\';this.onerror=null;">'
-          : '<svg viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><circle cx="12" cy="12" r="10"/></svg>';
-        return (
-          '<a href="#/browse?category=' +
-          cat.id +
-          '" class="bb-category-card">' +
-          '<div class="bb-category-icon">' +
-          iconContent +
-          '</div>' +
-          '<p class="bb-category-name">' +
-          cat.name +
-          '</p>' +
-          '<p class="bb-category-count">' +
-          (cat.count || '50+') +
-          ' items</p>' +
-          '</a>'
-        );
-      })
-      .join('');
+      const categoryImages = {
+        textbooks: 'https://files.catbox.moe/823h9l.jpg',
+        electronics: 'https://files.catbox.moe/1imqtj.jpg',
+        'hostel-items': 'https://files.catbox.moe/gckfc2.jpg',
+        accessories: 'https://files.catbox.moe/pbrhk5.jpg',
+        fashion: 'https://files.catbox.moe/33juh8.jpg',
+        appliances: 'https://files.catbox.moe/ov8039.jpg',
+        thrifts: 'https://files.catbox.moe/ov8039.jpg',
+      };
+      categoriesHTML = config.categories
+        .map(function (cat) {
+          const imgSrc = categoryImages[cat.id];
+          const iconContent = imgSrc
+            ? '<img src="' +
+              imgSrc +
+              '" alt="' +
+              cat.name +
+              "\" loading=\"lazy\" onerror=\"this.parentElement.innerHTML='<svg viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'#6b7280\\' stroke-width=\\'1.8\\' stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\' width=\\'28\\' height=\\'28\\'><circle cx=\\'12\\' cy=\\'12\\' r=\\'10\\'/></svg>';this.onerror=null;\">"
+            : '<svg viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><circle cx="12" cy="12" r="10"/></svg>';
+          return (
+            '<a href="#/browse?category=' +
+            cat.id +
+            '" class="bb-category-card">' +
+            '<div class="bb-category-icon">' +
+            iconContent +
+            '</div>' +
+            '<p class="bb-category-name">' +
+            cat.name +
+            '</p>' +
+            '<p class="bb-category-count">' +
+            (cat.count || '50+') +
+            ' items</p>' +
+            '</a>'
+          );
+        })
+        .join('');
     }
 
     mainContent.innerHTML =
@@ -66,7 +70,6 @@
       '<div class="bb-hero-container" style="max-width: 80rem; margin: 0 auto; width: 100%; position: relative; z-index: 10;">' +
       '<div style="display: grid; grid-template-columns: 1fr; gap: 3rem; align-items: center;">' +
       '<div>' +
-      
       '<h1 id="hero-animated-text" style="font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; color: #ffffff; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 1.5rem;">' +
       'MADE FOR <span style="color: #ffce00;">CAMPUS LIFE</span>' +
       '</h1>' +
@@ -108,17 +111,17 @@
       '<p class="bb-section-subtitle">Find exactly what you need for campus life</p>' +
       '</div>' +
       '<div class="bb-categories-grid">' +
-(categoriesHTML ||
-'<a href="#/browse?category=textbooks" class="bb-category-card"><div class="bb-category-icon"><img src="https://files.catbox.moe/823h9l.jpg" alt="Book and Stationery" loading="lazy"></div><p class="bb-category-name">Book and Stationery</p><p class="bb-category-count">120+ items</p></a>' +
-'<a href="#/browse?category=electronics" class="bb-category-card"><div class="bb-category-icon"><img src="https://files.catbox.moe/1imqtj.jpg" alt="Electronics" loading="lazy"></div><p class="bb-category-name">Electronics</p><p class="bb-category-count">85+ items</p></a>' +
-'<a href="#/browse?category=hostel-items" class="bb-category-card"><div class="bb-category-icon"><img src="https://files.catbox.moe/gckfc2.jpg" alt="Gadgets" loading="lazy"></div><p class="bb-category-name">Gadgets</p><p class="bb-category-count">95+ items</p></a>' +
-'<a href="#/browse?category=accessories" class="bb-category-card"><div class="bb-category-icon"><img src="https://files.catbox.moe/pbrhk5.jpg" alt="Accessories" loading="lazy"></div><p class="bb-category-name">Accessories</p><p class="bb-category-count">45+ items</p></a>' +
-'<a href="#/browse?category=fashion" class="bb-category-card"><div class="bb-category-icon"><img src="https://files.catbox.moe/33juh8.jpg" alt="Fashion" loading="lazy"></div><p class="bb-category-name">Fashion</p><p class="bb-category-count">60+ items</p></a>' +
-'<a href="#/browse?category=appliances" class="bb-category-card"><div class="bb-category-icon"><img src="https://files.catbox.moe/ov8039.jpg" alt="Appliances" loading="lazy"></div><p class="bb-category-name">Appliances</p><p class="bb-category-count">35+ items</p></a>') +
+      (categoriesHTML ||
+        '<a href="#/browse?category=textbooks" class="bb-category-card"><div class="bb-category-icon"><img src="https://files.catbox.moe/823h9l.jpg" alt="Book and Stationery" loading="lazy"></div><p class="bb-category-name">Book and Stationery</p><p class="bb-category-count">120+ items</p></a>' +
+          '<a href="#/browse?category=electronics" class="bb-category-card"><div class="bb-category-icon"><img src="https://files.catbox.moe/1imqtj.jpg" alt="Electronics" loading="lazy"></div><p class="bb-category-name">Electronics</p><p class="bb-category-count">85+ items</p></a>' +
+          '<a href="#/browse?category=hostel-items" class="bb-category-card"><div class="bb-category-icon"><img src="https://files.catbox.moe/gckfc2.jpg" alt="Gadgets" loading="lazy"></div><p class="bb-category-name">Gadgets</p><p class="bb-category-count">95+ items</p></a>' +
+          '<a href="#/browse?category=accessories" class="bb-category-card"><div class="bb-category-icon"><img src="https://files.catbox.moe/pbrhk5.jpg" alt="Accessories" loading="lazy"></div><p class="bb-category-name">Accessories</p><p class="bb-category-count">45+ items</p></a>' +
+          '<a href="#/browse?category=fashion" class="bb-category-card"><div class="bb-category-icon"><img src="https://files.catbox.moe/33juh8.jpg" alt="Fashion" loading="lazy"></div><p class="bb-category-name">Fashion</p><p class="bb-category-count">60+ items</p></a>' +
+          '<a href="#/browse?category=appliances" class="bb-category-card"><div class="bb-category-icon"><img src="https://files.catbox.moe/ov8039.jpg" alt="Appliances" loading="lazy"></div><p class="bb-category-name">Appliances</p><p class="bb-category-count">35+ items</p></a>') +
       '</div>' +
       '</div>' +
       '</section>' +
-      '<!-- We\'ve Got You Covered -->' +
+      "<!-- We've Got You Covered -->" +
       '<section class="bb-covered" id="bb-covered-section">' +
       '<div class="bb-covered-inner">' +
       '<div class="bb-covered-text-col">' +
@@ -126,9 +129,9 @@
       '<h2 class="bb-covered-headline">WE\'VE GOT<br>YOU<br><em class="bb-covered-accent">COVERED</em></h2>' +
       '<p class="bb-covered-body">From textbooks to accommodation, electronics to everyday essentials — JERTS CART connects you with suppliers who\'ve got exactly what you need. Buy and thrive together on campus.</p>' +
       '<div class="bb-covered-pills">' +
-'<span class="bb-covered-pill">Book and Stationery</span>' +
-'<span class="bb-covered-pill">Electronics</span>' +
-'<span class="bb-covered-pill">Gadgets</span>' +
+      '<span class="bb-covered-pill">Book and Stationery</span>' +
+      '<span class="bb-covered-pill">Electronics</span>' +
+      '<span class="bb-covered-pill">Gadgets</span>' +
       '<span class="bb-covered-pill">Accessories</span>' +
       '<span class="bb-covered-pill">Fashion</span>' +
       '<span class="bb-covered-pill">Appliances</span>' +
@@ -228,7 +231,7 @@
  * Scale-In Text Animation
  * Animates each character with a spring effect
  */
-function initTextAnimation () {
+function initTextAnimation() {
   // eslint-disable-next-line no-console
   console.log('initTextAnimation called');
 
@@ -246,14 +249,24 @@ function initTextAnimation () {
 
   for (let i = 0; i < textBefore.length; i++) {
     const char = textBefore[i];
-    html += '<span class="hero-char" style="display:inline-block;opacity:0;transform:scale(0);transition:all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);transition-delay:' + (delay * 0.05).toFixed(3) + 's;">' + (char === ' ' ? '&nbsp;' : char) + '</span>';
+    html +=
+      '<span class="hero-char" style="display:inline-block;opacity:0;transform:scale(0);transition:all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);transition-delay:' +
+      (delay * 0.05).toFixed(3) +
+      's;">' +
+      (char === ' ' ? '&nbsp;' : char) +
+      '</span>';
     delay++;
   }
 
   html += '<span style="color:#ffce00;">';
   for (let j = 0; j < textYellow.length; j++) {
     const char2 = textYellow[j];
-    html += '<span class="hero-char" style="display:inline-block;opacity:0;transform:scale(0);transition:all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);transition-delay:' + (delay * 0.05).toFixed(3) + 's;">' + (char2 === ' ' ? '&nbsp;' : char2) + '</span>';
+    html +=
+      '<span class="hero-char" style="display:inline-block;opacity:0;transform:scale(0);transition:all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);transition-delay:' +
+      (delay * 0.05).toFixed(3) +
+      's;">' +
+      (char2 === ' ' ? '&nbsp;' : char2) +
+      '</span>';
     delay++;
   }
   html += '</span>';

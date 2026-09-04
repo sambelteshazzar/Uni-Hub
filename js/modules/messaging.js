@@ -1,4 +1,3 @@
-
 /**
  * ============================================
  * Messaging Module
@@ -7,10 +6,11 @@
  */
 
 class MessageManager {
-  constructor () {
+  constructor() {
     this.socket = null;
     this.currentConversation = null;
-    this._isOffline = () => (typeof api !== 'undefined' && api.isStaticDeploy) || !window._backendAvailable;
+    this._isOffline = () =>
+      (typeof api !== 'undefined' && api.isStaticDeploy) || !window._backendAvailable;
     this.listeners = {
       newMessage: [],
       messageRead: [],
@@ -28,13 +28,17 @@ class MessageManager {
     }
   }
 
-  async _fetchWithCsrf (url, options = {}) {
+  async _fetchWithCsrf(url, options = {}) {
     if (typeof api !== 'undefined' && api.isStaticDeploy) {
-      const offlineBody = JSON.stringify({ success: false, error: 'Not available in offline mode' });
+      const offlineBody = JSON.stringify({
+        success: false,
+        error: 'Not available in offline mode',
+      });
       return new Response(offlineBody, { status: 503, statusText: 'Offline' });
     }
     const token = typeof StorageManager !== 'undefined' ? StorageManager.getAuthToken() : null;
-    const isMutating = options.method && !['GET', 'HEAD', 'OPTIONS'].includes(options.method.toUpperCase());
+    const isMutating =
+      options.method && !['GET', 'HEAD', 'OPTIONS'].includes(options.method.toUpperCase());
     let csrfHeaders = {};
     if (isMutating && typeof api !== 'undefined' && api.fetchCsrfToken) {
       const csrfToken = await api.fetchCsrfToken();
@@ -57,7 +61,7 @@ class MessageManager {
   /**
    * Initialize the messaging system
    */
-  async init () {
+  async init() {
     if (this._isOffline()) {
       return;
     }
@@ -80,27 +84,29 @@ class MessageManager {
   /**
    * Load Socket.IO client library dynamically
    */
-  loadSocketIO () {
+  loadSocketIO() {
     return new Promise((resolve, _reject) => {
       // Try CDN first as fallback
       const script = document.createElement('script');
       script.src = 'https://cdn.socket.io/4.7.2/socket.io.min.js';
-      script.onload = () => { resolve(); };
-  script.onerror = () => {
-    if (typeof api !== 'undefined' && api.isStaticDeploy) {
-      // Offline mode — messaging disabled
-      resolve();
-      return;
-    }
-    // If CDN fails, try loading from backend
-    const backendScript = document.createElement('script');
-    backendScript.src = `${window.API_URL?.replace('/api', '') || 'https://uni-hub-bnxi.onrender.com'}/socket.io/socket.io.js`;
-    backendScript.onload = resolve;
-      backendScript.onerror = () => {
+      script.onload = () => {
+        resolve();
+      };
+      script.onerror = () => {
+        if (typeof api !== 'undefined' && api.isStaticDeploy) {
+          // Offline mode — messaging disabled
+          resolve();
+          return;
+        }
+        // If CDN fails, try loading from backend
+        const backendScript = document.createElement('script');
+        backendScript.src = `${window.API_URL?.replace('/api', '') || 'https://uni-hub-bnxi.onrender.com'}/socket.io/socket.io.js`;
+        backendScript.onload = resolve;
+        backendScript.onerror = () => {
           resolve();
         };
-    document.head.appendChild(backendScript);
-  };
+        document.head.appendChild(backendScript);
+      };
       document.head.appendChild(script);
     });
   }
@@ -108,7 +114,7 @@ class MessageManager {
   /**
    * Connect to Socket.IO server
    */
-  connect () {
+  connect() {
     if (typeof api !== 'undefined' && api.isStaticDeploy) {
       // Offline mode — Socket.IO not available
       return;
@@ -130,12 +136,15 @@ class MessageManager {
       return;
     }
 
-      if (!token) {
-        return;
-      }
+    if (!token) {
+      return;
+    }
 
     try {
-      const serverUrl = (window.API_URL || 'https://uni-hub-bnxi.onrender.com/api').replace('/api', '');
+      const serverUrl = (window.API_URL || 'https://uni-hub-bnxi.onrender.com/api').replace(
+        '/api',
+        ''
+      );
 
       this.socket = io(serverUrl, {
         auth: { token },
@@ -166,7 +175,7 @@ class MessageManager {
   /**
    * Setup Socket.IO event listeners
    */
-  setupListeners () {
+  setupListeners() {
     if (!this.socket) {
       return;
     }
@@ -212,7 +221,7 @@ class MessageManager {
    * Join a conversation room
    * @param {string} conversationId
    */
-  joinConversation (conversationId) {
+  joinConversation(conversationId) {
     if (!this.socket || !this.isConnected) {
       return;
     }
@@ -225,7 +234,7 @@ class MessageManager {
    * Leave a conversation room
    * @param {string} conversationId
    */
-  leaveConversation (conversationId) {
+  leaveConversation(conversationId) {
     if (!this.socket || !this.isConnected) {
       return;
     }
@@ -242,7 +251,7 @@ class MessageManager {
    * @param {Object} data - Message data
    * @returns {Promise}
    */
-  sendMessageViaSocket (data) {
+  sendMessageViaSocket(data) {
     return new Promise((resolve, reject) => {
       if (!this.socket || !this.isConnected) {
         // Fallback to HTTP
@@ -265,16 +274,19 @@ class MessageManager {
    * @param {Object} data
    * @returns {Promise}
    */
-  async sendMessageHTTP (data) {
+  async sendMessageHTTP(data) {
     try {
       if (this._isOffline()) {
         return this._sendOfflineMessage(data);
       }
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages`, {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
+      const response = await this._fetchWithCsrf(
+        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages`,
+        {
+          method: 'POST',
+          body: JSON.stringify(data),
+        }
+      );
 
       const result = await response.json();
 
@@ -291,7 +303,7 @@ class MessageManager {
     }
   }
 
-  _sendOfflineMessage (data) {
+  _sendOfflineMessage(data) {
     const msg = {
       id: 'msg-' + Date.now(),
       ...data,
@@ -301,7 +313,9 @@ class MessageManager {
     };
     const stored = StorageManager.get('unihub_messages', true) || {};
     const convId = data.conversationId || 'conv-new';
-    if (!stored[convId]) { stored[convId] = []; }
+    if (!stored[convId]) {
+      stored[convId] = [];
+    }
     stored[convId].push(msg);
     StorageManager.set('unihub_messages', stored);
     return { success: true, data: msg };
@@ -312,7 +326,7 @@ class MessageManager {
    * @param {Object} data - { conversationId?, receiverId, content, type?, imageUrl?, productId? }
    * @returns {Promise}
    */
-  async sendMessage (data) {
+  async sendMessage(data) {
     try {
       // Try Socket.IO first
       if (this.socket && this.isConnected) {
@@ -332,7 +346,7 @@ class MessageManager {
    * Indicate user is typing
    * @param {string} conversationId
    */
-  startTyping (conversationId) {
+  startTyping(conversationId) {
     if (!this.socket || !this.isConnected) {
       return;
     }
@@ -344,7 +358,7 @@ class MessageManager {
    * Indicate user stopped typing
    * @param {string} conversationId
    */
-  stopTyping (conversationId) {
+  stopTyping(conversationId) {
     if (!this.socket || !this.isConnected) {
       return;
     }
@@ -356,7 +370,7 @@ class MessageManager {
    * Mark message as read
    * @param {string} messageId
    */
-  markAsRead (messageId) {
+  markAsRead(messageId) {
     if (!this.socket || !this.isConnected) {
       return;
     }
@@ -369,7 +383,7 @@ class MessageManager {
    * @param {Object} options - { page?, limit?, status? }
    * @returns {Promise}
    */
-  async getConversations (options = {}) {
+  async getConversations(options = {}) {
     try {
       if (this._isOffline()) {
         return this._getOfflineConversations(options);
@@ -378,7 +392,9 @@ class MessageManager {
       const { page = 1, limit = 20, status = 'active' } = options;
       const params = new URLSearchParams({ page, limit, status });
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/conversations?${params}`);
+      const response = await this._fetchWithCsrf(
+        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/conversations?${params}`
+      );
 
       const result = await response.json();
 
@@ -395,19 +411,21 @@ class MessageManager {
     }
   }
 
-  _getOfflineConversations (options = {}) {
+  _getOfflineConversations(_options = {}) {
     const stored = StorageManager.get('unihub_conversations', true) || [];
     return stored.filter(c => c.status !== 'archived');
   }
 
-  async getConversation (conversationId) {
+  async getConversation(conversationId) {
     try {
       if (this._isOffline()) {
         const convs = this._getOfflineConversations();
         return convs.find(c => c.id === conversationId) || null;
       }
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/conversation/${conversationId}`);
+      const response = await this._fetchWithCsrf(
+        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/conversation/${conversationId}`
+      );
 
       const result = await response.json();
 
@@ -431,7 +449,7 @@ class MessageManager {
    * @param {Object} options - { page?, limit? }
    * @returns {Promise}
    */
-  async getMessages (conversationId, options = {}) {
+  async getMessages(conversationId, options = {}) {
     try {
       if (this._isOffline()) {
         return this._getOfflineMessages(conversationId, options);
@@ -441,7 +459,7 @@ class MessageManager {
       const params = new URLSearchParams({ page, limit });
 
       const response = await this._fetchWithCsrf(
-        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/conversation/${conversationId}/messages?${params}`,
+        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/conversation/${conversationId}/messages?${params}`
       );
 
       const result = await response.json();
@@ -459,7 +477,7 @@ class MessageManager {
     }
   }
 
-  _getOfflineMessages (conversationId, options = {}) {
+  _getOfflineMessages(conversationId, _options = {}) {
     const stored = StorageManager.get('unihub_messages', true) || {};
     return stored[conversationId] || [];
   }
@@ -468,13 +486,15 @@ class MessageManager {
    * Get unread message count
    * @returns {Promise}
    */
-  async getUnreadCount () {
+  async getUnreadCount() {
     try {
       if (this._isOffline()) {
         return { count: 0 };
       }
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/unread-count`);
+      const response = await this._fetchWithCsrf(
+        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/unread-count`
+      );
 
       const result = await response.json();
 
@@ -497,11 +517,14 @@ class MessageManager {
    * @param {string} messageId
    * @returns {Promise}
    */
-  async deleteMessage (messageId) {
+  async deleteMessage(messageId) {
     try {
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/${messageId}`, {
-        method: 'DELETE',
-      });
+      const response = await this._fetchWithCsrf(
+        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/${messageId}`,
+        {
+          method: 'DELETE',
+        }
+      );
 
       const result = await response.json();
 
@@ -521,7 +544,7 @@ class MessageManager {
    * @param {Object} options
    * @returns {Promise}
    */
-  async searchMessages (query, options = {}) {
+  async searchMessages(query, options = {}) {
     try {
       const { conversationId, page = 1, limit = 20 } = options;
       const params = new URLSearchParams({ query, page, limit });
@@ -529,7 +552,9 @@ class MessageManager {
         params.append('conversationId', conversationId);
       }
 
-      const response = await this._fetchWithCsrf(`${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/search?${params}`);
+      const response = await this._fetchWithCsrf(
+        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/search?${params}`
+      );
 
       const result = await response.json();
 
@@ -548,7 +573,7 @@ class MessageManager {
    * @param {string} event
    * @param {Function} callback
    */
-  on (event, callback) {
+  on(event, callback) {
     if (this.listeners[event]) {
       this.listeners[event].push(callback);
     }
@@ -559,7 +584,7 @@ class MessageManager {
    * @param {string} event
    * @param {Function} callback
    */
-  off (event, callback) {
+  off(event, callback) {
     if (this.listeners[event]) {
       this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
     }
@@ -570,7 +595,7 @@ class MessageManager {
    * @param {string} event
    * @param {*} data
    */
-  notifyListeners (event, data) {
+  notifyListeners(event, data) {
     if (this.listeners[event]) {
       this.listeners[event].forEach(callback => callback(data));
     }
@@ -579,7 +604,7 @@ class MessageManager {
   /**
    * Update message badge in UI
    */
-  updateMessageBadge () {
+  updateMessageBadge() {
     const badge = document.getElementById('message-badge');
     if (badge) {
       if (this.unreadCount > 0) {
@@ -594,7 +619,7 @@ class MessageManager {
   /**
    * Disconnect from Socket.IO server
    */
-  disconnect () {
+  disconnect() {
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;

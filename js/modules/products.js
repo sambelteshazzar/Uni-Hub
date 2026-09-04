@@ -5,7 +5,7 @@
 // ============================================
 
 class ProductsManager {
-  constructor () {
+  constructor() {
     this.products = [];
     this.filteredProducts = [];
     this.currentFilters = {
@@ -30,9 +30,9 @@ class ProductsManager {
   }
 
   /**
-  * Initialize products
-  */
-  async init () {
+   * Initialize products
+   */
+  async init() {
     try {
       if (this.useBackend) {
         try {
@@ -63,7 +63,7 @@ class ProductsManager {
     this._mergeLocalProducts();
   }
 
-  _persistLocalProducts () {
+  _persistLocalProducts() {
     try {
       const seedId = /^prod-00[1-9]$/;
       const localProducts = this.products.filter(p => p.id && !seedId.test(p.id));
@@ -76,7 +76,7 @@ class ProductsManager {
     }
   }
 
-  async _persistToIndexedDB (products) {
+  async _persistToIndexedDB(products) {
     try {
       const request = indexedDB.open('unihub_products', 1);
       request.onupgradeneeded = e => {
@@ -93,10 +93,12 @@ class ProductsManager {
           store.put(p);
         }
       };
-    } catch (_e) { console.warn('products: IndexedDB init failed:', _e); }
+    } catch (_e) {
+      console.warn('products: IndexedDB init failed:', _e);
+    }
   }
 
-  async _loadFromIndexedDB () {
+  async _loadFromIndexedDB() {
     return new Promise(resolve => {
       try {
         const request = indexedDB.open('unihub_products', 1);
@@ -108,7 +110,10 @@ class ProductsManager {
         };
         request.onsuccess = e => {
           const db = e.target.result;
-          if (!db.objectStoreNames.contains('products')) { resolve([]); return; }
+          if (!db.objectStoreNames.contains('products')) {
+            resolve([]);
+            return;
+          }
           const tx = db.transaction('products', 'readonly');
           const store = tx.objectStore('products');
           const getAll = store.getAll();
@@ -116,11 +121,13 @@ class ProductsManager {
           getAll.onerror = () => resolve([]);
         };
         request.onerror = () => resolve([]);
-      } catch (_e) { resolve([]); }
+      } catch (_e) {
+        resolve([]);
+      }
     });
   }
 
-  _mergeLocalProducts () {
+  _mergeLocalProducts() {
     try {
       const localProducts = StorageManager.get(this.PRODUCTS_STORAGE_KEY + '_local') || [];
       const existingIds = new Set(this.products.map(p => p.id));
@@ -144,28 +151,43 @@ class ProductsManager {
       if (localProducts.length > 0) {
         this.filteredProducts = [...this.products];
       }
-    } catch (_e) { console.warn('products: loadAll failed:', _e); }
+    } catch (_e) {
+      console.warn('products: loadAll failed:', _e);
+    }
   }
 
   /**
    * Fetch a specific page from the backend API (server-side pagination)
-  */
-  async fetchPage (page = 1, pageSize = null) {
+   */
+  async fetchPage(page = 1, pageSize = null) {
     const size = pageSize || this.pageSize;
     const params = { page, limit: size };
 
-    if (this.currentFilters.category) params.category = this.currentFilters.category;
+    if (this.currentFilters.category) {
+      params.category = this.currentFilters.category;
+    }
     if (this.currentFilters.condition) {
       const conditions = Array.isArray(this.currentFilters.condition)
         ? this.currentFilters.condition.join(',')
         : this.currentFilters.condition;
       params.condition = conditions;
     }
-    if (this.currentFilters.university) params.university = this.currentFilters.university;
-    if (this.currentFilters.searchQuery) params.search = this.currentFilters.searchQuery;
-    if (this.currentFilters.priceRange && (this.currentFilters.priceRange.min > 0 || this.currentFilters.priceRange.max < Infinity)) {
-      if (this.currentFilters.priceRange.min > 0) params.minPrice = this.currentFilters.priceRange.min;
-      if (this.currentFilters.priceRange.max < Infinity) params.maxPrice = this.currentFilters.priceRange.max;
+    if (this.currentFilters.university) {
+      params.university = this.currentFilters.university;
+    }
+    if (this.currentFilters.searchQuery) {
+      params.search = this.currentFilters.searchQuery;
+    }
+    if (
+      this.currentFilters.priceRange &&
+      (this.currentFilters.priceRange.min > 0 || this.currentFilters.priceRange.max < Infinity)
+    ) {
+      if (this.currentFilters.priceRange.min > 0) {
+        params.minPrice = this.currentFilters.priceRange.min;
+      }
+      if (this.currentFilters.priceRange.max < Infinity) {
+        params.maxPrice = this.currentFilters.priceRange.max;
+      }
     }
     if (this.currentFilters.sortBy && this.currentFilters.sortBy !== 'newest') {
       params.sortBy = this.currentFilters.sortBy;
@@ -200,21 +222,21 @@ class ProductsManager {
   /**
    * Get all products (local)
    */
-  getAll () {
+  getAll() {
     return this.products;
   }
 
   /**
    * Get product by ID
    */
-  getById (id) {
+  getById(id) {
     return this.products.find(p => p.id === id) || null;
   }
 
   /**
    * Filter products
    */
-  filter (filters) {
+  filter(filters) {
     if (filters.university !== undefined) {
       this.currentFilters.university = filters.university;
     }
@@ -246,7 +268,7 @@ class ProductsManager {
   /**
    * Apply filters to products
    */
-  applyFilters () {
+  applyFilters() {
     let filtered = [...this.products];
 
     // University filter
@@ -269,9 +291,21 @@ class ProductsManager {
     // Gadget type sub-filter (only meaningful for gadgets/hostel-items;
     // "laptops" / "phones" narrow the list by title/description keywords).
     if (this.currentFilters.gadgetType === 'laptops') {
-      filtered = filtered.filter(p => p.category !== 'hostel-items' || /\b(laptop|laptops|macbook|notebook|chromebook)\b/i.test(`${p.title} ${p.description || ''}`));
+      filtered = filtered.filter(
+        p =>
+          p.category !== 'hostel-items' ||
+          /\b(laptop|laptops|macbook|notebook|chromebook)\b/i.test(
+            `${p.title} ${p.description || ''}`
+          )
+      );
     } else if (this.currentFilters.gadgetType === 'phones') {
-      filtered = filtered.filter(p => p.category !== 'hostel-items' || /\b(phone|phones|mobile|smartphone|iphone|android|samsung|tecno|infinix|redmi)\b/i.test(`${p.title} ${p.description || ''}`));
+      filtered = filtered.filter(
+        p =>
+          p.category !== 'hostel-items' ||
+          /\b(phone|phones|mobile|smartphone|iphone|android|samsung|tecno|infinix|redmi)\b/i.test(
+            `${p.title} ${p.description || ''}`
+          )
+      );
     }
 
     // Condition filter
@@ -292,24 +326,24 @@ class ProductsManager {
     if (this.currentFilters.searchQuery) {
       const query = this.currentFilters.searchQuery.toLowerCase();
       filtered = filtered.filter(
-        p => p.title.toLowerCase().includes(query) || p.description.toLowerCase().includes(query),
+        p => p.title.toLowerCase().includes(query) || p.description.toLowerCase().includes(query)
       );
     }
 
     // Sorting
     switch (this.currentFilters.sortBy) {
-    case 'price-low':
-      filtered.sort((a, b) => a.price - b.price);
-      break;
-    case 'price-high':
-      filtered.sort((a, b) => b.price - a.price);
-      break;
-    case 'newest':
-      filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      break;
-    case 'rating':
-      filtered.sort((a, b) => (b.seller?.rating || 0) - (a.seller?.rating || 0));
-      break;
+      case 'price-low':
+        filtered.sort((a, b) => a.price - b.price);
+        break;
+      case 'price-high':
+        filtered.sort((a, b) => b.price - a.price);
+        break;
+      case 'newest':
+        filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        break;
+      case 'rating':
+        filtered.sort((a, b) => (b.seller?.rating || 0) - (a.seller?.rating || 0));
+        break;
     }
 
     this.filteredProducts = filtered;
@@ -319,7 +353,7 @@ class ProductsManager {
   /**
    * Reset filters
    */
-  resetFilters () {
+  resetFilters() {
     this.currentFilters = {
       university: null,
       category: null,
@@ -335,20 +369,27 @@ class ProductsManager {
   }
 
   /**
-  * Get paginated products
-  * When backend is available, returns a promise for server-side pagination.
-  * Falls back to client-side pagination otherwise.
-  */
-  getPaginated (page = 1) {
+   * Get paginated products
+   * When backend is available, returns a promise for server-side pagination.
+   * Falls back to client-side pagination otherwise.
+   */
+  getPaginated(page = 1) {
     this.currentPage = page;
     const start = (page - 1) * this.pageSize;
     const end = start + this.pageSize;
     const paginatedProducts = this.filteredProducts.slice(start, end);
-    const totalPages = Math.max(1, Math.ceil(
-      (this._backendAvailable && this._totalFromServer > 0 ? this._totalFromServer : this.filteredProducts.length) / this.pageSize
-    ));
-    const totalProducts = this._backendAvailable && this._totalFromServer > 0
-      ? this._totalFromServer : this.filteredProducts.length;
+    const totalPages = Math.max(
+      1,
+      Math.ceil(
+        (this._backendAvailable && this._totalFromServer > 0
+          ? this._totalFromServer
+          : this.filteredProducts.length) / this.pageSize
+      )
+    );
+    const totalProducts =
+      this._backendAvailable && this._totalFromServer > 0
+        ? this._totalFromServer
+        : this.filteredProducts.length;
 
     return {
       products: paginatedProducts,
@@ -364,7 +405,7 @@ class ProductsManager {
   /**
    * Add product (to backend)
    */
-  async addProduct (productData) {
+  async addProduct(productData) {
     try {
       if (this.useBackend) {
         try {
@@ -410,7 +451,7 @@ class ProductsManager {
   /**
    * Update product
    */
-  async updateProduct (productId, updates) {
+  async updateProduct(productId, updates) {
     try {
       if (this.useBackend) {
         const data = await api.products.update(productId, updates);
@@ -440,7 +481,7 @@ class ProductsManager {
   /**
    * Delete product
    */
-  async deleteProduct (productId) {
+  async deleteProduct(productId) {
     try {
       if (this.useBackend) {
         const data = await api.products.delete(productId);
@@ -461,9 +502,11 @@ class ProductsManager {
     }
   }
 
-  async approveProduct (productId) {
+  async approveProduct(productId) {
     const index = this.products.findIndex(p => p.id === productId);
-    if (index === -1) return { success: false, error: 'Product not found' };
+    if (index === -1) {
+      return { success: false, error: 'Product not found' };
+    }
     this.products[index].status = 'approved';
     this.products[index].updatedAt = new Date().toISOString();
     this.filteredProducts = [...this.products];
@@ -471,9 +514,11 @@ class ProductsManager {
     return { success: true, product: this.products[index] };
   }
 
-  async rejectProduct (productId, reason) {
+  async rejectProduct(productId, reason) {
     const index = this.products.findIndex(p => p.id === productId);
-    if (index === -1) return { success: false, error: 'Product not found' };
+    if (index === -1) {
+      return { success: false, error: 'Product not found' };
+    }
     this.products[index].status = 'rejected';
     this.products[index].rejectionReason = reason || '';
     this.products[index].updatedAt = new Date().toISOString();
@@ -485,7 +530,7 @@ class ProductsManager {
   /**
    * Track price drops for products
    */
-  trackPriceDrops () {
+  trackPriceDrops() {
     try {
       const key = `${STORAGE_KEY_PREFIX}price_history`;
       const history = StorageManager.get(key, true) || {};
@@ -517,7 +562,7 @@ class ProductsManager {
   /**
    * Get price history for a product
    */
-  getPriceHistory (productId) {
+  getPriceHistory(productId) {
     try {
       const key = `${STORAGE_KEY_PREFIX}price_history`;
       const history = StorageManager.get(key, true) || {};
@@ -528,7 +573,7 @@ class ProductsManager {
     }
   }
 
-  getWishlist () {
+  getWishlist() {
     try {
       return StorageManager.get(this.wishlistKey, true) || [];
     } catch (error) {
@@ -537,12 +582,12 @@ class ProductsManager {
     }
   }
 
-  isInWishlist (productId) {
+  isInWishlist(productId) {
     const wishlist = this.getWishlist();
     return wishlist.some(item => (item.id || item) === productId);
   }
 
-  addToWishlist (productId) {
+  addToWishlist(productId) {
     const wishlist = this.getWishlist();
     if (!this.isInWishlist(productId)) {
       const product = this.getById(productId);
@@ -556,14 +601,14 @@ class ProductsManager {
     return wishlist;
   }
 
-  removeFromWishlist (productId) {
+  removeFromWishlist(productId) {
     let wishlist = this.getWishlist();
     wishlist = wishlist.filter(item => (item.id || item) !== productId);
     StorageManager.set(this.wishlistKey, wishlist);
     return wishlist;
   }
 
-  addToRecentlyViewed (productId) {
+  addToRecentlyViewed(productId) {
     try {
       const key = `${STORAGE_KEY_PREFIX}recently_viewed`;
       let viewed = StorageManager.get(key, true) || [];
@@ -576,18 +621,18 @@ class ProductsManager {
     }
   }
 
-  getRecentlyViewed () {
+  getRecentlyViewed() {
     try {
       const key = `${STORAGE_KEY_PREFIX}recently_viewed`;
       const ids = StorageManager.get(key, true) || [];
       return ids.map(id => this.getById(id)).filter(Boolean);
     } catch (error) {
       console.error('getRecentlyViewed error:', error);
-    return [];
+      return [];
     }
   }
 
-  trackWishlistPrices () {
+  trackWishlistPrices() {
     try {
       const wishlist = this.getWishlist();
       const priceDrops = [];
@@ -597,7 +642,9 @@ class ProductsManager {
       wishlist.forEach(item => {
         const productId = item.id || item;
         const product = this.getById(productId);
-        if (!product) { return; }
+        if (!product) {
+          return;
+        }
         const currentPrice = product.price;
         const previous = history[productId];
         if (previous && currentPrice < previous.price) {
@@ -612,9 +659,9 @@ class ProductsManager {
       console.error('trackWishlistPrices error:', error);
       return [];
     }
-}
+  }
 
-clearRecentlyViewed () {
+  clearRecentlyViewed() {
     try {
       const key = `${STORAGE_KEY_PREFIX}recently_viewed`;
       StorageManager.set(key, []);
@@ -634,21 +681,21 @@ if (typeof window !== 'undefined') {
 
 // Hostel-specific functionality extension
 class HostelProductsManager {
-  constructor () {
+  constructor() {
     this.baseManager = productsManager;
   }
 
   /**
    * Get hostel-specific products
    */
-  getHostelProducts () {
+  getHostelProducts() {
     return this.baseManager.getAll().filter(p => p.category === CATEGORIES.HOSTEL_ITEMS);
   }
 
   /**
    * Add hostel product with validation
    */
-  async addHostelProduct (productData) {
+  async addHostelProduct(productData) {
     // Validate hostel-specific fields
     if (!productData.university) {
       return {
@@ -676,14 +723,14 @@ class HostelProductsManager {
   /**
    * Get hostel products by university
    */
-  getHostelProductsByUniversity (universityId) {
+  getHostelProductsByUniversity(universityId) {
     return this.getHostelProducts().filter(p => p.university === universityId);
   }
 
   /**
    * Get featured hostel items
    */
-  getFeaturedHostelItems () {
+  getFeaturedHostelItems() {
     return this.getHostelProducts()
       .filter(p => p.condition === PRODUCT_CONDITIONS.EXCELLENT)
       .sort((a, b) => b.price - a.price)
@@ -696,7 +743,12 @@ class HostelProductsManager {
 const _hostelProductsManager = new HostelProductsManager();
 
 // Export for ES6 modules
-export { ProductsManager, productsManager, HostelProductsManager, _hostelProductsManager as hostelProductsManager };
+export {
+  ProductsManager,
+  productsManager,
+  HostelProductsManager,
+  _hostelProductsManager as hostelProductsManager,
+};
 
 // Make globally available for module scripts
 if (typeof window !== 'undefined') {

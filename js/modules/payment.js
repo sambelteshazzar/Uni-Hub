@@ -4,13 +4,11 @@
 // ============================================
 
 class PaymentManager {
-  constructor () {
+  constructor() {
     this.PAYMENT_STORAGE_KEY = `${STORAGE_KEY_PREFIX}payments`;
     // Use environment variable or window config for Paystack key
     // Set window.PAYSTACK_PUBLIC_KEY in your HTML or use a build-time replacement
-    this.PAYSTACK_PUBLIC_KEY =
-      (typeof window !== 'undefined' && window.PAYSTACK_PUBLIC_KEY) ||
-      '';
+    this.PAYSTACK_PUBLIC_KEY = (typeof window !== 'undefined' && window.PAYSTACK_PUBLIC_KEY) || '';
   }
 
   /**
@@ -19,7 +17,7 @@ class PaymentManager {
    * @param {string} paymentMode - Payment method
    * @returns {Object} - Payment initialization result
    */
-  async initializePayment (order, paymentMode) {
+  async initializePayment(order, paymentMode) {
     const payment = {
       id: this.generatePaymentId(),
       orderId: order.id,
@@ -36,28 +34,30 @@ class PaymentManager {
 
     // Handle different payment modes
     switch (paymentMode) {
-    case PAYMENT_MODES.MOMO:
-      return await this.initiateMoMoPayment(payment);
-    case PAYMENT_MODES.TELECEL:
-      return await this.initiateTelecelCashPayment(payment);
-    case PAYMENT_MODES.BANK:
-      return await this.initiateBankTransfer(payment);
-    case PAYMENT_MODES.CASH:
-      return await this.initiateCashPayment(payment);
-    default:
-      return {
-        success: false,
-        error: 'Invalid payment method',
-      };
+      case PAYMENT_MODES.MOMO:
+        return await this.initiateMoMoPayment(payment);
+      case PAYMENT_MODES.TELECEL:
+        return await this.initiateTelecelCashPayment(payment);
+      case PAYMENT_MODES.BANK:
+        return await this.initiateBankTransfer(payment);
+      case PAYMENT_MODES.CASH:
+        return await this.initiateCashPayment(payment);
+      default:
+        return {
+          success: false,
+          error: 'Invalid payment method',
+        };
     }
   }
 
   /**
    * Initiate Mobile Money payment via Paystack Inline
    */
-  async initiateMoMoPayment (payment) {
+  async initiateMoMoPayment(payment) {
     if (!window.PaystackPop) {
-      console.error('PaystackPop not loaded. Add <script src="https://js.paystack.co/v1/inline.js"></script> to your HTML');
+      console.error(
+        'PaystackPop not loaded. Add <script src="https://js.paystack.co/v1/inline.js"></script> to your HTML'
+      );
       return {
         success: false,
         error: 'Paystack not loaded. Please refresh the page.',
@@ -92,10 +92,14 @@ class PaymentManager {
           orderId: payment.orderId,
           paymentId: payment.id,
           custom_fields: [
-            { display_name: 'Payment Method', variable_name: 'payment_method', value: 'MTN Mobile Money' },
+            {
+              display_name: 'Payment Method',
+              variable_name: 'payment_method',
+              value: 'MTN Mobile Money',
+            },
           ],
         },
-        callback: (response) => {
+        callback: response => {
           resolve({
             success: true,
             message: 'Payment initiated. Complete on Paystack.',
@@ -114,9 +118,11 @@ class PaymentManager {
   /**
    * Initiate Telecel Cash payment via Paystack Inline
    */
-  async initiateTelecelCashPayment (payment) {
+  async initiateTelecelCashPayment(payment) {
     if (!window.PaystackPop) {
-      console.error('PaystackPop not loaded. Add <script src="https://js.paystack.co/v1/inline.js"></script> to your HTML');
+      console.error(
+        'PaystackPop not loaded. Add <script src="https://js.paystack.co/v1/inline.js"></script> to your HTML'
+      );
       return {
         success: false,
         error: 'Paystack not loaded. Please refresh the page.',
@@ -151,11 +157,15 @@ class PaymentManager {
           orderId: payment.orderId,
           paymentId: payment.id,
           custom_fields: [
-            { display_name: 'Payment Method', variable_name: 'payment_method', value: 'Telecel Cash' },
+            {
+              display_name: 'Payment Method',
+              variable_name: 'payment_method',
+              value: 'Telecel Cash',
+            },
             { display_name: 'Mobile Network', variable_name: 'mobile_network', value: 'Telecel' },
           ],
         },
-        callback: (response) => {
+        callback: response => {
           resolve({
             success: true,
             message: 'Payment initiated. Complete on Paystack.',
@@ -174,7 +184,7 @@ class PaymentManager {
   /**
    * Initiate Bank Transfer payment
    */
-  async initiateBankTransfer (payment) {
+  async initiateBankTransfer(payment) {
     return {
       success: true,
       message: 'Bank transfer initiated',
@@ -191,7 +201,7 @@ class PaymentManager {
   /**
    * Initiate Cash payment
    */
-  async initiateCashPayment (payment) {
+  async initiateCashPayment(payment) {
     return {
       success: true,
       message: 'Cash on delivery selected',
@@ -205,7 +215,7 @@ class PaymentManager {
    * @param {string} paymentId - Payment ID
    * @returns {Object} - Verification result
    */
-  async verifyPayment (paymentId) {
+  async verifyPayment(paymentId) {
     const payments = this.getAllPayments();
     const payment = payments.find(p => p.id === paymentId);
 
@@ -218,7 +228,10 @@ class PaymentManager {
 
     if (typeof api !== 'undefined') {
       try {
-        const response = await api.post('/payment/verify', { paymentId, transactionId: payment.transactionId });
+        const response = await api.post('/payment/verify', {
+          paymentId,
+          transactionId: payment.transactionId,
+        });
         if (response.success) {
           payment.status = 'completed';
           payment.verifiedAt = new Date().toISOString();
@@ -266,7 +279,7 @@ class PaymentManager {
   /**
    * Get payment by ID
    */
-  getPaymentById (paymentId) {
+  getPaymentById(paymentId) {
     const payments = this.getAllPayments();
     return payments.find(p => p.id === paymentId) || null;
   }
@@ -274,7 +287,7 @@ class PaymentManager {
   /**
    * Get payments by order ID
    */
-  getPaymentsByOrderId (orderId) {
+  getPaymentsByOrderId(orderId) {
     const payments = this.getAllPayments();
     return payments.filter(p => p.orderId === orderId);
   }
@@ -282,7 +295,7 @@ class PaymentManager {
   /**
    * Get all payments
    */
-  getAllPayments () {
+  getAllPayments() {
     const payments = StorageManager.get(this.PAYMENT_STORAGE_KEY, true);
     return payments || [];
   }
@@ -290,7 +303,7 @@ class PaymentManager {
   /**
    * Save payment
    */
-  savePayment (payment) {
+  savePayment(payment) {
     const payments = this.getAllPayments();
     payments.push(payment);
     StorageManager.set(this.PAYMENT_STORAGE_KEY, payments);
@@ -299,7 +312,7 @@ class PaymentManager {
   /**
    * Update payment
    */
-  updatePayment (payment) {
+  updatePayment(payment) {
     const payments = this.getAllPayments();
     const index = payments.findIndex(p => p.id === payment.id);
 
@@ -312,14 +325,14 @@ class PaymentManager {
   /**
    * Generate payment ID
    */
-  generatePaymentId () {
+  generatePaymentId() {
     return `payment_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   /**
    * Get payment status options
    */
-  getStatusOptions () {
+  getStatusOptions() {
     return [
       { value: 'pending', label: 'Pending', color: '#f59e0b' },
       { value: 'processing', label: 'Processing', color: '#3b82f6' },
@@ -329,7 +342,7 @@ class PaymentManager {
     ];
   }
 
-  async refundPayment (paymentId, reason) {
+  async refundPayment(paymentId, reason) {
     const payment = this.getPaymentById(paymentId);
 
     if (!payment) {
@@ -375,7 +388,7 @@ class PaymentManager {
   /**
    * Get payment methods with icons
    */
-  getPaymentMethods () {
+  getPaymentMethods() {
     return [
       {
         id: PAYMENT_MODES.MOMO,
@@ -398,7 +411,6 @@ class PaymentManager {
         description: 'Direct bank transfer',
         providers: ['GCB', 'Absa', 'Stanbic'],
       },
-
     ];
   }
 }

@@ -4,14 +4,16 @@
 /* exported adminProductsManager */
 
 class AdminProductsManager {
-  constructor () {
+  constructor() {
     this.MODERATION_STORAGE_KEY = `${STORAGE_KEY_PREFIX}product_moderation`;
     this._initialized = false;
     this._backendProducts = null;
   }
 
-  async init () {
-    if (this._initialized) return;
+  async init() {
+    if (this._initialized) {
+      return;
+    }
     this._initialized = true;
     try {
       if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable !== false) {
@@ -20,10 +22,12 @@ class AdminProductsManager {
           this._backendProducts = resp.data.products;
         }
       }
-    } catch (_) { console.warn('admin-products: backend fetch failed:', _); }
+    } catch (_) {
+      console.warn('admin-products: backend fetch failed:', _);
+    }
   }
 
-  getAllProducts () {
+  getAllProducts() {
     return this._backendProducts || productsManager.getAll();
   }
 
@@ -32,7 +36,7 @@ class AdminProductsManager {
    * @param {string} productId - Product ID
    * @returns {Object|null}
    */
-  getProductById (productId) {
+  getProductById(productId) {
     return productsManager.getById(productId);
   }
 
@@ -42,7 +46,7 @@ class AdminProductsManager {
    * @param {string} reason - Reason for flagging
    * @returns {Object}
    */
-  flagProduct (productId, reason) {
+  flagProduct(productId, reason) {
     const product = this.getProductById(productId);
 
     if (!product) {
@@ -77,7 +81,7 @@ class AdminProductsManager {
    * Get all flags
    * @returns {Array}
    */
-  getFlags () {
+  getFlags() {
     const flags = StorageManager.get(this.MODERATION_STORAGE_KEY, true);
     return flags || [];
   }
@@ -86,7 +90,7 @@ class AdminProductsManager {
    * Get flagged products
    * @returns {Array}
    */
-  getFlaggedProducts () {
+  getFlaggedProducts() {
     const flags = this.getFlags().filter(f => f.status === 'pending');
     return flags.map(flag => ({
       flag: flag,
@@ -99,7 +103,7 @@ class AdminProductsManager {
    * @param {string} flagId - Flag ID
    * @returns {Object}
    */
-  approveFlag (flagId) {
+  approveFlag(flagId) {
     const flags = this.getFlags();
     const index = flags.findIndex(f => f.id === flagId);
 
@@ -129,7 +133,7 @@ class AdminProductsManager {
    * @param {string} flagId - Flag ID
    * @returns {Object}
    */
-  rejectFlag (flagId) {
+  rejectFlag(flagId) {
     const flags = this.getFlags();
     const index = flags.findIndex(f => f.id === flagId);
 
@@ -164,7 +168,7 @@ class AdminProductsManager {
    * @param {string} productId - Product ID
    * @returns {Object}
    */
-  deleteProduct (productId) {
+  deleteProduct(productId) {
     // RBAC: product deletion is admin-only (backend enforces too).
     if (adminAuthManager.adminUser?.role === 'moderator') {
       return { success: false, error: 'Moderators cannot delete products' };
@@ -209,7 +213,7 @@ class AdminProductsManager {
    * @param {Object} updates - Updates to apply
    * @returns {Object}
    */
-  updateProduct (productId, updates) {
+  updateProduct(productId, updates) {
     const product = this.getProductById(productId);
 
     if (!product) {
@@ -255,7 +259,7 @@ class AdminProductsManager {
    * @param {string} sellerId - Seller ID
    * @returns {Array}
    */
-  getProductsBySeller (sellerId) {
+  getProductsBySeller(sellerId) {
     return this.getAllProducts().filter(p => p.seller.id === sellerId);
   }
 
@@ -264,7 +268,7 @@ class AdminProductsManager {
    * @param {string} category - Category ID
    * @returns {Array}
    */
-  getProductsByCategory (category) {
+  getProductsByCategory(category) {
     return this.getAllProducts().filter(p => p.category === category);
   }
 
@@ -273,7 +277,7 @@ class AdminProductsManager {
    * @param {string} university - University ID
    * @returns {Array}
    */
-  getProductsByUniversity (university) {
+  getProductsByUniversity(university) {
     return this.getAllProducts().filter(p => p.university === university);
   }
 
@@ -282,12 +286,12 @@ class AdminProductsManager {
    * @param {string} query - Search query
    * @returns {Array}
    */
-  searchProducts (query) {
+  searchProducts(query) {
     const normalizedQuery = query.toLowerCase();
     return this.getAllProducts().filter(
       p =>
         p.title.toLowerCase().includes(normalizedQuery) ||
-        p.description.toLowerCase().includes(normalizedQuery),
+        p.description.toLowerCase().includes(normalizedQuery)
     );
   }
 
@@ -295,7 +299,7 @@ class AdminProductsManager {
    * Get product statistics
    * @returns {Object}
    */
-  getStats () {
+  getStats() {
     const products = this.getAllProducts();
     const flags = this.getFlags();
 
@@ -324,7 +328,7 @@ class AdminProductsManager {
    * @param {number} limit - Number of products
    * @returns {Array}
    */
-  getRecentProducts (limit = 10) {
+  getRecentProducts(limit = 10) {
     return this.getAllProducts()
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, limit);
@@ -335,7 +339,7 @@ class AdminProductsManager {
    * @param {Array} productIds - Product IDs to delete
    * @returns {Object}
    */
-  bulkDelete (productIds) {
+  bulkDelete(productIds) {
     let deleted = 0;
     let failed = 0;
 
@@ -366,21 +370,37 @@ class AdminProductsManager {
    * Export products to CSV (placeholder)
    * @returns {string}
    */
-  exportToCSV () {
+  exportToCSV() {
     const products = this.getAllProducts();
     const headers = [
-      'ID', 'Title', 'Price', 'Category', 'Condition', 'Seller', 'University', 'Created',
+      'ID',
+      'Title',
+      'Price',
+      'Category',
+      'Condition',
+      'Seller',
+      'University',
+      'Created',
     ];
     const rows = products.map(p => [
-      p.id, p.title, p.price, p.category, p.condition, p.seller?.fullName || p.sellerName || p.seller?.name || 'Unknown', p.university, p.createdAt,
+      p.id,
+      p.title,
+      p.price,
+      p.category,
+      p.condition,
+      p.seller?.fullName || p.sellerName || p.seller?.name || 'Unknown',
+      p.university,
+      p.createdAt,
     ]);
 
-    const csvContent = [headers, ...rows].map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','))
+      .join('\n');
     this._downloadCSV(csvContent, 'jertscart-products.csv');
     return csvContent;
   }
 
-  _syncBackendFlag (flag, action) {
+  _syncBackendFlag(flag, action) {
     try {
       if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable !== false) {
         const productId = flag.productId;
@@ -390,10 +410,12 @@ class AdminProductsManager {
           api.admin.rejectProduct(productId, flag.reason).catch(() => {});
         }
       }
-    } catch (_) {}
+    } catch (_) {
+      /* noop */
+    }
   }
 
-  _downloadCSV (csvContent, filename) {
+  _downloadCSV(csvContent, filename) {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -403,9 +425,9 @@ class AdminProductsManager {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    }
+    URL.revokeObjectURL(url);
   }
+}
 
 // Create singleton instance
 const adminProductsManager = new AdminProductsManager();

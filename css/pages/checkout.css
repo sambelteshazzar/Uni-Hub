@@ -343,9 +343,16 @@
   color: var(--bg-primary);
 }
 
-.momo-provider-color.mtn { background: #ffc300; color: #000; }
-.momo-provider-color.vodafone { background: #e60000; }
-.momo-provider-color.airteltigo { background: #005aff; }
+.momo-provider-color.mtn {
+  background: #ffc300;
+  color: #000;
+}
+.momo-provider-color.vodafone {
+  background: #e60000;
+}
+.momo-provider-color.airteltigo {
+  background: #005aff;
+}
 
 .card-fields {
   display: grid;
@@ -756,7 +763,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .delivery-options,
@@ -1037,4 +1046,6 @@
   }
 }
 
-[data-theme="dark"] .momo-provider-color.mtn { color: var(--neutral-900); }
+[data-theme='dark'] .momo-provider-color.mtn {
+  color: var(--neutral-900);
+}

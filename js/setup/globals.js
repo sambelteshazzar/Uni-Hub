@@ -232,7 +232,11 @@ if (typeof messagesPage !== 'undefined') {
 // GLOBAL HELPERS
 // ====================
 window.showToast = function (message, type, title, duration) {
-  if (typeof toastManager !== 'undefined' && toastManager && typeof toastManager.show === 'function') {
+  if (
+    typeof toastManager !== 'undefined' &&
+    toastManager &&
+    typeof toastManager.show === 'function'
+  ) {
     toastManager.show(message, type, title, duration);
   } else if (typeof Toast !== 'undefined' && Toast && typeof Toast.show === 'function') {
     Toast.show(message, type, duration);

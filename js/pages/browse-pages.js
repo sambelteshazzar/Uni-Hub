@@ -6,9 +6,9 @@
 // depth). SecurityUtils is loaded globally by js/utils/security.js.
 const _browseEsc = v => {
   if (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) {
-    return SecurityUtils.escapeHtml(String(v == null ? '' : v));
+    return SecurityUtils.escapeHtml(String(v === null || v === undefined ? '' : v));
   }
-  return String(v == null ? '' : v);
+  return String(v === null || v === undefined ? '' : v);
 };
 
 class BrowsePage {
@@ -91,8 +91,10 @@ class BrowsePage {
     } else {
       // Default the browse filter to the user's own university, so they
       // see the campus marketplace they signed up for.
-      const currentUser = (typeof authManager !== 'undefined' && authManager.getCurrentUser)
-        ? authManager.getCurrentUser() : null;
+      const currentUser =
+        typeof authManager !== 'undefined' && authManager.getCurrentUser
+          ? authManager.getCurrentUser()
+          : null;
       const selectedUniversity = currentUser?.university || '';
       if (selectedUniversity) {
         productsManager.filter({ university: selectedUniversity });
@@ -142,13 +144,17 @@ class BrowsePage {
 
     if (filters.search) {
       const searchInput = document.getElementById('browse-search-input');
-      if (searchInput) searchInput.value = filters.search;
+      if (searchInput) {
+        searchInput.value = filters.search;
+      }
     }
   }
 
   _bindScrollHoverGuard() {
     const root = document.querySelector('.browse-page');
-    if (!root) return;
+    if (!root) {
+      return;
+    }
     let frame = 0;
     let idleTimer = 0;
     const markScrolling = () => {
@@ -210,7 +216,9 @@ class BrowsePage {
     }));
     const uniCounts = {};
     this._allProducts.forEach(p => {
-      if (p.university) uniCounts[p.university] = (uniCounts[p.university] || 0) + 1;
+      if (p.university) {
+        uniCounts[p.university] = (uniCounts[p.university] || 0) + 1;
+      }
     });
     this.state.universities = Object.keys(uniCounts)
       .sort()
@@ -270,7 +278,7 @@ class BrowsePage {
               .fill('')
               .map(
                 () =>
-                  `<div style="background:#fff;"><div class="browse-skeleton" style="aspect-ratio:1;border-radius:0;"></div><div style="padding:12px 16px 16px;"><div class="browse-skeleton" style="height:10px;width:40%;margin-bottom:6px;"></div><div class="browse-skeleton" style="height:14px;width:100%;margin-bottom:6px;"></div><div class="browse-skeleton" style="height:20px;width:50%;margin-bottom:8px;"></div><div class="browse-skeleton" style="height:34px;width:100%;"></div></div></div>`
+                  '<div style="background:#fff;"><div class="browse-skeleton" style="aspect-ratio:1;border-radius:0;"></div><div style="padding:12px 16px 16px;"><div class="browse-skeleton" style="height:10px;width:40%;margin-bottom:6px;"></div><div class="browse-skeleton" style="height:14px;width:100%;margin-bottom:6px;"></div><div class="browse-skeleton" style="height:20px;width:50%;margin-bottom:8px;"></div><div class="browse-skeleton" style="height:34px;width:100%;"></div></div></div>'
               )
               .join('')}
           </div>
@@ -393,7 +401,9 @@ ${this._renderGadgetTypeSubBar()}
   // Sub-bar of male/female pills, only shown when Fashion is the active
   // category (the only apparel category for now).
   _renderGenderSubBar() {
-    if (!this.state.selectedCategories.includes('fashion')) return '';
+    if (!this.state.selectedCategories.includes('fashion')) {
+      return '';
+    }
     const active = this.state.selectedGender || 'all';
     const maleCount = this._allProducts.filter(
       p => p.category === 'fashion' && (p.gender || 'unisex') === 'male'
@@ -437,7 +447,9 @@ ${this._renderGadgetTypeSubBar()}
   // laptop products or phone products based on title/description keywords;
   // "All" restores the full gadgets list.
   _renderGadgetTypeSubBar() {
-    if (!this.state.selectedCategories.includes('hostel-items')) return '';
+    if (!this.state.selectedCategories.includes('hostel-items')) {
+      return '';
+    }
     const active = this.state.selectedGadgetType || 'all';
     const gadgets = this._allProducts.filter(p => p.category === 'hostel-items');
     const _isLaptop = p =>
@@ -603,17 +615,23 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
 
     this.state.selectedCategories.forEach(catId => {
       const cat = this.state.categories.find(c => c.id === catId);
-      if (cat) chips.push({ label: cat.name, type: 'category', value: catId });
+      if (cat) {
+        chips.push({ label: cat.name, type: 'category', value: catId });
+      }
     });
 
     this.state.selectedConditions.forEach(condId => {
       const cond = this.state.conditions.find(c => c.id === condId);
-      if (cond) chips.push({ label: cond.name, type: 'condition', value: condId });
+      if (cond) {
+        chips.push({ label: cond.name, type: 'condition', value: condId });
+      }
     });
 
     this.state.selectedUniversities.forEach(uniId => {
       const uni = this.state.universities.find(u => u.id === uniId);
-      if (uni) chips.push({ label: uni.name, type: 'university', value: uniId });
+      if (uni) {
+        chips.push({ label: uni.name, type: 'university', value: uniId });
+      }
     });
 
     if (this.state.priceRange.min > 0 || this.state.priceRange.max < Infinity) {
@@ -623,7 +641,9 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
       chips.push({ label: `${minLabel} - ${maxLabel || 'Any'}`, type: 'price', value: 'price' });
     }
 
-    if (chips.length === 0) return '';
+    if (chips.length === 0) {
+      return '';
+    }
 
     return `
       <div class="browse-active-filters">
@@ -700,8 +720,12 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
   }
 
   renderLoadMore(paginatedData) {
-    if (!paginatedData || paginatedData.totalPages <= 1) return '';
-    if (paginatedData.currentPage >= paginatedData.totalPages) return '';
+    if (!paginatedData || paginatedData.totalPages <= 1) {
+      return '';
+    }
+    if (paginatedData.currentPage >= paginatedData.totalPages) {
+      return '';
+    }
     return `
       <div class="browse-load-more">
         <button class="browse-load-more-btn" onclick="BrowsePage.loadMore()">Load More Products</button>
@@ -709,18 +733,26 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
   }
 
   renderPagination(paginatedData) {
-    if (!paginatedData || paginatedData.totalPages <= 1) return '';
+    if (!paginatedData || paginatedData.totalPages <= 1) {
+      return '';
+    }
     const pages = [];
     const current = paginatedData.currentPage;
     const total = paginatedData.totalPages;
 
     pages.push(1);
-    if (current > 3) pages.push('...');
+    if (current > 3) {
+      pages.push('...');
+    }
     for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
       pages.push(i);
     }
-    if (current < total - 2) pages.push('...');
-    if (total > 1) pages.push(total);
+    if (current < total - 2) {
+      pages.push('...');
+    }
+    if (total > 1) {
+      pages.push(total);
+    }
 
     return `
       <div class="browse-pagination">
@@ -859,7 +891,9 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
     const activeBtn = document.querySelector(
       `.browse-view-btn[onclick="BrowsePage.toggleView('${mode}')"]`
     );
-    if (activeBtn) activeBtn.classList.add('active');
+    if (activeBtn) {
+      activeBtn.classList.add('active');
+    }
   }
 
   async loadMore() {
@@ -882,7 +916,9 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
 
   async goToPage(page) {
     const paginatedData = await this._fetchPaginatedData(page);
-    if (paginatedData.products.length === 0 && page > 1) return;
+    if (paginatedData.products.length === 0 && page > 1) {
+      return;
+    }
     this.state.currentPage = page;
     this.state.totalProducts = paginatedData.totalProducts || this.state.totalProducts;
     const mainContent = document.getElementById('main-content');
@@ -915,13 +951,19 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
   removeFilter(type, value) {
     if (type === 'category') {
       const idx = this.state.selectedCategories.indexOf(value);
-      if (idx > -1) this.state.selectedCategories.splice(idx, 1);
+      if (idx > -1) {
+        this.state.selectedCategories.splice(idx, 1);
+      }
     } else if (type === 'condition') {
       const idx = this.state.selectedConditions.indexOf(value);
-      if (idx > -1) this.state.selectedConditions.splice(idx, 1);
+      if (idx > -1) {
+        this.state.selectedConditions.splice(idx, 1);
+      }
     } else if (type === 'university') {
       const idx = this.state.selectedUniversities.indexOf(value);
-      if (idx > -1) this.state.selectedUniversities.splice(idx, 1);
+      if (idx > -1) {
+        this.state.selectedUniversities.splice(idx, 1);
+      }
     } else if (type === 'price') {
       this.state.priceRange = { min: 0, max: Infinity };
     }
@@ -947,12 +989,20 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
     this.state.mobileDrawerOpen = false;
     const drawer = document.getElementById('browse-mobile-drawer');
     const overlay = document.getElementById('browse-mobile-overlay');
-    if (drawer) drawer.classList.remove('open');
-    if (overlay) overlay.classList.remove('open');
+    if (drawer) {
+      drawer.classList.remove('open');
+    }
+    if (overlay) {
+      overlay.classList.remove('open');
+    }
     document.body.style.overflow = '';
     setTimeout(() => {
-      if (drawer) drawer.style.display = '';
-      if (overlay) overlay.style.display = '';
+      if (drawer) {
+        drawer.style.display = '';
+      }
+      if (overlay) {
+        overlay.style.display = '';
+      }
     }, 250);
   }
 }

@@ -205,8 +205,8 @@ const initializeSocket = io => {
         });
 
         const receiverSockets = getUserSockets(receiverId);
-        if (receiverSockets.length === 0) {
-        }
+        // TODO: notify receiver via push if offline — currently a no-op when receiverSockets is empty.
+        void receiverSockets;
       } catch (error) {
         socket.emit('error', { message: 'Failed to send message' });
       }
@@ -252,7 +252,9 @@ const initializeSocket = io => {
             });
           });
         }
-      } catch (error) {}
+      } catch (error) {
+        /* noop */
+      }
     });
 
     socket.on('disconnect', () => {

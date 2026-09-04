@@ -12,15 +12,15 @@
 // provide the primary defense — this is defense-in-depth).
 const _esc = v => {
   if (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) {
-    return SecurityUtils.escapeHtml(String(v == null ? '' : v));
+    return SecurityUtils.escapeHtml(String(v === null || v === undefined ? '' : v));
   }
-  return String(v == null ? '' : v);
+  return String(v === null || v === undefined ? '' : v);
 };
 const _safeUrl = url => {
   if (typeof SecurityUtils !== 'undefined' && SecurityUtils.sanitizeUrl) {
     return SecurityUtils.sanitizeUrl(url) || '';
   }
-  return String(url == null ? '' : url);
+  return String(url === null || url === undefined ? '' : url);
 };
 
 class MessagesPage {

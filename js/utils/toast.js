@@ -1,7 +1,7 @@
 const Toast = {
   _container: null,
 
-  _getContainer () {
+  _getContainer() {
     if (!this._container || !document.body.contains(this._container)) {
       this._container = document.querySelector('.uni-toast-container');
       if (!this._container) {
@@ -13,13 +13,13 @@ const Toast = {
     return this._container;
   },
 
-  show (message, type = 'info', duration = 4000) {
+  show(message, type = 'info', duration = 4000) {
     const container = this._getContainer();
     const icons = {
       success: '\u2713',
       error: '\u2717',
       warning: '\u26A0',
-      info: '\u2139'
+      info: '\u2139',
     };
 
     const item = document.createElement('div');
@@ -39,10 +39,18 @@ const Toast = {
     }, duration);
   },
 
-  success (message) { this.show(message, 'success'); },
-  error (message) { this.show(message, 'error'); },
-  warning (message) { this.show(message, 'warning'); },
-  info (message) { this.show(message, 'info'); }
+  success(message) {
+    this.show(message, 'success');
+  },
+  error(message) {
+    this.show(message, 'error');
+  },
+  warning(message) {
+    this.show(message, 'warning');
+  },
+  info(message) {
+    this.show(message, 'info');
+  },
 };
 
 window.Toast = Toast;

@@ -18,7 +18,7 @@ export const POLICIES = {
   // ${POLICIES.VERSION} at page-render time; a plain array property
   // would self-reference POLICIES inside its own initializer (TDZ
   // ReferenceError at module load).
-  get privacy () {
+  get privacy() {
     return [
       {
         heading: '1. Who We Are',
@@ -81,7 +81,7 @@ export const POLICIES = {
     ];
   },
 
-  get terms () {
+  get terms() {
     return [
       {
         heading: '1. Acceptance of Terms',
@@ -108,7 +108,7 @@ export const POLICIES = {
       },
       {
         heading: '6. Prohibited Conduct',
-        body: '<p>No fraudulent orders or listings, harassment, off-platform payment evasion designed to defeat escrow, interference with the service, or attempts to access other users\' data.</p>',
+        body: "<p>No fraudulent orders or listings, harassment, off-platform payment evasion designed to defeat escrow, interference with the service, or attempts to access other users' data.</p>",
       },
       {
         heading: '7. Liability',

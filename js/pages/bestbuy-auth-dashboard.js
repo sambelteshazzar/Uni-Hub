@@ -4,71 +4,97 @@
 // ============================================
 
 (function () {
-  var waitForPages = setInterval(function () {
-    if (typeof Pages === 'undefined') return;
+  const waitForPages = setInterval(function () {
+    if (typeof Pages === 'undefined') {
+      return;
+    }
     clearInterval(waitForPages);
 
     // ============================================
     // SHARED: social button SVGs & offline handler
     // ============================================
-    var isOffline = function () {
-      return (typeof api !== 'undefined' && api.isStaticDeploy);
+    const isOffline = function () {
+      return typeof api !== 'undefined' && api.isStaticDeploy;
     };
 
-var socialBtnStyle =
-    '<style>' +
-    '.bb-social-divider { position: relative; margin: 1.25rem 0; text-align: center; }' +
-    '.bb-social-divider::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid var(--border-light); }' +
-    '.bb-social-divider span { position: relative; background: var(--bg-primary); padding: 0 0.75rem; font-size: 0.75rem; color: var(--neutral-600); text-transform: uppercase; letter-spacing: 0.05em; }' +
-    '.bb-google-btn { display: flex; align-items: center; justify-content: center; gap: 0.625rem; width: 100%; height: 44px; border: 1px solid var(--border-medium); border-radius: 0.375rem; background: var(--bg-primary); cursor: pointer; transition: all 0.15s ease; font-size: 0.875rem; font-weight: 600; color: var(--neutral-900); margin-bottom: 1.25rem; }' +
-    '.bb-google-btn:hover { border-color: var(--primary); background: var(--bg-secondary); }' +
-    '.bb-google-btn:active { background: var(--primary-light); }' +
-    '</style>';
+    const socialBtnStyle =
+      '<style>' +
+      '.bb-social-divider { position: relative; margin: 1.25rem 0; text-align: center; }' +
+      '.bb-social-divider::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid var(--border-light); }' +
+      '.bb-social-divider span { position: relative; background: var(--bg-primary); padding: 0 0.75rem; font-size: 0.75rem; color: var(--neutral-600); text-transform: uppercase; letter-spacing: 0.05em; }' +
+      '.bb-google-btn { display: flex; align-items: center; justify-content: center; gap: 0.625rem; width: 100%; height: 44px; border: 1px solid var(--border-medium); border-radius: 0.375rem; background: var(--bg-primary); cursor: pointer; transition: all 0.15s ease; font-size: 0.875rem; font-weight: 600; color: var(--neutral-900); margin-bottom: 1.25rem; }' +
+      '.bb-google-btn:hover { border-color: var(--primary); background: var(--bg-secondary); }' +
+      '.bb-google-btn:active { background: var(--primary-light); }' +
+      '</style>';
 
-  var googleSVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width:1.25rem;height:1.25rem;">' +
-    '<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>' +
-    '<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>' +
-    '<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"></path>' +
-    '<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>' +
-    '</svg>';
+    const googleSVG =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width:1.25rem;height:1.25rem;">' +
+      '<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>' +
+      '<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>' +
+      '<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"></path>' +
+      '<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>' +
+      '</svg>';
 
-  var socialBtnsHTML = function (label) {
-    return socialBtnStyle +
-    '<div class="bb-social-divider"><span>Or continue with</span></div>' +
-    '<button type="button" class="bb-google-btn" title="' + label + ' with Google" onclick="Pages.handleSocialLogin(\'google\')">' + googleSVG + ' <span>' + label + ' with Google</span></button>';
-  };
+    const socialBtnsHTML = function (label) {
+      return (
+        socialBtnStyle +
+        '<div class="bb-social-divider"><span>Or continue with</span></div>' +
+        '<button type="button" class="bb-google-btn" title="' +
+        label +
+        ' with Google" onclick="Pages.handleSocialLogin(\'google\')">' +
+        googleSVG +
+        ' <span>' +
+        label +
+        ' with Google</span></button>'
+      );
+    };
 
     // ============================================
     // SHARED: typewriter animation
     // ============================================
-    var runTypewriter = function (phrases) {
-      var speed = 80;
-      var deleteSpeed = 40;
-      var pauseDuration = 2000;
-      var phraseIndex = 0;
-      var charIndex = 0;
-      var isDeleting = false;
-      var isPaused = false;
-      var textEl = document.getElementById('bb-typewriter-text');
-      var cursorEl = document.getElementById('bb-typewriter-cursor');
-      if (!textEl || !cursorEl) return;
+    const runTypewriter = function (phrases) {
+      const speed = 80;
+      const deleteSpeed = 40;
+      const pauseDuration = 2000;
+      let phraseIndex = 0;
+      let charIndex = 0;
+      let isDeleting = false;
+      let isPaused = false;
+      const textEl = document.getElementById('bb-typewriter-text');
+      const cursorEl = document.getElementById('bb-typewriter-cursor');
+      if (!textEl || !cursorEl) {
+        return;
+      }
 
       function type() {
-        var currentPhrase = phrases[phraseIndex];
+        const currentPhrase = phrases[phraseIndex];
         if (isPaused) {
-          setTimeout(function () { isPaused = false; isDeleting = true; type(); }, pauseDuration);
+          setTimeout(function () {
+            isPaused = false;
+            isDeleting = true;
+            type();
+          }, pauseDuration);
           return;
         }
         if (isDeleting) {
           charIndex--;
           textEl.textContent = currentPhrase.substring(0, charIndex);
-          if (charIndex <= 0) { isDeleting = false; phraseIndex = (phraseIndex + 1) % phrases.length; setTimeout(type, 300); }
-          else { setTimeout(type, deleteSpeed); }
+          if (charIndex <= 0) {
+            isDeleting = false;
+            phraseIndex = (phraseIndex + 1) % phrases.length;
+            setTimeout(type, 300);
+          } else {
+            setTimeout(type, deleteSpeed);
+          }
         } else {
           charIndex++;
           textEl.textContent = currentPhrase.substring(0, charIndex);
-          if (charIndex >= currentPhrase.length) { isPaused = true; setTimeout(type, pauseDuration); }
-          else { setTimeout(type, speed); }
+          if (charIndex >= currentPhrase.length) {
+            isPaused = true;
+            setTimeout(type, pauseDuration);
+          } else {
+            setTimeout(type, speed);
+          }
         }
       }
       type();
@@ -78,76 +104,87 @@ var socialBtnStyle =
     // PASSWORD TOGGLE
     // ============================================
     Pages.togglePassword = function (inputId, btn) {
-      var input = document.getElementById(inputId);
-      if (!input) return;
+      const input = document.getElementById(inputId);
+      if (!input) {
+        return;
+      }
       if (input.type === 'password') {
         input.type = 'text';
-        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+        btn.innerHTML =
+          '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
       } else {
         input.type = 'password';
-        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+        btn.innerHTML =
+          '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
       }
     };
 
     // ============================================
     // SOCIAL LOGIN HANDLER
     // ============================================
-  Pages.handleSocialLogin = function (provider) {
-    if (isOffline()) {
-      showToast('Google Sign-In is not available in offline mode. Please use email and password.', 'info');
-      return;
-    }
-    if (provider !== 'google') {
-      showToast('Only Google Sign-In is supported at this time.', 'info');
-      return;
-    }
-    if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
-      var tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: window.GOOGLE_CLIENT_ID || '',
-        scope: 'openid email profile',
-        callback: function (tokenResponse) {
-          if (tokenResponse.access_token) {
-            Pages._handleGoogleToken(tokenResponse.access_token);
-          } else {
-            showToast('Google Sign-In was cancelled or failed.', 'error');
-          }
-        },
-        error_callback: function () {
-          showToast('Google Sign-In failed. Please try again.', 'error');
-        }
-      });
-      tokenClient.requestAccessToken();
-    } else {
-      showToast('Google Sign-In is loading. Please try again in a moment.', 'info');
-    }
-  };
-
-  Pages._handleGoogleToken = async function (accessToken) {
-    try {
-      showToast('Signing in with Google...', 'info');
-      var res = await fetch((window.API_URL || '') + '/auth/google/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ access_token: accessToken })
-      });
-      var data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Google login failed');
-      if (typeof authManager !== 'undefined') {
-        authManager.saveSession(data.token, data.user);
+    Pages.handleSocialLogin = function (provider) {
+      if (isOffline()) {
+        showToast(
+          'Google Sign-In is not available in offline mode. Please use email and password.',
+          'info'
+        );
+        return;
       }
-      showToast('Signed in with Google!', 'success');
-      setTimeout(function () { window.location.hash = '#/browse'; }, 500);
-    } catch (err) {
-      showToast(err.message || 'Google Sign-In failed. Please try again.', 'error');
-    }
-  };
+      if (provider !== 'google') {
+        showToast('Only Google Sign-In is supported at this time.', 'info');
+        return;
+      }
+      if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
+        const tokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: window.GOOGLE_CLIENT_ID || '',
+          scope: 'openid email profile',
+          callback: function (tokenResponse) {
+            if (tokenResponse.access_token) {
+              Pages._handleGoogleToken(tokenResponse.access_token);
+            } else {
+              showToast('Google Sign-In was cancelled or failed.', 'error');
+            }
+          },
+          error_callback: function () {
+            showToast('Google Sign-In failed. Please try again.', 'error');
+          },
+        });
+        tokenClient.requestAccessToken();
+      } else {
+        showToast('Google Sign-In is loading. Please try again in a moment.', 'info');
+      }
+    };
+
+    Pages._handleGoogleToken = async function (accessToken) {
+      try {
+        showToast('Signing in with Google...', 'info');
+        const res = await fetch((window.API_URL || '') + '/auth/google/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ access_token: accessToken }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.message || 'Google login failed');
+        }
+        if (typeof authManager !== 'undefined') {
+          authManager.saveSession(data.token, data.user);
+        }
+        showToast('Signed in with Google!', 'success');
+        setTimeout(function () {
+          window.location.hash = '#/browse';
+        }, 500);
+      } catch (err) {
+        showToast(err.message || 'Google Sign-In failed. Please try again.', 'error');
+      }
+    };
 
     // ============================================
     // LOGIN
     // ============================================
     Pages.renderLogin = function () {
       Pages.showOriginalNavFooter();
-      var mainContent = document.getElementById('main-content');
+      const mainContent = document.getElementById('main-content');
       mainContent.innerHTML =
         '<div class="bb-auth-page">' +
         '<div class="bb-auth-branding">' +
@@ -204,7 +241,12 @@ var socialBtnStyle =
         '</div>';
 
       window.scrollTo({ top: 0 });
-      runTypewriter(['Welcome Back', 'Your Campus Marketplace', 'Great Deals Await You', 'Sign In & Start Shopping']);
+      runTypewriter([
+        'Welcome Back',
+        'Your Campus Marketplace',
+        'Great Deals Await You',
+        'Sign In & Start Shopping',
+      ]);
     };
 
     // ============================================
@@ -212,9 +254,9 @@ var socialBtnStyle =
     // ============================================
     Pages.handleLoginBB = async function (event) {
       event.preventDefault();
-      var email = document.getElementById('login-email').value;
-      var password = document.getElementById('login-password').value;
-      var result = await authManager.login(email, password);
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      const result = await authManager.login(email, password);
       if (result.success) {
         Pages.updateNavbar();
         Pages.updateCartBadge();
@@ -237,7 +279,7 @@ var socialBtnStyle =
     // ============================================
     Pages.renderRegister = async function () {
       Pages.showOriginalNavFooter();
-      var mainContent = document.getElementById('main-content');
+      const mainContent = document.getElementById('main-content');
 
       mainContent.innerHTML =
         '<div class="bb-auth-page">' +
@@ -308,7 +350,12 @@ var socialBtnStyle =
         '</div>';
 
       window.scrollTo({ top: 0 });
-      runTypewriter(['Join JERTS CART', 'Your Campus Marketplace', 'Buy & Sell with Students', 'Create Your Account']);
+      runTypewriter([
+        'Join JERTS CART',
+        'Your Campus Marketplace',
+        'Buy & Sell with Students',
+        'Create Your Account',
+      ]);
     };
 
     // ============================================
@@ -316,12 +363,12 @@ var socialBtnStyle =
     // ============================================
     Pages.handleRegisterBB = async function (event) {
       event.preventDefault();
-      var firstName = document.getElementById('reg-firstName').value;
-      var lastName = document.getElementById('reg-lastName').value;
-      var email = document.getElementById('reg-email').value;
-      var password = document.getElementById('reg-password').value;
-      var phone = document.getElementById('reg-phone').value;
-      var acceptedTerms = document.getElementById('reg-terms').checked === true;
+      const firstName = document.getElementById('reg-firstName').value;
+      const lastName = document.getElementById('reg-lastName').value;
+      const email = document.getElementById('reg-email').value;
+      const password = document.getElementById('reg-password').value;
+      const phone = document.getElementById('reg-phone').value;
+      const acceptedTerms = document.getElementById('reg-terms').checked === true;
 
       if (!acceptedTerms) {
         showToast('Please accept the Terms of Service and Privacy Policy to continue.', 'warning');
@@ -334,24 +381,25 @@ var socialBtnStyle =
       // picked one. The picker replaces the form's content; on save
       // we restore the form with the chosen university hidden in the
       // payload.
-      var formPanel = document.querySelector('#register-form-bb');
-      if (!formPanel) {return;}
-      var panelParent = formPanel.parentNode;
+      const formPanel = document.querySelector('#register-form-bb');
+      if (!formPanel) {
+        return;
+      }
       // Save the form HTML so we can restore on back.
-      var originalFormHtml = formPanel.outerHTML;
-      var identity = {
+      const originalFormHtml = formPanel.outerHTML;
+      const identity = {
         fullName: firstName + ' ' + lastName,
         email: email,
         password: password,
         phone: phone,
       };
-      var pickerHost = document.createElement('div');
+      const pickerHost = document.createElement('div');
       pickerHost.id = 'bb-register-picker-host';
       pickerHost.className = 'bb-form-group';
-      var step2Html =
+      const step2Html =
         '<div style="margin-bottom: 1rem;">' +
-          '<h2 class="bb-auth-form-title" style="font-size: 1.25rem; margin: 0 0 0.5rem;">Pick your university</h2>' +
-          '<p class="bb-auth-form-sub" style="margin: 0; font-size: 0.9rem;">Choose where you\'re enrolled. You can change it later from your profile.</p>' +
+        '<h2 class="bb-auth-form-title" style="font-size: 1.25rem; margin: 0 0 0.5rem;">Pick your university</h2>' +
+        '<p class="bb-auth-form-sub" style="margin: 0; font-size: 0.9rem;">Choose where you\'re enrolled. You can change it later from your profile.</p>' +
         '</div>';
       pickerHost.outerHTML = step2Html;
       // Replace the form with the picker host + a Save/Back row.
@@ -360,26 +408,28 @@ var socialBtnStyle =
         step2Html +
         '<div id="bb-register-picker-host"></div>' +
         '<div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">' +
-          '<button type="button" class="bb-submit-btn bb-submit-btn-secondary" id="bb-register-back" style="flex: 1;">Back</button>' +
-          '<button type="button" class="bb-submit-btn" id="bb-register-create" disabled style="flex: 2;">Create Account</button>' +
+        '<button type="button" class="bb-submit-btn bb-submit-btn-secondary" id="bb-register-back" style="flex: 1;">Back</button>' +
+        '<button type="button" class="bb-submit-btn" id="bb-register-create" disabled style="flex: 2;">Create Account</button>' +
         '</div>' +
         '</div>';
-      var pickerMount = document.getElementById('bb-register-picker-host');
-      var createBtn = document.getElementById('bb-register-create');
-      var backBtn = document.getElementById('bb-register-back');
-      var chosenUniversity = null;
+      const pickerMount = document.getElementById('bb-register-picker-host');
+      const createBtn = document.getElementById('bb-register-create');
+      const backBtn = document.getElementById('bb-register-back');
+      let chosenUniversity = null;
 
       window.UniversitiesPage.renderPicker(pickerMount, {
         onSelect: function (id) {
           chosenUniversity = id;
-          if (createBtn) {createBtn.disabled = false;}
+          if (createBtn) {
+            createBtn.disabled = false;
+          }
         },
       });
 
       if (backBtn) {
         backBtn.addEventListener('click', function () {
           // Restore the original form and let user adjust their input.
-          var step2 = document.getElementById('bb-register-step2');
+          const step2 = document.getElementById('bb-register-step2');
           if (step2 && step2.parentNode) {
             step2.outerHTML = originalFormHtml;
           }
@@ -388,15 +438,17 @@ var socialBtnStyle =
 
       if (createBtn) {
         createBtn.addEventListener('click', async function () {
-          if (!chosenUniversity) {return;}
+          if (!chosenUniversity) {
+            return;
+          }
           createBtn.disabled = true;
           createBtn.textContent = 'Creating account…';
           try {
-            var payload = Object.assign({}, identity, {
+            const payload = Object.assign({}, identity, {
               university: chosenUniversity,
               acceptedTerms: true,
             });
-            var result = await authManager.register(payload);
+            const result = await authManager.register(payload);
             if (result.success) {
               Pages.updateNavbar();
               showToast('Account created! Welcome, ' + firstName + '!', 'success');
@@ -442,7 +494,7 @@ var socialBtnStyle =
     // ============================================
     Pages.renderForgotPassword = function () {
       Pages.showOriginalNavFooter();
-      var mainContent = document.getElementById('main-content');
+      const mainContent = document.getElementById('main-content');
       mainContent.innerHTML =
         '<div class="bb-auth-page">' +
         '<div class="bb-auth-branding">' +
@@ -482,23 +534,30 @@ var socialBtnStyle =
 
     Pages.handleForgotPasswordBB = async function (event) {
       event.preventDefault();
-      var email = document.getElementById('forgot-email').value;
-      var submitBtn = document.querySelector('#forgot-form-bb button[type="submit"]');
+      const email = document.getElementById('forgot-email').value;
+      const submitBtn = document.querySelector('#forgot-form-bb button[type="submit"]');
       submitBtn.disabled = true;
       submitBtn.textContent = 'Sending...';
 
       try {
-        var baseURL = (typeof window !== 'undefined' && window.API_URL) || 'https://uni-hub-bnxi.onrender.com/api';
+        const baseURL =
+          (typeof window !== 'undefined' && window.API_URL) ||
+          'https://uni-hub-bnxi.onrender.com/api';
         if (typeof api !== 'undefined' && api.isStaticDeploy) {
-          showToast('Password reset is not available in offline mode. Please log in with your existing credentials.', 'info');
-          setTimeout(function () { Pages.renderLogin(); }, 2000);
+          showToast(
+            'Password reset is not available in offline mode. Please log in with your existing credentials.',
+            'info'
+          );
+          setTimeout(function () {
+            Pages.renderLogin();
+          }, 2000);
         } else {
-          var response = await fetch(baseURL + '/auth/forgot-password', {
+          const response = await fetch(baseURL + '/auth/forgot-password', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: email }),
           });
-          var result = await response.json();
+          const result = await response.json();
           if (result.success) {
             showToast(result.message, 'success');
             if (result.resetToken) {
@@ -512,7 +571,9 @@ var socialBtnStyle =
         }
       } catch (error) {
         showToast('Running in offline mode. Please log in with your existing credentials.', 'info');
-        setTimeout(function () { Pages.renderLogin(); }, 3000);
+        setTimeout(function () {
+          Pages.renderLogin();
+        }, 3000);
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Send Reset Link';
@@ -525,7 +586,7 @@ var socialBtnStyle =
     Pages.renderResetPassword = function (token) {
       Pages.showOriginalNavFooter();
       token = token || '';
-      var mainContent = document.getElementById('main-content');
+      const mainContent = document.getElementById('main-content');
       mainContent.innerHTML =
         '<div class="bb-auth-page">' +
         '<div class="bb-auth-branding">' +
@@ -546,7 +607,9 @@ var socialBtnStyle =
         '<h1 class="bb-auth-form-title">New Password</h1>' +
         '<p class="bb-auth-form-subtitle">Choose a strong password for your account</p>' +
         '</div>' +
-        '<form id="reset-form-bb" onsubmit="Pages.handleResetPasswordBB(event, \'' + token + '\')">' +
+        '<form id="reset-form-bb" onsubmit="Pages.handleResetPasswordBB(event, \'' +
+        token +
+        '\')">' +
         '<div class="bb-form-group">' +
         '<label for="reset-newPassword" class="bb-form-label">New Password <span class="required-star">*</span></label>' +
         '<div class="bb-password-wrapper">' +
@@ -579,10 +642,10 @@ var socialBtnStyle =
 
     Pages.handleResetPasswordBB = async function (event, token) {
       event.preventDefault();
-      var form = document.getElementById('reset-form-bb');
-      var newPassword = form.newPassword.value;
-      var confirmPassword = form.confirmPassword.value;
-      var submitBtn = form.querySelector('button[type="submit"]');
+      const form = document.getElementById('reset-form-bb');
+      const newPassword = form.newPassword.value;
+      const confirmPassword = form.confirmPassword.value;
+      const submitBtn = form.querySelector('button[type="submit"]');
 
       if (newPassword !== confirmPassword) {
         showToast('Passwords do not match', 'error');
@@ -593,27 +656,41 @@ var socialBtnStyle =
       submitBtn.textContent = 'Resetting...';
 
       try {
-        var baseURL = (typeof window !== 'undefined' && window.API_URL) || 'https://uni-hub-bnxi.onrender.com/api';
+        const baseURL =
+          (typeof window !== 'undefined' && window.API_URL) ||
+          'https://uni-hub-bnxi.onrender.com/api';
         if (typeof api !== 'undefined' && api.isStaticDeploy) {
-          showToast('Password reset is not available in offline mode. Please log in with your existing credentials.', 'info');
-          setTimeout(function () { Pages.renderLogin(); }, 2000);
+          showToast(
+            'Password reset is not available in offline mode. Please log in with your existing credentials.',
+            'info'
+          );
+          setTimeout(function () {
+            Pages.renderLogin();
+          }, 2000);
         } else {
-          var response = await fetch(baseURL + '/auth/reset-password', {
+          const response = await fetch(baseURL + '/auth/reset-password', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token: token, newPassword: newPassword }),
           });
-          var result = await response.json();
+          const result = await response.json();
           if (result.success) {
             showToast(result.message, 'success');
-            setTimeout(function () { Pages.renderLogin(); }, 1500);
+            setTimeout(function () {
+              Pages.renderLogin();
+            }, 1500);
           } else {
             showToast(result.error || 'Failed to reset password', 'error');
           }
         }
       } catch (error) {
-        showToast('Running in offline mode. Password reset is not available offline. Please log in with your existing credentials.', 'info');
-        setTimeout(function () { Pages.renderLogin(); }, 3000);
+        showToast(
+          'Running in offline mode. Password reset is not available offline. Please log in with your existing credentials.',
+          'info'
+        );
+        setTimeout(function () {
+          Pages.renderLogin();
+        }, 3000);
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Reset Password';
@@ -627,7 +704,7 @@ var socialBtnStyle =
       if (typeof AuthPageMethods !== 'undefined' && AuthPageMethods.renderStudentVerification) {
         AuthPageMethods.renderStudentVerification();
       } else {
-        var mainContent = document.getElementById('main-content');
+        const mainContent = document.getElementById('main-content');
         mainContent.innerHTML =
           '<div class="bb-auth-page">' +
           '<div class="bb-auth-form-section" style="margin: 0 auto;">' +
@@ -661,38 +738,48 @@ var socialBtnStyle =
     // ============================================
     // NAVBAR INTERACTIONS
     // ============================================
-Pages.toggleSearch = function () {
-  var searchBar = document.querySelector('.navbar-search-always');
-  if (searchBar) {
-    searchBar.classList.toggle('active');
-    if (searchBar.classList.contains('active')) {
-      var input = document.getElementById('navbar-search-input');
-      if (input) setTimeout(function () { input.focus(); }, 100);
-    }
-  }
-};
+    Pages.toggleSearch = function () {
+      const searchBar = document.querySelector('.navbar-search-always');
+      if (searchBar) {
+        searchBar.classList.toggle('active');
+        if (searchBar.classList.contains('active')) {
+          const input = document.getElementById('navbar-search-input');
+          if (input) {
+            setTimeout(function () {
+              input.focus();
+            }, 100);
+          }
+        }
+      }
+    };
 
-Pages.handleSearch = function () {
-  var input = document.getElementById('navbar-search-input');
-  if (input && input.value.trim()) {
-    window.location.hash = '/browse?q=' + encodeURIComponent(input.value.trim());
-    var searchBar = document.querySelector('.navbar-search-always');
-    if (searchBar && searchBar.classList.contains('active')) searchBar.classList.remove('active');
-  }
-};
+    Pages.handleSearch = function () {
+      const input = document.getElementById('navbar-search-input');
+      if (input && input.value.trim()) {
+        window.location.hash = '/browse?q=' + encodeURIComponent(input.value.trim());
+        const searchBar = document.querySelector('.navbar-search-always');
+        if (searchBar && searchBar.classList.contains('active')) {
+          searchBar.classList.remove('active');
+        }
+      }
+    };
 
-document.addEventListener('keydown', function (e) {
-  if (e.key === 'Enter' && e.target.id === 'navbar-search-input') Pages.handleSearch();
-  if (e.key === 'Escape') {
-    var searchBar = document.querySelector('.navbar-search-always');
-    if (searchBar && searchBar.classList.contains('active')) searchBar.classList.remove('active');
-    Pages.closeMobileMenu();
-  }
-});
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && e.target.id === 'navbar-search-input') {
+        Pages.handleSearch();
+      }
+      if (e.key === 'Escape') {
+        const searchBar = document.querySelector('.navbar-search-always');
+        if (searchBar && searchBar.classList.contains('active')) {
+          searchBar.classList.remove('active');
+        }
+        Pages.closeMobileMenu();
+      }
+    });
 
     Pages.toggleMobileMenu = function () {
-      var drawer = document.getElementById('navbar-drawer');
-      var overlay = document.getElementById('navbar-overlay');
+      const drawer = document.getElementById('navbar-drawer');
+      const overlay = document.getElementById('navbar-overlay');
       if (drawer && overlay) {
         drawer.classList.add('active');
         overlay.classList.add('active');
@@ -701,8 +788,8 @@ document.addEventListener('keydown', function (e) {
     };
 
     Pages.closeMobileMenu = function () {
-      var drawer = document.getElementById('navbar-drawer');
-      var overlay = document.getElementById('navbar-overlay');
+      const drawer = document.getElementById('navbar-drawer');
+      const overlay = document.getElementById('navbar-overlay');
       if (drawer && overlay) {
         drawer.classList.remove('active');
         overlay.classList.remove('active');
@@ -711,26 +798,41 @@ document.addEventListener('keydown', function (e) {
     };
 
     // Override updateNavbar to also update mobile drawer
-    var originalUpdateNavbar = Pages.updateNavbar;
     Pages.updateNavbar = function () {
-      var isLoggedIn = typeof authManager !== 'undefined' && authManager.isLoggedIn();
-      var authBtns = document.getElementById('navbar-auth-buttons');
-      var userMenu = document.getElementById('navbar-user-menu');
-      var drawerAuth = document.getElementById('navbar-drawer-auth');
-      var drawerUser = document.getElementById('navbar-drawer-user');
+      const isLoggedIn = typeof authManager !== 'undefined' && authManager.isLoggedIn();
+      const authBtns = document.getElementById('navbar-auth-buttons');
+      const userMenu = document.getElementById('navbar-user-menu');
+      const drawerAuth = document.getElementById('navbar-drawer-auth');
+      const drawerUser = document.getElementById('navbar-drawer-user');
       if (isLoggedIn) {
-        if (authBtns) authBtns.style.display = 'none';
-        if (userMenu) userMenu.style.display = 'flex';
-        if (drawerAuth) drawerAuth.style.display = 'none';
-        if (drawerUser) drawerUser.style.display = 'block';
+        if (authBtns) {
+          authBtns.style.display = 'none';
+        }
+        if (userMenu) {
+          userMenu.style.display = 'flex';
+        }
+        if (drawerAuth) {
+          drawerAuth.style.display = 'none';
+        }
+        if (drawerUser) {
+          drawerUser.style.display = 'block';
+        }
       } else {
-        if (authBtns) authBtns.style.display = 'flex';
-        if (userMenu) userMenu.style.display = 'none';
-        if (drawerAuth) drawerAuth.style.display = 'block';
-        if (drawerUser) drawerUser.style.display = 'none';
+        if (authBtns) {
+          authBtns.style.display = 'flex';
+        }
+        if (userMenu) {
+          userMenu.style.display = 'none';
+        }
+        if (drawerAuth) {
+          drawerAuth.style.display = 'block';
+        }
+        if (drawerUser) {
+          drawerUser.style.display = 'none';
+        }
       }
     };
 
-    console.log('Auth & dashboard renderers loaded');
+    console.info('Auth & dashboard renderers loaded');
   }, 50);
 })();

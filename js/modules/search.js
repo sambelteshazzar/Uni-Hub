@@ -4,7 +4,7 @@
 // ============================================
 
 class SearchManager {
-  constructor () {
+  constructor() {
     this.searchHistory = [];
     this.recentSearches = [];
     this.autocompleteTimeout = null;
@@ -14,7 +14,7 @@ class SearchManager {
     }
   }
 
-  handleAutocomplete (query) {
+  handleAutocomplete(query) {
     clearTimeout(this.autocompleteTimeout);
     if (!query || query.length < 2) {
       this.hideAutocomplete();
@@ -25,7 +25,7 @@ class SearchManager {
     }, 250);
   }
 
-  async fetchAndShowSuggestions (query) {
+  async fetchAndShowSuggestions(query) {
     try {
       const suggestions = await this.getSuggestions(query);
       const historyMatches = this.searchHistory
@@ -47,18 +47,21 @@ class SearchManager {
     }
   }
 
-  renderAutocomplete (items, query) {
+  renderAutocomplete(items, query) {
     const container = document.getElementById('search-autocomplete');
-    if (!container) return;
+    if (!container) {
+      return;
+    }
 
     if (items.length === 0) {
       this.hideAutocomplete();
       return;
     }
 
-    const escape = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml)
-      ? v => SecurityUtils.escapeHtml(String(v))
-      : v => String(v);
+    const escape =
+      typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml
+        ? v => SecurityUtils.escapeHtml(String(v))
+        : v => String(v);
 
     const highlighted = (text, q) => {
       const escaped = escape(text);
@@ -69,9 +72,10 @@ class SearchManager {
 
     let html = '';
     items.forEach(item => {
-      const icon = item.type === 'history'
-        ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
-        : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>';
+      const icon =
+        item.type === 'history'
+          ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+          : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>';
 
       const safeText = escape(item.text);
       html += `<div class="autocomplete-item" data-type="${escape(item.type)}" data-value="${safeText}" onmousedown="if(typeof searchManager!=='undefined')searchManager.selectSuggestion(this.getAttribute('data-value'))">`;
@@ -84,7 +88,8 @@ class SearchManager {
         html += `<span class="autocomplete-price">GHS ${escape(String(item.price))}</span>`;
       }
       if (item.type === 'history') {
-        html += `<button class="autocomplete-remove" onmousedown="event.stopPropagation(); if(typeof searchManager!=='undefined')searchManager.removeSuggestion(this.closest('.autocomplete-item').getAttribute('data-value'))">&times;</button>`;
+        html +=
+          "<button class=\"autocomplete-remove\" onmousedown=\"event.stopPropagation(); if(typeof searchManager!=='undefined')searchManager.removeSuggestion(this.closest('.autocomplete-item').getAttribute('data-value'))\">&times;</button>";
       }
       html += '</div>';
     });
@@ -94,7 +99,7 @@ class SearchManager {
     this.autocompleteVisible = true;
   }
 
-  showAutocomplete () {
+  showAutocomplete() {
     const input = document.getElementById('navbar-search-input');
     if (input && input.value && input.value.length >= 2 && this.autocompleteVisible) {
       const container = document.getElementById('search-autocomplete');
@@ -113,7 +118,7 @@ class SearchManager {
     }
   }
 
-  hideAutocomplete () {
+  hideAutocomplete() {
     const container = document.getElementById('search-autocomplete');
     if (container) {
       container.style.display = 'none';
@@ -121,7 +126,7 @@ class SearchManager {
     this.autocompleteVisible = false;
   }
 
-  selectSuggestion (text) {
+  selectSuggestion(text) {
     const input = document.getElementById('navbar-search-input');
     if (input) {
       input.value = text;
@@ -132,7 +137,7 @@ class SearchManager {
     }
   }
 
-  removeSuggestion (text) {
+  removeSuggestion(text) {
     this.removeFromHistory(text);
     this.handleAutocomplete(document.getElementById('navbar-search-input')?.value || '');
   }
@@ -140,7 +145,7 @@ class SearchManager {
   /**
    * Load search history from localStorage
    */
-  loadHistory () {
+  loadHistory() {
     const history = StorageManager.get(STORAGE_KEYS.SEARCH_HISTORY, true);
     this.searchHistory = history || [];
   }
@@ -148,7 +153,7 @@ class SearchManager {
   /**
    * Save search history
    */
-  saveHistory () {
+  saveHistory() {
     StorageManager.set(STORAGE_KEYS.SEARCH_HISTORY, this.searchHistory);
   }
 
@@ -158,7 +163,7 @@ class SearchManager {
    * @param {Object} filters - Additional filters
    * @returns {Array} - Search results
    */
-  search (query, filters = {}) {
+  search(query, filters = {}) {
     if (!query || query.trim() === '') {
       return productsManager.getAll();
     }
@@ -187,7 +192,7 @@ class SearchManager {
    * @param {Object} filters - Filters to apply
    * @returns {Array}
    */
-  applyFilters (results, filters) {
+  applyFilters(results, filters) {
     let filtered = [...results];
 
     // Filter by university
@@ -225,27 +230,27 @@ class SearchManager {
    * @param {string} sortBy - Sort criteria
    * @returns {Array}
    */
-  sortResults (results, sortBy) {
+  sortResults(results, sortBy) {
     const sorted = [...results];
 
     switch (sortBy) {
-    case 'newest':
-      return sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      case 'newest':
+        return sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-    case 'price-low':
-      return sorted.sort((a, b) => a.price - b.price);
+      case 'price-low':
+        return sorted.sort((a, b) => a.price - b.price);
 
-    case 'price-high':
-      return sorted.sort((a, b) => b.price - a.price);
+      case 'price-high':
+        return sorted.sort((a, b) => b.price - a.price);
 
-    case 'rating':
-      return sorted.sort((a, b) => b.seller.rating - a.seller.rating);
+      case 'rating':
+        return sorted.sort((a, b) => b.seller.rating - a.seller.rating);
 
-    case 'popular':
-      return sorted.sort((a, b) => (b.views || 0) - (a.views || 0));
+      case 'popular':
+        return sorted.sort((a, b) => (b.views || 0) - (a.views || 0));
 
-    default:
-      return sorted;
+      default:
+        return sorted;
     }
   }
 
@@ -253,7 +258,7 @@ class SearchManager {
    * Add search to history
    * @param {string} query - Search query
    */
-  addToHistory (query) {
+  addToHistory(query) {
     const normalizedQuery = query.trim();
     if (!normalizedQuery) {
       return;
@@ -277,14 +282,14 @@ class SearchManager {
    * Get search history
    * @returns {Array}
    */
-  getHistory () {
+  getHistory() {
     return this.searchHistory;
   }
 
   /**
    * Clear search history
    */
-  clearHistory () {
+  clearHistory() {
     this.searchHistory = [];
     this.saveHistory();
   }
@@ -293,7 +298,7 @@ class SearchManager {
    * Remove search from history
    * @param {string} query - Search query to remove
    */
-  removeFromHistory (query) {
+  removeFromHistory(query) {
     this.searchHistory = this.searchHistory.filter(q => q !== query);
     this.saveHistory();
   }
@@ -303,7 +308,7 @@ class SearchManager {
    * @param {string} query - Partial query
    * @returns {Array}
    */
-  async getSuggestions (query) {
+  async getSuggestions(query) {
     if (!query || query.length < 2) {
       return [];
     }
@@ -343,7 +348,7 @@ class SearchManager {
    * Get trending searches (placeholder)
    * @returns {Array}
    */
-  async getTrendingSearches () {
+  async getTrendingSearches() {
     if (typeof api !== 'undefined') {
       try {
         const response = await api.search.trending();
@@ -362,7 +367,7 @@ class SearchManager {
    * @param {Object} criteria - Search criteria
    * @returns {Object} - Search results with metadata
    */
-  advancedSearch (criteria) {
+  advancedSearch(criteria) {
     const {
       query = '',
       university = null,
@@ -416,7 +421,7 @@ class SearchManager {
    * @param {Object} filters - Filters
    * @returns {number}
    */
-  getResultCount (query, filters = {}) {
+  getResultCount(query, filters = {}) {
     return this.search(query, filters).length;
   }
 
@@ -426,7 +431,7 @@ class SearchManager {
    * @param {string} query - Search query
    * @returns {string}
    */
-  highlightTerms (text, query) {
+  highlightTerms(text, query) {
     if (!query) {
       return text;
     }
@@ -448,9 +453,9 @@ class SearchManager {
    * @param {number} wait - Wait time in ms
    * @returns {Function}
    */
-  debounce (func, wait) {
+  debounce(func, wait) {
     let timeout;
-    return function executedFunction (...args) {
+    return function executedFunction(...args) {
       const later = () => {
         clearTimeout(timeout);
         func(...args);

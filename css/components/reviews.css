@@ -633,7 +633,12 @@
 
 .skeleton-line {
   height: 16px;
-  background: linear-gradient(90deg, var(--neutral-200, #f3f4f6) 25%, var(--neutral-300, #e5e7eb) 50%, var(--neutral-200, #f3f4f6) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--neutral-200, #f3f4f6) 25%,
+    var(--neutral-300, #e5e7eb) 50%,
+    var(--neutral-200, #f3f4f6) 75%
+  );
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s ease-in-out infinite;
   border-radius: 4px;
@@ -713,21 +718,21 @@
 }
 
 /* --- Dark Mode Overrides --- */
-[data-theme="dark"] .star,
-[data-theme="dark"] .star.empty,
-[data-theme="dark"] .star-input {
+[data-theme='dark'] .star,
+[data-theme='dark'] .star.empty,
+[data-theme='dark'] .star-input {
   color: var(--neutral-300);
 }
 
-[data-theme="dark"] .star.half {
+[data-theme='dark'] .star.half {
   background: linear-gradient(90deg, #fbbf24 50%, var(--neutral-300) 50%);
 }
 
-[data-theme="dark"] .review-form-textarea {
+[data-theme='dark'] .review-form-textarea {
   background-color: var(--bg-secondary);
   color: var(--neutral-900);
 }
 
-[data-theme="dark"] .review-form-textarea:focus {
+[data-theme='dark'] .review-form-textarea:focus {
   box-shadow: 0 0 0 3px rgba(109, 158, 255, 0.15);
 }

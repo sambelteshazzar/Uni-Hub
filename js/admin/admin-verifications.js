@@ -4,14 +4,16 @@
 // ============================================
 
 class AdminVerificationsManager {
-  constructor () {
+  constructor() {
     this.QUEUE_KEY = STORAGE_KEYS.VERIFICATION_QUEUE;
     this.queue = this._loadQueue();
     this._initialized = false;
   }
 
-  async init () {
-    if (this._initialized) {return;}
+  async init() {
+    if (this._initialized) {
+      return;
+    }
     this._initialized = true;
     this._lastSyncOk = null;
     this._lastSyncError = null;
@@ -21,29 +23,33 @@ class AdminVerificationsManager {
     // cancel it (not currently used, but cheap insurance).
     if (!this._refreshTimer) {
       this._refreshTimer = setInterval(() => {
-        if (typeof document !== 'undefined' && document.hidden) {return;}
+        if (typeof document !== 'undefined' && document.hidden) {
+          return;
+        }
         this._fetchFromBackend();
       }, 30000);
     }
   }
 
-  _loadQueue () {
+  _loadQueue() {
     if (typeof StorageManager !== 'undefined' && typeof StorageManager.get === 'function') {
       return StorageManager.get(this.QUEUE_KEY, true) || [];
     }
     return [];
   }
 
-  async _fetchFromBackend () {
+  async _fetchFromBackend() {
     try {
       if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable !== false) {
         const resp = await api.admin.getPendingVerifications();
         if (resp.success && resp.data) {
-          const backendItems = Array.isArray(resp.data) ? resp.data : (resp.data.verifications || []);
+          const backendItems = Array.isArray(resp.data) ? resp.data : resp.data.verifications || [];
           for (const backendItem of backendItems) {
-            const exists = this.queue.find(item =>
-              (item.studentId === backendItem.studentId && item.university === backendItem.university) ||
-              (item.id === backendItem.id)
+            const exists = this.queue.find(
+              item =>
+                (item.studentId === backendItem.studentId &&
+                  item.university === backendItem.university) ||
+                item.id === backendItem.id
             );
             if (!exists) {
               this.queue.push({
@@ -91,41 +97,41 @@ class AdminVerificationsManager {
     }
   }
 
-  getLastSyncStatus () {
+  getLastSyncStatus() {
     return { ok: this._lastSyncOk, error: this._lastSyncError };
   }
 
-  _persist () {
+  _persist() {
     if (typeof StorageManager !== 'undefined' && typeof StorageManager.set === 'function') {
       StorageManager.set(this.QUEUE_KEY, this.queue, true);
     }
   }
 
-  getPending () {
+  getPending() {
     return this.queue.filter(v => v.status === 'pending');
   }
 
-  getApproved () {
+  getApproved() {
     return this.queue.filter(v => v.status === 'approved');
   }
 
-  getApprovedPendingUser () {
+  getApprovedPendingUser() {
     return this.queue.filter(v => v.status === 'approved_pending_user');
   }
 
-  getRejected () {
+  getRejected() {
     return this.queue.filter(v => v.status === 'rejected');
   }
 
-  getAll () {
+  getAll() {
     return this.queue;
   }
 
-  getById (id) {
+  getById(id) {
     return this.queue.find(v => v.id === id) || null;
   }
 
-  getStats () {
+  getStats() {
     return {
       total: this.queue.length,
       pending: this.getPending().length,
@@ -135,17 +141,22 @@ class AdminVerificationsManager {
     };
   }
 
-  approve (id, notes) {
+  approve(id, notes) {
     const entry = this.getById(id);
-    if (!entry) return { success: false, error: 'Verification not found' };
-    if (entry.status !== 'pending') {return { success: false, error: 'Verification already reviewed' };}
+    if (!entry) {
+      return { success: false, error: 'Verification not found' };
+    }
+    if (entry.status !== 'pending') {
+      return { success: false, error: 'Verification already reviewed' };
+    }
 
     // Optimistic local state — backend is the source of truth but we
     // update the local cache immediately so the UI does not stutter.
     entry.status = 'approved_pending_user';
-    entry.reviewedBy = typeof adminAuthManager !== 'undefined' && adminAuthManager.getCurrentUser
-      ? adminAuthManager.getCurrentUser()?.fullName || 'Admin'
-      : 'Admin';
+    entry.reviewedBy =
+      typeof adminAuthManager !== 'undefined' && adminAuthManager.getCurrentUser
+        ? adminAuthManager.getCurrentUser()?.fullName || 'Admin'
+        : 'Admin';
     entry.reviewedAt = new Date().toISOString();
     entry.reviewNotes = notes || null;
     this._persist();
@@ -156,21 +167,30 @@ class AdminVerificationsManager {
     this._syncBackendAction(id, 'approve', notes);
 
     if (typeof adminAuthManager !== 'undefined' && adminAuthManager.logActivity) {
-      adminAuthManager.logActivity('Verification approved (awaiting user confirmation)', { id, studentId: entry.studentId, fullName: entry.fullName });
+      adminAuthManager.logActivity('Verification approved (awaiting user confirmation)', {
+        id,
+        studentId: entry.studentId,
+        fullName: entry.fullName,
+      });
     }
 
     return { success: true, data: entry };
   }
 
-  reject (id, notes) {
+  reject(id, notes) {
     const entry = this.getById(id);
-    if (!entry) return { success: false, error: 'Verification not found' };
-    if (entry.status !== 'pending') return { success: false, error: 'Verification already reviewed' };
+    if (!entry) {
+      return { success: false, error: 'Verification not found' };
+    }
+    if (entry.status !== 'pending') {
+      return { success: false, error: 'Verification already reviewed' };
+    }
 
     entry.status = 'rejected';
-    entry.reviewedBy = typeof adminAuthManager !== 'undefined' && adminAuthManager.getCurrentUser
-      ? adminAuthManager.getCurrentUser()?.fullName || 'Admin'
-      : 'Admin';
+    entry.reviewedBy =
+      typeof adminAuthManager !== 'undefined' && adminAuthManager.getCurrentUser
+        ? adminAuthManager.getCurrentUser()?.fullName || 'Admin'
+        : 'Admin';
     entry.reviewedAt = new Date().toISOString();
     entry.reviewNotes = notes || null;
     this._persist();
@@ -179,13 +199,18 @@ class AdminVerificationsManager {
     this._syncBackendAction(id, 'reject', notes);
 
     if (typeof adminAuthManager !== 'undefined' && adminAuthManager.logActivity) {
-      adminAuthManager.logActivity('Verification rejected', { id, studentId: entry.studentId, fullName: entry.fullName, notes });
+      adminAuthManager.logActivity('Verification rejected', {
+        id,
+        studentId: entry.studentId,
+        fullName: entry.fullName,
+        notes,
+      });
     }
 
     return { success: true, data: entry };
   }
 
-  async _syncBackendAction (id, action, notes) {
+  async _syncBackendAction(id, action, notes) {
     try {
       if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable !== false) {
         if (action === 'approve') {
@@ -194,13 +219,17 @@ class AdminVerificationsManager {
           return await api.admin.rejectVerification(id, notes);
         }
       }
-    } catch (_) { console.warn('verifications: backend sync failed:', _); }
+    } catch (_) {
+      console.warn('verifications: backend sync failed:', _);
+    }
     return null;
   }
 
-  _syncUserVerification (entry, isVerified) {
+  _syncUserVerification(entry, isVerified) {
     if (typeof adminUsersManager !== 'undefined') {
-      const user = adminUsersManager.getUserByEmail(entry.email || entry.personalEmail || entry.universityEmail);
+      const user = adminUsersManager.getUserByEmail(
+        entry.email || entry.personalEmail || entry.universityEmail
+      );
       if (user) {
         user.isVerified = isVerified;
         user.verifiedAt = isVerified ? new Date().toISOString() : null;
@@ -208,7 +237,6 @@ class AdminVerificationsManager {
       }
     }
 
-    const allSessions = [];
     try {
       const raw = localStorage.getItem('unihub_session');
       if (raw) {
@@ -216,49 +244,71 @@ class AdminVerificationsManager {
         if (session && session.user) {
           const matchEmail = entry.email || entry.personalEmail || entry.universityEmail;
           const matchId = entry.userId;
-          if ((matchEmail && session.user.email === matchEmail) || (matchId && session.user.id === matchId)) {
+          if (
+            (matchEmail && session.user.email === matchEmail) ||
+            (matchId && session.user.id === matchId)
+          ) {
             session.user.isVerified = isVerified;
             localStorage.setItem('unihub_session', JSON.stringify(session));
           }
         }
       }
-    } catch (_) {}
+    } catch (_) {
+      /* noop */
+    }
 
     if (typeof StorageManager !== 'undefined' && typeof STORAGE_KEYS !== 'undefined') {
-      const verKey = STORAGE_KEYS.STUDENT_VERIFICATION;
+      // TODO: security review — prefix should derive from STORAGE_KEYS.STUDENT_VERIFICATION,
+      // not the hardcoded 'unihub_student_verification' below.
+      const _verKey = STORAGE_KEYS.STUDENT_VERIFICATION;
+      void _verKey;
       const allKeys = [];
       try {
         for (let i = 0; i < localStorage.length; i++) {
           const k = localStorage.key(i);
-          if (k && k.startsWith('unihub_student_verification')) allKeys.push(k);
+          if (k && k.startsWith('unihub_student_verification')) {
+            allKeys.push(k);
+          }
         }
-      } catch (e) { console.warn('verifications: ls scan failed:', e); }
+      } catch (e) {
+        console.warn('verifications: ls scan failed:', e);
+      }
 
       for (const key of allKeys) {
         try {
           const raw = localStorage.getItem(key);
-          if (!raw) continue;
+          if (!raw) {
+            continue;
+          }
           const data = JSON.parse(raw);
-          if (!data) continue;
+          if (!data) {
+            continue;
+          }
           const matchEmail = entry.email || entry.personalEmail || entry.universityEmail;
           const matchId = entry.studentId;
-          if ((matchEmail && data.studentEmail === matchEmail) ||
-              (matchEmail && data.personalEmail === matchEmail) ||
-              (matchId && data.studentId === matchId)) {
+          if (
+            (matchEmail && data.studentEmail === matchEmail) ||
+            (matchEmail && data.personalEmail === matchEmail) ||
+            (matchId && data.studentId === matchId)
+          ) {
             data.isVerified = isVerified;
             data.isPending = false;
             data.status = isVerified ? 'approved' : 'rejected';
             data.reviewedAt = new Date().toISOString();
             localStorage.setItem(key, JSON.stringify(data));
           }
-        } catch (e) { console.warn('verifications: key update failed:', e); }
+        } catch (e) {
+          console.warn('verifications: key update failed:', e);
+        }
       }
     }
   }
 
-  delete (id) {
+  delete(id) {
     const index = this.queue.findIndex(v => v.id === id);
-    if (index === -1) return { success: false, error: 'Verification not found' };
+    if (index === -1) {
+      return { success: false, error: 'Verification not found' };
+    }
     this.queue.splice(index, 1);
     this._persist();
 

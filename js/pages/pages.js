@@ -13,15 +13,15 @@
 // render layer must validate too — defense in depth.
 const _pageEsc = v => {
   if (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) {
-    return SecurityUtils.escapeHtml(String(v == null ? '' : v));
+    return SecurityUtils.escapeHtml(String(v === null || v === undefined ? '' : v));
   }
-  return String(v == null ? '' : v);
+  return String(v === null || v === undefined ? '' : v);
 };
 const _pageSafeUrl = url => {
   if (typeof SecurityUtils !== 'undefined' && SecurityUtils.sanitizeUrl) {
     return SecurityUtils.sanitizeUrl(url) || '';
   }
-  return String(url == null ? '' : url);
+  return String(url === null || url === undefined ? '' : url);
 };
 
 // Admin route guard. AGENTS.md requires /admin/* to enforce
@@ -71,7 +71,7 @@ const _requireAdmin = () => {
 // ============================================
 class AdminUI {
   // ---- Brand mark (top of sidebar) ----
-  static brand () {
+  static brand() {
     return `
       <div class="adm-brand">
         <div class="adm-brand-mark">J</div>
@@ -84,8 +84,14 @@ class AdminUI {
   }
 
   // ---- Profile chip (under brand) ----
-  static profile (user) {
-    const initials = (user?.fullName || 'A').split(' ').map(s => s[0]).slice(0, 2).join('').toUpperCase() || 'A';
+  static profile(user) {
+    const initials =
+      (user?.fullName || 'A')
+        .split(' ')
+        .map(s => s[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase() || 'A';
     return `
       <div class="adm-profile">
         <div class="adm-avatar-md">${_pageEsc(initials)}</div>
@@ -98,9 +104,11 @@ class AdminUI {
   }
 
   // ---- Single nav item ----
-  static navItem (item, isActive) {
+  static navItem(item, isActive) {
     const cls = isActive ? 'adm-nav-item is-active' : 'adm-nav-item';
-    const badge = item.badge ? `<span class="adm-nav-badge">${_pageEsc(String(item.badge))}</span>` : '';
+    const badge = item.badge
+      ? `<span class="adm-nav-badge">${_pageEsc(String(item.badge))}</span>`
+      : '';
     return `
       <a href="#" class="${cls}" data-adm-nav="${_pageEsc(item.key)}" data-action="nav">
         ${item.icon || ''}
@@ -111,48 +119,57 @@ class AdminUI {
   }
 
   // ---- Section label ----
-  static navSection (label) {
+  static navSection(label) {
     return `<div class="adm-nav-section-label">${_pageEsc(label)}</div>`;
   }
 
   // ---- Full sidebar ----
-  static sidebar (activeItem) {
-    const user = (typeof adminAuthManager !== 'undefined' && adminAuthManager.getCurrentUser?.())
-      || (typeof authManager !== 'undefined' && authManager.getCurrentUser?.())
-      || null;
+  static sidebar(activeItem) {
+    const user =
+      (typeof adminAuthManager !== 'undefined' && adminAuthManager.getCurrentUser?.()) ||
+      (typeof authManager !== 'undefined' && authManager.getCurrentUser?.()) ||
+      null;
     const sections = [
       {
         label: 'Operations',
         items: [
-          { key: 'dashboard',     label: 'Dashboard',     icon: Icons.chart },
-          { key: 'verifications', label: 'Verifications', icon: Icons.shield || Icons.verification || Icons.check },
-          { key: 'users',         label: 'Users',         icon: Icons.users },
-          { key: 'products',      label: 'Products',      icon: Icons.package },
-          { key: 'orders',        label: 'Orders',        icon: Icons.clipboard },
-          { key: 'payouts',       label: 'Payouts',       icon: Icons.money },
+          { key: 'dashboard', label: 'Dashboard', icon: Icons.chart },
+          {
+            key: 'verifications',
+            label: 'Verifications',
+            icon: Icons.shield || Icons.verification || Icons.check,
+          },
+          { key: 'users', label: 'Users', icon: Icons.users },
+          { key: 'products', label: 'Products', icon: Icons.package },
+          { key: 'orders', label: 'Orders', icon: Icons.clipboard },
+          { key: 'payouts', label: 'Payouts', icon: Icons.money },
         ],
       },
       {
         label: 'Marketing',
         items: [
-          { key: 'coupons',    label: 'Coupons',     icon: Icons.gift || Icons.tag || Icons.chart },
-          { key: 'newsletter', label: 'Newsletter',  icon: Icons.mail || Icons.email || '' },
+          { key: 'coupons', label: 'Coupons', icon: Icons.gift || Icons.tag || Icons.chart },
+          { key: 'newsletter', label: 'Newsletter', icon: Icons.mail || Icons.email || '' },
         ],
       },
       {
         label: 'Insights',
         items: [
-          { key: 'reports',   label: 'Reports',   icon: Icons.chart },
+          { key: 'reports', label: 'Reports', icon: Icons.chart },
           { key: 'analytics', label: 'Analytics', icon: Icons.chart },
-          { key: 'activity',  label: 'Activity',  icon: Icons.clock || Icons.chart },
-          { key: 'regions',   label: 'Regions',   icon: Icons.globe || Icons.chart },
+          { key: 'activity', label: 'Activity', icon: Icons.clock || Icons.chart },
+          { key: 'regions', label: 'Regions', icon: Icons.globe || Icons.chart },
         ],
       },
     ];
-    const itemsHtml = sections.map(s => `
+    const itemsHtml = sections
+      .map(
+        s => `
       ${AdminUI.navSection(s.label)}
       ${s.items.map(i => AdminUI.navItem(i, i.key === activeItem)).join('')}
-    `).join('');
+    `
+      )
+      .join('');
     return `
       <aside class="adm-sidebar">
         ${AdminUI.brand()}
@@ -179,7 +196,7 @@ class AdminUI {
   // pageActions is HTML for the right-side action area (search + buttons).
   // The wrapper does NOT include sidebar — the page's render method
   // composes both.
-  static topbar (pageLabel, pageActions) {
+  static topbar(pageLabel, pageActions) {
     return `
       <div class="adm-topbar">
         <div class="adm-breadcrumb">
@@ -195,7 +212,7 @@ class AdminUI {
   }
 
   // ---- Page header (title + sub + right actions like period selector) ----
-  static pageHeader (title, sub, rightActions) {
+  static pageHeader(title, sub, rightActions) {
     return `
       <header class="adm-page-header">
         <div>
@@ -208,7 +225,7 @@ class AdminUI {
   }
 
   // ---- Stat card (one stat) ----
-  static statCard ({ label, value, delta, deltaKind }) {
+  static statCard({ label, value, delta, deltaKind }) {
     const deltaClass = deltaKind ? `adm-stat-delta--${deltaKind}` : 'adm-stat-delta--muted';
     return `
       <div class="adm-stat">
@@ -220,7 +237,7 @@ class AdminUI {
   }
 
   // ---- Stat grid (wraps stat cards) ----
-  static statGrid (cards) {
+  static statGrid(cards) {
     return `<section class="adm-stats">${cards.join('')}</section>`;
   }
 
@@ -228,25 +245,31 @@ class AdminUI {
   // tabs = [{ key, label }]; activeKey is the highlighted one.
   // groupClass optional — pass 'adm-pill-group--inverse' to make active dark.
   // dataAttr optional — defaults to 'data-adm-pill'.
-  static pillGroup (tabs, activeKey, groupClass, dataAttr) {
+  static pillGroup(tabs, activeKey, groupClass, dataAttr) {
     const data = dataAttr || 'data-adm-pill';
-    const pills = tabs.map(t => {
-      const active = t.key === activeKey ? ' is-active' : '';
-      return `<button type="button" class="adm-pill${active}" ${data}="${_pageEsc(t.key)}">${_pageEsc(t.label)}</button>`;
-    }).join('');
+    const pills = tabs
+      .map(t => {
+        const active = t.key === activeKey ? ' is-active' : '';
+        return `<button type="button" class="adm-pill${active}" ${data}="${_pageEsc(t.key)}">${_pageEsc(t.label)}</button>`;
+      })
+      .join('');
     return `<div class="adm-pill-group${groupClass ? ' ' + groupClass : ''}">${pills}</div>`;
   }
 
   // ---- Card surface (with optional header) ----
-  static card (titleHtml, bodyHtml, headerActionsHtml) {
+  static card(titleHtml, bodyHtml, headerActionsHtml) {
     return `
       <section class="adm-card">
-        ${titleHtml ? `
+        ${
+          titleHtml
+            ? `
           <header class="adm-card-header">
             <div>${titleHtml}</div>
             ${headerActionsHtml ? `<div>${headerActionsHtml}</div>` : ''}
           </header>
-        ` : ''}
+        `
+            : ''
+        }
         <div class="adm-table-wrap">${bodyHtml}</div>
       </section>
     `;
@@ -255,19 +278,23 @@ class AdminUI {
   // ---- Table from column defs + rows ----
   // columns: [{ label, render(row) -> string }]; render emits raw HTML.
   // rows: array of objects. emptyHtml is shown when rows is empty.
-  static table ({ columns, rows, emptyHtml, footerHtml, rowAttr }) {
+  static table({ columns, rows, emptyHtml, footerHtml, rowAttr }) {
     const thead = `<thead><tr>${columns.map(c => `<th class="adm-th">${_pageEsc(c.label)}</th>`).join('')}</tr></thead>`;
-    const tbody = rows.length === 0
-      ? (emptyHtml || `<tr><td class="adm-td" colspan="${columns.length}"><div class="adm-empty"><div class="adm-empty-title">No records</div></div></td></tr>`)
-      : rows.map(row => {
-        const attrs = rowAttr ? rowAttr(row) : '';
-        return `<tr${attrs}>${columns.map(c => `<td class="adm-td">${c.render(row)}</td>`).join('')}</tr>`;
-      }).join('');
+    const tbody =
+      rows.length === 0
+        ? emptyHtml ||
+          `<tr><td class="adm-td" colspan="${columns.length}"><div class="adm-empty"><div class="adm-empty-title">No records</div></div></td></tr>`
+        : rows
+            .map(row => {
+              const attrs = rowAttr ? rowAttr(row) : '';
+              return `<tr${attrs}>${columns.map(c => `<td class="adm-td">${c.render(row)}</td>`).join('')}</tr>`;
+            })
+            .join('');
     return `<table class="adm-table">${thead}<tbody>${tbody}</tbody></table>${footerHtml || ''}`;
   }
 
   // ---- Empty state (page-level, outside a table) ----
-  static emptyState ({ icon, title, body, actions }) {
+  static emptyState({ icon, title, body, actions }) {
     return `
       <div class="adm-empty">
         <div class="adm-empty-icon" aria-hidden="true">${icon || ''}</div>
@@ -281,7 +308,7 @@ class AdminUI {
   // ---- Modal (open + delegated listener; returns the overlay element) ----
   // Caller appends to document.body and wires the delegated handler
   // (see AdminUI.wireModal for the standard pattern).
-  static modalHtml ({ id, title, sub, body, footer, size }) {
+  static modalHtml({ id, title, sub, body, footer, size }) {
     const sizeClass = size ? ` adm-modal--${size}` : '';
     return `
       <div id="${id}" class="adm-modal-backdrop" role="dialog" aria-modal="true">
@@ -306,29 +333,42 @@ class AdminUI {
   // handlers = { onClose: () => void, onAction: (key) => void }
   // Buttons inside .adm-modal-actions with data-adm-modal-action=KEY
   // are routed to handlers.onAction.
-  static wireModal (overlay, handlers) {
+  static wireModal(overlay, handlers) {
     overlay.addEventListener('click', e => {
-      if (e.target === overlay) { handlers.onClose?.(); return; }
+      if (e.target === overlay) {
+        handlers.onClose?.();
+        return;
+      }
       const closeBtn = e.target.closest('[data-adm-modal-close]');
-      if (closeBtn) { handlers.onClose?.(); return; }
+      if (closeBtn) {
+        handlers.onClose?.();
+        return;
+      }
       const actionBtn = e.target.closest('[data-adm-modal-action]');
       if (actionBtn) {
         handlers.onAction?.(actionBtn.dataset.admModalAction, actionBtn);
       }
     });
-    const escHandler = e => { if (e.key === 'Escape') { handlers.onClose?.(); document.removeEventListener('keydown', escHandler); } };
+    const escHandler = e => {
+      if (e.key === 'Escape') {
+        handlers.onClose?.();
+        document.removeEventListener('keydown', escHandler);
+      }
+    };
     document.addEventListener('keydown', escHandler);
   }
 
   // ---- Standard sidebar wiring: nav clicks, dark toggle, logout ----
   // activeItem is the current page key (so clicking it is a no-op).
   // onNavigate: (key) => void — caller decides how to route.
-  static wireSidebar (onNavigate) {
+  static wireSidebar(onNavigate) {
     const nav = document.getElementById('adm-sidebar-nav');
     if (nav) {
       nav.addEventListener('click', e => {
         const item = e.target.closest('[data-adm-nav]');
-        if (!item) { return; }
+        if (!item) {
+          return;
+        }
         e.preventDefault();
         const key = item.dataset.admNav;
         // Update active class optimistically
@@ -341,18 +381,24 @@ class AdminUI {
     if (sidebar) {
       sidebar.addEventListener('click', e => {
         const btn = e.target.closest('[data-action]');
-        if (!btn) { return; }
+        if (!btn) {
+          return;
+        }
         const action = btn.dataset.action;
         if (action === 'toggle-dark') {
           const label = document.getElementById('adm-dark-label');
           const on = label && label.textContent === 'Dark mode';
-          if (label) { label.textContent = on ? 'Light mode' : 'Dark mode'; }
+          if (label) {
+            label.textContent = on ? 'Light mode' : 'Dark mode';
+          }
           // Dark mode itself is a separate spec; we just toggle the label.
         } else if (action === 'logout') {
           if (typeof adminAuthManager !== 'undefined') {
             adminAuthManager.logout?.();
             window.location.hash = '#/';
-            if (typeof Pages !== 'undefined' && Pages.renderLanding) { Pages.renderLanding(); }
+            if (typeof Pages !== 'undefined' && Pages.renderLanding) {
+              Pages.renderLanding();
+            }
           }
         }
       });
@@ -362,8 +408,10 @@ class AdminUI {
   // ---- Standard topbar search wiring ----
   // inputEl: the search <input> element.
   // onSearch: (value) => void — caller filters the current page.
-  static wireSearch (inputEl, onSearch) {
-    if (!inputEl) { return; }
+  static wireSearch(inputEl, onSearch) {
+    if (!inputEl) {
+      return;
+    }
     let timer = null;
     inputEl.addEventListener('input', e => {
       clearTimeout(timer);
@@ -375,11 +423,15 @@ class AdminUI {
   // ---- Standard pill group wiring ----
   // groupEl: the .adm-pill-group element.
   // onChange: (key) => void.
-  static wirePillGroup (groupEl, onChange) {
-    if (!groupEl) { return; }
+  static wirePillGroup(groupEl, onChange) {
+    if (!groupEl) {
+      return;
+    }
     groupEl.addEventListener('click', e => {
       const pill = e.target.closest('[data-adm-pill]');
-      if (!pill) { return; }
+      if (!pill) {
+        return;
+      }
       groupEl.querySelectorAll('.adm-pill').forEach(p => p.classList.remove('is-active'));
       pill.classList.add('is-active');
       onChange?.(pill.dataset.admPill);
@@ -387,7 +439,7 @@ class AdminUI {
   }
 
   // ---- Toast (light) ----
-  static toast (message, kind) {
+  static toast(message, kind) {
     let host = document.getElementById('adm-toast-host');
     if (!host) {
       host = document.createElement('div');
@@ -410,7 +462,7 @@ class AdminUI {
   // Reuses the adm-auth split layout from the login page for visual
   // consistency. The side panel is the same brand panel; the right
   // side shows the error message + primary action.
-  static renderErrorPage ({ code, title, body, primaryAction }) {
+  static renderErrorPage({ code, title, body, primaryAction }) {
     const primary = primaryAction
       ? `<a href="${_pageEsc(primaryAction.href)}" class="adm-btn adm-btn--primary">${_pageEsc(primaryAction.label)}</a>`
       : '';
@@ -443,7 +495,9 @@ class AdminUI {
   }
 }
 
-if (typeof window !== 'undefined') { window.AdminUI = AdminUI; }
+if (typeof window !== 'undefined') {
+  window.AdminUI = AdminUI;
+}
 
 class Pages {
   // Admin product-form category metadata. Mirrors public/data/categories.json
@@ -504,8 +558,8 @@ class Pages {
       id: 'fashion',
       label: 'Fashion',
       subcategories: [
-        'Men\'s Clothing',
-        'Women\'s Clothing',
+        "Men's Clothing",
+        "Women's Clothing",
         'Shoes',
         'Sneakers',
         'Traditional Wear',
@@ -541,15 +595,15 @@ class Pages {
    * Navigate to a page using hash-based routing
    * @param {string} hash - Hash to navigate to (e.g., '/cart', '/product/prod-001')
    */
-  static navigate (hash) {
+  static navigate(hash) {
     window.location.hash = hash;
   }
 
   /**
    * Register all page routes with the router
    */
-  static registerRoutes () {
-    console.log('✓ Pages.registerRoutes() called');
+  static registerRoutes() {
+    console.info('✓ Pages.registerRoutes() called');
     // Home/Landing
     router.register('/', () => this.renderLanding());
     router.register('/home', () => this.renderLanding());
@@ -560,7 +614,7 @@ class Pages {
     router.register('/auth', () => {
       window.location.hash = '#/login';
     });
-    console.log('✓ Auth routes registered');
+    console.info('✓ Auth routes registered');
 
     // Main pages
     router.register('/browse', params => this.renderBrowse(params));
@@ -578,7 +632,7 @@ class Pages {
     router.register('/track', () => this.renderTrackOrder());
     router.register('/verification', () => this.renderStudentVerification());
     router.register('/notifications', () => this.renderNotifications());
-    
+
     // Newsletter
     router.register('/newsletter/confirm', params => this.renderNewsletterConfirm(params));
     router.register('/newsletter/confirmed', params => this.renderNewsletterConfirmed(params));
@@ -599,7 +653,7 @@ class Pages {
     router.register('/universities', () => window.UniversitiesPage.renderUniversities());
     router.register('/onboarding', () => window.UniversitiesPage.renderOnboarding());
 
-    console.log('✓ Main routes registered');
+    console.info('✓ Main routes registered');
 
     // Product detail
     router.register('/product/:id', params => this.renderProductDetail(params.id));
@@ -633,22 +687,32 @@ class Pages {
     // leaving an unparseable attribute and a `cart-badge` that never
     // updated. Install once, fire on any matching click.
     if (!Pages._addToCartHandlerInstalled) {
-      document.addEventListener('click', async (e) => {
+      document.addEventListener('click', async e => {
         const btn = e.target.closest('[data-action="add-to-cart"]');
-        if (!btn) {return;}
+        if (!btn) {
+          return;
+        }
         e.stopPropagation();
         const productId = btn.getAttribute('data-product-id');
-        if (!productId || typeof productsManager === 'undefined') {return;}
+        if (!productId || typeof productsManager === 'undefined') {
+          return;
+        }
         const product = productsManager.getById
           ? productsManager.getById(productId)
           : (productsManager.getAll() || []).find(p => p.id === productId);
-        if (!product) {return;}
+        if (!product) {
+          return;
+        }
         try {
           if (typeof cartManager !== 'undefined' && cartManager.add) {
             await cartManager.add(product, 1);
           }
-        } catch (e) { /* cartManager may not be available yet */ }
-        if (typeof Pages.updateCartBadge === 'function') {Pages.updateCartBadge();}
+        } catch (e) {
+          /* cartManager may not be available yet */
+        }
+        if (typeof Pages.updateCartBadge === 'function') {
+          Pages.updateCartBadge();
+        }
         if (typeof showToast === 'function') {
           showToast(`Added "${product.title || 'item'}" to cart`, 'success', 2500);
         }
@@ -656,10 +720,10 @@ class Pages {
       Pages._addToCartHandlerInstalled = true;
     }
 
-    console.log('✓ All routes registered successfully');
+    console.info('✓ All routes registered successfully');
   }
 
-  static formatConditionLabel (condition) {
+  static formatConditionLabel(condition) {
     const labels = {
       new: 'New',
       'like-new': 'Like New',
@@ -678,7 +742,7 @@ class Pages {
   /**
    * Navigate to Messages (with auth check)
    */
-  static navigateToMessages () {
+  static navigateToMessages() {
     const token = StorageManager.getAuthToken();
     if (!token && typeof authManager !== 'undefined' && !authManager.isLoggedIn()) {
       showToast('Please log in to access messages', 'info');
@@ -691,7 +755,7 @@ class Pages {
   /**
    * Handle search submission from navbar
    */
-  static handleSearch () {
+  static handleSearch() {
     const input = document.getElementById('navbar-search-input');
     if (input && input.value.trim()) {
       // Setting the hash triggers a hashchange event → the router fires
@@ -706,7 +770,7 @@ class Pages {
   /**
    * Toggle mobile menu drawer
    */
-  static toggleMobileMenu () {
+  static toggleMobileMenu() {
     const drawer = document.getElementById('navbar-drawer');
     const overlay = document.getElementById('navbar-overlay');
     if (drawer && overlay) {
@@ -719,7 +783,7 @@ class Pages {
   /**
    * Close mobile menu drawer
    */
-  static closeMobileMenu () {
+  static closeMobileMenu() {
     const drawer = document.getElementById('navbar-drawer');
     const overlay = document.getElementById('navbar-overlay');
     if (drawer && overlay) {
@@ -732,7 +796,7 @@ class Pages {
   /**
    * Render SVG star rating
    */
-  static renderStars (rating) {
+  static renderStars(rating) {
     let html = '';
     for (let i = 1; i <= 5; i++) {
       if (i <= rating) {
@@ -747,7 +811,7 @@ class Pages {
   /**
    * Hide original navbar and footer for landing page
    */
-  static hideOriginalNavFooter () {
+  static hideOriginalNavFooter() {
     const navbar = document.getElementById('navbar');
     const footer = document.getElementById('footer');
     if (navbar) {
@@ -763,7 +827,7 @@ class Pages {
   /**
    * Show original navbar and footer for other pages
    */
-  static showOriginalNavFooter () {
+  static showOriginalNavFooter() {
     const navbar = document.getElementById('navbar');
     const footer = document.getElementById('footer');
     if (navbar && navbar.getAttribute('data-hidden') === 'true') {
@@ -783,7 +847,7 @@ class Pages {
   /**
    * Render Landing Page - Delegates to BestBuy Landing
    */
-  static async renderLanding () {
+  static async renderLanding() {
     if (typeof window.renderBestBuyLanding === 'function') {
       return window.renderBestBuyLanding();
     }
@@ -814,7 +878,7 @@ class Pages {
    * Level-4 module and is guaranteed to be on window.BrowsePageMethods
    * before any route handler runs.
    */
-  static async renderBrowse (filters = {}) {
+  static async renderBrowse(filters = {}) {
     if (typeof BrowsePageMethods !== 'undefined' && BrowsePageMethods.renderBrowse) {
       return BrowsePageMethods.renderBrowse(filters);
     }
@@ -835,7 +899,7 @@ class Pages {
   /**
    * Render Browse Page Loading Skeleton
    */
-  static renderBrowseSkeleton () {
+  static renderBrowseSkeleton() {
     return `
   <div class="browse-modern">
   <div class="browse-hero" style="min-height:180px;">
@@ -854,9 +918,9 @@ class Pages {
  <div class="browse-container">
  <div class="products-grid-modern">
             ${Array(6)
-    .fill()
-    .map(
-      () => `
+              .fill()
+              .map(
+                () => `
               <div class="product-card-modern">
                 <div class="product-card-image-wrap">
                   <div class="skeleton-image" style="width: 100%; height: 100%;"></div>
@@ -867,9 +931,9 @@ class Pages {
                   <div class="skeleton" style="height: 20px; width: 60%; border-radius: 4px;"></div>
                 </div>
               </div>
-            `,
-    )
-    .join('')}
+            `
+              )
+              .join('')}
           </div>
         </div>
       </div>
@@ -895,7 +959,7 @@ class Pages {
   /**
    * Render Modern Browse Page HTML
    */
-  static renderBrowseModernHTML (paginatedData, totalProducts) {
+  static renderBrowseModernHTML(paginatedData, totalProducts) {
     const allProducts = productsManager.getAll();
     const categoryCounts = {};
     allProducts.forEach(p => {
@@ -993,16 +1057,16 @@ class Pages {
  <div class="browse-categories">
  <div class="browse-categories-scroll">
  ${categories
-    .map(
-      cat => `
+   .map(
+     cat => `
  <button class="category-pill ${cat.id === productsManager.currentFilters.category ? 'active' : !productsManager.currentFilters.category && cat.id === 'all' ? 'active' : ''}" onclick="BrowsePageMethods.filterByCategory('${cat.id}')">
  ${Icons[cat.icon] || ''}
  ${cat.name}
  <span class="pill-count">${cat.count}</span>
  </button>
- `,
-    )
-    .join('')}
+ `
+   )
+   .join('')}
  </div>
  </div>
 
@@ -1035,16 +1099,16 @@ class Pages {
  </div>
  <div class="filter-dropdown-body">
  ${conditions
-    .map(
-      cond => `
+   .map(
+     cond => `
  <div class="filter-option">
  <input type="checkbox" id="cond-${cond.id}" onchange="BrowsePageMethods.applyBrowseFilters()" ${selectedConditions.includes(cond.id) ? 'checked' : ''}>
  <label for="cond-${cond.id}">${cond.name}</label>
  <span class="filter-count">${cond.count}</span>
  </div>
- `,
-    )
-    .join('')}
+ `
+   )
+   .join('')}
  </div>
  </div>
  </details>
@@ -1098,17 +1162,17 @@ class Pages {
  </details>
 
  ${
-  productsManager.currentFilters.category ||
+   productsManager.currentFilters.category ||
    productsManager.currentFilters.condition ||
    (productsManager.currentFilters.priceRange &&
      (productsManager.currentFilters.priceRange.min > 0 ||
        productsManager.currentFilters.priceRange.max < Infinity)) ||
    productsManager.currentFilters.minRating
-    ? `
+     ? `
  <button style="padding:0.5rem 0.875rem;background:transparent;border:1px solid #ef4444;border-radius:8px;font-size:0.8125rem;font-weight:500;color:#ef4444;cursor:pointer;" onclick="Pages.resetBrowseFilters()">Clear all</button>
  `
-    : ''
-}
+     : ''
+ }
  </div>
 
  <!-- Sort -->
@@ -1130,9 +1194,9 @@ class Pages {
  <!-- Products Grid -->
  <div class="products-grid-modern">
  ${
-  paginatedData.products.length > 0
-    ? paginatedData.products.map(product => this.renderProductCardModern(product)).join('')
-    : `
+   paginatedData.products.length > 0
+     ? paginatedData.products.map(product => this.renderProductCardModern(product)).join('')
+     : `
  <div class="browse-empty" style="grid-column: 1/-1;">
  <div class="browse-empty-icon" style="width: 64px; height: 64px; margin: 0 auto 1rem;">${Icons.search}</div>
  <h3>No items found</h3>
@@ -1140,7 +1204,7 @@ class Pages {
  <button class="btn btn-primary" onclick="Pages.resetBrowseFilters()">Clear Filters</button>
  </div>
  `
-}
+ }
  </div>
 
 ${
@@ -1149,12 +1213,12 @@ ${
         <div class="pagination">
           <button class="page-btn" onclick="Pages.goToBrowsePage(${paginatedData.currentPage - 1})" ${paginatedData.currentPage <= 1 ? 'disabled style="opacity:0.4;pointer-events:none;"' : ''}>&laquo;</button>
           ${this._renderPageNumbers(paginatedData.currentPage, paginatedData.totalPages)
-    .map(p =>
-      p === '...'
-        ? '<span style="padding:0 4px;color:var(--neutral-400);">...</span>'
-        : `<button class="page-btn ${p === paginatedData.currentPage ? 'active' : ''}" onclick="Pages.goToBrowsePage(${p})">${p}</button>`,
-    )
-    .join('')}
+            .map(p =>
+              p === '...'
+                ? '<span style="padding:0 4px;color:var(--neutral-400);">...</span>'
+                : `<button class="page-btn ${p === paginatedData.currentPage ? 'active' : ''}" onclick="Pages.goToBrowsePage(${p})">${p}</button>`
+            )
+            .join('')}
           <button class="page-btn" onclick="Pages.goToBrowsePage(${paginatedData.currentPage + 1})" ${paginatedData.currentPage >= paginatedData.totalPages ? 'disabled style="opacity:0.4;pointer-events:none;"' : ''}>&raquo;</button>
         </div>
       `
@@ -1171,7 +1235,7 @@ ${Pages.renderRecentlyViewedSection()}
   /**
    * Render Modern Product Card
    */
-  static renderProductCardModern (product) {
+  static renderProductCardModern(product) {
     const isInWishlist = productsManager.isInWishlist?.(product.id) || false;
     const _sn = product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
     const initials = _sn
@@ -1232,13 +1296,15 @@ ${product.seller?.verified ? '<span class="trust-badge trust-badge-verified"><sv
   /**
    * Filter by Category (for category pills)
    */
-  static filterByCategory (categoryId) {
+  static filterByCategory(categoryId) {
     document.querySelectorAll('.category-pill').forEach(pill => {
       pill.classList.remove('active');
     });
 
     const clickedPill = event.target.closest('.category-pill');
-    if (clickedPill) {clickedPill.classList.add('active');}
+    if (clickedPill) {
+      clickedPill.classList.add('active');
+    }
 
     if (categoryId === 'all') {
       productsManager.resetFilters();
@@ -1252,7 +1318,7 @@ ${product.seller?.verified ? '<span class="trust-badge trust-badge-verified"><sv
   /**
    * Toggle Mobile Filters
    */
-  static toggleMobileFilters () {
+  static toggleMobileFilters() {
     const group = document.getElementById('browse-filters-group');
     group?.classList.toggle('open');
   }
@@ -1260,7 +1326,7 @@ ${product.seller?.verified ? '<span class="trust-badge trust-badge-verified"><sv
   /**
    * Set Rating Filter
    */
-  static setRatingFilter (rating) {
+  static setRatingFilter(rating) {
     productsManager.filter({ minRating: rating });
     this.renderBrowse();
   }
@@ -1268,7 +1334,7 @@ ${product.seller?.verified ? '<span class="trust-badge trust-badge-verified"><sv
   /**
    * Render Product Card - Modern Professional Design
    */
-  static renderProductCard (product) {
+  static renderProductCard(product) {
     const isInWishlist = productsManager.isInWishlist(product.id);
     const initials =
       product.seller?.name
@@ -1330,7 +1396,7 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
   /**
    * Render Best Buy-style Product Card for Browse/Top Deals page
    */
-  static renderBBProductCard (product) {
+  static renderBBProductCard(product) {
     const isInWishlist = productsManager.isInWishlist(product.id);
     const _bsn = product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
     const initials = _bsn
@@ -1423,7 +1489,7 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
   /**
    * Toggle Wishlist
    */
-  static toggleWishlist (event, productId) {
+  static toggleWishlist(event, productId) {
     event.stopPropagation();
 
     if (productsManager.isInWishlist(productId)) {
@@ -1441,13 +1507,23 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
   /**
    * Apply Browse Filters
    */
-  static applyBrowseFilters () {
+  static applyBrowseFilters() {
     const conditions = [];
-    if (document.getElementById('cond-new')?.checked) {conditions.push('new');}
-    if (document.getElementById('cond-like-new')?.checked) {conditions.push('like-new');}
-    if (document.getElementById('cond-excellent')?.checked) {conditions.push('excellent');}
-    if (document.getElementById('cond-good')?.checked) {conditions.push('good');}
-    if (document.getElementById('cond-fair')?.checked) {conditions.push('fair');}
+    if (document.getElementById('cond-new')?.checked) {
+      conditions.push('new');
+    }
+    if (document.getElementById('cond-like-new')?.checked) {
+      conditions.push('like-new');
+    }
+    if (document.getElementById('cond-excellent')?.checked) {
+      conditions.push('excellent');
+    }
+    if (document.getElementById('cond-good')?.checked) {
+      conditions.push('good');
+    }
+    if (document.getElementById('cond-fair')?.checked) {
+      conditions.push('fair');
+    }
 
     productsManager.filter({
       condition: conditions.length > 0 ? conditions : null,
@@ -1459,7 +1535,7 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
   /**
    * Reset Browse Filters
    */
-  static resetBrowseFilters () {
+  static resetBrowseFilters() {
     productsManager.resetFilters();
     this.renderBrowse();
   }
@@ -1467,7 +1543,7 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
   /**
    * Apply Sort Order
    */
-  static applySortOrder () {
+  static applySortOrder() {
     const sortBy = document.getElementById('sort-select').value;
     productsManager.currentFilters.sortBy = sortBy;
     productsManager.applyFilters();
@@ -1477,7 +1553,7 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
   /**
    * Re-render just the products grid (for filtering without page refresh)
    */
-  static renderBrowseProducts () {
+  static renderBrowseProducts() {
     const paginatedData = productsManager.getPaginated(1);
     const productsGrid = document.querySelector('.products-grid');
 
@@ -1492,9 +1568,11 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
   /**
    * Render Recently Viewed Section HTML
    */
-  static renderRecentlyViewedSection () {
+  static renderRecentlyViewedSection() {
     const recentlyViewed = productsManager.getRecentlyViewed(8);
-    if (!recentlyViewed || recentlyViewed.length === 0) {return '';}
+    if (!recentlyViewed || recentlyViewed.length === 0) {
+      return '';
+    }
 
     return `
 <div class="recently-viewed-section" style="padding: 2rem 0 1rem;">
@@ -1504,9 +1582,9 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
 </div>
 <div style="display:flex;gap:1rem;overflow-x:auto;padding-bottom:0.5rem;scrollbar-width:thin;">
 ${recentlyViewed
-    .map(product => {
-      const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
-      return `
+  .map(product => {
+    const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
+    return `
 <div onclick="Pages.renderProductDetail('${product.id}')" style="min-width:160px;max-width:160px;cursor:pointer;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--neutral-200);transition:box-shadow 0.2s;background:var(--bg-primary);" onmouseover="this.style.boxShadow='var(--shadow-card-hover)'" onmouseout="this.style.boxShadow='none'">
 <div style="aspect-ratio:1;overflow:hidden;background:var(--neutral-100);">
 <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg';this.onerror=null;">
@@ -1517,26 +1595,32 @@ ${recentlyViewed
 <span class="condition-badge ${product.condition || 'good'}" style="font-size:0.65rem;padding:2px 6px;margin-top:4px;">${conditionLabel}</span>
 </div>
 </div>`;
-    })
-    .join('')}
+  })
+  .join('')}
 </div>
 </div>
 `;
   }
 
-  static _renderPageNumbers (current, total) {
+  static _renderPageNumbers(current, total) {
     const pages = [];
     pages.push(1);
-    if (current > 3) {pages.push('...');}
+    if (current > 3) {
+      pages.push('...');
+    }
     for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
       pages.push(i);
     }
-    if (current < total - 2) {pages.push('...');}
-    if (total > 1) {pages.push(total);}
+    if (current < total - 2) {
+      pages.push('...');
+    }
+    if (total > 1) {
+      pages.push(total);
+    }
     return pages;
   }
 
-  static async goToBrowsePage (page) {
+  static async goToBrowsePage(page) {
     const paginatedData = await this._fetchPaginatedData(page);
     const totalProducts =
       paginatedData.totalProducts || paginatedData.total || productsManager.filteredProducts.length;
@@ -1547,10 +1631,12 @@ ${recentlyViewed
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  static async _fetchPaginatedData (page) {
+  static async _fetchPaginatedData(page) {
     if (productsManager._backendAvailable) {
       const serverData = await productsManager.fetchPage(page);
-      if (serverData) {return serverData;}
+      if (serverData) {
+        return serverData;
+      }
     }
     return productsManager.getPaginated(page);
   }
@@ -1569,7 +1655,7 @@ ${recentlyViewed
    * This avoids a double render (click → set hash → hash → render) AND
    * keeps the URL predictable so refresh/back/forward work correctly.
    */
-  static async renderProductDetail (productId) {
+  static async renderProductDetail(productId) {
     const desiredPath = `/product/${productId}`;
     const currentPath = (window.location.hash || '#').replace(/^#/, '').split('?')[0];
     if (currentPath !== desiredPath) {
@@ -1791,16 +1877,16 @@ ${
 <div class="pd-methods-label">Options</div>
 <div class="pd-variants-list">
 ${product.variants
-    .map(
-      (v, i) => `
+  .map(
+    (v, i) => `
 <button class="pd-variant-btn" data-variant-index="${i}" onclick="Pages.selectVariant(this, ${i})">
 <span class="pd-variant-label">${v.label}</span>
 <span class="pd-variant-value">${v.value}</span>
 ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
 </button>
-`,
-    )
-    .join('')}
+`
+  )
+  .join('')}
 </div>
 <input type="hidden" id="selected-variant-index" value="-1" />
 </div>
@@ -1883,17 +1969,19 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
     this.loadProductReviews(productId);
   }
 
-  static selectVariant (btn, index) {
+  static selectVariant(btn, index) {
     document.querySelectorAll('.pd-variant-btn').forEach(b => b.classList.remove('selected'));
     btn.classList.add('selected');
     document.getElementById('selected-variant-index').value = index;
   }
 
-  static selectColor (btn) {
+  static selectColor(btn) {
     document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
     btn.classList.add('selected');
     const nameEl = document.querySelector('.color-name-display');
-    if (nameEl) {nameEl.textContent = btn.dataset.colorName;}
+    if (nameEl) {
+      nameEl.textContent = btn.dataset.colorName;
+    }
     const stock = parseInt(btn.dataset.colorStock) || 0;
     const indicator = document.querySelector('.color-stock-indicator');
     if (indicator) {
@@ -1910,7 +1998,9 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
     }
     if (btn.dataset.colorImage) {
       const mainImg = document.querySelector('.pd-main-image');
-      if (mainImg && btn.dataset.colorImage) {mainImg.src = btn.dataset.colorImage;}
+      if (mainImg && btn.dataset.colorImage) {
+        mainImg.src = btn.dataset.colorImage;
+      }
     }
     window.__selectedColor = {
       id: btn.dataset.colorId,
@@ -1921,9 +2011,11 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
     };
   }
 
-  static addToCartWithVariant (productId) {
+  static addToCartWithVariant(productId) {
     const product = productsManager.getById(productId);
-    if (!product) {return;}
+    if (!product) {
+      return;
+    }
     const variantIndex = parseInt(document.getElementById('selected-variant-index')?.value);
     let variant = null;
     if (
@@ -1947,7 +2039,7 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
     if (!isVerified) {
       showToast(
         'Item added to cart, but you must be verified as a student to purchase.',
-        'warning',
+        'warning'
       );
     } else {
       showToast('Added to cart', 'success');
@@ -1957,7 +2049,7 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
   /**
    * Toggle Wishlist in Detail View
    */
-  static toggleWishlistDetail (productId) {
+  static toggleWishlistDetail(productId) {
     if (productsManager.isInWishlist(productId)) {
       productsManager.removeFromWishlist(productId);
       notificationManager?.info('Removed from Wishlist', 'Product removed from your wishlist');
@@ -1973,25 +2065,29 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
   /**
    * Add all wishlist items to cart
    */
-  static addAllWishlistToCart () {
+  static addAllWishlistToCart() {
     const wishlistProducts = productsManager.getWishlist();
     let added = 0;
     wishlistProducts.forEach(product => {
       const result = cartManager?.add(product);
-      if (result?.success) {added++;}
+      if (result?.success) {
+        added++;
+      }
     });
     Pages.updateCartBadge();
     notificationManager?.success(
       'Added to Cart',
-      `${added} item${added !== 1 ? 's' : ''} added to your cart`,
+      `${added} item${added !== 1 ? 's' : ''} added to your cart`
     );
   }
 
   /**
    * Clear entire wishlist
    */
-  static clearWishlist () {
-    if (!confirm('Remove all items from your wishlist?')) {return;}
+  static clearWishlist() {
+    if (!confirm('Remove all items from your wishlist?')) {
+      return;
+    }
     const wishlistIds = StorageManager.get(productsManager.wishlistKey, true) || [];
     wishlistIds.forEach(id => productsManager.removeFromWishlist(id));
     Pages.updateWishlistBadge();
@@ -2002,7 +2098,7 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
   /**
    * Load and display reviews for a product's seller
    */
-  static async loadProductReviews (productId) {
+  static async loadProductReviews(productId) {
     const container = document.getElementById('product-reviews-container');
     if (!container) {
       return;
@@ -2087,7 +2183,7 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
   /**
    * Render a single review item
    */
-  static renderReviewItem (review) {
+  static renderReviewItem(review) {
     const timeAgo = this.formatReviewTime(review.createdAt);
     const stars = this.renderStars(review.rating);
 
@@ -2111,7 +2207,7 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
   /**
    * Format review time
    */
-  static formatReviewTime (date) {
+  static formatReviewTime(date) {
     if (!date) {
       return '';
     }
@@ -2134,11 +2230,11 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
   /**
    * Write Review for Seller
    */
-  static async writeReview (sellerId, productId) {
+  static async writeReview(sellerId, productId) {
     this._showReviewModal(sellerId, productId);
   }
 
-  static _showReviewModal (sellerId, productId) {
+  static _showReviewModal(sellerId, productId) {
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
     if (!currentUser) {
@@ -2148,7 +2244,9 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
     }
 
     const existing = document.getElementById('review-modal-overlay');
-    if (existing) {existing.remove();}
+    if (existing) {
+      existing.remove();
+    }
 
     const overlay = document.createElement('div');
     overlay.id = 'review-modal-overlay';
@@ -2206,7 +2304,9 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
 
     overlay.querySelector('#review-cancel-btn').addEventListener('click', () => overlay.remove());
     overlay.addEventListener('click', e => {
-      if (e.target === overlay) {overlay.remove();}
+      if (e.target === overlay) {
+        overlay.remove();
+      }
     });
 
     submitBtn.addEventListener('click', async () => {
@@ -2247,7 +2347,7 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
   /**
    * Share Product
    */
-  static shareProduct (productId) {
+  static shareProduct(productId) {
     const product = productsManager.getById(productId);
     const shareUrl = window.location.href.split('#')[0] + `#/product/${productId}`;
     const shareText = `Check out this item on JERTS CART: ${product.title} - GHS ${product.price?.toLocaleString() || '0'}`;
@@ -2274,7 +2374,9 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
     overlay.style.cssText =
       'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;';
     overlay.onclick = e => {
-      if (e.target === overlay) {overlay.remove();}
+      if (e.target === overlay) {
+        overlay.remove();
+      }
     };
 
     overlay.innerHTML = `
@@ -2310,10 +2412,12 @@ Copy Link
     document.body.appendChild(overlay);
   }
 
-  static async downloadReceipt (orderId) {
+  static async downloadReceipt(orderId) {
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
-    if (!currentUser) {return;}
+    if (!currentUser) {
+      return;
+    }
 
     let order = null;
     try {
@@ -2342,7 +2446,7 @@ Copy Link
   <td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">GHS ${(item.price || 0).toLocaleString()}</td>
   <td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">GHS ${((item.price || 0) * item.quantity).toLocaleString()}</td>
   </tr>
-  `,
+  `
       )
       .join('');
 
@@ -2430,7 +2534,7 @@ Copy Link
   /**
    * Copy share link to clipboard
    */
-  static copyShareLink (url) {
+  static copyShareLink(url) {
     navigator.clipboard
       .writeText(url)
       .then(() => {
@@ -2445,7 +2549,7 @@ Copy Link
   /**
    * Render Cart Page
    */
-  static renderCart () {
+  static renderCart() {
     const mainContent = document.getElementById('main-content');
     const cartItems = cartManager.getItems();
     const summary = cartManager.getSummary();
@@ -2490,8 +2594,8 @@ Copy Link
             </div>
             
             ${cartItems
-    .map(
-      item => `
+              .map(
+                item => `
               <div class="cart-item" data-product-id="${item.product.id}">
                 <div class="cart-item-image">
   <img src="${item.product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${item.product.title}" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
@@ -2515,9 +2619,9 @@ Copy Link
   <button class="remove-btn" onclick="Pages.removeFromCart('${item.product.id}')">Remove</button>
   </div>
               </div>
-            `,
-    )
-    .join('')}
+            `
+              )
+              .join('')}
           </div>
           
           <div class="cart-summary">
@@ -2568,7 +2672,7 @@ Copy Link
   /**
    * Add product to cart from product detail
    */
-  static addToCart (productId) {
+  static addToCart(productId) {
     const product = productsManager.getById(productId);
 
     if (!product) {
@@ -2587,7 +2691,7 @@ Copy Link
       if (!isVerified) {
         showToast(
           'Item added to cart, but you must be verified as a student to purchase.',
-          'warning',
+          'warning'
         );
       } else {
         showToast(result.message, 'success');
@@ -2598,7 +2702,7 @@ Copy Link
   /**
    * Remove item from cart
    */
-  static removeFromCart (productId) {
+  static removeFromCart(productId) {
     cartManager.remove(productId);
     this.updateCartBadge();
     this.renderCart();
@@ -2607,7 +2711,7 @@ Copy Link
   /**
    * Increment cart item quantity
    */
-  static incrementCartQuantity (productId) {
+  static incrementCartQuantity(productId) {
     cartManager.increment(productId);
     this.updateCartBadge();
     this.renderCart();
@@ -2616,7 +2720,7 @@ Copy Link
   /**
    * Decrement cart item quantity
    */
-  static decrementCartQuantity (productId) {
+  static decrementCartQuantity(productId) {
     cartManager.decrement(productId);
     this.updateCartBadge();
     this.renderCart();
@@ -2625,7 +2729,7 @@ Copy Link
   /**
    * Handle Proceed to Checkout button click from Cart
    */
-  static handleProceedToCheckout () {
+  static handleProceedToCheckout() {
     // Verify required managers are loaded
     if (typeof cartManager === 'undefined' || !cartManager) {
       console.error('Cart manager not loaded');
@@ -2662,7 +2766,7 @@ Copy Link
     if (!isVerified) {
       showToast(
         'You must be verified as a student to make purchases. Please complete student verification first.',
-        'warning',
+        'warning'
       );
       this.renderStudentVerification();
       return;
@@ -2675,7 +2779,7 @@ Copy Link
   /**
    * Render Checkout Page
    */
-  static renderCheckout () {
+  static renderCheckout() {
     // Verify checkoutManager is loaded
     if (typeof checkoutManager === 'undefined' || !checkoutManager) {
       console.error('Checkout manager not loaded yet');
@@ -2709,19 +2813,19 @@ Copy Link
     if (!isVerified) {
       showToast(
         'You must be verified as a student to make purchases. Please complete student verification first.',
-        'warning',
+        'warning'
       );
       this.renderStudentVerification();
       return;
     }
 
-// Update URL hash for proper routing — but only if the hash isn't already
-// the checkout route. Setting `location.hash` always fires a `hashchange`
-// event, even when the value is the same as the current hash; without this
-// guard the router re-navigates and re-invokes `renderCheckout`, which
-// recurses until the call stack overflows. (Regression surfaced after the
-// coupon editor added DOM-query code that deepened the stack frames just
-// enough to trip the V8 limit.)
+    // Update URL hash for proper routing — but only if the hash isn't already
+    // the checkout route. Setting `location.hash` always fires a `hashchange`
+    // event, even when the value is the same as the current hash; without this
+    // guard the router re-navigates and re-invokes `renderCheckout`, which
+    // recurses until the call stack overflows. (Regression surfaced after the
+    // coupon editor added DOM-query code that deepened the stack frames just
+    // enough to trip the V8 limit.)
     if (window.location.hash.replace(/^#/, '') !== '/checkout') {
       window.location.hash = '/checkout';
     }
@@ -2759,17 +2863,17 @@ Copy Link
                 <h3><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;"><path d="M5 17H4a2 2 0 01-2-2V5a2 2 0 012-2h16a2 2 0 012 2v10a2 2 0 01-2 2h-1"/><path d="M12 17V5"/><path d="M5 17a2 2 0 104 0"/><path d="M15 17a2 2 0 104 0"/></svg>Delivery Method</h3>
                 <div class="delivery-options">
                   ${deliveryOptions
-    .map(
-      option => `
+                    .map(
+                      option => `
                     <div class="option-card" onclick="Pages.selectDeliveryOption('${option.value}', this)">
                       <input type="radio" name="deliveryMode" value="${option.value}" id="delivery-${option.value}" />
                       <div class="option-icon">${option.icon}</div>
                       <div class="option-label">${option.label}</div>
                       <div class="option-fee">${option.fee === 0 ? 'Free' : `GHS ${option.fee}`}</div>
                     </div>
-                  `,
-    )
-    .join('')}
+                  `
+                    )
+                    .join('')}
                 </div>
               </div>
 
@@ -2810,16 +2914,16 @@ Copy Link
                 <h3><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><line x1="6" y1="12" x2="6.01" y2="12"/><line x1="18" y1="12" x2="18.01" y2="12"/></svg>Payment Method</h3>
                 <div class="payment-options">
                   ${paymentOptions
-    .map(
-      option => `
+                    .map(
+                      option => `
                     <div class="option-card" onclick="Pages.selectPaymentOption('${option.value}', this)">
                       <input type="radio" name="paymentMode" value="${option.value}" id="payment-${option.value}" />
                       <div class="option-icon">${option.icon}</div>
                       <div class="option-label">${option.label}</div>
                     </div>
-                  `,
-    )
-    .join('')}
+                  `
+                    )
+                    .join('')}
                 </div>
               </div>
             </div>
@@ -2830,8 +2934,8 @@ Copy Link
               
               <div class="order-items">
                 ${cartItems
-    .map(
-      item => `
+                  .map(
+                    item => `
   <div class="order-item">
   <div class="order-item-image">
         <img src="${(item.product.images && item.product.images[0]) || '/assets/images/products/no-image.svg'}" alt="${item.product.title}" onerror="this.src='/assets/images/products/no-image.svg'" />
@@ -2843,9 +2947,9 @@ Copy Link
   <div class="order-item-price">${Formatter.formatPrice((item.product.price + (item.variant ? item.variant.price || 0 : 0)) * item.quantity)}</div>
   </div>
   </div>
-                `,
-    )
-    .join('')}
+                `
+                  )
+                  .join('')}
               </div>
 
               <div class="summary-divider"></div>
@@ -2910,17 +3014,20 @@ Copy Link
   // Module-scoped applied coupon (reset on each checkout render).
   static _appliedCoupon = null;
 
-  static async _applyCheckoutCoupon () {
+  static async _applyCheckoutCoupon() {
     const codeInput = document.getElementById('coupon-code-input');
     const msg = document.getElementById('coupon-message');
     const code = (codeInput?.value || '').trim();
     if (!code) {
-      if (msg) {msg.textContent = 'Enter a coupon code first';}
+      if (msg) {
+        msg.textContent = 'Enter a coupon code first';
+      }
       return;
     }
-    const subtotal = (typeof cartManager !== 'undefined' && cartManager.getSummary)
-      ? cartManager.getSummary().subtotal
-      : 0;
+    const subtotal =
+      typeof cartManager !== 'undefined' && cartManager.getSummary
+        ? cartManager.getSummary().subtotal
+        : 0;
     try {
       const res = await api.coupons.validate(code, subtotal);
       if (res && res.success && res.data) {
@@ -2946,36 +3053,49 @@ Copy Link
     }
   }
 
-  static _removeCheckoutCoupon () {
+  static _removeCheckoutCoupon() {
     Pages._appliedCoupon = null;
     const couponRow = document.getElementById('coupon-row');
     const codeInput = document.getElementById('coupon-code-input');
-    if (couponRow) {couponRow.style.display = 'none';}
-    if (codeInput) {codeInput.value = '';}
+    if (couponRow) {
+      couponRow.style.display = 'none';
+    }
+    if (codeInput) {
+      codeInput.value = '';
+    }
     Pages._renderCheckoutCoupon(null);
     const msg = document.getElementById('coupon-message');
-    if (msg) {msg.textContent = '';}
+    if (msg) {
+      msg.textContent = '';
+    }
   }
 
   // Update the discount row + grand total from the applied coupon (or clear).
-  static _renderCheckoutCoupon (coupon) {
+  static _renderCheckoutCoupon(coupon) {
     const couponRow = document.getElementById('coupon-row');
     const couponDiscount = document.getElementById('coupon-discount');
     const grandTotalEl = document.getElementById('grand-total');
     const deliveryFeeText = document.getElementById('delivery-fee')?.textContent || 'GHS 0';
     const deliveryFeeNum = Number(deliveryFeeText.replace(/[^0-9.]/g, '')) || 0;
-    const subtotal = (typeof cartManager !== 'undefined' && cartManager.getSummary)
-      ? cartManager.getSummary().subtotal
-      : 0;
+    const subtotal =
+      typeof cartManager !== 'undefined' && cartManager.getSummary
+        ? cartManager.getSummary().subtotal
+        : 0;
     if (coupon && coupon.discount > 0) {
-      if (couponRow) {couponRow.style.display = 'flex';}
-      if (couponDiscount) {couponDiscount.textContent = `-${Formatter.formatPrice(coupon.discount)}`;}
+      if (couponRow) {
+        couponRow.style.display = 'flex';
+      }
+      if (couponDiscount) {
+        couponDiscount.textContent = `-${Formatter.formatPrice(coupon.discount)}`;
+      }
       if (grandTotalEl) {
         const total = Math.max(0, subtotal + deliveryFeeNum - coupon.discount);
         grandTotalEl.textContent = Formatter.formatPrice(total);
       }
     } else {
-      if (couponRow) {couponRow.style.display = 'none';}
+      if (couponRow) {
+        couponRow.style.display = 'none';
+      }
       if (grandTotalEl) {
         grandTotalEl.textContent = Formatter.formatPrice(subtotal + deliveryFeeNum);
       }
@@ -2985,7 +3105,7 @@ Copy Link
   /**
    * Select delivery option
    */
-  static selectDeliveryOption (value, element) {
+  static selectDeliveryOption(value, element) {
     // Update radio button
     document.querySelectorAll('input[name="deliveryMode"]').forEach(radio => {
       radio.checked = radio.value === value;
@@ -3000,16 +3120,15 @@ Copy Link
     // Update delivery fee
     const deliveryFee = checkoutManager.calculateDeliveryFee(
       value,
-      cartManager.getSummary().subtotal,
+      cartManager.getSummary().subtotal
     );
     document.getElementById('delivery-fee').textContent = Formatter.formatPrice(deliveryFee);
 
     // Update grand total — keep any applied coupon discount in the displayed
     // total so changing delivery mode doesn't silently clobber the discount.
     const subtotal = cartManager.getSummary().subtotal;
-    const couponDiscount = Pages._appliedCoupon && Pages._appliedCoupon.discount > 0
-      ? Pages._appliedCoupon.discount
-      : 0;
+    const couponDiscount =
+      Pages._appliedCoupon && Pages._appliedCoupon.discount > 0 ? Pages._appliedCoupon.discount : 0;
     const grandTotal = Math.max(0, subtotal + deliveryFee - couponDiscount);
     document.getElementById('grand-total').textContent = Formatter.formatPrice(grandTotal);
   }
@@ -3017,7 +3136,7 @@ Copy Link
   /**
    * Select payment option
    */
-  static selectPaymentOption (value, element) {
+  static selectPaymentOption(value, element) {
     // Update radio button
     document.querySelectorAll('input[name="paymentMode"]').forEach(radio => {
       radio.checked = radio.value === value;
@@ -3033,7 +3152,7 @@ Copy Link
   /**
    * Handle checkout form submission
    */
-  static async handleCheckout (event) {
+  static async handleCheckout(event) {
     event.preventDefault();
 
     const form = event.target;
@@ -3047,7 +3166,7 @@ Copy Link
     if (!isVerified) {
       showToast(
         'You must be verified as a student to make purchases. Please complete student verification first.',
-        'warning',
+        'warning'
       );
       this.renderStudentVerification();
       return;
@@ -3121,7 +3240,7 @@ Copy Link
           // Send notification
           notificationManager?.success(
             'Order Confirmed',
-            `Your order #${result.order.orderNumber} has been confirmed!`,
+            `Your order #${result.order.orderNumber} has been confirmed!`
           );
 
           // Render confirmation page
@@ -3153,7 +3272,7 @@ Copy Link
   /**
    * Render Order Confirmation Page
    */
-  static renderOrderConfirmation (order) {
+  static renderOrderConfirmation(order) {
     const mainContent = document.getElementById('main-content');
 
     mainContent.innerHTML = `
@@ -3220,7 +3339,7 @@ Copy Link
   /**
    * Render Orders Page
    */
-  static async renderOrders () {
+  static async renderOrders() {
     const mainContent = document.getElementById('main-content');
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
@@ -3268,8 +3387,8 @@ Copy Link
         
         <div class="cart-items">
           ${orders
-    .map(
-      order => `
+            .map(
+              order => `
             <div class="cart-item" style="display: block;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
 <div>
@@ -3280,16 +3399,16 @@ Copy Link
                   </div>
                 </div>
                 <span class="condition-badge ${order.status}" style="background: ${this.getStatusColor(
-  order.status,
-)}; color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.875rem;">
+                  order.status
+                )}; color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.875rem;">
                   ${Formatter.capitalize(order.status.replace('-', ' '))}
                 </span>
               </div>
               
               <div style="border-top: 1px solid var(--neutral-200); padding-top: 1rem;">
                 ${order.items
-    .map(
-      item => `
+                  .map(
+                    item => `
                   <div style="display: flex; gap: 1rem; margin-bottom: 0.75rem;">
                     <img src="${item.image || '/assets/images/products/no-image.svg'}" alt="${item.title}" style="width: 60px; height: 60px; object-fit: cover; border-radius: var(--radius-md);" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
                     <div style="flex: 1;">
@@ -3298,9 +3417,9 @@ Copy Link
                     </div>
                     <div style="font-weight: 600;">${Formatter.formatPrice(item.price * item.quantity)}</div>
                   </div>
-                `,
-    )
-    .join('')}
+                `
+                  )
+                  .join('')}
               </div>
               
 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--neutral-200);">
@@ -3319,9 +3438,9 @@ Copy Link
 
 ${Pages.renderOrderTimeline(order.status)}
 </div>
-          `,
-    )
-    .join('')}
+          `
+            )
+            .join('')}
         </div>
       </div>
     `;
@@ -3330,7 +3449,7 @@ ${Pages.renderOrderTimeline(order.status)}
   /**
    * Get status color
    */
-  static getStatusColor (status) {
+  static getStatusColor(status) {
     const colors = {
       [ORDER_STATUS.PLACED]: '#0046be',
       [ORDER_STATUS.CONFIRMED]: '#10b981',
@@ -3344,7 +3463,7 @@ ${Pages.renderOrderTimeline(order.status)}
   /**
    * Render Order Timeline Stepper
    */
-  static renderOrderTimeline (status) {
+  static renderOrderTimeline(status) {
     if (status === ORDER_STATUS.CANCELLED) {
       return `
 <div class="order-timeline" style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--neutral-200);">
@@ -3364,22 +3483,24 @@ Order Cancelled
 
     const stepOrder = steps.map(s => s.key);
     const currentIdx = stepOrder.indexOf(status);
-    if (currentIdx === -1) {return '';}
+    if (currentIdx === -1) {
+      return '';
+    }
 
     return `
 <div class="order-timeline" style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--neutral-200);">
 <div style="display:flex;align-items:center;width:100%;">
 ${steps
-    .map((step, i) => {
-      const isCompleted = i <= currentIdx;
-      const isCurrent = i === currentIdx;
-      const dotColor = isCompleted
-        ? isCurrent
-          ? this.getStatusColor(status)
-          : '#10b981'
-        : 'var(--neutral-300)';
-      const lineColor = i < currentIdx ? '#10b981' : 'var(--neutral-200)';
-      return `
+  .map((step, i) => {
+    const isCompleted = i <= currentIdx;
+    const isCurrent = i === currentIdx;
+    const dotColor = isCompleted
+      ? isCurrent
+        ? this.getStatusColor(status)
+        : '#10b981'
+      : 'var(--neutral-300)';
+    const lineColor = i < currentIdx ? '#10b981' : 'var(--neutral-200)';
+    return `
 <div style="flex:1;display:flex;flex-direction:column;align-items:center;position:relative;">
 ${i > 0 ? `<div style="position:absolute;top:8px;left:-50%;width:100%;height:2px;background:${lineColor};z-index:0;"></div>` : ''}
 <div style="width:18px;height:18px;border-radius:50%;background:${dotColor};border:2px solid ${dotColor};z-index:1;display:flex;align-items:center;justify-content:center;margin-bottom:4px;">
@@ -3388,8 +3509,8 @@ ${isCurrent ? '<div style="width:6px;height:6px;border-radius:50%;background:whi
 </div>
 <span style="font-size:0.7rem;color:${isCompleted ? 'var(--neutral-700)' : 'var(--neutral-400)'};font-weight:${isCurrent ? '600' : '400'};text-align:center;white-space:nowrap;">${step.label}</span>
 </div>`;
-    })
-    .join('')}
+  })
+  .join('')}
 </div>
 </div>`;
   }
@@ -3397,10 +3518,12 @@ ${isCurrent ? '<div style="width:6px;height:6px;border-radius:50%;background:whi
   /**
    * View Order Details (expand in page)
    */
-  static async viewOrderDetails (orderId) {
+  static async viewOrderDetails(orderId) {
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
-    if (!currentUser) {return;}
+    if (!currentUser) {
+      return;
+    }
 
     const orders = await checkoutManager.getUserOrders(currentUser.id);
     const order = orders.find(o => o.id === orderId);
@@ -3414,7 +3537,9 @@ ${isCurrent ? '<div style="width:6px;height:6px;border-radius:50%;background:whi
     overlay.style.cssText =
       'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;';
     overlay.onclick = e => {
-      if (e.target === overlay) {overlay.remove();}
+      if (e.target === overlay) {
+        overlay.remove();
+      }
     };
 
     overlay.innerHTML = `
@@ -3431,8 +3556,8 @@ ${Pages.renderOrderTimeline(order.status)}
 <div style="margin-top:1.5rem;">
 <h3 style="font-size:1rem;margin:0 0 1rem;">Items</h3>
 ${order.items
-    .map(
-      item => `
+  .map(
+    item => `
 <div style="display:flex;gap:1rem;margin-bottom:0.75rem;align-items:center;">
   <img src="${item.image || '/assets/images/products/no-image.svg'}" alt="${item.title}" style="width:50px;height:50px;object-fit:cover;border-radius:var(--radius-md);" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
 <div style="flex:1;">
@@ -3441,9 +3566,9 @@ ${order.items
 </div>
 <div style="font-weight:600;">${Formatter.formatPrice(item.price * item.quantity)}</div>
 </div>
-`,
-    )
-    .join('')}
+`
+  )
+  .join('')}
 </div>
   <div style="border-top:1px solid var(--neutral-200);padding-top:1rem;margin-top:1rem;display:flex;justify-content:space-between;align-items:center;">
   <div>
@@ -3464,7 +3589,7 @@ ${order.items
   /**
    * Update cart badge in navbar
    */
-  static updateCartBadge () {
+  static updateCartBadge() {
     const badge = document.getElementById('cart-badge');
     if (badge) {
       const count = cartManager.getCount();
@@ -3480,7 +3605,7 @@ ${order.items
   /**
    * Update wishlist badge in navbar
    */
-  static updateWishlistBadge () {
+  static updateWishlistBadge() {
     try {
       const badge = document.getElementById('wishlist-badge');
       if (badge && productsManager && typeof productsManager.getWishlist === 'function') {
@@ -3500,7 +3625,7 @@ ${order.items
   /**
    * Initialize dark mode from saved preference
    */
-  static initDarkMode () {
+  static initDarkMode() {
     const saved = StorageManager.get(STORAGE_KEYS.THEME, false);
     if (saved === 'dark') {
       document.documentElement.setAttribute('data-theme', 'dark');
@@ -3511,7 +3636,7 @@ ${order.items
   /**
    * Toggle dark mode
    */
-  static toggleDarkMode () {
+  static toggleDarkMode() {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     if (isDark) {
       document.documentElement.removeAttribute('data-theme');
@@ -3526,7 +3651,7 @@ ${order.items
   /**
    * Update dark mode toggle icons
    */
-  static updateDarkModeIcons () {
+  static updateDarkModeIcons() {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     const sunIcon = document.getElementById('dark-mode-icon-sun');
     const moonIcon = document.getElementById('dark-mode-icon-moon');
@@ -3539,7 +3664,7 @@ ${order.items
   /**
    * Update navbar based on authentication state
    */
-  static updateNavbar () {
+  static updateNavbar() {
     const authButtons = document.getElementById('navbar-auth-buttons');
     const userMenu = document.getElementById('navbar-user-menu');
     const drawerAuth = document.getElementById('navbar-drawer-auth');
@@ -3557,35 +3682,54 @@ ${order.items
     // #/login) mode — see js/router.js. Read both URL representations
     // so this works regardless of the active mode.
     const hash = (typeof window !== 'undefined' && window.location && window.location.hash) || '';
-    const path = (typeof window !== 'undefined' && window.location && window.location.pathname) || '';
+    const path =
+      (typeof window !== 'undefined' && window.location && window.location.pathname) || '';
     const onAuthRoute =
-      hash.startsWith('#/login') || path.startsWith('/login') ||
-      hash.startsWith('#/register') || path.startsWith('/register') ||
-      hash.startsWith('#/forgot-password') || path.startsWith('/forgot-password') ||
-      hash.startsWith('#/reset-password') || path.startsWith('/reset-password') ||
-      hash.startsWith('#/verify') || path.startsWith('/verify') ||
-      hash.startsWith('#/onboarding') || path.startsWith('/onboarding');
+      hash.startsWith('#/login') ||
+      path.startsWith('/login') ||
+      hash.startsWith('#/register') ||
+      path.startsWith('/register') ||
+      hash.startsWith('#/forgot-password') ||
+      path.startsWith('/forgot-password') ||
+      hash.startsWith('#/reset-password') ||
+      path.startsWith('/reset-password') ||
+      hash.startsWith('#/verify') ||
+      path.startsWith('/verify') ||
+      hash.startsWith('#/onboarding') ||
+      path.startsWith('/onboarding');
 
     if (isLoggedIn) {
       // Desktop navbar - logged in
-      if (authButtons) {authButtons.style.display = 'none';}
+      if (authButtons) {
+        authButtons.style.display = 'none';
+      }
       if (userMenu) {
         userMenu.style.display = 'flex';
         userMenu.style.gap = 'var(--space-sm)';
       }
       // Mobile drawer - logged in
-      if (drawerAuth) {drawerAuth.style.display = 'none';}
-      if (drawerUser) {drawerUser.style.display = 'block';}
+      if (drawerAuth) {
+        drawerAuth.style.display = 'none';
+      }
+      if (drawerUser) {
+        drawerUser.style.display = 'block';
+      }
     } else {
       // Desktop navbar - logged out
       if (authButtons) {
         authButtons.style.display = onAuthRoute ? 'none' : 'flex';
         authButtons.style.gap = 'var(--space-sm)';
       }
-      if (userMenu) {userMenu.style.display = 'none';}
+      if (userMenu) {
+        userMenu.style.display = 'none';
+      }
       // Mobile drawer - logged out
-      if (drawerAuth) {drawerAuth.style.display = onAuthRoute ? 'none' : 'block';}
-      if (drawerUser) {drawerUser.style.display = 'none';}
+      if (drawerAuth) {
+        drawerAuth.style.display = onAuthRoute ? 'none' : 'block';
+      }
+      if (drawerUser) {
+        drawerUser.style.display = 'none';
+      }
     }
   }
 
@@ -3596,7 +3740,7 @@ ${order.items
   /**
    * Render Wishlist Page
    */
-  static renderWishlist () {
+  static renderWishlist() {
     const mainContent = document.getElementById('main-content');
     const wishlistProducts = productsManager.getWishlist();
     const priceDrops = productsManager.trackWishlistPrices();
@@ -3661,17 +3805,17 @@ ${Icons.trash} Clear All
 </div>
 <div class="wishlist-grid">
 ${wishlistProducts
-    .map(product => {
-      const _wsn = product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
-      const initials = _wsn
-        .split(' ')
-        .map(n => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
-      const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
-      const conditionClass = product.condition || 'good';
-      return `
+  .map(product => {
+    const _wsn = product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
+    const initials = _wsn
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+    const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
+    const conditionClass = product.condition || 'good';
+    return `
 <div class="wishlist-card" onclick="Pages.renderProductDetail('${product.id}')">
 <div class="wishlist-card-image">
 <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg';this.onerror=null;">
@@ -3698,8 +3842,8 @@ ${Icons.upload}
 </div>
 </div>
 </div>`;
-    })
-    .join('')}
+  })
+  .join('')}
 </div>
 </div>
 <style>
@@ -3786,7 +3930,7 @@ font-size: 0.8rem;
   /**
    * Render User Dashboard - Vertical Tabs Modern Design
    */
-  static async renderDashboard () {
+  static async renderDashboard() {
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
 
@@ -3953,10 +4097,10 @@ font-size: 0.8rem;
 
               <div class="dv-orders">
                 ${
-  recentOrders.length > 0
-    ? recentOrders
-      .map(
-        order => `
+                  recentOrders.length > 0
+                    ? recentOrders
+                        .map(
+                          order => `
                   <div class="dv-order-item">
 <div class="dv-order-icon">${Icons.package}</div>
           <div class="dv-order-info">
@@ -3966,17 +4110,17 @@ font-size: 0.8rem;
                     <div class="dv-order-time">${Formatter.formatTimeAgo(order.createdAt)}</div>
                     <span class="dv-order-status ${order.status ? order.status.toLowerCase() : 'placed'}">${order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'Placed'}</span>
                   </div>
-                `,
-      )
-      .join('')
-    : `
+                `
+                        )
+                        .join('')
+                    : `
                   <div class="dv-empty">
 <div class="dv-empty-icon">${Icons.package}</div>
         <h3>No orders yet</h3>
         <p>Start shopping to see your orders here!</p>
                   </div>
                 `
-}
+                }
               </div>
             </div>
 
@@ -3987,10 +4131,10 @@ font-size: 0.8rem;
 
               <div class="dv-orders">
                 ${
-  orders.length > 0
-    ? orders
-      .map(
-        order => `
+                  orders.length > 0
+                    ? orders
+                        .map(
+                          order => `
                   <div class="dv-order-item">
 <div class="dv-order-icon">${Icons.package}</div>
           <div class="dv-order-info">
@@ -4000,17 +4144,17 @@ font-size: 0.8rem;
                     <div class="dv-order-time">${Formatter.formatTimeAgo(order.createdAt)}</div>
                     <span class="dv-order-status ${order.status ? order.status.toLowerCase() : 'placed'}">${order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'Placed'}</span>
                   </div>
-                `,
-      )
-      .join('')
-    : `
+                `
+                        )
+                        .join('')
+                    : `
                   <div class="dv-empty">
 <div class="dv-empty-icon">${Icons.cart}</div>
         <h3>No orders yet</h3>
         <p>Browse products and make your first purchase!</p>
                   </div>
                 `
-}
+                }
               </div>
             </div>
 
@@ -4020,12 +4164,12 @@ font-size: 0.8rem;
               <p class="dv-panel-subtitle">Items you've saved for later.</p>
 
               ${
-  wishlist.length > 0
-    ? `
+                wishlist.length > 0
+                  ? `
                 <div class="dv-wishlist-grid">
                   ${wishlist
-    .map(
-      product => `
+                    .map(
+                      product => `
                     <div class="store-product-card" onclick="Pages.renderProductDetail('${product.id}')">
                       <div class="store-product-image">
                         <img src="${(product.images && product.images[0]) || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
@@ -4040,19 +4184,19 @@ font-size: 0.8rem;
                         </div>
                       </div>
                     </div>
-                  `,
-    )
-    .join('')}
+                  `
+                    )
+                    .join('')}
                 </div>
               `
-    : `
+                  : `
                 <div class="dv-empty">
 <div class="dv-empty-icon">${Icons.heartOutline}</div>
         <h3>Your wishlist is empty</h3>
                   <p>Save items you love to find them later!</p>
                 </div>
               `
-}
+              }
             </div>
 
             <!-- Cart Panel -->
@@ -4061,13 +4205,13 @@ font-size: 0.8rem;
               <p class="dv-panel-subtitle">Review items before checkout.</p>
 
               ${
-  cartCount > 0
-    ? `
+                cartCount > 0
+                  ? `
                 <div class="dv-orders">
                   ${cartManager
-    .getItems()
-    .map(
-      item => `
+                    .getItems()
+                    .map(
+                      item => `
                     <div class="dv-order-item">
 <div class="dv-order-icon">${Icons.cart}</div>
           <div class="dv-order-info">
@@ -4075,23 +4219,23 @@ font-size: 0.8rem;
             <div class="dv-order-amount">Qty: ${item.quantity} × ${item.product.price.toLocaleString()} GHS</div>
           </div>
                     </div>
-                  `,
-    )
-    .join('')}
+                  `
+                    )
+                    .join('')}
                 </div>
                 <div style="margin-top:1.5rem;display:flex;gap:0.75rem;">
                   <button class="dv-btn dv-btn-outline" onclick="cartManager.clear(); Pages.renderDashboard();">Clear Cart</button>
                   <button class="dv-btn dv-btn-primary" onclick="event.preventDefault(); Pages.handleProceedToCheckout();">Proceed to Checkout →</button>
                 </div>
               `
-    : `
+                  : `
                 <div class="dv-empty">
 <div class="dv-empty-icon">${Icons.cart}</div>
         <h3>Your cart is empty</h3>
         <p>Add items to get started!</p>
                 </div>
               `
-}
+              }
             </div>
 
             <!-- Profile Panel -->
@@ -4201,7 +4345,7 @@ font-size: 0.8rem;
   /**
    * Switch Dashboard Tab
    */
-  static switchDashboardTab (tabId) {
+  static switchDashboardTab(tabId) {
     // Update tab buttons
     document.querySelectorAll('.dv-tab').forEach(tab => {
       tab.classList.toggle('active', tab.dataset.tab === tabId);
@@ -4220,7 +4364,7 @@ font-size: 0.8rem;
    * TODO: security review — destructive account action; requires human
    * review pass per AGENTS.md before merge.
    */
-  static _openDeleteAccountModal () {
+  static _openDeleteAccountModal() {
     const overlay = document.createElement('div');
     overlay.id = 'delete-account-overlay';
     overlay.className = 'admin-modal-light-backdrop';
@@ -4297,7 +4441,7 @@ font-size: 0.8rem;
   /**
    * Render User Profile
    */
-  static renderProfile () {
+  static renderProfile() {
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
 
@@ -4342,7 +4486,7 @@ font-size: 0.8rem;
   /**
    * Handle Profile Update
    */
-  static handleProfileUpdate (event) {
+  static handleProfileUpdate(event) {
     event.preventDefault();
     const form = event.target;
     const updates = {
@@ -4362,7 +4506,7 @@ font-size: 0.8rem;
   /**
    * Handle Logout
    */
-  static handleLogout () {
+  static handleLogout() {
     authManager.logout();
     notificationManager?.info('Logged Out', 'You have been logged out successfully.');
     // Update navbar to show login/signup buttons
@@ -4373,7 +4517,7 @@ font-size: 0.8rem;
   /**
    * Render Notifications Page
    */
-  static renderNotifications () {
+  static renderNotifications() {
     const mainContent = document.getElementById('main-content');
     notificationManager?.markAllAsRead();
     const notifications = notificationManager?.getAll() || [];
@@ -4385,22 +4529,22 @@ font-size: 0.8rem;
           <div style="display:flex;gap:0.5rem;">
             <a href="#/dashboard" style="padding:0.5rem 1rem;border:1px solid var(--neutral-300,#d4d4d4);border-radius:0.5rem;font-size:0.875rem;color:var(--text-primary,#111);text-decoration:none;">Back to Dashboard</a>
             ${
-  notifications.length > 0
-    ? `
+              notifications.length > 0
+                ? `
               <button onclick="notificationManager?.deleteRead();Pages.renderNotifications();" style="padding:0.5rem 1rem;border:1px solid var(--neutral-300,#d4d4d4);border-radius:0.5rem;background:transparent;cursor:pointer;font-size:0.875rem;color:var(--text-primary,#111);">Clear Read</button>
               <button onclick="if(confirm('Delete all notifications?')){notificationManager?.deleteAll();Pages.renderNotifications();}" style="padding:0.5rem 1rem;border:1px solid var(--color-danger,#ef4444);border-radius:0.5rem;background:transparent;cursor:pointer;font-size:0.875rem;color:var(--color-danger,#ef4444);">Clear All</button>
             `
-    : ''
-}
+                : ''
+            }
           </div>
         </div>
         ${
-  notifications.length > 0
-    ? `
+          notifications.length > 0
+            ? `
           <div class="cart-items">
             ${notifications
-    .map(
-      n => `
+              .map(
+                n => `
               <div class="cart-item ${n.read ? 'read' : 'unread'}" style="display: flex; align-items: flex-start; gap: 1rem;${n.read ? '' : 'border-left:3px solid var(--color-primary,#2563eb);'}">
                 <div style="font-size: 2rem;">${n.icon}</div>
                 <div style="flex: 1;">
@@ -4412,19 +4556,19 @@ font-size: 0.8rem;
                 </div>
                 <button class="remove-btn" onclick="notificationManager?.delete('${n.id}'); Pages.renderNotifications();">×</button>
               </div>
-            `,
-    )
-    .join('')}
+            `
+              )
+              .join('')}
           </div>
         `
-    : `
+            : `
           <div class="empty-cart">
             <div class="empty-cart-icon">${Icons.bell}</div>
             <h3>No notifications</h3>
             <p>You're all caught up!</p>
           </div>
         `
-}
+        }
       </div>
     `;
   }
@@ -4432,7 +4576,7 @@ font-size: 0.8rem;
   /**
    * Render Delivery Options Page
    */
-  static renderDeliveryOptions () {
+  static renderDeliveryOptions() {
     const mainContent = document.getElementById('main-content');
     const deliveryOptions = deliveryManager.getDeliveryOptions();
 
@@ -4441,8 +4585,8 @@ font-size: 0.8rem;
         <h1 style="margin-bottom: 1.5rem;">Delivery Options</h1>
         <div class="delivery-options">
           ${deliveryOptions
-    .map(
-      option => `
+            .map(
+              option => `
             <div class="option-card">
               <div class="option-icon">${option.icon}</div>
               <div class="option-label">${option.name}</div>
@@ -4450,9 +4594,9 @@ font-size: 0.8rem;
               <div class="option-fee">${option.fee === 0 ? 'Free' : `GHS ${option.fee}`}</div>
               <div class="option-fee" style="font-size: 0.75rem;">${option.estimatedTime}</div>
             </div>
-          `,
-    )
-    .join('')}
+          `
+            )
+            .join('')}
         </div>
       </div>
     `;
@@ -4461,7 +4605,7 @@ font-size: 0.8rem;
   /**
    * Render Payment Page
    */
-  static async renderPayment (orderId) {
+  static async renderPayment(orderId) {
     const order = await checkoutManager.getOrderById(orderId);
     const mainContent = document.getElementById('main-content');
 
@@ -4508,7 +4652,7 @@ font-size: 0.8rem;
   /**
    * Render Payment Success Page
    */
-  static renderPaymentSuccess () {
+  static renderPaymentSuccess() {
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `
       <div class="container" style="padding: 2rem 1rem; text-align: center;">
@@ -4520,7 +4664,7 @@ font-size: 0.8rem;
     `;
   }
 
-  static getAdminSidebar (activeItem) {
+  static getAdminSidebar(activeItem) {
     const adminUser = adminAuthManager.getCurrentUser();
     const items = [
       {
@@ -4606,7 +4750,7 @@ font-size: 0.8rem;
   <span>${item.label}</span>
   </a>
   </li>
-  `,
+  `
     )
     .join('')}
   </ul>
@@ -4620,8 +4764,10 @@ font-size: 0.8rem;
   /**
    * Render Admin Dashboard
    */
-  static async renderAdminDashboard () {
-    if (!_requireAdmin()) {return;}
+  static async renderAdminDashboard() {
+    if (!_requireAdmin()) {
+      return;
+    }
     const adminUser =
       (typeof adminAuthManager !== 'undefined' && adminAuthManager.getCurrentUser?.()) ||
       (typeof authManager !== 'undefined' && authManager.getCurrentUser?.()) ||
@@ -4698,7 +4844,9 @@ font-size: 0.8rem;
 
     AdminUI.wireSidebar(key => {
       const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {Pages[method]();}
+      if (typeof Pages[method] === 'function') {
+        Pages[method]();
+      }
     });
 
     // Decorative — period switch is a no-op for now. Wire the active class.
@@ -4706,7 +4854,9 @@ font-size: 0.8rem;
     if (periodGroup) {
       periodGroup.addEventListener('click', e => {
         const pill = e.target.closest('[data-adm-period]');
-        if (!pill) {return;}
+        if (!pill) {
+          return;
+        }
         periodGroup.querySelectorAll('.adm-pill').forEach(p => p.classList.remove('is-active'));
         pill.classList.add('is-active');
       });
@@ -4717,7 +4867,9 @@ font-size: 0.8rem;
     if (topbarEl) {
       topbarEl.addEventListener('click', e => {
         const btn = e.target.closest('[data-adm-action]');
-        if (!btn) {return;}
+        if (!btn) {
+          return;
+        }
         const action = btn.dataset.admAction;
         if (action === 'notifications') {
           AdminUI.toast('No new notifications', 'info');
@@ -4733,7 +4885,14 @@ font-size: 0.8rem;
     try {
       stats = await adminReportsManager.getDashboardOverview();
     } catch (_e) {
-      stats = { summary: {}, today: {}, thisWeek: {}, thisMonth: {}, recentOrders: [], recentUsers: [] };
+      stats = {
+        summary: {},
+        today: {},
+        thisWeek: {},
+        thisMonth: {},
+        recentOrders: [],
+        recentUsers: [],
+      };
     }
 
     // Payout queue snapshot for the dashboard card. Non-fatal: if the
@@ -4748,7 +4907,9 @@ font-size: 0.8rem;
         pendingPayoutCount = requested.length;
         pendingPayoutAmount = requested.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
       }
-    } catch (_e) { /* queue unavailable */ }
+    } catch (_e) {
+      /* queue unavailable */
+    }
 
     const summary = stats.summary || {};
     const totalUsers = Number(summary.totalUsers) || 0;
@@ -4757,14 +4918,14 @@ font-size: 0.8rem;
     const gmvText = Formatter.formatPrice(Number(summary.totalRevenue) || 0);
     const commissionText = Formatter.formatPrice(Number(summary.commissionEarned) || 0);
 
-    const usersDelta = newUsersThisWeek > 0
-      ? `+${newUsersThisWeek} this week`
-      : `${totalUsers} total accounts`;
+    const usersDelta =
+      newUsersThisWeek > 0 ? `+${newUsersThisWeek} this week` : `${totalUsers} total accounts`;
     const usersDeltaKind = newUsersThisWeek > 0 ? 'success' : 'muted';
 
-    const gmvDelta = totalOrders > 0
-      ? `${totalOrders} order${totalOrders === 1 ? '' : 's'} placed`
-      : '0 orders placed';
+    const gmvDelta =
+      totalOrders > 0
+        ? `${totalOrders} order${totalOrders === 1 ? '' : 's'} placed`
+        : '0 orders placed';
 
     const statCards = [
       AdminUI.statCard({
@@ -4788,9 +4949,10 @@ font-size: 0.8rem;
       AdminUI.statCard({
         label: 'Payout queue',
         value: _pageEsc(String(pendingPayoutCount)),
-        delta: pendingPayoutCount > 0
-          ? `${Formatter.formatPrice(pendingPayoutAmount)} awaiting review`
-          : 'No payouts awaiting review',
+        delta:
+          pendingPayoutCount > 0
+            ? `${Formatter.formatPrice(pendingPayoutAmount)} awaiting review`
+            : 'No payouts awaiting review',
         deltaKind: pendingPayoutCount > 0 ? 'danger' : 'muted',
       }),
     ];
@@ -4820,7 +4982,10 @@ font-size: 0.8rem;
           </div>
         `,
       },
-      { label: 'Action', render: r => `<span class="adm-text-strong">${_pageEsc(r.action || '—')}</span>` },
+      {
+        label: 'Action',
+        render: r => `<span class="adm-text-strong">${_pageEsc(r.action || '—')}</span>`,
+      },
       { label: 'Detail', render: r => Pages._renderActivityDetails(r.details || {}) },
       {
         label: 'Severity',
@@ -4851,33 +5016,43 @@ font-size: 0.8rem;
           `;
         })(),
       }),
-      filterSelector,
+      filterSelector
     );
 
     const oldCard = mainContent.querySelector('.adm-card');
-    if (oldCard) {oldCard.outerHTML = activityCard;}
+    if (oldCard) {
+      oldCard.outerHTML = activityCard;
+    }
 
     // Filter the table by data-cat when filter pills change.
     const filterGroup = mainContent.querySelector('[data-adm-pill]')?.parentElement;
     if (filterGroup) {
       filterGroup.addEventListener('click', e => {
         const pill = e.target.closest('[data-adm-pill]');
-        if (!pill) {return;}
+        if (!pill) {
+          return;
+        }
         const filter = pill.dataset.admPill;
         filterGroup.querySelectorAll('.adm-pill').forEach(p => p.classList.remove('is-active'));
         pill.classList.add('is-active');
         const tbody = mainContent.querySelector('.adm-table tbody');
-        if (!tbody) {return;}
+        if (!tbody) {
+          return;
+        }
         let shown = 0;
         const total = tbody.querySelectorAll('tr').length;
         tbody.querySelectorAll('tr').forEach(tr => {
           const cat = tr.dataset.cat || 'all';
           const show = filter === 'all' || cat === filter;
           tr.style.display = show ? '' : 'none';
-          if (show) {shown += 1;}
+          if (show) {
+            shown += 1;
+          }
         });
         const info = mainContent.querySelector('.adm-pagination-info');
-        if (info) {info.textContent = `Showing ${shown} of ${total}`;}
+        if (info) {
+          info.textContent = `Showing ${shown} of ${total}`;
+        }
       });
     }
   }
@@ -4888,35 +5063,44 @@ font-size: 0.8rem;
   // empty in a fresh deployment. Returned objects use the shape the
   // dashboard table expects: { createdAt, userInitials, userName,
   // action, details, severity, severityLabel, category }.
-  static _buildDashboardActivityRows (stats) {
-    const fromOrders = (stats && Array.isArray(stats.recentOrders) ? stats.recentOrders : []).map(o => ({
-      createdAt: o.createdAt,
-      userInitials: ((o.customer && o.customer.name) || 'CU').trim().charAt(0).toUpperCase(),
-      userName: (o.customer && o.customer.name) || 'Customer',
-      action: 'Order placed',
-      details: {
-        orderNumber: o.orderNumber || o.id,
-        amount: o.pricing && o.pricing.grandTotal ? Formatter.formatPrice(o.pricing.grandTotal) : undefined,
-        status: o.status,
-      },
-      severity: 'success',
-      severityLabel: 'Success',
-      category: 'orders',
-    }));
+  static _buildDashboardActivityRows(stats) {
+    const fromOrders = (stats && Array.isArray(stats.recentOrders) ? stats.recentOrders : []).map(
+      o => ({
+        createdAt: o.createdAt,
+        userInitials: ((o.customer && o.customer.name) || 'CU').trim().charAt(0).toUpperCase(),
+        userName: (o.customer && o.customer.name) || 'Customer',
+        action: 'Order placed',
+        details: {
+          orderNumber: o.orderNumber || o.id,
+          amount:
+            o.pricing && o.pricing.grandTotal
+              ? Formatter.formatPrice(o.pricing.grandTotal)
+              : undefined,
+          status: o.status,
+        },
+        severity: 'success',
+        severityLabel: 'Success',
+        category: 'orders',
+      })
+    );
 
-    const fromUsers = (stats && Array.isArray(stats.recentUsers) ? stats.recentUsers : []).map(u => ({
-      createdAt: u.createdAt || new Date().toISOString(),
-      userInitials: (u.fullName || 'U').trim().charAt(0).toUpperCase(),
-      userName: u.fullName || 'User',
-      action: 'New signup',
-      details: { email: u.email, role: u.role },
-      severity: 'info',
-      severityLabel: 'Info',
-      category: 'logins',
-    }));
+    const fromUsers = (stats && Array.isArray(stats.recentUsers) ? stats.recentUsers : []).map(
+      u => ({
+        createdAt: u.createdAt || new Date().toISOString(),
+        userInitials: (u.fullName || 'U').trim().charAt(0).toUpperCase(),
+        userName: u.fullName || 'User',
+        action: 'New signup',
+        details: { email: u.email, role: u.role },
+        severity: 'info',
+        severityLabel: 'Info',
+        category: 'logins',
+      })
+    );
 
     const combined = fromOrders.concat(fromUsers);
-    if (combined.length > 0) {return combined;}
+    if (combined.length > 0) {
+      return combined;
+    }
 
     // Representative fallback — matches the mockup's seed rows so the
     // dashboard reads as a designed surface in a fresh deployment.
@@ -4966,8 +5150,10 @@ font-size: 0.8rem;
     return fallback;
   }
 
-  static async renderAdminVerifications (filter = 'pending') {
-    if (!_requireAdmin()) {return;}
+  static async renderAdminVerifications(filter = 'pending') {
+    if (!_requireAdmin()) {
+      return;
+    }
     // Remember the active tab so post-purge re-renders return to it.
     Pages._verifFilter = filter;
     const adminUser =
@@ -5040,12 +5226,13 @@ font-size: 0.8rem;
     const sync = adminVerificationsManager.getLastSyncStatus
       ? adminVerificationsManager.getLastSyncStatus()
       : { ok: null, error: null };
-    const syncBanner = sync.ok === false
-      ? `<div id="admin-verifications-sync-banner" style="margin: 0.75rem 0 1rem; padding: 0.75rem 1rem; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; color: #92400e; font-size: 0.9rem;">
+    const syncBanner =
+      sync.ok === false
+        ? `<div id="admin-verifications-sync-banner" style="margin: 0.75rem 0 1rem; padding: 0.75rem 1rem; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; color: #92400e; font-size: 0.9rem;">
           <strong>Backend sync failed.</strong> Showing cached data. ${sync.error ? 'Last error: ' + _pageEsc(sync.error) : ''}
           <button type="button" data-action="retry-sync" class="btn btn-ghost btn-sm" style="margin-left: 0.5rem;">Retry</button>
         </div>`
-      : '';
+        : '';
 
     mainContent.innerHTML = `
       <div class="adm-layout">
@@ -5077,22 +5264,28 @@ font-size: 0.8rem;
 
     AdminUI.wireSidebar(key => {
       const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {Pages[method]();}
+      if (typeof Pages[method] === 'function') {
+        Pages[method]();
+      }
     });
 
-    const filterLabel = filter === 'all'
-      ? 'All Verifications'
-      : filter === 'approved'
-        ? 'Approved Verifications'
-        : filter === 'approved_pending_user'
-          ? 'Awaiting User Confirmation'
-          : filter === 'rejected'
-            ? 'Rejected Verifications'
-            : 'Pending Verifications';
+    const filterLabel =
+      filter === 'all'
+        ? 'All Verifications'
+        : filter === 'approved'
+          ? 'Approved Verifications'
+          : filter === 'approved_pending_user'
+            ? 'Awaiting User Confirmation'
+            : filter === 'rejected'
+              ? 'Rejected Verifications'
+              : 'Pending Verifications';
 
     const pillTabs = [
       { key: 'pending', label: `Pending (${stats.pending})` },
-      { key: 'approved_pending_user', label: `Awaiting Confirmation (${stats.approvedPendingUser || 0})` },
+      {
+        key: 'approved_pending_user',
+        label: `Awaiting Confirmation (${stats.approvedPendingUser || 0})`,
+      },
       { key: 'approved', label: `Approved (${stats.approved})` },
       { key: 'rejected', label: `Rejected (${stats.rejected})` },
       { key: 'all', label: 'All' },
@@ -5133,7 +5326,8 @@ font-size: 0.8rem;
       },
       {
         label: 'University',
-        render: v => `<span class="adm-text-strong">${_pageEsc(v.university || v.universityName || '—')}</span>`,
+        render: v =>
+          `<span class="adm-text-strong">${_pageEsc(v.university || v.universityName || '—')}</span>`,
       },
       {
         label: 'Method',
@@ -5168,11 +5362,13 @@ font-size: 0.8rem;
 
     const cardTitle = `<h3 class="adm-card-title">${_pageEsc(filterLabel)}</h3><p class="adm-card-sub">Showing ${allItems.length} verification${allItems.length === 1 ? '' : 's'}</p>`;
 
-    const emptyHtml = `<tr><td class="adm-td" colspan="${verifColumns.length}">${AdminUI.emptyState({
-      icon: Icons.shield || '',
-      title: 'No verifications to show',
-      body: `There are no ${filter} verifications right now.`,
-    })}</td></tr>`;
+    const emptyHtml = `<tr><td class="adm-td" colspan="${verifColumns.length}">${AdminUI.emptyState(
+      {
+        icon: Icons.shield || '',
+        title: 'No verifications to show',
+        body: `There are no ${filter} verifications right now.`,
+      }
+    )}</td></tr>`;
 
     const footerHtml = `
       <div class="adm-pagination">
@@ -5205,9 +5401,13 @@ font-size: 0.8rem;
 
       page.addEventListener('click', e => {
         const btn = e.target.closest('[data-verif-action]');
-        if (!btn) {return;}
+        if (!btn) {
+          return;
+        }
         const id = btn.dataset.verifId;
-        if (!id) {return;}
+        if (!id) {
+          return;
+        }
         if (btn.dataset.verifAction === 'view') {
           void Pages.viewVerificationDetail(id);
         }
@@ -5219,18 +5419,26 @@ font-size: 0.8rem;
       AdminUI.wireSearch(searchInput, value => {
         const q = (value || '').trim().toLowerCase();
         const tbody = mainContent.querySelector('.adm-table tbody');
-        if (!tbody) {return;}
+        if (!tbody) {
+          return;
+        }
         let shown = 0;
         const trs = tbody.querySelectorAll('tr');
         trs.forEach(tr => {
-          if (!tr.children || tr.children.length < 2) {return;}
+          if (!tr.children || tr.children.length < 2) {
+            return;
+          }
           const text = tr.textContent.toLowerCase();
           const match = !q || text.includes(q);
           tr.style.display = match ? '' : 'none';
-          if (match) {shown += 1;}
+          if (match) {
+            shown += 1;
+          }
         });
         const info = mainContent.querySelector('.adm-pagination-info');
-        if (info) {info.textContent = `Showing ${shown} of ${stats.total}`;}
+        if (info) {
+          info.textContent = `Showing ${shown} of ${stats.total}`;
+        }
       });
     }
   }
@@ -5241,7 +5449,7 @@ font-size: 0.8rem;
   // manual settlement mark; Reject = requires a stored reason.
   // ============================================
 
-  static _payoutStatusClass (status) {
+  static _payoutStatusClass(status) {
     // Maps payout states onto existing admin-status-badge classes.
     const badgeMap = {
       paid: 'delivered',
@@ -5252,11 +5460,12 @@ font-size: 0.8rem;
     return badgeMap[status] || 'placed';
   }
 
-  static async renderAdminPayouts (filter) {
-    if (!_requireAdmin()) {return;}
+  static async renderAdminPayouts(filter) {
+    if (!_requireAdmin()) {
+      return;
+    }
     const adminUser =
-      (typeof adminAuthManager !== 'undefined' && adminAuthManager.getCurrentUser?.()) ||
-      null;
+      (typeof adminAuthManager !== 'undefined' && adminAuthManager.getCurrentUser?.()) || null;
     if (!adminUser) {
       this.renderAdminLogin();
       return;
@@ -5290,7 +5499,9 @@ font-size: 0.8rem;
 
     AdminUI.wireSidebar(key => {
       const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {Pages[method]();}
+      if (typeof Pages[method] === 'function') {
+        Pages[method]();
+      }
     });
 
     // One fetch for the whole queue (backend caps page size); counts and
@@ -5313,9 +5524,12 @@ font-size: 0.8rem;
 
     const counts = { requested: 0, paid: 0, failed: 0 };
     for (const p of payouts) {
-      if (counts[p.status] !== undefined) { counts[p.status]++; }
+      if (counts[p.status] !== undefined) {
+        counts[p.status]++;
+      }
     }
-    const visible = activeFilter === 'all' ? payouts : payouts.filter(p => p.status === activeFilter);
+    const visible =
+      activeFilter === 'all' ? payouts : payouts.filter(p => p.status === activeFilter);
 
     const statusToBadgeKind = {
       requested: 'warning',
@@ -5329,7 +5543,12 @@ font-size: 0.8rem;
       { key: 'failed', label: `Rejected (${counts.failed})` },
       { key: 'all', label: `All (${payouts.length})` },
     ];
-    const pillSelector = AdminUI.pillGroup(pillTabs, activeFilter, 'adm-pill-group--inverse', 'data-payout-filter');
+    const pillSelector = AdminUI.pillGroup(
+      pillTabs,
+      activeFilter,
+      'adm-pill-group--inverse',
+      'data-payout-filter'
+    );
 
     const payoutColumns = [
       {
@@ -5349,9 +5568,16 @@ font-size: 0.8rem;
           `;
         },
       },
-      { label: 'Amount', render: p => `<span class="adm-text-strong">${_pageEsc(Formatter.formatPrice(p.amount || 0))}</span>` },
+      {
+        label: 'Amount',
+        render: p =>
+          `<span class="adm-text-strong">${_pageEsc(Formatter.formatPrice(p.amount || 0))}</span>`,
+      },
       { label: 'Method', render: p => _pageEsc(Formatter.capitalize(p.method || '')) },
-      { label: 'Destination', render: p => `<span class="adm-text-mono">${_pageEsc(p.destination || '')}</span>` },
+      {
+        label: 'Destination',
+        render: p => `<span class="adm-text-mono">${_pageEsc(p.destination || '')}</span>`,
+      },
       { label: 'Requested', render: p => _pageEsc(Formatter.formatTimeAgo(p.requestedAt)) },
       {
         label: 'Status',
@@ -5370,7 +5596,9 @@ font-size: 0.8rem;
       {
         label: 'Actions',
         render: p => {
-          if (p.status !== 'requested') {return '<span class="adm-text-muted">—</span>';}
+          if (p.status !== 'requested') {
+            return '<span class="adm-text-muted">—</span>';
+          }
           const id = _pageEsc(p.id || '');
           return `
             <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
@@ -5384,13 +5612,15 @@ font-size: 0.8rem;
 
     const cardTitle = `<h3 class="adm-card-title">Payout Requests</h3><p class="adm-card-sub">Showing ${visible.length} request${visible.length === 1 ? '' : 's'}</p>`;
 
-    const emptyHtml = `<tr><td class="adm-td" colspan="${payoutColumns.length}">${AdminUI.emptyState({
-      icon: Icons.money || '',
-      title: 'No payout requests',
-      body: loadError
-        ? `${loadError} Offline or server unreachable.`
-        : `There are no ${activeFilter === 'all' ? '' : `${activeFilter} `}payout requests right now.`,
-    })}</td></tr>`;
+    const emptyHtml = `<tr><td class="adm-td" colspan="${payoutColumns.length}">${AdminUI.emptyState(
+      {
+        icon: Icons.money || '',
+        title: 'No payout requests',
+        body: loadError
+          ? `${loadError} Offline or server unreachable.`
+          : `There are no ${activeFilter === 'all' ? '' : `${activeFilter} `}payout requests right now.`,
+      }
+    )}</td></tr>`;
 
     const footerHtml = `
       <div class="adm-pagination">
@@ -5426,9 +5656,13 @@ font-size: 0.8rem;
 
       page.addEventListener('click', e => {
         const btn = e.target.closest('[data-payout-action]');
-        if (!btn) {return;}
+        if (!btn) {
+          return;
+        }
         const id = btn.dataset.payoutId;
-        if (!id) {return;}
+        if (!id) {
+          return;
+        }
         if (btn.dataset.payoutAction === 'approve') {
           void Pages._approvePayout(id);
         } else if (btn.dataset.payoutAction === 'reject') {
@@ -5444,28 +5678,42 @@ font-size: 0.8rem;
       AdminUI.wireSearch(searchInput, value => {
         const q = (value || '').trim().toLowerCase();
         const tbody = mainContent.querySelector('.adm-table tbody');
-        if (!tbody) {return;}
+        if (!tbody) {
+          return;
+        }
         let shown = 0;
         const trs = tbody.querySelectorAll('tr');
         trs.forEach(tr => {
-          if (!tr.children || tr.children.length < 2) {return;}
+          if (!tr.children || tr.children.length < 2) {
+            return;
+          }
           const text = tr.textContent.toLowerCase();
           const match = !q || text.includes(q);
           tr.style.display = match ? '' : 'none';
-          if (match) {shown += 1;}
+          if (match) {
+            shown += 1;
+          }
         });
         const info = mainContent.querySelector('.adm-pagination-info');
-        if (info) {info.textContent = `Showing ${shown} of ${payouts.length}`;}
+        if (info) {
+          info.textContent = `Showing ${shown} of ${payouts.length}`;
+        }
       });
     }
   }
 
-  static async _approvePayout (id) {
-    if (!_requireAdmin()) {return;}
+  static async _approvePayout(id) {
+    if (!_requireAdmin()) {
+      return;
+    }
     // TODO: security review — money-moving action; confirm guards against
     // accidental double-click but real protection is the backend's
     // status-guarded transition (409 on already-handled requests).
-    if (!window.confirm('Approve this payout?\n\nIt will be marked PAID for manual settlement and a negative ledger entry will be recorded for the seller.')) {
+    if (
+      !window.confirm(
+        'Approve this payout?\n\nIt will be marked PAID for manual settlement and a negative ledger entry will be recorded for the seller.'
+      )
+    ) {
       return;
     }
     try {
@@ -5481,8 +5729,10 @@ font-size: 0.8rem;
     await this.renderAdminPayouts();
   }
 
-  static _openRejectPayoutModal (id) {
-    if (!_requireAdmin()) {return;}
+  static _openRejectPayoutModal(id) {
+    if (!_requireAdmin()) {
+      return;
+    }
 
     const overlay = document.createElement('div');
     overlay.id = 'payout-reject-overlay';
@@ -5491,7 +5741,8 @@ font-size: 0.8rem;
       title: 'Reject payout request',
       sub: 'Rejection is final — the seller would need to submit a new request. The reason is kept in the payout record.',
       body: '<textarea id="payout-reject-reason" class="adm-modal-field" maxlength="300" rows="3" placeholder="Reason (min 3 characters)"></textarea><p id="payout-reject-error" class="adm-modal-error" role="alert"></p>',
-      footer: '<button type="button" data-adm-modal-cancel data-adm-modal-close class="adm-btn">Cancel</button><button type="button" data-adm-modal-action="confirm" class="adm-btn adm-btn--danger">Reject request</button>',
+      footer:
+        '<button type="button" data-adm-modal-cancel data-adm-modal-close class="adm-btn">Cancel</button><button type="button" data-adm-modal-action="confirm" class="adm-btn adm-btn--danger">Reject request</button>',
     });
     document.body.appendChild(overlay);
 
@@ -5502,7 +5753,9 @@ font-size: 0.8rem;
     AdminUI.wireModal(overlay, {
       onClose: () => overlay.remove(),
       onAction: async key => {
-        if (key !== 'confirm') {return;}
+        if (key !== 'confirm') {
+          return;
+        }
         const reason = reasonEl.value.trim();
         if (reason.length < 3) {
           errorEl.textContent = 'Please enter a rejection reason of at least 3 characters.';
@@ -5525,11 +5778,15 @@ font-size: 0.8rem;
       },
     });
 
-    if (reasonEl) {reasonEl.focus();}
+    if (reasonEl) {
+      reasonEl.focus();
+    }
   }
 
-  static async viewVerificationDetail (id) {
-    if (!_requireAdmin()) {return;}
+  static async viewVerificationDetail(id) {
+    if (!_requireAdmin()) {
+      return;
+    }
     if (typeof adminVerificationsManager === 'undefined') {
       showToast('Verification module not loaded', 'error');
       return;
@@ -5547,7 +5804,9 @@ font-size: 0.8rem;
       if (resp.success && resp.data) {
         docsState = resp.data;
       }
-    } catch (_) { /* non-fatal: render modal without doc section */ }
+    } catch (_) {
+      /* non-fatal: render modal without doc section */
+    }
 
     const esc = v2 => _pageEsc(String(v2 === null || v2 === undefined ? '' : v2));
     let docsSection;
@@ -5557,18 +5816,21 @@ font-size: 0.8rem;
           Documents permanently deleted${v.reviewedAt ? ` (decision ${esc(Formatter.formatDate(v.reviewedAt))})` : ''}
         </div>`;
     } else if (docsState.documents.length > 0) {
-      const items = docsState.documents.map(d => {
-        if (d.mimeType === 'application/pdf') {
-          return `<a href="${esc(d.url)}" target="_blank" rel="noopener noreferrer" data-doc-link class="adm-text-strong" style="display:block;padding:0.5rem;background:var(--neutral-50);border-radius:var(--radius-md);color:var(--primary);font-size:0.85rem;text-decoration:none;border:1px solid var(--neutral-200);">${Icons.clipboard || ''} ${esc(d.fileName)}</a>`;
-        }
-        return `<img src="${esc(d.url)}" alt="${esc(d.fileName)}" style="max-width:100%;max-height:280px;display:block;margin:0.5rem auto;border-radius:var(--radius-md);" />`;
-      }).join('');
+      const items = docsState.documents
+        .map(d => {
+          if (d.mimeType === 'application/pdf') {
+            return `<a href="${esc(d.url)}" target="_blank" rel="noopener noreferrer" data-doc-link class="adm-text-strong" style="display:block;padding:0.5rem;background:var(--neutral-50);border-radius:var(--radius-md);color:var(--primary);font-size:0.85rem;text-decoration:none;border:1px solid var(--neutral-200);">${Icons.clipboard || ''} ${esc(d.fileName)}</a>`;
+          }
+          return `<img src="${esc(d.url)}" alt="${esc(d.fileName)}" style="max-width:100%;max-height:280px;display:block;margin:0.5rem auto;border-radius:var(--radius-md);" />`;
+        })
+        .join('');
       const purgeNote = docsState.purgeScheduledFor
         ? `<div class="adm-text-muted" style="font-size:0.75rem;margin-top:0.5rem;color:var(--warning);">Auto-deletes ${esc(Formatter.formatDate(docsState.purgeScheduledFor))}</div>`
         : '';
-      const purgeBtn = adminAuthManager.getCurrentUser()?.role === 'admin'
-        ? `<button type="button" data-vrf-action="purge" data-vrf-id="${esc(v.id)}" class="adm-btn adm-btn--sm adm-btn--danger" style="margin-top:0.5rem;">Purge now</button>`
-        : '';
+      const purgeBtn =
+        adminAuthManager.getCurrentUser()?.role === 'admin'
+          ? `<button type="button" data-vrf-action="purge" data-vrf-id="${esc(v.id)}" class="adm-btn adm-btn--sm adm-btn--danger" style="margin-top:0.5rem;">Purge now</button>`
+          : '';
       docsSection = `
         <div style="border:1px solid var(--neutral-200);border-radius:var(--radius-md);padding:0.75rem;background:var(--bg-primary);">
           ${items}
@@ -5638,8 +5900,9 @@ font-size: 0.8rem;
       </div>
     `;
 
-    const approveRejectBlock = v.status === 'pending'
-      ? `
+    const approveRejectBlock =
+      v.status === 'pending'
+        ? `
         <div class="adm-modal-divider">
           <div class="adm-modal-field-group">
             <label class="adm-modal-field-label" for="vrf-review-notes-${esc(v.id)}">Review Notes (optional)</label>
@@ -5650,7 +5913,7 @@ font-size: 0.8rem;
             <button type="button" data-vrf-action="reject" data-vrf-id="${esc(v.id)}" class="adm-btn adm-btn--danger" style="flex:1;">Reject Verification</button>
           </div>
         </div>`
-      : '';
+        : '';
 
     const overlay = document.createElement('div');
     overlay.id = 'vrf-detail-overlay';
@@ -5666,11 +5929,17 @@ font-size: 0.8rem;
 
     // Signed URLs expire after 300s; refetch fresh ones once on load error.
     let refetched = false;
-    overlay.addEventListener('error', e => {
-      if (refetched || e.target.tagName !== 'IMG') { return; }
-      refetched = true;
-      void Pages.viewVerificationDetail(id);
-    }, true);
+    overlay.addEventListener(
+      'error',
+      e => {
+        if (refetched || e.target.tagName !== 'IMG') {
+          return;
+        }
+        refetched = true;
+        void Pages.viewVerificationDetail(id);
+      },
+      true
+    );
 
     AdminUI.wireModal(overlay, {
       onClose: () => overlay.remove(),
@@ -5683,7 +5952,13 @@ font-size: 0.8rem;
           Pages.rejectVerification(vid);
           overlay.remove();
         } else if (key === 'purge') {
-          if (!window.confirm('Permanently delete all documents for this request now? This cannot be undone.')) { return; }
+          if (
+            !window.confirm(
+              'Permanently delete all documents for this request now? This cannot be undone.'
+            )
+          ) {
+            return;
+          }
           btn.disabled = true;
           try {
             const resp = await api.verification.purgeDocuments(vid);
@@ -5704,7 +5979,7 @@ font-size: 0.8rem;
     });
   }
 
-  static async approveVerification (id) {
+  static async approveVerification(id) {
     if (typeof adminVerificationsManager === 'undefined') {
       showToast('Verification module not loaded', 'error');
       return;
@@ -5726,7 +6001,11 @@ font-size: 0.8rem;
     const reason = backendResp && backendResp.confirmationLinkReason;
 
     if (confirmationLink) {
-      showToast('Approved — email not sent. Copy the link below to share with the user.', 'info', 8000);
+      showToast(
+        'Approved — email not sent. Copy the link below to share with the user.',
+        'info',
+        8000
+      );
       Pages._showConfirmationLinkBox(id, result.data.fullName, confirmationLink, reason);
     } else {
       showToast(`Student ${result.data.fullName} approved — confirmation link emailed.`, 'success');
@@ -5739,20 +6018,24 @@ font-size: 0.8rem;
    * with the magic-link the admin can paste into the user's email by
    * hand, or open in a private browser to complete the confirmation.
    */
-  static _showConfirmationLinkBox (id, fullName, link, reason) {
-    const esc = (s) => {
-      const e = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ||
+  static _showConfirmationLinkBox(id, fullName, link, reason) {
+    const esc = s => {
+      const e =
+        (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ||
         (window.SecurityUtils && window.SecurityUtils.escapeHtml);
       return e ? e(s) : String(s);
     };
     const existing = document.getElementById('confirm-link-box');
-    if (existing) {existing.remove();}
+    if (existing) {
+      existing.remove();
+    }
     const safeName = esc(fullName);
     const safeLink = esc(link);
     const safeReason = esc(reason || 'email service not configured');
     const box = document.createElement('div');
     box.id = 'confirm-link-box';
-    box.style.cssText = 'position: fixed; right: 24px; bottom: 24px; max-width: 480px; z-index: 9999; background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.12);';
+    box.style.cssText =
+      'position: fixed; right: 24px; bottom: 24px; max-width: 480px; z-index: 9999; background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.12);';
     box.innerHTML = `
       <div style="display: flex; align-items: flex-start; gap: 12px;">
         <div style="flex: 1;">
@@ -5767,7 +6050,7 @@ font-size: 0.8rem;
         </div>
       </div>
     `;
-    box.addEventListener('click', (e) => {
+    box.addEventListener('click', e => {
       const action = e.target.closest('[data-action]')?.getAttribute('data-action');
       if (action === 'copy') {
         const ta = box.querySelector('[data-confirm-link]');
@@ -5776,11 +6059,15 @@ font-size: 0.8rem;
           try {
             navigator.clipboard.writeText(ta.value).then(
               () => showToast('Link copied to clipboard', 'success'),
-              () => showToast('Copy failed — please copy manually', 'error'),
+              () => showToast('Copy failed — please copy manually', 'error')
             );
           } catch (_) {
             // Older browsers — execCommand fallback
-            try { document.execCommand('copy'); } catch (__) { /* nothing */ }
+            try {
+              document.execCommand('copy');
+            } catch (__) {
+              /* nothing */
+            }
           }
         }
       } else if (action === 'open') {
@@ -5792,7 +6079,7 @@ font-size: 0.8rem;
     document.body.appendChild(box);
   }
 
-  static rejectVerification (id) {
+  static rejectVerification(id) {
     if (typeof adminVerificationsManager === 'undefined') {
       showToast('Verification module not loaded', 'error');
       return;
@@ -5802,9 +6089,11 @@ font-size: 0.8rem;
 
     if (!notes) {
       const reason = prompt(
-        'Please provide a reason for rejection (this will be visible to the student):',
+        'Please provide a reason for rejection (this will be visible to the student):'
       );
-      if (reason === null) {return;}
+      if (reason === null) {
+        return;
+      }
       notes = reason;
     }
 
@@ -5820,7 +6109,7 @@ font-size: 0.8rem;
   /**
    * Render Admin Login
    */
-  static renderAdminLogin () {
+  static renderAdminLogin() {
     this.hideOriginalNavFooter();
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
@@ -5868,7 +6157,7 @@ font-size: 0.8rem;
   /**
    * Handle Admin Login
    */
-  static async handleAdminLogin (event) {
+  static async handleAdminLogin(event) {
     event.preventDefault();
     const form = event.target;
     const result = await adminAuthManager.login(form.email.value, form.password.value);
@@ -5884,8 +6173,10 @@ font-size: 0.8rem;
   /**
    * Render Admin Users Page
    */
-  static async renderAdminUsers () {
-    if (!_requireAdmin()) {return;}
+  static async renderAdminUsers() {
+    if (!_requireAdmin()) {
+      return;
+    }
     this.hideOriginalNavFooter();
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
@@ -5917,14 +6208,18 @@ font-size: 0.8rem;
 
     AdminUI.wireSidebar(key => {
       const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {Pages[method]();}
+      if (typeof Pages[method] === 'function') {
+        Pages[method]();
+      }
     });
 
     const topbarEl = mainContent.querySelector('.adm-topbar');
     if (topbarEl) {
       topbarEl.addEventListener('click', e => {
         const btn = e.target.closest('[data-adm-action]');
-        if (!btn) {return;}
+        if (!btn) {
+          return;
+        }
         const action = btn.dataset.admAction;
         if (action === 'invite-user') {
           AdminUI.toast('User invite flow not yet available', 'info');
@@ -5971,7 +6266,8 @@ font-size: 0.8rem;
       {
         label: 'Status',
         render: u => {
-          const suspended = u.isSuspended === true || u.status === 'suspended' || u.status === 'banned';
+          const suspended =
+            u.isSuspended === true || u.status === 'suspended' || u.status === 'banned';
           // 2026-08-30: legacy users (e.g. pre-fix Google signups) have
           // an empty university and needsUniversityPick: true. Surface
           // this so admins can chase them down.
@@ -5991,8 +6287,11 @@ font-size: 0.8rem;
       {
         label: 'Actions',
         render: u => {
-          if (u.role === 'admin') {return '<span class="adm-text-muted">—</span>';}
-          const suspended = u.isSuspended === true || u.status === 'suspended' || u.status === 'banned';
+          if (u.role === 'admin') {
+            return '<span class="adm-text-muted">—</span>';
+          }
+          const suspended =
+            u.isSuspended === true || u.status === 'suspended' || u.status === 'banned';
           if (suspended) {
             return `<button type="button" class="adm-btn adm-btn--sm" data-user-action="unban" data-user-id="${_pageEsc(u.id)}">Unban</button>`;
           }
@@ -6040,10 +6339,14 @@ font-size: 0.8rem;
     if (page) {
       page.addEventListener('click', e => {
         const btn = e.target.closest('[data-user-action]');
-        if (!btn) {return;}
+        if (!btn) {
+          return;
+        }
         const action = btn.dataset.userAction;
         const userId = btn.dataset.userId || '';
-        if (!userId) {return;}
+        if (!userId) {
+          return;
+        }
         if (action === 'ban') {
           Pages.adminBanUser(userId);
         } else if (action === 'unban') {
@@ -6059,7 +6362,9 @@ font-size: 0.8rem;
       AdminUI.wireSearch(searchInput, value => {
         const q = (value || '').trim().toLowerCase();
         const tbody = mainContent.querySelector('.adm-table tbody');
-        if (!tbody) {return;}
+        if (!tbody) {
+          return;
+        }
         let shown = 0;
         const trs = tbody.querySelectorAll('tr');
         trs.forEach(tr => {
@@ -6069,10 +6374,14 @@ font-size: 0.8rem;
           const text = tr.textContent.toLowerCase();
           const match = !q || text.includes(q);
           tr.style.display = match ? '' : 'none';
-          if (match) {shown += 1;}
+          if (match) {
+            shown += 1;
+          }
         });
         const info = mainContent.querySelector('.adm-pagination-info');
-        if (info) {info.textContent = `Showing ${shown} of ${total}`;}
+        if (info) {
+          info.textContent = `Showing ${shown} of ${total}`;
+        }
       });
     }
   }
@@ -6080,8 +6389,10 @@ font-size: 0.8rem;
   /**
    * Render Admin Products Page
    */
-  static async renderAdminProducts () {
-    if (!_requireAdmin()) {return;}
+  static async renderAdminProducts() {
+    if (!_requireAdmin()) {
+      return;
+    }
     let products = adminProductsManager.getAllProducts();
     if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
       try {
@@ -6135,14 +6446,18 @@ font-size: 0.8rem;
 
     AdminUI.wireSidebar(key => {
       const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {Pages[method]();}
+      if (typeof Pages[method] === 'function') {
+        Pages[method]();
+      }
     });
 
     const topbarEl = mainContent.querySelector('.adm-topbar');
     if (topbarEl) {
       topbarEl.addEventListener('click', e => {
         const btn = e.target.closest('[data-adm-action]');
-        if (!btn) {return;}
+        if (!btn) {
+          return;
+        }
         const action = btn.dataset.admAction;
         if (action === 'add-product') {
           if (typeof Pages.renderAdminProductCreate === 'function') {
@@ -6180,7 +6495,8 @@ font-size: 0.8rem;
       { label: 'Price', render: p => _pageEsc(Formatter.formatPrice(p.price ?? 0)) },
       {
         label: 'Seller',
-        render: p => _pageEsc(p.seller?.fullName || p.sellerName || p.seller?.name || p.seller || 'Unknown'),
+        render: p =>
+          _pageEsc(p.seller?.fullName || p.sellerName || p.seller?.name || p.seller || 'Unknown'),
       },
       {
         label: 'Status',
@@ -6210,11 +6526,13 @@ font-size: 0.8rem;
     const total = products.length;
     const cardTitle = `<h3 class="adm-card-title">All products</h3><p class="adm-card-sub">Showing ${total} item${total === 1 ? '' : 's'}</p>`;
 
-    const emptyHtml = `<tr><td class="adm-td" colspan="${productColumns.length}">${AdminUI.emptyState({
-      icon: Icons.package || '',
-      title: 'No products yet',
-      body: 'When sellers add products they will appear here. Review listings, approve submissions, and manage the catalog from this page.',
-    })}</td></tr>`;
+    const emptyHtml = `<tr><td class="adm-td" colspan="${productColumns.length}">${AdminUI.emptyState(
+      {
+        icon: Icons.package || '',
+        title: 'No products yet',
+        body: 'When sellers add products they will appear here. Review listings, approve submissions, and manage the catalog from this page.',
+      }
+    )}</td></tr>`;
 
     const footerHtml = `
       <div class="adm-pagination">
@@ -6242,10 +6560,14 @@ font-size: 0.8rem;
     if (page) {
       page.addEventListener('click', e => {
         const btn = e.target.closest('[data-product-action]');
-        if (!btn) {return;}
+        if (!btn) {
+          return;
+        }
         const action = btn.dataset.productAction;
         const productId = btn.dataset.productId || '';
-        if (!productId) {return;}
+        if (!productId) {
+          return;
+        }
         if (action === 'edit') {
           Pages.renderAdminProductEdit(productId);
         } else if (action === 'delete') {
@@ -6263,18 +6585,26 @@ font-size: 0.8rem;
       AdminUI.wireSearch(searchInput, value => {
         const q = (value || '').trim().toLowerCase();
         const tbody = mainContent.querySelector('.adm-table tbody');
-        if (!tbody) {return;}
+        if (!tbody) {
+          return;
+        }
         let shown = 0;
         const trs = tbody.querySelectorAll('tr');
         trs.forEach(tr => {
-          if (!tr.children || tr.children.length < 2) {return;}
+          if (!tr.children || tr.children.length < 2) {
+            return;
+          }
           const text = tr.textContent.toLowerCase();
           const match = !q || text.includes(q);
           tr.style.display = match ? '' : 'none';
-          if (match) {shown += 1;}
+          if (match) {
+            shown += 1;
+          }
         });
         const info = mainContent.querySelector('.adm-pagination-info');
-        if (info) {info.textContent = `Showing ${shown} of ${total}`;}
+        if (info) {
+          info.textContent = `Showing ${shown} of ${total}`;
+        }
       });
     }
   }
@@ -6282,8 +6612,10 @@ font-size: 0.8rem;
   /**
    * Render Admin Orders Page
    */
-  static async renderAdminOrders () {
-    if (!_requireAdmin()) {return;}
+  static async renderAdminOrders() {
+    if (!_requireAdmin()) {
+      return;
+    }
     this.hideOriginalNavFooter();
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
@@ -6311,7 +6643,9 @@ font-size: 0.8rem;
 
     AdminUI.wireSidebar(key => {
       const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {Pages[method]();}
+      if (typeof Pages[method] === 'function') {
+        Pages[method]();
+      }
     });
 
     const orders = await adminOrdersManager.getAllOrders();
@@ -6362,11 +6696,13 @@ font-size: 0.8rem;
     const total = orders.length;
     const cardTitle = `<h3 class="adm-card-title">All orders</h3><p class="adm-card-sub">Showing ${total} order${total === 1 ? '' : 's'}</p>`;
 
-    const emptyHtml = `<tr><td class="adm-td" colspan="${orderColumns.length}">${AdminUI.emptyState({
-      icon: Icons.clipboard || '',
-      title: 'No orders yet',
-      body: 'When buyers place orders they will appear here. Track payment status, manage fulfillment, and resolve disputes from this page.',
-    })}</td></tr>`;
+    const emptyHtml = `<tr><td class="adm-td" colspan="${orderColumns.length}">${AdminUI.emptyState(
+      {
+        icon: Icons.clipboard || '',
+        title: 'No orders yet',
+        body: 'When buyers place orders they will appear here. Track payment status, manage fulfillment, and resolve disputes from this page.',
+      }
+    )}</td></tr>`;
 
     const footerHtml = `
       <div class="adm-pagination">
@@ -6394,10 +6730,14 @@ font-size: 0.8rem;
     if (page) {
       page.addEventListener('click', e => {
         const btn = e.target.closest('[data-order-action]');
-        if (!btn) {return;}
+        if (!btn) {
+          return;
+        }
         const action = btn.dataset.orderAction;
         const orderId = btn.dataset.orderId || '';
-        if (!orderId) {return;}
+        if (!orderId) {
+          return;
+        }
         if (action === 'view') {
           Pages.viewOrderDetails(orderId);
         }
@@ -6409,18 +6749,26 @@ font-size: 0.8rem;
       AdminUI.wireSearch(searchInput, value => {
         const q = (value || '').trim().toLowerCase();
         const tbody = mainContent.querySelector('.adm-table tbody');
-        if (!tbody) {return;}
+        if (!tbody) {
+          return;
+        }
         let shown = 0;
         const trs = tbody.querySelectorAll('tr');
         trs.forEach(tr => {
-          if (!tr.children || tr.children.length < 2) {return;}
+          if (!tr.children || tr.children.length < 2) {
+            return;
+          }
           const text = tr.textContent.toLowerCase();
           const match = !q || text.includes(q);
           tr.style.display = match ? '' : 'none';
-          if (match) {shown += 1;}
+          if (match) {
+            shown += 1;
+          }
         });
         const info = mainContent.querySelector('.adm-pagination-info');
-        if (info) {info.textContent = `Showing ${shown} of ${total}`;}
+        if (info) {
+          info.textContent = `Showing ${shown} of ${total}`;
+        }
       });
     }
   }
@@ -6428,8 +6776,10 @@ font-size: 0.8rem;
   /**
    * Render Admin Regions Page
    */
-  static async renderAdminCoupons () {
-    if (!_requireAdmin()) {return;}
+  static async renderAdminCoupons() {
+    if (!_requireAdmin()) {
+      return;
+    }
     this.hideOriginalNavFooter();
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
@@ -6466,7 +6816,9 @@ font-size: 0.8rem;
 
     AdminUI.wireSidebar(key => {
       const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {Pages[method]();}
+      if (typeof Pages[method] === 'function') {
+        Pages[method]();
+      }
     });
 
     // Delegate clicks on the host so row-action buttons keep working
@@ -6475,7 +6827,9 @@ font-size: 0.8rem;
     if (host) {
       host.addEventListener('click', ev => {
         const btn = ev.target.closest('[data-coupon-action]');
-        if (!btn) {return;}
+        if (!btn) {
+          return;
+        }
         const id = btn.getAttribute('data-coupon-id');
         const action = btn.dataset.couponAction;
         if (action === 'toggle') {
@@ -6504,9 +6858,11 @@ font-size: 0.8rem;
   }
 
   // Internal: load coupons from API and render the table.
-  static async _renderAdminCouponsList () {
+  static async _renderAdminCouponsList() {
     const host = document.getElementById('admin-coupons-host');
-    if (!host) {return;}
+    if (!host) {
+      return;
+    }
     let coupons = [];
     let loadError = null;
     try {
@@ -6532,27 +6888,33 @@ font-size: 0.8rem;
       `;
       return;
     }
-    const search = (document.getElementById('admin-coupons-search')?.value || '').toLowerCase().trim();
+    const search = (document.getElementById('admin-coupons-search')?.value || '')
+      .toLowerCase()
+      .trim();
     const filtered = search
-      ? coupons.filter(c =>
-          (c.code || '').toLowerCase().includes(search) ||
-          (c.description || '').toLowerCase().includes(search)
+      ? coupons.filter(
+          c =>
+            (c.code || '').toLowerCase().includes(search) ||
+            (c.description || '').toLowerCase().includes(search)
         )
       : coupons;
     const columns = [
       {
         label: 'Code',
-        render: c => `<span class="adm-text-strong" style="font-family:var(--font-family-mono);">${_pageEsc(c.code)}</span>`,
+        render: c =>
+          `<span class="adm-text-strong" style="font-family:var(--font-family-mono);">${_pageEsc(c.code)}</span>`,
       },
       {
         label: 'Discount',
-        render: c => c.type === 'percent'
-          ? `${_pageEsc(String(c.value))}%`
-          : `GHS ${Number(c.value || 0).toFixed(2)}`,
+        render: c =>
+          c.type === 'percent'
+            ? `${_pageEsc(String(c.value))}%`
+            : `GHS ${Number(c.value || 0).toFixed(2)}`,
       },
       {
         label: 'Min order',
-        render: c => c.min_order && c.min_order > 0 ? `GHS ${Number(c.min_order).toFixed(2)}` : '—',
+        render: c =>
+          c.min_order && c.min_order > 0 ? `GHS ${Number(c.min_order).toFixed(2)}` : '—',
       },
       {
         label: 'Uses',
@@ -6563,9 +6925,10 @@ font-size: 0.8rem;
       },
       {
         label: 'Status',
-        render: c => c.active
-          ? '<span class="adm-badge adm-badge--success">Active</span>'
-          : '<span class="adm-badge adm-badge--muted">Disabled</span>',
+        render: c =>
+          c.active
+            ? '<span class="adm-badge adm-badge--success">Active</span>'
+            : '<span class="adm-badge adm-badge--muted">Disabled</span>',
       },
       {
         label: 'Description',
@@ -6597,10 +6960,12 @@ font-size: 0.8rem;
   }
 
   // Internal: inline create/edit form for a coupon.
-  static _showAdminCouponForm (existing) {
+  static _showAdminCouponForm(existing) {
     const isEdit = !!existing;
     const host = document.getElementById('admin-coupons-host');
-    if (!host) {return;}
+    if (!host) {
+      return;
+    }
     const c = existing || { type: 'percent', value: 10, active: 1 };
     const formHtml = `
       <div class="adm-card" style="margin-bottom:16px;">
@@ -6653,7 +7018,9 @@ font-size: 0.8rem;
     `;
     host.insertAdjacentHTML('afterbegin', formHtml);
 
-    document.getElementById('adm-coupon-cancel').addEventListener('click', () => Pages._renderAdminCouponsList());
+    document
+      .getElementById('adm-coupon-cancel')
+      .addEventListener('click', () => Pages._renderAdminCouponsList());
     document.getElementById('adm-coupon-save').addEventListener('click', async () => {
       const payload = {
         type: document.getElementById('adm-coupon-type').value,
@@ -6673,7 +7040,7 @@ font-size: 0.8rem;
     });
   }
 
-  static async _saveAdminCouponCreate (payload) {
+  static async _saveAdminCouponCreate(payload) {
     try {
       const res = await api.admin.createCoupon(payload);
       if (res && res.success) {
@@ -6687,7 +7054,7 @@ font-size: 0.8rem;
     }
   }
 
-  static async _saveAdminCouponEdit (id, payload) {
+  static async _saveAdminCouponEdit(id, payload) {
     try {
       const res = await api.admin.updateCoupon(id, payload);
       if (res && res.success) {
@@ -6701,7 +7068,7 @@ font-size: 0.8rem;
     }
   }
 
-  static async _toggleAdminCoupon (id, btn) {
+  static async _toggleAdminCoupon(id, btn) {
     const row = btn.closest('tr');
     const currentActive = btn.textContent.trim() === 'Disable';
     btn.disabled = true;
@@ -6720,7 +7087,7 @@ font-size: 0.8rem;
     }
   }
 
-  static async _deleteAdminCoupon (id) {
+  static async _deleteAdminCoupon(id) {
     if (!confirm('Delete this coupon? Orders already placed with it will keep their discount.')) {
       return;
     }
@@ -6737,8 +7104,10 @@ font-size: 0.8rem;
     }
   }
 
-  static renderAdminRegions () {
-    if (!_requireAdmin()) {return;}
+  static renderAdminRegions() {
+    if (!_requireAdmin()) {
+      return;
+    }
     const regions = regionManager.getAllRegions();
     this.hideOriginalNavFooter();
     document.body.style.background = '';
@@ -6752,9 +7121,15 @@ font-size: 0.8rem;
     `;
 
     const regionColumns = [
-      { label: 'Region', render: r => `<span class="adm-text-strong">${_pageEsc(r.name || '')}</span>` },
+      {
+        label: 'Region',
+        render: r => `<span class="adm-text-strong">${_pageEsc(r.name || '')}</span>`,
+      },
       { label: 'Capital', render: r => _pageEsc(r.capital || '') },
-      { label: 'Universities', render: r => String((r.universities && r.universities.length) || 0) },
+      {
+        label: 'Universities',
+        render: r => String((r.universities && r.universities.length) || 0),
+      },
       {
         label: 'Actions',
         render: r => '<button type="button" class="adm-btn adm-btn--sm">Edit</button>',
@@ -6762,7 +7137,9 @@ font-size: 0.8rem;
     ];
 
     const cardHtml = AdminUI.card(
-      '<h3 class="adm-card-title">Regions</h3><p class="adm-card-sub">Showing ' + regions.length + ' regions</p>',
+      '<h3 class="adm-card-title">Regions</h3><p class="adm-card-sub">Showing ' +
+        regions.length +
+        ' regions</p>',
       AdminUI.table({
         columns: regionColumns,
         rows: regions,
@@ -6776,7 +7153,7 @@ font-size: 0.8rem;
             </div>
           </div>
         `,
-      }),
+      })
     );
 
     mainContent.innerHTML = `
@@ -6794,15 +7171,19 @@ font-size: 0.8rem;
 
     AdminUI.wireSidebar(key => {
       const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {Pages[method]();}
+      if (typeof Pages[method] === 'function') {
+        Pages[method]();
+      }
     });
   }
 
   /**
    * Render Admin Reports Page
    */
-  static async renderAdminReports () {
-    if (!_requireAdmin()) {return;}
+  static async renderAdminReports() {
+    if (!_requireAdmin()) {
+      return;
+    }
     this.hideOriginalNavFooter();
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
@@ -6831,32 +7212,46 @@ font-size: 0.8rem;
 
     AdminUI.wireSidebar(key => {
       const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {Pages[method]();}
+      if (typeof Pages[method] === 'function') {
+        Pages[method]();
+      }
     });
 
     let stats;
     try {
       stats = await adminReportsManager.getDashboardOverview();
     } catch (_) {
-      stats = { summary: { totalRevenue: 0, totalOrders: 0, totalUsers: 0, totalProducts: 0, pendingProducts: 0 }, thisMonth: { newUsers: 0 } };
+      stats = {
+        summary: {
+          totalRevenue: 0,
+          totalOrders: 0,
+          totalUsers: 0,
+          totalProducts: 0,
+          pendingProducts: 0,
+        },
+        thisMonth: { newUsers: 0 },
+      };
     }
 
     const summary = stats.summary || {};
-    const avgOrderValue = summary.totalOrders > 0
-      ? Math.round(summary.totalRevenue / summary.totalOrders)
-      : 0;
+    const avgOrderValue =
+      summary.totalOrders > 0 ? Math.round(summary.totalRevenue / summary.totalOrders) : 0;
 
     const reportCard = (title, rows) => `
       <section class="adm-card">
         <header class="adm-card-header"><div><h3 class="adm-card-title">${_pageEsc(title)}</h3></div></header>
         <div class="adm-table-wrap"><table class="adm-table">
           <tbody>
-            ${rows.map(([k, v, kind]) => `
+            ${rows
+              .map(
+                ([k, v, kind]) => `
               <tr>
                 <td class="adm-td">${_pageEsc(k)}</td>
                 <td class="adm-td adm-text-right adm-text-strong">${v}</td>
               </tr>
-            `).join('')}
+            `
+              )
+              .join('')}
           </tbody>
         </table></div>
       </section>
@@ -6891,7 +7286,7 @@ font-size: 0.8rem;
   /**
    * Approve a product
    */
-  static async adminApproveProduct (productId) {
+  static async adminApproveProduct(productId) {
     if (!confirm('Are you sure you want to approve this product?')) {
       return;
     }
@@ -6908,7 +7303,7 @@ font-size: 0.8rem;
     }
   }
 
-  static async adminRejectProduct (productId) {
+  static async adminRejectProduct(productId) {
     const reason = prompt('Please enter a reason for rejection:');
     if (!reason) {
       return;
@@ -6929,7 +7324,7 @@ font-size: 0.8rem;
     }
   }
 
-  static async adminDeleteProduct (productId) {
+  static async adminDeleteProduct(productId) {
     if (!confirm('Are you sure you want to delete this product? This cannot be undone.')) {
       return;
     }
@@ -6949,7 +7344,7 @@ font-size: 0.8rem;
       if (deleted) {
         productsManager.products = productsManager.products.filter(p => p.id !== productId);
         productsManager.filteredProducts = productsManager.filteredProducts.filter(
-          p => p.id !== productId,
+          p => p.id !== productId
         );
         productsManager._persistLocalProducts();
         showToast('Product deleted successfully', 'success');
@@ -6965,7 +7360,7 @@ font-size: 0.8rem;
   /**
    * Ban a user
    */
-  static async adminBanUser (userId) {
+  static async adminBanUser(userId) {
     const reason = prompt('Please enter a reason for banning this user:');
     if (!reason) {
       return;
@@ -6988,7 +7383,7 @@ font-size: 0.8rem;
     }
   }
 
-  static async adminUnbanUser (userId) {
+  static async adminUnbanUser(userId) {
     if (!confirm('Are you sure you want to unban this user?')) {
       return;
     }
@@ -7005,8 +7400,10 @@ font-size: 0.8rem;
     }
   }
 
-  static async renderAdminActivity () {
-    if (!_requireAdmin()) {return;}
+  static async renderAdminActivity() {
+    if (!_requireAdmin()) {
+      return;
+    }
     this.hideOriginalNavFooter();
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
@@ -7043,7 +7440,12 @@ font-size: 0.8rem;
       { key: 'payouts', label: 'Payouts' },
       { key: 'logins', label: 'Logins' },
     ];
-    const pillSelector = AdminUI.pillGroup(pillTabs, 'all', 'adm-pill-group--inverse', 'data-activity-filter');
+    const pillSelector = AdminUI.pillGroup(
+      pillTabs,
+      'all',
+      'adm-pill-group--inverse',
+      'data-activity-filter'
+    );
 
     mainContent.innerHTML = `
       <div class="adm-layout">
@@ -7086,7 +7488,9 @@ font-size: 0.8rem;
 
     AdminUI.wireSidebar(key => {
       const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {Pages[method]();}
+      if (typeof Pages[method] === 'function') {
+        Pages[method]();
+      }
     });
 
     // Re-wire the topbar selects (previously inline onchange) to the
@@ -7094,7 +7498,10 @@ font-size: 0.8rem;
     const topbar = mainContent.querySelector('.adm-topbar');
     if (topbar) {
       topbar.addEventListener('change', e => {
-        if (e.target.id === 'activity-filter-action' || e.target.id === 'activity-filter-severity') {
+        if (
+          e.target.id === 'activity-filter-action' ||
+          e.target.id === 'activity-filter-severity'
+        ) {
           Pages._loadActivityLogs();
         }
       });
@@ -7107,17 +7514,23 @@ font-size: 0.8rem;
         const activePill = page.querySelector('.adm-pill.is-active');
         const filter = activePill ? activePill.dataset.activityFilter : 'all';
         const tbody = mainContent.querySelector('.adm-table tbody');
-        if (!tbody) {return;}
+        if (!tbody) {
+          return;
+        }
         const trs = tbody.querySelectorAll('tr');
         let shown = 0;
         trs.forEach(tr => {
           const cat = tr.dataset.cat || 'all';
           const show = filter === 'all' || cat === filter;
           tr.style.display = show ? '' : 'none';
-          if (show) {shown += 1;}
+          if (show) {
+            shown += 1;
+          }
         });
         const info = mainContent.querySelector('.adm-pagination-info');
-        if (info) {info.textContent = `Showing ${shown} of ${trs.length}`;}
+        if (info) {
+          info.textContent = `Showing ${shown} of ${trs.length}`;
+        }
       });
     }
 
@@ -7125,7 +7538,7 @@ font-size: 0.8rem;
     this._loadActivityLogs();
   }
 
-  static async _loadActivityLogs () {
+  static async _loadActivityLogs() {
     const actionFilter = document.getElementById('activity-filter-action')?.value || '';
     const severityFilter = document.getElementById('activity-filter-severity')?.value || '';
     const tbody = document.getElementById('activity-logs-tbody');
@@ -7155,9 +7568,24 @@ font-size: 0.8rem;
         const s = statsRes.data;
         const onlineVal = onlineRes.success ? (onlineRes.data.onlineCount ?? 0) : '?';
         const statCards = [
-          AdminUI.statCard({ label: 'Events Today', value: String(s.totalToday || 0), delta: 'Across all actions', deltaKind: 'muted' }),
-          AdminUI.statCard({ label: 'Events This Week', value: String(s.totalThisWeek || 0), delta: 'Last 7 days', deltaKind: 'muted' }),
-          AdminUI.statCard({ label: 'Online Now', value: String(onlineVal), delta: 'Active sessions', deltaKind: 'muted' }),
+          AdminUI.statCard({
+            label: 'Events Today',
+            value: String(s.totalToday || 0),
+            delta: 'Across all actions',
+            deltaKind: 'muted',
+          }),
+          AdminUI.statCard({
+            label: 'Events This Week',
+            value: String(s.totalThisWeek || 0),
+            delta: 'Last 7 days',
+            deltaKind: 'muted',
+          }),
+          AdminUI.statCard({
+            label: 'Online Now',
+            value: String(onlineVal),
+            delta: 'Active sessions',
+            deltaKind: 'muted',
+          }),
         ];
         statsHost.innerHTML = AdminUI.statGrid(statCards);
       }
@@ -7182,7 +7610,7 @@ font-size: 0.8rem;
             <td>${Pages._renderActivityDetails(a.details || {})}</td>
             <td><span class="admin-status-pill admin-status-pill--info">info</span></td>
           </tr>
-        `,
+        `
           )
           .join('');
         tbody.innerHTML =
@@ -7195,7 +7623,7 @@ font-size: 0.8rem;
     }
   }
 
-  static async _loadMoreActivity () {
+  static async _loadMoreActivity() {
     this._activityPage = (this._activityPage || 1) + 1;
     const actionFilter = document.getElementById('activity-filter-action')?.value || '';
     const severityFilter = document.getElementById('activity-filter-severity')?.value || '';
@@ -7226,54 +7654,93 @@ font-size: 0.8rem;
   // Render a server-side activity-log `details` payload as a compact,
   // human-readable list. Falls back to JSON.stringify for unknown shapes.
   // All values are escaped via `_pageEsc` before insertion.
-  static _renderActivityDetails (details) {
-    if (details === null || details === undefined) {return '<span style="color:var(--neutral-500);">—</span>';}
+  static _renderActivityDetails(details) {
+    if (details === null || details === undefined) {
+      return '<span style="color:var(--neutral-500);">—</span>';
+    }
     // The backend may ship details as a pre-stringified JSON string.
     // Try to parse it so we can render the same nice key/value list.
     if (typeof details === 'string') {
       const trimmed = details.trim();
-      if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+      if (
+        (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+        (trimmed.startsWith('[') && trimmed.endsWith(']'))
+      ) {
         try {
           const parsed = JSON.parse(trimmed);
           if (parsed && typeof parsed === 'object') {
             return Pages._renderActivityDetails(parsed);
           }
-        } catch (_) { /* not JSON, fall through */ }
+        } catch (_) {
+          /* not JSON, fall through */
+        }
       }
       return _pageEsc(details) || '<span style="color:var(--neutral-500);">—</span>';
     }
-    if (typeof details !== 'object') {return _pageEsc(String(details));}
+    if (typeof details !== 'object') {
+      return _pageEsc(String(details));
+    }
 
     // Order keys by importance for the most common actions.
-    const keyOrder = ['email', 'name', 'productTitle', 'productId', 'orderNumber', 'amount', 'role', 'status', 'reason', 'mfaBypassed', 'ip', 'userAgent'];
+    const keyOrder = [
+      'email',
+      'name',
+      'productTitle',
+      'productId',
+      'orderNumber',
+      'amount',
+      'role',
+      'status',
+      'reason',
+      'mfaBypassed',
+      'ip',
+      'userAgent',
+    ];
     const sortedKeys = Object.keys(details).sort((a, b) => {
       const ai = keyOrder.indexOf(a);
       const bi = keyOrder.indexOf(b);
-      if (ai === -1 && bi === -1) {return a.localeCompare(b);}
-      if (ai === -1) {return 1;}
-      if (bi === -1) {return -1;}
+      if (ai === -1 && bi === -1) {
+        return a.localeCompare(b);
+      }
+      if (ai === -1) {
+        return 1;
+      }
+      if (bi === -1) {
+        return -1;
+      }
       return ai - bi;
     });
 
-    const items = sortedKeys.map(k => {
-      const v = details[k];
-      if (v === null || v === undefined || v === '') {return '';}
-      const prettyKey = k.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase());
-      let prettyVal;
-      if (typeof v === 'boolean') {prettyVal = v ? 'Yes' : 'No';}
-      else if (typeof v === 'object') {prettyVal = JSON.stringify(v);}
-      else {prettyVal = String(v);}
-      return `<div style="display:flex;gap:var(--space-sm);align-items:baseline;line-height:1.5;">
+    const items = sortedKeys
+      .map(k => {
+        const v = details[k];
+        if (v === null || v === undefined || v === '') {
+          return '';
+        }
+        const prettyKey = k.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase());
+        let prettyVal;
+        if (typeof v === 'boolean') {
+          prettyVal = v ? 'Yes' : 'No';
+        } else if (typeof v === 'object') {
+          prettyVal = JSON.stringify(v);
+        } else {
+          prettyVal = String(v);
+        }
+        return `<div style="display:flex;gap:var(--space-sm);align-items:baseline;line-height:1.5;">
         <span style="color:var(--neutral-500);min-width:90px;flex-shrink:0;">${_pageEsc(prettyKey)}</span>
         <span style="color:var(--neutral-800);">${_pageEsc(prettyVal)}</span>
       </div>`;
-    }).filter(Boolean).join('');
+      })
+      .filter(Boolean)
+      .join('');
 
-    if (!items) {return '<span style="color:var(--neutral-500);">—</span>';}
+    if (!items) {
+      return '<span style="color:var(--neutral-500);">—</span>';
+    }
     return `<div style="font-size:0.8rem;">${items}</div>`;
   }
 
-  static _renderActivityRows (logs, tbody, append = false) {
+  static _renderActivityRows(logs, tbody, append = false) {
     const severityToModifier = {
       info: 'admin-status-pill--info',
       warning: 'admin-status-pill--warning',
@@ -7304,7 +7771,9 @@ font-size: 0.8rem;
         const time = new Date(log.createdAt).toLocaleString();
         const user = log.userName || log.userEmail || 'System';
         const action = actionLabels[log.action] || log.action;
-        const details = log.details ? Pages._renderActivityDetails(log.details) : '<span style="color:var(--neutral-500);">—</span>';
+        const details = log.details
+          ? Pages._renderActivityDetails(log.details)
+          : '<span style="color:var(--neutral-500);">—</span>';
         const severity = log.severity || 'info';
         const sevModifier = severityToModifier[severity] || 'admin-status-pill--neutral';
 
@@ -7332,16 +7801,18 @@ font-size: 0.8rem;
   // For categories with a subcategories list: a subcategory <select>
   // (product.subcategory). Categories with neither render nothing.
   // `values` may contain { gender, subcategory } for pre-selection (Edit).
-  static _renderAdminProductSubOptions (categoryId, values = {}) {
+  static _renderAdminProductSubOptions(categoryId, values = {}) {
     const meta = Pages.ADMIN_CATEGORY_META.find(m => m.id === categoryId);
-    if (!meta) {return '';}
+    if (!meta) {
+      return '';
+    }
     const parts = [];
     if (meta.hasGender) {
       const cur = values.gender || 'unisex';
       const opts = ['male', 'female', 'unisex']
         .map(
           g =>
-            `<label style="display:inline-flex;align-items:center;gap:.35rem;"><input type="radio" name="gender" value="${g}" ${g === cur ? 'checked' : ''}> ${g.charAt(0).toUpperCase() + g.slice(1)}</label>`,
+            `<label style="display:inline-flex;align-items:center;gap:.35rem;"><input type="radio" name="gender" value="${g}" ${g === cur ? 'checked' : ''}> ${g.charAt(0).toUpperCase() + g.slice(1)}</label>`
         )
         .join(' ');
       parts.push(`
@@ -7356,8 +7827,8 @@ font-size: 0.8rem;
         .concat(
           meta.subcategories.map(
             s =>
-              `<option value="${_pageEsc(s)}" ${s === cur ? 'selected' : ''}>${_pageEsc(s)}</option>`,
-          ),
+              `<option value="${_pageEsc(s)}" ${s === cur ? 'selected' : ''}>${_pageEsc(s)}</option>`
+          )
         )
         .join('');
       parts.push(`
@@ -7373,16 +7844,22 @@ font-size: 0.8rem;
   // the sub-options block, drop-zone + image-preview event delegation (no
   // inline handlers — CSP-friendly), max-5 warning, and the manual-URL
   // textarea sync. Used by both Create and Edit forms.
-  static _wireAdminProductForm (form) {
+  static _wireAdminProductForm(form) {
     const categorySelect = form.querySelector('[name="category"]');
     const subHost = form.querySelector('#admin-sub-options-host');
     const refreshSub = () => {
-      if (!subHost) {return;}
+      if (!subHost) {
+        return;
+      }
       const cur = {};
       const g = form.querySelector('[name="gender"]:checked');
-      if (g) {cur.gender = g.value;}
+      if (g) {
+        cur.gender = g.value;
+      }
       const sc = form.querySelector('[name="subcategory"]');
-      if (sc) {cur.subcategory = sc.value;}
+      if (sc) {
+        cur.subcategory = sc.value;
+      }
       subHost.innerHTML = Pages._renderAdminProductSubOptions(categorySelect.value, cur);
     };
     if (categorySelect && subHost) {
@@ -7397,7 +7874,7 @@ font-size: 0.8rem;
   //   negative is allowed for "discounted" variants like a smaller size).
   // Returns the HTML to drop into the form. The host element must have
   // id="admin-variants-host" so _wireVariantEditor can find it.
-  static _renderAdminVariantsCard (variants) {
+  static _renderAdminVariantsCard(variants) {
     const list = Array.isArray(variants) ? variants : [];
     const rows = list
       .map(
@@ -7426,8 +7903,10 @@ font-size: 0.8rem;
                 <th style="padding:0 0 8px;width:15%;"></th>
               </tr>
             </thead>
-            <tbody id="admin-variants-tbody">${rows ||
-              '<tr><td colspan="4" style="padding:8px 0;color:var(--neutral-500);font-size:13px;">No variants yet — leave empty to sell as one SKU.</td></tr>'}</tbody>
+            <tbody id="admin-variants-tbody">${
+              rows ||
+              '<tr><td colspan="4" style="padding:8px 0;color:var(--neutral-500);font-size:13px;">No variants yet — leave empty to sell as one SKU.</td></tr>'
+            }</tbody>
           </table>
           <button type="button" class="adm-btn adm-btn--sm" id="admin-variants-add" style="margin-top:12px;">
             + Add variant
@@ -7440,10 +7919,12 @@ font-size: 0.8rem;
   // Wire add/remove delegation for the variant editor. Reads existing rows
   // from the DOM so it works for both create and edit forms (call after
   // injecting _renderAdminVariantsCard).
-  static _wireVariantEditor (form) {
+  static _wireVariantEditor(form) {
     const tbody = form.querySelector('#admin-variants-tbody');
     const addBtn = form.querySelector('#admin-variants-add');
-    if (!tbody || !addBtn) {return;}
+    if (!tbody || !addBtn) {
+      return;
+    }
 
     const newRow = () => `
       <tr class="adm-variant-row" data-variant-index="${tbody.querySelectorAll('.adm-variant-row').length}">
@@ -7456,31 +7937,42 @@ font-size: 0.8rem;
     addBtn.addEventListener('click', () => {
       // Strip the empty-state row on first add.
       const empty = tbody.querySelector('tr:not(.adm-variant-row)');
-      if (empty) {empty.remove();}
+      if (empty) {
+        empty.remove();
+      }
       tbody.insertAdjacentHTML('beforeend', newRow());
     });
 
     tbody.addEventListener('click', e => {
       const btn = e.target.closest('.adm-variant-remove');
-      if (!btn) {return;}
+      if (!btn) {
+        return;
+      }
       const row = btn.closest('.adm-variant-row');
-      if (row) {row.remove();}
+      if (row) {
+        row.remove();
+      }
     });
   }
 
   // Collect variants from the variant editor rows. Skips rows where both
   // label and value are empty (avoids persisting placeholder rows that the
   // seller added but never filled in).
-  static _collectAdminVariants (form) {
+  static _collectAdminVariants(form) {
     const rows = form.querySelectorAll('#admin-variants-tbody .adm-variant-row');
     const out = [];
     rows.forEach(row => {
       const label = row.querySelector('.adm-variant-label')?.value.trim() || '';
       const value = row.querySelector('.adm-variant-value')?.value.trim() || '';
       const priceRaw = row.querySelector('.adm-variant-price')?.value;
-      const price = priceRaw === '' || priceRaw == null ? 0 : Number(priceRaw);
-      if (!label && !value) {return;}
-      if (Number.isNaN(price)) {return;}
+      const price =
+        priceRaw === '' || priceRaw === null || priceRaw === undefined ? 0 : Number(priceRaw);
+      if (!label && !value) {
+        return;
+      }
+      if (Number.isNaN(price)) {
+        return;
+      }
       out.push({ label, value, price });
     });
     return out;
@@ -7492,16 +7984,20 @@ font-size: 0.8rem;
   // strict Content-Security-Policy blocks inline handlers, and AGENTS.md
   // forbids adding new ones). Uses event delegation on the preview grid so
   // the × button's handler does not depend on a stale pending-image index.
-  static _wireImageDropZone (form) {
+  static _wireImageDropZone(form) {
     const dropZone = form.querySelector('#image-drop-zone');
     const fileInput = form.querySelector('#image-file-input');
     const previewGrid = form.querySelector('#image-preview-grid');
     const urlTextarea = form.querySelector('#image-url-textarea');
-    if (!dropZone || !fileInput || !previewGrid) {return;}
+    if (!dropZone || !fileInput || !previewGrid) {
+      return;
+    }
 
     const openPicker = e => {
       // Avoid re-opening when the file input itself was the click target.
-      if (e.target === fileInput) {return;}
+      if (e.target === fileInput) {
+        return;
+      }
       fileInput.click();
     };
     dropZone.addEventListener('click', openPicker);
@@ -7533,10 +8029,14 @@ font-size: 0.8rem;
     // from the wrappers themselves.
     previewGrid.addEventListener('click', ev => {
       const btn = ev.target.closest('.remove-pending-image');
-      if (!btn) {return;}
+      if (!btn) {
+        return;
+      }
       ev.preventDefault();
       const wrapper = btn.closest('[data-pending-index]');
-      if (!wrapper) {return;}
+      if (!wrapper) {
+        return;
+      }
       const idx = Number(wrapper.dataset.pendingIndex);
       if (Number.isInteger(idx) && idx >= 0 && idx < Pages._pendingImageFiles.length) {
         Pages._pendingImageFiles.splice(idx, 1);
@@ -7553,8 +8053,10 @@ font-size: 0.8rem;
     }
   }
 
-  static renderAdminProductCreate () {
-    if (!_requireAdmin()) {return;}
+  static renderAdminProductCreate() {
+    if (!_requireAdmin()) {
+      return;
+    }
     this._pendingImageFiles = [];
     this._uploadedImageUrls = [];
     this.hideOriginalNavFooter();
@@ -7676,14 +8178,18 @@ font-size: 0.8rem;
     // through the topbar action handler.
     AdminUI.wireSidebar(key => {
       const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {Pages[method]();}
+      if (typeof Pages[method] === 'function') {
+        Pages[method]();
+      }
     });
     // Wire topbar actions (back to products, search).
     const topbar = mainContent.querySelector('.adm-topbar');
     if (topbar) {
       topbar.addEventListener('click', e => {
         const btn = e.target.closest('[data-action]');
-        if (!btn) {return;}
+        if (!btn) {
+          return;
+        }
         if (btn.dataset.action === 'back-to-products') {
           Pages.renderAdminProducts();
         }
@@ -7691,7 +8197,9 @@ font-size: 0.8rem;
     }
     const searchInput = document.getElementById('admin-products-search');
     if (searchInput) {
-      AdminUI.wireSearch(searchInput, () => { /* products list page handles search */ });
+      AdminUI.wireSearch(searchInput, () => {
+        /* products list page handles search */
+      });
     }
     if (form) {
       form.addEventListener('submit', e => Pages._handleAdminProductCreate(e));
@@ -7701,7 +8209,7 @@ font-size: 0.8rem;
   static _pendingImageFiles = [];
   static _uploadedImageUrls = [];
 
-  static _filesToDataUris (files) {
+  static _filesToDataUris(files) {
     return Promise.all(
       files.map(file => {
         return new Promise((resolve, reject) => {
@@ -7729,8 +8237,10 @@ font-size: 0.8rem;
       })
     );
   }
-  static async renderAdminNewsletter () {
-    if (!_requireAdmin()) {return;}
+  static async renderAdminNewsletter() {
+    if (!_requireAdmin()) {
+      return;
+    }
     this.hideOriginalNavFooter();
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
@@ -7749,10 +8259,25 @@ font-size: 0.8rem;
     const statsHtml = `
       <div id="newsletter-stats-host">
         ${AdminUI.statGrid([
-          AdminUI.statCard({ label: 'Total subscribers', value: '—', delta: 'All statuses', deltaKind: 'muted' }),
+          AdminUI.statCard({
+            label: 'Total subscribers',
+            value: '—',
+            delta: 'All statuses',
+            deltaKind: 'muted',
+          }),
           AdminUI.statCard({ label: 'Active', value: '—', delta: 'Confirmed', deltaKind: 'muted' }),
-          AdminUI.statCard({ label: 'Pending', value: '—', delta: 'Awaiting confirmation', deltaKind: 'muted' }),
-          AdminUI.statCard({ label: 'Unsubscribed', value: '—', delta: 'Opted out', deltaKind: 'muted' }),
+          AdminUI.statCard({
+            label: 'Pending',
+            value: '—',
+            delta: 'Awaiting confirmation',
+            deltaKind: 'muted',
+          }),
+          AdminUI.statCard({
+            label: 'Unsubscribed',
+            value: '—',
+            delta: 'Opted out',
+            deltaKind: 'muted',
+          }),
         ])}
       </div>
     `;
@@ -7814,7 +8339,9 @@ font-size: 0.8rem;
 
     AdminUI.wireSidebar(key => {
       const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {Pages[method]();}
+      if (typeof Pages[method] === 'function') {
+        Pages[method]();
+      }
     });
 
     // Wire the topbar primary action: "Create campaign" opens the existing modal.
@@ -7822,7 +8349,9 @@ font-size: 0.8rem;
     if (topbar) {
       topbar.addEventListener('click', e => {
         const btn = e.target.closest('[data-adm-action]');
-        if (!btn) {return;}
+        if (!btn) {
+          return;
+        }
         if (btn.dataset.admAction === 'new-campaign') {
           if (typeof Pages.showNewsletterCampaignModal === 'function') {
             Pages.showNewsletterCampaignModal();
@@ -7836,56 +8365,68 @@ font-size: 0.8rem;
     this._loadNewsletterSubscribers();
   }
 
-  static async _loadNewsletterStats () {
+  static async _loadNewsletterStats() {
     try {
       const response = await api.get('/newsletter/stats');
       if (response.success) {
         const { total, active, pending, unsubscribed, bounced } = response.data;
-        document.getElementById('stat-total').querySelector('.admin-stat-value').textContent = total?.toLocaleString() || '0';
-        document.getElementById('stat-active').querySelector('.admin-stat-value').textContent = active?.toLocaleString() || '0';
-        document.getElementById('stat-pending').querySelector('.admin-stat-value').textContent = pending?.toLocaleString() || '0';
-        document.getElementById('stat-unsubscribed').querySelector('.admin-stat-value').textContent = (unsubscribed + bounced)?.toLocaleString() || '0';
+        document.getElementById('stat-total').querySelector('.admin-stat-value').textContent =
+          total?.toLocaleString() || '0';
+        document.getElementById('stat-active').querySelector('.admin-stat-value').textContent =
+          active?.toLocaleString() || '0';
+        document.getElementById('stat-pending').querySelector('.admin-stat-value').textContent =
+          pending?.toLocaleString() || '0';
+        document
+          .getElementById('stat-unsubscribed')
+          .querySelector('.admin-stat-value').textContent =
+          (unsubscribed + bounced)?.toLocaleString() || '0';
       }
     } catch (error) {
       console.error('Failed to load newsletter stats:', error);
     }
   }
 
-  static async _loadNewsletterCampaigns () {
+  static async _loadNewsletterCampaigns() {
     try {
       const response = await api.get('/newsletter/campaigns');
       if (response.success) {
         const tbody = document.getElementById('campaigns-table-body');
         if (response.data.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #9ca3af;">No campaigns sent yet</td></tr>';
+          tbody.innerHTML =
+            '<tr><td colspan="4" style="text-align: center; color: #9ca3af;">No campaigns sent yet</td></tr>';
           return;
         }
-        tbody.innerHTML = response.data.map(c => `
+        tbody.innerHTML = response.data
+          .map(
+            c => `
           <tr>
             <td>${c.subject}</td>
             <td>${c.sent_at ? new Date(c.sent_at).toLocaleDateString() : '—'}</td>
             <td>${(c.recipient_count || 0).toLocaleString()}</td>
             <td><span class="status-badge status-delivered">Sent</span></td>
           </tr>
-        `).join('');
+        `
+          )
+          .join('');
       }
     } catch (error) {
       console.error('Failed to load campaigns:', error);
     }
   }
 
-  static async _loadNewsletterSubscribers () {
+  static async _loadNewsletterSubscribers() {
     try {
       const response = await api.get('/newsletter/stats');
       // We'll use the stats endpoint for now; a proper subscribers list endpoint would be better
       const tbody = document.getElementById('subscribers-table-body');
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #9ca3af;">Use API for full subscriber list</td></tr>';
+      tbody.innerHTML =
+        '<tr><td colspan="4" style="text-align: center; color: #9ca3af;">Use API for full subscriber list</td></tr>';
     } catch (error) {
       console.error('Failed to load subscribers:', error);
     }
   }
 
-  static showNewsletterCampaignModal () {
+  static showNewsletterCampaignModal() {
     const modalHtml = `
       <div class="modal-overlay" id="newsletter-campaign-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem;">
         <div class="modal" style="background: white; border-radius: 12px; width: 100%; max-width: 700px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
@@ -7918,21 +8459,27 @@ font-size: 0.8rem;
     `;
 
     const existing = document.getElementById('newsletter-campaign-modal');
-    if (existing) existing.remove();
+    if (existing) {
+      existing.remove();
+    }
 
     document.body.insertAdjacentHTML('beforeend', modalHtml);
 
     document.getElementById('campaign-test').addEventListener('change', e => {
-      document.getElementById('campaign-test-email').style.display = e.target.checked ? 'block' : 'none';
+      document.getElementById('campaign-test-email').style.display = e.target.checked
+        ? 'block'
+        : 'none';
     });
   }
 
-  static closeNewsletterCampaignModal () {
+  static closeNewsletterCampaignModal() {
     const modal = document.getElementById('newsletter-campaign-modal');
-    if (modal) modal.remove();
+    if (modal) {
+      modal.remove();
+    }
   }
 
-  static async sendNewsletterCampaign () {
+  static async sendNewsletterCampaign() {
     const subject = document.getElementById('campaign-subject').value.trim();
     const htmlContent = document.getElementById('campaign-content').value.trim();
     const isTest = document.getElementById('campaign-test').checked;
@@ -7961,7 +8508,10 @@ font-size: 0.8rem;
       });
 
       if (response.success) {
-        showToast(isTest ? 'Test email sent!' : `Campaign sent to ${response.data.sent} subscribers`, 'success');
+        showToast(
+          isTest ? 'Test email sent!' : `Campaign sent to ${response.data.sent} subscribers`,
+          'success'
+        );
         this.closeNewsletterCampaignModal();
         this._loadNewsletterCampaigns();
         this._loadNewsletterStats();
@@ -7975,12 +8525,12 @@ font-size: 0.8rem;
       sendBtn.textContent = originalText;
     }
   }
-  static _handleImageDrop (event) {
+  static _handleImageDrop(event) {
     const files = event.dataTransfer.files;
     this._handleImageFiles(files);
   }
 
-  static _handleImageFiles (fileList) {
+  static _handleImageFiles(fileList) {
     // HEIC/HEIF are accepted by no browser's Image decoder and would fail
     // silently at upload time. They were previously in the allowed list
     // — dropped until a converter is wired in.
@@ -7996,7 +8546,7 @@ font-size: 0.8rem;
     if (dropped.length > 0 && typeof showToast === 'function') {
       showToast(
         `${dropped.length} file(s) skipped — not images (HEIC is not supported).`,
-        'warning',
+        'warning'
       );
     }
     const files = Array.from(fileList).filter(isImageLike).slice(0, room);
@@ -8008,7 +8558,7 @@ font-size: 0.8rem;
     if (remainingWanted > 0 && typeof showToast === 'function') {
       showToast(
         `Only ${files.length} of ${Array.from(fileList).filter(isImageLike).length} image(s) added — max 5 per product.`,
-        'warning',
+        'warning'
       );
     }
     this._pendingImageFiles.push(...files);
@@ -8042,7 +8592,7 @@ font-size: 0.8rem;
   // Legacy entry point — kept so older callers (if any) keep working.
   // Inline handlers used to call this with (btn, index); the new
   // delegated handler in _wireImageDropZone handles removal directly.
-  static _removeImage (btn, index) {
+  static _removeImage(btn, index) {
     if (Number.isInteger(index) && index >= 0 && index < this._pendingImageFiles.length) {
       this._pendingImageFiles.splice(index, 1);
     }
@@ -8059,7 +8609,7 @@ font-size: 0.8rem;
     this._syncImageUrls();
   }
 
-  static _syncImageUrls () {
+  static _syncImageUrls() {
     const textarea = document.getElementById('image-url-textarea');
     const hidden = document.getElementById('image-urls-input');
     const manualUrls = (textarea?.value || '')
@@ -8072,7 +8622,7 @@ font-size: 0.8rem;
     }
   }
 
-  static async _handleAdminProductCreate (event) {
+  static async _handleAdminProductCreate(event) {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
@@ -8095,21 +8645,24 @@ font-size: 0.8rem;
             const names = uploadResult.failures.map(f => f.filename || 'unknown').join(', ');
             showToast(
               `${uploadResult.failures.length} image(s) failed: ${names}. ${uploadResult.urls.length} uploaded.`,
-              'warning',
+              'warning'
             );
           }
         } else {
           if (uploadResult.isAuthError) {
             showToast('Session expired — please log in again', 'error');
-            if (typeof authManager !== 'undefined' && authManager.clearSession)
-            {authManager.clearSession();}
-            if (typeof navigateTo === 'function') {navigateTo('login');}
+            if (typeof authManager !== 'undefined' && authManager.clearSession) {
+              authManager.clearSession();
+            }
+            if (typeof navigateTo === 'function') {
+              navigateTo('login');
+            }
             return;
           }
           showToast(
             'Image upload failed: ' +
               (uploadResult.error || 'Unknown error. Check your internet connection.'),
-            'error',
+            'error'
           );
           uploadAborted = true;
         }
@@ -8154,11 +8707,17 @@ font-size: 0.8rem;
       status: 'active',
     };
     // Remove empty optional fields so the backend doesn't persist "undefined".
-    if (!data.gender) {delete data.gender;}
-    if (!data.subcategory) {delete data.subcategory;}
+    if (!data.gender) {
+      delete data.gender;
+    }
+    if (!data.subcategory) {
+      delete data.subcategory;
+    }
     // Always send `variants` as an array (even empty) so the backend can
     // distinguish "no variants" from "uninitialized".
-    if (!Array.isArray(data.variants)) {data.variants = [];}
+    if (!Array.isArray(data.variants)) {
+      data.variants = [];
+    }
 
     if (uploadAborted && this._pendingImageFiles.length > 0 && manualUrls.length === 0) {
       if (!confirm('Image upload failed. Create product without images?')) {
@@ -8195,9 +8754,12 @@ font-size: 0.8rem;
     } catch (error) {
       if (error.isAuthError || error.status === 401) {
         showToast('Session expired — please log in again', 'error');
-        if (typeof authManager !== 'undefined' && authManager.clearSession)
-        {authManager.clearSession();}
-        if (typeof navigateTo === 'function') {navigateTo('login');}
+        if (typeof authManager !== 'undefined' && authManager.clearSession) {
+          authManager.clearSession();
+        }
+        if (typeof navigateTo === 'function') {
+          navigateTo('login');
+        }
         return;
       }
       const fallbackResult = await productsManager.addProduct(data);
@@ -8210,8 +8772,10 @@ font-size: 0.8rem;
     }
   }
 
-  static async renderAdminProductEdit (productId) {
-    if (!_requireAdmin()) {return;}
+  static async renderAdminProductEdit(productId) {
+    if (!_requireAdmin()) {
+      return;
+    }
     this._pendingImageFiles = [];
     this._uploadedImageUrls = [];
     this.hideOriginalNavFooter();
@@ -8224,7 +8788,9 @@ font-size: 0.8rem;
       product = res.data || res;
     } catch (e) {
       mainContent.innerHTML =
-        '<div class="adm-empty"><div class="adm-empty-title">Failed to load product</div><p class="adm-empty-body">' + (e.message || 'Product not found.') + '</p></div>';
+        '<div class="adm-empty"><div class="adm-empty-title">Failed to load product</div><p class="adm-empty-body">' +
+        (e.message || 'Product not found.') +
+        '</p></div>';
       return;
     }
 
@@ -8361,15 +8927,21 @@ font-size: 0.8rem;
     const subHost = form.querySelector('#admin-sub-options-host');
     const categorySelect = form.querySelector('[name="category"]');
     const refreshSub = () => {
-      if (!subHost) {return;}
+      if (!subHost) {
+        return;
+      }
       const cur = { gender: product.gender, subcategory: product.subcategory };
       subHost.innerHTML = Pages._renderAdminProductSubOptions(categorySelect.value, cur);
       // After rendering, capture any new values so a later category re-select
       // preserves the user's latest input.
       const g = form.querySelector('[name="gender"]:checked');
-      if (g) {product.gender = g.value;}
+      if (g) {
+        product.gender = g.value;
+      }
       const sc = form.querySelector('[name="subcategory"]');
-      if (sc) {product.subcategory = sc.value;}
+      if (sc) {
+        product.subcategory = sc.value;
+      }
     };
     if (categorySelect && subHost) {
       categorySelect.addEventListener('change', refreshSub);
@@ -8380,13 +8952,17 @@ font-size: 0.8rem;
     // Sidebar + topbar wiring for the new adm-* layout.
     AdminUI.wireSidebar(key => {
       const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {Pages[method]();}
+      if (typeof Pages[method] === 'function') {
+        Pages[method]();
+      }
     });
     const topbar = mainContent.querySelector('.adm-topbar');
     if (topbar) {
       topbar.addEventListener('click', e => {
         const btn = e.target.closest('[data-action]');
-        if (!btn) {return;}
+        if (!btn) {
+          return;
+        }
         if (btn.dataset.action === 'back-to-products') {
           Pages.renderAdminProducts();
         }
@@ -8400,10 +8976,14 @@ font-size: 0.8rem;
     if (existingGrid) {
       existingGrid.addEventListener('click', ev => {
         const btn = ev.target.closest('.remove-existing-image');
-        if (!btn) {return;}
+        if (!btn) {
+          return;
+        }
         ev.preventDefault();
         const wrapper = btn.closest('.existing-image-wrapper');
-        if (!wrapper) {return;}
+        if (!wrapper) {
+          return;
+        }
         const url = wrapper.dataset.url || '';
         // Remove from pending upload list and DOM.
         Pages._uploadedImageUrls = Pages._uploadedImageUrls.filter(u => u !== url);
@@ -8416,12 +8996,12 @@ font-size: 0.8rem;
     });
   }
 
-  static _removeExistingImage (btn, url) {
+  static _removeExistingImage(btn, url) {
     this._uploadedImageUrls = this._uploadedImageUrls.filter(u => u !== url);
     btn.parentElement.remove();
   }
 
-  static async _handleAdminProductEdit (event, productId) {
+  static async _handleAdminProductEdit(event, productId) {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
@@ -8436,7 +9016,7 @@ font-size: 0.8rem;
             const names = uploadResult.failures.map(f => f.filename || 'unknown').join(', ');
             showToast(
               `${uploadResult.failures.length} image(s) failed: ${names}. ${uploadResult.urls.length} uploaded.`,
-              'warning',
+              'warning'
             );
           }
         } else {
@@ -8466,12 +9046,18 @@ font-size: 0.8rem;
     };
     // Drop empty optional fields so the backend can distinguish "unset"
     // from "explicitly cleared".
-    if (!data.gender) {delete data.gender;}
-    if (!data.subcategory) {delete data.subcategory;}
+    if (!data.gender) {
+      delete data.gender;
+    }
+    if (!data.subcategory) {
+      delete data.subcategory;
+    }
     // Always send `variants` as an array. Previously the edit handler
     // silently dropped variants, so re-saving a product wiped them — this
     // restores parity with the create handler.
-    if (!Array.isArray(data.variants)) {data.variants = [];}
+    if (!Array.isArray(data.variants)) {
+      data.variants = [];
+    }
 
     const university = formData.get('university')?.trim();
     if (university) {
@@ -8482,7 +9068,7 @@ font-size: 0.8rem;
       const result = await api.admin.updateProduct(productId, data);
       if (result.success) {
         const localProduct = productsManager.products.find(
-          p => p.id === productId || p._id === productId,
+          p => p.id === productId || p._id === productId
         );
         if (localProduct && result.data) {
           Object.assign(localProduct, result.data, { updatedAt: new Date().toISOString() });
@@ -8519,8 +9105,10 @@ font-size: 0.8rem;
     }
   }
 
-  static async renderAdminAnalytics () {
-    if (!_requireAdmin()) {return;}
+  static async renderAdminAnalytics() {
+    if (!_requireAdmin()) {
+      return;
+    }
     this.hideOriginalNavFooter();
     document.body.style.background = '';
     const mainContent = document.getElementById('main-content');
@@ -8568,7 +9156,9 @@ font-size: 0.8rem;
 
     AdminUI.wireSidebar(key => {
       const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {Pages[method]();}
+      if (typeof Pages[method] === 'function') {
+        Pages[method]();
+      }
     });
 
     try {
@@ -8597,19 +9187,19 @@ font-size: 0.8rem;
           ],
           categories: (typeof productsManager !== 'undefined'
             ? Object.entries(
-              productsManager.products.reduce((m, p) => {
-                m[p.category] = (m[p.category] || 0) + 1;
-                return m;
-              }, {}),
-            )
+                productsManager.products.reduce((m, p) => {
+                  m[p.category] = (m[p.category] || 0) + 1;
+                  return m;
+                }, {})
+              )
             : [
-              ['electronics', 2],
-              ['hostel-items', 2],
-              ['appliances', 1],
-              ['textbooks', 1],
-              ['accessories', 1],
-              ['fashion', 1],
-            ]
+                ['electronics', 2],
+                ['hostel-items', 2],
+                ['appliances', 1],
+                ['textbooks', 1],
+                ['accessories', 1],
+                ['fashion', 1],
+              ]
           ).map(([category, count]) => ({ category, count })),
           users: days.map(dt => ({ date: dt, count: Math.floor(Math.random() * 5) })),
           topProducts: (typeof productsManager !== 'undefined'
@@ -8747,7 +9337,7 @@ font-size: 0.8rem;
     }
   }
 
-  static renderFAQ () {
+  static renderFAQ() {
     const mainContent = document.getElementById('main-content');
     if (!mainContent) {
       return;
@@ -8756,7 +9346,7 @@ font-size: 0.8rem;
     const faqItems = [
       {
         q: 'What is JERTS CART?',
-        a: 'JERTS CART is a student marketplace for buying and selling items within university communities in Ghana. Whether you\'re looking for textbooks, electronics, hostel essentials, or fashion items, JERTS CART connects you with fellow students.',
+        a: "JERTS CART is a student marketplace for buying and selling items within university communities in Ghana. Whether you're looking for textbooks, electronics, hostel essentials, or fashion items, JERTS CART connects you with fellow students.",
       },
       {
         q: 'How do I create an account?',
@@ -8784,7 +9374,7 @@ font-size: 0.8rem;
       },
       {
         q: 'Can I return an item?',
-        a: 'Returns depend on the seller\'s policy. We recommend discussing return terms with the seller before purchasing. If you have a dispute, you can report the transaction through your order page.',
+        a: "Returns depend on the seller's policy. We recommend discussing return terms with the seller before purchasing. If you have a dispute, you can report the transaction through your order page.",
       },
       {
         q: 'How do I contact a seller?',
@@ -8802,8 +9392,8 @@ font-size: 0.8rem;
         <p style="color: var(--text-secondary, #6b7280); margin-bottom: 2.5rem; font-size: 1.05rem;">Everything you need to know about buying and selling on JERTS CART.</p>
         <div class="faq-list">
           ${faqItems
-    .map(
-      (item, i) => `
+            .map(
+              (item, i) => `
             <details class="faq-item" style="border: 1px solid var(--border-color, #e5e7eb); border-radius: 0.75rem; margin-bottom: 0.75rem; overflow: hidden; background: var(--bg-primary, #fff);${i === 0 ? ' open;' : ''}">
               <summary style="padding: 1.25rem 1.5rem; font-weight: 600; cursor: pointer; font-size: 1rem; color: var(--text-primary, #111827); list-style: none; display: flex; justify-content: space-between; align-items: center;">
                 ${item.q}
@@ -8813,9 +9403,9 @@ font-size: 0.8rem;
                 ${item.a}
               </div>
             </details>
-          `,
-    )
-    .join('')}
+          `
+            )
+            .join('')}
         </div>
         <div style="margin-top: 3rem; text-align: center; padding: 2rem; background: var(--bg-secondary, #f9fafb); border-radius: 0.75rem;">
           <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary, #111827);">Still have questions?</h2>
@@ -8837,7 +9427,7 @@ font-size: 0.8rem;
    * Render newsletter confirmation page (called when user clicks email link)
    * @param {Object} params - Route params (includes token)
    */
-  static async renderNewsletterConfirm (params) {
+  static async renderNewsletterConfirm(params) {
     const mainContent = document.getElementById('main-content');
     if (!mainContent) {
       return;
@@ -8873,10 +9463,16 @@ font-size: 0.8rem;
       if (response.success) {
         router.goToHash('/newsletter/confirmed?status=success');
       } else {
-        router.goToHash('/newsletter/confirmed?status=error&message=' + encodeURIComponent(response.error || 'Confirmation failed'));
+        router.goToHash(
+          '/newsletter/confirmed?status=error&message=' +
+            encodeURIComponent(response.error || 'Confirmation failed')
+        );
       }
     } catch (error) {
-      router.goToHash('/newsletter/confirmed?status=error&message=' + encodeURIComponent(error.message || 'Confirmation failed'));
+      router.goToHash(
+        '/newsletter/confirmed?status=error&message=' +
+          encodeURIComponent(error.message || 'Confirmation failed')
+      );
     }
   }
 
@@ -8884,7 +9480,7 @@ font-size: 0.8rem;
    * Render newsletter confirmation result page
    * @param {Object} params - Route params (includes status, message)
    */
-  static renderNewsletterConfirmed (params) {
+  static renderNewsletterConfirmed(params) {
     const mainContent = document.getElementById('main-content');
     if (!mainContent) {
       return;
@@ -8896,15 +9492,17 @@ font-size: 0.8rem;
     if (status === 'success' || status === 'already_active') {
       icon = '🎉';
       title = status === 'already_active' ? 'Already Subscribed!' : 'Subscription Confirmed!';
-      description = status === 'already_active'
-        ? 'You\'re already on our newsletter list. Thanks for being part of JERTS CART!'
-        : 'Welcome to JERTS CART! You\'ll now receive the best deals, selling tips, and campus marketplace updates. Check your email for a welcome code!';
+      description =
+        status === 'already_active'
+          ? "You're already on our newsletter list. Thanks for being part of JERTS CART!"
+          : "Welcome to JERTS CART! You'll now receive the best deals, selling tips, and campus marketplace updates. Check your email for a welcome code!";
       buttonText = 'Start Shopping';
       buttonAction = "router.goToHash('/browse')";
     } else {
       icon = '❌';
       title = 'Confirmation Failed';
-      description = message || 'Something went wrong. Please try subscribing again or contact support.';
+      description =
+        message || 'Something went wrong. Please try subscribing again or contact support.';
       buttonText = 'Try Again';
       buttonAction = "router.goToHash('/')";
     }
@@ -8924,39 +9522,41 @@ font-size: 0.8rem;
     window.scrollTo(0, 0);
   }
 
-  static renderTerms () {
+  static renderTerms() {
     return typeof StaticPageMethods !== 'undefined'
       ? StaticPageMethods.renderTerms()
       : console.warn('StaticPageMethods not loaded');
   }
 
-  static renderPrivacy () {
+  static renderPrivacy() {
     return typeof StaticPageMethods !== 'undefined'
       ? StaticPageMethods.renderPrivacy()
       : console.warn('StaticPageMethods not loaded');
   }
 
-  static renderAbout () {
+  static renderAbout() {
     return typeof StaticPageMethods !== 'undefined'
       ? StaticPageMethods.renderAbout()
       : console.warn('StaticPageMethods not loaded');
   }
 
-  static renderContact () {
+  static renderContact() {
     return typeof StaticPageMethods !== 'undefined'
       ? StaticPageMethods.renderContact()
       : console.warn('StaticPageMethods not loaded');
   }
 
-  static _handleContactForm (event) {
+  static _handleContactForm(event) {
     return typeof StaticPageMethods !== 'undefined'
       ? StaticPageMethods._handleContactForm(event)
       : console.warn('StaticPageMethods not loaded');
   }
 
-  static renderTrackOrder () {
+  static renderTrackOrder() {
     const mainContent = document.getElementById('main-content');
-    if (!mainContent) {return;}
+    if (!mainContent) {
+      return;
+    }
 
     mainContent.innerHTML = `
       <div style="max-width:640px;margin:0 auto;padding:3rem 1.5rem;">
@@ -8970,15 +9570,19 @@ font-size: 0.8rem;
       </div>
     `;
     document.getElementById('track-input').addEventListener('keydown', e => {
-      if (e.key === 'Enter') {Pages._doTrackOrder();}
+      if (e.key === 'Enter') {
+        Pages._doTrackOrder();
+      }
     });
     window.scrollTo(0, 0);
   }
 
-  static async _doTrackOrder () {
+  static async _doTrackOrder() {
     const input = document.getElementById('track-input');
     const resultDiv = document.getElementById('track-result');
-    if (!input || !resultDiv) {return;}
+    if (!input || !resultDiv) {
+      return;
+    }
 
     const trackingNumber = input.value.trim().toUpperCase();
     if (!trackingNumber) {
@@ -9009,15 +9613,15 @@ font-size: 0.8rem;
               <div style="height:100%;width:${currentIdx >= 0 ? (currentIdx / (statusSteps.length - 1)) * 100 : 0}%;background:#0046be;border-radius:2px;transition:width 0.3s;"></div>
             </div>
             ${statusSteps
-    .map(
-      (step, i) => `
+              .map(
+                (step, i) => `
               <div style="display:flex;flex-direction:column;align-items:center;position:relative;z-index:1;flex:1;">
                 <div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#fff;background:${i <= currentIdx ? '#0046be' : '#d1d5db'};border:3px solid ${i <= currentIdx ? '#0046be' : '#e5e7eb'};">${i <= currentIdx ? '✓' : i + 1}</div>
                 <span style="margin-top:0.5rem;font-size:0.75rem;color:${i <= currentIdx ? '#111827' : '#9ca3af'};font-weight:${i <= currentIdx ? '600' : '400'};text-align:center;">${step.charAt(0).toUpperCase() + step.slice(1).replace('-', ' ')}</span>
               </div>
-            `,
-    )
-    .join('')}
+            `
+              )
+              .join('')}
           </div>`;
 
       resultDiv.innerHTML = `
@@ -9037,23 +9641,23 @@ font-size: 0.8rem;
         </div>
         ${stepHtml}
         ${
-  order.items && order.items.length
-    ? `
+          order.items && order.items.length
+            ? `
         <div style="background:var(--bg-primary,#fff);border:1px solid var(--border-color,#e5e7eb);border-radius:0.75rem;padding:1.5rem;">
           <h3 style="font-size:1rem;font-weight:600;margin-bottom:1rem;color:var(--text-primary,#111827);">Items</h3>
           ${order.items
-    .map(
-      item => `
+            .map(
+              item => `
             <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid #f3f4f6;">
               <span style="font-size:0.95rem;color:var(--text-primary,#111827);">${item.title || 'Item'}</span>
               <span style="font-size:0.95rem;font-weight:600;color:var(--text-primary,#111827);">×${item.quantity}</span>
             </div>
-          `,
-    )
-    .join('')}
+          `
+            )
+            .join('')}
         </div>`
-    : ''
-}
+            : ''
+        }
       `;
     } catch (err) {
       resultDiv.innerHTML =

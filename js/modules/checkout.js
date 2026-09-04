@@ -2,13 +2,32 @@ const _cartManager = typeof cartManager !== 'undefined' ? cartManager : null;
 const _api = typeof api !== 'undefined' ? api : null;
 const _StorageManager = typeof StorageManager !== 'undefined' ? StorageManager : null;
 const _STORAGE_KEYS = typeof STORAGE_KEYS !== 'undefined' ? STORAGE_KEYS : null;
-const _STORAGE_KEY_PREFIX = typeof STORAGE_KEY_PREFIX !== 'undefined' ? STORAGE_KEY_PREFIX : 'unihub_';
-const _ORDER_STATUS = typeof ORDER_STATUS !== 'undefined' ? ORDER_STATUS : { PLACED: 'placed', CONFIRMED: 'confirmed', IN_TRANSIT: 'in_transit', DELIVERED: 'delivered', CANCELLED: 'cancelled' };
-const _DELIVERY_MODES = typeof DELIVERY_MODES !== 'undefined' ? DELIVERY_MODES : { BOLT: 'bolt', YANGO: 'yango', IN_PERSON: 'in_person' };
-const _PAYMENT_MODES = typeof PAYMENT_MODES !== 'undefined' ? PAYMENT_MODES : { CASH: 'cash', MOMO: 'momo', TELECEL: 'telecel', BANK: 'bank' };
-const _Validator = typeof Validator !== 'undefined' ? Validator : {
-  isValidPhone: (p) => /^[\d\s+()-]{7,15}$/.test(p),
-};
+const _STORAGE_KEY_PREFIX =
+  typeof STORAGE_KEY_PREFIX !== 'undefined' ? STORAGE_KEY_PREFIX : 'unihub_';
+const _ORDER_STATUS =
+  typeof ORDER_STATUS !== 'undefined'
+    ? ORDER_STATUS
+    : {
+        PLACED: 'placed',
+        CONFIRMED: 'confirmed',
+        IN_TRANSIT: 'in_transit',
+        DELIVERED: 'delivered',
+        CANCELLED: 'cancelled',
+      };
+const _DELIVERY_MODES =
+  typeof DELIVERY_MODES !== 'undefined'
+    ? DELIVERY_MODES
+    : { BOLT: 'bolt', YANGO: 'yango', IN_PERSON: 'in_person' };
+const _PAYMENT_MODES =
+  typeof PAYMENT_MODES !== 'undefined'
+    ? PAYMENT_MODES
+    : { CASH: 'cash', MOMO: 'momo', TELECEL: 'telecel', BANK: 'bank' };
+const _Validator =
+  typeof Validator !== 'undefined'
+    ? Validator
+    : {
+        isValidPhone: p => /^[\d\s+()-]{7,15}$/.test(p),
+      };
 
 class CheckoutFlow {
   constructor() {
@@ -41,7 +60,9 @@ class CheckoutFlow {
 
   _prefillFromSession() {
     try {
-      const session = _StorageManager.get(_STORAGE_KEYS.CURRENT_USER, true) || _StorageManager.get(_STORAGE_KEYS.SESSION, true);
+      const session =
+        _StorageManager.get(_STORAGE_KEYS.CURRENT_USER, true) ||
+        _StorageManager.get(_STORAGE_KEYS.SESSION, true);
       const user = session?.user || session;
       if (user) {
         this.shippingData.fullName = user.fullName || user.name || '';
@@ -49,12 +70,16 @@ class CheckoutFlow {
         this.shippingData.university = user.university || '';
         this.shippingData.address = user.address || '';
       }
-    } catch (e) { console.warn('checkout: loadUserDetails failed:', e); }
+    } catch (e) {
+      console.warn('checkout: loadUserDetails failed:', e);
+    }
   }
 
   render() {
     const container = document.getElementById('checkout-flow-container');
-    if (!container) return;
+    if (!container) {
+      return;
+    }
     container.innerHTML = this._buildHTML();
     this._bindEvents();
     this._updateProgress();
@@ -83,18 +108,21 @@ class CheckoutFlow {
   }
 
   _buildProgress() {
-    const progressPercent = this.currentStep > 0
-      ? ((this.currentStep) / (this.STEPS.length - 1)) * 100
-      : 0;
+    const progressPercent =
+      this.currentStep > 0 ? (this.currentStep / (this.STEPS.length - 1)) * 100 : 0;
     return `
       <div class="checkout-progress">
         <div class="checkout-progress-track"></div>
         <div class="checkout-progress-fill" style="width: ${progressPercent}%"></div>
         ${this.STEPS.map((step, i) => {
           let cls = 'checkout-step-indicator';
-          if (i === this.currentStep) cls += ' active';
-          else if (this.completedSteps.has(i)) cls += ' completed';
-          else if (i > this.currentStep) cls += ' disabled';
+          if (i === this.currentStep) {
+            cls += ' active';
+          } else if (this.completedSteps.has(i)) {
+            cls += ' completed';
+          } else if (i > this.currentStep) {
+            cls += ' disabled';
+          }
           return `
             <button class="${cls}" data-step="${i}">
               <div class="checkout-step-number"><span>${step.number}</span></div>
@@ -260,7 +288,11 @@ class CheckoutFlow {
       paymentLabel = `Card ending in ${last4}`;
     }
 
-    const deliveryModeLabels = { in_person: 'In-Person Pickup', yango: 'Yango Delivery', bolt: 'Bolt Delivery' };
+    const deliveryModeLabels = {
+      in_person: 'In-Person Pickup',
+      yango: 'Yango Delivery',
+      bolt: 'Bolt Delivery',
+    };
 
     return `
       <div class="checkout-panel" data-panel="review">
@@ -295,9 +327,12 @@ class CheckoutFlow {
           <div class="review-section review-items">
             <div class="review-section-title">Order Items (${cartItems.length})</div>
             <div class="review-items-list">
-              ${cartItems.map(item => {
-                const itemPrice = (item.product.price + (item.variant ? item.variant.price || 0 : 0)) * item.quantity;
-                return `
+              ${cartItems
+                .map(item => {
+                  const itemPrice =
+                    (item.product.price + (item.variant ? item.variant.price || 0 : 0)) *
+                    item.quantity;
+                  return `
                   <div class="review-item">
                     <div class="review-item-image">
                       <img src="${item.product.images?.[0] || ''}" alt="${this._esc(item.product.title)}" onerror="this.src='';this.onerror=null;" />
@@ -310,7 +345,8 @@ class CheckoutFlow {
                     <div class="review-item-price">GHS ${itemPrice.toFixed(2)}</div>
                   </div>
                 `;
-              }).join('')}
+                })
+                .join('')}
             </div>
           </div>
           <div class="review-totals">
@@ -326,11 +362,19 @@ class CheckoutFlow {
 
   _buildConfirmationPanel() {
     const order = this.orderResult;
-    if (!order) return '<div class="checkout-panel" data-panel="confirmation"></div>';
+    if (!order) {
+      return '<div class="checkout-panel" data-panel="confirmation"></div>';
+    }
 
-    const deliveryFee = order.pricing?.deliveryFee || this._calculateDeliveryFee(this.shippingData.deliveryMode);
-    const estDelivery = this.shippingData.deliveryMode === 'in_person' ? 'Ready for pickup' : '1-3 business days';
-    const deliveryModeLabels = { in_person: 'In-Person Pickup', yango: 'Yango Delivery', bolt: 'Bolt Delivery' };
+    const deliveryFee =
+      order.pricing?.deliveryFee || this._calculateDeliveryFee(this.shippingData.deliveryMode);
+    const estDelivery =
+      this.shippingData.deliveryMode === 'in_person' ? 'Ready for pickup' : '1-3 business days';
+    const deliveryModeLabels = {
+      in_person: 'In-Person Pickup',
+      yango: 'Yango Delivery',
+      bolt: 'Bolt Delivery',
+    };
 
     return `
       <div class="checkout-panel" data-panel="confirmation">
@@ -344,10 +388,14 @@ class CheckoutFlow {
       <div class="checkout-order-number-label">Order Number</div>
       <div class="checkout-order-number">${order.orderNumber || order.id || ''}</div>
     </div>
-    ${order.trackingNumber ? `<div class="checkout-order-number-box" style="margin-top:0.75rem;">
+    ${
+      order.trackingNumber
+        ? `<div class="checkout-order-number-box" style="margin-top:0.75rem;">
       <div class="checkout-order-number-label">Tracking Number</div>
       <div class="checkout-order-number" style="color:#0046be;font-family:monospace;letter-spacing:0.05em;">${order.trackingNumber}</div>
-    </div>` : ''}
+    </div>`
+        : ''
+    }
           <div class="checkout-estimated-delivery">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             <div>
@@ -377,9 +425,10 @@ class CheckoutFlow {
       <div class="checkout-actions">
         ${showBack ? '<button class="btn btn-secondary" id="checkout-btn-back">Back</button>' : '<div></div>'}
         <div class="checkout-actions-right">
-          ${isPlaceOrder
-            ? '<button class="btn btn-primary btn-lg" id="checkout-btn-place-order">Place Order</button>'
-            : '<button class="btn btn-primary" id="checkout-btn-next">Continue</button>'
+          ${
+            isPlaceOrder
+              ? '<button class="btn btn-primary btn-lg" id="checkout-btn-place-order">Place Order</button>'
+              : '<button class="btn btn-primary" id="checkout-btn-next">Continue</button>'
           }
         </div>
       </div>
@@ -388,9 +437,11 @@ class CheckoutFlow {
 
   _bindEvents() {
     const flow = document.querySelector('.checkout-flow');
-    if (!flow) return;
+    if (!flow) {
+      return;
+    }
 
-    flow.addEventListener('click', (e) => {
+    flow.addEventListener('click', e => {
       const stepBtn = e.target.closest('.checkout-step-indicator');
       if (stepBtn && !stepBtn.classList.contains('disabled')) {
         const stepIdx = parseInt(stepBtn.dataset.step, 10);
@@ -439,15 +490,29 @@ class CheckoutFlow {
       }
     });
 
-    flow.addEventListener('input', (e) => {
+    flow.addEventListener('input', e => {
       const el = e.target;
-      if (el.id === 'ship-fullName') this.shippingData.fullName = el.value;
-      if (el.id === 'ship-phone') this.shippingData.phone = el.value;
-      if (el.id === 'ship-university') this.shippingData.university = el.value;
-      if (el.id === 'ship-address') this.shippingData.address = el.value;
-      if (el.id === 'ship-instructions') this.shippingData.instructions = el.value;
-      if (el.id === 'ship-deliveryMode') this.shippingData.deliveryMode = el.value;
-      if (el.id === 'pay-momoPhone') this.paymentData.momoPhone = el.value;
+      if (el.id === 'ship-fullName') {
+        this.shippingData.fullName = el.value;
+      }
+      if (el.id === 'ship-phone') {
+        this.shippingData.phone = el.value;
+      }
+      if (el.id === 'ship-university') {
+        this.shippingData.university = el.value;
+      }
+      if (el.id === 'ship-address') {
+        this.shippingData.address = el.value;
+      }
+      if (el.id === 'ship-instructions') {
+        this.shippingData.instructions = el.value;
+      }
+      if (el.id === 'ship-deliveryMode') {
+        this.shippingData.deliveryMode = el.value;
+      }
+      if (el.id === 'pay-momoPhone') {
+        this.paymentData.momoPhone = el.value;
+      }
       if (el.id === 'pay-cardNumber') {
         let val = el.value.replace(/\D/g, '').substring(0, 16);
         val = val.replace(/(.{4})/g, '$1 ').trim();
@@ -456,7 +521,9 @@ class CheckoutFlow {
       }
       if (el.id === 'pay-cardExpiry') {
         let val = el.value.replace(/\D/g, '').substring(0, 4);
-        if (val.length >= 3) val = val.substring(0, 2) + '/' + val.substring(2);
+        if (val.length >= 3) {
+          val = val.substring(0, 2) + '/' + val.substring(2);
+        }
         el.value = val;
         this.paymentData.cardExpiry = val;
       }
@@ -467,7 +534,7 @@ class CheckoutFlow {
       this._clearFieldError(el.id);
     });
 
-    flow.addEventListener('change', (e) => {
+    flow.addEventListener('change', e => {
       const el = e.target;
       if (el.id === 'ship-deliveryMode') {
         this.shippingData.deliveryMode = el.value;
@@ -491,9 +558,13 @@ class CheckoutFlow {
     if (key && this.errors[key]) {
       delete this.errors[key];
       const input = document.getElementById(fieldId);
-      if (input) input.classList.remove('error');
+      if (input) {
+        input.classList.remove('error');
+      }
       const errorEl = input?.parentElement?.querySelector('.form-error');
-      if (errorEl) errorEl.textContent = '';
+      if (errorEl) {
+        errorEl.textContent = '';
+      }
     }
   }
 
@@ -504,8 +575,12 @@ class CheckoutFlow {
     });
     const momoSection = document.querySelector('.payment-mobile-money');
     const cardSection = document.querySelector('.payment-card');
-    if (momoSection) momoSection.style.display = this.paymentData.method === 'mobile_money' ? 'block' : 'none';
-    if (cardSection) cardSection.style.display = this.paymentData.method === 'card' ? 'block' : 'none';
+    if (momoSection) {
+      momoSection.style.display = this.paymentData.method === 'mobile_money' ? 'block' : 'none';
+    }
+    if (cardSection) {
+      cardSection.style.display = this.paymentData.method === 'card' ? 'block' : 'none';
+    }
   }
 
   _updateMomoProviders() {
@@ -518,14 +593,18 @@ class CheckoutFlow {
   _updateProgress() {
     const fill = document.querySelector('.checkout-progress-fill');
     if (fill) {
-      const pct = this.currentStep > 0 ? ((this.currentStep) / (this.STEPS.length - 1)) * 100 : 0;
+      const pct = this.currentStep > 0 ? (this.currentStep / (this.STEPS.length - 1)) * 100 : 0;
       fill.style.width = `${pct}%`;
     }
     document.querySelectorAll('.checkout-step-indicator').forEach((btn, i) => {
       btn.classList.remove('active', 'completed', 'disabled');
-      if (i === this.currentStep) btn.classList.add('active');
-      else if (this.completedSteps.has(i)) btn.classList.add('completed');
-      else if (i > this.currentStep) btn.classList.add('disabled');
+      if (i === this.currentStep) {
+        btn.classList.add('active');
+      } else if (this.completedSteps.has(i)) {
+        btn.classList.add('completed');
+      } else if (i > this.currentStep) {
+        btn.classList.add('disabled');
+      }
     });
   }
 
@@ -533,7 +612,9 @@ class CheckoutFlow {
     document.querySelectorAll('.checkout-panel').forEach(panel => {
       panel.classList.remove('active');
     });
-    const activePanel = document.querySelector(`.checkout-panel[data-panel="${this.STEPS[this.currentStep].id}"]`);
+    const activePanel = document.querySelector(
+      `.checkout-panel[data-panel="${this.STEPS[this.currentStep].id}"]`
+    );
     if (activePanel) {
       activePanel.classList.add('active');
     }
@@ -668,14 +749,20 @@ class CheckoutFlow {
   }
 
   async submitOrder() {
-    if (this.isSubmitting) return;
+    if (this.isSubmitting) {
+      return;
+    }
     this.isSubmitting = true;
 
     const overlay = document.getElementById('checkout-submit-overlay');
-    if (overlay) overlay.classList.add('active');
+    if (overlay) {
+      overlay.classList.add('active');
+    }
 
     try {
-      const session = _StorageManager.get(_STORAGE_KEYS.CURRENT_USER, true) || _StorageManager.get(_STORAGE_KEYS.SESSION, true);
+      const session =
+        _StorageManager.get(_STORAGE_KEYS.CURRENT_USER, true) ||
+        _StorageManager.get(_STORAGE_KEYS.SESSION, true);
       const currentUser = session?.user || session;
       if (!currentUser) {
         showToast('You must be logged in to place an order', 'warning');
@@ -686,7 +773,10 @@ class CheckoutFlow {
       const verification = _StorageManager.get(_STORAGE_KEYS.STUDENT_VERIFICATION, true);
       const isVerified = currentUser.isVerified || (verification && verification.isVerified);
       if (!isVerified) {
-        showToast('You must be verified as a student to make purchases. Please complete student verification first.', 'warning');
+        showToast(
+          'You must be verified as a student to make purchases. Please complete student verification first.',
+          'warning'
+        );
         if (typeof Pages !== 'undefined' && Pages.renderStudentVerification) {
           Pages.renderStudentVerification();
         }
@@ -697,9 +787,14 @@ class CheckoutFlow {
       const deliveryFee = this._calculateDeliveryFee(this.shippingData.deliveryMode);
       const grandTotal = summary.subtotal + deliveryFee;
 
-      const paymentMode = this.paymentData.method === 'mobile_money'
-        ? (this.paymentData.momoProvider === 'mtn' ? 'momo' : this.paymentData.momoProvider === 'vodafone' ? 'telecel' : 'momo')
-        : 'bank';
+      const paymentMode =
+        this.paymentData.method === 'mobile_money'
+          ? this.paymentData.momoProvider === 'mtn'
+            ? 'momo'
+            : this.paymentData.momoProvider === 'vodafone'
+              ? 'telecel'
+              : 'momo'
+          : 'bank';
 
       const orderData = {
         deliveryMode: this.shippingData.deliveryMode,
@@ -721,33 +816,45 @@ class CheckoutFlow {
           // Replay protection: same key reused across retries of this
           // submission attempt so a flaky network cannot duplicate orders.
           orderData.idempotencyKey = this._getIdempotencyKey();
-      const response = await _api.orders.create(orderData);
-        if (response.success) {
-          order = response.data;
-        } else if (response.code === 'VERIFICATION_REQUIRED' || response.error === 'Student verification required') {
-          showToast('You must be verified as a student to make purchases. Please complete student verification first.', 'warning');
-          if (typeof Pages !== 'undefined' && Pages.renderStudentVerification) {
-            setTimeout(() => Pages.renderStudentVerification(), 1500);
+          const response = await _api.orders.create(orderData);
+          if (response.success) {
+            order = response.data;
+          } else if (
+            response.code === 'VERIFICATION_REQUIRED' ||
+            response.error === 'Student verification required'
+          ) {
+            showToast(
+              'You must be verified as a student to make purchases. Please complete student verification first.',
+              'warning'
+            );
+            if (typeof Pages !== 'undefined' && Pages.renderStudentVerification) {
+              setTimeout(() => Pages.renderStudentVerification(), 1500);
+            }
+            return;
           }
-          return;
-        }
-      } catch (e) {
-        if (e?.response?.data?.code === 'VERIFICATION_REQUIRED' || e?.response?.data?.error === 'Student verification required') {
-          showToast('You must be verified as a student to make purchases. Please complete student verification first.', 'warning');
-          if (typeof Pages !== 'undefined' && Pages.renderStudentVerification) {
-            setTimeout(() => Pages.renderStudentVerification(), 1500);
+        } catch (e) {
+          if (
+            e?.response?.data?.code === 'VERIFICATION_REQUIRED' ||
+            e?.response?.data?.error === 'Student verification required'
+          ) {
+            showToast(
+              'You must be verified as a student to make purchases. Please complete student verification first.',
+              'warning'
+            );
+            if (typeof Pages !== 'undefined' && Pages.renderStudentVerification) {
+              setTimeout(() => Pages.renderStudentVerification(), 1500);
+            }
+            return;
           }
-          return;
         }
-      }
       }
 
-if (!order) {
-      order = {
-        id: `order_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
-        orderNumber: this._generateOrderNumber(),
-        trackingNumber: this._generateTrackingNumber(),
-        userId: currentUser.id,
+      if (!order) {
+        order = {
+          id: `order_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+          orderNumber: this._generateOrderNumber(),
+          trackingNumber: this._generateTrackingNumber(),
+          userId: currentUser.id,
           customer: {
             name: this.shippingData.fullName,
             email: currentUser.email,
@@ -785,7 +892,9 @@ if (!order) {
         this._saveOrderLocal(order);
       }
 
-      if (_cartManager) _cartManager.clear();
+      if (_cartManager) {
+        _cartManager.clear();
+      }
       this._orderRequestId = null; // fresh key for the next order
 
       this.orderResult = order;
@@ -794,13 +903,18 @@ if (!order) {
       this.render();
 
       if (typeof notificationManager !== 'undefined' && notificationManager) {
-        notificationManager.success('Order Confirmed', `Your order #${order.orderNumber || order.id} has been placed!`);
+        notificationManager.success(
+          'Order Confirmed',
+          `Your order #${order.orderNumber || order.id} has been placed!`
+        );
       }
     } catch (error) {
       showToast('An error occurred while placing your order. Please try again.', 'error');
     } finally {
       this.isSubmitting = false;
-      if (overlay) overlay.classList.remove('active');
+      if (overlay) {
+        overlay.classList.remove('active');
+      }
     }
   }
 
@@ -809,7 +923,9 @@ if (!order) {
     const year = date.getFullYear().toString().slice(-2);
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
-    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    const random = Math.floor(Math.random() * 10000)
+      .toString()
+      .padStart(4, '0');
     return `UH-${year}${month}${day}-${random}`;
   }
 
@@ -830,7 +946,8 @@ if (!order) {
       if (typeof CryptoUtil !== 'undefined' && CryptoUtil.generateSecureToken) {
         this._orderRequestId = CryptoUtil.generateSecureToken(16);
       } else {
-        this._orderRequestId = 'chk-' + Date.now() + '-' + Math.random().toString(36).slice(2, 12) + '-fallback';
+        this._orderRequestId =
+          'chk-' + Date.now() + '-' + Math.random().toString(36).slice(2, 12) + '-fallback';
       }
     }
     return this._orderRequestId;
@@ -842,11 +959,15 @@ if (!order) {
       const orders = _StorageManager.get(key, true) || [];
       orders.unshift(order);
       _StorageManager.set(key, orders);
-    } catch (e) { console.warn('checkout: saveOrderLocal failed:', e); }
+    } catch (e) {
+      console.warn('checkout: saveOrderLocal failed:', e);
+    }
   }
 
   _esc(str) {
-    if (!str) return '';
+    if (!str) {
+      return '';
+    }
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
@@ -924,7 +1045,9 @@ class CheckoutManager {
           this._orderRequestId = null;
           return { success: true, message: 'Order placed successfully!', order: response.data };
         }
-      } catch (error) { console.warn('checkout: placeOrder API failed, falling back to local:', error); }
+      } catch (error) {
+        console.warn('checkout: placeOrder API failed, falling back to local:', error);
+      }
     }
 
     const cartSummary = _cartManager.getSummary();
@@ -1001,12 +1124,14 @@ class CheckoutManager {
     return `order_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
-generateOrderNumber() {
+  generateOrderNumber() {
     const date = new Date();
     const year = date.getFullYear().toString().slice(-2);
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
-    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    const random = Math.floor(Math.random() * 10000)
+      .toString()
+      .padStart(4, '0');
     return `UH-${year}${month}${day}-${random}`;
   }
 
@@ -1032,7 +1157,9 @@ generateOrderNumber() {
         if (response.success) {
           return response.data.orders || response.data || [];
         }
-      } catch (error) { console.warn('checkout: getOrders API failed, using local:', error); }
+      } catch (error) {
+        console.warn('checkout: getOrders API failed, using local:', error);
+      }
     }
     const orders = _StorageManager.get(this.ORDER_STORAGE_KEY, true);
     return orders || [];
@@ -1093,11 +1220,23 @@ generateOrderNumber() {
     ];
   }
 
-    getPaymentModeOptions() {
+  getPaymentModeOptions() {
     return [
-      { value: _PAYMENT_MODES.MOMO, label: 'MTN Mobile Money', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>' },
-      { value: _PAYMENT_MODES.TELECEL, label: 'Telecel Cash', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 6h.01"/><path d="M8 10h8"/><path d="M8 14h8"/><path d="M8 18h4"/></svg>' },
-      { value: _PAYMENT_MODES.BANK, label: 'Bank Transfer', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M12 3l9 7H3l9-7z"/><path d="M5 10v11"/><path d="M10 10v11"/><path d="M14 10v11"/><path d="M19 10v11"/></svg>' },
+      {
+        value: _PAYMENT_MODES.MOMO,
+        label: 'MTN Mobile Money',
+        icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
+      },
+      {
+        value: _PAYMENT_MODES.TELECEL,
+        label: 'Telecel Cash',
+        icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 6h.01"/><path d="M8 10h8"/><path d="M8 14h8"/><path d="M8 18h4"/></svg>',
+      },
+      {
+        value: _PAYMENT_MODES.BANK,
+        label: 'Bank Transfer',
+        icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M12 3l9 7H3l9-7z"/><path d="M5 10v11"/><path d="M10 10v11"/><path d="M14 10v11"/><path d="M19 10v11"/></svg>',
+      },
     ];
   }
 
@@ -1115,7 +1254,11 @@ generateOrderNumber() {
           instructions: order.delivery.instructions,
         });
       }
-      return { success: true, message: 'Cash payment confirmed - Pay on delivery', transactionId: `cash_${Date.now()}` };
+      return {
+        success: true,
+        message: 'Cash payment confirmed - Pay on delivery',
+        transactionId: `cash_${Date.now()}`,
+      };
     }
 
     // Use real payment manager for MoMo, Telecel, Bank
@@ -1125,7 +1268,12 @@ generateOrderNumber() {
         if (paymentResult.success) {
           // Payment initiated successfully - user will complete on Paystack
           // The webhook will handle verification asynchronously
-          return { success: true, message: paymentResult.message, reference: paymentResult.reference, trans: paymentResult.trans };
+          return {
+            success: true,
+            message: paymentResult.message,
+            reference: paymentResult.reference,
+            trans: paymentResult.trans,
+          };
         } else {
           return { success: false, error: paymentResult.error };
         }
@@ -1147,7 +1295,11 @@ generateOrderNumber() {
               instructions: order.delivery.instructions,
             });
           }
-          resolve({ success: true, message: 'Payment successful', transactionId: `txn_${Date.now()}` });
+          resolve({
+            success: true,
+            message: 'Payment successful',
+            transactionId: `txn_${Date.now()}`,
+          });
         } else {
           resolve({ success: false, error: 'Payment failed. Please try again.' });
         }

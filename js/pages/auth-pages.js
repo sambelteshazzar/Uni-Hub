@@ -3,21 +3,26 @@
 // AUTH PAGE METHODS
 // ============================================
 
-const _Icons = typeof Icons !== 'undefined' ? Icons : {
-  graduation: '🎓',
-  email: '📧',
-  document: '📄',
-  clipboard: '📋',
-  upload: '⬆',
-};
+const _Icons =
+  typeof Icons !== 'undefined'
+    ? Icons
+    : {
+        graduation: '🎓',
+        email: '📧',
+        document: '📄',
+        clipboard: '📋',
+        upload: '⬆',
+      };
 
 const AuthPageMethods = {
-  renderStudentVerification () {
+  renderStudentVerification() {
     const mainContent = document.getElementById('main-content');
     // University now lives on the user record (set at signup) — there's
     // no separate localStorage copy. Fall back to the stored user object.
-    const currentUser = (typeof authManager !== 'undefined' && authManager.getCurrentUser)
-      ? authManager.getCurrentUser() : null;
+    const currentUser =
+      typeof authManager !== 'undefined' && authManager.getCurrentUser
+        ? authManager.getCurrentUser()
+        : null;
     const selectedUniversity = currentUser?.university || '';
     const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true);
 
@@ -44,7 +49,7 @@ const AuthPageMethods = {
       `;
       const card = mainContent.querySelector('.auth-card');
       if (card) {
-        card.addEventListener('click', (e) => {
+        card.addEventListener('click', e => {
           const a = e.target.closest('[data-action]')?.getAttribute('data-action');
           if (a === 'pick-uni' && Pages.renderLanding) {
             if (typeof window.router !== 'undefined' && window.router.navigate) {
@@ -69,21 +74,26 @@ const AuthPageMethods = {
     // Get university name and check active status
     let universityName = 'your university';
     api
-    .loadJSON('data/config.json')
-    .then(config => {
-      const uni = config.universities.find(u => u.id === selectedUniversity);
-      if (uni) {
-        if (uni.active === false) {
-          Pages.renderLanding();
-        showToast(`${uni.name} is coming soon! We're currently available at Accra Technical University (ATU).`, 'info');
-          return;
+      .loadJSON('data/config.json')
+      .then(config => {
+        const uni = config.universities.find(u => u.id === selectedUniversity);
+        if (uni) {
+          if (uni.active === false) {
+            Pages.renderLanding();
+            showToast(
+              `${uni.name} is coming soon! We're currently available at Accra Technical University (ATU).`,
+              'info'
+            );
+            return;
+          }
+          universityName = uni.name;
+          const nameEl = mainContent.querySelector('.verification-university-name');
+          if (nameEl) {
+            nameEl.textContent = universityName;
+          }
         }
-        universityName = uni.name;
-        const nameEl = mainContent.querySelector('.verification-university-name');
-        if (nameEl) nameEl.textContent = universityName;
-      }
-    })
-    .catch(() => {});
+      })
+      .catch(() => {});
 
     // Check if already verified
     if (
@@ -256,11 +266,11 @@ const AuthPageMethods = {
   // Legacy tab switcher kept as a no-op so any stale onclick="..." in the
   // DOM doesn't throw. Safe to remove once we're sure no cached HTML still
   // references it.
-  switchVerificationTab (_tab) {
+  switchVerificationTab(_tab) {
     /* intentionally empty — unified form has no tabs */
   },
 
-  handleFileSelect (event) {
+  handleFileSelect(event) {
     const files = event.target.files;
     const fileList = document.getElementById('file-list');
 
@@ -282,21 +292,28 @@ const AuthPageMethods = {
    * the approval confirmation link; `universityEmail` (optional) is
    * collected only as a hint for the admin reviewer.
    */
-  async handleVerification (event) {
+  async handleVerification(event) {
     event.preventDefault();
     const form = document.getElementById('verification-form');
-    if (!form) {return;}
+    if (!form) {
+      return;
+    }
 
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     if (!api || !session?.token) {
-      showToast('You must be logged in to submit verification. Please log in and try again.', 'warning');
+      showToast(
+        'You must be logged in to submit verification. Please log in and try again.',
+        'warning'
+      );
       return;
     }
 
     // University lives on the user record. If it's missing, send the
     // user through the onboarding picker before they can verify.
-    const currentUser = (typeof authManager !== 'undefined' && authManager.getCurrentUser)
-      ? authManager.getCurrentUser() : null;
+    const currentUser =
+      typeof authManager !== 'undefined' && authManager.getCurrentUser
+        ? authManager.getCurrentUser()
+        : null;
     const selectedUniversity = currentUser?.university || '';
     if (!selectedUniversity) {
       showToast('Please pick your university first.', 'warning');
@@ -333,7 +350,10 @@ const AuthPageMethods = {
       return;
     }
     if (data.universityEmail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.universityEmail)) {
-      showToast('University email is not a valid email address — leave it blank if you do not have one.', 'warning');
+      showToast(
+        'University email is not a valid email address — leave it blank if you do not have one.',
+        'warning'
+      );
       return;
     }
     if (!/^[\d\s+\-()]{7,15}$/.test(data.phone)) {
@@ -360,7 +380,9 @@ const AuthPageMethods = {
       if (files.length > 0) {
         const fd = new FormData();
         Object.entries(data).forEach(([k, v]) => {
-          if (v !== null && v !== undefined) {fd.append(k, v);}
+          if (v !== null && v !== undefined) {
+            fd.append(k, v);
+          }
         });
         files.forEach(f => fd.append('documents', f));
         response = await api.verification.submitDocuments(fd);
@@ -392,7 +414,10 @@ const AuthPageMethods = {
       showToast(response?.error || 'Submission failed. Please try again.', 'error');
     } catch (err) {
       console.warn('auth-pages: verification submit error:', err);
-      showToast('Cannot connect to server. Please check your internet connection and try again.', 'error');
+      showToast(
+        'Cannot connect to server. Please check your internet connection and try again.',
+        'error'
+      );
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
@@ -404,23 +429,30 @@ const AuthPageMethods = {
   // Legacy handlers kept as thin shims so any stale inline onsubmit="..."
   // references (e.g. in cached HTML) don't throw. Real form is wired to
   // handleVerification above.
-  async handleStudentVerification (event) { return Pages.handleVerification(event); },
-  async handleDocumentVerification (event) { return Pages.handleVerification(event); },
+  async handleStudentVerification(event) {
+    return Pages.handleVerification(event);
+  },
+  async handleDocumentVerification(event) {
+    return Pages.handleVerification(event);
+  },
 
   /**
    * Open an overlay with the university picker so the user can change
    * their university without leaving the verification form. On save, the
    * user record is updated and the form's header re-renders.
    */
-  async openChangeUniversityOverlay () {
+  async openChangeUniversityOverlay() {
     // If one is already open, dismiss it.
     const existing = document.getElementById('change-uni-overlay');
-    if (existing) {existing.remove();}
+    if (existing) {
+      existing.remove();
+    }
 
     const overlay = document.createElement('div');
     overlay.id = 'change-uni-overlay';
     overlay.className = 'auth-overlay';
-    overlay.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1100; padding: 1rem;';
+    overlay.style.cssText =
+      'position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1100; padding: 1rem;';
     overlay.innerHTML = `
       <div class="auth-card verification-card" style="max-width: 480px; width: 100%; max-height: 90vh; overflow: auto; padding: 1.5rem;">
         <h3 style="margin: 0 0 0.25rem;">Change your university</h3>
@@ -432,13 +464,17 @@ const AuthPageMethods = {
         </div>
       </div>
     `;
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) {overlay.remove();}
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) {
+        overlay.remove();
+      }
     });
     document.body.appendChild(overlay);
 
-    const currentUser = (typeof authManager !== 'undefined' && authManager.getCurrentUser)
-      ? authManager.getCurrentUser() : null;
+    const currentUser =
+      typeof authManager !== 'undefined' && authManager.getCurrentUser
+        ? authManager.getCurrentUser()
+        : null;
     const currentId = currentUser?.university || null;
 
     const host = overlay.querySelector('#change-uni-picker-host');
@@ -448,17 +484,23 @@ const AuthPageMethods = {
 
     await window.UniversitiesPage.renderPicker(host, {
       selectedId: currentId,
-      onSelect: (id) => {
+      onSelect: id => {
         chosen = id;
-        if (saveBtn) {saveBtn.disabled = !id || id === currentId;}
+        if (saveBtn) {
+          saveBtn.disabled = !id || id === currentId;
+        }
       },
     });
 
-    if (cancelBtn) {cancelBtn.addEventListener('click', () => overlay.remove());}
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => overlay.remove());
+    }
 
     if (saveBtn) {
       saveBtn.addEventListener('click', async () => {
-        if (!chosen || chosen === currentId) {return;}
+        if (!chosen || chosen === currentId) {
+          return;
+        }
         saveBtn.disabled = true;
         saveBtn.textContent = 'Saving…';
         try {
@@ -468,7 +510,9 @@ const AuthPageMethods = {
             if (typeof authManager !== 'undefined' && authManager.setCurrentUser) {
               authManager.setCurrentUser(updated);
             }
-            if (typeof showToast === 'function') {showToast('University updated.', 'success');}
+            if (typeof showToast === 'function') {
+              showToast('University updated.', 'success');
+            }
             overlay.remove();
             // Re-render the verification form so the header reflects the
             // new university.
@@ -485,13 +529,15 @@ const AuthPageMethods = {
         } catch (err) {
           saveBtn.disabled = false;
           saveBtn.textContent = 'Save';
-          if (typeof showToast === 'function') {showToast('Network error. Please try again.', 'error');}
+          if (typeof showToast === 'function') {
+            showToast('Network error. Please try again.', 'error');
+          }
         }
       });
     }
   },
 
-  renderLogin () {
+  renderLogin() {
     // Don't hide navbar/footer - show as overlay on landing page
     const overlay = document.createElement('div');
     overlay.id = 'auth-overlay';
@@ -819,7 +865,7 @@ const AuthPageMethods = {
     document.body.appendChild(overlay);
   },
 
-  closeAuthOverlay (immediate = false) {
+  closeAuthOverlay(immediate = false) {
     // Remove all auth overlays to be safe
     const overlays = document.querySelectorAll('#auth-overlay');
     overlays.forEach(overlay => {
@@ -834,7 +880,7 @@ const AuthPageMethods = {
     });
   },
 
-  switchAuthModal (type) {
+  switchAuthModal(type) {
     Pages.closeAuthOverlay();
     setTimeout(() => {
       if (type === 'register') {
@@ -845,7 +891,7 @@ const AuthPageMethods = {
     }, 200);
   },
 
-  async handleLogin (event) {
+  async handleLogin(event) {
     event.preventDefault();
     const form = document.getElementById('login-form');
     const email = form.email.value;
@@ -853,33 +899,40 @@ const AuthPageMethods = {
 
     const result = await authManager.login(email, password);
 
-  if (result.success) {
-  // Close the auth overlay immediately (no animation delay)
-  Pages.closeAuthOverlay(true);
-  // Update navbar to show user menu
-  Pages.updateNavbar();
-  Pages.updateCartBadge();
+    if (result.success) {
+      // Close the auth overlay immediately (no animation delay)
+      Pages.closeAuthOverlay(true);
+      // Update navbar to show user menu
+      Pages.updateNavbar();
+      Pages.updateCartBadge();
 
-  if (typeof notificationManager !== 'undefined' && notificationManager.requestBrowserPermission) {
-  notificationManager.requestBrowserPermission();
-  }
+      if (
+        typeof notificationManager !== 'undefined' &&
+        notificationManager.requestBrowserPermission
+      ) {
+        notificationManager.requestBrowserPermission();
+      }
 
-  // If the user has no university yet (e.g. legacy Google signup before
-  // the picker was enforced), send them to /#/onboarding first. Their
-  // existing session is fine; they just need to pick a university.
-  const currentUser = (typeof authManager !== 'undefined' && authManager.getCurrentUser)
-    ? authManager.getCurrentUser() : null;
-  if (currentUser && currentUser.needsUniversityPick) {
-    if (typeof window.router !== 'undefined' && window.router.navigate) {
-      window.router.navigate('/onboarding');
-    } else {
-      window.location.hash = '#/onboarding';
-    }
-    if (typeof Pages !== 'undefined' && Pages.renderOnboarding) {Pages.renderOnboarding();}
-    return;
-  }
+      // If the user has no university yet (e.g. legacy Google signup before
+      // the picker was enforced), send them to /#/onboarding first. Their
+      // existing session is fine; they just need to pick a university.
+      const currentUser =
+        typeof authManager !== 'undefined' && authManager.getCurrentUser
+          ? authManager.getCurrentUser()
+          : null;
+      if (currentUser && currentUser.needsUniversityPick) {
+        if (typeof window.router !== 'undefined' && window.router.navigate) {
+          window.router.navigate('/onboarding');
+        } else {
+          window.location.hash = '#/onboarding';
+        }
+        if (typeof Pages !== 'undefined' && Pages.renderOnboarding) {
+          Pages.renderOnboarding();
+        }
+        return;
+      }
 
-  // Force redirect to browse page using multiple methods for reliability
+      // Force redirect to browse page using multiple methods for reliability
       try {
         // Method 1: Use router if available
         if (typeof window.router !== 'undefined' && window.router.navigate) {
@@ -903,7 +956,10 @@ const AuthPageMethods = {
         Pages.updateNavbar();
         Pages.updateCartBadge();
         Pages.updateWishlistBadge();
-        notificationManager?.warning('Offline Mode', 'You are logged in with demo data. Some features may be limited.');
+        notificationManager?.warning(
+          'Offline Mode',
+          'You are logged in with demo data. Some features may be limited.'
+        );
         window.location.hash = '#/browse';
         Pages.renderBrowse();
       } else {
@@ -912,13 +968,15 @@ const AuthPageMethods = {
     }
   },
 
-  renderRegister () {
+  renderRegister() {
     // Hide navbar and footer for auth pages - cleaner professional look
     Pages.hideOriginalNavFooter();
 
     const mainContent = document.getElementById('main-content');
-    const currentUser = (typeof authManager !== 'undefined' && authManager.getCurrentUser)
-      ? authManager.getCurrentUser() : null;
+    const currentUser =
+      typeof authManager !== 'undefined' && authManager.getCurrentUser
+        ? authManager.getCurrentUser()
+        : null;
     const selectedUniversity = currentUser?.university || '';
 
     mainContent.innerHTML = `
@@ -1180,10 +1238,12 @@ const AuthPageMethods = {
     `;
   },
 
-  async handleRegister (event) {
+  async handleRegister(event) {
     event.preventDefault();
     const form = document.getElementById('register-form');
-    if (!form) {return;}
+    if (!form) {
+      return;
+    }
 
     // Capture identity fields from step 1.
     const identity = {
@@ -1200,8 +1260,13 @@ const AuthPageMethods = {
     }
 
     // Validate step 1 fields locally before showing step 2.
-    if (!identity.fullName || !identity.email || !identity.phone ||
-        !identity.password || !identity.confirmPassword) {
+    if (
+      !identity.fullName ||
+      !identity.email ||
+      !identity.phone ||
+      !identity.password ||
+      !identity.confirmPassword
+    ) {
       showToast('Please fill in all required fields.', 'warning');
       return;
     }
@@ -1222,9 +1287,11 @@ const AuthPageMethods = {
   // Renders step 2 (university picker) inside the register overlay. The
   // overlay is the .auth-card-modern element created in renderRegister.
   // We replace its body with the picker UI and a back/submit pair.
-  _showRegisterUniversityStep (identity) {
+  _showRegisterUniversityStep(identity) {
     const overlay = document.querySelector('.auth-card-modern');
-    if (!overlay) {return;}
+    if (!overlay) {
+      return;
+    }
 
     overlay.innerHTML = `
       <div class="auth-card-header">
@@ -1247,9 +1314,11 @@ const AuthPageMethods = {
     let chosenUniversity = null;
 
     window.UniversitiesPage.renderPicker(host, {
-      onSelect: (id) => {
+      onSelect: id => {
         chosenUniversity = id;
-        if (createBtn) {createBtn.disabled = false;}
+        if (createBtn) {
+          createBtn.disabled = false;
+        }
       },
     });
 
@@ -1263,7 +1332,9 @@ const AuthPageMethods = {
 
     if (createBtn) {
       createBtn.addEventListener('click', async () => {
-        if (!chosenUniversity) {return;}
+        if (!chosenUniversity) {
+          return;
+        }
         createBtn.disabled = true;
         createBtn.textContent = 'Creating account…';
         try {
@@ -1297,7 +1368,7 @@ const AuthPageMethods = {
     }
   },
 
-  renderForgotPassword () {
+  renderForgotPassword() {
     const mainContent = document.getElementById('main-content');
 
     mainContent.innerHTML = `
@@ -1323,7 +1394,7 @@ const AuthPageMethods = {
     `;
   },
 
-  async handleForgotPassword (event) {
+  async handleForgotPassword(event) {
     event.preventDefault();
     const form = document.getElementById('forgot-form');
     const email = form.email.value;
@@ -1333,33 +1404,41 @@ const AuthPageMethods = {
     submitBtn.textContent = 'Sending...';
 
     try {
-      const baseURL = (typeof window !== 'undefined' && window.API_URL) || 'https://uni-hub-bnxi.onrender.com/api';
+      const baseURL =
+        (typeof window !== 'undefined' && window.API_URL) ||
+        'https://uni-hub-bnxi.onrender.com/api';
       if (typeof api !== 'undefined' && api.isStaticDeploy) {
-        showToast('Password reset is not available in offline mode. Please log in with your existing credentials.', 'info');
+        showToast(
+          'Password reset is not available in offline mode. Please log in with your existing credentials.',
+          'info'
+        );
         setTimeout(() => Pages.renderLogin(), 2000);
       } else {
-      const response = await fetch(`${baseURL}/auth/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
+        const response = await fetch(`${baseURL}/auth/forgot-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
 
-      const result = await response.json();
+        const result = await response.json();
 
-      if (result.success) {
-        showToast(result.message, 'success');
+        if (result.success) {
+          showToast(result.message, 'success');
 
-        if (result.resetToken) {
-          Pages.renderResetPassword(result.resetToken);
+          if (result.resetToken) {
+            Pages.renderResetPassword(result.resetToken);
+          } else {
+            Pages.renderLogin();
+          }
         } else {
-          Pages.renderLogin();
+          showToast(result.error || 'Failed to send reset link', 'error');
         }
-      } else {
-        showToast(result.error || 'Failed to send reset link', 'error');
-      }
       }
     } catch (error) {
-      showToast('Running in offline mode. In offline mode, you can log in with any demo account (e.g. kwame.mensah@ug.edu.gh) using any password.', 'info');
+      showToast(
+        'Running in offline mode. In offline mode, you can log in with any demo account (e.g. kwame.mensah@ug.edu.gh) using any password.',
+        'info'
+      );
       setTimeout(() => Pages.renderLogin(), 3000);
     } finally {
       submitBtn.disabled = false;
@@ -1367,7 +1446,7 @@ const AuthPageMethods = {
     }
   },
 
-  renderResetPassword (token = '') {
+  renderResetPassword(token = '') {
     const mainContent = document.getElementById('main-content');
 
     mainContent.innerHTML = `
@@ -1399,7 +1478,7 @@ const AuthPageMethods = {
     `;
   },
 
-  async handleResetPassword (event, token) {
+  async handleResetPassword(event, token) {
     event.preventDefault();
     const form = document.getElementById('reset-form');
     const newPassword = form.newPassword.value;
@@ -1415,28 +1494,36 @@ const AuthPageMethods = {
     submitBtn.textContent = 'Resetting...';
 
     try {
-      const baseURL = (typeof window !== 'undefined' && window.API_URL) || 'https://uni-hub-bnxi.onrender.com/api';
+      const baseURL =
+        (typeof window !== 'undefined' && window.API_URL) ||
+        'https://uni-hub-bnxi.onrender.com/api';
       if (typeof api !== 'undefined' && api.isStaticDeploy) {
-        showToast('Password reset is not available in offline mode. Please log in with your existing credentials.', 'info');
+        showToast(
+          'Password reset is not available in offline mode. Please log in with your existing credentials.',
+          'info'
+        );
         setTimeout(() => Pages.renderLogin(), 2000);
       } else {
-      const response = await fetch(`${baseURL}/auth/reset-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, newPassword }),
-      });
+        const response = await fetch(`${baseURL}/auth/reset-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, newPassword }),
+        });
 
-      const result = await response.json();
+        const result = await response.json();
 
-      if (result.success) {
-        showToast(result.message, 'success');
-        setTimeout(() => Pages.renderLogin(), 1500);
-      } else {
-        showToast(result.error || 'Failed to reset password', 'error');
-      }
+        if (result.success) {
+          showToast(result.message, 'success');
+          setTimeout(() => Pages.renderLogin(), 1500);
+        } else {
+          showToast(result.error || 'Failed to reset password', 'error');
+        }
       }
     } catch (error) {
-      showToast('Running in offline mode. Password reset is not available offline. Please log in with your existing credentials.', 'info');
+      showToast(
+        'Running in offline mode. Password reset is not available offline. Please log in with your existing credentials.',
+        'info'
+      );
       setTimeout(() => Pages.renderLogin(), 3000);
     } finally {
       submitBtn.disabled = false;
@@ -1451,9 +1538,11 @@ const AuthPageMethods = {
    * render success / failure UI. The token itself is not stored or logged
    * after the call returns.
    */
-  async renderVerifyConfirmation () {
+  async renderVerifyConfirmation() {
     const mainContent = document.getElementById('main-content');
-    if (!mainContent) {return;}
+    if (!mainContent) {
+      return;
+    }
 
     // The router has already parsed the query string into params, but the
     // token contains characters that router.parseQueryString() will have
@@ -1465,8 +1554,9 @@ const AuthPageMethods = {
     const rawParams = new URLSearchParams(rawQuery);
     const token = rawParams.get('token') || '';
 
-    const esc = (s) => {
-      const e = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ||
+    const esc = s => {
+      const e =
+        (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ||
         (window.SecurityUtils && window.SecurityUtils.escapeHtml);
       return e ? e(s) : String(s);
     };
@@ -1487,9 +1577,12 @@ const AuthPageMethods = {
     `;
 
     if (!token) {
-      this._renderVerifyFailure(mainContent, 'Missing token',
+      this._renderVerifyFailure(
+        mainContent,
+        'Missing token',
         'This confirmation link is invalid. Please use the link from your verification email, or contact support.',
-        'verify-actions');
+        'verify-actions'
+      );
       return;
     }
 
@@ -1513,26 +1606,36 @@ const AuthPageMethods = {
         // If the user is signed in, refresh the in-memory user so the
         // auth-aware UI updates immediately.
         if (typeof authManager !== 'undefined' && authManager.refresh) {
-          try { await authManager.refresh(); } catch (_e) { /* non-fatal */ }
+          try {
+            await authManager.refresh();
+          } catch (_e) {
+            /* non-fatal */
+          }
         }
         this._renderVerifySuccess(mainContent, resp.data);
         return;
       }
-      this._renderVerifyFailure(mainContent,
+      this._renderVerifyFailure(
+        mainContent,
         esc(resp?.error || 'Could not confirm verification'),
         'The link may have expired or already been used. If you need help, contact support and include the email your verification was sent to.',
-        'verify-actions');
+        'verify-actions'
+      );
     } catch (err) {
       console.warn('verify: confirm call failed:', err);
-      this._renderVerifyFailure(mainContent, 'Network error',
+      this._renderVerifyFailure(
+        mainContent,
+        'Network error',
         'We could not reach the server. Please check your connection and try the link again.',
-        'verify-actions');
+        'verify-actions'
+      );
     }
   },
 
-  _renderVerifySuccess (mainContent, data) {
-    const esc = (s) => {
-      const e = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ||
+  _renderVerifySuccess(mainContent, data) {
+    const esc = s => {
+      const e =
+        (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ||
         (window.SecurityUtils && window.SecurityUtils.escapeHtml);
       return e ? e(s) : String(s);
     };
@@ -1557,7 +1660,7 @@ const AuthPageMethods = {
     }
     const root = mainContent.querySelector('#verify-actions');
     if (root) {
-      root.addEventListener('click', (e) => {
+      root.addEventListener('click', e => {
         const action = e.target.closest('[data-action]')?.getAttribute('data-action');
         if (action === 'browse' && typeof Pages !== 'undefined' && Pages.renderBrowse) {
           // Update the URL hash so back button / bookmark / reload
@@ -1568,7 +1671,11 @@ const AuthPageMethods = {
             window.location.hash = '#/browse';
           }
           Pages.renderBrowse();
-        } else if (action === 'dashboard' && typeof Pages !== 'undefined' && Pages.renderDashboard) {
+        } else if (
+          action === 'dashboard' &&
+          typeof Pages !== 'undefined' &&
+          Pages.renderDashboard
+        ) {
           if (typeof window.router !== 'undefined' && window.router.navigate) {
             window.router.navigate('/dashboard');
           } else {
@@ -1580,18 +1687,25 @@ const AuthPageMethods = {
     }
   },
 
-  _renderVerifyFailure (mainContent, title, body, actionsContainerId) {
-    const esc = (s) => {
-      const e = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ||
+  _renderVerifyFailure(mainContent, title, body, actionsContainerId) {
+    const esc = s => {
+      const e =
+        (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ||
         (window.SecurityUtils && window.SecurityUtils.escapeHtml);
       return e ? e(s) : String(s);
     };
     const titleEl = mainContent.querySelector('#verify-title');
     const subtitleEl = mainContent.querySelector('#verify-subtitle');
     const spinnerEl = mainContent.querySelector('#verify-spinner');
-    if (titleEl) {titleEl.textContent = esc(title);}
-    if (subtitleEl) {subtitleEl.textContent = '';}
-    if (spinnerEl) {spinnerEl.remove();}
+    if (titleEl) {
+      titleEl.textContent = esc(title);
+    }
+    if (subtitleEl) {
+      subtitleEl.textContent = '';
+    }
+    if (spinnerEl) {
+      spinnerEl.remove();
+    }
     const actionsRoot = mainContent.querySelector(`#${actionsContainerId}`);
     if (actionsRoot) {
       actionsRoot.innerHTML = `
@@ -1600,7 +1714,7 @@ const AuthPageMethods = {
           <button class="btn btn-ghost" data-action="home">Go to home</button>
         </div>
       `;
-      actionsRoot.addEventListener('click', (e) => {
+      actionsRoot.addEventListener('click', e => {
         const action = e.target.closest('[data-action]')?.getAttribute('data-action');
         if (action === 'home' && typeof Pages !== 'undefined' && Pages.renderLanding) {
           if (typeof window.router !== 'undefined' && window.router.navigate) {
@@ -1620,12 +1734,15 @@ const AuthPageMethods = {
    * and shows one of four clear states with appropriate next-action
    * buttons. No PII in the local cache is read.
    */
-  async renderVerificationStatus () {
+  async renderVerificationStatus() {
     const mainContent = document.getElementById('main-content');
-    if (!mainContent) {return;}
+    if (!mainContent) {
+      return;
+    }
 
-    const esc = (s) => {
-      const e = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ||
+    const esc = s => {
+      const e =
+        (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ||
         (window.SecurityUtils && window.SecurityUtils.escapeHtml);
       return e ? e(s) : String(s);
     };
@@ -1659,7 +1776,11 @@ const AuthPageMethods = {
       // directly through the existing auth-aware request helper.
       const resp = await api.request('/verification/me');
       if (!resp || !resp.success) {
-        this._renderStatusError(mainContent, esc, resp?.error || 'Could not load your verification status.');
+        this._renderStatusError(
+          mainContent,
+          esc,
+          resp?.error || 'Could not load your verification status.'
+        );
         return;
       }
       const data = resp.data || {};
@@ -1681,7 +1802,7 @@ const AuthPageMethods = {
     }
   },
 
-  _renderStatusApproved (root, esc, data) {
+  _renderStatusApproved(root, esc, data) {
     root.innerHTML = `
       <div class="auth-container" style="max-width: 560px; margin: 3rem auto;">
         <div class="auth-card" style="text-align: center; padding: 2.5rem 2rem;">
@@ -1702,7 +1823,7 @@ const AuthPageMethods = {
     root.querySelector('#main-content') || root;
     const card = root.querySelector('.auth-card');
     if (card) {
-      card.addEventListener('click', (e) => {
+      card.addEventListener('click', e => {
         const a = e.target.closest('[data-action]')?.getAttribute('data-action');
         if (a === 'browse' && Pages.renderBrowse) {
           if (typeof window.router !== 'undefined' && window.router.navigate) {
@@ -1723,7 +1844,7 @@ const AuthPageMethods = {
     }
   },
 
-  _renderStatusAwaitingConfirmation (root, esc, data) {
+  _renderStatusAwaitingConfirmation(root, esc, data) {
     root.innerHTML = `
       <div class="auth-container" style="max-width: 560px; margin: 3rem auto;">
         <div class="auth-card" style="text-align: center; padding: 2.5rem 2rem;">
@@ -1750,7 +1871,7 @@ const AuthPageMethods = {
     `;
     const card = root.querySelector('.auth-card');
     if (card) {
-      card.addEventListener('click', (e) => {
+      card.addEventListener('click', e => {
         const a = e.target.closest('[data-action]')?.getAttribute('data-action');
         if (a === 'home' && Pages.renderLanding) {
           if (typeof window.router !== 'undefined' && window.router.navigate) {
@@ -1764,7 +1885,7 @@ const AuthPageMethods = {
     }
   },
 
-  _renderStatusPending (root, esc, data) {
+  _renderStatusPending(root, esc, data) {
     root.innerHTML = `
       <div class="auth-container" style="max-width: 560px; margin: 3rem auto;">
         <div class="auth-card" style="text-align: center; padding: 2.5rem 2rem;">
@@ -1785,7 +1906,7 @@ const AuthPageMethods = {
     `;
     const card = root.querySelector('.auth-card');
     if (card) {
-      card.addEventListener('click', (e) => {
+      card.addEventListener('click', e => {
         const a = e.target.closest('[data-action]')?.getAttribute('data-action');
         if (a === 'home' && Pages.renderLanding) {
           if (typeof window.router !== 'undefined' && window.router.navigate) {
@@ -1799,7 +1920,7 @@ const AuthPageMethods = {
     }
   },
 
-  _renderStatusRejected (root, esc, data) {
+  _renderStatusRejected(root, esc, data) {
     root.innerHTML = `
       <div class="auth-container" style="max-width: 560px; margin: 3rem auto;">
         <div class="auth-card" style="text-align: center; padding: 2.5rem 2rem;">
@@ -1818,10 +1939,11 @@ const AuthPageMethods = {
     `;
     const card = root.querySelector('.auth-card');
     if (card) {
-      card.addEventListener('click', (e) => {
+      card.addEventListener('click', e => {
         const a = e.target.closest('[data-action]')?.getAttribute('data-action');
-        if (a === 'resubmit' && Pages.renderStudentVerification) {Pages.renderStudentVerification();}
-        else if (a === 'home' && Pages.renderLanding) {
+        if (a === 'resubmit' && Pages.renderStudentVerification) {
+          Pages.renderStudentVerification();
+        } else if (a === 'home' && Pages.renderLanding) {
           if (typeof window.router !== 'undefined' && window.router.navigate) {
             window.router.navigate('/');
           } else {
@@ -1833,7 +1955,7 @@ const AuthPageMethods = {
     }
   },
 
-  _renderStatusNotSubmitted (root, esc) {
+  _renderStatusNotSubmitted(root, esc) {
     root.innerHTML = `
       <div class="auth-container" style="max-width: 560px; margin: 3rem auto;">
         <div class="auth-card" style="text-align: center; padding: 2.5rem 2rem;">
@@ -1850,14 +1972,16 @@ const AuthPageMethods = {
     `;
     const card = root.querySelector('.auth-card');
     if (card) {
-      card.addEventListener('click', (e) => {
+      card.addEventListener('click', e => {
         const a = e.target.closest('[data-action]')?.getAttribute('data-action');
-        if (a === 'verify' && Pages.renderStudentVerification) {Pages.renderStudentVerification();}
+        if (a === 'verify' && Pages.renderStudentVerification) {
+          Pages.renderStudentVerification();
+        }
       });
     }
   },
 
-  _renderStatusNotLoggedIn (root, esc) {
+  _renderStatusNotLoggedIn(root, esc) {
     root.innerHTML = `
       <div class="auth-container" style="max-width: 560px; margin: 3rem auto;">
         <div class="auth-card" style="text-align: center; padding: 2.5rem 2rem;">
@@ -1871,14 +1995,16 @@ const AuthPageMethods = {
     `;
     const card = root.querySelector('.auth-card');
     if (card) {
-      card.addEventListener('click', (e) => {
+      card.addEventListener('click', e => {
         const a = e.target.closest('[data-action]')?.getAttribute('data-action');
-        if (a === 'login' && Pages.renderLogin) {Pages.renderLogin();}
+        if (a === 'login' && Pages.renderLogin) {
+          Pages.renderLogin();
+        }
       });
     }
   },
 
-  _renderStatusNotConnected (root, esc) {
+  _renderStatusNotConnected(root, esc) {
     root.innerHTML = `
       <div class="auth-container" style="max-width: 560px; margin: 3rem auto;">
         <div class="auth-card" style="text-align: center; padding: 2.5rem 2rem;">
@@ -1889,7 +2015,7 @@ const AuthPageMethods = {
     `;
   },
 
-  _renderStatusError (root, esc, message) {
+  _renderStatusError(root, esc, message) {
     root.innerHTML = `
       <div class="auth-container" style="max-width: 560px; margin: 3rem auto;">
         <div class="auth-card" style="text-align: center; padding: 2.5rem 2rem;">
@@ -1904,9 +2030,11 @@ const AuthPageMethods = {
     `;
     const card = root.querySelector('.auth-card');
     if (card) {
-      card.addEventListener('click', (e) => {
+      card.addEventListener('click', e => {
         const a = e.target.closest('[data-action]')?.getAttribute('data-action');
-        if (a === 'retry' && Pages.renderVerificationStatus) {Pages.renderVerificationStatus();}
+        if (a === 'retry' && Pages.renderVerificationStatus) {
+          Pages.renderVerificationStatus();
+        }
       });
     }
   },
@@ -1921,13 +2049,15 @@ window.AuthPageMethods = AuthPageMethods;
 // `this._renderX()` style helpers, and without a bind, `this` is the
 // `Pages` class instance (no helpers) and the call throws
 // "this._renderStatusNotLoggedIn is not a function".
-(function attachAuthPageMethods () {
+(function attachAuthPageMethods() {
   const waitForPages = setInterval(function () {
     if (typeof Pages === 'undefined') {
       return;
     }
     clearInterval(waitForPages);
-    const bind = (k) => { Pages[k] = AuthPageMethods[k].bind(AuthPageMethods); };
+    const bind = k => {
+      Pages[k] = AuthPageMethods[k].bind(AuthPageMethods);
+    };
     [
       'handleRegister',
       'handleLogin',

@@ -9,15 +9,17 @@ class SecurityUtils {
    * @param {string} text - Raw text input
    * @returns {string} - Escaped HTML-safe string
    */
-  static escapeHtml (text) {
-    if (typeof text !== 'string') {return '';}
+  static escapeHtml(text) {
+    if (typeof text !== 'string') {
+      return '';
+    }
 
     const htmlEscapes = {
       '&': '&amp;',
       '<': '&lt;',
       '>': '&gt;',
       '"': '&quot;',
-      '\'': '&#x27;',
+      "'": '&#x27;',
       '/': '&#x2F;',
       '`': '&#x60;',
       '=': '&#x3D;',
@@ -31,8 +33,10 @@ class SecurityUtils {
    * @param {string} input - User input
    * @returns {string} - Sanitized string
    */
-  static sanitizeInput (input) {
-    if (!input) {return '';}
+  static sanitizeInput(input) {
+    if (!input) {
+      return '';
+    }
 
     // Convert to string
     let sanitized = String(input);
@@ -41,6 +45,7 @@ class SecurityUtils {
     sanitized = sanitized.replace(/\0/g, '');
 
     // Remove control characters except newlines and tabs
+    // eslint-disable-next-line no-control-regex
     sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, '');
 
     // Trim whitespace
@@ -55,7 +60,7 @@ class SecurityUtils {
    * @param {Object} obj - Object to sanitize
    * @returns {Object} - Sanitized object
    */
-  static sanitizeObject (obj) {
+  static sanitizeObject(obj) {
     if (typeof obj !== 'object' || obj === null) {
       return obj;
     }
@@ -82,8 +87,10 @@ class SecurityUtils {
    * @param {string} url - URL to sanitize
    * @returns {string|null} - Safe URL or null
    */
-  static sanitizeUrl (url) {
-    if (!url) {return null;}
+  static sanitizeUrl(url) {
+    if (!url) {
+      return null;
+    }
 
     try {
       const parsed = new URL(url, window.location.origin);
@@ -117,7 +124,7 @@ class SecurityUtils {
    * @param {string} email - Email to validate
    * @returns {Object} - { valid: boolean, sanitized: string|null }
    */
-  static validateEmail (email) {
+  static validateEmail(email) {
     if (!email || typeof email !== 'string') {
       return { valid: false, sanitized: null };
     }
@@ -140,8 +147,10 @@ class SecurityUtils {
    * @param {string} html - HTML string
    * @returns {string} - Sanitized HTML with only allowed tags
    */
-  static sanitizeHtml (html) {
-    if (!html) {return '';}
+  static sanitizeHtml(html) {
+    if (!html) {
+      return '';
+    }
 
     // Allowed tags (whitelist)
     const allowedTags = {
@@ -162,12 +171,16 @@ class SecurityUtils {
     // Strip all tags first
     const sanitized = html.replace(/<[^>]*>/g, match => {
       const tagMatch = match.match(/^<\/?([a-z][a-z0-9]*)[^>]*>$/i);
-      if (!tagMatch) {return '';}
+      if (!tagMatch) {
+        return '';
+      }
 
       const tagName = tagMatch[1].toLowerCase();
       const isClosing = match.startsWith('</');
 
-      if (!allowedTags[tagName]) {return '';}
+      if (!allowedTags[tagName]) {
+        return '';
+      }
 
       if (isClosing) {
         return `</${tagName}>`;
@@ -208,7 +221,7 @@ class SecurityUtils {
    * @param {number} length - Token length
    * @returns {string} - Random token
    */
-  static generateSecureToken (length = 32) {
+  static generateSecureToken(length = 32) {
     const array = new Uint8Array(length);
     crypto.getRandomValues(array);
     return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
@@ -219,7 +232,7 @@ class SecurityUtils {
    * @param {string} data - Data to hash
    * @returns {Promise<string>} - SHA-256 hash
    */
-  static async hashData (data) {
+  static async hashData(data) {
     const encoder = new TextEncoder();
     const dataBuffer = encoder.encode(data);
     const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
@@ -232,8 +245,10 @@ class SecurityUtils {
    * @param {string} input - Input to check
    * @returns {boolean} - True if suspicious
    */
-  static containsXssPatterns (input) {
-    if (typeof input !== 'string') {return false;}
+  static containsXssPatterns(input) {
+    if (typeof input !== 'string') {
+      return false;
+    }
 
     const xssPatterns = [
       /<script[^>]*>/i,
@@ -257,9 +272,11 @@ class SecurityUtils {
    * @param {number} maxLength - Maximum length
    * @returns {string} - Truncated text
    */
-  static safeTruncate (text, maxLength = 100) {
+  static safeTruncate(text, maxLength = 100) {
     const sanitized = this.sanitizeInput(text);
-    if (sanitized.length <= maxLength) {return sanitized;}
+    if (sanitized.length <= maxLength) {
+      return sanitized;
+    }
     return sanitized.substring(0, maxLength) + '...';
   }
 }

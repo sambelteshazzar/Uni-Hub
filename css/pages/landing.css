@@ -9,7 +9,11 @@ Extracted from inline styles in pages.js
   background-image:
     radial-gradient(circle at 15% 50%, rgba(0, 70, 190, 0.08), transparent 25%),
     radial-gradient(circle at 85% 30%, rgba(0, 70, 190, 0.05), transparent 25%);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif;
 }
 
 .modern-landing * {
@@ -29,8 +33,12 @@ Extracted from inline styles in pages.js
 }
 
 /* Color Utilities */
-.text-indigo { color: #0046be; }
-.bg-indigo { background-color: #0046be; }
+.text-indigo {
+  color: #0046be;
+}
+.bg-indigo {
+  background-color: #0046be;
+}
 .gradient-indigo {
   background: linear-gradient(135deg, #0046be, #003399);
 }

@@ -8,7 +8,7 @@ class StorageManager {
    * @param {string} key - Storage key
    * @param {any} value - Value to store
    */
-  static set (key, value) {
+  static set(key, value) {
     try {
       // Always JSON-encode so round-tripping through get(parse=true) works.
       // (Previously a bare string was written as-is, which JSON.parse on
@@ -29,15 +29,21 @@ class StorageManager {
    * @param {boolean} parse - Whether to parse JSON
    * @returns {any} - Retrieved value
    */
-  static get (key, parse = true) {
+  static get(key, parse = true) {
     try {
       const data = localStorage.getItem(key);
-      if (!data) {return null;}
+      if (!data) {
+        return null;
+      }
       return parse ? JSON.parse(data) : data;
     } catch (error) {
       // Corrupted data - clear it and return null
       console.warn(`Storage: Corrupted data for key "${key}", clearing...`);
-      try { localStorage.removeItem(key); } catch(e) { /* Safari private */ }
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {
+        /* Safari private */
+      }
       return null;
     }
   }
@@ -46,7 +52,7 @@ class StorageManager {
    * Remove item from localStorage
    * @param {string} key - Storage key
    */
-  static remove (key) {
+  static remove(key) {
     try {
       localStorage.removeItem(key);
       return true;
@@ -59,11 +65,15 @@ class StorageManager {
   /**
    * Clear all app data from localStorage
    */
-  static clear () {
+  static clear() {
     try {
       if (typeof STORAGE_KEYS !== 'undefined') {
         Object.values(STORAGE_KEYS).forEach(key => {
-      try { localStorage.removeItem(key); } catch(e) { /* Safari private */ }
+          try {
+            localStorage.removeItem(key);
+          } catch (e) {
+            /* Safari private */
+          }
         });
       }
       return true;
@@ -77,10 +87,10 @@ class StorageManager {
    * Check if key exists
    * @param {string} key - Storage key
    */
-  static has (key) {
+  static has(key) {
     try {
       return localStorage.getItem(key) !== null;
-    } catch(e) {
+    } catch (e) {
       return false;
     }
   }
@@ -89,7 +99,7 @@ class StorageManager {
    * Get all keys that match a prefix
    * @param {string} prefix - Key prefix
    */
-  static getByPrefix (prefix) {
+  static getByPrefix(prefix) {
     const items = {};
     try {
       for (let i = 0; i < localStorage.length; i++) {
@@ -98,7 +108,7 @@ class StorageManager {
           items[key] = this.get(key);
         }
       }
-    } catch(e) {
+    } catch (e) {
       console.warn('localStorage unavailable:', e);
     }
     return items;
@@ -109,7 +119,7 @@ class StorageManager {
    * Uses 'unihub_session' (authManager's storage key)
    * @returns {string|null} - Auth token or null if not found
    */
-  static getAuthToken () {
+  static getAuthToken() {
     try {
       const session = this.get('unihub_session', true);
       if (session && session.token) {

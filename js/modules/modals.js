@@ -4,7 +4,7 @@
 // ============================================
 
 class ModalManager {
-  constructor () {
+  constructor() {
     this.activeModals = [];
     this.modalContainer = null;
     this._previousFocusElement = null;
@@ -14,7 +14,7 @@ class ModalManager {
   /**
    * Initialize modal container
    */
-  init () {
+  init() {
     if (!this.modalContainer) {
       this.modalContainer = document.createElement('div');
       this.modalContainer.className = 'modal-container-global';
@@ -26,7 +26,7 @@ class ModalManager {
    * Open a modal
    * @param {Object} options - Modal options
    */
-  open (options) {
+  open(options) {
     this.init();
 
     const modal = {
@@ -63,12 +63,16 @@ class ModalManager {
 
       // Set up focus trap
       const trapHandler = e => {
-        if (e.key !== 'Tab') return;
+        if (e.key !== 'Tab') {
+          return;
+        }
 
         const focusableEls = modalElement.querySelectorAll(
           'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
         );
-        if (focusableEls.length === 0) return;
+        if (focusableEls.length === 0) {
+          return;
+        }
 
         const firstEl = focusableEls[0];
         const lastEl = focusableEls[focusableEls.length - 1];
@@ -98,7 +102,7 @@ class ModalManager {
    * @param {Object} modal - Modal config
    * @returns {HTMLElement}
    */
-  createModalElement (modal) {
+  createModalElement(modal) {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.dataset.modalId = modal.id;
@@ -169,7 +173,7 @@ class ModalManager {
    * Close a modal
    * @param {string} modalId - Modal ID
    */
-  close (modalId) {
+  close(modalId) {
     const modalIndex = this.activeModals.findIndex(m => m.id === modalId);
 
     if (modalIndex === -1) {
@@ -217,7 +221,7 @@ class ModalManager {
   /**
    * Close all modals
    */
-  closeAll () {
+  closeAll() {
     this.activeModals.forEach(modal => {
       this.close(modal.id);
     });
@@ -227,7 +231,7 @@ class ModalManager {
    * Generate unique ID
    * @returns {string}
    */
-  generateId () {
+  generateId() {
     return `modal_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
@@ -235,7 +239,7 @@ class ModalManager {
    * Show alert modal
    * @param {Object} options - Alert options
    */
-  alert (options) {
+  alert(options) {
     const { title = 'Alert', message, type = 'info', onConfirm } = options;
 
     const icons = {
@@ -277,7 +281,9 @@ class ModalManager {
     if (modalOverlay) {
       const container = modalOverlay.querySelector('.modal-container');
       const existingFooter = container.querySelector('.modal-footer');
-      if (existingFooter) existingFooter.remove();
+      if (existingFooter) {
+        existingFooter.remove();
+      }
       const footer = document.createElement('div');
       footer.className = 'modal-footer';
       footer.appendChild(okBtn);
@@ -291,7 +297,7 @@ class ModalManager {
    * Show confirm modal
    * @param {Object} options - Confirm options
    */
-  confirm (options) {
+  confirm(options) {
     const {
       title = 'Confirm',
       message,
@@ -332,7 +338,9 @@ class ModalManager {
     if (modalOverlay) {
       const container = modalOverlay.querySelector('.modal-container');
       const existingFooter = container.querySelector('.modal-footer');
-      if (existingFooter) existingFooter.remove();
+      if (existingFooter) {
+        existingFooter.remove();
+      }
       const footer = document.createElement('div');
       footer.className = 'modal-footer';
       footer.appendChild(cancelBtn);
@@ -348,7 +356,7 @@ class ModalManager {
    * @param {string} modalId - Modal ID
    * @param {boolean} confirmed - Whether confirmed
    */
-  closeAndCallback (modalId, confirmed) {
+  closeAndCallback(modalId, confirmed) {
     const modal = this.activeModals.find(m => m.id === modalId);
     if (modal && modal.onConfirm) {
       modal.onConfirm(confirmed);
@@ -360,7 +368,7 @@ class ModalManager {
    * Show condition selector modal
    * @param {Object} options - Options
    */
-  showConditionSelector (options) {
+  showConditionSelector(options) {
     const { _onSelect, currentValue } = options;
 
     const conditions = [
@@ -380,7 +388,9 @@ class ModalManager {
       radio.type = 'radio';
       radio.name = 'condition';
       radio.value = c.id;
-      if (currentValue === c.id) radio.checked = true;
+      if (currentValue === c.id) {
+        radio.checked = true;
+      }
 
       const iconDiv = document.createElement('div');
       iconDiv.className = 'condition-icon';
@@ -401,7 +411,9 @@ class ModalManager {
 
       optionDiv.addEventListener('click', () => {
         this.selectedCondition = c.id;
-        contentDiv.querySelectorAll('.condition-option').forEach(o => o.classList.remove('selected'));
+        contentDiv
+          .querySelectorAll('.condition-option')
+          .forEach(o => o.classList.remove('selected'));
         optionDiv.classList.add('selected');
         radio.checked = true;
       });
@@ -429,7 +441,9 @@ class ModalManager {
     if (modalOverlay) {
       const container = modalOverlay.querySelector('.modal-container');
       const existingFooter = container.querySelector('.modal-footer');
-      if (existingFooter) existingFooter.remove();
+      if (existingFooter) {
+        existingFooter.remove();
+      }
       const footer = document.createElement('div');
       footer.className = 'modal-footer';
       footer.appendChild(cancelBtn);
@@ -445,7 +459,7 @@ class ModalManager {
    * @param {string} conditionId - Condition ID
    * @param {string} modalId - Modal ID
    */
-  selectCondition (conditionId, modalId) {
+  selectCondition(conditionId, modalId) {
     this.selectedCondition = conditionId;
 
     // Update visual selection
@@ -463,7 +477,7 @@ class ModalManager {
    * Confirm condition selection
    * @param {string} modalId - Modal ID
    */
-  confirmCondition (modalId) {
+  confirmCondition(modalId) {
     const modal = this.activeModals.find(m => m.id === modalId);
     if (modal && modal.onSelect) {
       modal.onSelect(this.selectedCondition);
@@ -476,7 +490,7 @@ class ModalManager {
    * @param {string} imageUrl - Image URL
    * @param {string} alt - Alt text
    */
-  showImage (imageUrl, alt = '') {
+  showImage(imageUrl, alt = '') {
     const modalId = this.open({
       type: 'image',
       size: 'xl',
@@ -496,7 +510,9 @@ class ModalManager {
     if (modalOverlay) {
       const container = modalOverlay.querySelector('.modal-container');
       const existingFooter = container.querySelector('.modal-footer');
-      if (existingFooter) existingFooter.remove();
+      if (existingFooter) {
+        existingFooter.remove();
+      }
       const footer = document.createElement('div');
       footer.className = 'modal-footer';
       footer.appendChild(closeBtn);
@@ -508,7 +524,7 @@ class ModalManager {
    * Show quick view modal for product
    * @param {Object} product - Product object
    */
-  showProductQuickView (product) {
+  showProductQuickView(product) {
     const content = document.createElement('div');
     content.className = 'product-quick-view';
 
@@ -539,7 +555,8 @@ class ModalManager {
 
     const sellerDiv = document.createElement('div');
     sellerDiv.className = 'quick-view-seller';
-    const _sName = product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
+    const _sName =
+      product.seller?.fullName || product.sellerName || product.seller?.name || 'Seller';
     sellerDiv.textContent = `Seller: ${_sName} (${product.seller?.rating || product.sellerRating || 0}⭐)`;
 
     detailsDiv.appendChild(h3);
@@ -575,7 +592,9 @@ class ModalManager {
     if (modalOverlay) {
       const container = modalOverlay.querySelector('.modal-container');
       const existingFooter = container.querySelector('.modal-footer');
-      if (existingFooter) existingFooter.remove();
+      if (existingFooter) {
+        existingFooter.remove();
+      }
       const footer = document.createElement('div');
       footer.className = 'modal-footer';
       footer.appendChild(closeBtn);
@@ -588,7 +607,7 @@ class ModalManager {
    * Check if modal is open
    * @returns {boolean}
    */
-  isModalOpen () {
+  isModalOpen() {
     return this.activeModals.length > 0;
   }
 
@@ -596,7 +615,7 @@ class ModalManager {
    * Get active modal count
    * @returns {number}
    */
-  getActiveCount () {
+  getActiveCount() {
     return this.activeModals.length;
   }
 }

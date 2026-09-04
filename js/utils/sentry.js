@@ -22,7 +22,7 @@ const _dsn =
 
 let sentryInitialized = false;
 
-async function _loadSentry () {
+async function _loadSentry() {
   if (Sentry) {
     return true;
   }
@@ -36,7 +36,7 @@ async function _loadSentry () {
   }
 }
 
-export async function initSentry () {
+export async function initSentry() {
   if (sentryInitialized) {
     return true;
   }
@@ -73,21 +73,21 @@ export async function initSentry () {
   return true;
 }
 
-export function captureException (error, context = {}) {
+export function captureException(error, context = {}) {
   if (!Sentry) {
     return;
   }
   Sentry.captureException(error, { extra: context });
 }
 
-export function captureMessage (message, level = 'info', context = {}) {
+export function captureMessage(message, level = 'info', context = {}) {
   if (!Sentry) {
     return;
   }
   Sentry.captureMessage(message, { level, extra: context });
 }
 
-export function setUserContext (user) {
+export function setUserContext(user) {
   if (!Sentry || !user) {
     return;
   }
@@ -100,21 +100,21 @@ export function setUserContext (user) {
   });
 }
 
-export function clearUserContext () {
+export function clearUserContext() {
   if (!Sentry) {
     return;
   }
   Sentry.setUser(null);
 }
 
-export function addBreadcrumb (breadcrumb) {
+export function addBreadcrumb(breadcrumb) {
   if (!Sentry) {
     return;
   }
   Sentry.addBreadcrumb(breadcrumb);
 }
 
-export function startTransaction (name, op) {
+export function startTransaction(name, op) {
   if (!Sentry) {
     return null;
   }

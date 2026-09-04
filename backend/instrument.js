@@ -1,31 +1,31 @@
 // instrument.js — must be loaded before all other modules
-const Sentry = require("@sentry/node");
-const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+const Sentry = require('@sentry/node');
+const { nodeProfilingIntegration } = require('@sentry/profiling-node');
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
 
   // Performance monitoring
-  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
-  
+  tracesSampleRate: process.env.NODE_ENV === 'development' ? 1.0 : 0.1,
+
   // Capture local variable values in stack frames
   includeLocalVariables: true,
-  
+
   // Enable Sentry Logs
   enableLogs: true,
-  
+
   // Profiling
-  profilesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+  profilesSampleRate: process.env.NODE_ENV === 'development' ? 1.0 : 0.1,
   integrations: [
     nodeProfilingIntegration(),
   ],
 
   // Environment
-  environment: process.env.NODE_ENV || "development",
-  
+  environment: process.env.NODE_ENV || 'development',
+
   // Release tracking (set in production)
   release: process.env.SENTRY_RELEASE,
-  
+
   // Error handling
   beforeSend(event, hint) {
     // Filter out known non-critical errors

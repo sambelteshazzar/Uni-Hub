@@ -12,8 +12,10 @@ const UniversitiesPage = {
   // Cache universities per page load so we don't re-hit the API.
   _cache: null,
 
-  async _loadActive (force) {
-    if (this._cache && !force) {return this._cache;}
+  async _loadActive(force) {
+    if (this._cache && !force) {
+      return this._cache;
+    }
     const resp = await api.request('/auth/universities');
     const list = resp?.data?.universities || [];
     this._cache = list;
@@ -21,13 +23,17 @@ const UniversitiesPage = {
   },
 
   // -------- public info page --------
-  async renderUniversities () {
+  async renderUniversities() {
     const main = document.getElementById('main-content');
-    if (!main) {return;}
+    if (!main) {
+      return;
+    }
 
     // Hide admin chrome on this public page.
     const navbar = document.getElementById('navbar');
-    if (navbar) {navbar.style.display = '';}
+    if (navbar) {
+      navbar.style.display = '';
+    }
 
     main.innerHTML = `
       <div class="auth-container" style="max-width: 1100px; margin: 3rem auto; padding: 0 1.5rem;">
@@ -51,7 +57,9 @@ const UniversitiesPage = {
     }
 
     const grid = main.querySelector('#universities-grid');
-    if (!grid) {return;}
+    if (!grid) {
+      return;
+    }
 
     if (!list.length) {
       grid.innerHTML = `
@@ -65,7 +73,7 @@ const UniversitiesPage = {
     grid.innerHTML = list.map(u => UniversitiesPage._renderInfoCard(u)).join('');
   },
 
-  _renderInfoCard (u) {
+  _renderInfoCard(u) {
     const esc = UniversitiesPage._esc;
     return `
       <div class="adm-card" style="margin-bottom: 1rem; padding: 1.25rem 1.5rem;">
@@ -89,7 +97,7 @@ const UniversitiesPage = {
   // -------- reusable picker --------
   // Renders a list of active universities as selectable cards. Returns
   // when the user picks via the onSelect callback. Pure DOM, no fetch.
-  async renderPicker (container, { onSelect, selectedId = null, compact = false } = {}) {
+  async renderPicker(container, { onSelect, selectedId = null, compact = false } = {}) {
     const esc = UniversitiesPage._esc;
     let list = [];
     try {
@@ -110,29 +118,41 @@ const UniversitiesPage = {
       return;
     }
 
-    container.innerHTML = list.map(u => UniversitiesPage._renderPickerCard(u, { selectedId, compact, esc })).join('');
+    container.innerHTML = list
+      .map(u => UniversitiesPage._renderPickerCard(u, { selectedId, compact, esc }))
+      .join('');
 
     // Delegate click-to-select on the card body (and a keyboard handler
     // for accessibility — Enter on a focused card selects it).
-    container.addEventListener('click', (e) => {
+    container.addEventListener('click', e => {
       const card = e.target.closest('[data-uni-id]');
-      if (!card) {return;}
+      if (!card) {
+        return;
+      }
       const id = card.getAttribute('data-uni-id');
       UniversitiesPage._markSelected(container, id);
-      if (typeof onSelect === 'function') {onSelect(id);}
+      if (typeof onSelect === 'function') {
+        onSelect(id);
+      }
     });
-    container.addEventListener('keydown', (e) => {
-      if (e.key !== 'Enter' && e.key !== ' ') {return;}
+    container.addEventListener('keydown', e => {
+      if (e.key !== 'Enter' && e.key !== ' ') {
+        return;
+      }
       const card = e.target.closest('[data-uni-id]');
-      if (!card) {return;}
+      if (!card) {
+        return;
+      }
       e.preventDefault();
       const id = card.getAttribute('data-uni-id');
       UniversitiesPage._markSelected(container, id);
-      if (typeof onSelect === 'function') {onSelect(id);}
+      if (typeof onSelect === 'function') {
+        onSelect(id);
+      }
     });
   },
 
-  _renderPickerCard (u, { selectedId, compact, esc }) {
+  _renderPickerCard(u, { selectedId, compact, esc }) {
     const isSelected = selectedId === u.id;
     const padding = compact ? '0.85rem 1rem' : '1rem 1.25rem';
     const border = isSelected
@@ -164,7 +184,7 @@ const UniversitiesPage = {
           display: flex; align-items: center; justify-content: center;
           flex-shrink: 0;
         ">
-          ${isSelected ? `<div style="width: 8px; height: 8px; border-radius: 50%; background: var(--primary);"></div>` : ''}
+          ${isSelected ? '<div style="width: 8px; height: 8px; border-radius: 50%; background: var(--primary);"></div>' : ''}
         </div>
         <div style="flex: 1;">
           <div style="font-weight: 600; color: var(--text-primary, #111827);">${esc(u.name)}</div>
@@ -174,20 +194,20 @@ const UniversitiesPage = {
     `;
   },
 
-  _markSelected (container, id) {
+  _markSelected(container, id) {
     container.querySelectorAll('[data-uni-id]').forEach(card => {
       const isSel = card.getAttribute('data-uni-id') === id;
       card.setAttribute('aria-pressed', isSel ? 'true' : 'false');
       card.style.border = isSel
         ? '2px solid var(--primary)'
         : '1px solid var(--border-color, #e5e7eb)';
-      card.style.background = isSel
-        ? 'var(--bg-secondary, #f9fafb)'
-        : 'var(--bg-primary, #fff)';
+      card.style.background = isSel ? 'var(--bg-secondary, #f9fafb)' : 'var(--bg-primary, #fff)';
       // Replace the radio dot
       const dot = card.querySelector('div > div');
       if (dot) {
-        dot.innerHTML = isSel ? '<div style="width: 8px; height: 8px; border-radius: 50%; background: var(--primary);"></div>' : '';
+        dot.innerHTML = isSel
+          ? '<div style="width: 8px; height: 8px; border-radius: 50%; background: var(--primary);"></div>'
+          : '';
         dot.style.border = isSel
           ? '2px solid var(--primary)'
           : '2px solid var(--neutral-300, #d1d5db)';
@@ -199,13 +219,17 @@ const UniversitiesPage = {
   // Used at /#/onboarding — renders the picker in a centered card and a
   // "Save and continue" button. On success, calls the new
   // /api/auth/me/university endpoint and routes to /#/browse.
-  async renderOnboarding () {
+  async renderOnboarding() {
     const main = document.getElementById('main-content');
-    if (!main) {return;}
+    if (!main) {
+      return;
+    }
 
     // If somehow not logged in, send to login.
     if (typeof authManager === 'undefined' || !authManager.isLoggedIn()) {
-      if (typeof Pages !== 'undefined' && Pages.renderLogin) {Pages.renderLogin();}
+      if (typeof Pages !== 'undefined' && Pages.renderLogin) {
+        Pages.renderLogin();
+      }
       return;
     }
 
@@ -229,15 +253,19 @@ const UniversitiesPage = {
     let chosen = null;
 
     await UniversitiesPage.renderPicker(host, {
-      onSelect: (id) => {
+      onSelect: id => {
         chosen = id;
-        if (saveBtn) {saveBtn.disabled = false;}
+        if (saveBtn) {
+          saveBtn.disabled = false;
+        }
       },
     });
 
     if (saveBtn) {
       saveBtn.addEventListener('click', async () => {
-        if (!chosen) {return;}
+        if (!chosen) {
+          return;
+        }
         saveBtn.disabled = true;
         saveBtn.textContent = 'Saving…';
         try {
@@ -248,13 +276,17 @@ const UniversitiesPage = {
             if (typeof authManager !== 'undefined' && authManager.setCurrentUser) {
               authManager.setCurrentUser(resp.data || resp.user);
             }
-            if (typeof showToast === 'function') {showToast('University saved. Welcome to JERTS CART!', 'success');}
+            if (typeof showToast === 'function') {
+              showToast('University saved. Welcome to JERTS CART!', 'success');
+            }
             if (typeof window.router !== 'undefined' && window.router.navigate) {
               window.router.navigate('/browse');
             } else {
               window.location.hash = '#/browse';
             }
-            if (typeof Pages !== 'undefined' && Pages.renderBrowse) {Pages.renderBrowse();}
+            if (typeof Pages !== 'undefined' && Pages.renderBrowse) {
+              Pages.renderBrowse();
+            }
           } else {
             saveBtn.disabled = false;
             saveBtn.textContent = 'Save and continue';
@@ -265,14 +297,17 @@ const UniversitiesPage = {
         } catch (err) {
           saveBtn.disabled = false;
           saveBtn.textContent = 'Save and continue';
-          if (typeof showToast === 'function') {showToast('Network error. Please try again.', 'error');}
+          if (typeof showToast === 'function') {
+            showToast('Network error. Please try again.', 'error');
+          }
         }
       });
     }
   },
 
-  _esc (s) {
-    const e = (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ||
+  _esc(s) {
+    const e =
+      (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ||
       (window.SecurityUtils && window.SecurityUtils.escapeHtml);
     return e ? e(s) : String(s);
   },

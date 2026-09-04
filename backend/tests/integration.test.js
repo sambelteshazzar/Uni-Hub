@@ -47,7 +47,9 @@ describe('Integration Tests - Critical User Flows', () => {
       const { getDb } = require('../config/database');
       const database = getDb();
       database.prepare('UPDATE users SET isVerified = 1 WHERE id = ?').run(buyerId);
-    } catch (e) {}
+    } catch (e) {
+      /* noop — test environment may not support direct DB writes */
+    }
   });
 
   describe('Flow 1: User Registration & Authentication', () => {

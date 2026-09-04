@@ -38,12 +38,17 @@ class AuthManager {
           try {
             const ADMIN_KEY = 'unihub_admin_session';
             if (!localStorage.getItem(ADMIN_KEY)) {
-              localStorage.setItem(ADMIN_KEY, JSON.stringify({
-                ...parsed,
-                expiresAt: Math.min(parsed.expiresAt || 0, Date.now() + 24 * 60 * 60 * 1000),
-              }));
+              localStorage.setItem(
+                ADMIN_KEY,
+                JSON.stringify({
+                  ...parsed,
+                  expiresAt: Math.min(parsed.expiresAt || 0, Date.now() + 24 * 60 * 60 * 1000),
+                })
+              );
             }
-          } catch (_e) { /* storage unavailable — just clear below */ }
+          } catch (_e) {
+            /* storage unavailable — just clear below */
+          }
           this.clearSession();
           return;
         }
@@ -67,7 +72,9 @@ class AuthManager {
 
   async _validateToken() {
     const baseURL = this._getBaseURL();
-    if (!baseURL) return;
+    if (!baseURL) {
+      return;
+    }
     try {
       const res = await fetch(`${baseURL}/auth/me`, {
         headers: { Authorization: `Bearer ${this.token}` },
@@ -147,7 +154,9 @@ class AuthManager {
   }
 
   _getOfflineUsers() {
-    if (!this._isDevMode()) return {};
+    if (!this._isDevMode()) {
+      return {};
+    }
     const _defaultAvatar =
       'data:image/svg+xml,' +
       encodeURIComponent(
@@ -600,7 +609,9 @@ class AuthManager {
   }
 
   async syncVerificationStatus() {
-    if (!this.isLoggedIn() || this.isOfflineMode) return;
+    if (!this.isLoggedIn() || this.isOfflineMode) {
+      return;
+    }
     try {
       const response = await fetch(`${this._getBaseURL()}/verification/me`, {
         headers: { Authorization: `Bearer ${this.token}` },

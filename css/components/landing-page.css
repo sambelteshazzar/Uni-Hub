@@ -122,8 +122,9 @@ HERO SECTION
 ============================================ */
 .lp-hero {
   padding: var(--space-4xl) 0;
-  background: linear-gradient(135deg, rgba(0, 70, 190, 0.88), rgba(0, 100, 200, 0.92)),
-              url('/assets/images/hero-students.jpg') center/cover no-repeat;
+  background:
+    linear-gradient(135deg, rgba(0, 70, 190, 0.88), rgba(0, 100, 200, 0.92)),
+    url('/assets/images/hero-students.jpg') center/cover no-repeat;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   scroll-margin-top: var(--header-height);
   position: relative;
@@ -137,8 +138,9 @@ HERO SECTION
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(ellipse at top left, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-              radial-gradient(ellipse at bottom right, rgba(0, 50, 150, 0.3) 0%, transparent 50%);
+  background:
+    radial-gradient(ellipse at top left, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom right, rgba(0, 50, 150, 0.3) 0%, transparent 50%);
   pointer-events: none;
 }
 
