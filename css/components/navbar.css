@@ -24,6 +24,16 @@
   transform: translateZ(0);
 }
 
+/* Landing route: hide the marketing-nav links (Home/Browse/Messages/FAQ).
+   The hero already provides the primary CTA, so duplicating them in the
+   top nav is visual clutter. Search and account/cart actions remain so
+   signed-in users can still act. The body[data-route="landing"] hook is
+   set by Pages.updateNavbar() — see js/pages/pages.js. */
+body[data-route='landing'] .navbar-menu,
+body[data-route='landing'] .navbar-drawer-nav {
+  display: none;
+}
+
 .navbar-container {
   display: flex;
   align-items: center;

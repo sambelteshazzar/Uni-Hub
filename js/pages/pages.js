@@ -646,7 +646,17 @@ class Pages {
     // My verification status (2026-08-30). The user checks here to see
     // whether their submission is pending, approved (waiting for the
     // email click), or fully verified.
-    router.register('/verification-status', () => this.renderVerificationStatus());
+    //
+    // Pages.renderVerificationStatus is bound async by auth-pages.js after
+    // the Pages class is constructed, so we resolve it lazily via
+    // `Pages.renderVerificationStatus?.()` instead of `this.render...
+    // ()` (which captures the not-yet-bound state at register time).
+    router.register('/verification-status', () => {
+      if (typeof Pages !== 'undefined' && typeof Pages.renderVerificationStatus === 'function') {
+        return Pages.renderVerificationStatus();
+      }
+      console.warn('renderVerificationStatus not yet bound; route skipped');
+    });
 
     // University info page (public, no auth) and onboarding picker
     // (auth-gated by renderOnboarding). See js/pages/universities-page.js.
@@ -3669,6 +3679,20 @@ ${order.items
     const userMenu = document.getElementById('navbar-user-menu');
     const drawerAuth = document.getElementById('navbar-drawer-auth');
     const drawerUser = document.getElementById('navbar-drawer-user');
+
+    // Body route hook — CSS hides the marketing-nav links (Home/Browse/
+    // Messages/FAQ) and drawer items when we're on the landing page so the
+    // hero isn't fighting redundant chrome. Pages whose own renderer also
+    // wants this can read window.__currentRoute directly.
+    const currentRoute =
+      (typeof router !== 'undefined' && router.getCurrentRoute && router.getCurrentRoute()) ||
+      (window.location && (window.location.pathname || '').replace(/\/$/, '')) ||
+      '/';
+    const isLanding = currentRoute === '/' || currentRoute === '';
+    if (typeof document !== 'undefined' && document.body) {
+      document.body.dataset.route = isLanding ? 'landing' : 'app';
+    }
+    window.__currentRoute = currentRoute;
 
     // Check auth using authManager (which uses unihub_session)
     const isLoggedIn = typeof authManager !== 'undefined' && authManager.isLoggedIn();

@@ -411,7 +411,18 @@ const AuthPageMethods = {
         }
         return;
       }
-      showToast(response?.error || 'Submission failed. Please try again.', 'error');
+      // If the server's error mentions document storage, surface a more
+      // actionable hint: the user can still submit without files. Other
+      // errors fall back to the generic toast unchanged.
+      const serverErr = response?.error || '';
+      const isDocStorageErr = /store\s+verification\s+documents/i.test(serverErr);
+      showToast(
+        isDocStorageErr
+          ? 'Document upload is temporarily unavailable. Please submit without documents — an admin will still review your details.'
+          : serverErr || 'Submission failed. Please try again.',
+        'error',
+        6000
+      );
     } catch (err) {
       console.warn('auth-pages: verification submit error:', err);
       showToast(
@@ -1962,7 +1973,7 @@ const AuthPageMethods = {
           <div style="font-size: 2.5rem;">${_Icons.graduation}</div>
           <h2 style="margin: 1rem 0 0.5rem;">You haven't submitted verification yet</h2>
           <p style="color: var(--neutral-600, #6b7280);">
-            Submit your student details to start buying and selling on Uni-Hub.
+            Submit your student details to start buying and selling on JERTS CART.
           </p>
           <div style="margin-top: 1.5rem;">
             <button class="btn btn-primary" data-action="verify">Start verification</button>

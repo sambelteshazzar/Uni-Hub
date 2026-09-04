@@ -136,6 +136,14 @@ exports.submitVerification = asyncHandler(async (req, res) => {
       for (const u of uploaded) {
         try { await destroyDocument(u.asset.publicId, u.sniffed); } catch (_e) { /* sweep retries */ }
       }
+      // Also delete the parent student_verifications row that we created
+      // at line 104. Without this, a Cloudinary upload failure orphans a
+      // 'pending' row the user can't easily retry past (the next submit
+      // re-creates a new orphan each time). 404 on delete is fine — the
+      // row may have been removed by an admin race.
+      try {
+        await db('student_verifications').deleteById(verification.id);
+      } catch (_rollbackErr) { /* swallow — the user-facing error below is the priority */ }
       throw err instanceof ApiError ? err : new ApiError(500, 'Failed to store verification documents');
     }
   }

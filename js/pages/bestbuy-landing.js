@@ -216,6 +216,15 @@
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
+    // Mark the body route so the navbar's marketing-nav links (Home /
+    // Browse / Messages / FAQ) hide on the landing page — see
+    // css/components/navbar.css `body[data-route='landing']`. The nav
+    // links are redundant with the landing hero, which already provides
+    // the primary CTA. Brand / search / cart / auth remain so signed-in
+    // users can still act.
+    document.body.dataset.route = 'landing';
+    window.__currentRoute = '/';
+
     // Initialize text animation after render
     setTimeout(function () {
       initTextAnimation();

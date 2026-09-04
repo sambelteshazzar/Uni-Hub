@@ -1177,6 +1177,46 @@ async function runDocRetentionMigration (handle) {
     }
     // One-time cleanup: rows without an asset are dead weight from the old
     // metadata-only flow.
+    //
+    // SQLite rewrites FK references on ALTER TABLE RENAME — so if a previous
+    // boot's runStudentVerificationStatusRebuild renamed
+    // student_verifications → student_verifications_old before recreating
+    // it, the FK on verification_documents now points to the missing
+    // student_verifications_old. The DELETE below would fail FK checks.
+    // Heal that FK before the cleanup; the rebuild is idempotent and the
+    // new table has the same column shape.
+    try {
+      const fkList = target
+        .prepare('PRAGMA foreign_key_list(verification_documents)')
+        .all();
+      const refsOld = fkList.find(fk => fk.table === 'student_verifications_old');
+      if (refsOld) {
+        target.pragma('foreign_keys = OFF');
+        try {
+          target.exec('ALTER TABLE verification_documents RENAME TO verification_documents_old');
+          target.exec(`CREATE TABLE verification_documents (
+            id TEXT PRIMARY KEY,
+            verificationId TEXT NOT NULL REFERENCES student_verifications(id) ON DELETE CASCADE,
+            fileName TEXT,
+            fileUrl TEXT,
+            fileType TEXT,
+            cloudinaryPublicId TEXT,
+            sizeBytes INTEGER,
+            mimeType TEXT,
+            uploadedAt TEXT DEFAULT (datetime('now'))
+          )`);
+          target.exec('INSERT INTO verification_documents SELECT * FROM verification_documents_old');
+          target.exec('DROP TABLE verification_documents_old');
+        } finally {
+          target.pragma('foreign_keys = ON');
+        }
+      }
+    } catch (fkHealErr) {
+      // Non-fatal — the legacy cleanup DELETE will surface its own error
+      // below if the FK is still broken, but a heal failure should not
+      // abort the rest of the boot.
+      console.warn('verification_documents FK heal skipped:', fkHealErr.message);
+    }
     target.prepare('DELETE FROM verification_documents WHERE cloudinaryPublicId IS NULL').run();
   } catch (err) {
     console.error('Doc retention migration failed:', err.message);
