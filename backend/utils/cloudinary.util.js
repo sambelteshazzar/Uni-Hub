@@ -14,6 +14,25 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// Dev fallback: when Cloudinary credentials are missing or still set to the
+// documented placeholder, skip the network round-trip and synthesize a stub
+// asset. This lets the rest of the upload pipeline (sniff type, write the
+// verification_documents row, mark pending) run normally so devs can test
+// the end-to-end verification flow without a Cloudinary account. Production
+// deploys must set real CLOUDINARY_* env vars — the placeholder check
+// rejects the literal "your-cloud-name" from .env.example too.
+//
+// Search the codebase for DEV_NO_UPLOAD before any production deploy: every
+// record that skipped real upload will carry this marker.
+const isDevFallbackActive = (() => {
+  const name = process.env.CLOUDINARY_CLOUD_NAME;
+  const key = process.env.CLOUDINARY_API_KEY;
+  const secret = process.env.CLOUDINARY_API_SECRET;
+  if (!name || !key || !secret) {return true;}
+  if (name === 'your-cloud-name' || key === 'your-api-key' || secret === 'your-api-secret') {return true;}
+  return false;
+})();
+
 /**
  * Upload image to Cloudinary
  * @param {string} filePath - Local file path
@@ -119,6 +138,21 @@ function resourceTypeForMime (mimeType) {
 }
 
 const uploadPrivateDocument = (buffer, folder, mimeType) => {
+  if (isDevFallbackActive) {
+    // Dev-only stub: skip the network call. The marker is searchable so a
+    // pre-deploy audit can find every record that didn't actually upload.
+    // The controller still writes a verification_documents row so the
+    // admin queue and tests see the submission.
+    console.warn(
+      `[cloudinary] DEV_NO_UPLOAD: skipping real upload for ${folder} (${mimeType}, ${buffer.length} bytes). ` +
+      'Set CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET in .env to enable real uploads.'
+    );
+    return Promise.resolve({
+      publicId: 'DEV_NO_UPLOAD',
+      bytes: buffer.length,
+      devStub: true,
+    });
+  }
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
@@ -140,6 +174,9 @@ const uploadPrivateDocument = (buffer, folder, mimeType) => {
 };
 
 function getSignedDocumentUrl (publicId, mimeType, ttlSeconds = 300) {
+  if (publicId === 'DEV_NO_UPLOAD') {
+    return null; // admin UI should render "(no preview — dev stub)" for these
+  }
   const options = {
     type: 'private',
     resource_type: resourceTypeForMime(mimeType),
@@ -158,6 +195,9 @@ function getSignedDocumentUrl (publicId, mimeType, ttlSeconds = 300) {
 }
 
 async function destroyDocument (publicId, mimeType) {
+  if (publicId === 'DEV_NO_UPLOAD') {
+    return { result: 'ok', devStub: true };
+  }
   try {
     return await cloudinary.uploader.destroy(publicId, {
       type: 'private',

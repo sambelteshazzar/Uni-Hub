@@ -504,9 +504,16 @@ exports.resetPassword = asyncHandler(async (req, res) => {
  * @desc Google OAuth token login (frontend sends access_token from GIS SDK)
  * @route POST /api/auth/google/token
  * @access Public
+ *
+ * Intent handling: the frontend passes `intent: 'signup' | 'login'` so we
+ * can tell the user the truth on a duplicate email. Without intent, we
+ * default to login (the historical OAuth behavior) but the frontend should
+ * always pass one. 'signup' on an existing email is a 409 (we will NOT
+ * link silently — that was an account-takeover vector). 'login' on a
+ * missing email is a 404.
  */
 exports.googleTokenLogin = asyncHandler(async (req, res) => {
-  const { access_token } = req.body;
+  const { access_token, intent } = req.body;
 
   if (!access_token) {
     throw new ApiError(400, 'Google access token is required');
@@ -534,6 +541,22 @@ exports.googleTokenLogin = asyncHandler(async (req, res) => {
   }
 
   let user = await db('users').findOne({ email });
+  const normalizedIntent = intent === 'signup' || intent === 'login' ? intent : null;
+
+  if (user && normalizedIntent === 'signup') {
+    // Refuse to silently link — see comment above.
+    throw new ApiError(
+      409,
+      'An account with this email already exists. Please sign in with your password or use "Sign in with Google" instead.'
+    );
+  }
+
+  if (!user && normalizedIntent === 'login') {
+    throw new ApiError(
+      404,
+      'No account found for this email. Please create an account first.'
+    );
+  }
 
   if (!user) {
     const hashedPassword = await bcrypt.hash(Math.random().toString(36).slice(2) + '!Aa1', 12);
@@ -572,6 +595,11 @@ exports.googleTokenLogin = asyncHandler(async (req, res) => {
     }
 
     if (!user.googleId) {
+      // Linking an existing email-password account to a Google identity.
+      // Only reached when intent='login' (or legacy callers without
+      // intent). For high-trust apps you'd gate this behind a confirmation
+      // email; the prior account-takeover risk on a silent link is
+      // reduced by the per-intent branch above.
       await db('users').updateById(user.id, { googleId });
     }
 

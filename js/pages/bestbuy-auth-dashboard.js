@@ -35,13 +35,15 @@
       '<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>' +
       '</svg>';
 
-    const socialBtnsHTML = function (label) {
+    const socialBtnsHTML = function (label, intent) {
       return (
         socialBtnStyle +
         '<div class="bb-social-divider"><span>Or continue with</span></div>' +
-        '<button type="button" class="bb-google-btn" title="' +
+        '<button type="button" class="bb-google-btn" data-google-intent="' +
+        intent +
+        '" title="' +
         label +
-        ' with Google" onclick="Pages.handleSocialLogin(\'google\')">' +
+        ' with Google">' +
         googleSVG +
         ' <span>' +
         label +
@@ -122,7 +124,7 @@
     // ============================================
     // SOCIAL LOGIN HANDLER
     // ============================================
-    Pages.handleSocialLogin = function (provider) {
+    Pages.handleSocialLogin = function (provider, intent) {
       if (isOffline()) {
         showToast(
           'Google Sign-In is not available in offline mode. Please use email and password.',
@@ -140,6 +142,9 @@
           scope: 'openid email profile',
           callback: function (tokenResponse) {
             if (tokenResponse.access_token) {
+              // Stash the intent on window so _handleGoogleToken can read
+              // it. (It can't be threaded through the GIS callback.)
+              window.__googleIntent = intent || 'login';
               Pages._handleGoogleToken(tokenResponse.access_token);
             } else {
               showToast('Google Sign-In was cancelled or failed.', 'error');
@@ -155,16 +160,52 @@
       }
     };
 
+    // One delegated click handler for both signup and login "Sign in/up
+    // with Google" buttons. Reads data-google-intent so the backend can
+    // reject signup-vs-email-exists and login-vs-email-missing honestly.
+    if (!Pages._googleBtnHandlerInstalled) {
+      Pages._googleBtnHandlerInstalled = true;
+      document.addEventListener('click', e => {
+        const btn = e.target.closest('.bb-google-btn');
+        if (!btn) {
+          return;
+        }
+        e.preventDefault();
+        const intent = btn.getAttribute('data-google-intent') || 'login';
+        Pages.handleSocialLogin('google', intent);
+      });
+    }
+
     Pages._handleGoogleToken = async function (accessToken) {
       try {
         showToast('Signing in with Google...', 'info');
+        const intent = window.__googleIntent || 'login';
         const res = await fetch((window.API_URL || '') + '/auth/google/token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ access_token: accessToken }),
+          body: JSON.stringify({ access_token: accessToken, intent }),
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         if (!res.ok) {
+          // 409 = email already exists when intent=signup; 404 = no
+          // account when intent=login. Both are honest user errors and
+          // the user needs an actionable toast, not a generic failure.
+          if (res.status === 409) {
+            showToast(
+              data.message || 'An account with this email already exists. Please sign in instead.',
+              'warning',
+              6000
+            );
+            return;
+          }
+          if (res.status === 404) {
+            showToast(
+              data.message || 'No account found for this email. Please create an account first.',
+              'warning',
+              6000
+            );
+            return;
+          }
           throw new Error(data.message || 'Google login failed');
         }
         if (typeof authManager !== 'undefined') {
@@ -176,6 +217,8 @@
         }, 500);
       } catch (err) {
         showToast(err.message || 'Google Sign-In failed. Please try again.', 'error');
+      } finally {
+        window.__googleIntent = null;
       }
     };
 
@@ -209,7 +252,7 @@
         '<h1 class="bb-auth-form-title">Sign In</h1>' +
         '<p class="bb-auth-form-subtitle">Enter your email and password to continue</p>' +
         '</div>' +
-        socialBtnsHTML('Sign in') +
+        socialBtnsHTML('Sign in', 'login') +
         '<form id="login-form-bb" onsubmit="Pages.handleLoginBB(event)">' +
         '<div class="bb-form-group">' +
         '<label for="login-email" class="bb-form-label">Email Address <span class="required-star">*</span></label>' +
@@ -305,7 +348,7 @@
         '<h1 class="bb-auth-form-title">Create Account</h1>' +
         '<p class="bb-auth-form-subtitle">Fill in your details to get started</p>' +
         '</div>' +
-        socialBtnsHTML('Sign up') +
+        socialBtnsHTML('Sign up', 'signup') +
         '<form id="register-form-bb" onsubmit="Pages.handleRegisterBB(event)">' +
         '<div class="bb-name-row">' +
         '<div class="bb-form-group">' +
