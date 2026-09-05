@@ -604,34 +604,46 @@ class Pages {
    */
   static registerRoutes() {
     console.info('✓ Pages.registerRoutes() called');
+    // Helper: most renderers live on Pages but are bound async by the auth/
+    // admin page modules (see js/pages/bestbuy-auth-dashboard.js etc).
+    // Registering `this.renderFoo()` at construction time captures the
+    // not-yet-bound state and throws on direct URL navigation. _safeCall
+    // resolves lazily against the live Pages singleton so late-bound
+    // methods are picked up the first time the route fires.
+    const safeCall = (method, ...args) => {
+      if (typeof Pages !== 'undefined' && typeof Pages[method] === 'function') {
+        return Pages[method](...args);
+      }
+      console.warn(`Pages.${method} not yet bound; route skipped`);
+    };
     // Home/Landing
-    router.register('/', () => this.renderLanding());
-    router.register('/home', () => this.renderLanding());
+    router.register('/', () => safeCall('renderLanding'));
+    router.register('/home', () => safeCall('renderLanding'));
 
     // Auth
-    router.register('/login', () => this.renderLogin());
-    router.register('/register', () => this.renderRegister());
+    router.register('/login', () => safeCall('renderLogin'));
+    router.register('/register', () => safeCall('renderRegister'));
     router.register('/auth', () => {
       window.location.hash = '#/login';
     });
     console.info('✓ Auth routes registered');
 
     // Main pages
-    router.register('/browse', params => this.renderBrowse(params));
-    router.register('/cart', () => this.renderCart());
-    router.register('/checkout', () => this.renderCheckout());
-    router.register('/dashboard', () => this.renderDashboard());
-    router.register('/profile', () => this.renderProfile());
-    router.register('/orders', () => this.renderOrders());
-    router.register('/wishlist', () => this.renderWishlist());
-    router.register('/faq', () => this.renderFAQ());
-    router.register('/terms', () => this.renderTerms());
-    router.register('/privacy', () => this.renderPrivacy());
-    router.register('/about', () => this.renderAbout());
-    router.register('/contact', () => this.renderContact());
-    router.register('/track', () => this.renderTrackOrder());
-    router.register('/verification', () => this.renderStudentVerification());
-    router.register('/notifications', () => this.renderNotifications());
+    router.register('/browse', params => safeCall('renderBrowse', params));
+    router.register('/cart', () => safeCall('renderCart'));
+    router.register('/checkout', () => safeCall('renderCheckout'));
+    router.register('/dashboard', () => safeCall('renderDashboard'));
+    router.register('/profile', () => safeCall('renderProfile'));
+    router.register('/orders', () => safeCall('renderOrders'));
+    router.register('/wishlist', () => safeCall('renderWishlist'));
+    router.register('/faq', () => safeCall('renderFAQ'));
+    router.register('/terms', () => safeCall('renderTerms'));
+    router.register('/privacy', () => safeCall('renderPrivacy'));
+    router.register('/about', () => safeCall('renderAbout'));
+    router.register('/contact', () => safeCall('renderContact'));
+    router.register('/track', () => safeCall('renderTrackOrder'));
+    router.register('/verification', () => safeCall('renderStudentVerification'));
+    router.register('/notifications', () => safeCall('renderNotifications'));
 
     // Newsletter
     router.register('/newsletter/confirm', params => this.renderNewsletterConfirm(params));
@@ -641,7 +653,7 @@ class Pages {
     // here from the link in the approval email. The token is read from
     // the raw URL hash inside the handler — the router's parsed params
     // are HTML-escaped and not safe to pass to the API.
-    router.register('/verify', () => this.renderVerifyConfirmation());
+    router.register('/verify', () => safeCall('renderVerifyConfirmation'));
 
     // My verification status (2026-08-30). The user checks here to see
     // whether their submission is pending, approved (waiting for the
@@ -651,12 +663,7 @@ class Pages {
     // the Pages class is constructed, so we resolve it lazily via
     // `Pages.renderVerificationStatus?.()` instead of `this.render...
     // ()` (which captures the not-yet-bound state at register time).
-    router.register('/verification-status', () => {
-      if (typeof Pages !== 'undefined' && typeof Pages.renderVerificationStatus === 'function') {
-        return Pages.renderVerificationStatus();
-      }
-      console.warn('renderVerificationStatus not yet bound; route skipped');
-    });
+    router.register('/verification-status', () => safeCall('renderVerificationStatus'));
 
     // University info page (public, no auth) and onboarding picker
     // (auth-gated by renderOnboarding). See js/pages/universities-page.js.
@@ -674,22 +681,24 @@ class Pages {
     // Admin
     // TODO: security review CSP — most admin routes below render forms with
     // inline handlers; migrate to addEventListener / data-action delegation.
-    router.register('/admin', () => this.renderAdminDashboard());
-    router.register('/admin/login', () => this.renderAdminLogin());
-    router.register('/admin/verifications', () => this.renderAdminVerifications());
-    router.register('/admin/products', () => this.renderAdminProducts());
-    router.register('/admin/products/new', () => this.renderAdminProductCreate());
-    router.register('/admin/products/edit/:id', params => this.renderAdminProductEdit(params.id));
-    router.register('/admin/analytics', () => this.renderAdminAnalytics());
-    router.register('/admin/users', () => this.renderAdminUsers());
-    router.register('/admin/orders', () => this.renderAdminOrders());
-    router.register('/admin/payouts', () => this.renderAdminPayouts());
-    router.register('/admin/reports', () => this.renderAdminReports());
-    router.register('/admin/activity', () => this.renderAdminActivity());
-    router.register('/admin/regions', () => this.renderAdminRegions());
+    router.register('/admin', () => safeCall('renderAdminDashboard'));
+    router.register('/admin/login', () => safeCall('renderAdminLogin'));
+    router.register('/admin/verifications', () => safeCall('renderAdminVerifications'));
+    router.register('/admin/products', () => safeCall('renderAdminProducts'));
+    router.register('/admin/products/new', () => safeCall('renderAdminProductCreate'));
+    router.register('/admin/products/edit/:id', params =>
+      safeCall('renderAdminProductEdit', params.id)
+    );
+    router.register('/admin/analytics', () => safeCall('renderAdminAnalytics'));
+    router.register('/admin/users', () => safeCall('renderAdminUsers'));
+    router.register('/admin/orders', () => safeCall('renderAdminOrders'));
+    router.register('/admin/payouts', () => safeCall('renderAdminPayouts'));
+    router.register('/admin/reports', () => safeCall('renderAdminReports'));
+    router.register('/admin/activity', () => safeCall('renderAdminActivity'));
+    router.register('/admin/regions', () => safeCall('renderAdminRegions'));
 
-    router.register('/admin/newsletter', () => this.renderAdminNewsletter());
-    router.register('/admin/coupons', () => this.renderAdminCoupons());
+    router.register('/admin/newsletter', () => safeCall('renderAdminNewsletter'));
+    router.register('/admin/coupons', () => safeCall('renderAdminCoupons'));
 
     // Delegated click handler for product cards. Replaces a broken inline
     // `onclick="cartManager.add(${JSON.stringify(product).replace(...))"`
