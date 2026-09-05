@@ -33,5 +33,10 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test
         env:
+          # server.js refuses to boot without JWT_SECRET (security guard
+          # against misconfigured deploys). The CI secret is a non-secret
+          # placeholder that's unique per workflow run; production uses
+          # a real value injected by the host.
+          JWT_SECRET: ci-test-secret-not-for-production-0123456789abcdef
           ADMIN_EMAIL: admin@unihub.com
           ADMIN_PASSWORD: Admin@123
