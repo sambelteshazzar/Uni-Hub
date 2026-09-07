@@ -137,9 +137,19 @@ class API {
    * requests and vice versa.
    */
   getTokenFor(url) {
+    // Strip the API base URL BEFORE the origin strip. request() and
+    // submitDocuments() both pass the ABSOLUTE URL (baseURL + path), so the
+    // path here is e.g. 'http://host/api/verification/pending'. The previous
+    // order stripped the origin first ('http://host' -> '/api/verification/...')
+    // and then tried to strip baseURL ('http://host/api') — which no longer
+    // matched, leaving a stray '/api' prefix. That made isAdminUrl below
+    // false for every admin/verification/users request in history mode
+    // (location.hash is empty there, so inAdminPanel could not rescue it),
+    // so the admin token was dropped and every call 401'd with "Session
+    // expired". Stripping baseURL first removes '/api' along with the host.
     const path = String(url || '')
-      .replace(/^https?:\/\/[^/]+/i, '')
       .replace(this.baseURL || '', '')
+      .replace(/^https?:\/\/[^/]+/i, '')
       .split('?')[0];
     const inAdminPanel =
       typeof location !== 'undefined' && String(location.hash || '').startsWith('#/admin');
