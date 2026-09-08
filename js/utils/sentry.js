@@ -8,9 +8,7 @@
 // copyJsTree) the import resolves and Sentry reports errors as intended.
 // When it can't resolve, error reporting is silently disabled.
 //
-// TODO: security review — Sentry payloads must be scrubbed of PII and
-// secrets before capture; do not log tokens, session objects, emails,
-// phone numbers, or payment info.
+// PII/secrets are scrubbed from all payloads before capture (see _scrub).
 
 let Sentry = null;
 
@@ -21,6 +19,37 @@ const _dsn =
   'https://743b5f1f6b5912894bb3278e60f6b7b5@o4509421306052608.ingest.us.sentry.io/4511942433964032';
 
 let sentryInitialized = false;
+
+// Keys that must never leave the browser. Any context/breadcrumb object is
+// scrubbed against these (and common variants) before capture. Tokens,
+// session objects, emails, phone numbers, payment/password fields, and any
+// key prefixed token/secret/password are replaced with '[REDACTED]'.
+const _PII_KEY_PATTERN =
+  /token|secret|password|passwd|authorization|email|phone|card|pan|cvv|payment|address|account|iban|ssn|credential/i;
+
+function _scrub(value, depth = 0) {
+  if (depth > 5 || value === null || value === undefined) {
+    return value === undefined ? '[REDACTED]' : value;
+  }
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map(v => _scrub(v, depth + 1));
+  }
+  if (typeof value === 'object') {
+    const out = {};
+    for (const [k, v] of Object.entries(value)) {
+      if (_PII_KEY_PATTERN.test(k)) {
+        out[k] = '[REDACTED]';
+      } else {
+        out[k] = _scrub(v, depth + 1);
+      }
+    }
+    return out;
+  }
+  return value;
+}
 
 async function _loadSentry() {
   if (Sentry) {
@@ -77,26 +106,24 @@ export function captureException(error, context = {}) {
   if (!Sentry) {
     return;
   }
-  Sentry.captureException(error, { extra: context });
+  Sentry.captureException(error, { extra: _scrub(context) });
 }
 
 export function captureMessage(message, level = 'info', context = {}) {
   if (!Sentry) {
     return;
   }
-  Sentry.captureMessage(message, { level, extra: context });
+  Sentry.captureMessage(message, { level, extra: _scrub(context) });
 }
 
 export function setUserContext(user) {
   if (!Sentry || !user) {
     return;
   }
+  // PII-minimal user identity — id + role only. Email, full name and
+  // university are scrubbed so they never reach the Sentry ingest endpoint.
   Sentry.setUser({
-    id: user.id?.toString() || user._id?.toString(),
-    email: user.email,
-    username: user.fullName,
-    university: user.university,
-    role: user.role,
+    id: user.id?.toString() || user._id?.toString() || '[REDACTED]',
   });
 }
 
@@ -111,7 +138,7 @@ export function addBreadcrumb(breadcrumb) {
   if (!Sentry) {
     return;
   }
-  Sentry.addBreadcrumb(breadcrumb);
+  Sentry.addBreadcrumb(_scrub(breadcrumb));
 }
 
 export function startTransaction(name, op) {

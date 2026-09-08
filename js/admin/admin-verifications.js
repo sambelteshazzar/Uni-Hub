@@ -272,15 +272,12 @@ class AdminVerificationsManager {
     }
 
     if (typeof StorageManager !== 'undefined' && typeof STORAGE_KEYS !== 'undefined') {
-      // TODO: security review — prefix should derive from STORAGE_KEYS.STUDENT_VERIFICATION,
-      // not the hardcoded 'unihub_student_verification' below.
-      const _verKey = STORAGE_KEYS.STUDENT_VERIFICATION;
-      void _verKey;
+      const verPrefix = STORAGE_KEYS.STUDENT_VERIFICATION;
       const allKeys = [];
       try {
         for (let i = 0; i < localStorage.length; i++) {
           const k = localStorage.key(i);
-          if (k && k.startsWith('unihub_student_verification')) {
+          if (k && k.startsWith(verPrefix)) {
             allKeys.push(k);
           }
         }
