@@ -37,19 +37,6 @@ const MODULE_DEPENDENCIES = {
     { name: 'formatters', file: 'js/utils/formatters.js', exposes: ['Formatter'] },
     { name: 'crypto', file: 'js/utils/crypto.js', exposes: ['CryptoUtil'] },
     { name: 'api', file: 'js/utils/api.js', exposes: ['api'] },
-    {
-      name: 'sentry',
-      file: 'js/utils/sentry.js',
-      exposes: [
-        'initSentry',
-        'captureException',
-        'captureMessage',
-        'setUserContext',
-        'clearUserContext',
-        'addBreadcrumb',
-        'startTransaction',
-      ],
-    },
     { name: 'footer', file: 'js/utils/footer.js', exposes: ['footerUtils'], required: false },
   ],
 
@@ -236,11 +223,12 @@ class ModuleLoader {
    * Initialize the application after modules are loaded
    */
   async initializeApp() {
-    // Initialize Sentry first
-    if (typeof window.initSentry === 'function') {
-      window.initSentry();
-      console.log('✓ Sentry initialized');
-    }
+    // Initialize Sentry lazily, off the critical path. The bundled
+    // js/utils/sentry.js with the inlined @sentry/browser SDK is ~1.1 MB, so
+    // fetching it during boot would serially delay first paint for every
+    // visitor. Load it after the app is interactive; failures are silent
+    // (error reporting is best-effort and must never affect the app).
+    this._initSentryDeferred();
 
     // Initialize app - use window.* because ES6 module scope doesn't have bare globals
     if (window.app && window.app.init) {
@@ -284,6 +272,37 @@ class ModuleLoader {
 
     // Handle initial route
     await this.handleInitialRoute();
+  }
+
+  /**
+   * Load and initialize Sentry after the app is interactive, not during boot.
+   * The @sentry/browser SDK is inlined into js/utils/sentry.js (~1.1 MB), so
+   * keeping it off the critical path avoids serially delaying first paint.
+   * Uses requestIdleCallback when available, else a short timeout.
+   */
+  _initSentryDeferred() {
+    const boot = () => {
+      try {
+        import(/* @vite-ignore */ './utils/sentry.js')
+          .then(mod => {
+            const init = mod.initSentry;
+            if (typeof init === 'function') {
+              Promise.resolve(init()).catch(() => {});
+              console.log('✓ Sentry initialized (deferred)');
+            }
+          })
+          .catch(() => {
+            console.warn('Sentry deferred load failed');
+          });
+      } catch (_) {
+        /* best-effort */
+      }
+    };
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(boot, { timeout: 4000 });
+    } else {
+      setTimeout(boot, 3000);
+    }
   }
 
   /**
