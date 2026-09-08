@@ -151,8 +151,17 @@ class API {
       .replace(this.baseURL || '', '')
       .replace(/^https?:\/\/[^/]+/i, '')
       .split('?')[0];
+    // Detect the admin panel from EITHER URL mode. The router defaults to
+    // history mode (clean URLs: /admin/products), where location.hash is
+    // empty. The old hash-only check therefore missed the panel in history
+    // mode, so generic authenticated endpoints invoked *from* the panel
+    // (e.g. POST /products/upload during "Add Product") fell through to the
+    // user-session branch and returned null for admins — 401 and a silent
+    // fallback to a placeholder image. Check pathname too so panel-context
+    // requests always authenticate with the admin session.
     const inAdminPanel =
-      typeof location !== 'undefined' && String(location.hash || '').startsWith('#/admin');
+      String(location?.hash || '').startsWith('#/admin') ||
+      /^\/admin(?:\/|$|[?#])/.test(String(location?.pathname || ''));
     const isAdminUrl =
       /^\/(admin|users|verification)\b/.test(path) || path.startsWith('/payment/refund');
 
