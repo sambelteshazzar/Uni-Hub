@@ -10,8 +10,21 @@ Implemented so far:
   + in-flight coalescing in `api.js`; verification queue no longer persists PII.
 - Phase 4 (security cleanup, partial) — DONE for Sentry PII scrubbing and the
   verification key-prefix TODO.
-- Phase 3 (CSS bundle + code-splitting) — deferred: needs a PurgeCSS/CSS-coverage
-  pass, not hand-editing ~4.4k lines blindly.
+- Phase 3 (partial) — DONE: Sentry SDK (~249 KB gzipped) deferred off the
+  critical path via requestIdleCallback. Previously loaded eagerly in the
+  `core` module level for every visitor.
+
+Remaining (deferred — needs tooling or a dedicated, low-risk follow-up):
+- Phase 3.1 CSS: the 341 KB (raw) / ~53 KB (gz) bundle is 34 files, several of
+  which are coexisting generations (browse.css + browse-modern.css, landing.css
+  + bestbuy-landing.css + components/landing-page.css). Both old and new class
+  names are actively emitted in JS, so this needs a CSS-coverage/PurgeCSS pass,
+  not hand-editing.
+- Phase 3.2 code-splitting pages.js (82 KB gz, loaded every route): splitting
+  the monolithic `Pages` class into admin vs public chunks is a multi-file,
+  regression-risky refactor (router + admin sidebar + bestbuy-auth-dashboard all
+  reference `window.Pages.<method>`). Best done as an isolated change with full
+  Playwright coverage.
 
 ---
 
