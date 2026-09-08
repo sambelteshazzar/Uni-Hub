@@ -7,16 +7,13 @@ exports.getWishlist = asyncHandler(async (req, res) => {
     { sort: { createdAt: -1 } },
   );
 
-  const products = [];
-  for (const item of wishlistItems) {
-    const product = await db('products').findById(item.product);
-    if (product) {
-      products.push({
-        ...product,
-        id: product.id || product._id,
-      });
-    }
-  }
+  const productIds = wishlistItems.map(item => item.product);
+  const productRows = await db('products').findByIds(productIds);
+  const productById = new Map(productRows.map(p => [p.id, p]));
+  const products = productIds
+    .map(id => productById.get(id))
+    .filter(Boolean)
+    .map(product => ({ ...product, id: product.id || product._id }));
 
   res.json({
     success: true,

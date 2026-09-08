@@ -70,8 +70,11 @@ exports.advancedSearch = asyncHandler(async (req, res) => {
 
   const totalPages = Math.ceil(totalResults / limit);
 
-  const data = await Promise.all(results.map(async p => {
-    const seller = await db('users').findById(p.seller);
+  const sellerIds = results.map(p => p.seller).filter(id => id !== null && id !== undefined);
+  const sellers = await db('users').findByIds(sellerIds);
+  const sellerById = new Map(sellers.map(s => [s.id, s]));
+  const data = results.map(p => {
+    const seller = sellerById.get(p.seller);
     const obj = {
       ...p,
       id: p.id || p._id,
@@ -83,7 +86,7 @@ exports.advancedSearch = asyncHandler(async (req, res) => {
     };
     delete obj.__v;
     return obj;
-  }));
+  });
 
   res.json({
     success: true,

@@ -222,22 +222,48 @@ exports.getUserConversations = asyncHandler(async (req, res) => {
     [req.user.id, status, limitNum, offset],
   );
 
+  const convIds = rows.map(c => c.id);
+
+  // Batch all related lookups instead of one query per conversation.
+  const allParticipants = convIds.length > 0
+    ? await db('conversation_participants').find({ conversationId: { $in: convIds } })
+    : [];
+  const participantsByConv = new Map();
+  for (const p of allParticipants) {
+    if (!participantsByConv.has(p.conversationId)) {
+      participantsByConv.set(p.conversationId, []);
+    }
+    participantsByConv.get(p.conversationId).push(p);
+  }
+
+  const participantUserIds = Array.from(new Set(allParticipants.map(p => p.userId).filter(id => id !== null && id !== undefined)));
+  const participantUsers = await db('users').findByIds(participantUserIds);
+  const userById = new Map(participantUsers.map(u => [u.id, u]));
+
+  const lastMessageIds = rows.map(c => c.lastMessage).filter(id => id !== null && id !== undefined);
+  const lastMessages = await db('messages').findByIds(lastMessageIds);
+  const messageById = new Map(lastMessages.map(m => [m.id, m]));
+
+  const productIds = rows.map(c => c.product).filter(id => id !== null && id !== undefined);
+  const products = await db('products').findByIds(productIds);
+  const productById = new Map(products.map(p => [p.id, p]));
+
   const conversations = [];
   for (const conv of rows) {
-    const participants = await db('conversation_participants').find({ conversationId: conv.id });
+    const participants = participantsByConv.get(conv.id) || [];
     const otherParticipant = participants.find(p => p.userId !== req.user.id);
-    const otherUser = otherParticipant ? await db('users').findById(otherParticipant.userId) : null;
+    const otherUser = otherParticipant ? userById.get(otherParticipant.userId) : null;
 
-    const lastMsg = conv.lastMessage ? await db('messages').findById(conv.lastMessage) : null;
+    const lastMsg = conv.lastMessage ? messageById.get(conv.lastMessage) : null;
 
     let product = null;
     if (conv.product) {
-      product = await db('products').findById(conv.product);
+      product = productById.get(conv.product);
     }
 
     const participantsWithUsers = [];
     for (const p of participants) {
-      const u = await db('users').findById(p.userId);
+      const u = userById.get(p.userId);
       if (u) {
         participantsWithUsers.push({ id: u.id, fullName: u.fullName, avatar: u.avatar, university: u.university, isOnline: fromBool(u.isOnline) });
       }

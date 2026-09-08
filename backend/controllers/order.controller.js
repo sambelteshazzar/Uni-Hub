@@ -298,12 +298,22 @@ exports.getMyOrders = asyncHandler(async (req, res) => {
     { sort: { createdAt: -1 } },
   );
 
-  const populatedOrders = [];
-  for (const order of orders) {
-    const items = await db('order_items').find({ orderId: order.id });
-    order._items = items;
-    populatedOrders.push(getPublicOrder(order));
+  const orderIds = orders.map(o => o.id).filter(id => id !== null && id !== undefined);
+  const itemsByOrder = new Map();
+  if (orderIds.length > 0) {
+    const allItems = await db('order_items').find({ orderId: { $in: orderIds } });
+    for (const item of allItems) {
+      if (!itemsByOrder.has(item.orderId)) {
+        itemsByOrder.set(item.orderId, []);
+      }
+      itemsByOrder.get(item.orderId).push(item);
+    }
   }
+
+  const populatedOrders = orders.map(order => {
+    order._items = itemsByOrder.get(order.id) || [];
+    return getPublicOrder(order);
+  });
 
   res.json({
     success: true,
@@ -331,8 +341,11 @@ exports.getOrder = asyncHandler(async (req, res) => {
   const user = await db('users').findById(order.userId);
   order.userId = user ? { id: user.id, fullName: user.fullName, email: user.email } : order.userId;
 
+  const sellerIds = items.map(item => item.seller).filter(id => id !== null && id !== undefined);
+  const sellers = await db('users').findByIds(sellerIds);
+  const sellerById = new Map(sellers.map(s => [s.id, s]));
   for (const item of items) {
-    const seller = await db('users').findById(item.seller);
+    const seller = sellerById.get(item.seller);
     item.seller = seller ? { id: seller.id, fullName: seller.fullName, email: seller.email, phone: seller.phone } : item.seller;
   }
 
@@ -660,8 +673,11 @@ exports.cancelOrder = asyncHandler(async (req, res) => {
   // Release inventory back to 'active'. Only reset if currently reserved
   // or sold — avoids double-release on idempotent calls.
   const orderItems = await db('order_items').find({ orderId: order.id });
+  const productIds = orderItems.map(item => item.productId);
+  const products = await db('products').findByIds(productIds);
+  const productById = new Map(products.map(p => [p.id, p]));
   for (const item of orderItems) {
-    const p = await db('products').findById(item.productId);
+    const p = productById.get(item.productId);
     if (p && (p.status === 'reserved' || p.status === 'sold')) {
       await db('products').updateById(item.productId, { status: 'active' });
     }

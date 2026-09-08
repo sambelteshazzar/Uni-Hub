@@ -2,21 +2,6 @@ const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { db, mapProductRow } = require('../utils/db');
 const logActivity = require('../utils/logActivity');
 
-async function populateCreator (product) {
-  const creator = await db('users').findById(product.seller);
-  if (creator) {
-    product.seller = {
-      _id: creator.id,
-      id: creator.id,
-      fullName: creator.fullName,
-      rating: creator.rating,
-      avatar: creator.avatar,
-    };
-  }
-  product._id = product.id;
-  return product;
-}
-
 async function populateCreatorDetail (product) {
   const creator = await db('users').findById(product.seller);
   if (creator) {
@@ -112,7 +97,27 @@ exports.getProducts = asyncHandler(async (req, res) => {
   // Execute query
   const products = await db('products').find(query, { sort: sortOptions, limit: limitNum, skip });
 
-  const populated = await Promise.all(products.map(p => populateCreator(p)));
+  // Batch-populate the seller for every row in ONE query (was N+1: one
+  // findById per product via populateCreator). getProducts is the hottest
+  // read endpoint (browse/search/listings, up to 100 rows), so this matters.
+  const sellerIds = products.map(p => p.seller).filter(id => id !== null && id !== undefined);
+  const sellers = await db('users').findByIds(sellerIds);
+  const sellerById = new Map(sellers.map(s => [s.id, s]));
+  const populated = products.map(product => {
+    const creator = sellerById.get(product.seller);
+    const mapped = { ...product };
+    if (creator) {
+      mapped.seller = {
+        _id: creator.id,
+        id: creator.id,
+        fullName: creator.fullName,
+        rating: creator.rating,
+        avatar: creator.avatar,
+      };
+    }
+    mapped._id = mapped.id;
+    return mapped;
+  });
 
   res.json({
     success: true,
