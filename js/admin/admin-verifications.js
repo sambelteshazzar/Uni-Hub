@@ -103,7 +103,21 @@ class AdminVerificationsManager {
 
   _persist() {
     if (typeof StorageManager !== 'undefined' && typeof StorageManager.set === 'function') {
-      StorageManager.set(this.QUEUE_KEY, this.queue, true);
+      // Persist a PII-minimal snapshot only, as a last-known-good for the
+      // offline "cached data" banner. Backend is the source of truth, so we
+      // must not write student emails/phones into durable browser storage.
+      const sanitized = this.queue.map(v => ({
+        id: v.id,
+        studentId: v.studentId,
+        fullName: v.fullName,
+        university: v.university,
+        status: v.status,
+        verificationMethod: v.verificationMethod,
+        submittedAt: v.submittedAt,
+        reviewedAt: v.reviewedAt,
+        userId: v.userId,
+      }));
+      StorageManager.set(this.QUEUE_KEY, sanitized, true);
     }
   }
 

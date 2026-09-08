@@ -34,6 +34,13 @@ class API {
       this._probeBackend();
     }
     this.timeout = 30000;
+    // In-memory GET cache. Cuts the double-fetch between page renderers and
+    // the admin managers (which both hit e.g. /admin/products) and dedupes
+    // repeated reads within a short window. Bounded + TTL-gated, and cleared
+    // by mutation invalidation so it only serves genuinely-fresh data.
+    this._cache = new Map();
+    this._inflight = new Map();
+    this._cacheTTL = 30000;
   }
 
   _csrfUrl() {
@@ -186,6 +193,40 @@ class API {
   }
 
   /**
+   * Drop cached GET entries for the resource a mutation touched. We key on
+   * the collection prefix (e.g. /admin/products/123 -> /admin/products) so a
+   * create/update/delete also invalidates the corresponding list. Fallback
+   * to clearing only exact matches when the path has no obvious parent.
+   */
+  _invalidateCacheFor(url) {
+    const path = String(url || '')
+      .replace(this.baseURL || '', '')
+      .replace(/^https?:\/\/[^/]+/i, '')
+      .split('?')[0];
+    // Collection = the path up to (excluding) its last segment, so a
+    // create/update/delete on /admin/products/123 also invalidates the
+    // /admin/products list.
+    const segments = path.split('/').filter(Boolean);
+    const collection = segments.length > 1 ? `/${segments.slice(0, -1).join('/')}` : path;
+
+    const toPath = key => {
+      const spaceIdx = key.indexOf(' ');
+      const keyUrl = spaceIdx === -1 ? key : key.slice(spaceIdx + 1);
+      return String(keyUrl || '')
+        .replace(this.baseURL || '', '')
+        .replace(/^https?:\/\/[^/]+/i, '')
+        .split('?')[0];
+    };
+
+    for (const key of Array.from(this._cache.keys())) {
+      const kp = toPath(key);
+      if (kp === path || kp === collection || kp.startsWith(collection + '/')) {
+        this._cache.delete(key);
+      }
+    }
+  }
+
+  /**
    * Make a fetch request with error handling and auth
    * @param {string} url - Full URL or endpoint
    * @param {Object} options - Fetch options
@@ -211,72 +252,126 @@ class API {
       }
 
       const { headers: _optHeaders, ...safeOptions } = options;
-      const response = await Promise.race([
-        fetch(fullUrl, {
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            ...csrfHeaders,
-            ..._optHeaders,
-          },
-          ...(isMutating ? { credentials: 'include' } : {}),
-          ...safeOptions,
-        }),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), this.timeout)
-        ),
-      ]);
 
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        // Don't trigger session-expired flow for auth endpoints — a 401
-        // from /auth/login (wrong password) or /auth/me (token check on
-        // first load) is a normal error, not an expired-session signal.
-        // Clearing the session there fires a misleading "Session expired"
-        // toast and kicks the user to the login screen on a typo.
-        const isAuthEndpoint = url.startsWith('/auth/');
-        if (
-          response.status === 401 &&
-          typeof authManager !== 'undefined' &&
-          authManager.clearSession &&
-          !isAuthEndpoint
-        ) {
-          authManager.clearSession();
-          const e = new Error('Session expired — please log in again');
-          e.status = 401;
-          e.isAuthError = true;
-          throw e;
+      // GET cache: serve a fresh in-memory hit without a network round-trip.
+      // Mutations are never served from cache and instead invalidate below.
+      const method = (options.method || 'GET').toUpperCase();
+      const cacheKey = `${method} ${fullUrl}`;
+      const cacheable =
+        !isMutating &&
+        !/\/auth\//.test(url) &&
+        !/\/(me|confirm)\b/.test(url) &&
+        !/\/(my-|mine\b)/.test(url) &&
+        !/csrf/.test(url);
+      if (cacheable) {
+        const hit = this._cache.get(cacheKey);
+        if (hit && hit.expiresAt > Date.now()) {
+          return hit.data;
         }
-        if (response.status === 403 && data.error && data.error.toLowerCase().includes('csrf')) {
-          this._csrfToken = null;
-          const retryCsrfToken = await this.fetchCsrfToken();
-          if (retryCsrfToken) {
-            const retryResponse = await fetch(fullUrl, {
-              headers: {
-                'Content-Type': 'application/json',
-                ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                'X-CSRF-Token': retryCsrfToken,
-                ...options.headers,
-              },
-              credentials: 'include',
-              ...safeOptions,
-            });
-            const retryData = await retryResponse.json().catch(() => ({}));
-            if (!retryResponse.ok) {
-              const error = new Error(retryData.error || retryResponse.statusText);
-              error.status = retryResponse.status;
-              error.data = retryData;
-              throw error;
-            }
-            return retryData;
+        // Dedupe concurrent identical GETs (e.g. a page renderer and an admin
+        // manager both fetch /admin/products at the same time). The first
+        // caller starts the request; the rest await the same in-flight Promise.
+        if (this._inflight.has(cacheKey)) {
+          return this._inflight.get(cacheKey);
+        }
+      }
+
+      const performRequest = async () => {
+        const response = await Promise.race([
+          fetch(fullUrl, {
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              ...csrfHeaders,
+              ..._optHeaders,
+            },
+            ...(isMutating ? { credentials: 'include' } : {}),
+            ...safeOptions,
+          }),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Request timeout')), this.timeout)
+          ),
+        ]);
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          // Don't trigger session-expired flow for auth endpoints — a 401
+          // from /auth/login (wrong password) or /auth/me (token check on
+          // first load) is a normal error, not an expired-session signal.
+          // Clearing the session there fires a misleading "Session expired"
+          // toast and kicks the user to the login screen on a typo.
+          const isAuthEndpoint = url.startsWith('/auth/');
+          if (
+            response.status === 401 &&
+            typeof authManager !== 'undefined' &&
+            authManager.clearSession &&
+            !isAuthEndpoint
+          ) {
+            authManager.clearSession();
+            const e = new Error('Session expired — please log in again');
+            e.status = 401;
+            e.isAuthError = true;
+            throw e;
           }
+          if (response.status === 403 && data.error && data.error.toLowerCase().includes('csrf')) {
+            this._csrfToken = null;
+            const retryCsrfToken = await this.fetchCsrfToken();
+            if (retryCsrfToken) {
+              const retryResponse = await fetch(fullUrl, {
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                  'X-CSRF-Token': retryCsrfToken,
+                  ...options.headers,
+                },
+                credentials: 'include',
+                ...safeOptions,
+              });
+              const retryData = await retryResponse.json().catch(() => ({}));
+              if (!retryResponse.ok) {
+                const error = new Error(retryData.error || retryResponse.statusText);
+                error.status = retryResponse.status;
+                error.data = retryData;
+                throw error;
+              }
+              return retryData;
+            }
+          }
+
+          const error = new Error(data.error || response.statusText);
+          error.status = response.status;
+          error.data = data;
+          throw error;
         }
 
-        const error = new Error(data.error || response.statusText);
-        error.status = response.status;
-        error.data = data;
-        throw error;
+        return data;
+      };
+
+      let data;
+      if (cacheable) {
+        const inflightPromise = performRequest()
+          .catch(err => {
+            this._inflight.delete(cacheKey);
+            throw err;
+          })
+          .then(res => {
+            this._inflight.delete(cacheKey);
+            return res;
+          });
+        this._inflight.set(cacheKey, inflightPromise);
+        data = await inflightPromise;
+      } else {
+        data = await performRequest();
+      }
+
+      if (isMutating) {
+        // A write may have changed the resource(s) this response touches.
+        // Invalidate any cached GET whose path shares the mutation's base
+        // resource so stale listings can't survive a follow-up read.
+        this._invalidateCacheFor(fullUrl);
+      } else if (cacheable && data && data.success) {
+        this._cache.set(cacheKey, { data, expiresAt: Date.now() + this._cacheTTL });
       }
 
       return data;
