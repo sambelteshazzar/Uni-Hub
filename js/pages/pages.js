@@ -5862,7 +5862,7 @@ font-size: 0.8rem;
         : '';
       const purgeBtn =
         adminAuthManager.getCurrentUser()?.role === 'admin'
-          ? `<button type="button" data-vrf-action="purge" data-vrf-id="${esc(v.id)}" class="adm-btn adm-btn--sm adm-btn--danger" style="margin-top:0.5rem;">Purge now</button>`
+          ? `<button type="button" data-adm-modal-action="purge" data-vrf-id="${esc(v.id)}" class="adm-btn adm-btn--sm adm-btn--danger" style="margin-top:0.5rem;">Purge now</button>`
           : '';
       docsSection = `
         <div style="border:1px solid var(--neutral-200);border-radius:var(--radius-md);padding:0.75rem;background:var(--bg-primary);">
@@ -5942,8 +5942,8 @@ font-size: 0.8rem;
             <textarea id="vrf-review-notes-${esc(v.id)}" class="adm-modal-field" rows="3" placeholder="Add notes about this verification..."></textarea>
           </div>
           <div style="display:flex;gap:8px;">
-            <button type="button" data-vrf-action="approve" data-vrf-id="${esc(v.id)}" class="adm-btn" style="flex:1;background:var(--color-success);color:#fff;border-color:var(--color-success);">Approve Verification</button>
-            <button type="button" data-vrf-action="reject" data-vrf-id="${esc(v.id)}" class="adm-btn adm-btn--danger" style="flex:1;">Reject Verification</button>
+            <button type="button" data-adm-modal-action="approve" data-vrf-id="${esc(v.id)}" class="adm-btn" style="flex:1;background:var(--color-success);color:#fff;border-color:var(--color-success);">Approve Verification</button>
+            <button type="button" data-adm-modal-action="reject" data-vrf-id="${esc(v.id)}" class="adm-btn adm-btn--danger" style="flex:1;">Reject Verification</button>
           </div>
         </div>`
         : '';
@@ -5958,24 +5958,35 @@ font-size: 0.8rem;
       body: detailGrid + documentsSection + approveRejectBlock,
       footer: '',
     });
+    // A stale detail overlay can linger if the modal was re-opened via the
+    // image-error refetch path. Drop any previous one so we never stack
+    // hundreds of overlays (each with its own approve/reject buttons).
+    document.querySelectorAll('#vrf-detail-overlay').forEach(el => el.remove());
     document.body.appendChild(overlay);
 
     // Signed URLs expire after 300s; refetch fresh ones once on load error.
-    let refetched = false;
-    overlay.addEventListener(
-      'error',
-      e => {
-        if (refetched || e.target.tagName !== 'IMG') {
-          return;
-        }
-        refetched = true;
-        void Pages.viewVerificationDetail(id);
-      },
-      true
-    );
+    // Guard with a static flag so a persistent image error can't loop: the
+    // refetch re-runs this method, which would otherwise reset a local
+    // `refetched` and repaint forever.
+    if (!Pages._vrfRefetched) {
+      Pages._vrfRefetched = true;
+      overlay.addEventListener(
+        'error',
+        e => {
+          if (e.target.tagName !== 'IMG') {
+            return;
+          }
+          void Pages.viewVerificationDetail(id);
+        },
+        true
+      );
+    }
 
     AdminUI.wireModal(overlay, {
-      onClose: () => overlay.remove(),
+      onClose: () => {
+        Pages._vrfRefetched = false;
+        overlay.remove();
+      },
       onAction: async (key, btn) => {
         const vid = btn.dataset.vrfId || id;
         if (key === 'approve') {

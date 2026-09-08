@@ -476,7 +476,11 @@ exports.getVerificationDocuments = asyncHandler(async (req, res) => {
       mimeType: d.mimeType || d.fileType || 'application/octet-stream',
       sizeBytes: d.sizeBytes || 0,
       url: getSignedDocumentUrl(d.cloudinaryPublicId, d.mimeType || d.fileType, 300),
-    }));
+    }))
+    // Drop documents with no usable preview URL (e.g. DEV_NO_UPLOAD stubs).
+    // An empty string URL in the UI renders <img src="">, whose load error
+    // trips the modal's capture-phase error refetch and repaints it endlessly.
+    .filter(d => d.url);
 
   // PII access logging — who viewed which student's documents, when.
   // NEVER include the URLs themselves.
