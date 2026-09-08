@@ -34,13 +34,16 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
 
   const recentOrders = await db('orders').find({}, { sort: { createdAt: -1 }, limit: 10 });
 
-  const ordersWithUser = await Promise.all(recentOrders.map(async (order) => {
-    const user = await db('users').findById(order.userId);
+  const recentUserIds = recentOrders.map(o => o.userId).filter(id => id !== null && id !== undefined);
+  const recentUsers = await db('users').findByIds(recentUserIds);
+  const recentUserById = new Map(recentUsers.map(u => [u.id, u]));
+  const ordersWithUser = recentOrders.map(order => {
+    const user = recentUserById.get(order.userId);
     return {
       ...order,
       userId: user ? { id: user.id, fullName: user.fullName, email: user.email } : null,
     };
-  }));
+  });
 
   res.json({
     success: true,
@@ -72,13 +75,16 @@ exports.getAdminProducts = asyncHandler(async (req, res) => {
     skip: (page - 1) * limit,
   });
 
-  const productsWithSeller = await Promise.all(products.map(async (product) => {
-    const seller = await db('users').findById(product.seller);
+  const sellerIds = products.map(p => p.seller).filter(id => id !== null && id !== undefined);
+  const sellers = await db('users').findByIds(sellerIds);
+  const sellerById = new Map(sellers.map(s => [s.id, s]));
+  const productsWithSeller = products.map(product => {
+    const seller = sellerById.get(product.seller);
     return {
       ...product,
       seller: seller ? { id: seller.id, fullName: seller.fullName, email: seller.email, university: seller.university } : null,
     };
-  }));
+  });
 
   const total = await db('products').countDocuments(query);
 
@@ -104,13 +110,16 @@ exports.getAdminOrders = asyncHandler(async (req, res) => {
     skip: (page - 1) * limit,
   });
 
-  const ordersWithUser = await Promise.all(orders.map(async (order) => {
-    const user = await db('users').findById(order.userId);
+  const orderUserIds = orders.map(o => o.userId).filter(id => id !== null && id !== undefined);
+  const orderUsers = await db('users').findByIds(orderUserIds);
+  const orderUserById = new Map(orderUsers.map(u => [u.id, u]));
+  const ordersWithUser = orders.map(order => {
+    const user = orderUserById.get(order.userId);
     return {
       ...order,
       userId: user ? { id: user.id, fullName: user.fullName, email: user.email, phone: user.phone } : null,
     };
-  }));
+  });
 
   const total = await db('orders').countDocuments(query);
 
@@ -243,13 +252,16 @@ exports.getBannedUsers = asyncHandler(async (req, res) => {
     skip: (page - 1) * limit,
   });
 
-  const usersWithBannedBy = await Promise.all(bannedUsers.map(async (user) => {
-    const bannedByUser = user.bannedBy ? await db('users').findById(user.bannedBy) : null;
+  const bannedByIds = bannedUsers.map(u => u.bannedBy).filter(id => id !== null && id !== undefined);
+  const bannedByUsers = await db('users').findByIds(bannedByIds);
+  const bannedByById = new Map(bannedByUsers.map(u => [u.id, u]));
+  const usersWithBannedBy = bannedUsers.map(user => {
+    const bannedByUser = bannedByById.get(user.bannedBy);
     return {
       ...user,
       bannedBy: bannedByUser ? { id: bannedByUser.id, fullName: bannedByUser.fullName } : null,
     };
-  }));
+  });
 
   const total = await db('users').countDocuments({ isSuspended: 1 });
 
@@ -479,16 +491,19 @@ exports.getPayoutQueue = asyncHandler(async (req, res) => {
     skip: (page - 1) * limit,
   });
 
-  // Populate seller info for the queue view.
-  const populated = await Promise.all(payouts.map(async (p) => {
-    const seller = await db('users').findById(p.sellerId);
+  // Populate seller info for the queue view (single batched lookup).
+  const sellerIds = payouts.map(p => p.sellerId).filter(id => id !== null && id !== undefined);
+  const sellers = await db('users').findByIds(sellerIds);
+  const sellerById = new Map(sellers.map(s => [s.id, s]));
+  const populated = payouts.map(p => {
+    const seller = sellerById.get(p.sellerId);
     return {
       ...p,
       seller: seller
         ? { id: seller.id, fullName: seller.fullName, email: seller.email, phone: seller.phone }
         : null,
     };
-  }));
+  });
 
   const total = await db('payouts').countDocuments(query);
 

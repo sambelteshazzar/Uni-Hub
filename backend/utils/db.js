@@ -248,6 +248,38 @@ class Db {
     return this._mapRow(row);
   }
 
+  async findByIds (ids) {
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return [];
+    }
+    const unique = Array.from(new Set(ids.filter(id => id !== null && id !== undefined)));
+    if (unique.length === 0) {
+      return [];
+    }
+    // SQLite has a bound-parameter ceiling (historically 999); chunk so a
+    // large id list can't exceed it. Preserves caller order.
+    const CHUNK = 500;
+    const chunks = [];
+    for (let i = 0; i < unique.length; i += CHUNK) {
+      chunks.push(unique.slice(i, i + CHUNK));
+    }
+
+    const found = [];
+    for (const chunk of chunks) {
+      const placeholders = chunk.map(() => '?').join(',');
+      const rows = await this._all(
+        `SELECT * FROM ${this._q(this.table)} WHERE ${this._q('id')} IN (${placeholders})`,
+        chunk,
+      );
+      found.push(...this._mapRows(rows));
+    }
+
+    // Return in the caller's requested order (like individual findById calls
+    // did), and exclude ids that had no match.
+    const byId = new Map(found.map(row => [row.id, row]));
+    return unique.map(id => byId.get(id)).filter(Boolean);
+  }
+
   async findOne (where) {
     const { sql, params } = this._buildWhere(where);
     const { row } = await this._get(`SELECT * FROM ${this._q(this.table)} ${sql} LIMIT 1`, params);

@@ -165,14 +165,20 @@ exports.getPendingVerifications = asyncHandler(async (req, res) => {
     { sort: { createdAt: -1 } },
   );
 
-  const populatedVerifications = [];
-  for (const v of verifications) {
-    const reviewer = await db('users').findById(v.reviewedBy);
-    populatedVerifications.push({
+  // Single batched lookup instead of one findById per row (N+1). Most rows
+  // have reviewedBy === null (unreviewed), so we only query reviewers that
+  // are actually set.
+  const reviewerIds = verifications.map(v => v.reviewedBy).filter(id => id !== null && id !== undefined);
+  const reviewers = await db('users').findByIds(reviewerIds);
+  const reviewerById = new Map(reviewers.map(r => [r.id, r]));
+
+  const populatedVerifications = verifications.map(v => {
+    const reviewer = reviewerById.get(v.reviewedBy);
+    return {
       ...v,
       reviewedBy: reviewer ? { id: reviewer.id, fullName: reviewer.fullName } : null,
-    });
-  }
+    };
+  });
 
   res.json({
     success: true,
