@@ -160,20 +160,22 @@ const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:8000')
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
-        callback(null, true);
-      } else if (
-        origin &&
-        allowedOrigins.some(allowed => origin.startsWith(allowed.replace(/\/$/, '')))
-      ) {
-        callback(null, true);
-      } else {
-        if (process.env.NODE_ENV === 'production') {
-          callback(new Error('CORS not allowed'));
-        } else {
-          callback(null, true);
-        }
+      // Default-deny in every environment. Allow only same-origin (no Origin
+      // header, e.g. curl/server-to-server), an explicit '*' allowlist entry,
+      // or an exact match against the configured origins. The old code
+      // reflected ANY origin in non-production and used a startsWith() suffix
+      // trust, both of which are cross-origin request-smuggling risks.
+      if (!origin) {
+        return callback(null, true);
       }
+      if (allowedOrigins.includes('*')) {
+        return callback(null, true);
+      }
+      const normalized = allowedOrigins.map(o => o.replace(/\/$/, ''));
+      if (normalized.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error('CORS not allowed'));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

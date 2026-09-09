@@ -129,11 +129,17 @@ const errorHandler = (err, req, res, _next) => {
     };
     errorResponse = { statusCode: 413, message: multerMessages[err.code] || 'Upload error: ' + err.code };
   } else {
+    // Unknown/unexpected errors: never echo raw err.message to the client.
+    // err.message may contain SQL text, file paths, or dependency internals
+    // (information disclosure). Log full details server-side (already done at
+    // the top of this handler) and return a generic message. The safe set is a
+    // narrow allowlist of benign user-facing messages authored by our code.
     const safeErrors = ['Only image files', 'Failed to upload', 'No images uploaded', 'CSRF', 'rate limit'];
     const isSafeError = safeErrors.some(k => (err.message || '').toLowerCase().includes(k.toLowerCase()));
+    const message = isSafeError ? err.message : 'Internal server error';
     errorResponse = {
       statusCode: err.statusCode || err.status || 500,
-      message: (process.env.NODE_ENV === 'development' || isSafeError) ? err.message : 'Internal server error',
+      message: process.env.NODE_ENV === 'development' ? message : 'Internal server error',
     };
   }
 
