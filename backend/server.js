@@ -373,9 +373,14 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Session + Passport (for Google OAuth redirect flow)
+const SESSION_SECRET = process.env.SESSION_SECRET || process.env.JWT_SECRET;
+if (process.env.NODE_ENV === 'production' && !SESSION_SECRET) {
+  console.error('FATAL: no SESSION_SECRET/JWT_SECRET set — refusing to start with an insecure session signing key.');
+  process.exit(1);
+}
 app.use(
   session({
-    secret: process.env.JWT_SECRET || 'fallback-session-secret',
+    secret: SESSION_SECRET || 'dev-only-session-secret',
     resave: false,
     saveUninitialized: false,
     cookie: {

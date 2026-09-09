@@ -32,16 +32,19 @@ const app = createTestApp();
 async function registerUser (role = 'buyer', prefix = 'vdoc') {
   const user = {
     ...global.testUtils.generateTestUser(),
-    role,
     email: `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2)}@test.com`,
   };
   const res = await request(app).post('/api/auth/register').send(user);
-  return { token: res.body.data.token, id: res.body.data.user._id, email: user.email };
+  const id = res.body.data.user._id;
+  if (role !== 'buyer') {
+    setRole(id, role);
+  }
+  return { token: res.body.data.token, id, email: user.email };
 }
 
-// Registration only honors 'admin' in NODE_ENV=test (auth.controller forces
-// other roles to 'buyer'), so promote in the DB directly (payout.test.js
-// setRole pattern) when a test needs a non-admin privileged role.
+// Registration always assigns 'buyer' (auth.controller never honors a client
+// role), so promote privileged roles in the DB directly (payout.test.js
+// setRole pattern) when a test needs an admin/moderator.
 const setRole = (userId, role) => {
   const { getDb } = require('../config/database');
   getDb().prepare('UPDATE users SET role = ? WHERE id = ?').run(role, userId);

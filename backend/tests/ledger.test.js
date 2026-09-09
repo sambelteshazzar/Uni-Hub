@@ -196,10 +196,11 @@ describe('GET /api/ledger/balance', () => {
     // Admin marks delivered -> cash settlement writes released entries.
     const admin = {
       ...global.testUtils.generateTestUser(),
-      role: 'admin',
       email: `admin_${Date.now()}_${Math.random().toString(36).slice(2)}@test.com`,
     };
     const adminReg = await request(app).post('/api/auth/register').send(admin);
+    const { db } = require('../utils/db');
+    await db('users').updateById(adminReg.body.data.user._id, { role: 'admin' });
     await request(app)
       .put(`/api/orders/${orderId}/status`)
       .set('Authorization', `Bearer ${adminReg.body.data.token}`)

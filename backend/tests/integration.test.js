@@ -18,7 +18,6 @@ describe('Integration Tests - Critical User Flows', () => {
 
   const makeAdmin = () => ({
     ...global.testUtils.generateTestUser(),
-    role: 'admin',
     email: `admin_${Date.now()}_${Math.random().toString(36).slice(2)}@test.com`,
   });
 
@@ -37,6 +36,11 @@ describe('Integration Tests - Critical User Flows', () => {
     adminToken = adminRes.body.data.token;
     adminId = adminRes.body.data.user._id;
 
+    // Roles are assigned server-side only (registration always creates a
+    // buyer). Elevate the admin in the DB directly, mirroring the seed path.
+    const { db } = require('../utils/db');
+    await db('users').updateById(adminId, { role: 'admin' });
+
     const buyerRes = await request(app)
       .post('/api/auth/register')
       .send(buyer);
@@ -53,7 +57,7 @@ describe('Integration Tests - Critical User Flows', () => {
   });
 
   describe('Flow 1: User Registration & Authentication', () => {
-    it('should register an admin', async () => {
+    it('should register an admin (elevated server-side, not via client role)', async () => {
       const freshAdmin = makeAdmin();
       const res = await request(app)
         .post('/api/auth/register')
@@ -61,10 +65,16 @@ describe('Integration Tests - Critical User Flows', () => {
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.user.role).toBe('admin');
+      // Registration never honors a client-supplied role — everyone starts
+      // as 'buyer'; admin is assigned via a server-side DB elevation below.
+      expect(res.body.data.user.role).toBe('buyer');
+
+      const id = res.body.data.user._id;
+      const { db } = require('../utils/db');
+      await db('users').updateById(id, { role: 'admin' });
 
       adminToken = res.body.data.token;
-      adminId = res.body.data.user._id;
+      adminId = id;
     });
 
     it('should register a buyer', async () => {

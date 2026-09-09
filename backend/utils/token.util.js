@@ -24,7 +24,7 @@ const generateToken = (id) => {
  */
 const decodeToken = (token) => {
   try {
-    return jwt.verify(token, process.env.JWT_SECRET);
+    return jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
   } catch (error) {
     return null;
   }

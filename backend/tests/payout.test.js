@@ -12,11 +12,14 @@ const app = createTestApp();
 async function registerUser (role = 'buyer', prefix = 'po') {
   const user = {
     ...global.testUtils.generateTestUser(),
-    role,
     email: `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2)}@test.com`,
   };
   const res = await request(app).post('/api/auth/register').send(user);
-  return { token: res.body.data.token, id: res.body.data.user._id, email: user.email };
+  const id = res.body.data.user._id;
+  if (role !== 'buyer') {
+    setRole(id, role);
+  }
+  return { token: res.body.data.token, id, email: user.email };
 }
 
 const setRole = (userId, role) => {

@@ -109,7 +109,7 @@ exports.register = asyncHandler(async (req, res) => {
     university,
     level,
     hall,
-    role: process.env.NODE_ENV === 'test' && req.body.role === 'admin' ? 'admin' : 'buyer',
+    role: 'buyer',
     isVerified: 0,
   });
 

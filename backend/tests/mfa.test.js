@@ -12,17 +12,18 @@ const app = createTestApp();
 async function registerUser (role, emailPrefix) {
   const user = {
     ...global.testUtils.generateTestUser(),
-    role: 'buyer', // registration always assigns buyer; test-mode allows admin only
     email: `${emailPrefix}_${Date.now()}_${Math.random().toString(36).slice(2)}@test.com`,
   };
-  if (role === 'admin') {
-    user.role = 'admin';
-  }
   const res = await request(app).post('/api/auth/register').send(user);
   const { getDb } = require('../config/database');
+  const id = res.body.data.user._id;
+  if (role === 'admin') {
+    // Elevate server-side; registration never honors a client-supplied role.
+    getDb().prepare('UPDATE users SET role = ? WHERE id = ?').run('admin', id);
+  }
   return {
     token: res.body.data.token,
-    id: res.body.data.user._id,
+    id,
     setRole (newRole) {
       getDb().prepare('UPDATE users SET role = ? WHERE id = ?').run(newRole, this.id);
     },

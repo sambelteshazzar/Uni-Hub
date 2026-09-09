@@ -21,7 +21,7 @@ describe('Admin API', () => {
     const adminRes = await request(app).post('/api/auth/register').send(adminUser);
     adminToken = adminRes.body.data.token;
     const adminId = adminRes.body.data.user._id || adminRes.body.data.user.id;
-    db('users').updateById(adminId, { role: 'admin' });
+    await db('users').updateById(adminId, { role: 'admin' });
 
     const buyerUser = global.testUtils.generateTestUser();
     buyerUser.email = `buyer_${Date.now()}@example.com`;

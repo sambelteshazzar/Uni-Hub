@@ -22,20 +22,19 @@ async function makeBuyer (suffix = Date.now()) {
 }
 
 async function makeAdmin (suffix = Date.now()) {
-  // In test mode, /api/auth/register honors role: 'admin' (see
-  // auth.controller.js). We still need the user verified so the admin
-  // auth guards don't 401 on unverified accounts.
   const admin = {
     ...global.testUtils.generateTestUser(),
-    role: 'admin',
     email: `coupon_admin_${suffix}@test.com`,
   };
   const res = await request(app).post('/api/auth/register').send(admin);
   if (!res.body?.data?.token) {
     throw new Error('admin register failed: ' + JSON.stringify(res.body));
   }
-  getDb().prepare('UPDATE users SET isVerified = 1 WHERE id = ?').run(res.body.data.user._id);
-  return { token: res.body.data.token, id: res.body.data.user._id };
+  const id = res.body.data.user._id;
+  getDb().prepare('UPDATE users SET isVerified = 1 WHERE id = ?').run(id);
+  // Elevate to admin server-side (registration never honors a client role).
+  getDb().prepare("UPDATE users SET role = 'admin' WHERE id = ?").run(id);
+  return { token: res.body.data.token, id };
 }
 
 describe('Coupon API', () => {

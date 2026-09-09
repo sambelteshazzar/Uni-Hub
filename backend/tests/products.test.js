@@ -11,7 +11,7 @@ describe('Products API', () => {
   let creatorId;
   let testProductId;
   const testUser = global.testUtils.generateTestUser();
-  const adminUser = { ...global.testUtils.generateTestUser(), role: 'admin', email: `admin_${Date.now()}_${Math.random().toString(36).slice(2)}@test.com` };
+  const adminUser = { ...global.testUtils.generateTestUser(), email: `admin_${Date.now()}_${Math.random().toString(36).slice(2)}@test.com` };
 
   beforeEach(async () => {
     const adminRes = await request(app)
@@ -20,6 +20,8 @@ describe('Products API', () => {
 
     authToken = adminRes.body.data.token;
     creatorId = adminRes.body.data.user._id;
+    const { db } = require('../utils/db');
+    await db('users').updateById(creatorId, { role: 'admin' });
   });
 
   describe('POST /api/products', () => {

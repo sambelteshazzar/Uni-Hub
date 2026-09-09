@@ -290,11 +290,12 @@ describe('Orders API — inventory state machine', () => {
     beforeEach(async () => {
       const admin = {
         ...global.testUtils.generateTestUser(),
-        role: 'admin',
         email: `admin_${Date.now()}_${Math.random().toString(36).slice(2)}@test.com`,
       };
       const adminRes = await request(app).post('/api/auth/register').send(admin);
       adminToken = adminRes.body.data.token;
+      const { db } = require('../utils/db');
+      await db('users').updateById(adminRes.body.data.user._id, { role: 'admin' });
 
       const res = await placeOrder(buyerToken, productId);
       orderId = res.body.data.id || res.body.data._id;
@@ -391,11 +392,12 @@ describe('Orders API — inventory state machine', () => {
     beforeEach(async () => {
       const admin = {
         ...global.testUtils.generateTestUser(),
-        role: 'admin',
         email: `admin_${Date.now()}_${Math.random().toString(36).slice(2)}@test.com`,
       };
       const adminRes = await request(app).post('/api/auth/register').send(admin);
       adminToken = adminRes.body.data.token;
+      const { db } = require('../utils/db');
+      await db('users').updateById(adminRes.body.data.user._id, { role: 'admin' });
 
       const res = await placeOrder(buyerToken, productId);
       orderId = res.body.data.id || res.body.data._id;

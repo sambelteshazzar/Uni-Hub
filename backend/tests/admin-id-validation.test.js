@@ -43,7 +43,7 @@ describe('Admin route :id validation (validateObjectId)', () => {
     const adminRes = await request(app).post('/api/auth/register').send(adminUser);
     adminToken = adminRes.body.data.token;
     const adminId = adminRes.body.data.user._id || adminRes.body.data.user.id;
-    db('users').updateById(adminId, { role: 'admin' });
+    await db('users').updateById(adminId, { role: 'admin' });
     csrfToken = generateCsrfToken();
   });
 

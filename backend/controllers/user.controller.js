@@ -60,6 +60,22 @@ exports.getUser = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'User not found');
   }
 
+  // IDOR guard: non-admin users may only fetch their own full profile.
+  // Other users receive a minimal, non-sensitive public projection so a
+  // buyer cannot enumerate email/phone/studentId across the user base.
+  if (req.user.id !== user.id && req.user.role !== 'admin') {
+    return res.json({
+      success: true,
+      data: {
+        id: user.id,
+        fullName: user.fullName,
+        avatar: user.avatar,
+        university: user.university,
+        rating: user.rating,
+      },
+    });
+  }
+
   res.json({
     success: true,
     data: getPublicProfile(user),

@@ -59,6 +59,13 @@ exports.sendMessage = asyncHandler(async (req, res) => {
     if (!conversation) {
       throw new ApiError(404, 'Conversation not found');
     }
+    const member = await db('conversation_participants').findOne({
+      conversationId,
+      userId: req.user.id,
+    });
+    if (!member) {
+      throw new ApiError(403, 'Not authorized to send to this conversation');
+    }
   } else {
     conversation = await findOrCreateConversation(req.user.id, receiverId, productId);
   }
