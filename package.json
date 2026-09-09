@@ -31,12 +31,15 @@
     "eslint-config-prettier": "^10.1.8",
     "http-server": "^14.1.1",
     "prettier": "^3.1.1",
-    "vercel": "^54.9.1",
+    "vercel": "^59.13.1",
     "vite": "^8.0.10"
   },
   "dependencies": {
     "@sentry/browser": "^10.70.0",
     "@sentry/vite-plugin": "^5.4.0"
+  },
+  "overrides": {
+    "tar": "7.5.22"
   },
   "directories": {
     "doc": "docs"
