@@ -583,9 +583,6 @@
       submitBtn.textContent = 'Sending...';
 
       try {
-        const baseURL =
-          (typeof window !== 'undefined' && window.API_URL) ||
-          'https://uni-hub-bnxi.onrender.com/api';
         if (typeof api !== 'undefined' && api.isStaticDeploy) {
           showToast(
             'Password reset is not available in offline mode. Please log in with your existing credentials.',
@@ -595,12 +592,9 @@
             Pages.renderLogin();
           }, 2000);
         } else {
-          const response = await fetch(baseURL + '/auth/forgot-password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email }),
-          });
-          const result = await response.json();
+          // Route through js/utils/api.js so the CSRF token is attached (the
+          // backend csrfProtection middleware requires it on this mutation).
+          const result = await api.auth.forgotPassword(email);
           if (result.success) {
             showToast(result.message, 'success');
             if (result.resetToken) {
@@ -699,9 +693,6 @@
       submitBtn.textContent = 'Resetting...';
 
       try {
-        const baseURL =
-          (typeof window !== 'undefined' && window.API_URL) ||
-          'https://uni-hub-bnxi.onrender.com/api';
         if (typeof api !== 'undefined' && api.isStaticDeploy) {
           showToast(
             'Password reset is not available in offline mode. Please log in with your existing credentials.',
@@ -711,12 +702,9 @@
             Pages.renderLogin();
           }, 2000);
         } else {
-          const response = await fetch(baseURL + '/auth/reset-password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: token, newPassword: newPassword }),
-          });
-          const result = await response.json();
+          // Route through js/utils/api.js so the CSRF token is attached (the
+          // backend csrfProtection middleware requires it on this mutation).
+          const result = await api.auth.resetPassword(token, newPassword);
           if (result.success) {
             showToast(result.message, 'success');
             setTimeout(function () {

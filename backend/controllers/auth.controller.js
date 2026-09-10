@@ -463,7 +463,7 @@ exports.resetPassword = asyncHandler(async (req, res) => {
 
   let decoded;
   try {
-    decoded = jwt.verify(token, process.env.JWT_SECRET);
+    decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
   } catch (error) {
     throw new ApiError(401, 'Invalid or expired reset token');
   }

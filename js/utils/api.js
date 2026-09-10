@@ -493,6 +493,9 @@ class API {
       this.put('/auth/change-password', { currentPassword, newPassword }),
     listUniversities: () => this.get('/auth/universities'),
     setUniversity: university => this.post('/auth/me/university', { university }),
+    forgotPassword: email => this.post('/auth/forgot-password', { email }),
+    resetPassword: (token, newPassword) =>
+      this.post('/auth/reset-password', { token, newPassword }),
   };
 
   /**
