@@ -3,7 +3,7 @@ import { resolve } from 'path';
 import { cpSync, readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
 import { buildSync } from 'esbuild';
 
-const appScripts = ['<script type="module" src="/js/app-init.js?v=18"></script>'];
+const appScripts = ['<script type="module" src="/js/app-init.js?v=19"></script>'];
 
 // The deployed artifact is dist/ served statically — the browser loads
 // dist/js/app-init.js directly and resolves each ES module as-is (no
