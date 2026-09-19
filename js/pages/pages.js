@@ -1666,22 +1666,28 @@ ${recentlyViewed
    * Direct onclick callers (cards, messaging "view product" button)
    * invoke this method synchronously. We want exactly one render per
    * user click, so we adopt this pattern:
-   *   1. If the URL hash is not yet on this product, set the hash and
-   *      return immediately. The hashchange event then fires the
-   *      router, which calls this method again to do the actual render.
-   *   2. If the hash is already on this product (router-initiated call),
-   *      render the page in place.
-   * This avoids a double render (click → set hash → hash → render) AND
-   * keeps the URL predictable so refresh/back/forward work correctly.
+   *   1. If this route is not the router's active route yet, hand off
+   *      to the router (goToHash works in both history and hash mode)
+   *      and return immediately. The router dispatches back to this
+   *      method to do the actual render.
+   *   2. If the route is already active (router-initiated call), render
+   *      the page in place.
+   * This avoids a double render (click -> navigate -> render) AND keeps
+   * the URL predictable so refresh/back/forward work correctly.
+   *
+   * Guard via router.isActive(), NOT window.location.hash: in history
+   * mode handleUrlChange() clears the hash with replaceState() before
+   * the handler runs, so a hash check never matches. Re-assigning the
+   * hash from inside the handler fires popstate synchronously and
+   * loops forever (Maximum call stack size exceeded).
    */
   static async renderProductDetail(productId) {
     const desiredPath = `/product/${productId}`;
-    const currentPath = (window.location.hash || '#').replace(/^#/, '').split('?')[0];
-    if (currentPath !== desiredPath) {
-      // Setting the hash fires hashchange → router picks it up and
-      // dispatches to this method again. Return now to avoid rendering
-      // twice for the same click.
-      window.location.hash = '#' + desiredPath;
+    if (window.router && !router.isActive(desiredPath)) {
+      // goToHash() dispatches through the router, which calls this
+      // method again (via the '/product/:id' route) to render. Return
+      // now to avoid rendering twice for the same click.
+      router.goToHash(desiredPath);
       return;
     }
 

@@ -179,6 +179,28 @@ class Router {
   }
 
   /**
+   * True when `path` is the route the router is currently handling.
+   *
+   * navigate() sets currentRoute BEFORE dispatching to the handler, so
+   * this is reliable even mid-dispatch. Page renderers that are also
+   * invoked directly by onclick handlers use this to distinguish
+   * "router-initiated call, render now" from "direct call, hand off to
+   * the router".
+   *
+   * Never read window.location.hash for this in history mode: the
+   * hashchange handler erases the hash via replaceState() before the
+   * handler runs, so a hash-based guard never matches and re-triggers
+   * a synchronous popstate loop (stack overflow).
+   */
+  isActive(path) {
+    if (this._mode === 'history') {
+      return this.currentRoute === path;
+    }
+    const currentPath = (window.location.hash || '#').replace(/^#/, '').split('?')[0];
+    return currentPath === path;
+  }
+
+  /**
    * Navigate to a route.
    *
    * `path` is the same string in both modes (e.g. '/browse'). It is
