@@ -255,7 +255,7 @@ const AuthPageMethods = {
     <li><strong>How long does review take?</strong> 24-48 hours, often faster.</li>
     <li><strong>Where do I check status?</strong> <a href="#/verification-status" data-action="status">Check your verification status</a> anytime.</li>
     <li><strong>Wrong university?</strong> <a href="#" data-action="change-uni" onclick="event.preventDefault();Pages.openChangeUniversityOverlay();">Change your university</a> at any time.</li>
-    <li><strong>Didn't get the email?</strong> Check spam, or contact <a href="mailto:unihubsupport@gmail.com">unihubsupport@gmail.com</a></li>
+    <li><strong>Didn't get the email?</strong> Check spam, or contact <a href="mailto:support@jertscart.com">support@jertscart.com</a></li>
     </ul>
     </div>
     </div>

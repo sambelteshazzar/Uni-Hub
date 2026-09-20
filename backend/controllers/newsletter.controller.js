@@ -13,7 +13,7 @@ try {
 } catch (err) {
   console.warn('Brevo not initialized:', err.message);
 }
-const FROM_EMAIL = process.env.NEWSLETTER_FROM_EMAIL || 'noreply@unihub.local';
+const FROM_EMAIL = process.env.NEWSLETTER_FROM_EMAIL || 'noreply@jertscart.com';
 const FROM_NAME = 'JERTS CART';
 const FRONTEND_URL = process.env.FRONTEND_URL?.split(',')[0]?.trim() || 'http://localhost:8000';
 

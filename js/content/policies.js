@@ -59,7 +59,7 @@ export const POLICIES = {
 <p><strong>Access & portability</strong> — download a machine-readable copy of your data at any time.<br/>
 <strong>Rectification</strong> — correct your profile details.<br/>
 <strong>Erasure</strong> — delete your account; we anonymise your personal information immediately.</p>
-<p>You may also contact us at <a href="mailto:unihubsupport@gmail.com">unihubsupport@gmail.com</a> for any request, and you have the right to lodge a complaint with the Data Protection Commission of Ghana.</p>`,
+<p>You may also contact us at <a href="mailto:support@jertscart.com">support@jertscart.com</a> for any request, and you have the right to lodge a complaint with the Data Protection Commission of Ghana.</p>`,
       },
       {
         heading: '8. Security',
@@ -75,7 +75,7 @@ export const POLICIES = {
       },
       {
         heading: '11. Contact',
-        body: `<p>Questions or requests: <a href="mailto:unihubsupport@gmail.com">unihubsupport@gmail.com</a>.</p>
+        body: `<p>Questions or requests: <a href="mailto:support@jertscart.com">support@jertscart.com</a>.</p>
 <p>You may escalate unresolved concerns to the Data Protection Commission of Ghana.</p>`,
       },
     ];
@@ -90,7 +90,7 @@ export const POLICIES = {
       {
         heading: '2. Accounts & Verification',
         body: `<p>Accounts are for verified university students aged 18 or older. You must provide accurate details and may be asked to verify student status. Providing false information may lead to suspension.</p>
-<p>You are responsible for your account; tell us promptly at <a href="mailto:unihubsupport@gmail.com">unihubsupport@gmail.com</a> if you suspect unauthorised access. You can delete your account at any time from Dashboard → Settings.</p>`,
+<p>You are responsible for your account; tell us promptly at <a href="mailto:support@jertscart.com">support@jertscart.com</a> if you suspect unauthorised access. You can delete your account at any time from Dashboard → Settings.</p>`,
       },
       {
         heading: '3. The Marketplace & Our Role',

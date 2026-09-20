@@ -211,7 +211,7 @@ class FooterUtils {
       contactLink.addEventListener('click', e => {
         e.preventDefault();
         this.showNotification(
-          'Contact page coming soon! For now, email us at unihubsupport@gmail.com',
+          'Contact page coming soon! For now, email us at support@jertscart.com',
           'info'
         );
       });
