@@ -15,6 +15,8 @@ services:
       # PORT is injected automatically by Render — do not set it here.
       - key: FRONTEND_URL
         sync: false
+      - key: APP_PUBLIC_URL
+        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRE
@@ -50,6 +52,10 @@ services:
       - key: EMAIL_PASS
         sync: false
       - key: EMAIL_FROM
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: NEWSLETTER_FROM_EMAIL
         sync: false
       - key: GOOGLE_CLIENT_ID
         sync: false

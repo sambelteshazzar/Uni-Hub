@@ -95,7 +95,7 @@ class ReviewManager {
       }
 
       const response = await this._fetchWithCsrf(
-        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews`,
+        `${window.API_URL || 'https://api.jertscart.com/api'}/reviews`,
         {
           method: 'POST',
           body: JSON.stringify({ sellerId, rating, comment, productId, orderId, detailedRatings }),
@@ -143,7 +143,7 @@ class ReviewManager {
         params.append('productId', productId);
       }
       const response = await this._fetchWithCsrf(
-        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/seller/${sellerId}?${params}`
+        `${window.API_URL || 'https://api.jertscart.com/api'}/reviews/seller/${sellerId}?${params}`
       );
       const result = await response.json();
       if (!response.ok) {
@@ -180,7 +180,7 @@ class ReviewManager {
         params.append('productId', productId);
       }
       const response = await this._fetchWithCsrf(
-        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/seller/${sellerId}/summary?${params}`
+        `${window.API_URL || 'https://api.jertscart.com/api'}/reviews/seller/${sellerId}/summary?${params}`
       );
       const result = await response.json();
       if (!response.ok) {
@@ -213,7 +213,7 @@ class ReviewManager {
       const { page = 1, limit = 10 } = options;
       const params = new URLSearchParams({ page, limit });
       const response = await this._fetchWithCsrf(
-        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/my-reviews?${params}`
+        `${window.API_URL || 'https://api.jertscart.com/api'}/reviews/my-reviews?${params}`
       );
       const result = await response.json();
       if (!response.ok) {
@@ -235,7 +235,7 @@ class ReviewManager {
       }
 
       const response = await this._fetchWithCsrf(
-        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/${reviewId}`,
+        `${window.API_URL || 'https://api.jertscart.com/api'}/reviews/${reviewId}`,
         {
           method: 'PUT',
           body: JSON.stringify(data),
@@ -261,7 +261,7 @@ class ReviewManager {
       }
 
       const response = await this._fetchWithCsrf(
-        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/${reviewId}`,
+        `${window.API_URL || 'https://api.jertscart.com/api'}/reviews/${reviewId}`,
         { method: 'DELETE' }
       );
       const result = await response.json();
@@ -284,7 +284,7 @@ class ReviewManager {
       }
 
       const response = await this._fetchWithCsrf(
-        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/${reviewId}/helpful`,
+        `${window.API_URL || 'https://api.jertscart.com/api'}/reviews/${reviewId}/helpful`,
         { method: 'POST' }
       );
       const result = await response.json();
@@ -306,7 +306,7 @@ class ReviewManager {
       }
 
       const response = await this._fetchWithCsrf(
-        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/${reviewId}/report`,
+        `${window.API_URL || 'https://api.jertscart.com/api'}/reviews/${reviewId}/report`,
         { method: 'POST' }
       );
       const result = await response.json();
@@ -329,7 +329,7 @@ class ReviewManager {
       }
 
       const response = await this._fetchWithCsrf(
-        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/reviews/${reviewId}/respond`,
+        `${window.API_URL || 'https://api.jertscart.com/api'}/reviews/${reviewId}/respond`,
         {
           method: 'POST',
           body: JSON.stringify({ comment }),

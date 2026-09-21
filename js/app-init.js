@@ -12,9 +12,9 @@ if (typeof window !== 'undefined' && !window.API_URL) {
     window.location.hostname !== '127.0.0.1' &&
     window.location.protocol !== 'file:'
   ) {
-    window.API_URL = 'https://uni-hub-bnxi.onrender.com/api';
+    window.API_URL = 'https://api.jertscart.com/api';
   } else {
-    window.API_URL = window.API_URL || 'https://uni-hub-bnxi.onrender.com/api';
+    window.API_URL = window.API_URL || 'https://api.jertscart.com/api';
   }
 }
 

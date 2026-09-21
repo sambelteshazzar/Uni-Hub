@@ -15,7 +15,7 @@ class API {
       baseURL ||
       (typeof window !== 'undefined' && window.API_URL) ||
       envAPI ||
-      'https://uni-hub-bnxi.onrender.com/api';
+      'https://api.jertscart.com/api';
     this._isStaticDeploy = false;
     this._backendProbed = false;
     this._backendReachable = null;

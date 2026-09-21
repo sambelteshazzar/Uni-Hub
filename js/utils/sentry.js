@@ -89,7 +89,11 @@ export async function initSentry() {
         }),
       ],
       tracesSampleRate: _isDev ? 1.0 : 0.1,
-      tracePropagationTargets: ['localhost', /^https:\/\/uni-hub-bnxi\.onrender\.com/],
+      tracePropagationTargets: [
+        'localhost',
+        /^https:\/\/api\.jertscart\.com/,
+        /^https:\/\/uni-hub-bnxi\.onrender\.com/,
+      ],
       replaysSessionSampleRate: _isDev ? 1.0 : 0.1,
       replaysOnErrorSampleRate: 1.0,
       debug: _isDev,

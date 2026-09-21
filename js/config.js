@@ -10,9 +10,7 @@ window.PAYSTACK_PUBLIC_KEY = 'pk_test_xxxxxxxxxxxx';
 if (typeof window.API_URL === 'undefined') {
   const isLocalhost =
     window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  window.API_URL = isLocalhost
-    ? 'http://localhost:5000/api'
-    : 'https://uni-hub-bnxi.onrender.com/api';
+  window.API_URL = isLocalhost ? 'http://localhost:5000/api' : 'https://api.jertscart.com/api';
 }
 
 // Google OAuth Client ID - Replace with your actual client ID from Google Cloud Console

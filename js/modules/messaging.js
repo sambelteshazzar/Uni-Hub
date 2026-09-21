@@ -100,7 +100,7 @@ class MessageManager {
         }
         // If CDN fails, try loading from backend
         const backendScript = document.createElement('script');
-        backendScript.src = `${window.API_URL?.replace('/api', '') || 'https://uni-hub-bnxi.onrender.com'}/socket.io/socket.io.js`;
+        backendScript.src = `${window.API_URL?.replace('/api', '') || 'https://api.jertscart.com'}/socket.io/socket.io.js`;
         backendScript.onload = resolve;
         backendScript.onerror = () => {
           resolve();
@@ -141,10 +141,7 @@ class MessageManager {
     }
 
     try {
-      const serverUrl = (window.API_URL || 'https://uni-hub-bnxi.onrender.com/api').replace(
-        '/api',
-        ''
-      );
+      const serverUrl = (window.API_URL || 'https://api.jertscart.com/api').replace('/api', '');
 
       this.socket = io(serverUrl, {
         auth: { token },
@@ -281,7 +278,7 @@ class MessageManager {
       }
 
       const response = await this._fetchWithCsrf(
-        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages`,
+        `${window.API_URL || 'https://api.jertscart.com/api'}/messages`,
         {
           method: 'POST',
           body: JSON.stringify(data),
@@ -393,7 +390,7 @@ class MessageManager {
       const params = new URLSearchParams({ page, limit, status });
 
       const response = await this._fetchWithCsrf(
-        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/conversations?${params}`
+        `${window.API_URL || 'https://api.jertscart.com/api'}/messages/conversations?${params}`
       );
 
       const result = await response.json();
@@ -424,7 +421,7 @@ class MessageManager {
       }
 
       const response = await this._fetchWithCsrf(
-        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/conversation/${conversationId}`
+        `${window.API_URL || 'https://api.jertscart.com/api'}/messages/conversation/${conversationId}`
       );
 
       const result = await response.json();
@@ -459,7 +456,7 @@ class MessageManager {
       const params = new URLSearchParams({ page, limit });
 
       const response = await this._fetchWithCsrf(
-        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/conversation/${conversationId}/messages?${params}`
+        `${window.API_URL || 'https://api.jertscart.com/api'}/messages/conversation/${conversationId}/messages?${params}`
       );
 
       const result = await response.json();
@@ -493,7 +490,7 @@ class MessageManager {
       }
 
       const response = await this._fetchWithCsrf(
-        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/unread-count`
+        `${window.API_URL || 'https://api.jertscart.com/api'}/messages/unread-count`
       );
 
       const result = await response.json();
@@ -520,7 +517,7 @@ class MessageManager {
   async deleteMessage(messageId) {
     try {
       const response = await this._fetchWithCsrf(
-        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/${messageId}`,
+        `${window.API_URL || 'https://api.jertscart.com/api'}/messages/${messageId}`,
         {
           method: 'DELETE',
         }
@@ -553,7 +550,7 @@ class MessageManager {
       }
 
       const response = await this._fetchWithCsrf(
-        `${window.API_URL || 'https://uni-hub-bnxi.onrender.com/api'}/messages/search?${params}`
+        `${window.API_URL || 'https://api.jertscart.com/api'}/messages/search?${params}`
       );
 
       const result = await response.json();

@@ -34,8 +34,9 @@ async function sendEmail (to, subject, html) {
   }
 
   try {
+    const fromEmail = process.env.EMAIL_FROM || process.env.EMAIL_USER;
     const info = await mailTransporter.sendMail({
-      from: `"JERTS CART" <${process.env.EMAIL_USER}>`,
+      from: `"JERTS CART" <${fromEmail}>`,
       to,
       subject,
       html,
