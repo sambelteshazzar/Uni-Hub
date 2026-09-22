@@ -739,6 +739,19 @@ class Pages {
       Pages._addToCartHandlerInstalled = true;
     }
 
+    // Document-level handler for the newsletter "Create campaign" button.
+    // Installed once; survives any DOM re-render inside renderAdminNewsletter.
+    if (!Pages._newsletterCampaignHandlerInstalled) {
+      document.addEventListener('click', e => {
+        const btn = e.target.closest('[data-adm-action="new-campaign"]');
+        if (btn && typeof Pages.showNewsletterCampaignModal === 'function') {
+          e.preventDefault();
+          Pages.showNewsletterCampaignModal();
+        }
+      });
+      Pages._newsletterCampaignHandlerInstalled = true;
+    }
+
     console.info('✓ All routes registered successfully');
   }
 
