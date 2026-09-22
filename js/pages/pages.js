@@ -8482,7 +8482,7 @@ font-size: 0.8rem;
         <div class="modal" style="background: white; border-radius: 12px; width: 100%; max-width: 700px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
           <div class="modal-header" style="padding: 1.5rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
             <h2 style="font-size: 1.25rem; font-weight: 600;">Create Email Campaign</h2>
-            <button class="btn btn-ghost" onclick="Pages.closeNewsletterCampaignModal()" style="padding: 0.5rem;">${Icons.close || '×'}</button>
+            <button class="btn btn-ghost" id="nl-close-modal-btn" style="padding: 0.5rem;">${Icons.close || '×'}</button>
           </div>
           <div class="modal-body" style="padding: 1.5rem;">
             <div style="margin-bottom: 1rem;">
@@ -8501,8 +8501,8 @@ font-size: 0.8rem;
             </div>
           </div>
           <div class="modal-footer" style="padding: 1.5rem; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 1rem;">
-            <button class="btn btn-ghost" onclick="Pages.closeNewsletterCampaignModal()">Cancel</button>
-            <button class="btn btn-primary" onclick="Pages.sendNewsletterCampaign()">Send Campaign</button>
+            <button class="btn btn-ghost" id="nl-cancel-btn">Cancel</button>
+            <button class="btn btn-primary" id="nl-send-btn">Send Campaign</button>
           </div>
         </div>
       </div>
@@ -8519,6 +8519,16 @@ font-size: 0.8rem;
       document.getElementById('campaign-test-email').style.display = e.target.checked
         ? 'block'
         : 'none';
+    });
+
+    document.getElementById('nl-close-modal-btn').addEventListener('click', () => {
+      Pages.closeNewsletterCampaignModal();
+    });
+    document.getElementById('nl-cancel-btn').addEventListener('click', () => {
+      Pages.closeNewsletterCampaignModal();
+    });
+    document.getElementById('nl-send-btn').addEventListener('click', () => {
+      Pages.sendNewsletterCampaign();
     });
   }
 
