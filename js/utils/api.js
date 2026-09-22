@@ -30,10 +30,13 @@ class API {
     } catch (e) {
       this._apiOrigin = this.baseURL.replace(/\/api\/?$/, '').replace(/\/$/, '');
     }
+    this._reprobeTimer = null;
     if (typeof window !== 'undefined' && !this._isStaticDeploy) {
       this._probeBackend();
     }
-    this.timeout = 30000;
+    // 45s: the first real request can race a free-tier cold start, where the
+    // load balancer holds the request until the instance finishes booting.
+    this.timeout = 45000;
     // In-memory GET cache. Cuts the double-fetch between page renderers and
     // the admin managers (which both hit e.g. /admin/products) and dedupes
     // repeated reads within a short window. Bounded + TTL-gated, and cleared
@@ -58,8 +61,14 @@ class API {
   }
 
   _probeBackend(attempt = 1) {
-    const maxAttempts = 3;
-    const timeoutMs = attempt === 1 ? 8000 : 10000;
+    const maxAttempts = 4;
+    // The first attempt gets a long budget: on a sleeping free-tier instance
+    // this very request triggers the cold start and is held by the load
+    // balancer until the instance boots (Render can take 30-90s). It is also
+    // what warms the instance for subsequent calls. Later attempts are cheap
+    // follow-ups in case the first was a transient network blip.
+    const timeoutMs = attempt === 1 ? 60000 : 10000;
+    const wasUnreachable = this._backendReachable === false;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
     fetch(this._csrfUrl(), {
@@ -70,6 +79,17 @@ class API {
         clearTimeout(timeout);
         this._backendReachable = res.ok;
         this._backendProbed = true;
+        if (res.ok) {
+          // Recover also when a data layer already failed during a slow cold
+          // start (e.g. the products fetch timed out before this probe did) —
+          // the page would otherwise keep showing static fallback data.
+          if (wasUnreachable || window._backendAvailable === false) {
+            this._handleBackendRecovered();
+          }
+          this._clearReprobeTimer();
+        } else {
+          this._scheduleReprobe();
+        }
       })
       .catch(() => {
         clearTimeout(timeout);
@@ -78,8 +98,49 @@ class API {
         } else {
           this._backendReachable = false;
           this._backendProbed = true;
+          this._scheduleReprobe();
         }
       });
+  }
+
+  _clearReprobeTimer() {
+    if (this._reprobeTimer) {
+      clearTimeout(this._reprobeTimer);
+      this._reprobeTimer = null;
+    }
+  }
+
+  /**
+   * While the backend is unreachable, re-run a full probe cycle every 20s so
+   * the app recovers automatically once a cold start (or outage) ends — no
+   * manual reload needed.
+   */
+  _scheduleReprobe() {
+    if (this._reprobeTimer) {
+      return;
+    }
+    this._reprobeTimer = setTimeout(() => {
+      this._reprobeTimer = null;
+      if (this._backendReachable === false) {
+        this._probeBackend();
+      }
+    }, 20000);
+  }
+
+  _handleBackendRecovered() {
+    // A recovery means the session may be an offline/demo session and the
+    // page may be showing static fallback data. The cleanest correct state
+    // is a fresh load: re-fetch sessions, product data, and CSRF from the
+    // now-warm backend.
+    try {
+      const toast = window.toastManager;
+      if (toast && typeof toast.info === 'function') {
+        toast.info('Backend reconnected — refreshing to load live data…', 'Back online', 5000);
+      }
+    } catch (e) {
+      /* toast is cosmetic */
+    }
+    setTimeout(() => window.location.reload(), 2500);
   }
 
   async fetchCsrfToken() {
