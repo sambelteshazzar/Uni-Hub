@@ -1,6 +1,38 @@
 const nodemailer = require('nodemailer');
+const brevo = require('@getbrevo/brevo');
 
 let transporter = null;
+let brevoApi = null;
+let brevoInitTried = false;
+
+// Brevo transactional API — preferred when BREVO_API_KEY is set. The
+// newsletter already uses this key; transactional mail (approval links,
+// password reset, order updates) previously only looked at EMAIL_* SMTP
+// vars, so a Brevo-only deploy reported "email service not configured".
+function getBrevoApi () {
+  if (brevoInitTried) {
+    return brevoApi;
+  }
+  brevoInitTried = true;
+  try {
+    if (process.env.BREVO_API_KEY) {
+      const api = new brevo.TransactionalEmailsApi();
+      api.authentications.apiKey.apiKey = process.env.BREVO_API_KEY;
+      brevoApi = api;
+    }
+  } catch (err) {
+    console.warn('Brevo not initialized:', err.message);
+  }
+  return brevoApi;
+}
+
+function getFromAddress () {
+  const email =
+    process.env.EMAIL_FROM ||
+    process.env.NEWSLETTER_FROM_EMAIL ||
+    'noreply@jertscart.com';
+  return { email, name: 'JERTS CART' };
+}
 
 function getTransporter () {
   if (transporter) {
@@ -26,17 +58,37 @@ function getTransporter () {
 }
 
 async function sendEmail (to, subject, html) {
+  const from = getFromAddress();
+
+  // Prefer Brevo API when configured; fall back to SMTP.
+  const api = getBrevoApi();
+  if (api) {
+    try {
+      await api.sendTransacEmail({
+        sender: { email: from.email, name: from.name },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+      });
+      return { success: true };
+    } catch (error) {
+      console.error('Brevo send error:', error.message);
+      return { success: false, error: error.message };
+    }
+  }
+
   const mailTransporter = getTransporter();
 
   if (!mailTransporter) {
-    console.warn('Email not configured — skipping send. Configure EMAIL_HOST, EMAIL_USER, EMAIL_PASS in .env');
+    console.warn(
+      'Email not configured — skipping send. Set BREVO_API_KEY or EMAIL_HOST/EMAIL_USER/EMAIL_PASS in .env'
+    );
     return { success: false, error: 'Email service not configured' };
   }
 
   try {
-    const fromEmail = process.env.EMAIL_FROM || process.env.EMAIL_USER;
     const info = await mailTransporter.sendMail({
-      from: `"JERTS CART" <${fromEmail}>`,
+      from: `"JERTS CART" <${from.email}>`,
       to,
       subject,
       html,
@@ -214,11 +266,12 @@ async function sendNewOrderEmail (email, order) {
 }
 
 /**
- * Whether an SMTP transport is configured (EMAIL_HOST/USER/PASS present).
- * Used by the auth layer to decide if email MFA can actually deliver.
+ * Whether a transport is configured: Brevo API key or SMTP
+ * (EMAIL_HOST/USER/PASS). Used by auth MFA and the verification
+ * approval flow to decide if mail can actually deliver.
  */
 function isEmailConfigured () {
-  return !!getTransporter();
+  return !!(getBrevoApi() || getTransporter());
 }
 
 // HTML-escape interpolated values to defuse any HTML in user-controlled

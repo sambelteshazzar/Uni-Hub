@@ -222,7 +222,7 @@ exports.login = asyncHandler(async (req, res) => {
   // directly, with a loud warning on every use.
   // - test env keeps MFA ON regardless of mail config (suites assert
   //   the challenge flow)
-  // - configuring EMAIL_* re-enables MFA automatically, no code change
+  // - configuring BREVO_API_KEY or EMAIL_* re-enables MFA automatically
   // TODO: security review — replace email OTP for privileged accounts with
   // TOTP (authenticator app) so no mailbox is needed at all.
   if (['admin', 'moderator'].includes(mappedUser.role)) {
@@ -230,7 +230,7 @@ exports.login = asyncHandler(async (req, res) => {
     if (mfaBypassed) {
       console.warn(
         `[SECURITY] MFA bypassed for "${mappedUser.email}" — no mail transport configured. ` +
-        'Configure EMAIL_* to enforce email verification for privileged logins.',
+        'Configure BREVO_API_KEY or EMAIL_* to enforce email verification for privileged logins.',
       );
       await logActivity('login', mappedUser, { email: mappedUser.email, mfaBypassed: true }, 'warning', req);
     } else {
