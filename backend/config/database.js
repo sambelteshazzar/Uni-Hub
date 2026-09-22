@@ -337,7 +337,7 @@ CREATE TABLE IF NOT EXISTS search_history (
 
 CREATE TABLE IF NOT EXISTS activity_logs (
   id TEXT PRIMARY KEY,
-  user TEXT REFERENCES users(id),
+  user TEXT,
   userEmail TEXT,
   userName TEXT,
   userRole TEXT CHECK(userRole IN ('buyer','admin')),
@@ -1009,7 +1009,7 @@ async function runTursoMigrations () {
       await tursoClient.execute('ALTER TABLE activity_logs RENAME TO activity_logs_old');
       await tursoClient.execute(`CREATE TABLE activity_logs (
   id TEXT PRIMARY KEY,
-  user TEXT REFERENCES users(id),
+  user TEXT,
   userEmail TEXT,
   userName TEXT,
   userRole TEXT CHECK(userRole IN (${USER_ROLES_SQL})),
@@ -1355,7 +1355,7 @@ function connectLocal () {
       db.exec('ALTER TABLE activity_logs RENAME TO activity_logs_old');
       db.exec(`CREATE TABLE activity_logs (
         id TEXT PRIMARY KEY,
-        user TEXT REFERENCES users(id),
+        user TEXT,
         userEmail TEXT,
         userName TEXT,
         userRole TEXT CHECK(userRole IN (${USER_ROLES_SQL})),
