@@ -109,6 +109,18 @@ class BrowsePage {
     }
     productsManager.filter({ gadgetType: this.state.selectedGadgetType });
 
+    // Condition and price filters have NO corresponding URL params, so they
+    // cannot be restored from the URL. productsManager and BrowsePage are
+    // singletons — stale values from a prior visit (e.g. a condition or
+    // price-range the user applied before navigating away) would otherwise
+    // persist here and be sent to the backend on every render, potentially
+    // matching zero products. Reset them unconditionally so each render
+    // starts from a clean slate, mirroring what clearFilters() does.
+    productsManager.currentFilters.condition = null;
+    this.state.selectedConditions = [];
+    productsManager.currentFilters.priceRange = { min: 0, max: Infinity };
+    this.state.priceRange = { min: 0, max: Infinity };
+
     // Re-apply after explicit filter resets so filteredProducts stays in sync.
     productsManager.applyFilters();
 
