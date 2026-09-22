@@ -34,6 +34,12 @@ const ACTIVITY_LOGS_ACTIONS_SQL = [
   'verification_docs_viewed', 'verification_docs_purge',
   // Magic-link confirmation flow (2026-08-29):
   'verification_confirmed',
+  // Coupon CRUD (2026-09-22):
+  'coupon_create', 'coupon_update', 'coupon_delete',
+  // Admin user management:
+  'admin_user_update', 'admin_user_create',
+  // Newsletter campaigns:
+  'newsletter_campaign',
 ].map(a => `'${a}'`).join(',');
 
 // Role tiers (2026-08-21): buyer < moderator < admin. Moderators handle
@@ -995,7 +1001,10 @@ async function runTursoMigrations () {
     if (activityResult.rows.length > 0 && activitySchemaSql && (!activitySchemaSql.includes('\'moderator\'') ||
       !activitySchemaSql.includes('\'verification_docs_viewed\'') ||
       !activitySchemaSql.includes('\'verification_docs_purge\'') ||
-      !activitySchemaSql.includes('\'account_deleted\''))) {
+      !activitySchemaSql.includes('\'account_deleted\'') ||
+      !activitySchemaSql.includes('\'coupon_create\'') ||
+      !activitySchemaSql.includes('\'admin_user_update\'') ||
+      !activitySchemaSql.includes('\'newsletter_campaign\''))) {
       console.log('Migrating activity_logs table for extended audit actions...');
       await tursoClient.execute('ALTER TABLE activity_logs RENAME TO activity_logs_old');
       await tursoClient.execute(`CREATE TABLE activity_logs (
@@ -1338,7 +1347,10 @@ function connectLocal () {
     if (activityTbl && activityTbl.sql && (!activityTbl.sql.includes('\'moderator\'') ||
       !activityTbl.sql.includes('\'verification_docs_viewed\'') ||
       !activityTbl.sql.includes('\'verification_docs_purge\'') ||
-      !activityTbl.sql.includes('\'account_deleted\''))) {
+      !activityTbl.sql.includes('\'account_deleted\'') ||
+      !activityTbl.sql.includes('\'coupon_create\'') ||
+      !activityTbl.sql.includes('\'admin_user_update\'') ||
+      !activityTbl.sql.includes('\'newsletter_campaign\''))) {
       console.log('Migrating activity_logs table for extended audit actions...');
       db.exec('ALTER TABLE activity_logs RENAME TO activity_logs_old');
       db.exec(`CREATE TABLE activity_logs (

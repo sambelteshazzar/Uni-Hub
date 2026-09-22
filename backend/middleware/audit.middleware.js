@@ -46,8 +46,8 @@ function deriveAction (req) {
   const p = req.path;
   // Normalize the trailing id segment FIRST, then compound-id routes;
   // doing both unconditionally corrupted /users/:id/ban -> /users/:id/:id.
-  const normalized = /\/(approve|reject|ban)$/u.test(p)
-    ? p.replace(/\/[^/]+\/(approve|reject|ban)$/u, '/:id/$1')
+  const normalized = /\/(approve|reject|ban|purge-documents)$/u.test(p)
+    ? p.replace(/\/[^/]+\/(approve|reject|ban|purge-documents)$/u, '/:id/$1')
     : p.replace(/\/[^/]+$/u, '/:id');
   switch (`${req.method} ${normalized}`) {
   case 'POST /products': return 'product_create';
@@ -56,6 +56,16 @@ function deriveAction (req) {
   case 'PUT /products/:id/approve': return 'admin_approve';
   case 'PUT /products/:id/reject': return 'admin_reject';
   case 'PUT /users/:id/ban': return 'admin_ban';
+  case 'PUT /users/:id': return 'admin_user_update';
+  case 'POST /users': return 'admin_user_create';
+  case 'POST /coupons': return 'coupon_create';
+  case 'PUT /coupons/:id': return 'coupon_update';
+  case 'DELETE /coupons/:id': return 'coupon_delete';
+  case 'PUT /payouts/:id/approve': return 'payout_approve';
+  case 'PUT /payouts/:id/reject': return 'payout_reject';
+  case 'POST /refund': return 'admin_refund';
+  case 'POST /payouts': return 'payout_request';
+  case 'POST /newsletter/campaign': return 'newsletter_campaign';
   default: return null;
   }
 }
