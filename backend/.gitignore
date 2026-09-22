@@ -10,3 +10,6 @@ coverage/
 # Temporary uploads
 uploads/
 
+# Wipe-script JSON backups
+data/db-backup-*.json
+
