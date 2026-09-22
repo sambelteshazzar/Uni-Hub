@@ -422,19 +422,23 @@ class AdminUI {
 
   // ---- Standard pill group wiring ----
   // groupEl: the .adm-pill-group element.
-  // onChange: (key) => void.
+  // onChange: (key) => void. Key is read from the pill's data attribute —
+  // may be data-adm-pill (default) or a custom attr (data-verif-filter,
+  // data-payout-filter, data-activity-filter, …).
   static wirePillGroup(groupEl, onChange) {
     if (!groupEl) {
       return;
     }
     groupEl.addEventListener('click', e => {
-      const pill = e.target.closest('[data-adm-pill]');
-      if (!pill) {
+      const pill = e.target.closest('.adm-pill');
+      if (!pill || !groupEl.contains(pill)) {
         return;
       }
       groupEl.querySelectorAll('.adm-pill').forEach(p => p.classList.remove('is-active'));
       pill.classList.add('is-active');
-      onChange?.(pill.dataset.admPill);
+      // pillGroup() sets exactly one data-* key per pill — use it.
+      const key = Object.values(pill.dataset)[0];
+      onChange?.(key);
     });
   }
 
@@ -8407,14 +8411,8 @@ font-size: 0.8rem;
       }
     });
 
-    // Wire the topbar primary action: "Create campaign" opens the existing modal.
-    mainContent.addEventListener('click', e => {
-      const btn = e.target.closest('[data-adm-action="new-campaign"]');
-      if (btn) {
-        e.preventDefault();
-        Pages.showNewsletterCampaignModal();
-      }
-    });
+    // "Create campaign" is handled by the document-level listener installed
+    // once in registerRoutes — do not re-bind here (it used to stack).
 
     this._loadNewsletterStats();
     this._loadNewsletterCampaigns();
@@ -8481,8 +8479,10 @@ font-size: 0.8rem;
   }
 
   static showNewsletterCampaignModal() {
+    // `.modal-overlay` CSS is opacity:0/visibility:hidden until `.active` —
+    // without the class the modal mounts invisible and looks like a dead button.
     const modalHtml = `
-      <div class="modal-overlay" id="newsletter-campaign-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem;">
+      <div class="modal-overlay active" id="newsletter-campaign-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; opacity: 1; visibility: visible;">
         <div class="modal" style="background: white; border-radius: 12px; width: 100%; max-width: 700px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
           <div class="modal-header" style="padding: 1.5rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
             <h2 style="font-size: 1.25rem; font-weight: 600;">Create Email Campaign</h2>
