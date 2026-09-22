@@ -82,6 +82,20 @@ class MessageManager {
   }
 
   /**
+   * Backend origin (scheme://host[:port]) for Socket.IO URLs.
+   * Never strip '/api' with String.replace — for
+   * 'https://api.jertscart.com/api' the first '/api' match is inside the
+   * hostname and the result is the bogus origin 'https:/.jertscart.com'.
+   */
+  _apiOrigin() {
+    try {
+      return new URL(window.API_URL || 'https://api.jertscart.com/api').origin;
+    } catch (_e) {
+      return 'https://api.jertscart.com';
+    }
+  }
+
+  /**
    * Load Socket.IO client library dynamically
    */
   loadSocketIO() {
@@ -100,7 +114,7 @@ class MessageManager {
         }
         // If CDN fails, try loading from backend
         const backendScript = document.createElement('script');
-        backendScript.src = `${window.API_URL?.replace('/api', '') || 'https://api.jertscart.com'}/socket.io/socket.io.js`;
+        backendScript.src = `${this._apiOrigin()}/socket.io/socket.io.js`;
         backendScript.onload = resolve;
         backendScript.onerror = () => {
           resolve();
@@ -141,7 +155,7 @@ class MessageManager {
     }
 
     try {
-      const serverUrl = (window.API_URL || 'https://api.jertscart.com/api').replace('/api', '');
+      const serverUrl = this._apiOrigin();
 
       this.socket = io(serverUrl, {
         auth: { token },

@@ -271,7 +271,15 @@ class AuthManager {
       if (!baseURL) {
         return null;
       }
-      const response = await fetch(`${baseURL.replace('/api', '')}/api/auth/csrf-token`, {
+      // baseURL already ends in /api — append the path directly. The old
+      // `${baseURL.replace('/api', '')}/api/...` stripped the FIRST '/api'
+      // substring, which for https://api.jertscart.com/api matched inside the
+      // hostname ('//api...') and produced the bogus origin
+      // 'https:/.jertscart.com'. The fetch then failed, _fetchCsrfToken
+      // swallowed the error and returned null, and login was sent without
+      // X-CSRF-Token -> backend 403 "CSRF token missing" after the domain
+      // change in 67e3666e.
+      const response = await fetch(`${baseURL}/auth/csrf-token`, {
         credentials: 'include',
       });
       const data = await response.json();

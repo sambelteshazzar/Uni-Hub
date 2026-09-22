@@ -27,4 +27,26 @@ test.describe('Authentication', () => {
     await page.goto('/#/register');
     await expect(page.locator('#reg-email')).toBeVisible({ timeout: 10000 });
   });
+
+  // Regression: 67e3666e pointed API_URL at https://api.jertscart.com/api;
+  // auth.js built the CSRF URL with baseURL.replace('/api', ''), which matched
+  // '/api' inside the hostname and produced https:/.jertscart.com/... — the
+  // fetch failed, _fetchCsrfToken returned null, and login was rejected with
+  // 403 "CSRF token missing".
+  test('csrf token fetch derives a valid URL from api.jertscart.com base', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const requested = [];
+    await page.route('**/auth/csrf-token', route => {
+      requested.push(route.request().url());
+      route.fulfill({ json: { success: true, csrfToken: 'e2e-token' } });
+    });
+    const token = await page.evaluate(async () => {
+      window.API_URL = 'https://api.jertscart.com/api';
+      return await authManager._fetchCsrfToken();
+    });
+    expect(requested[0]).toBe('https://api.jertscart.com/api/auth/csrf-token');
+    expect(token).toBe('e2e-token');
+  });
 });
