@@ -74,8 +74,12 @@ class Router {
     const href = a.getAttribute('href') || '';
     if (!href.startsWith('#/')) return;
     e.preventDefault();
-    const path = href.replace(/^#\/?/, '/');
-    this.navigate(path);
+    const raw = href.replace(/^#\/?/, '/');
+    const qi = raw.indexOf('?');
+    const path = qi === -1 ? raw : raw.substring(0, qi);
+    const qs = qi === -1 ? '' : raw.substring(qi + 1);
+    const params = this.parseQueryString(qs);
+    this.navigate(path, params);
   }
 
   /**
