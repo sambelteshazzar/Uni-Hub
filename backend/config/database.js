@@ -1145,14 +1145,24 @@ async function runTursoMigrations () {
     console.error('Doc retention migration failed:', docRetentionErr.message);
   }
 
-  // Newsletter subscribers — add missing verificationToken column if the
-  // table was created by an older schema version without it.
+  // Newsletter subscribers — add missing columns if the table was created by
+  // an older schema version.
   try {
     const nlCols = await tursoClient.execute('PRAGMA table_info(newsletter_subscribers)');
     const nlNames = nlCols.rows.map(r => r.name);
-    if (nlNames.length > 0 && !nlNames.includes('verificationToken')) {
-      await tursoClient.execute('ALTER TABLE newsletter_subscribers ADD COLUMN verificationToken TEXT');
-      console.log('Added verificationToken column to newsletter_subscribers');
+    if (nlNames.length > 0) {
+      if (!nlNames.includes('verificationToken')) {
+        await tursoClient.execute('ALTER TABLE newsletter_subscribers ADD COLUMN verificationToken TEXT');
+      }
+      if (!nlNames.includes('verifiedAt')) {
+        await tursoClient.execute('ALTER TABLE newsletter_subscribers ADD COLUMN verifiedAt TEXT');
+      }
+      if (!nlNames.includes('createdAt')) {
+        await tursoClient.execute('ALTER TABLE newsletter_subscribers ADD COLUMN createdAt TEXT DEFAULT (datetime(\'now\'))');
+      }
+      if (!nlNames.includes('updatedAt')) {
+        await tursoClient.execute('ALTER TABLE newsletter_subscribers ADD COLUMN updatedAt TEXT DEFAULT (datetime(\'now\'))');
+      }
     }
   } catch (nlErr) {
     console.error('Newsletter migration failed:', nlErr.message);
