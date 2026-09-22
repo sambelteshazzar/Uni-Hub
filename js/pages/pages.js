@@ -8395,20 +8395,13 @@ font-size: 0.8rem;
     });
 
     // Wire the topbar primary action: "Create campaign" opens the existing modal.
-    const topbar = mainContent.querySelector('.adm-topbar');
-    if (topbar) {
-      topbar.addEventListener('click', e => {
-        const btn = e.target.closest('[data-adm-action]');
-        if (!btn) {
-          return;
-        }
-        if (btn.dataset.admAction === 'new-campaign') {
-          if (typeof Pages.showNewsletterCampaignModal === 'function') {
-            Pages.showNewsletterCampaignModal();
-          }
-        }
-      });
-    }
+    mainContent.addEventListener('click', e => {
+      const btn = e.target.closest('[data-adm-action="new-campaign"]');
+      if (btn) {
+        e.preventDefault();
+        Pages.showNewsletterCampaignModal();
+      }
+    });
 
     this._loadNewsletterStats();
     this._loadNewsletterCampaigns();
@@ -8420,16 +8413,14 @@ font-size: 0.8rem;
       const response = await api.get('/newsletter/stats');
       if (response.success) {
         const { total, active, pending, unsubscribed, bounced } = response.data;
-        document.getElementById('stat-total').querySelector('.admin-stat-value').textContent =
-          total?.toLocaleString() || '0';
-        document.getElementById('stat-active').querySelector('.admin-stat-value').textContent =
-          active?.toLocaleString() || '0';
-        document.getElementById('stat-pending').querySelector('.admin-stat-value').textContent =
-          pending?.toLocaleString() || '0';
-        document
-          .getElementById('stat-unsubscribed')
-          .querySelector('.admin-stat-value').textContent =
-          (unsubscribed + bounced)?.toLocaleString() || '0';
+        const cards = document.querySelectorAll('#newsletter-stats-host .adm-stat');
+        if (cards.length >= 4) {
+          cards[0].querySelector('.adm-stat-value').textContent = total?.toLocaleString() || '0';
+          cards[1].querySelector('.adm-stat-value').textContent = active?.toLocaleString() || '0';
+          cards[2].querySelector('.adm-stat-value').textContent = pending?.toLocaleString() || '0';
+          cards[3].querySelector('.adm-stat-value').textContent =
+            (unsubscribed + bounced)?.toLocaleString() || '0';
+        }
       }
     } catch (error) {
       console.error('Failed to load newsletter stats:', error);
@@ -8451,8 +8442,8 @@ font-size: 0.8rem;
             c => `
           <tr>
             <td>${c.subject}</td>
-            <td>${c.sent_at ? new Date(c.sent_at).toLocaleDateString() : '—'}</td>
-            <td>${(c.recipient_count || 0).toLocaleString()}</td>
+            <td>${c.sentAt ? new Date(c.sentAt).toLocaleDateString() : '—'}</td>
+            <td>${(c.recipientCount || 0).toLocaleString()}</td>
             <td><span class="status-badge status-delivered">Sent</span></td>
           </tr>
         `
