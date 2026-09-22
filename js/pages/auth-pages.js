@@ -943,21 +943,20 @@ const AuthPageMethods = {
         return;
       }
 
-      // Force redirect to browse page using multiple methods for reliability
+      // Single navigation path — the router's /browse handler renders.
+      // The old triple path (navigate + hash assignment + setTimeout
+      // renderBrowse) started up to three concurrent renders; the last
+      // one to finish could overwrite a successful grid with a skeleton
+      // or a failed fetch's empty state.
       try {
-        // Method 1: Use router if available
         if (typeof window.router !== 'undefined' && window.router.navigate) {
-          router.navigate('/browse');
-        }
-        // Method 2: Direct hash change (always works)
-        window.location.hash = '#/browse';
-        // Method 3: Render directly as fallback
-        setTimeout(() => {
+          window.router.navigate('/browse');
+        } else {
+          window.location.hash = '#/browse';
           Pages.renderBrowse();
-        }, 50);
+        }
       } catch (e) {
         console.error('Navigation error:', e);
-        // Final fallback
         window.location.hash = '#/browse';
         Pages.renderBrowse();
       }
@@ -971,8 +970,12 @@ const AuthPageMethods = {
           'Offline Mode',
           'You are logged in with demo data. Some features may be limited.'
         );
-        window.location.hash = '#/browse';
-        Pages.renderBrowse();
+        if (typeof window.router !== 'undefined' && window.router.navigate) {
+          window.router.navigate('/browse');
+        } else {
+          window.location.hash = '#/browse';
+          Pages.renderBrowse();
+        }
       } else {
         showToast('Login failed: ' + result.error, 'error');
       }
@@ -1661,13 +1664,13 @@ const AuthPageMethods = {
         const action = e.target.closest('[data-action]')?.getAttribute('data-action');
         if (action === 'browse' && typeof Pages !== 'undefined' && Pages.renderBrowse) {
           // Update the URL hash so back button / bookmark / reload
-          // work as the user expects.
+          // work as the user expects. Router alone triggers renderBrowse.
           if (typeof window.router !== 'undefined' && window.router.navigate) {
             window.router.navigate('/browse');
           } else {
             window.location.hash = '#/browse';
+            Pages.renderBrowse();
           }
-          Pages.renderBrowse();
         } else if (
           action === 'dashboard' &&
           typeof Pages !== 'undefined' &&
@@ -1827,8 +1830,8 @@ const AuthPageMethods = {
             window.router.navigate('/browse');
           } else {
             window.location.hash = '#/browse';
+            Pages.renderBrowse();
           }
-          Pages.renderBrowse();
         } else if (a === 'dashboard' && Pages.renderDashboard) {
           if (typeof window.router !== 'undefined' && window.router.navigate) {
             window.router.navigate('/dashboard');

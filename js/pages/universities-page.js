@@ -283,9 +283,9 @@ const UniversitiesPage = {
               window.router.navigate('/browse');
             } else {
               window.location.hash = '#/browse';
-            }
-            if (typeof Pages !== 'undefined' && Pages.renderBrowse) {
-              Pages.renderBrowse();
+              if (typeof Pages !== 'undefined' && Pages.renderBrowse) {
+                Pages.renderBrowse();
+              }
             }
           } else {
             saveBtn.disabled = false;

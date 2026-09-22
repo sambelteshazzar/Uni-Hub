@@ -136,7 +136,9 @@ class ModuleLoader {
       // user can keep getting a stale pages.js / browse-pages.js from
       // the HTTP cache long after a deploy). Bump this version whenever
       // any of the dynamically-imported module files change.
-      const MODULE_VERSION = '24';
+      // Bump whenever browse-pages.js / auth / any dynamic module changes,
+      // or clients keep the previous file for a full day (max-age=86400).
+      const MODULE_VERSION = '25';
       await import(/* @vite-ignore */ `./${moduleDef.file.replace('js/', '')}?v=${MODULE_VERSION}`);
 
       // Verify module was exposed to window

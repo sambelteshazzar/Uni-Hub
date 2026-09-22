@@ -304,14 +304,15 @@
         Pages.updateNavbar();
         Pages.updateCartBadge();
         showToast('Welcome back, ' + (result.user.fullName || email) + '!', 'success');
-        window.location.hash = '#/browse';
-        Pages.renderBrowse();
+        // Single navigation path — router triggers renderBrowse. A parallel
+        // direct renderBrowse() races the hashchange handler (double fetch,
+        // skeleton wiping a finished grid).
+        window.router.navigate('/browse');
       } else if (result.isOffline) {
         Pages.updateNavbar();
         Pages.updateCartBadge();
         showToast('You are in offline mode. Browse with demo data.', 'info');
-        window.location.hash = '#/browse';
-        Pages.renderBrowse();
+        window.router.navigate('/browse');
       } else {
         showToast('Login failed: ' + result.error, 'error');
       }

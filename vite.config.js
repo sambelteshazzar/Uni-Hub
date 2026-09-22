@@ -3,7 +3,12 @@ import { resolve } from 'path';
 import { cpSync, readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
 import { buildSync } from 'esbuild';
 
-const appScripts = ['<script type="module" src="/js/app-init.js?v=25"></script>'];
+// Keep in sync with index.html's app-init.js?v=N tag. closeBundle strips
+// Vite's transformed entry and re-injects this literal when the source
+// tag isn't already in the output — a stale version here freezes clients
+// on the previous module bundle for a full day (js Cache-Control max-age).
+const APP_INIT_VERSION = '26';
+const appScripts = [`<script type="module" src="/js/app-init.js?v=${APP_INIT_VERSION}"></script>`];
 
 // The deployed artifact is dist/ served statically — the browser loads
 // dist/js/app-init.js directly and resolves each ES module as-is (no
@@ -93,7 +98,18 @@ export default defineConfig({
           html = html.replace('</head>', cssLinks.join('\n') + '\n</head>');
         }
 
-        if (!html.includes('/js/app-init.js')) {
+        // Always stamp the canonical app-init tag. Vite may rewrite the
+        // source <script src="js/app-init.js?v=N"> into an /assets/ bundle
+        // (stripped above) or leave a relative path that the browser would
+        // cache under a different key. Replacing keeps one entry point and
+        // one version — matching APP_INIT_VERSION + index.html + MODULE_VERSION
+        // semantics (MODULE_VERSION still gates the dynamically-imported tree).
+        const existingAppInit = html.match(
+          /<script[^>]*src="[^"]*app-init\.js(\?[^"]*)?"[^>]*><\/script>/,
+        );
+        if (existingAppInit) {
+          html = html.replace(existingAppInit[0], appScripts[0]);
+        } else {
           html = html.replace('</body>', appScripts.join('\n') + '\n</body>');
         }
 
