@@ -313,11 +313,21 @@ class AuthManager {
       const baseURL = this._getBaseURL();
       if (baseURL) {
         const csrfToken = await this._fetchCsrfToken();
+        if (!csrfToken) {
+          // Without a token the POST is guaranteed to 403 "CSRF token
+          // missing" — fail fast with a clear network error instead of
+          // surfacing a confusing security error (the silent-omit path
+          // that caused the jertscart.com login outage).
+          return {
+            success: false,
+            error: 'Could not reach the server. Please check your connection and try again.',
+          };
+        }
         const response = await fetch(`${this._getBaseURL()}/auth/register`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+            'X-CSRF-Token': csrfToken,
           },
           credentials: 'include',
           body: JSON.stringify(userData),
@@ -408,11 +418,18 @@ class AuthManager {
       const baseURL = this._getBaseURL();
       if (baseURL) {
         const csrfToken = await this._fetchCsrfToken();
+        if (!csrfToken) {
+          // Same fail-fast rationale as register() — see comment there.
+          return {
+            success: false,
+            error: 'Could not reach the server. Please check your connection and try again.',
+          };
+        }
         const response = await fetch(`${this._getBaseURL()}/auth/login`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+            'X-CSRF-Token': csrfToken,
           },
           credentials: 'include',
           body: JSON.stringify({ email, password }),
@@ -453,15 +470,25 @@ class AuthManager {
    */
   logout() {
     const baseURL = this._getBaseURL();
-    if (this.token && !this.isOfflineMode && baseURL) {
+    // Capture the token SYNCHRONOUSLY: clearSession() below nulls
+    // this.token before the _fetchCsrfToken promise resolves, and the old
+    // `Bearer ${this.token}` inside .then sent "Bearer null".
+    const token = this.token;
+    if (token && !this.isOfflineMode && baseURL) {
       this._fetchCsrfToken()
         .then(csrfToken => {
+          if (!csrfToken) {
+            // Local session is cleared regardless; a doomed POST without
+            // the header would only 403. The backend logout route is a
+            // stateless ack, so skipping it loses nothing.
+            return;
+          }
           fetch(`${baseURL}/auth/logout`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${this.token}`,
-              ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+              Authorization: `Bearer ${token}`,
+              'X-CSRF-Token': csrfToken,
             },
             credentials: 'include',
           }).catch(() => {});
@@ -527,12 +554,18 @@ class AuthManager {
       delete updates._id;
 
       const csrfToken = await this._fetchCsrfToken();
+      if (!csrfToken) {
+        return {
+          success: false,
+          error: 'Could not reach the server. Please check your connection and try again.',
+        };
+      }
       const response = await fetch(`${this._getBaseURL()}/auth/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${this.token}`,
-          ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+          'X-CSRF-Token': csrfToken,
         },
         credentials: 'include',
         body: JSON.stringify(updates),
@@ -571,12 +604,18 @@ class AuthManager {
       }
 
       const csrfToken = await this._fetchCsrfToken();
+      if (!csrfToken) {
+        return {
+          success: false,
+          error: 'Could not reach the server. Please check your connection and try again.',
+        };
+      }
       const response = await fetch(`${this._getBaseURL()}/auth/change-password`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${this.token}`,
-          ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+          'X-CSRF-Token': csrfToken,
         },
         credentials: 'include',
         body: JSON.stringify({ currentPassword, newPassword }),

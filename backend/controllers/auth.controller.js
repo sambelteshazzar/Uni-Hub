@@ -174,6 +174,17 @@ exports.setMyUniversity = asyncHandler(async (req, res) => {
 });
 
 /**
+ * @desc Logout — acknowledge a client-side session discard.
+ * @route POST /api/auth/logout
+ * @access Public (deliberately no `protect`: JWT is stateless, and an
+ *   expired/absent bearer token must not turn a legitimate logout into a
+ *   401 the UI would report as a failed logout)
+ */
+exports.logout = asyncHandler(async (_req, res) => {
+  res.json({ success: true, message: 'Logged out successfully' });
+});
+
+/**
  * @desc Login user
  * @route POST /api/auth/login
  * @access Public

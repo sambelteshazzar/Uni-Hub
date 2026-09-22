@@ -5,6 +5,7 @@ const { protect } = require('../middleware/auth.middleware');
 const {
   register,
   login,
+  logout,
   verifyMfa,
   getMe,
   updateProfile,
@@ -72,6 +73,9 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 // Public routes
 router.post('/register', register);
 router.post('/login', login);
+// Stateless-JWT logout ack — see auth.controller.js/logout for why this
+// is intentionally unprotected.
+router.post('/logout', logout);
 router.get('/universities', listUniversities);
 // MFA completion — guarded by challengeId + emailed code possession.
 router.post('/mfa/verify', verifyMfa);
