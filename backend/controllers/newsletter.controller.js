@@ -238,13 +238,15 @@ exports.unsubscribe = asyncHandler(async (req, res) => {
  * @access Private (Admin)
  */
 exports.getStats = asyncHandler(async (req, res) => {
-  const total = await db('newsletter_subscribers').count();
-  const active = await db('newsletter_subscribers').count({ status: 'active' });
-  const pending = await db('newsletter_subscribers').count({ status: 'pending' });
-  const unsubscribed = await db('newsletter_subscribers').count({ status: 'unsubscribed' });
-  const bounced = await db('newsletter_subscribers').count({ status: 'bounced' });
+  const total = await db('newsletter_subscribers').countDocuments();
+  const active = await db('newsletter_subscribers').countDocuments({ status: 'active' });
+  const pending = await db('newsletter_subscribers').countDocuments({ status: 'pending' });
+  const unsubscribed = await db('newsletter_subscribers').countDocuments({ status: 'unsubscribed' });
+  const bounced = await db('newsletter_subscribers').countDocuments({ status: 'bounced' });
 
-  const bySource = await db('newsletter_subscribers').groupBy('source').count();
+  const bySource = await db('newsletter_subscribers').rawAll(
+    'SELECT source, COUNT(*) as count FROM newsletter_subscribers GROUP BY source',
+  );
 
   res.json({
     success: true,
@@ -285,7 +287,7 @@ exports.sendCampaign = asyncHandler(async (req, res) => {
     return res.json({ success: true, message: 'Test email sent', data: { testEmail } });
   }
 
-  const subscribers = await db('newsletter_subscribers').findAll({ status: 'active' });
+  const subscribers = await db('newsletter_subscribers').find({ status: 'active' });
   const emails = subscribers.map(s => ({ email: s.email }));
 
   if (emails.length === 0) {
@@ -335,6 +337,6 @@ exports.sendCampaign = asyncHandler(async (req, res) => {
  * @access Private (Admin)
  */
 exports.getCampaigns = asyncHandler(async (req, res) => {
-  const campaigns = await db('email_campaigns').findAll();
+  const campaigns = await db('email_campaigns').find();
   res.json({ success: true, data: campaigns.reverse() });
 });

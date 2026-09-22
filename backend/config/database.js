@@ -1144,6 +1144,19 @@ async function runTursoMigrations () {
   } catch (docRetentionErr) {
     console.error('Doc retention migration failed:', docRetentionErr.message);
   }
+
+  // Newsletter subscribers — add missing verificationToken column if the
+  // table was created by an older schema version without it.
+  try {
+    const nlCols = await tursoClient.execute('PRAGMA table_info(newsletter_subscribers)');
+    const nlNames = nlCols.rows.map(r => r.name);
+    if (nlNames.length > 0 && !nlNames.includes('verificationToken')) {
+      await tursoClient.execute('ALTER TABLE newsletter_subscribers ADD COLUMN verificationToken TEXT');
+      console.log('Added verificationToken column to newsletter_subscribers');
+    }
+  } catch (nlErr) {
+    console.error('Newsletter migration failed:', nlErr.message);
+  }
 }
 
 /**
