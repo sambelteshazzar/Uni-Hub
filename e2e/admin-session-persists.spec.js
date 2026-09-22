@@ -10,52 +10,28 @@
 //     stores admin sessions ONLY under `unihub_admin_session`; api.js
 //     selects it for /admin/* URLs and while #/admin routes are active.
 //
-// Strategy: run the two-step MFA login through Playwright's request
-// context (no mailbox needed — test env returns devCode), then inject the
-// resulting session into localStorage exactly as AdminAuthManager
-// ._completeLogin stores it (flat shape), and exercise the SPA normally.
+// Strategy: reuse e2e/helpers/admin-auth.js, which runs the two-step MFA
+// login through Playwright's request context (devCode in NODE_ENV=test)
+// and ALSO tolerates the controller's no-mailtransport MFA bypass
+// (auth.controller.js:229 — when a reused dev server runs without
+// NODE_ENV=test and no mail transport, privileged login returns the token
+// directly with no mfaRequired flag). The helper injects the resulting
+// session into localStorage in the exact flat shape AdminAuthManager
+// ._completeLogin persists; this spec then exercises the SPA normally.
+// (The backend's MFA-enforcement security property itself is covered by
+// backend/tests/mfa.test.js, which always runs with NODE_ENV=test.)
 
 const { test, expect } = require('@playwright/test');
+const { injectAdminSession, ADMIN_SESSION_KEY } = require('./helpers/admin-auth');
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@unihub.local';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin123!';
 const PRIVILEGED_ROLES = ['admin', 'moderator'];
-const ADMIN_SESSION_KEY = 'unihub_admin_session';
-
-async function adminLoginViaApi (request) {
-  // The production server enforces CSRF on mutating requests; fetch a
-  // token first exactly like js/utils/api.js does for the SPA.
-  const csrf = await request.get('http://localhost:5000/api/auth/csrf-token');
-  const csrfToken = (await csrf.json())?.csrfToken;
-  const headers = csrfToken ? { 'X-CSRF-Token': csrfToken } : {};
-
-  const step1 = await request.post('http://localhost:5000/api/auth/login', {
-    headers,
-    data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
-  });
-  expect(step1.status()).toBe(200);
-  const body1 = await step1.json();
-  expect(body1.data.mfaRequired, 'privileged login must require MFA').toBe(true);
-
-  const step2 = await request.post('http://localhost:5000/api/auth/mfa/verify', {
-    headers,
-    data: { challengeId: body1.data.challengeId, code: body1.data.devCode },
-  });
-  expect(step2.status()).toBe(200);
-  const body2 = await step2.json();
-  return body2.data; // { token, user }
-}
 
 test.describe('Admin session separation + persistence', () => {
   test('separate admin session survives reload, powers /admin APIs, never leaks to the main app', async ({ page }) => {
-    const data = await adminLoginViaApi(page.request);
-    expect(PRIVILEGED_ROLES).toContain(data.user.role);
-
-    // Inject the session in the exact FLAT shape _completeLogin persists.
-    await page.addInitScript(({ key, session }) => {
-      window.API_URL = 'http://localhost:5000/api';
-      window.localStorage.setItem(key, JSON.stringify(session));
-    }, { key: ADMIN_SESSION_KEY, session: { ...data.user, token: data.token, expiresAt: Date.now() + 24 * 60 * 60 * 1000 } });
+    // Logs in via API (MFA or bypass, per server env) and injects the
+    // flat session into unihub_admin_session before any app code runs.
+    const session = await injectAdminSession(page);
+    expect(PRIVILEGED_ROLES).toContain(session.role);
 
     // Diagnostics in case selectors or backend calls break.
     const consoleWarnings = [];

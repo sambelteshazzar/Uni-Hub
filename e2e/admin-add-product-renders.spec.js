@@ -93,7 +93,11 @@ test.describe('Admin Add Product form renders without crash (regression)', () =>
     await page.waitForTimeout(100);
     // Snapshot the URL before submit.
     const urlBefore = page.url();
-    await page.locator('#admin-product-form').locator('button[type="submit"]').click();
+    // Since abcd38ca ("Migrate admin product create + edit forms to adm-*
+    // layout") the submit button lives in the topbar, OUTSIDE the form,
+    // associated via the HTML `form="admin-product-form"` attribute — so a
+    // descendant lookup (#admin-product-form button) never matches.
+    await page.locator('button[type="submit"][form="admin-product-form"]').click();
     // Give the wired handler a chance to call preventDefault and either
     // run _handleAdminProductCreate or fail for a non-regression reason.
     // Either way, the URL bar must NOT have grown a `?title=` query.
