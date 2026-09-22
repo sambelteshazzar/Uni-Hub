@@ -89,20 +89,8 @@ class BrowsePage {
       productsManager.filter({ university: filters.university });
       this.state.selectedUniversities = [filters.university];
     } else {
-      // Default the browse filter to the user's own university, so they
-      // see the campus marketplace they signed up for.
-      const currentUser =
-        typeof authManager !== 'undefined' && authManager.getCurrentUser
-          ? authManager.getCurrentUser()
-          : null;
-      const selectedUniversity = currentUser?.university || '';
-      if (selectedUniversity) {
-        productsManager.filter({ university: selectedUniversity });
-        this.state.selectedUniversities = [selectedUniversity];
-      } else {
-        productsManager.currentFilters.university = null;
-        this.state.selectedUniversities = [];
-      }
+      productsManager.currentFilters.university = null;
+      this.state.selectedUniversities = [];
     }
 
     // Gender sub-filter (only relevant under the Fashion category).
