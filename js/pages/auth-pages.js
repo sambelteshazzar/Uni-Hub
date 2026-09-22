@@ -411,24 +411,44 @@ const AuthPageMethods = {
         }
         return;
       }
-      // If the server's error mentions document storage, surface a more
-      // actionable hint: the user can still submit without files. Other
-      // errors fall back to the generic toast unchanged.
-      const serverErr = response?.error || '';
-      const isDocStorageErr = /store\s+verification\s+documents/i.test(serverErr);
-      showToast(
-        isDocStorageErr
-          ? 'Document upload is temporarily unavailable. Please submit without documents — an admin will still review your details.'
-          : serverErr || 'Submission failed. Please try again.',
-        'error',
-        6000
-      );
+      // Offline/timeout responses come back as objects (no throw). Real
+      // server errors carry `.error` and should be shown as-is.
+      if (response?.isOffline) {
+        showToast(
+          'Cannot connect to server. Please check your internet connection and try again.',
+          'error'
+        );
+      } else {
+        // If the server's error mentions document storage, surface a more
+        // actionable hint: the user can still submit without files. Other
+        // errors fall back to the generic toast unchanged.
+        const serverErr = response?.error || '';
+        const isDocStorageErr = /store\s+verification\s+documents/i.test(serverErr);
+        showToast(
+          isDocStorageErr
+            ? 'Document upload is temporarily unavailable. Please submit without documents — an admin will still review your details.'
+            : serverErr || 'Submission failed. Please try again.',
+          'error',
+          6000
+        );
+      }
     } catch (err) {
+      // TODO: security review — surface API error text without leaking internals.
       console.warn('auth-pages: verification submit error:', err);
-      showToast(
-        'Cannot connect to server. Please check your internet connection and try again.',
-        'error'
-      );
+      const msg = String(err?.message || '');
+      const isNetworkErr =
+        (err instanceof TypeError && msg === 'Failed to fetch') || msg === 'Request timeout';
+      // request() only throws for HTTP error statuses (it returns isOffline
+      // for real network failures). Show the server's message so a 429/400/401
+      // is not mislabeled as a connectivity problem.
+      if (isNetworkErr || (!err?.status && !msg)) {
+        showToast(
+          'Cannot connect to server. Please check your internet connection and try again.',
+          'error'
+        );
+      } else {
+        showToast(msg || 'Submission failed. Please try again.', 'error', 6000);
+      }
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
