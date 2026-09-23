@@ -34,6 +34,9 @@ const ACTIVITY_LOGS_ACTIONS_SQL = [
   'verification_docs_viewed', 'verification_docs_purge',
   // Magic-link confirmation flow (2026-08-29):
   'verification_confirmed',
+  // Admin approve + user self-service resend of the confirmation email
+  // (2026-09-23) — both were silently rejected by the CHECK until now:
+  'verification_approved_by_admin', 'verification_link_resent',
   // Coupon CRUD (2026-09-22):
   'coupon_create', 'coupon_update', 'coupon_delete',
   // Admin user management:
@@ -1004,7 +1007,8 @@ async function runTursoMigrations () {
       !activitySchemaSql.includes('\'account_deleted\'') ||
       !activitySchemaSql.includes('\'coupon_create\'') ||
       !activitySchemaSql.includes('\'admin_user_update\'') ||
-      !activitySchemaSql.includes('\'newsletter_campaign\''))) {
+      !activitySchemaSql.includes('\'newsletter_campaign\'') ||
+      !activitySchemaSql.includes('\'verification_link_resent\''))) {
       console.log('Migrating activity_logs table for extended audit actions...');
       await tursoClient.execute('ALTER TABLE activity_logs RENAME TO activity_logs_old');
       await tursoClient.execute(`CREATE TABLE activity_logs (
@@ -1350,7 +1354,8 @@ function connectLocal () {
       !activityTbl.sql.includes('\'account_deleted\'') ||
       !activityTbl.sql.includes('\'coupon_create\'') ||
       !activityTbl.sql.includes('\'admin_user_update\'') ||
-      !activityTbl.sql.includes('\'newsletter_campaign\''))) {
+      !activityTbl.sql.includes('\'newsletter_campaign\'') ||
+      !activityTbl.sql.includes('\'verification_link_resent\''))) {
       console.log('Migrating activity_logs table for extended audit actions...');
       db.exec('ALTER TABLE activity_logs RENAME TO activity_logs_old');
       db.exec(`CREATE TABLE activity_logs (
