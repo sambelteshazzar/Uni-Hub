@@ -613,12 +613,30 @@ class Pages {
     // Registering `this.renderFoo()` at construction time captures the
     // not-yet-bound state and throws on direct URL navigation. _safeCall
     // resolves lazily against the live Pages singleton so late-bound
-    // methods are picked up the first time the route fires.
+    // methods are picked up the first time the route fires. The dashboard
+    // renderers attach from a 50ms poll the module loader does not await,
+    // so on a cold cache the initial dispatch can still beat the bind —
+    // retry briefly (2s) and only while the user is still on this route.
     const safeCall = (method, ...args) => {
-      if (typeof Pages !== 'undefined' && typeof Pages[method] === 'function') {
+      const isReady = () => typeof Pages !== 'undefined' && typeof Pages[method] === 'function';
+      if (isReady()) {
         return Pages[method](...args);
       }
-      console.warn(`Pages.${method} not yet bound; route skipped`);
+      console.warn(`Pages.${method} not yet bound; retrying shortly`);
+      const expected = typeof router !== 'undefined' ? router.currentRoute : null;
+      let tries = 0;
+      const timer = setInterval(() => {
+        if (isReady()) {
+          clearInterval(timer);
+          if (typeof router !== 'undefined' && router.currentRoute !== expected) {
+            return; // user navigated away before the renderer arrived
+          }
+          Pages[method](...args);
+        } else if (++tries >= 40) {
+          clearInterval(timer);
+          console.warn(`Pages.${method} never bound; route skipped`);
+        }
+      }, 50);
     };
     // Home/Landing
     router.register('/', () => safeCall('renderLanding'));
