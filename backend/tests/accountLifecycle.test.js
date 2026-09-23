@@ -124,14 +124,15 @@ describe('account deletion', () => {
     expect(pwOnly.status).toBe(400);
     expect(pwOnly.body.requiredFactor).toBe('otp');
 
-    // Task 3 only: endpoint arrives in Task 4.
-    const user = require('../utils/db').db('users');
-    const ch = await require('../utils/mfa').createChallenge(await user.findById(u.id), 'delete');
-
+    const otp = await request(app)
+      .post('/api/users/me/deletion-otp')
+      .set('Authorization', `Bearer ${u.token}`)
+      .send({});
+    expect(otp.status).toBe(200);
     const res = await request(app)
       .delete('/api/users/me')
       .set('Authorization', `Bearer ${u.token}`)
-      .send({ confirmText: 'DELETE', challengeId: ch.id, code: ch.code });
+      .send({ confirmText: 'DELETE', challengeId: otp.body.challengeId, code: otp.body.devCode });
     expect(res.status).toBe(200);
   });
 });

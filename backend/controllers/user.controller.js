@@ -283,3 +283,52 @@ exports.deleteMyAccount = asyncHandler(async (req, res) => {
 
   res.json({ success: true, message: 'Your account has been deleted and your personal data removed.' });
 });
+
+/**
+ * @desc Advisory preflight: structured blockers for the requesting user
+ * @route GET /api/users/me/deletion-blockers
+ */
+exports.getMyDeletionBlockers = asyncHandler(async (req, res) => {
+  const blockers = await getDeletionBlockers(req.user.id);
+  res.json({ success: true, blockers });
+});
+
+/**
+ * @desc Send a purpose-bound OTP for account deletion (Google-linked only)
+ * @route POST /api/users/me/deletion-otp
+ */
+exports.requestDeletionOtp = asyncHandler(async (req, res) => {
+  const user = await db('users').findById(req.user.id);
+  if (!user) {
+    throw new ApiError(404, 'Account not found');
+  }
+  if (!user.googleId) {
+    return res.status(400).json({
+      success: false,
+      error: 'This account deletes with your password.',
+      requiredFactor: 'password',
+    });
+  }
+
+  const challenge = await mfa.createChallenge(user, 'delete');
+  const sent = await sendEmail(
+    user.email,
+    'Your JERTS CART account deletion code',
+    `<p>Your JERTS CART account deletion code is:</p>
+     <p style="font-size:28px;font-weight:700;letter-spacing:6px;">${challenge.code}</p>
+     <p>This code expires in 5 minutes and can be used once. If you did not request account deletion, you can ignore this email.</p>`,
+  );
+  // In test env we still return devCode (suites complete the flow without
+  // a mailbox). Outside test, an unconfigured/failed transport is fatal:
+  // deletion intent cannot be verified without the emailed factor.
+  if (process.env.NODE_ENV !== 'test' && !sent.success) {
+    throw new ApiError(502, 'We could not email your code — please try again shortly.');
+  }
+
+  res.json({
+    success: true,
+    challengeId: challenge.id,
+    expiresInSeconds: 300,
+    ...(challenge.devCode ? { devCode: challenge.devCode } : {}),
+  });
+});

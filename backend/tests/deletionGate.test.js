@@ -162,6 +162,12 @@ describe('getDeletionBlockers', () => {
 const setGoogleId = id =>
   getDb().prepare('UPDATE users SET googleId = ? WHERE id = ?').run(`g_${Date.now()}`, id);
 
+const requestOtp = async token => {
+  const res = await request(app).post('/api/users/me/deletion-otp')
+    .set('Authorization', `Bearer ${token}`).send({});
+  return res;
+};
+
 // NOTE (Task 3 only): /me/deletion-otp does not exist yet — create OTPs
 // directly via mfa.createChallenge(user, 'delete') for THIS task's factor
 // tests; Task 4 switches/extends to the HTTP endpoint.
@@ -405,5 +411,92 @@ describe('DELETE /users/me — scrub completeness', () => {
       .send({ confirmText: 'DELETE', challengeId: ch.id, code: ch.code });
     expect(res.status).toBe(200);
     expect(getDb().prepare('SELECT isActive FROM users WHERE id = ?').get(u.id).isActive).toBe(0);
+  });
+});
+
+describe('deletion preflight + OTP endpoints', () => {
+  // Shared require-cache instance of the mounted router — its otpStore is
+  // the live limiter store. resetAll between tests or the 3/15min counter
+  // accumulates (rate-limit test would poison the OTP tests that follow).
+  const { otpStore } = require('../routes/user.routes');
+  // Guarded: at Step 1 (routes not yet written) otpStore is undefined and
+  // tests must fail with 404, not a TypeError.
+  beforeEach(async () => {
+    if (otpStore) { await otpStore.resetAll(); }
+  });
+
+  test('GET /users/me/deletion-blockers → 200 clear / 200 with list when blocked', async () => {
+    const u = await registerUser();
+    const clear = await request(app).get('/api/users/me/deletion-blockers')
+      .set('Authorization', `Bearer ${u.token}`);
+    expect(clear.status).toBe(200);
+    expect(clear.body.blockers).toEqual([]);
+
+    seedLedger(u.id, 10, 'released');
+    const blocked = await request(app).get('/api/users/me/deletion-blockers')
+      .set('Authorization', `Bearer ${u.token}`);
+    expect(blocked.status).toBe(200);
+    expect(blocked.body.blockers[0].type).toBe('balance');
+  });
+
+  test('requires authentication', async () => {
+    expect((await request(app).get('/api/users/me/deletion-blockers')).status).toBe(401);
+  });
+
+  test('google-linked POST deletion-otp → challengeId + devCode(test); pure-email → requiredFactor password', async () => {
+    const g = await registerUser();
+    setGoogleId(g.id);
+    const otp = await requestOtp(g.token);
+    expect(otp.status).toBe(200);
+    expect(otp.body.challengeId).toBeDefined();
+    expect(otp.body.expiresInSeconds).toBe(300);
+    expect(otp.body.devCode).toMatch(/^\d{6}$/);
+    expect(otp.body.code).toBeUndefined(); // raw code never in responses
+
+    const p = await registerUser();
+    const res = await requestOtp(p.token);
+    expect(res.status).toBe(400);
+    expect(res.body.requiredFactor).toBe('password');
+  });
+
+  test('devCode absent when NODE_ENV is not test; 502 when send fails outside test', async () => {
+    const g = await registerUser();
+    setGoogleId(g.id);
+    const prev = process.env.NODE_ENV;
+    try {
+      process.env.NODE_ENV = 'production';
+      sendEmail.mockResolvedValueOnce({ success: true });
+      const ok = await requestOtp(g.token);
+      expect(ok.status).toBe(200);
+      expect(ok.body.devCode).toBeUndefined();
+
+      sendEmail.mockResolvedValueOnce({ success: false, error: 'no transport' });
+      const fail = await requestOtp(g.token);
+      expect(fail.status).toBe(502);
+    } finally {
+      process.env.NODE_ENV = prev;
+    }
+  });
+
+  test('rate limit: 4th send in window → 429 with retryAfterSeconds', async () => {
+    const g = await registerUser();
+    setGoogleId(g.id);
+    for (let i = 0; i < 3; i++) {
+      const r = await requestOtp(g.token);
+      expect(r.status).toBe(200);
+    }
+    const limited = await requestOtp(g.token);
+    expect(limited.status).toBe(429);
+    expect(limited.body.retryAfterSeconds).toBeGreaterThan(0);
+  });
+
+  test('purpose confusion across endpoints: deletion challenge rejected at /auth/mfa/verify', async () => {
+    const g = await registerUser();
+    setGoogleId(g.id);
+    const otp = await requestOtp(g.token);
+    const verify = await request(app).post('/api/auth/mfa/verify')
+      .send({ challengeId: otp.body.challengeId, code: otp.body.devCode });
+    expect(verify.status).toBe(401);
+    expect(verify.body.token).toBeUndefined();
   });
 });
