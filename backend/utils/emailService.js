@@ -102,8 +102,12 @@ async function sendEmail (to, subject, html) {
 }
 
 async function sendPasswordResetEmail (email, resetToken) {
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8000';
-  const resetUrl = `${frontendUrl}#/reset-password?token=${resetToken}`;
+  // FRONTEND_URL is a CSV (CORS allowlist) — first origin builds the link,
+  // matching buildConfirmationLink / newsletter / server.js CORS parsing.
+  const frontendUrl = String(process.env.FRONTEND_URL || 'http://localhost:8000')
+    .split(',')[0]
+    .trim();
+  const resetUrl = `${frontendUrl}/#/reset-password?token=${resetToken}`;
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
