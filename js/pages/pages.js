@@ -319,7 +319,7 @@ class AdminUI {
               ${sub ? `<p class="adm-modal-sub">${_pageEsc(sub)}</p>` : ''}
             </div>
             <button type="button" class="adm-modal-close" data-adm-modal-close aria-label="Close">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18M6 6l12 12"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
           <div class="adm-modal-body">${body}</div>
@@ -395,10 +395,7 @@ class AdminUI {
         } else if (action === 'logout') {
           if (typeof adminAuthManager !== 'undefined') {
             adminAuthManager.logout?.();
-            window.location.hash = '#/';
-            if (typeof Pages !== 'undefined' && Pages.renderLanding) {
-              Pages.renderLanding();
-            }
+            router.navigate('/');
           }
         }
       });
@@ -439,6 +436,319 @@ class AdminUI {
       // pillGroup() sets exactly one data-* key per pill — use it.
       const key = Object.values(pill.dataset)[0];
       onChange?.(key);
+    });
+  }
+
+  // ---- Table skeleton (loading shimmer) ----
+  // columns: column count to fake; rows: skeleton row count.
+  static tableSkeleton({ columns = 5, rows = 6 } = {}) {
+    const safeCols = Math.max(1, columns);
+    const ths = Array.from(
+      { length: safeCols },
+      () => '<th class="adm-th"><span class="adm-skel adm-skel--th"></span></th>'
+    ).join('');
+    const trs = Array.from(
+      { length: rows },
+      () =>
+        `<tr>${Array.from(
+          { length: safeCols },
+          () => '<td class="adm-td"><span class="adm-skel"></span></td>'
+        ).join('')}</tr>`
+    ).join('');
+    return `<table class="adm-table"><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`;
+  }
+
+  // ---- Numbered pagination footer ----
+  // Buttons carry data-adm-page="N" — wire page-level delegation on
+  // click of [data-adm-page] (skip when disabled).
+  static paginationFooter({ total, page, pageSize }) {
+    const count = total || 0;
+    const pages = Math.max(1, Math.ceil(count / pageSize));
+    const cur = Math.min(Math.max(1, page), pages);
+    if (count === 0) {
+      return `
+      <div class="adm-pagination">
+        <span class="adm-pagination-info">Showing 0 of 0</span>
+      </div>`;
+    }
+    const start = (cur - 1) * pageSize + 1;
+    const end = Math.min(cur * pageSize, count);
+    const info = `<span class="adm-pagination-info">Showing ${start}&ndash;${end} of ${count}</span>`;
+    if (pages <= 1) {
+      return `
+      <div class="adm-pagination">
+        ${info}
+      </div>`;
+    }
+    const nums = [];
+    if (pages <= 7) {
+      for (let i = 1; i <= pages; i += 1) {
+        nums.push(i);
+      }
+    } else {
+      nums.push(1);
+      const from = Math.max(2, cur - 2);
+      const to = Math.min(pages - 1, cur + 2);
+      if (from > 2) {
+        nums.push('…');
+      }
+      for (let i = from; i <= to; i += 1) {
+        nums.push(i);
+      }
+      if (to < pages - 1) {
+        nums.push('…');
+      }
+      nums.push(pages);
+    }
+    const buttons = nums
+      .map(n => {
+        if (n === '…') {
+          return '<span class="adm-pagination-ellipsis">&hellip;</span>';
+        }
+        const active = n === cur ? ' is-active' : '';
+        const current = n === cur ? ' aria-current="page"' : '';
+        return `<button type="button" class="adm-btn adm-btn--sm adm-page-num${active}" data-adm-page="${n}"${current}>${n}</button>`;
+      })
+      .join('');
+    return `
+      <div class="adm-pagination">
+        ${info}
+        <div class="adm-pagination-actions">
+          <button type="button" class="adm-btn adm-btn--sm" data-adm-page="${cur - 1}"${
+            cur <= 1 ? ' disabled' : ''
+          }>Previous</button>
+          ${buttons}
+          <button type="button" class="adm-btn adm-btn--sm" data-adm-page="${cur + 1}"${
+            cur >= pages ? ' disabled' : ''
+          }>Next</button>
+        </div>
+      </div>`;
+  }
+
+  // ---- Row action menu (single ⋯ trigger per row) ----
+  // items = [{ label, danger?, data }] where data is a map of data-*
+  // attributes (e.g. { 'product-action': 'delete', 'product-id': id })
+  // so existing page-level [data-*-action] delegation keeps working.
+  static rowMenu(items) {
+    AdminUI._bindRowMenus();
+    const menuItems = items
+      .map(it => {
+        const data = Object.entries(it.data || {})
+          .map(([k, v]) => `data-${_pageEsc(k)}="${_pageEsc(v)}"`)
+          .join(' ');
+        return `<button type="button" role="menuitem" class="adm-rowmenu-item${
+          it.danger ? ' adm-rowmenu-item--danger' : ''
+        }" ${data}>${_pageEsc(it.label)}</button>`;
+      })
+      .join('');
+    return `
+      <div class="adm-rowmenu" data-rowmenu>
+        <button type="button" class="adm-btn adm-btn--sm adm-rowmenu-trigger" data-rowmenu-trigger aria-haspopup="menu" aria-expanded="false" aria-label="Row actions">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        </button>
+        <div class="adm-rowmenu-pop" role="menu" hidden>${menuItems}</div>
+      </div>
+    `;
+  }
+
+  // Global trigger / outside-click / Escape handling — installed once.
+  // The pop uses position:fixed (set here from the trigger rect) so it
+  // escapes .adm-table-wrap overflow clipping on first/last rows.
+  static _bindRowMenus() {
+    if (AdminUI._rowMenusBound) {
+      return;
+    }
+    AdminUI._rowMenusBound = true;
+    const closeAll = () => {
+      document.querySelectorAll('.adm-rowmenu-pop.is-open').forEach(pop => {
+        pop.classList.remove('is-open');
+        pop.hidden = true;
+        const trig = pop.parentElement && pop.parentElement.querySelector('[data-rowmenu-trigger]');
+        if (trig) {
+          trig.setAttribute('aria-expanded', 'false');
+        }
+      });
+      window.removeEventListener('scroll', closeAll, true);
+    };
+    const open = trigger => {
+      const wrap = trigger.closest('[data-rowmenu]');
+      const pop = wrap && wrap.querySelector('.adm-rowmenu-pop');
+      if (!pop) {
+        return;
+      }
+      pop.hidden = false;
+      pop.classList.add('is-open');
+      trigger.setAttribute('aria-expanded', 'true');
+      const r = trigger.getBoundingClientRect();
+      const pr = pop.getBoundingClientRect();
+      let top = r.bottom + 4;
+      let left = r.right - pr.width;
+      if (top + pr.height > window.innerHeight - 8) {
+        top = r.top - pr.height - 4;
+      }
+      if (left < 8) {
+        left = 8;
+      } else if (left + pr.width > window.innerWidth - 8) {
+        left = window.innerWidth - pr.width - 8;
+      }
+      pop.style.top = `${top}px`;
+      pop.style.left = `${left}px`;
+      window.addEventListener('scroll', closeAll, true);
+    };
+    document.addEventListener('click', e => {
+      const trigger = e.target.closest('[data-rowmenu-trigger]');
+      if (trigger) {
+        const isOpen = trigger.getAttribute('aria-expanded') === 'true';
+        closeAll();
+        if (!isOpen) {
+          open(trigger);
+        }
+        return;
+      }
+      // Any other click (menu item or outside) closes every open menu.
+      closeAll();
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeAll();
+      }
+    });
+  }
+
+  // ---- Promise-based confirm dialog (replaces window.confirm) ----
+  static confirmDialog({
+    title,
+    message,
+    confirmLabel = 'Confirm',
+    cancelLabel = 'Cancel',
+    danger = true,
+  }) {
+    return new Promise(resolve => {
+      const existing = document.getElementById('adm-confirm-dialog');
+      if (existing) {
+        existing.remove();
+      }
+      const wrap = document.createElement('div');
+      wrap.innerHTML = AdminUI.modalHtml({
+        id: 'adm-confirm-dialog',
+        title,
+        body: `<p class="adm-modal-confirm-msg">${_pageEsc(message || '')}</p>`,
+        footer: `
+          <button type="button" class="adm-btn" data-adm-modal-action="cancel">${_pageEsc(
+            cancelLabel
+          )}</button>
+          <button type="button" class="adm-btn ${
+            danger ? 'adm-btn--danger' : 'adm-btn--primary'
+          }" data-adm-modal-action="confirm">${_pageEsc(confirmLabel)}</button>
+        `,
+      });
+      const overlay = wrap.firstElementChild;
+      document.body.appendChild(overlay);
+      const close = result => {
+        document.removeEventListener('keydown', onKey);
+        overlay.remove();
+        resolve(result);
+      };
+      const onKey = e => {
+        if (e.key === 'Escape') {
+          close(false);
+        }
+      };
+      overlay.addEventListener('click', e => {
+        if (e.target === overlay || e.target.closest('[data-adm-modal-close]')) {
+          close(false);
+          return;
+        }
+        const actionBtn = e.target.closest('[data-adm-modal-action]');
+        if (actionBtn) {
+          close(actionBtn.dataset.admModalAction === 'confirm');
+        }
+      });
+      document.addEventListener('keydown', onKey);
+      const confirmBtn = overlay.querySelector('[data-adm-modal-action="confirm"]');
+      if (confirmBtn) {
+        confirmBtn.focus();
+      }
+    });
+  }
+
+  // ---- Promise-based prompt dialog (replaces window.prompt) ----
+  // Resolves with the trimmed non-empty value, or null on cancel.
+  static promptDialog({
+    title,
+    message,
+    placeholder = '',
+    confirmLabel = 'Confirm',
+    cancelLabel = 'Cancel',
+    maxlength = 300,
+  }) {
+    return new Promise(resolve => {
+      const existing = document.getElementById('adm-prompt-dialog');
+      if (existing) {
+        existing.remove();
+      }
+      const wrap = document.createElement('div');
+      wrap.innerHTML = AdminUI.modalHtml({
+        id: 'adm-prompt-dialog',
+        title,
+        body: `
+          ${message ? `<p class="adm-modal-confirm-msg">${_pageEsc(message)}</p>` : ''}
+          <textarea id="adm-prompt-input" class="adm-modal-field" rows="3" maxlength="${
+            Number(maxlength) || 300
+          }" placeholder="${_pageEsc(placeholder)}"></textarea>
+          <p class="adm-modal-error" role="alert" id="adm-prompt-error"></p>
+        `,
+        footer: `
+          <button type="button" class="adm-btn" data-adm-modal-action="cancel">${_pageEsc(
+            cancelLabel
+          )}</button>
+          <button type="button" class="adm-btn adm-btn--danger" data-adm-modal-action="confirm">${_pageEsc(
+            confirmLabel
+          )}</button>
+        `,
+      });
+      const overlay = wrap.firstElementChild;
+      document.body.appendChild(overlay);
+      const input = overlay.querySelector('#adm-prompt-input');
+      const errorEl = overlay.querySelector('#adm-prompt-error');
+      const close = value => {
+        document.removeEventListener('keydown', onKey);
+        overlay.remove();
+        resolve(value);
+      };
+      const onKey = e => {
+        if (e.key === 'Escape') {
+          close(null);
+        }
+      };
+      overlay.addEventListener('click', e => {
+        if (e.target === overlay || e.target.closest('[data-adm-modal-close]')) {
+          close(null);
+          return;
+        }
+        const actionBtn = e.target.closest('[data-adm-modal-action]');
+        if (actionBtn) {
+          if (actionBtn.dataset.admModalAction !== 'confirm') {
+            close(null);
+            return;
+          }
+          const value = input ? input.value.trim() : '';
+          if (!value) {
+            if (errorEl) {
+              errorEl.textContent = 'Please enter a value.';
+            }
+            if (input) {
+              input.focus();
+            }
+            return;
+          }
+          close(value);
+        }
+      });
+      document.addEventListener('keydown', onKey);
+      if (input) {
+        input.focus();
+      }
     });
   }
 
@@ -714,7 +1024,9 @@ class Pages {
     // inline handlers; migrate to addEventListener / data-action delegation.
     router.register('/admin', () => safeCall('renderAdminDashboard'));
     router.register('/admin/login', () => safeCall('renderAdminLogin'));
-    router.register('/admin/verifications', () => safeCall('renderAdminVerifications'));
+    router.register('/admin/verifications', params =>
+      safeCall('renderAdminVerifications', params && params.filter)
+    );
     router.register('/admin/products', () => safeCall('renderAdminProducts'));
     router.register('/admin/products/new', () => safeCall('renderAdminProductCreate'));
     router.register('/admin/products/edit/:id', params =>
@@ -723,7 +1035,9 @@ class Pages {
     router.register('/admin/analytics', () => safeCall('renderAdminAnalytics'));
     router.register('/admin/users', () => safeCall('renderAdminUsers'));
     router.register('/admin/orders', () => safeCall('renderAdminOrders'));
-    router.register('/admin/payouts', () => safeCall('renderAdminPayouts'));
+    router.register('/admin/payouts', params =>
+      safeCall('renderAdminPayouts', params && params.filter)
+    );
     router.register('/admin/reports', () => safeCall('renderAdminReports'));
     router.register('/admin/activity', () => safeCall('renderAdminActivity'));
     router.register('/admin/regions', () => safeCall('renderAdminRegions'));
@@ -5128,8 +5442,8 @@ font-size: 0.8rem;
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
       </button>
       <button type="button" class="adm-btn adm-btn--primary" data-adm-action="new-product">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19M5 12h14"/></svg>
-        New product
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add product
       </button>
     `;
 
@@ -5178,10 +5492,7 @@ font-size: 0.8rem;
     `;
 
     AdminUI.wireSidebar(key => {
-      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {
-        Pages[method]();
-      }
+      router.navigate('/admin/' + key);
     });
 
     // Decorative — period switch is a no-op for now. Wire the active class.
@@ -5338,18 +5649,11 @@ font-size: 0.8rem;
         rows: activityRows,
         rowAttr: r => ` data-cat="${_pageEsc(r.category || 'all')}"`,
         emptyHtml: `<tr><td class="adm-td" colspan="${activityColumns.length}"><div class="adm-empty"><div class="adm-empty-title">No activity yet</div><p class="adm-empty-body">When admins take actions, they'll show up here.</p></div></td></tr>`,
-        footerHtml: (() => {
-          const total = activityRows.length;
-          return `
-            <div class="adm-pagination">
-              <span class="adm-pagination-info">Showing ${total} of ${total}</span>
-              <div class="adm-pagination-actions">
-                <button type="button" class="adm-btn adm-btn--sm" disabled>Previous</button>
-                <button type="button" class="adm-btn adm-btn--sm" disabled>Next</button>
-              </div>
-            </div>
-          `;
-        })(),
+        footerHtml: AdminUI.paginationFooter({
+          total: activityRows.length,
+          page: 1,
+          pageSize: Math.max(activityRows.length, 1),
+        }),
       }),
       filterSelector
     );
@@ -5456,7 +5760,7 @@ font-size: 0.8rem;
         userInitials: 'JD',
         userName: 'John Doe',
         action: 'Payout request',
-        details: { amount: 'GHS 120.50', method: 'Momo' },
+        details: { amount: 'GH₵ 120.50', method: 'Momo' },
         severity: 'warning',
         severityLabel: 'Warning',
         category: 'payouts',
@@ -5466,7 +5770,7 @@ font-size: 0.8rem;
         userInitials: 'AM',
         userName: 'Ama Mensah',
         action: 'Order placed',
-        details: { amount: 'GHS 45.00', category: 'Electronics' },
+        details: { amount: 'GH₵ 45.00', category: 'Electronics' },
         severity: 'success',
         severityLabel: 'Success',
         category: 'orders',
@@ -5485,12 +5789,19 @@ font-size: 0.8rem;
     return fallback;
   }
 
-  static async renderAdminVerifications(filter = 'pending') {
+  static async renderAdminVerifications(filter) {
     if (!_requireAdmin()) {
       return;
     }
+    // Filter source, in priority order: explicit arg (route dispatch /
+    // internal callers), then router params (internal re-render after a
+    // pill click — updateUrl synced currentParams), then default. Never
+    // read location.search here: the handler runs before navigate's
+    // pushState, so the bar still shows the previous page's query.
+    const routeParams = (typeof router !== 'undefined' && router.getParams()) || {};
+    const activeFilter = filter || routeParams.filter || 'pending';
     // Remember the active tab so post-purge re-renders return to it.
-    Pages._verifFilter = filter;
+    Pages._verifFilter = activeFilter;
     const adminUser =
       (typeof adminAuthManager !== 'undefined' && adminAuthManager.getCurrentUser?.()) ||
       (typeof authManager !== 'undefined' && authManager.getCurrentUser?.()) ||
@@ -5509,65 +5820,21 @@ font-size: 0.8rem;
       return;
     }
 
-    await adminVerificationsManager.init();
-
     const mainContent = document.getElementById('main-content');
-    const stats = adminVerificationsManager.getStats();
-    const allItems =
-      filter === 'all'
-        ? adminVerificationsManager.getAll()
-        : filter === 'approved'
-          ? adminVerificationsManager.getApproved()
-          : filter === 'rejected'
-            ? adminVerificationsManager.getRejected()
-            : filter === 'approved_pending_user'
-              ? adminVerificationsManager.getApprovedPendingUser()
-              : adminVerificationsManager.getPending();
+    const qs = (typeof router !== 'undefined' && router.getParams()) || {};
+    const state = {
+      pill: activeFilter,
+      q: qs.q || '',
+      page: 1,
+      pageSize: 10,
+    };
 
     const topbarActions = `
       <div class="adm-search">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-        <input type="text" placeholder="Search verifications by name, email, or student ID" aria-label="Search verifications" id="admin-verifications-search" />
+        <input type="text" placeholder="Search verifications by name, email, or student ID" aria-label="Search verifications" id="admin-verifications-search" value="${_pageEsc(state.q)}" />
       </div>
     `;
-
-    const statCards = [
-      AdminUI.statCard({
-        label: 'Pending',
-        value: _pageEsc(String(stats.pending)),
-        delta: stats.pending > 0 ? 'Awaiting review' : 'Queue clear',
-        deltaKind: stats.pending > 0 ? 'warning' : 'muted',
-      }),
-      AdminUI.statCard({
-        label: 'Approved',
-        value: _pageEsc(String(stats.approved)),
-        delta: 'All-time',
-        deltaKind: 'success',
-      }),
-      AdminUI.statCard({
-        label: 'Rejected',
-        value: _pageEsc(String(stats.rejected)),
-        delta: 'All-time',
-        deltaKind: 'danger',
-      }),
-      AdminUI.statCard({
-        label: 'Total',
-        value: _pageEsc(String(stats.total)),
-        delta: 'Across all statuses',
-        deltaKind: 'muted',
-      }),
-    ];
-
-    const sync = adminVerificationsManager.getLastSyncStatus
-      ? adminVerificationsManager.getLastSyncStatus()
-      : { ok: null, error: null };
-    const syncBanner =
-      sync.ok === false
-        ? `<div id="admin-verifications-sync-banner" style="margin: 0.75rem 0 1rem; padding: 0.75rem 1rem; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; color: #92400e; font-size: 0.9rem;">
-          <strong>Backend sync failed.</strong> Showing cached data. ${sync.error ? 'Last error: ' + _pageEsc(sync.error) : ''}
-          <button type="button" data-action="retry-sync" class="btn btn-ghost btn-sm" style="margin-left: 0.5rem;">Retry</button>
-        </div>`
-        : '';
 
     mainContent.innerHTML = `
       <div class="adm-layout">
@@ -5577,9 +5844,9 @@ font-size: 0.8rem;
           <div class="adm-page">
             ${AdminUI.pageHeader('Student Verifications', 'Review and approve student ID verifications.', null)}
 
-            ${syncBanner}
+            <div id="admin-verifications-banner-host"></div>
 
-            <div id="admin-verifications-stats-host">${AdminUI.statGrid(statCards)}</div>
+            <div id="admin-verifications-stats-host"></div>
 
             <div id="admin-verifications-card-host"></div>
           </div>
@@ -5587,45 +5854,9 @@ font-size: 0.8rem;
       </div>
     `;
 
-    const retryBtn = mainContent.querySelector('[data-action="retry-sync"]');
-    if (retryBtn) {
-      retryBtn.addEventListener('click', async () => {
-        retryBtn.disabled = true;
-        retryBtn.textContent = 'Retrying…';
-        await adminVerificationsManager._fetchFromBackend();
-        Pages.renderAdminVerifications(Pages._verifFilter || 'pending');
-      });
-    }
-
     AdminUI.wireSidebar(key => {
-      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {
-        Pages[method]();
-      }
+      router.navigate('/admin/' + key);
     });
-
-    const filterLabel =
-      filter === 'all'
-        ? 'All Verifications'
-        : filter === 'approved'
-          ? 'Approved Verifications'
-          : filter === 'approved_pending_user'
-            ? 'Awaiting User Confirmation'
-            : filter === 'rejected'
-              ? 'Rejected Verifications'
-              : 'Pending Verifications';
-
-    const pillTabs = [
-      { key: 'pending', label: `Pending (${stats.pending})` },
-      {
-        key: 'approved_pending_user',
-        label: `Awaiting Confirmation (${stats.approvedPendingUser || 0})`,
-      },
-      { key: 'approved', label: `Approved (${stats.approved})` },
-      { key: 'rejected', label: `Rejected (${stats.rejected})` },
-      { key: 'all', label: 'All' },
-    ];
-    const pillSelector = AdminUI.pillGroup(pillTabs, filter, null, 'data-verif-filter');
 
     const statusToBadgeKind = {
       pending: 'warning',
@@ -5695,46 +5926,171 @@ font-size: 0.8rem;
       },
     ];
 
-    const cardTitle = `<h3 class="adm-card-title">${_pageEsc(filterLabel)}</h3><p class="adm-card-sub">Showing ${allItems.length} verification${allItems.length === 1 ? '' : 's'}</p>`;
-
-    const emptyHtml = `<tr><td class="adm-td" colspan="${verifColumns.length}">${AdminUI.emptyState(
-      {
-        icon: Icons.shield || '',
-        title: 'No verifications to show',
-        body: `There are no ${filter} verifications right now.`,
-      }
-    )}</td></tr>`;
-
-    const footerHtml = `
-      <div class="adm-pagination">
-        <span class="adm-pagination-info">Showing ${allItems.length} of ${stats.total}</span>
-        <div class="adm-pagination-actions">
-          <button type="button" class="adm-btn adm-btn--sm" disabled>Previous</button>
-          <button type="button" class="adm-btn adm-btn--sm" disabled>Next</button>
-        </div>
-      </div>
-    `;
-
-    const tableHtml = AdminUI.table({
-      columns: verifColumns,
-      rows: allItems,
-      emptyHtml,
-      footerHtml,
-    });
-
-    const cardHtml = AdminUI.card(cardTitle, tableHtml, pillSelector);
     const cardHost = document.getElementById('admin-verifications-card-host');
+    const statsHost = document.getElementById('admin-verifications-stats-host');
+    const bannerHost = document.getElementById('admin-verifications-banner-host');
+
+    const selectItems = () =>
+      state.pill === 'all'
+        ? adminVerificationsManager.getAll()
+        : state.pill === 'approved'
+          ? adminVerificationsManager.getApproved()
+          : state.pill === 'rejected'
+            ? adminVerificationsManager.getRejected()
+            : state.pill === 'approved_pending_user'
+              ? adminVerificationsManager.getApprovedPendingUser()
+              : adminVerificationsManager.getPending();
+
+    const labelFor = p =>
+      p === 'all'
+        ? 'All Verifications'
+        : p === 'approved'
+          ? 'Approved Verifications'
+          : p === 'approved_pending_user'
+            ? 'Awaiting User Confirmation'
+            : p === 'rejected'
+              ? 'Rejected Verifications'
+              : 'Pending Verifications';
+
+    const paint = () => {
+      const stats = adminVerificationsManager.getStats();
+      const statCards = [
+        AdminUI.statCard({
+          label: 'Pending',
+          value: _pageEsc(String(stats.pending)),
+          delta: stats.pending > 0 ? 'Awaiting review' : 'Queue clear',
+          deltaKind: stats.pending > 0 ? 'warning' : 'muted',
+        }),
+        AdminUI.statCard({
+          label: 'Approved',
+          value: _pageEsc(String(stats.approved)),
+          delta: 'All-time',
+          deltaKind: 'success',
+        }),
+        AdminUI.statCard({
+          label: 'Rejected',
+          value: _pageEsc(String(stats.rejected)),
+          delta: 'All-time',
+          deltaKind: 'danger',
+        }),
+        AdminUI.statCard({
+          label: 'Total',
+          value: _pageEsc(String(stats.total)),
+          delta: 'Across all statuses',
+          deltaKind: 'muted',
+        }),
+      ];
+      if (statsHost) {
+        statsHost.innerHTML = AdminUI.statGrid(statCards);
+      }
+
+      const allItems = selectItems();
+      const filterLabel = labelFor(state.pill);
+      const pillTabs = [
+        { key: 'pending', label: `Pending (${stats.pending})` },
+        {
+          key: 'approved_pending_user',
+          label: `Awaiting Confirmation (${stats.approvedPendingUser || 0})`,
+        },
+        { key: 'approved', label: `Approved (${stats.approved})` },
+        { key: 'rejected', label: `Rejected (${stats.rejected})` },
+        { key: 'all', label: 'All' },
+      ];
+      const pillSelector = AdminUI.pillGroup(pillTabs, state.pill, null, 'data-verif-filter');
+
+      const q = state.q.trim().toLowerCase();
+      const filtered = q
+        ? allItems.filter(v => {
+            const hay = `${v.fullName || ''} ${v.studentId || ''} ${v.personalEmail || ''} ${
+              v.universityEmail || ''
+            } ${v.email || ''} ${v.university || v.universityName || ''}`.toLowerCase();
+            return hay.includes(q);
+          })
+        : allItems;
+      const pages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
+      if (state.page > pages) {
+        state.page = pages;
+      }
+      const slice = filtered.slice((state.page - 1) * state.pageSize, state.page * state.pageSize);
+
+      const cardTitle = `<h3 class="adm-card-title">${_pageEsc(filterLabel)}</h3><p class="adm-card-sub">Showing ${filtered.length} verification${filtered.length === 1 ? '' : 's'}${q ? ' matching search' : ''}</p>`;
+      const emptyHtml = `<tr><td class="adm-td" colspan="${verifColumns.length}">${AdminUI.emptyState(
+        {
+          icon: Icons.shield || '',
+          title: 'No verifications to show',
+          body: `There are no ${state.pill} verifications right now.`,
+        }
+      )}</td></tr>`;
+      const tableHtml = AdminUI.table({
+        columns: verifColumns,
+        rows: slice,
+        emptyHtml,
+        footerHtml: AdminUI.paginationFooter({
+          total: filtered.length,
+          page: state.page,
+          pageSize: state.pageSize,
+        }),
+      });
+      if (cardHost) {
+        cardHost.innerHTML = AdminUI.card(cardTitle, tableHtml, pillSelector);
+      }
+
+      AdminUI.wirePillGroup(cardHost && cardHost.querySelector('.adm-pill-group'), key => {
+        state.pill = key;
+        Pages._verifFilter = key;
+        state.page = 1;
+        const params = { filter: key };
+        const qq = state.q.trim();
+        if (qq) {
+          params.q = qq;
+        }
+        router.updateUrl('/admin/verifications', params);
+        paint();
+      });
+    };
+
+    // Skeleton while the first init() fetch runs (cached after that).
     if (cardHost) {
-      cardHost.outerHTML = cardHtml;
+      cardHost.innerHTML = AdminUI.card(
+        `<h3 class="adm-card-title">${_pageEsc(labelFor(state.pill))}</h3><p class="adm-card-sub">Loading verifications…</p>`,
+        AdminUI.tableSkeleton({ columns: verifColumns.length, rows: 6 })
+      );
     }
+
+    await adminVerificationsManager.init();
+
+    // Sync banner — status is only meaningful after init().
+    const sync = adminVerificationsManager.getLastSyncStatus
+      ? adminVerificationsManager.getLastSyncStatus()
+      : { ok: null, error: null };
+    if (sync.ok === false && bannerHost) {
+      bannerHost.innerHTML = `
+        <div id="admin-verifications-sync-banner" style="margin: 0.75rem 0 1rem; padding: 0.75rem 1rem; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; color: #92400e; font-size: 0.9rem;">
+          <strong>Backend sync failed.</strong> Showing cached data. ${sync.error ? 'Last error: ' + _pageEsc(sync.error) : ''}
+          <button type="button" data-action="retry-sync" class="btn btn-ghost btn-sm" style="margin-left: 0.5rem;">Retry</button>
+        </div>`;
+      const retryBtn = bannerHost.querySelector('[data-action="retry-sync"]');
+      if (retryBtn) {
+        retryBtn.addEventListener('click', async () => {
+          retryBtn.disabled = true;
+          retryBtn.textContent = 'Retrying…';
+          await adminVerificationsManager._fetchFromBackend();
+          Pages.renderAdminVerifications(Pages._verifFilter || 'pending');
+        });
+      }
+    }
+
+    paint();
 
     const page = mainContent.querySelector('.adm-page');
     if (page) {
-      AdminUI.wirePillGroup(page.querySelector('.adm-pill-group'), key => {
-        Pages.renderAdminVerifications(key);
-      });
-
       page.addEventListener('click', e => {
+        const pg = e.target.closest('[data-adm-page]');
+        if (pg && !pg.disabled) {
+          state.page = Number(pg.dataset.admPage) || 1;
+          paint();
+          return;
+        }
         const btn = e.target.closest('[data-verif-action]');
         if (!btn) {
           return;
@@ -5751,29 +6107,17 @@ font-size: 0.8rem;
 
     const searchInput = document.getElementById('admin-verifications-search');
     if (searchInput) {
+      searchInput.value = state.q;
       AdminUI.wireSearch(searchInput, value => {
-        const q = (value || '').trim().toLowerCase();
-        const tbody = mainContent.querySelector('.adm-table tbody');
-        if (!tbody) {
-          return;
+        state.q = value || '';
+        state.page = 1;
+        const params = { filter: state.pill };
+        const qq = state.q.trim();
+        if (qq) {
+          params.q = qq;
         }
-        let shown = 0;
-        const trs = tbody.querySelectorAll('tr');
-        trs.forEach(tr => {
-          if (!tr.children || tr.children.length < 2) {
-            return;
-          }
-          const text = tr.textContent.toLowerCase();
-          const match = !q || text.includes(q);
-          tr.style.display = match ? '' : 'none';
-          if (match) {
-            shown += 1;
-          }
-        });
-        const info = mainContent.querySelector('.adm-pagination-info');
-        if (info) {
-          info.textContent = `Showing ${shown} of ${stats.total}`;
-        }
+        router.updateUrl('/admin/verifications', params, true);
+        paint();
       });
     }
   }
@@ -5810,11 +6154,21 @@ font-size: 0.8rem;
     document.body.style.background = '';
 
     const mainContent = document.getElementById('main-content');
+    const qs = (typeof router !== 'undefined' && router.getParams()) || {};
+    this._payoutFilter = filter || qs.filter || 'requested';
+    const state = {
+      pill: this._payoutFilter,
+      q: qs.q || '',
+      page: 1,
+      pageSize: 10,
+      rows: [],
+      loadError: null,
+    };
 
     const topbarActions = `
       <div class="adm-search">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-        <input type="text" placeholder="Search payouts by seller, amount, or destination" aria-label="Search payouts" id="admin-payouts-search" />
+        <input type="text" placeholder="Search payouts by seller, amount, or destination" aria-label="Search payouts" id="admin-payouts-search" value="${_pageEsc(state.q)}" />
       </div>
     `;
 
@@ -5833,57 +6187,14 @@ font-size: 0.8rem;
     `;
 
     AdminUI.wireSidebar(key => {
-      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {
-        Pages[method]();
-      }
+      router.navigate('/admin/' + key);
     });
-
-    // One fetch for the whole queue (backend caps page size); counts and
-    // filtering are derived client-side so tab switches don't refetch.
-    let payouts = [];
-    let loadError = null;
-    try {
-      const resp = await api.admin.getPayouts({ limit: 200 });
-      if (resp.success && Array.isArray(resp.data?.payouts)) {
-        payouts = resp.data.payouts;
-      } else {
-        loadError = resp.error || 'Failed to load payout queue.';
-      }
-    } catch (err) {
-      loadError = err.message || 'Failed to load payout queue.';
-    }
-
-    this._payoutFilter = filter || this._payoutFilter || 'requested';
-    const activeFilter = this._payoutFilter;
-
-    const counts = { requested: 0, paid: 0, failed: 0 };
-    for (const p of payouts) {
-      if (counts[p.status] !== undefined) {
-        counts[p.status]++;
-      }
-    }
-    const visible =
-      activeFilter === 'all' ? payouts : payouts.filter(p => p.status === activeFilter);
 
     const statusToBadgeKind = {
       requested: 'warning',
       paid: 'success',
       failed: 'danger',
     };
-
-    const pillTabs = [
-      { key: 'requested', label: `Requested (${counts.requested})` },
-      { key: 'paid', label: `Paid (${counts.paid})` },
-      { key: 'failed', label: `Rejected (${counts.failed})` },
-      { key: 'all', label: `All (${payouts.length})` },
-    ];
-    const pillSelector = AdminUI.pillGroup(
-      pillTabs,
-      activeFilter,
-      'adm-pill-group--inverse',
-      'data-payout-filter'
-    );
 
     const payoutColumns = [
       {
@@ -5934,62 +6245,128 @@ font-size: 0.8rem;
           if (p.status !== 'requested') {
             return '<span class="adm-text-muted">—</span>';
           }
-          const id = _pageEsc(p.id || '');
-          return `
-            <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
-              <button type="button" class="adm-btn adm-btn--sm" data-payout-action="approve" data-payout-id="${id}" style="background:var(--color-success);color:#fff;border-color:var(--color-success);">Approve</button>
-              <button type="button" class="adm-btn adm-btn--sm adm-btn--danger" data-payout-action="reject" data-payout-id="${id}">Reject</button>
-            </div>
-          `;
+          const id = p.id || '';
+          return AdminUI.rowMenu([
+            { label: 'Approve', data: { 'payout-action': 'approve', 'payout-id': id } },
+            {
+              label: 'Reject',
+              danger: true,
+              data: { 'payout-action': 'reject', 'payout-id': id },
+            },
+          ]);
         },
       },
     ];
 
-    const cardTitle = `<h3 class="adm-card-title">Payout Requests</h3><p class="adm-card-sub">Showing ${visible.length} request${visible.length === 1 ? '' : 's'}</p>`;
-
-    const emptyHtml = `<tr><td class="adm-td" colspan="${payoutColumns.length}">${AdminUI.emptyState(
-      {
-        icon: Icons.money || '',
-        title: 'No payout requests',
-        body: loadError
-          ? `${loadError} Offline or server unreachable.`
-          : `There are no ${activeFilter === 'all' ? '' : `${activeFilter} `}payout requests right now.`,
-      }
-    )}</td></tr>`;
-
-    const footerHtml = `
-      <div class="adm-pagination">
-        <span class="adm-pagination-info">Showing ${visible.length} of ${payouts.length}</span>
-        <div class="adm-pagination-actions">
-          <button type="button" class="adm-btn adm-btn--sm" disabled>Previous</button>
-          <button type="button" class="adm-btn adm-btn--sm" disabled>Next</button>
-        </div>
-      </div>
-    `;
-
-    const tableHtml = AdminUI.table({
-      columns: payoutColumns,
-      rows: visible,
-      emptyHtml,
-      footerHtml,
-    });
-
-    const cardHtml = AdminUI.card(cardTitle, tableHtml, pillSelector);
     const cardHost = document.getElementById('admin-payouts-card-host');
+
+    const paint = () => {
+      const payouts = state.rows;
+      const counts = { requested: 0, paid: 0, failed: 0 };
+      for (const p of payouts) {
+        if (counts[p.status] !== undefined) {
+          counts[p.status]++;
+        }
+      }
+      const q = state.q.trim().toLowerCase();
+      const byPill = state.pill === 'all' ? payouts : payouts.filter(p => p.status === state.pill);
+      const visible = q
+        ? byPill.filter(p => {
+            const hay = `${p.seller?.fullName || ''} ${p.seller?.email || ''} ${
+              p.destination || ''
+            } ${p.amount || ''} ${p.status || ''}`.toLowerCase();
+            return hay.includes(q);
+          })
+        : byPill;
+      const pillTabs = [
+        { key: 'requested', label: `Requested (${counts.requested})` },
+        { key: 'paid', label: `Paid (${counts.paid})` },
+        { key: 'failed', label: `Rejected (${counts.failed})` },
+        { key: 'all', label: `All (${payouts.length})` },
+      ];
+      const pillSelector = AdminUI.pillGroup(
+        pillTabs,
+        state.pill,
+        'adm-pill-group--inverse',
+        'data-payout-filter'
+      );
+
+      const pages = Math.max(1, Math.ceil(visible.length / state.pageSize));
+      if (state.page > pages) {
+        state.page = pages;
+      }
+      const slice = visible.slice((state.page - 1) * state.pageSize, state.page * state.pageSize);
+      const cardTitle = `<h3 class="adm-card-title">Payout Requests</h3><p class="adm-card-sub">Showing ${visible.length} request${visible.length === 1 ? '' : 's'}${q ? ' matching search' : ''}</p>`;
+      const emptyHtml = `<tr><td class="adm-td" colspan="${payoutColumns.length}">${AdminUI.emptyState(
+        {
+          icon: Icons.money || '',
+          title: 'No payout requests',
+          body: state.loadError
+            ? `${state.loadError} Offline or server unreachable.`
+            : `There are no ${state.pill === 'all' ? '' : `${state.pill} `}payout requests right now.`,
+        }
+      )}</td></tr>`;
+      const tableHtml = AdminUI.table({
+        columns: payoutColumns,
+        rows: slice,
+        emptyHtml,
+        footerHtml: AdminUI.paginationFooter({
+          total: visible.length,
+          page: state.page,
+          pageSize: state.pageSize,
+        }),
+      });
+      if (cardHost) {
+        cardHost.innerHTML = AdminUI.card(cardTitle, tableHtml, pillSelector);
+      }
+
+      AdminUI.wirePillGroup(cardHost && cardHost.querySelector('.adm-pill-group'), key => {
+        state.pill = key;
+        Pages._payoutFilter = key;
+        state.page = 1;
+        const params = { filter: key };
+        const qq = state.q.trim();
+        if (qq) {
+          params.q = qq;
+        }
+        router.updateUrl('/admin/payouts', params);
+        paint();
+      });
+    };
+
+    // Skeleton while the one-time queue fetch runs.
     if (cardHost) {
-      cardHost.outerHTML = cardHtml;
+      cardHost.innerHTML = AdminUI.card(
+        '<h3 class="adm-card-title">Payout Requests</h3><p class="adm-card-sub">Loading payout queue…</p>',
+        AdminUI.tableSkeleton({ columns: payoutColumns.length, rows: 6 })
+      );
     }
 
+    // One fetch for the whole queue (backend caps page size); counts and
+    // filtering are derived client-side so tab switches don't refetch.
+    try {
+      const resp = await api.admin.getPayouts({ limit: 200 });
+      if (resp.success && Array.isArray(resp.data?.payouts)) {
+        state.rows = resp.data.payouts;
+      } else {
+        state.loadError = resp.error || 'Failed to load payout queue.';
+      }
+    } catch (err) {
+      state.loadError = err.message || 'Failed to load payout queue.';
+    }
+    paint();
+
     // Delegated handlers — installed on the page wrapper so they survive
-    // any future table re-renders. Pill group drives filter changes;
-    // approve/reject actions go through Pages._approvePayout / the modal.
+    // table re-renders; approve/reject go through Pages._approvePayout.
     const page = mainContent.querySelector('.adm-page');
     if (page) {
-      AdminUI.wirePillGroup(page.querySelector('.adm-pill-group'), key => {
-        Pages.renderAdminPayouts(key);
-      });
-
       page.addEventListener('click', e => {
+        const pg = e.target.closest('[data-adm-page]');
+        if (pg && !pg.disabled) {
+          state.page = Number(pg.dataset.admPage) || 1;
+          paint();
+          return;
+        }
         const btn = e.target.closest('[data-payout-action]');
         if (!btn) {
           return;
@@ -6006,33 +6383,19 @@ font-size: 0.8rem;
       });
     }
 
-    // Client-side search filter (decorative — the data is small). Wired
-    // against the input rendered in the topbar.
     const searchInput = document.getElementById('admin-payouts-search');
     if (searchInput) {
+      searchInput.value = state.q;
       AdminUI.wireSearch(searchInput, value => {
-        const q = (value || '').trim().toLowerCase();
-        const tbody = mainContent.querySelector('.adm-table tbody');
-        if (!tbody) {
-          return;
+        state.q = value || '';
+        state.page = 1;
+        const params = { filter: state.pill };
+        const qq = state.q.trim();
+        if (qq) {
+          params.q = qq;
         }
-        let shown = 0;
-        const trs = tbody.querySelectorAll('tr');
-        trs.forEach(tr => {
-          if (!tr.children || tr.children.length < 2) {
-            return;
-          }
-          const text = tr.textContent.toLowerCase();
-          const match = !q || text.includes(q);
-          tr.style.display = match ? '' : 'none';
-          if (match) {
-            shown += 1;
-          }
-        });
-        const info = mainContent.querySelector('.adm-pagination-info');
-        if (info) {
-          info.textContent = `Showing ${shown} of ${payouts.length}`;
-        }
+        router.updateUrl('/admin/payouts', params, true);
+        paint();
       });
     }
   }
@@ -6044,11 +6407,14 @@ font-size: 0.8rem;
     // TODO: security review — money-moving action; confirm guards against
     // accidental double-click but real protection is the backend's
     // status-guarded transition (409 on already-handled requests).
-    if (
-      !window.confirm(
-        'Approve this payout?\n\nIt will be marked PAID for manual settlement and a negative ledger entry will be recorded for the seller.'
-      )
-    ) {
+    const ok = await AdminUI.confirmDialog({
+      title: 'Approve payout?',
+      message:
+        'It will be marked PAID for manual settlement and a negative ledger entry will be recorded for the seller.',
+      confirmLabel: 'Approve payout',
+      danger: false,
+    });
+    if (!ok) {
       return;
     }
     try {
@@ -6298,11 +6664,13 @@ font-size: 0.8rem;
           Pages.rejectVerification(vid);
           overlay.remove();
         } else if (key === 'purge') {
-          if (
-            !window.confirm(
-              'Permanently delete all documents for this request now? This cannot be undone.'
-            )
-          ) {
+          const purgeOk = await AdminUI.confirmDialog({
+            title: 'Delete documents?',
+            message:
+              'Permanently delete all documents for this request now. This cannot be undone.',
+            confirmLabel: 'Delete documents',
+          });
+          if (!purgeOk) {
             return;
           }
           btn.disabled = true;
@@ -6425,7 +6793,7 @@ font-size: 0.8rem;
     document.body.appendChild(box);
   }
 
-  static rejectVerification(id) {
+  static async rejectVerification(id) {
     if (typeof adminVerificationsManager === 'undefined') {
       showToast('Verification module not loaded', 'error');
       return;
@@ -6434,10 +6802,13 @@ font-size: 0.8rem;
     let notes = notesEl ? notesEl.value.trim() : '';
 
     if (!notes) {
-      const reason = prompt(
-        'Please provide a reason for rejection (this will be visible to the student):'
-      );
-      if (reason === null) {
+      const reason = await AdminUI.promptDialog({
+        title: 'Rejection reason',
+        message: 'This will be visible to the student:',
+        placeholder: 'Reason',
+        confirmLabel: 'Reject',
+      });
+      if (!reason) {
         return;
       }
       notes = reason;
@@ -6510,7 +6881,7 @@ font-size: 0.8rem;
 
     if (result.success) {
       notificationManager?.success('Login Successful', 'Welcome to Admin Panel');
-      Pages.renderAdminDashboard();
+      router.navigate('/admin');
     } else {
       notificationManager?.error('Login Failed', result.error);
     }
@@ -6533,7 +6904,7 @@ font-size: 0.8rem;
         <input type="text" placeholder="Search users by name, email, or university" aria-label="Search users" id="admin-users-search" />
       </div>
       <button type="button" class="adm-btn adm-btn--primary" data-adm-action="invite-user">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19M5 12h14"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Add user
       </button>
     `;
@@ -6553,10 +6924,7 @@ font-size: 0.8rem;
     `;
 
     AdminUI.wireSidebar(key => {
-      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {
-        Pages[method]();
-      }
+      router.navigate('/admin/' + key);
     });
 
     const topbarEl = mainContent.querySelector('.adm-topbar');
@@ -6571,14 +6939,6 @@ font-size: 0.8rem;
           AdminUI.toast('User invite flow not yet available', 'info');
         }
       });
-    }
-
-    let users = [];
-    try {
-      await adminUsersManager.loadUsers();
-      users = adminUsersManager.getAllUsers() || [];
-    } catch (_e) {
-      users = [];
     }
 
     const roleToBadgeKind = {
@@ -6644,21 +7004,23 @@ font-size: 0.8rem;
               : null;
           const eligibleToDelete =
             u.role !== 'admin' && u.role !== 'moderator' && u.id !== viewerId;
-          const deleteBtn = eligibleToDelete
-            ? `<button type="button" class="adm-btn adm-btn--sm adm-btn--danger" data-user-action="delete" data-user-id="${_pageEsc(u.id)}" style="margin-left:0.35rem;">Delete</button>`
-            : '';
+          const id = u.id || '';
           const suspended =
             u.isSuspended === true || u.status === 'suspended' || u.status === 'banned';
-          if (suspended) {
-            return `<button type="button" class="adm-btn adm-btn--sm" data-user-action="unban" data-user-id="${_pageEsc(u.id)}">Unban</button>${deleteBtn}`;
+          const items = suspended
+            ? [{ label: 'Unban', data: { 'user-action': 'unban', 'user-id': id } }]
+            : [{ label: 'Ban', danger: true, data: { 'user-action': 'ban', 'user-id': id } }];
+          if (eligibleToDelete) {
+            items.push({
+              label: 'Delete',
+              danger: true,
+              data: { 'user-action': 'delete', 'user-id': id },
+            });
           }
-          return `<button type="button" class="adm-btn adm-btn--sm adm-btn--danger" data-user-action="ban" data-user-id="${_pageEsc(u.id)}">Ban</button>${deleteBtn}`;
+          return AdminUI.rowMenu(items);
         },
       },
     ];
-
-    const total = users.length;
-    const cardTitle = `<h3 class="adm-card-title">All users</h3><p class="adm-card-sub">Showing ${total} account${total === 1 ? '' : 's'}</p>`;
 
     const emptyHtml = `<tr><td class="adm-td" colspan="${userColumns.length}">${AdminUI.emptyState({
       icon: Icons.users || '',
@@ -6666,35 +7028,73 @@ font-size: 0.8rem;
       body: 'When people sign up they will appear here. Manage roles, ban accounts, and review verification status from this page.',
     })}</td></tr>`;
 
-    const footerHtml = `
-      <div class="adm-pagination">
-        <span class="adm-pagination-info">Showing ${total} of ${total}</span>
-        <div class="adm-pagination-actions">
-          <button type="button" class="adm-btn adm-btn--sm" disabled>Previous</button>
-          <button type="button" class="adm-btn adm-btn--sm" disabled>Next</button>
-        </div>
-      </div>
-    `;
-
-    const tableHtml = AdminUI.table({
-      columns: userColumns,
-      rows: users,
-      emptyHtml,
-      footerHtml,
-    });
-
     const cardHost = document.getElementById('admin-users-card-host');
+    const qs = (typeof router !== 'undefined' && router.getParams()) || {};
+    const state = {
+      rows: [],
+      q: qs.q || '',
+      page: 1,
+      pageSize: 10,
+    };
+    const paint = () => {
+      const q = state.q.trim().toLowerCase();
+      const filtered = q
+        ? state.rows.filter(u => {
+            const hay = `${u.fullName || ''} ${u.email || ''} ${u.university || ''} ${
+              u.role || ''
+            }`.toLowerCase();
+            return hay.includes(q);
+          })
+        : state.rows;
+      const pages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
+      if (state.page > pages) {
+        state.page = pages;
+      }
+      const slice = filtered.slice((state.page - 1) * state.pageSize, state.page * state.pageSize);
+      const rowTitle = `<h3 class="adm-card-title">All users</h3><p class="adm-card-sub">Showing ${filtered.length} account${filtered.length === 1 ? '' : 's'}${q ? ' matching search' : ''}</p>`;
+      const tableHtml = AdminUI.table({
+        columns: userColumns,
+        rows: slice,
+        emptyHtml,
+        footerHtml: AdminUI.paginationFooter({
+          total: filtered.length,
+          page: state.page,
+          pageSize: state.pageSize,
+        }),
+      });
+      if (cardHost) {
+        cardHost.innerHTML = AdminUI.card(rowTitle, tableHtml);
+      }
+    };
+
     if (cardHost) {
-      cardHost.outerHTML = AdminUI.card(cardTitle, tableHtml);
+      cardHost.innerHTML = AdminUI.card(
+        '<h3 class="adm-card-title">All users</h3><p class="adm-card-sub">Loading users…</p>',
+        AdminUI.tableSkeleton({ columns: userColumns.length, rows: 6 })
+      );
     }
 
-    // Delegated handler for ban/unban actions. Installed on the page
-    // wrapper so it survives any future table re-renders. The actual
-    // prompt/confirm + API call + re-render lives in Pages.adminBanUser
-    // / Pages.adminUnbanUser (kept identical to the prior implementation).
+    let users = [];
+    try {
+      await adminUsersManager.loadUsers();
+      users = adminUsersManager.getAllUsers() || [];
+    } catch (_e) {
+      users = [];
+    }
+    state.rows = users;
+    paint();
+
+    // Delegated handler for pagination + ban/unban/delete actions.
+    // Installed on the page wrapper so it survives table re-renders.
     const page = mainContent.querySelector('.adm-page');
     if (page) {
       page.addEventListener('click', e => {
+        const pg = e.target.closest('[data-adm-page]');
+        if (pg && !pg.disabled) {
+          state.page = Number(pg.dataset.admPage) || 1;
+          paint();
+          return;
+        }
         const btn = e.target.closest('[data-user-action]');
         if (!btn) {
           return;
@@ -6714,33 +7114,14 @@ font-size: 0.8rem;
       });
     }
 
-    // Client-side search filter (decorative — the data is small). Wired
-    // against the input rendered in the topbar.
     const searchInput = document.getElementById('admin-users-search');
     if (searchInput) {
+      searchInput.value = state.q;
       AdminUI.wireSearch(searchInput, value => {
-        const q = (value || '').trim().toLowerCase();
-        const tbody = mainContent.querySelector('.adm-table tbody');
-        if (!tbody) {
-          return;
-        }
-        let shown = 0;
-        const trs = tbody.querySelectorAll('tr');
-        trs.forEach(tr => {
-          if (!tr.dataset.userId && tr.children.length < 2) {
-            return;
-          }
-          const text = tr.textContent.toLowerCase();
-          const match = !q || text.includes(q);
-          tr.style.display = match ? '' : 'none';
-          if (match) {
-            shown += 1;
-          }
-        });
-        const info = mainContent.querySelector('.adm-pagination-info');
-        if (info) {
-          info.textContent = `Showing ${shown} of ${total}`;
-        }
+        state.q = value || '';
+        state.page = 1;
+        router.updateUrl('/admin/users', state.q.trim() ? { q: state.q.trim() } : {}, true);
+        paint();
       });
     }
   }
@@ -6751,27 +7132,6 @@ font-size: 0.8rem;
   static async renderAdminProducts() {
     if (!_requireAdmin()) {
       return;
-    }
-    let products = adminProductsManager.getAllProducts();
-    if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
-      try {
-        const resp = await api.admin.getProducts({ limit: 100 });
-        if (resp.success && resp.data && resp.data.products) {
-          const backendProducts = resp.data.products;
-          if (backendProducts.length > 0) {
-            const localIds = new Set(products.map(p => p.id));
-            const merged = [...backendProducts];
-            for (const lp of products) {
-              if (!localIds.has(lp.id) && !backendProducts.some(bp => bp.id === lp.id)) {
-                merged.push(lp);
-              }
-            }
-            products = merged;
-          }
-        }
-      } catch (_) {
-        console.warn('pages: mergeLocalProducts failed:', _);
-      }
     }
 
     this.hideOriginalNavFooter();
@@ -6784,8 +7144,8 @@ font-size: 0.8rem;
         <input type="text" placeholder="Search products by title or seller" aria-label="Search products" id="admin-products-search" />
       </div>
       <button type="button" class="adm-btn adm-btn--primary" data-adm-action="add-product">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19M5 12h14"/></svg>
-        Add Product
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add product
       </button>
     `;
 
@@ -6804,10 +7164,7 @@ font-size: 0.8rem;
     `;
 
     AdminUI.wireSidebar(key => {
-      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {
-        Pages[method]();
-      }
+      router.navigate('/admin/' + key);
     });
 
     const topbarEl = mainContent.querySelector('.adm-topbar');
@@ -6869,21 +7226,29 @@ font-size: 0.8rem;
       {
         label: 'Actions',
         render: p => {
-          const id = _pageEsc(p.id || '');
-          let html = '';
+          const id = p.id || '';
+          const items = [];
           if (p.status === 'pending') {
-            html += `<button type="button" class="adm-btn adm-btn--sm" data-product-action="approve" data-product-id="${id}">Approve</button> `;
-            html += `<button type="button" class="adm-btn adm-btn--sm adm-btn--danger" data-product-action="reject" data-product-id="${id}">Reject</button> `;
+            items.push({
+              label: 'Approve',
+              data: { 'product-action': 'approve', 'product-id': id },
+            });
+            items.push({
+              label: 'Reject',
+              danger: true,
+              data: { 'product-action': 'reject', 'product-id': id },
+            });
           }
-          html += `<button type="button" class="adm-btn adm-btn--sm adm-btn--primary" data-product-action="edit" data-product-id="${id}">Edit</button> `;
-          html += `<button type="button" class="adm-btn adm-btn--sm adm-btn--danger" data-product-action="delete" data-product-id="${id}">Delete</button>`;
-          return html;
+          items.push({ label: 'Edit', data: { 'product-action': 'edit', 'product-id': id } });
+          items.push({
+            label: 'Delete',
+            danger: true,
+            data: { 'product-action': 'delete', 'product-id': id },
+          });
+          return AdminUI.rowMenu(items);
         },
       },
     ];
-
-    const total = products.length;
-    const cardTitle = `<h3 class="adm-card-title">All products</h3><p class="adm-card-sub">Showing ${total} item${total === 1 ? '' : 's'}</p>`;
 
     const emptyHtml = `<tr><td class="adm-td" colspan="${productColumns.length}">${AdminUI.emptyState(
       {
@@ -6893,31 +7258,85 @@ font-size: 0.8rem;
       }
     )}</td></tr>`;
 
-    const footerHtml = `
-      <div class="adm-pagination">
-        <span class="adm-pagination-info">Showing ${total} of ${total}</span>
-        <div class="adm-pagination-actions">
-          <button type="button" class="adm-btn adm-btn--sm" disabled>Previous</button>
-          <button type="button" class="adm-btn adm-btn--sm" disabled>Next</button>
-        </div>
-      </div>
-    `;
-
-    const tableHtml = AdminUI.table({
-      columns: productColumns,
-      rows: products,
-      emptyHtml,
-      footerHtml,
-    });
-
     const cardHost = document.getElementById('admin-products-card-host');
+    const qs = (typeof router !== 'undefined' && router.getParams()) || {};
+    const state = {
+      rows: [],
+      q: qs.q || '',
+      page: 1,
+      pageSize: 10,
+    };
+    const paint = () => {
+      const q = state.q.trim().toLowerCase();
+      const filtered = q
+        ? state.rows.filter(p => {
+            const hay = `${p.title || ''} ${
+              p.seller?.fullName || p.sellerName || p.seller?.name || p.seller || ''
+            } ${p.category || ''}`.toLowerCase();
+            return hay.includes(q);
+          })
+        : state.rows;
+      const pages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
+      if (state.page > pages) {
+        state.page = pages;
+      }
+      const slice = filtered.slice((state.page - 1) * state.pageSize, state.page * state.pageSize);
+      const rowTitle = `<h3 class="adm-card-title">All products</h3><p class="adm-card-sub">Showing ${filtered.length} product${filtered.length === 1 ? '' : 's'}${q ? ' matching search' : ''}</p>`;
+      const tableHtml = AdminUI.table({
+        columns: productColumns,
+        rows: slice,
+        emptyHtml,
+        footerHtml: AdminUI.paginationFooter({
+          total: filtered.length,
+          page: state.page,
+          pageSize: state.pageSize,
+        }),
+      });
+      if (cardHost) {
+        cardHost.innerHTML = AdminUI.card(rowTitle, tableHtml);
+      }
+    };
+
     if (cardHost) {
-      cardHost.outerHTML = AdminUI.card(cardTitle, tableHtml);
+      cardHost.innerHTML = AdminUI.card(
+        '<h3 class="adm-card-title">All products</h3><p class="adm-card-sub">Loading products…</p>',
+        AdminUI.tableSkeleton({ columns: productColumns.length, rows: 6 })
+      );
     }
+
+    let products = adminProductsManager.getAllProducts();
+    if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable) {
+      try {
+        const resp = await api.admin.getProducts({ limit: 100 });
+        if (resp.success && resp.data && resp.data.products) {
+          const backendProducts = resp.data.products;
+          if (backendProducts.length > 0) {
+            const localIds = new Set(products.map(p => p.id));
+            const merged = [...backendProducts];
+            for (const lp of products) {
+              if (!localIds.has(lp.id) && !backendProducts.some(bp => bp.id === lp.id)) {
+                merged.push(lp);
+              }
+            }
+            products = merged;
+          }
+        }
+      } catch (_) {
+        console.warn('pages: mergeLocalProducts failed:', _);
+      }
+    }
+    state.rows = products;
+    paint();
 
     const page = mainContent.querySelector('.adm-page');
     if (page) {
       page.addEventListener('click', e => {
+        const pg = e.target.closest('[data-adm-page]');
+        if (pg && !pg.disabled) {
+          state.page = Number(pg.dataset.admPage) || 1;
+          paint();
+          return;
+        }
         const btn = e.target.closest('[data-product-action]');
         if (!btn) {
           return;
@@ -6941,29 +7360,12 @@ font-size: 0.8rem;
 
     const searchInput = document.getElementById('admin-products-search');
     if (searchInput) {
+      searchInput.value = state.q;
       AdminUI.wireSearch(searchInput, value => {
-        const q = (value || '').trim().toLowerCase();
-        const tbody = mainContent.querySelector('.adm-table tbody');
-        if (!tbody) {
-          return;
-        }
-        let shown = 0;
-        const trs = tbody.querySelectorAll('tr');
-        trs.forEach(tr => {
-          if (!tr.children || tr.children.length < 2) {
-            return;
-          }
-          const text = tr.textContent.toLowerCase();
-          const match = !q || text.includes(q);
-          tr.style.display = match ? '' : 'none';
-          if (match) {
-            shown += 1;
-          }
-        });
-        const info = mainContent.querySelector('.adm-pagination-info');
-        if (info) {
-          info.textContent = `Showing ${shown} of ${total}`;
-        }
+        state.q = value || '';
+        state.page = 1;
+        router.updateUrl('/admin/products', state.q.trim() ? { q: state.q.trim() } : {}, true);
+        paint();
       });
     }
   }
@@ -7001,13 +7403,8 @@ font-size: 0.8rem;
     `;
 
     AdminUI.wireSidebar(key => {
-      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {
-        Pages[method]();
-      }
+      router.navigate('/admin/' + key);
     });
-
-    const orders = await adminOrdersManager.getAllOrders();
 
     const statusToBadgeKind = {
       placed: 'info',
@@ -7052,9 +7449,6 @@ font-size: 0.8rem;
       },
     ];
 
-    const total = orders.length;
-    const cardTitle = `<h3 class="adm-card-title">All orders</h3><p class="adm-card-sub">Showing ${total} order${total === 1 ? '' : 's'}</p>`;
-
     const emptyHtml = `<tr><td class="adm-td" colspan="${orderColumns.length}">${AdminUI.emptyState(
       {
         icon: Icons.clipboard || '',
@@ -7063,31 +7457,65 @@ font-size: 0.8rem;
       }
     )}</td></tr>`;
 
-    const footerHtml = `
-      <div class="adm-pagination">
-        <span class="adm-pagination-info">Showing ${total} of ${total}</span>
-        <div class="adm-pagination-actions">
-          <button type="button" class="adm-btn adm-btn--sm" disabled>Previous</button>
-          <button type="button" class="adm-btn adm-btn--sm" disabled>Next</button>
-        </div>
-      </div>
-    `;
-
-    const tableHtml = AdminUI.table({
-      columns: orderColumns,
-      rows: orders,
-      emptyHtml,
-      footerHtml,
-    });
-
     const cardHost = document.getElementById('admin-orders-card-host');
+    const qs = (typeof router !== 'undefined' && router.getParams()) || {};
+    const state = {
+      rows: [],
+      q: qs.q || '',
+      page: 1,
+      pageSize: 10,
+    };
+    const paint = () => {
+      const q = state.q.trim().toLowerCase();
+      const filtered = q
+        ? state.rows.filter(o => {
+            const hay = `${o.orderNumber || ''} ${o.trackingNumber || ''} ${
+              o.customer?.name || ''
+            } ${o.status || ''}`.toLowerCase();
+            return hay.includes(q);
+          })
+        : state.rows;
+      const pages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
+      if (state.page > pages) {
+        state.page = pages;
+      }
+      const slice = filtered.slice((state.page - 1) * state.pageSize, state.page * state.pageSize);
+      const rowTitle = `<h3 class="adm-card-title">All orders</h3><p class="adm-card-sub">Showing ${filtered.length} order${filtered.length === 1 ? '' : 's'}${q ? ' matching search' : ''}</p>`;
+      const tableHtml = AdminUI.table({
+        columns: orderColumns,
+        rows: slice,
+        emptyHtml,
+        footerHtml: AdminUI.paginationFooter({
+          total: filtered.length,
+          page: state.page,
+          pageSize: state.pageSize,
+        }),
+      });
+      if (cardHost) {
+        cardHost.innerHTML = AdminUI.card(rowTitle, tableHtml);
+      }
+    };
+
     if (cardHost) {
-      cardHost.outerHTML = AdminUI.card(cardTitle, tableHtml);
+      cardHost.innerHTML = AdminUI.card(
+        '<h3 class="adm-card-title">All orders</h3><p class="adm-card-sub">Loading orders…</p>',
+        AdminUI.tableSkeleton({ columns: orderColumns.length, rows: 6 })
+      );
     }
+
+    const orders = await adminOrdersManager.getAllOrders();
+    state.rows = orders;
+    paint();
 
     const page = mainContent.querySelector('.adm-page');
     if (page) {
       page.addEventListener('click', e => {
+        const pg = e.target.closest('[data-adm-page]');
+        if (pg && !pg.disabled) {
+          state.page = Number(pg.dataset.admPage) || 1;
+          paint();
+          return;
+        }
         const btn = e.target.closest('[data-order-action]');
         if (!btn) {
           return;
@@ -7105,29 +7533,12 @@ font-size: 0.8rem;
 
     const searchInput = document.getElementById('admin-orders-search');
     if (searchInput) {
+      searchInput.value = state.q;
       AdminUI.wireSearch(searchInput, value => {
-        const q = (value || '').trim().toLowerCase();
-        const tbody = mainContent.querySelector('.adm-table tbody');
-        if (!tbody) {
-          return;
-        }
-        let shown = 0;
-        const trs = tbody.querySelectorAll('tr');
-        trs.forEach(tr => {
-          if (!tr.children || tr.children.length < 2) {
-            return;
-          }
-          const text = tr.textContent.toLowerCase();
-          const match = !q || text.includes(q);
-          tr.style.display = match ? '' : 'none';
-          if (match) {
-            shown += 1;
-          }
-        });
-        const info = mainContent.querySelector('.adm-pagination-info');
-        if (info) {
-          info.textContent = `Showing ${shown} of ${total}`;
-        }
+        state.q = value || '';
+        state.page = 1;
+        router.updateUrl('/admin/orders', state.q.trim() ? { q: state.q.trim() } : {}, true);
+        paint();
       });
     }
   }
@@ -7174,17 +7585,20 @@ font-size: 0.8rem;
     `;
 
     AdminUI.wireSidebar(key => {
-      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {
-        Pages[method]();
-      }
+      router.navigate('/admin/' + key);
     });
 
-    // Delegate clicks on the host so row-action buttons keep working
-    // after the table is re-rendered (e.g. after a toggle or delete).
+    // Delegate clicks on the host so row-action menu items and pagination
+    // keep working after the table is re-rendered.
     const host = document.getElementById('admin-coupons-host');
     if (host) {
       host.addEventListener('click', ev => {
+        const pg = ev.target.closest('[data-adm-page]');
+        if (pg && !pg.disabled && Pages._couponsState) {
+          Pages._couponsState.page = Number(pg.dataset.admPage) || 1;
+          void Pages._renderAdminCouponsList({ refresh: false });
+          return;
+        }
         const btn = ev.target.closest('[data-coupon-action]');
         if (!btn) {
           return;
@@ -7205,58 +7619,36 @@ font-size: 0.8rem;
       newBtn.addEventListener('click', () => Pages._showAdminCouponForm(null));
     }
 
-    // Filter box — currently a no-op stub; the page list is small enough
-    // that client-side filter is enough; the input is wired so the search
-    // icon doesn't look dead.
+    // Client-side filter over the cached list (no refetch per keystroke),
+    // with the query mirrored into the URL.
     const searchInput = document.getElementById('admin-coupons-search');
     if (searchInput) {
-      searchInput.addEventListener('input', () => Pages._renderAdminCouponsList());
+      const initialQ = ((typeof router !== 'undefined' && router.getParams()) || {}).q || '';
+      searchInput.value = initialQ;
+      searchInput.addEventListener('input', () => {
+        const q = (searchInput.value || '').trim();
+        if (Pages._couponsState) {
+          Pages._couponsState.page = 1;
+        }
+        router.updateUrl('/admin/coupons', q ? { q } : {}, true);
+        void Pages._renderAdminCouponsList({ refresh: false });
+      });
     }
 
     await Pages._renderAdminCouponsList();
   }
 
-  // Internal: load coupons from API and render the table.
-  static async _renderAdminCouponsList() {
+  // Internal: load coupons from API and render the table (state-based
+  // search + numbered pagination; skeleton while first loading).
+  static async _renderAdminCouponsList({ refresh = true } = {}) {
     const host = document.getElementById('admin-coupons-host');
     if (!host) {
       return;
     }
-    let coupons = [];
-    let loadError = null;
-    try {
-      const res = await api.admin.listCoupons();
-      if (res && res.success) {
-        coupons = Array.isArray(res.data) ? res.data : [];
-      } else if (res && res.error) {
-        loadError = res.error;
-      }
-    } catch (e) {
-      loadError = e.message || 'Failed to load coupons';
+    if (!Pages._couponsState) {
+      Pages._couponsState = { rows: [], loaded: false, page: 1, pageSize: 10 };
     }
-    if (loadError) {
-      host.innerHTML = `
-        <div class="adm-card">
-          <div class="adm-table-wrap" style="padding:20px;">
-            <div class="adm-empty">
-              <div class="adm-empty-title">Failed to load coupons</div>
-              <p class="adm-empty-body">${_pageEsc(loadError)}</p>
-            </div>
-          </div>
-        </div>
-      `;
-      return;
-    }
-    const search = (document.getElementById('admin-coupons-search')?.value || '')
-      .toLowerCase()
-      .trim();
-    const filtered = search
-      ? coupons.filter(
-          c =>
-            (c.code || '').toLowerCase().includes(search) ||
-            (c.description || '').toLowerCase().includes(search)
-        )
-      : coupons;
+    const state = Pages._couponsState;
     const columns = [
       {
         label: 'Code',
@@ -7268,12 +7660,12 @@ font-size: 0.8rem;
         render: c =>
           c.type === 'percent'
             ? `${_pageEsc(String(c.value))}%`
-            : `GHS ${Number(c.value || 0).toFixed(2)}`,
+            : Formatter.formatPrice(Number(c.value || 0)),
       },
       {
         label: 'Min order',
         render: c =>
-          c.min_order && c.min_order > 0 ? `GHS ${Number(c.min_order).toFixed(2)}` : '—',
+          c.min_order && c.min_order > 0 ? Formatter.formatPrice(Number(c.min_order)) : '—',
       },
       {
         label: 'Uses',
@@ -7295,27 +7687,91 @@ font-size: 0.8rem;
       },
       {
         label: 'Actions',
-        render: c => `
-          <div style="display:flex;gap:6px;justify-content:flex-end;">
-            <button type="button" class="adm-btn adm-btn--sm" data-coupon-action="toggle" data-coupon-id="${_pageEsc(c.id)}">
-              ${c.active ? 'Disable' : 'Enable'}
-            </button>
-            <button type="button" class="adm-btn adm-btn--sm adm-btn--danger" data-coupon-action="delete" data-coupon-id="${_pageEsc(c.id)}">
-              Delete
-            </button>
-          </div>
-        `,
+        render: c =>
+          AdminUI.rowMenu([
+            {
+              label: c.active ? 'Disable' : 'Enable',
+              data: { 'coupon-action': 'toggle', 'coupon-id': c.id || '' },
+            },
+            {
+              label: 'Delete',
+              danger: true,
+              data: { 'coupon-action': 'delete', 'coupon-id': c.id || '' },
+            },
+          ]),
       },
     ];
-    host.innerHTML = `
-      <div class="adm-card">
-        ${AdminUI.table({
-          columns,
-          rows: filtered,
-          emptyHtml: `<tr><td class="adm-td" colspan="${columns.length}">${AdminUI.emptyState({ icon: Icons.gift || Icons.tag || '', title: 'No coupons yet', body: 'Click "New coupon" to create one. Buyers will be able to apply the code at checkout.' })}</td></tr>`,
-        })}
-      </div>
-    `;
+
+    if (!state.loaded) {
+      host.innerHTML = AdminUI.card(
+        '<h3 class="adm-card-title">All coupons</h3><p class="adm-card-sub">Loading coupons…</p>',
+        AdminUI.tableSkeleton({ columns: columns.length, rows: 6 })
+      );
+    }
+
+    if (refresh || !state.loaded) {
+      let coupons = [];
+      let loadError = null;
+      try {
+        const res = await api.admin.listCoupons();
+        if (res && res.success) {
+          coupons = Array.isArray(res.data) ? res.data : [];
+        } else if (res && res.error) {
+          loadError = res.error;
+        }
+      } catch (e) {
+        loadError = e.message || 'Failed to load coupons';
+      }
+      if (loadError) {
+        host.innerHTML = `
+          <div class="adm-card">
+            <div class="adm-table-wrap" style="padding:20px;">
+              <div class="adm-empty">
+                <div class="adm-empty-title">Failed to load coupons</div>
+                <p class="adm-empty-body">${_pageEsc(loadError)}</p>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+      state.rows = coupons;
+      state.loaded = true;
+    }
+
+    const search = (document.getElementById('admin-coupons-search')?.value || '')
+      .toLowerCase()
+      .trim();
+    const filtered = search
+      ? state.rows.filter(
+          c =>
+            (c.code || '').toLowerCase().includes(search) ||
+            (c.description || '').toLowerCase().includes(search)
+        )
+      : state.rows;
+    const pages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
+    if (state.page > pages) {
+      state.page = pages;
+    }
+    const slice = filtered.slice((state.page - 1) * state.pageSize, state.page * state.pageSize);
+    const cardTitle = `<h3 class="adm-card-title">All coupons</h3><p class="adm-card-sub">Showing ${filtered.length} coupon${filtered.length === 1 ? '' : 's'}${search ? ' matching search' : ''}</p>`;
+    host.innerHTML = AdminUI.card(
+      cardTitle,
+      AdminUI.table({
+        columns,
+        rows: slice,
+        emptyHtml: `<tr><td class="adm-td" colspan="${columns.length}">${AdminUI.emptyState({
+          icon: Icons.gift || Icons.tag || '',
+          title: 'No coupons yet',
+          body: 'Click "New coupon" to create one. Buyers will be able to apply the code at checkout.',
+        })}</td></tr>`,
+        footerHtml: AdminUI.paginationFooter({
+          total: filtered.length,
+          page: state.page,
+          pageSize: state.pageSize,
+        }),
+      })
+    );
   }
 
   // Internal: inline create/edit form for a coupon.
@@ -7340,7 +7796,7 @@ font-size: 0.8rem;
             <label class="adm-form-label">Type</label>
             <select id="adm-coupon-type" class="adm-form-input">
               <option value="percent" ${c.type === 'percent' ? 'selected' : ''}>Percent off</option>
-              <option value="fixed" ${c.type === 'fixed' ? 'selected' : ''}>Fixed amount (GHS)</option>
+              <option value="fixed" ${c.type === 'fixed' ? 'selected' : ''}>Fixed amount (GH₵)</option>
             </select>
           </div>
           <div>
@@ -7348,7 +7804,7 @@ font-size: 0.8rem;
             <input type="number" id="adm-coupon-value" class="adm-form-input" min="1" step="1" value="${_pageEsc(String(c.value || ''))}" />
           </div>
           <div>
-            <label class="adm-form-label">Min order (GHS)</label>
+            <label class="adm-form-label">Min order (GH₵)</label>
             <input type="number" id="adm-coupon-min" class="adm-form-input" min="0" step="1" value="${_pageEsc(String(c.min_order || 0))}" />
           </div>
           <div>
@@ -7364,7 +7820,7 @@ font-size: 0.8rem;
           </div>
           <div style="grid-column:1/-1;">
             <label class="adm-form-label">Description</label>
-            <input type="text" id="adm-coupon-desc" class="adm-form-input" placeholder="10% off orders over GHS 50" value="${_pageEsc(c.description || '')}" maxlength="200" />
+            <input type="text" id="adm-coupon-desc" class="adm-form-input" placeholder="10% off orders over GH₵ 50" value="${_pageEsc(c.description || '')}" maxlength="200" />
           </div>
           <div style="grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end;">
             <button type="button" class="adm-btn" id="adm-coupon-cancel">Cancel</button>
@@ -7447,7 +7903,12 @@ font-size: 0.8rem;
   }
 
   static async _deleteAdminCoupon(id) {
-    if (!confirm('Delete this coupon? Orders already placed with it will keep their discount.')) {
+    const ok = await AdminUI.confirmDialog({
+      title: 'Delete coupon?',
+      message: 'Orders already placed with it will keep their discount.',
+      confirmLabel: 'Delete',
+    });
+    if (!ok) {
       return;
     }
     try {
@@ -7503,15 +7964,11 @@ font-size: 0.8rem;
         columns: regionColumns,
         rows: regions,
         emptyHtml: `<tr><td class="adm-td" colspan="${regionColumns.length}">${AdminUI.emptyState({ icon: Icons.globe || '', title: 'No regions', body: 'Regions will appear here once they are configured.' })}</td></tr>`,
-        footerHtml: `
-          <div class="adm-pagination">
-            <span class="adm-pagination-info">Showing ${regions.length} of ${regions.length}</span>
-            <div class="adm-pagination-actions">
-              <button type="button" class="adm-btn adm-btn--sm" disabled>Previous</button>
-              <button type="button" class="adm-btn adm-btn--sm" disabled>Next</button>
-            </div>
-          </div>
-        `,
+        footerHtml: AdminUI.paginationFooter({
+          total: regions.length,
+          page: 1,
+          pageSize: Math.max(regions.length, 1),
+        }),
       })
     );
 
@@ -7529,10 +7986,7 @@ font-size: 0.8rem;
     `;
 
     AdminUI.wireSidebar(key => {
-      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {
-        Pages[method]();
-      }
+      router.navigate('/admin/' + key);
     });
   }
 
@@ -7570,10 +8024,7 @@ font-size: 0.8rem;
     `;
 
     AdminUI.wireSidebar(key => {
-      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {
-        Pages[method]();
-      }
+      router.navigate('/admin/' + key);
     });
 
     let stats;
@@ -7618,9 +8069,9 @@ font-size: 0.8rem;
 
     const cards = [
       reportCard('Sales Report', [
-        ['Total revenue', `GHS ${(summary.totalRevenue || 0).toLocaleString()}`],
+        ['Total revenue', Formatter.formatPrice(summary.totalRevenue || 0)],
         ['Total orders', String(summary.totalOrders || 0)],
-        ['Avg order value', `GHS ${avgOrderValue.toLocaleString()}`],
+        ['Avg order value', Formatter.formatPrice(avgOrderValue)],
       ]),
       reportCard('User Report', [
         ['Total users', String(summary.totalUsers || 0)],
@@ -7646,7 +8097,13 @@ font-size: 0.8rem;
    * Approve a product
    */
   static async adminApproveProduct(productId) {
-    if (!confirm('Are you sure you want to approve this product?')) {
+    const ok = await AdminUI.confirmDialog({
+      title: 'Approve product?',
+      message: 'This will publish the listing to the marketplace immediately.',
+      confirmLabel: 'Approve',
+      danger: false,
+    });
+    if (!ok) {
       return;
     }
     try {
@@ -7663,7 +8120,12 @@ font-size: 0.8rem;
   }
 
   static async adminRejectProduct(productId) {
-    const reason = prompt('Please enter a reason for rejection:');
+    const reason = await AdminUI.promptDialog({
+      title: 'Reject product',
+      message: 'Enter a reason for rejection (this will be visible to the seller):',
+      placeholder: 'Reason',
+      confirmLabel: 'Reject',
+    });
     if (!reason) {
       return;
     }
@@ -7684,7 +8146,12 @@ font-size: 0.8rem;
   }
 
   static async adminDeleteProduct(productId) {
-    if (!confirm('Are you sure you want to delete this product? This cannot be undone.')) {
+    const ok = await AdminUI.confirmDialog({
+      title: 'Delete product?',
+      message: 'This cannot be undone. The listing will be removed from the marketplace.',
+      confirmLabel: 'Delete',
+    });
+    if (!ok) {
       return;
     }
     try {
@@ -7720,7 +8187,12 @@ font-size: 0.8rem;
    * Ban a user
    */
   static async adminBanUser(userId) {
-    const reason = prompt('Please enter a reason for banning this user:');
+    const reason = await AdminUI.promptDialog({
+      title: 'Ban user',
+      message: 'Enter a reason for banning this user (kept in the audit trail):',
+      placeholder: 'Reason',
+      confirmLabel: 'Ban user',
+    });
     if (!reason) {
       return;
     }
@@ -7743,7 +8215,13 @@ font-size: 0.8rem;
   }
 
   static async adminUnbanUser(userId) {
-    if (!confirm('Are you sure you want to unban this user?')) {
+    const ok = await AdminUI.confirmDialog({
+      title: 'Unban user?',
+      message: 'This will restore the user’s access to the marketplace.',
+      confirmLabel: 'Unban',
+      danger: false,
+    });
+    if (!ok) {
       return;
     }
     try {
@@ -7933,10 +8411,7 @@ font-size: 0.8rem;
     `;
 
     AdminUI.wireSidebar(key => {
-      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {
-        Pages[method]();
-      }
+      router.navigate('/admin/' + key);
     });
 
     // Re-wire the topbar selects (previously inline onchange) to the
@@ -8348,7 +8823,7 @@ font-size: 0.8rem;
               <tr style="text-align:left;font-size:12px;color:var(--neutral-600);">
                 <th style="padding:0 8px 8px 0;width:30%;">Label</th>
                 <th style="padding:0 8px 8px 0;width:35%;">Value</th>
-                <th style="padding:0 8px 8px 0;width:20%;">Price delta (GHS)</th>
+                <th style="padding:0 8px 8px 0;width:20%;">Price delta (GH₵)</th>
                 <th style="padding:0 0 8px;width:15%;"></th>
               </tr>
             </thead>
@@ -8521,7 +8996,7 @@ font-size: 0.8rem;
       </div>
       <button type="button" class="adm-btn" data-action="back-to-products">← Back to Products</button>
       <button type="submit" form="admin-product-form" class="adm-btn adm-btn--primary">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19M5 12h14"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Create product
       </button>
     `;
@@ -8547,7 +9022,7 @@ font-size: 0.8rem;
                   </div>
                   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
                     <div>
-                      <label class="adm-form-label adm-form-label--required">Price (GHS)</label>
+                      <label class="adm-form-label adm-form-label--required">Price (GH₵)</label>
                       <input type="number" name="price" required min="1" class="adm-form-input" placeholder="0" />
                     </div>
                     <div>
@@ -8626,10 +9101,7 @@ font-size: 0.8rem;
     // The "Back to Products" button now lives in the topbar; delegated
     // through the topbar action handler.
     AdminUI.wireSidebar(key => {
-      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {
-        Pages[method]();
-      }
+      router.navigate('/admin/' + key);
     });
     // Wire topbar actions (back to products, search).
     const topbar = mainContent.querySelector('.adm-topbar');
@@ -8700,7 +9172,7 @@ font-size: 0.8rem;
         <input type="text" placeholder="Search subscribers or campaigns" aria-label="Search newsletter" />
       </div>
       <button type="button" class="adm-btn adm-btn--primary" data-adm-action="new-campaign">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19M5 12h14"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Create campaign
       </button>
     `;
@@ -8787,10 +9259,7 @@ font-size: 0.8rem;
     `;
 
     AdminUI.wireSidebar(key => {
-      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {
-        Pages[method]();
-      }
+      router.navigate('/admin/' + key);
     });
 
     // "Create campaign" is handled by the document-level listener installed
@@ -9166,7 +9635,13 @@ font-size: 0.8rem;
     }
 
     if (uploadAborted && this._pendingImageFiles.length > 0 && manualUrls.length === 0) {
-      if (!confirm('Image upload failed. Create product without images?')) {
+      const okNoImages = await AdminUI.confirmDialog({
+        title: 'Image upload failed',
+        message: 'Create the product without images? You can add images later.',
+        confirmLabel: 'Create without images',
+        danger: false,
+      });
+      if (!okNoImages) {
         return;
       }
       data.images = ['/assets/images/products/no-image.svg'];
@@ -9293,7 +9768,7 @@ font-size: 0.8rem;
                   </div>
                   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
                     <div>
-                      <label class="adm-form-label adm-form-label--required">Price (GHS)</label>
+                      <label class="adm-form-label adm-form-label--required">Price (GH₵)</label>
                       <input type="number" name="price" required min="1" class="adm-form-input" value="${_pageEsc(product.price || '')}" />
                     </div>
                     <div>
@@ -9397,10 +9872,7 @@ font-size: 0.8rem;
     Pages._wireVariantEditor(form);
     // Sidebar + topbar wiring for the new adm-* layout.
     AdminUI.wireSidebar(key => {
-      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {
-        Pages[method]();
-      }
+      router.navigate('/admin/' + key);
     });
     const topbar = mainContent.querySelector('.adm-topbar');
     if (topbar) {
@@ -9601,10 +10073,7 @@ font-size: 0.8rem;
     `;
 
     AdminUI.wireSidebar(key => {
-      const method = 'renderAdmin' + key.charAt(0).toUpperCase() + key.slice(1);
-      if (typeof Pages[method] === 'function') {
-        Pages[method]();
-      }
+      router.navigate('/admin/' + key);
     });
 
     try {
@@ -9664,7 +10133,7 @@ font-size: 0.8rem;
           labels: (d.revenue || []).map(r => r.date?.slice(5) || ''),
           datasets: [
             {
-              label: 'Revenue (GHS)',
+              label: 'Revenue (GH₵)',
               data: (d.revenue || []).map(r => r.revenue),
               borderColor: '#3b82f6',
               backgroundColor: 'rgba(59,130,246,0.1)',

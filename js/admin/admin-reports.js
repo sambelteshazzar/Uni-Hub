@@ -387,9 +387,9 @@ class AdminReportsManager {
         const totalRevenue = allGroups.reduce((s, g) => s + (g.revenue || 0), 0);
         const averageOrder = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
         content += '<h2>Sales Summary</h2><table><tr><th>Metric</th><th>Value</th></tr>';
-        content += `<tr><td>Total Revenue</td><td>GHS ${totalRevenue}</td></tr>`;
+        content += `<tr><td>Total Revenue</td><td>${Formatter.formatPrice(totalRevenue)}</td></tr>`;
         content += `<tr><td>Total Orders</td><td>${totalOrders}</td></tr>`;
-        content += `<tr><td>Average Order</td><td>GHS ${averageOrder}</td></tr>`;
+        content += `<tr><td>Average Order</td><td>${Formatter.formatPrice(averageOrder)}</td></tr>`;
         content += '</table>';
       } else if (type === 'users') {
         const users = adminUsersManager.getAllUsers();
@@ -404,7 +404,7 @@ class AdminReportsManager {
         content +=
           '<h2>Product Summary</h2><table><tr><th>Title</th><th>Price</th><th>Category</th><th>Condition</th><th>Seller</th><th>Status</th></tr>';
         products.forEach(p => {
-          content += `<tr><td>${p.title || ''}</td><td>GHS ${p.price || 0}</td><td>${p.category || ''}</td><td>${p.condition || ''}</td><td>${p.seller?.name || ''}</td><td>${p.status || ''}</td></tr>`;
+          content += `<tr><td>${p.title || ''}</td><td>${Formatter.formatPrice(p.price || 0)}</td><td>${p.category || ''}</td><td>${p.condition || ''}</td><td>${p.seller?.name || ''}</td><td>${p.status || ''}</td></tr>`;
         });
         content += '</table>';
       } else if (type === 'orders') {
@@ -412,7 +412,7 @@ class AdminReportsManager {
         content +=
           '<h2>Order Summary</h2><table><tr><th>Order #</th><th>Customer</th><th>Status</th><th>Total</th><th>Payment</th><th>Date</th></tr>';
         cached.forEach(o => {
-          content += `<tr><td>${o.orderNumber || ''}</td><td>${o.customer?.name || ''}</td><td>${o.status || ''}</td><td>GHS ${o.pricing?.grandTotal || 0}</td><td>${o.payment?.mode || ''}</td><td>${o.createdAt || ''}</td></tr>`;
+          content += `<tr><td>${o.orderNumber || ''}</td><td>${o.customer?.name || ''}</td><td>${o.status || ''}</td><td>${Formatter.formatPrice(o.pricing?.grandTotal || 0)}</td><td>${o.payment?.mode || ''}</td><td>${o.createdAt || ''}</td></tr>`;
         });
         content += '</table>';
       }

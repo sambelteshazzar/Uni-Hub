@@ -264,17 +264,35 @@ class Router {
    *
    * Note: window.location.hash = '#/foo' goes through this method and
    * is normalized here, so legacy callers keep working.
+   *
+   * `replace` (history mode only): replaceState instead of pushState —
+   * use for URL normalization (e.g. default `?filter=` on first render)
+   * and debounced search sync so typing doesn't spam history entries.
    */
-  updateUrl(path, params = {}) {
+  updateUrl(path, params = {}, replace = false) {
     const queryString = Object.keys(params).length
       ? '?' + new URLSearchParams(params).toString()
       : '';
     const target = path + queryString;
 
+    // Keep currentParams in sync with the address bar so renderers can
+    // read router.getParams() instead of location.search — during a
+    // dispatch the handler runs BEFORE this pushState, so location.search
+    // still holds the PREVIOUS page's query (stale ?q= leaks across
+    // sidebar navigations). Internal re-renders (post-edit refresh) also
+    // get the live query this way.
+    if (path === this.currentRoute) {
+      this.currentParams = { ...params };
+    }
+
     if (this._mode === 'history') {
       // Avoid spamming history with the same URL on every render.
       if (window.location.pathname + window.location.search !== target) {
-        window.history.pushState({}, '', target);
+        if (replace) {
+          window.history.replaceState({}, '', target);
+        } else {
+          window.history.pushState({}, '', target);
+        }
       }
     } else {
       // Strip a leading '#' if a legacy caller passed '#/foo' as path.
