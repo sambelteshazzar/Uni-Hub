@@ -1,9 +1,11 @@
 const bcrypt = require('bcryptjs');
-const crypto = require('crypto');
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const { db } = require('../utils/db');
 const { POLICY_VERSION } = require('../config/policies');
 const logActivity = require('../utils/logActivity');
+const { sendEmail } = require('../utils/emailService');
+const mfa = require('../utils/mfa');
+const { getDeletionBlockers, executeAccountDeletion } = require('../utils/accountDeletion');
 
 function getPublicProfile (user) {
   if (!user) {return null;}
@@ -188,9 +190,10 @@ exports.exportMyData = asyncHandler(async (req, res) => {
 });
 
 /**
- * @desc Self-service account deletion = immediate PII anonymization (Act 843).
- *   Financial rows keep referencing the anonymous shell; isActive=0 kills
- *   all sessions via the protect middleware's inactive-user check.
+ * @desc Self-service account deletion: re-auth factor (password OR
+ *   purpose-bound email OTP) → obligations gate → one atomic scrub →
+ *   best-effort receipt. Structured bodies (409/requiredFactor/attempts)
+ *   bypass ApiError because errorHandler only forwards error+details.
  * @route DELETE /api/users/me
  * @access private
  */
@@ -200,38 +203,83 @@ exports.deleteMyAccount = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'Account not found');
   }
 
-  const { confirmText, password } = req.body;
+  const { confirmText, password, challengeId, code } = req.body;
   if (confirmText !== 'DELETE') {
     throw new ApiError(400, 'Type DELETE to confirm account deletion');
   }
 
-  const isGoogleOnly = !!user.googleId;
-  if (!isGoogleOnly) {
+  const requiresOtp = !!user.googleId;
+  if (requiresOtp) {
+    if (password && !challengeId) {
+      return res.status(400).json({
+        success: false,
+        error: 'This account deletes with a code we email you.',
+        requiredFactor: 'otp',
+      });
+    }
+    if (!challengeId || !code) {
+      return res.status(400).json({
+        success: false,
+        error: 'Enter the 6-digit code we emailed you.',
+        requiredFactor: 'otp',
+      });
+    }
+    const result = await mfa.verifyChallenge(challengeId, user.id, code, 'delete');
+    if (!result.ok) {
+      const messages = {
+        wrong_code: 'Invalid code',
+        expired: 'Code expired — request a new one',
+        already_used: 'Code already used — request a new one',
+        too_many_attempts: 'Too many attempts — request a new code',
+        invalid_format: 'Code must be 6 digits',
+        not_found: 'Code session not found — request a new one',
+      };
+      return res.status(400).json({
+        success: false,
+        error: messages[result.reason] || 'Verification failed',
+        ...(result.attemptsLeft !== undefined ? { attemptsLeft: result.attemptsLeft } : {}),
+      });
+    }
+  } else {
+    if (challengeId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Enter your password to delete this account.',
+        requiredFactor: 'password',
+      });
+    }
     if (!password || typeof password !== 'string') {
       throw new ApiError(400, 'Password confirmation required');
     }
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) {
-      throw new ApiError(401, 'Invalid password');
+      // 401 preserved for Wave 1 regression; frontend treats /users/me*
+      // 401s as inline errors (no session clear).
+      return res.status(401).json({ success: false, error: 'Invalid password' });
     }
   }
 
-  await db('users').updateById(user.id, {
-    fullName: 'Deleted User',
-    email: `deleted_${user.id}@anonymized.invalid`,
-    phone: `deleted-${String(user.id).slice(0, 8)}`,
-    avatar: '',
-    bio: null,
-    googleId: null,
-    password: await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 12),
-    isActive: 0,
-    banReason: 'account deleted by user',
+  // Gate re-check, immediately before the atomic write (spec §2).
+  const blockers = await getDeletionBlockers(user.id);
+  if (blockers.length > 0) {
+    return res.status(409).json({ success: false, code: 'DELETION_BLOCKED', blockers });
+  }
+
+  const { oldEmail } = await executeAccountDeletion(user, {
+    marker: 'account deleted by user',
   });
 
   await logActivity('account_deleted',
     { id: user.id, email: '[redacted]' },
-    { method: isGoogleOnly ? 'google' : 'password' },
+    { by: 'user', method: requiresOtp ? 'otp' : 'password' },
     'warning', req);
+
+  // Receipt: best-effort to the pre-scrub address; never fails the delete.
+  try {
+    await sendEmail(oldEmail, 'Your JERTS CART account has been deleted',
+      `<p>Your JERTS CART account was deleted and your personal data anonymized today.</p>
+       <p>Anonymized transaction records we must keep for accounting remain linked to an anonymous profile.</p>`);
+  } catch (_e) { /* log-only */ }
 
   res.json({ success: true, message: 'Your account has been deleted and your personal data removed.' });
 });

@@ -2,10 +2,37 @@
  * Hardened deletion (spec 2026-09-22): obligations gate, OTP re-auth,
  * full scrub, atomicity.
  */
+jest.mock('../utils/cloudinary.util', () => {
+  const actual = jest.requireActual('../utils/cloudinary.util');
+  return {
+    ...actual,
+    destroyDocument: jest.fn(async () => ({ result: 'ok' })),
+  };
+});
+jest.mock('../utils/emailService', () => {
+  const actual = jest.requireActual('../utils/emailService');
+  return {
+    ...actual,
+    sendEmail: jest.fn(async () => ({ success: true })),
+  };
+});
+
 const request = require('supertest');
 const { createTestApp } = require('./test-server');
+const { destroyDocument } = require('../utils/cloudinary.util');
+const { sendEmail } = require('../utils/emailService');
+const mfa = require('../utils/mfa');
 
 const app = createTestApp();
+
+// Per-test reset so mockResolvedValueOnce / mockRejectedValueOnce queues
+// from one test can never poison the next.
+beforeEach(() => {
+  sendEmail.mockReset();
+  sendEmail.mockResolvedValue({ success: true });
+  destroyDocument.mockReset();
+  destroyDocument.mockResolvedValue({ result: 'ok' });
+});
 
 const { getDb } = require('../config/database');
 const { getDeletionBlockers } = require('../utils/accountDeletion');
@@ -129,5 +156,254 @@ describe('getDeletionBlockers', () => {
     expect(blockers.some(b => b.type === 'open_order')).toBe(true);
     // Buyer's own gate sees it too.
     expect((await getDeletionBlockers(buyer.id)).some(b => b.type === 'open_order')).toBe(true);
+  });
+});
+
+const setGoogleId = id =>
+  getDb().prepare('UPDATE users SET googleId = ? WHERE id = ?').run(`g_${Date.now()}`, id);
+
+// NOTE (Task 3 only): /me/deletion-otp does not exist yet — create OTPs
+// directly via mfa.createChallenge(user, 'delete') for THIS task's factor
+// tests; Task 4 switches/extends to the HTTP endpoint.
+const makeDeleteChallenge = async userId => {
+  const user = await require('../utils/db').db('users').findById(userId);
+  return mfa.createChallenge(user, 'delete');
+};
+
+describe('DELETE /users/me — factors', () => {
+  test('pure-email account requires password; wrong password → 401 structured', async () => {
+    const u = await registerUser();
+    const bad = await request(app).delete('/api/users/me')
+      .set('Authorization', `Bearer ${u.token}`)
+      .send({ confirmText: 'DELETE', password: 'Nope1!' });
+    expect(bad.status).toBe(401);
+    expect(bad.body.success).toBe(false);
+
+    // challengeId instead of password → requiredFactor password
+    const ch = await makeDeleteChallenge(u.id);
+    const wrongFactor = await request(app).delete('/api/users/me')
+      .set('Authorization', `Bearer ${u.token}`)
+      .send({ confirmText: 'DELETE', challengeId: ch.id, code: ch.code });
+    expect(wrongFactor.status).toBe(400);
+    expect(wrongFactor.body.requiredFactor).toBe('password');
+  });
+
+  test('google-linked account requires OTP; password-only → 400 requiredFactor otp', async () => {
+    const u = await registerUser();
+    setGoogleId(u.id);
+    const pw = await request(app).delete('/api/users/me')
+      .set('Authorization', `Bearer ${u.token}`)
+      .send({ confirmText: 'DELETE', password: u.password });
+    expect(pw.status).toBe(400);
+    expect(pw.body.requiredFactor).toBe('otp');
+  });
+
+  test('google-linked deletes with OTP; purpose-confused login challenge rejected', async () => {
+    const u = await registerUser();
+    setGoogleId(u.id);
+
+    // Purpose confusion: a LOGIN-bound challenge must not redeem here.
+    const loginCh = await mfa.createChallenge(
+      await require('../utils/db').db('users').findById(u.id), 'login');
+    const confused = await request(app).delete('/api/users/me')
+      .set('Authorization', `Bearer ${u.token}`)
+      .send({ confirmText: 'DELETE', challengeId: loginCh.id, code: loginCh.code });
+    expect(confused.status).not.toBe(200);
+    const still = getDb().prepare('SELECT isActive FROM users WHERE id = ?').get(u.id);
+    expect(still.isActive).toBe(1);
+
+    const delCh = await makeDeleteChallenge(u.id);
+    const ok = await request(app).delete('/api/users/me')
+      .set('Authorization', `Bearer ${u.token}`)
+      .send({ confirmText: 'DELETE', challengeId: delCh.id, code: delCh.code });
+    expect(ok.status).toBe(200);
+  });
+
+  test('wrong OTP code → 400 with attemptsLeft; lock after 3', async () => {
+    const u = await registerUser();
+    setGoogleId(u.id);
+    const ch = await makeDeleteChallenge(u.id);
+    const miss = await request(app).delete('/api/users/me')
+      .set('Authorization', `Bearer ${u.token}`)
+      .send({ confirmText: 'DELETE', challengeId: ch.id, code: '000001' });
+    expect(miss.status).toBe(400);
+    expect(miss.body.attemptsLeft).toBe(2);
+
+    for (let i = 0; i < 2; i++) {
+      await request(app).delete('/api/users/me')
+        .set('Authorization', `Bearer ${u.token}`)
+        .send({ confirmText: 'DELETE', challengeId: ch.id, code: `00000${i + 2}` });
+    }
+    const locked = await request(app).delete('/api/users/me')
+      .set('Authorization', `Bearer ${u.token}`)
+      .send({ confirmText: 'DELETE', challengeId: ch.id, code: ch.code });
+    expect(locked.status).toBe(400);
+    expect(locked.body.error).toMatch(/too many/i);
+    expect(getDb().prepare('SELECT isActive FROM users WHERE id = ?').get(u.id).isActive).toBe(1);
+  });
+});
+
+describe('DELETE /users/me — obligations gate', () => {
+  test('balance blocker → 409 DELETION_BLOCKED with structured list, account untouched', async () => {
+    const u = await registerUser();
+    setGoogleId(u.id);
+    seedLedger(u.id, 45, 'escrowed');
+    const ch = await makeDeleteChallenge(u.id);
+    const res = await request(app).delete('/api/users/me')
+      .set('Authorization', `Bearer ${u.token}`)
+      .send({ confirmText: 'DELETE', challengeId: ch.id, code: ch.code });
+    expect(res.status).toBe(409);
+    expect(res.body.code).toBe('DELETION_BLOCKED');
+    expect(res.body.blockers.map(b => b.type)).toContain('balance');
+    expect(getDb().prepare('SELECT isActive, email FROM users WHERE id = ?').get(u.id))
+      .toMatchObject({ isActive: 1 });
+    // OTP was consumed-or-not — irrelevant; account must be intact either way.
+  });
+
+  test('open buyer order → 409; after cancelling it, delete succeeds', async () => {
+    const u = await registerUser();
+    setGoogleId(u.id);
+    const orderId = seedOrder({ buyerId: u.id });
+    const ch1 = await makeDeleteChallenge(u.id);
+    const blocked = await request(app).delete('/api/users/me')
+      .set('Authorization', `Bearer ${u.token}`)
+      .send({ confirmText: 'DELETE', challengeId: ch1.id, code: ch1.code });
+    expect(blocked.status).toBe(409);
+    expect(blocked.body.blockers[0].action.href).toBe('#/orders');
+
+    // Clear the obligation (what the UI cancel button does).
+    getDb().prepare('UPDATE orders SET status = ? WHERE id = ?').run('cancelled', orderId);
+    const ch2 = await makeDeleteChallenge(u.id);
+    const ok = await request(app).delete('/api/users/me')
+      .set('Authorization', `Bearer ${u.token}`)
+      .send({ confirmText: 'DELETE', challengeId: ch2.id, code: ch2.code });
+    expect(ok.status).toBe(200);
+  });
+});
+
+describe('DELETE /users/me — scrub completeness', () => {
+  test('PII dies, transactions/consent/messages survive, receipt best-effort', async () => {
+    const u = await registerUser();
+    setGoogleId(u.id);
+    const dbh = getDb();
+    // FK-safe seeds (PRAGMA foreign_keys=1): real product + real conversation
+    // before the rows that reference them.
+    const wlProduct = seedProduct(u.id, 'wl');
+    dbh.prepare('INSERT INTO wishlists (id, user, product) VALUES (?, ?, ?)').run(`wl_${u.id}`, u.id, wlProduct);
+    dbh.prepare(
+      'INSERT INTO student_verifications (id, userId, studentId, fullName, email, phone, university, level, verificationMethod, verificationCode, status, universityEmail, hall) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    ).run(`sv_${u.id}`, u.id, 'UG123456', 'Real Name', u.email, '+233249999999', 'atu', '200', 'email', '123456', 'pending', 'real@student.ug.edu.gh', 'Hall B');
+    dbh.prepare(
+      'INSERT INTO verification_documents (id, verificationId, fileName, cloudinaryPublicId, mimeType) VALUES (?, ?, ?, ?, ?)',
+    ).run(`vd_${u.id}`, `sv_${u.id}`, 'id.png', 'jertscart/verifications/id.png', 'image/png');
+    dbh.prepare('INSERT INTO newsletter_subscribers (id, email) VALUES (?, ?)').run(`nl_${u.id}`, u.email);
+    dbh.prepare('INSERT INTO search_history (id, user, query) VALUES (?, ?, ?)').run(`sh_${u.id}`, u.id, 'shoes');
+    dbh.prepare('INSERT INTO notifications (id, user, title, message) VALUES (?, ?, ?, ?)').run(`nt_${u.id}`, u.id, 'Hi', 'There');
+    dbh.prepare('INSERT INTO conversations (id, createdBy) VALUES (?, ?)').run(`cv_${u.id}`, u.id);
+    dbh.prepare('INSERT INTO messages (id, conversationId, sender, receiver, content) VALUES (?, ?, ?, ?, ?)').run(`msg_${u.id}`, `cv_${u.id}`, u.id, u.id, 'keep me');
+
+    const ch = await makeDeleteChallenge(u.id);
+    sendEmail.mockClear();
+    destroyDocument.mockClear();
+
+    const res = await request(app).delete('/api/users/me')
+      .set('Authorization', `Bearer ${u.token}`)
+      .send({ confirmText: 'DELETE', challengeId: ch.id, code: ch.code });
+    expect(res.status).toBe(200);
+
+    const user = dbh.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
+    expect(user.isActive).toBe(0);
+    expect(user.resetToken).toBeNull();
+    expect(user.email).toBe(`deleted_${u.id}@anonymized.invalid`);
+
+    // activity_logs PII scrubbed — target the signup row: the NEW
+    // account_deleted audit row (inserted after the batch, details=
+    // {by:'user'}) must NOT be picked by a bare LIMIT 1.
+    const log = dbh.prepare(
+      `SELECT userEmail, userName, ipAddress, userAgent, details FROM activity_logs
+       WHERE user = ? AND action = 'signup' LIMIT 1`,
+    ).get(u.id);
+    expect(log).toBeTruthy();
+    expect(log.userEmail).toBeNull();
+    expect(log.ipAddress).toBeNull();
+    expect(log.details).toBe('[redacted]');
+
+    const ver = dbh.prepare('SELECT * FROM student_verifications WHERE userId = ?').get(u.id);
+    expect(ver.studentId).toBe('redacted');
+    expect(ver.email).toBe(`deleted_${u.id}@anonymized.invalid`);
+    expect(ver.verificationCode).toBeNull();
+    expect(ver.universityEmail).toBeNull();
+    expect(ver.documentsPurgedAt).toBeTruthy();
+    expect(dbh.prepare('SELECT COUNT(*) c FROM verification_documents').get().c).toBe(0);
+    expect(destroyDocument).toHaveBeenCalledWith('jertscart/verifications/id.png', 'image/png');
+
+    expect(dbh.prepare('SELECT COUNT(*) c FROM newsletter_subscribers').get().c).toBe(0);
+    expect(dbh.prepare('SELECT COUNT(*) c FROM wishlists').get().c).toBe(0);
+    expect(dbh.prepare('SELECT COUNT(*) c FROM search_history').get().c).toBe(0);
+    expect(dbh.prepare('SELECT COUNT(*) c FROM notifications').get().c).toBe(0);
+
+    // Survivors
+    expect(dbh.prepare('SELECT COUNT(*) c FROM messages').get().c).toBe(1);
+    expect(dbh.prepare('SELECT COUNT(*) c FROM consent_records WHERE userId = ?').get(u.id).c).toBeGreaterThanOrEqual(1);
+
+    // Receipt to the OLD address, success irrelevant.
+    expect(sendEmail).toHaveBeenCalled();
+    expect(sendEmail.mock.calls[0][0]).toBe(u.email);
+  });
+
+  test('products flip to inactive (except sold)', async () => {
+    const u = await registerUser();
+    const dbh = getDb();
+    const mk = (id, status) => dbh.prepare(
+      `INSERT INTO products (id, title, description, price, category, condition, seller, sellerName, university, status)
+       VALUES (?, 'P', 'D', 10, 'electronics', 'good', ?, 'S', 'atu', ?)`,
+    ).run(id, u.id, status);
+    mk('pr_active', 'active');
+    mk('pr_sold', 'sold');
+
+    // Password factor (this user is NOT google-linked — a challengeId would
+    // bounce with requiredFactor:password).
+    const res = await request(app).delete('/api/users/me')
+      .set('Authorization', `Bearer ${u.token}`)
+      .send({ confirmText: 'DELETE', password: u.password });
+    expect(res.status).toBe(200);
+    expect(dbh.prepare('SELECT status FROM products WHERE id = ?').get('pr_active').status).toBe('inactive');
+    expect(dbh.prepare('SELECT status FROM products WHERE id = ?').get('pr_sold').status).toBe('sold');
+  });
+
+  test('atomicity: forced UNIQUE failure rolls back the whole scrub', async () => {
+    const u = await registerUser();
+    setGoogleId(u.id);
+    const dbh = getDb();
+    const wlProduct = seedProduct(u.id, 'atom');
+    dbh.prepare('INSERT INTO wishlists (id, user, product) VALUES (?, ?, ?)').run(`wl_a_${u.id}`, u.id, wlProduct);
+    // Plant the row the shell email would collide with (users.email UNIQUE).
+    dbh.prepare(
+      'INSERT INTO users (id, fullName, email, phone, university, password) VALUES (?, ?, ?, ?, ?, ?)',
+    ).run('planter', 'Planter', `deleted_${u.id}@anonymized.invalid`, '+233240000009', 'atu', 'x');
+
+    const ch = await makeDeleteChallenge(u.id);
+    const res = await request(app).delete('/api/users/me')
+      .set('Authorization', `Bearer ${u.token}`)
+      .send({ confirmText: 'DELETE', challengeId: ch.id, code: ch.code });
+    // errorHandler.js:112 maps 'UNIQUE constraint failed' → 400 (not 500).
+    expect(res.status).toBe(400);
+
+    const user = dbh.prepare('SELECT fullName, isActive FROM users WHERE id = ?').get(u.id);
+    expect(user.isActive).toBe(1);
+    expect(user.fullName).not.toBe('Deleted User');
+    expect(dbh.prepare('SELECT COUNT(*) c FROM wishlists WHERE user = ?').get(u.id).c).toBe(1);
+  });
+
+  test('receipt email failure never fails the delete', async () => {
+    const u = await registerUser();
+    setGoogleId(u.id);
+    sendEmail.mockRejectedValueOnce(new Error('smtp down'));
+    const ch = await makeDeleteChallenge(u.id);
+    const res = await request(app).delete('/api/users/me')
+      .set('Authorization', `Bearer ${u.token}`)
+      .send({ confirmText: 'DELETE', challengeId: ch.id, code: ch.code });
+    expect(res.status).toBe(200);
+    expect(getDb().prepare('SELECT isActive FROM users WHERE id = ?').get(u.id).isActive).toBe(0);
   });
 });

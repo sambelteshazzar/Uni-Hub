@@ -111,16 +111,27 @@ describe('account deletion', () => {
     expect(prod).toBeTruthy();
   });
 
-  test('google-only account deletes without password', async () => {
+  test('google-linked account deletes with an emailed OTP, not a free pass', async () => {
     const u = await registerUser();
     const { getDb } = require('../config/database');
-    getDb().prepare('UPDATE users SET googleId = ? WHERE id = ?')
-      .run(`g-${Date.now()}`, u.id);
+    getDb().prepare('UPDATE users SET googleId = ? WHERE id = ?').run(`g-${Date.now()}`, u.id);
+
+    // Password-only (the Wave 1 behavior) must now fail closed.
+    const pwOnly = await request(app)
+      .delete('/api/users/me')
+      .set('Authorization', `Bearer ${u.token}`)
+      .send({ confirmText: 'DELETE', password: u.password });
+    expect(pwOnly.status).toBe(400);
+    expect(pwOnly.body.requiredFactor).toBe('otp');
+
+    // Task 3 only: endpoint arrives in Task 4.
+    const user = require('../utils/db').db('users');
+    const ch = await require('../utils/mfa').createChallenge(await user.findById(u.id), 'delete');
 
     const res = await request(app)
       .delete('/api/users/me')
       .set('Authorization', `Bearer ${u.token}`)
-      .send({ confirmText: 'DELETE' });
+      .send({ confirmText: 'DELETE', challengeId: ch.id, code: ch.code });
     expect(res.status).toBe(200);
   });
 });
