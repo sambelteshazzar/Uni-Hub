@@ -95,11 +95,15 @@ const AuthPageMethods = {
       })
       .catch(() => {});
 
-    // Check if already verified
+    // Check if already verified. The session flag (users.isVerified)
+    // covers accounts verified without a submission record (seed users,
+    // admin users-list "mark verified") — after syncVerificationStatus
+    // those have verification.isVerified=true but no universityId, which
+    // would otherwise fall through to the form and ask them to submit
+    // again. The record branch keeps the same-university guard.
     if (
-      verification &&
-      verification.isVerified &&
-      verification.universityId === selectedUniversity
+      (currentUser && currentUser.isVerified) ||
+      (verification && verification.isVerified && verification.universityId === selectedUniversity)
     ) {
       Pages.renderBrowse();
       return;

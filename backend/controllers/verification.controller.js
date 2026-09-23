@@ -499,7 +499,12 @@ exports.getMyVerificationStatus = asyncHandler(async (req, res) => {
     return res.json({
       success: true,
       data: {
-        isVerified: false,
+        // users.isVerified is the marketplace access flag requireVerified
+        // enforces (admin users-list "mark verified", seed data, legacy
+        // accounts write ONLY this column). Returning false here made the
+        // client's syncVerificationStatus() downgrade verified users on
+        // every login ("verify again" bug).
+        isVerified: !!req.user.isVerified,
         status: 'not_submitted',
       },
     });
@@ -508,8 +513,11 @@ exports.getMyVerificationStatus = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     data: {
-      // Only fully confirmed verifications count as isVerified.
-      isVerified: latestVerification.status === 'approved',
+      // Only fully confirmed verifications count as isVerified — but the
+      // users.isVerified flag (same one requireVerified checks) also
+      // counts, so the two backend notions of "verified" cannot disagree
+      // and clobber a good session on sync.
+      isVerified: latestVerification.status === 'approved' || !!req.user.isVerified,
       status: latestVerification.status,
       // Own submitted personal email — lets the status page show a masked
       // destination ("sent to pe***@gmail.com") so users verify WHERE the
