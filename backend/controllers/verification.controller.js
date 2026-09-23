@@ -229,22 +229,31 @@ exports.approveVerification = asyncHandler(async (req, res) => {
 
   const confirmUrl = buildConfirmationLink(rawToken);
 
+  // Recipient: the personal email submitted on the form — mandatory since
+  // 2026-08-30 precisely "because the magic-link approval confirmation is
+  // sent there" (see submitValidation above), and what the status page
+  // tells the user to check. Falling back to users.email for legacy rows
+  // that predate the form field. Sending to users.email alone ignored the
+  // form address and stranded users whose registration address differed
+  // (e.g. registered with Gmail, typed another personal email).
+  const recipient = verification.email || (user && user.email);
+
   let emailSent = false;
   let emailError = null;
-  if (user && user.email) {
-    const result = await sendApprovalLinkEmail(user.email, rawToken, user);
+  if (recipient) {
+    const result = await sendApprovalLinkEmail(recipient, rawToken, user);
     emailSent = !!result.success;
     emailError = emailSent ? null : (result.error || 'unknown error');
     if (emailSent) {
       // eslint-disable-next-line no-console
-      console.log(`[VERIFICATION] Approval link sent to ${user.email} for verification ${verification.id}`);
+      console.log(`[VERIFICATION] Approval link sent to ${recipient} for verification ${verification.id}`);
     } else {
       // eslint-disable-next-line no-console
       console.warn(`[VERIFICATION] Email send failed for verification ${verification.id}: ${emailError}`);
     }
   } else {
     // eslint-disable-next-line no-console
-    console.warn(`[VERIFICATION] No user record found for verification ${verification.id} — cannot email link`);
+    console.warn(`[VERIFICATION] No recipient email for verification ${verification.id} — cannot email link`);
   }
 
   // In dev / when SMTP is not configured, surface the link so the admin
