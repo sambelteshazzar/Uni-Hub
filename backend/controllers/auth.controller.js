@@ -250,7 +250,7 @@ exports.login = asyncHandler(async (req, res) => {
         mappedUser.email,
         'JERTS CART admin login code',
         `<p>Your JERTS CART admin login code is:</p>
-         <p style="font-size:28px;font-weight:700;letter-spacing:6px;">${challenge.devCode || '••••••'}</p>
+         <p style="font-size:28px;font-weight:700;letter-spacing:6px;">${challenge.code}</p>
          <p>This code expires in 5 minutes. If you did not attempt to log in, change your password immediately.</p>`,
       );
       return res.json({

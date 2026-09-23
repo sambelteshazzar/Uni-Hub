@@ -159,3 +159,49 @@ describe('MFA — privileged login flow', () => {
     expect(replay.status).toBe(401);
   });
 });
+
+describe('MFA — purpose binding', () => {
+  it('rejects a delete-purpose challenge redeemed as login and vice versa', async () => {
+    const mfa = require('../utils/mfa');
+    const { db } = require('../utils/db');
+    const user = await db('users').create({
+      fullName: 'Purpose User',
+      email: `purpose_${Date.now()}@test.com`,
+      phone: '+233240000001',
+      password: 'x',
+      university: 'atu',
+      role: 'buyer',
+    });
+
+    const del = await mfa.createChallenge(user, 'delete');
+    expect(del.code).toMatch(/^\d{6}$/);
+    // Same code, wrong purpose at verify → mismatch.
+    const wrong = await mfa.verifyChallenge(del.id, user.id, del.code, 'login');
+    expect(wrong.ok).toBe(false);
+    expect(wrong.reason).toBe('wrong_code');
+
+    const right = await mfa.verifyChallenge(del.id, user.id, del.code, 'delete');
+    expect(right.ok).toBe(true);
+
+    const login = await mfa.createChallenge(user, 'login');
+    const wrong2 = await mfa.verifyChallenge(login.id, user.id, login.code, 'delete');
+    expect(wrong2.ok).toBe(false);
+  });
+
+  it('exposes attemptsLeft after a wrong code', async () => {
+    const mfa = require('../utils/mfa');
+    const { db } = require('../utils/db');
+    const user = await db('users').create({
+      fullName: 'Attempts User',
+      email: `attempts_${Date.now()}@test.com`,
+      phone: '+233240000002',
+      password: 'x',
+      university: 'atu',
+      role: 'buyer',
+    });
+    const ch = await mfa.createChallenge(user, 'login');
+    const miss = await mfa.verifyChallenge(ch.id, user.id, '999999', 'login');
+    expect(miss.ok).toBe(false);
+    expect(miss.attemptsLeft).toBe(2);
+  });
+});

@@ -7,7 +7,10 @@
 // allow max 3 attempts, and are single-use.
 //
 // TODO: security review — consider TOTP (RFC-6238) as a follow-up; email
-// OTP inherits the mailbox's security. Never log or email-back the code.
+// OTP inherits the mailbox's security. Never log the code. The only
+// sanctioned outbound channel is the email HTML the CALLER builds from the
+// returned `code`; API responses expose it as `devCode` under NODE_ENV=test
+// only.
 
 const crypto = require('crypto');
 const { db, generateId } = require('./db');
@@ -15,9 +18,9 @@ const { db, generateId } = require('./db');
 const CODE_TTL_MS = 5 * 60 * 1000;
 const MAX_ATTEMPTS = 3;
 
-function hashCode (userId, code) {
+function hashCode (userId, purpose, code) {
   const pepper = process.env.JWT_SECRET || 'jertscart-dev-pepper';
-  return crypto.createHash('sha256').update(`${userId}:${code}:${pepper}`).digest('hex');
+  return crypto.createHash('sha256').update(`${userId}:${purpose}:${code}:${pepper}`).digest('hex');
 }
 
 function generateCode () {
@@ -26,11 +29,12 @@ function generateCode () {
 }
 
 /**
- * Create an MFA challenge for a verified-password login.
- * @returns {{ id: string, code?: string }} code is present ONLY when
- *   NODE_ENV=test so e2e suites can complete the flow without a mailbox.
+ * Create an MFA challenge bound to a purpose ('login' | 'delete').
+ * @returns {{ id: string, code: string, devCode?: string }} `code` is the
+ *   raw OTP for in-process callers (email HTML). It must never be placed in
+ *   an API response — use `devCode` (test env) for that.
  */
-async function createChallenge (user) {
+async function createChallenge (user, purpose = 'login') {
   const code = generateCode();
   // Generate the id here and use it directly: looking the row back up by
   // `ORDER BY createdAt DESC LIMIT 1` is ambiguous when two logins for the
@@ -39,9 +43,9 @@ async function createChallenge (user) {
   const id = generateId();
   await db('admin_mfa_challenges').rawRun(
     'INSERT INTO admin_mfa_challenges (id, userId, codeHash, expiresAt) VALUES (?, ?, ?, ?)',
-    [id, user.id, hashCode(user.id, code), new Date(Date.now() + CODE_TTL_MS).toISOString()],
+    [id, user.id, hashCode(user.id, purpose, code), new Date(Date.now() + CODE_TTL_MS).toISOString()],
   );
-  const result = { id };
+  const result = { id, code };
   if (process.env.NODE_ENV === 'test') {
     result.devCode = code;
   }
@@ -50,8 +54,10 @@ async function createChallenge (user) {
 
 /**
  * Verify a challenge. Timing-safe comparison; single-use; max 3 attempts.
+ * The purpose is folded into the stored hash, so a 'delete'-bound code
+ * cannot redeem a 'login' challenge and vice versa.
  */
-async function verifyChallenge (challengeId, userId, providedCode) {
+async function verifyChallenge (challengeId, userId, providedCode, purpose = 'login') {
   if (!providedCode || !/^\d{6}$/.test(String(providedCode))) {
     return { ok: false, reason: 'invalid_format' };
   }
@@ -73,16 +79,21 @@ async function verifyChallenge (challengeId, userId, providedCode) {
     return { ok: false, reason: 'too_many_attempts' };
   }
 
-  const providedHash = Buffer.from(hashCode(userId, String(providedCode)), 'hex');
+  const providedHash = Buffer.from(hashCode(userId, purpose, String(providedCode)), 'hex');
   const storedHash = Buffer.from(row.codeHash, 'hex');
   const matches = crypto.timingSafeEqual(providedHash, storedHash);
 
   if (!matches) {
+    const attempts = row.attempts + 1;
     await db('admin_mfa_challenges').rawRun(
       'UPDATE admin_mfa_challenges SET attempts = attempts + 1 WHERE id = ?',
       [row.id],
     );
-    return { ok: false, reason: 'wrong_code' };
+    return {
+      ok: false,
+      reason: attempts >= MAX_ATTEMPTS ? 'too_many_attempts' : 'wrong_code',
+      attemptsLeft: Math.max(0, MAX_ATTEMPTS - attempts),
+    };
   }
 
   await db('admin_mfa_challenges').rawRun(
