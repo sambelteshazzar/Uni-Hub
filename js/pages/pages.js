@@ -645,6 +645,15 @@ class Pages {
     // Auth
     router.register('/login', () => safeCall('renderLogin'));
     router.register('/register', () => safeCall('renderRegister'));
+    router.register('/forgot-password', () => safeCall('renderForgotPassword'));
+    router.register('/reset-password', params => {
+      const raw = (params && params.token) || '';
+      // Reset tokens are JWTs (base64url + dots). Anything else — e.g. an
+      // attacker-crafted hash — is dropped before it can break out of the
+      // renderers' onsubmit attribute string (XSS via URL).
+      const token = /^[A-Za-z0-9._-]{10,2048}$/.test(raw) ? raw : '';
+      safeCall('renderResetPassword', token);
+    });
     router.register('/auth', () => {
       window.location.hash = '#/login';
     });

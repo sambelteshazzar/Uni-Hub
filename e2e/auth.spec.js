@@ -33,9 +33,7 @@ test.describe('Authentication', () => {
   // '/api' inside the hostname and produced https:/.jertscart.com/... — the
   // fetch failed, _fetchCsrfToken returned null, and login was rejected with
   // 403 "CSRF token missing".
-  test('csrf token fetch derives a valid URL from api.jertscart.com base', async ({
-    page,
-  }) => {
+  test('csrf token fetch derives a valid URL from api.jertscart.com base', async ({ page }) => {
     await page.goto('/');
     const requested = [];
     await page.route('**/auth/csrf-token', route => {
@@ -48,5 +46,21 @@ test.describe('Authentication', () => {
     });
     expect(requested[0]).toBe('https://api.jertscart.com/api/auth/csrf-token');
     expect(token).toBe('e2e-token');
+  });
+
+  // Regression: /forgot-password and /reset-password were never registered
+  // with the router — password-reset EMAILS landed on a blank 404 page.
+  test('forgot password page loads', async ({ page }) => {
+    await page.goto('/#/forgot-password');
+    await expect(page.locator('#forgot-email, #forgot-form, #forgot-form-bb').first()).toBeVisible({
+      timeout: 10000,
+    });
+  });
+
+  test('reset password page loads from email link', async ({ page }) => {
+    await page.goto('/#/reset-password?token=aaa.bbb.ccc');
+    await expect(page.locator('#reset-form, #reset-form-bb').first()).toBeVisible({
+      timeout: 10000,
+    });
   });
 });
