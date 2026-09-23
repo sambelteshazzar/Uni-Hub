@@ -355,6 +355,12 @@ describe('DELETE /users/me — scrub completeness', () => {
     // Receipt to the OLD address, success irrelevant.
     expect(sendEmail).toHaveBeenCalled();
     expect(sendEmail.mock.calls[0][0]).toBe(u.email);
+
+    // Old bearer token is dead — protect() rejects isActive=0 (401).
+    const reused = await request(app)
+      .get('/api/users/me')
+      .set('Authorization', `Bearer ${u.token}`);
+    expect(reused.status).toBe(401);
   });
 
   test('products flip to inactive (except sold)', async () => {
