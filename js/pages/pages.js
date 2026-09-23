@@ -6590,12 +6590,23 @@ font-size: 0.8rem;
           if (u.role === 'admin') {
             return '<span class="adm-text-muted">—</span>';
           }
+          // Split guard (plan default): Delete hidden for moderator/self
+          // rows, Ban/Unban behavior stays byte-identical for everyone else.
+          const viewerId =
+            typeof adminAuthManager !== 'undefined' && adminAuthManager.adminUser
+              ? adminAuthManager.adminUser.id
+              : null;
+          const eligibleToDelete =
+            u.role !== 'admin' && u.role !== 'moderator' && u.id !== viewerId;
+          const deleteBtn = eligibleToDelete
+            ? `<button type="button" class="adm-btn adm-btn--sm adm-btn--danger" data-user-action="delete" data-user-id="${_pageEsc(u.id)}" style="margin-left:0.35rem;">Delete</button>`
+            : '';
           const suspended =
             u.isSuspended === true || u.status === 'suspended' || u.status === 'banned';
           if (suspended) {
-            return `<button type="button" class="adm-btn adm-btn--sm" data-user-action="unban" data-user-id="${_pageEsc(u.id)}">Unban</button>`;
+            return `<button type="button" class="adm-btn adm-btn--sm" data-user-action="unban" data-user-id="${_pageEsc(u.id)}">Unban</button>${deleteBtn}`;
           }
-          return `<button type="button" class="adm-btn adm-btn--sm adm-btn--danger" data-user-action="ban" data-user-id="${_pageEsc(u.id)}">Ban</button>`;
+          return `<button type="button" class="adm-btn adm-btn--sm adm-btn--danger" data-user-action="ban" data-user-id="${_pageEsc(u.id)}">Ban</button>${deleteBtn}`;
         },
       },
     ];
@@ -6651,6 +6662,8 @@ font-size: 0.8rem;
           Pages.adminBanUser(userId);
         } else if (action === 'unban') {
           Pages.adminUnbanUser(userId);
+        } else if (action === 'delete') {
+          Pages.adminDeleteUser(userId);
         }
       });
     }
@@ -7698,6 +7711,91 @@ font-size: 0.8rem;
     } catch (e) {
       showToast(e.message || 'Failed to unban user', 'error');
     }
+  }
+
+  /**
+   * Permanently delete (anonymize) a user — spec 2026-09-22 §4.
+   * Preflight blockers render as WARNINGS only (admin delete bypasses the
+   * gate); the reason (min 5) is required and kept in the audit trail.
+   */
+  static adminDeleteUser(userId) {
+    if (!_requireAdmin()) {
+      return;
+    }
+
+    const overlay = document.createElement('div');
+    overlay.id = 'user-delete-overlay';
+    overlay.innerHTML = AdminUI.modalHtml({
+      id: 'user-delete-overlay',
+      title: 'Delete this account permanently?',
+      sub: 'Personal data is anonymized immediately and cannot be recovered. Transaction records stay linked to the anonymized profile for accounting. Ban is the reversible option — use it instead when unsure.',
+      body: `
+      <div id="user-delete-warnings" style="display:none;margin-bottom:0.75rem;padding:0.6rem;border-radius:6px;background:rgba(245,158,11,0.12);color:var(--text-primary,#111);font-size:0.875rem;"></div>
+      <textarea id="user-delete-reason" class="adm-modal-field" maxlength="300" rows="3" placeholder="Reason for deletion (min 5 characters) — kept in the audit trail"></textarea>
+      <p id="user-delete-error" class="adm-modal-error" role="alert"></p>`,
+      footer:
+        '<button type="button" data-adm-modal-cancel data-adm-modal-close class="adm-btn">Cancel</button>' +
+        '<button type="button" data-adm-modal-action="confirm" class="adm-btn adm-btn--danger" disabled>Delete forever</button>',
+    });
+    document.body.appendChild(overlay);
+
+    const errorEl = overlay.querySelector('#user-delete-error');
+    const warnEl = overlay.querySelector('#user-delete-warnings');
+    const reasonEl = overlay.querySelector('#user-delete-reason');
+    const confirmBtn = overlay.querySelector('[data-adm-modal-action="confirm"]');
+
+    const validate = () => {
+      confirmBtn.disabled = reasonEl.value.trim().length < 5;
+    };
+    reasonEl.addEventListener('input', validate);
+
+    // Advisory preflight — failures never block the admin escape valve.
+    api.users
+      .deletionBlockers(userId)
+      .then(resp => {
+        if (resp && Array.isArray(resp.blockers) && resp.blockers.length) {
+          warnEl.style.display = 'block';
+          warnEl.textContent = `Warnings (admin delete proceeds anyway): ${resp.blockers
+            .map(b => b.message)
+            .join(' · ')}`;
+        }
+      })
+      .catch(() => {
+        warnEl.style.display = 'block';
+        warnEl.textContent = "Couldn't check obligations — admin delete proceeds anyway.";
+      });
+
+    AdminUI.wireModal(overlay, {
+      onClose: () => overlay.remove(),
+      onAction: async key => {
+        if (key !== 'confirm') {
+          return;
+        }
+        const reason = reasonEl.value.trim();
+        if (reason.length < 5) {
+          errorEl.textContent = 'Please enter a reason of at least 5 characters.';
+          return;
+        }
+        confirmBtn.disabled = true;
+        try {
+          const result = await adminUsersManager.deleteUser(userId, reason);
+          if (result && result.success) {
+            showToast('Account deleted and anonymized', 'success');
+            overlay.remove();
+            await Pages.renderAdminUsers();
+          } else {
+            errorEl.textContent = (result && result.error) || 'Failed to delete this account.';
+            confirmBtn.disabled = false;
+          }
+        } catch (err) {
+          errorEl.textContent = err.message || 'Failed to delete this account.';
+          confirmBtn.disabled = false;
+        }
+      },
+    });
+
+    validate();
+    reasonEl.focus();
   }
 
   static async renderAdminActivity() {

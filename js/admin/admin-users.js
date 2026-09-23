@@ -260,40 +260,37 @@ class AdminUsersManager {
   }
 
   /**
-   * Delete user
-   * @param {string} userId - User ID
-   * @returns {Object}
+   * Delete user (spec 2026-09-22): server-first — the backend validates the
+   * reason and runs the shared anonymize; local cache only updates on success.
+   * @param {string} userId
+   * @param {string} reason - min 5 chars, stored in the audit trail
+   * @returns {Promise<{success: boolean, error?: string, message?: string}>}
    */
-  async deleteUser(userId) {
-    const index = this.users.findIndex(u => u.id === userId);
-
-    if (index === -1) {
-      return {
-        success: false,
-        error: 'User not found',
-      };
+  async deleteUser(userId, reason) {
+    if (!reason || typeof reason !== 'string' || reason.trim().length < 5) {
+      return { success: false, error: 'A reason of at least 5 characters is required.' };
     }
-
-    const user = this.users[index];
-    this.users.splice(index, 1);
-
-    this._persistUsersList();
-
-    if (typeof api !== 'undefined' && api.users && api.users.delete) {
-      try {
-        await api.users.delete(userId);
-      } catch (err) {
-        console.warn('admin-users: backend delete sync failed:', err);
+    if (typeof api === 'undefined' || !api.users || !api.users.delete || api.isStaticDeploy) {
+      return { success: false, error: 'Backend unavailable — deletion needs a live server.' };
+    }
+    try {
+      const resp = await api.users.delete(userId, reason.trim());
+      if (!resp || resp.success === false) {
+        return { success: false, error: (resp && resp.error) || 'Delete failed.' };
       }
+    } catch (err) {
+      return { success: false, error: err.message || 'Delete failed.' };
     }
 
-    adminAuthManager.logActivity('User deleted', { userId, email: user.email });
-
-    return {
-      success: true,
-      message: 'User deleted successfully',
-      user: user,
-    };
+    const index = this.users.findIndex(u => u.id === userId);
+    if (index !== -1) {
+      this.users.splice(index, 1);
+      this._persistUsersList();
+    }
+    // Audit locally without PII: id + reason only (email lives on the
+    // server-side activity row, redacted).
+    adminAuthManager.logActivity('User deleted', { userId, reason: reason.trim() });
+    return { success: true, message: 'User deleted' };
   }
 
   _persistUser(user) {
