@@ -2618,7 +2618,14 @@ Copy Link
   /**
    * Render Cart Page
    */
-  static renderCart() {
+  static async renderCart() {
+    // Re-sync verification flags from the server before painting the
+    // "verify to checkout" banner. session.user.isVerified / the
+    // verification cache can be stale (confirmed on another device, or
+    // by an older build whose confirm handler never persisted the flag).
+    if (typeof authManager !== 'undefined' && authManager.syncVerificationStatus) {
+      await authManager.syncVerificationStatus();
+    }
     const mainContent = document.getElementById('main-content');
     const cartItems = cartManager.getItems();
     const summary = cartManager.getSummary();
@@ -4061,6 +4068,11 @@ font-size: 0.8rem;
    * Render User Dashboard - Vertical Tabs Modern Design
    */
   static async renderDashboard() {
+    // Re-sync verification flags before painting Account Status
+    // ("⏳ Pending Verification" was reading a stale session.user).
+    if (typeof authManager !== 'undefined' && authManager.syncVerificationStatus) {
+      await authManager.syncVerificationStatus();
+    }
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
 

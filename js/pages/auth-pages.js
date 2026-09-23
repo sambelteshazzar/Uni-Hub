@@ -1646,11 +1646,14 @@ const AuthPageMethods = {
             studentId: resp.data.studentId || existing.studentId,
           });
         }
-        // If the user is signed in, refresh the in-memory user so the
-        // auth-aware UI updates immediately.
-        if (typeof authManager !== 'undefined' && authManager.refresh) {
+        // Persist the verified flag into the session + verification cache
+        // so the cart banner and dashboard settings repaint correctly.
+        // (This previously called authManager.refresh(), which does not
+        // exist — the guard silently skipped and session.user.isVerified
+        // stayed false forever.)
+        if (typeof authManager !== 'undefined' && authManager.syncVerificationStatus) {
           try {
-            await authManager.refresh();
+            await authManager.syncVerificationStatus();
           } catch (_e) {
             /* non-fatal */
           }
