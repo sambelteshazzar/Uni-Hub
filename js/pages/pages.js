@@ -1633,9 +1633,9 @@ ${recentlyViewed
 </div>`;
   })
   .join('')}
-</div>
-</div>
-`;
+        </div>
+      </div>
+    `;
   }
 
   static _renderPageNumbers(current, total) {
@@ -3469,12 +3469,17 @@ Copy Link
   Total: ${Formatter.formatPrice(order.pricing.grandTotal)}
   </div>
   <div style="display:flex;gap:0.5rem;">
-  <button class="btn btn-outline btn-sm" onclick="Pages.viewOrderDetails('${order.id}')">
-  View Details
-  </button>
-  <button class="btn btn-ghost btn-sm" onclick="Pages.downloadReceipt('${order.id}')">
-  Receipt
-  </button>
+    <button class="btn btn-outline btn-sm" data-order-action="view" data-order-id="${_pageEsc(order.id)}">
+      View Details
+    </button>
+    <button class="btn btn-ghost btn-sm" data-order-action="receipt" data-order-id="${_pageEsc(order.id)}">
+      Receipt
+    </button>
+    ${
+      ['placed', 'confirmed', 'in-transit'].includes(order.status)
+        ? `<button class="btn btn-ghost btn-sm" data-order-action="cancel" data-order-id="${_pageEsc(order.id)}" style="color:var(--color-danger,#ef4444);">Cancel</button>`
+        : ''
+    }
   </div>
 </div>
 
@@ -3486,6 +3491,41 @@ ${Pages.renderOrderTimeline(order.status)}
         </div>
       </div>
     `;
+
+    // Event delegation on the persistent container (refactor on touch —
+    // replaces the inline onclick handlers that used to live above). The
+    // .cart-items scope keeps this off the admin orders table, which reuses
+    // the data-order-action attribute with its own .adm-page listener.
+    // The flag prevents duplicate listeners on re-navigation.
+    if (!Pages._ordersActionsBound) {
+      document.getElementById('main-content').addEventListener('click', async e => {
+        const btn = e.target.closest('[data-order-action]');
+        if (!btn || !btn.closest('.cart-items')) {
+          return;
+        }
+        const id = btn.dataset.orderId || '';
+        const action = btn.dataset.orderAction;
+        if (action === 'view') {
+          Pages.viewOrderDetails(id);
+        } else if (action === 'receipt') {
+          Pages.downloadReceipt(id);
+        } else if (action === 'cancel') {
+          if (!confirm('Cancel this order?')) {
+            return;
+          }
+          btn.disabled = true;
+          try {
+            await api.orders.cancel(id);
+            showToast('Order cancelled', 'success');
+            await Pages.renderOrders();
+          } catch (err) {
+            showToast(err.message || 'Could not cancel this order.', 'error');
+            btn.disabled = false;
+          }
+        }
+      });
+      Pages._ordersActionsBound = true;
+    }
   }
 
   /**
