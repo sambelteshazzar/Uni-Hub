@@ -107,19 +107,70 @@ exports.updateUser = asyncHandler(async (req, res) => {
   });
 });
 
+const SHELL_EMAIL_RE = /^deleted_[^@]+@anonymized\.invalid$/;
+
+const isAlreadyDeleted = user =>
+  SHELL_EMAIL_RE.test(user.email) ||
+  user.banReason === 'account deleted by user' ||
+  String(user.banReason || '').startsWith('deleted by admin:');
+
+/**
+ * @desc Admin preflight warnings for deleting a target account
+ * @route GET /api/users/:id/deletion-blockers
+ */
+exports.getTargetDeletionBlockers = asyncHandler(async (req, res) => {
+  const user = await db('users').findById(req.params.id);
+  if (!user || isAlreadyDeleted(user)) {
+    throw new ApiError(404, 'User not found');
+  }
+  const blockers = await getDeletionBlockers(user.id);
+  res.json({ success: true, blockers });
+});
+
+/**
+ * @desc Admin deletion: anonymize + scrub (shared with self path).
+ *   Obligations gate is BYPASSED by design — admin delete is the
+ *   guaranteed exit valve when money/order blockers would deadlock a
+ *   self-service deletion (spec 2026-09-22 §4).
+ * @route DELETE /api/users/:id
+ */
 exports.deleteUser = asyncHandler(async (req, res) => {
   const user = await db('users').findById(req.params.id);
-
-  if (!user) {
+  if (!user || isAlreadyDeleted(user)) {
     throw new ApiError(404, 'User not found');
   }
 
-  await db('users').updateById(req.params.id, { isActive: false });
+  const { reason } = req.body;
+  if (!reason || typeof reason !== 'string' || reason.trim().length < 5) {
+    throw new ApiError(400, 'A deletion reason of at least 5 characters is required');
+  }
+  if (user.id === req.user.id) {
+    throw new ApiError(403, 'You cannot delete your own account from here — use Settings');
+  }
+  if (['admin', 'moderator'].includes(user.role)) {
+    throw new ApiError(403, 'Administrators and moderators cannot be deleted');
+  }
 
-  res.json({
-    success: true,
-    message: 'User deactivated',
+  const trimmed = reason.trim();
+  const { oldEmail } = await executeAccountDeletion(user, {
+    marker: `deleted by admin: ${trimmed}`,
   });
+
+  // Actor-side audit: target-linked row, redacted identity columns, admin
+  // context in details (schema has no admin_user_deleted action yet —
+  // reuse account_deleted per spec §4 follow-up note).
+  await logActivity('account_deleted',
+    { id: user.id, email: '[redacted]', fullName: '[redacted]' },
+    { by: 'admin', actorId: req.user.id, reason: trimmed },
+    'warning', req);
+
+  try {
+    await sendEmail(oldEmail, 'Your JERTS CART account has been deleted',
+      `<p>An administrator deleted your JERTS CART account. Your personal data has been anonymized.</p>
+       <p>Anonymized transaction records we must keep for accounting remain.</p>`);
+  } catch (_e) { /* best-effort */ }
+
+  res.json({ success: true, message: 'User deleted and anonymized' });
 });
 
 /**
@@ -270,7 +321,7 @@ exports.deleteMyAccount = asyncHandler(async (req, res) => {
   });
 
   await logActivity('account_deleted',
-    { id: user.id, email: '[redacted]' },
+    { id: user.id, email: '[redacted]', fullName: '[redacted]' },
     { by: 'user', method: requiresOtp ? 'otp' : 'password' },
     'warning', req);
 

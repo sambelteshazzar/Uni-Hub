@@ -12,6 +12,7 @@ const {
   deleteMyAccount,
   getMyDeletionBlockers,
   requestDeletionOtp,
+  getTargetDeletionBlockers,
 } = require('../controllers/user.controller');
 
 // OTP-send throttle: 3 / 15 min keyed userId+IP. custom handler returns
@@ -50,6 +51,7 @@ router.get('/me/export', protect, asyncHandler(exportMyData));
 router.get('/me/deletion-blockers', protect, asyncHandler(getMyDeletionBlockers));
 router.post('/me/deletion-otp', protect, deletionOtpLimiter, asyncHandler(requestDeletionOtp));
 router.delete('/me', protect, asyncHandler(deleteMyAccount));
+router.get('/:id/deletion-blockers', protect, authorize('admin'), asyncHandler(getTargetDeletionBlockers));
 router.get('/:id', protect, getUser);
 router.put('/:id', protect, authorize('admin'), updateUser);
 router.delete('/:id', protect, authorize('admin'), deleteUser);
