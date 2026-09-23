@@ -1564,15 +1564,38 @@ const AuthPageMethods = {
       return;
     }
 
-    // The router has already parsed the query string into params, but the
-    // token contains characters that router.parseQueryString() will have
-    // HTML-escaped. Read it from the raw hash instead so we get the
-    // unescaped value for the API call.
+    // The token can arrive in three shapes:
+    //  1. Hash query ('#/verify?token=…') — hash mode, or before the
+    //     router rewrites the URL.
+    //  2. location.search ('/verify?token=…') — history mode (default):
+    //     handleUrlChange replaceState()s '#/verify?token=…' to the clean
+    //     URL BEFORE this handler runs, erasing the hash and moving the
+    //     query to location.search. Reading only the hash here caused the
+    //     "Missing token" failure for every email link (2026-09-23).
+    //  3. router.currentParams — parsed by navigate(); values are
+    //     HTML-escaped, but the token is hex so this is a safe last
+    //     resort (e.g. if a future change stops rewriting the URL).
+    // Raw sources are preferred over currentParams because the router's
+    // parseQueryString HTML-escapes values and the API needs the exact
+    // bytes we stored the SHA-256 of.
     const rawHash = String(window.location.hash || '');
     const queryStart = rawHash.indexOf('?');
-    const rawQuery = queryStart >= 0 ? rawHash.slice(queryStart + 1) : '';
-    const rawParams = new URLSearchParams(rawQuery);
-    const token = rawParams.get('token') || '';
+    let rawQuery = queryStart >= 0 ? rawHash.slice(queryStart + 1) : '';
+    if (!rawQuery) {
+      const search = String(window.location.search || '');
+      if (search.length > 1) {
+        rawQuery = search.slice(1);
+      }
+    }
+    let token = rawQuery ? new URLSearchParams(rawQuery).get('token') || '' : '';
+    if (
+      !token &&
+      typeof router !== 'undefined' &&
+      router.currentParams &&
+      router.currentParams.token
+    ) {
+      token = String(router.currentParams.token);
+    }
 
     const esc = s => {
       const e =
