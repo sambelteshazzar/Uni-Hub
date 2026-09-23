@@ -1920,7 +1920,10 @@ const AuthPageMethods = {
           }
           Pages.renderLanding();
         } else if (a === 'resend') {
-          Pages._handleResendConfirmation(e.target.closest('[data-action="resend"]'));
+          // `this` — not `Pages`: AuthPageMethods helpers are attached via
+          // the whitelist at the bottom of this file, and private helpers
+          // like this one are only reachable through the bound `this`.
+          this._handleResendConfirmation(e.target.closest('[data-action="resend"]'));
         }
       });
     }
@@ -2137,6 +2140,7 @@ window.AuthPageMethods = AuthPageMethods;
       'handleVerification',
       'renderVerifyConfirmation',
       'renderVerificationStatus',
+      '_handleResendConfirmation',
       'openChangeUniversityOverlay',
     ].forEach(bind);
   }, 50);
