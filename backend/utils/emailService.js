@@ -1,5 +1,8 @@
 const nodemailer = require('nodemailer');
-const brevo = require('@getbrevo/brevo');
+// @getbrevo/brevo v6 exports BrevoClient — the old v1/v2
+// `new brevo.TransactionalEmailsApi()` no longer exists and threw at
+// runtime ("is not a constructor"), silently disabling ALL sending.
+const { BrevoClient } = require('@getbrevo/brevo');
 
 let transporter = null;
 let brevoApi = null;
@@ -16,9 +19,7 @@ function getBrevoApi () {
   brevoInitTried = true;
   try {
     if (process.env.BREVO_API_KEY) {
-      const api = new brevo.TransactionalEmailsApi();
-      api.authentications.apiKey.apiKey = process.env.BREVO_API_KEY;
-      brevoApi = api;
+      brevoApi = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
     }
   } catch (err) {
     console.warn('Brevo not initialized:', err.message);
@@ -64,7 +65,7 @@ async function sendEmail (to, subject, html) {
   const api = getBrevoApi();
   if (api) {
     try {
-      await api.sendTransacEmail({
+      await api.transactionalEmails.sendTransacEmail({
         sender: { email: from.email, name: from.name },
         to: [{ email: to }],
         subject,

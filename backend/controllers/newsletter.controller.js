@@ -1,14 +1,15 @@
 const { db } = require('../utils/db');
 const { ApiError, asyncHandler } = require('../utils/errorHandler');
 const crypto = require('crypto');
-const brevo = require('@getbrevo/brevo');
+// v6 SDK: BrevoClient (the old `new brevo.TransactionalEmailsApi()` threw
+// "is not a constructor" and left brevoApiInstance null — every newsletter
+// email silently skipped even with BREVO_API_KEY set).
+const { BrevoClient } = require('@getbrevo/brevo');
 
 let brevoApiInstance = null;
 try {
   if (process.env.BREVO_API_KEY) {
-    const apiInstance = new brevo.TransactionalEmailsApi();
-    apiInstance.authentications.apiKey.apiKey = process.env.BREVO_API_KEY;
-    brevoApiInstance = apiInstance;
+    brevoApiInstance = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
   }
 } catch (err) {
   console.warn('Brevo not initialized:', err.message);
@@ -51,7 +52,7 @@ async function sendVerificationEmail (email, token) {
       </body>
     </html>
   `;
-  await brevoApiInstance.sendTransacEmail({
+  await brevoApiInstance.transactionalEmails.sendTransacEmail({
     sender: { email: FROM_EMAIL, name: FROM_NAME },
     to: [{ email }],
     subject: 'Confirm your JERTS CART newsletter subscription',
@@ -87,7 +88,7 @@ async function sendWelcomeEmail (email) {
       </body>
     </html>
   `;
-  await brevoApiInstance.sendTransacEmail({
+  await brevoApiInstance.transactionalEmails.sendTransacEmail({
     sender: { email: FROM_EMAIL, name: FROM_NAME },
     to: [{ email }],
     subject: 'You\'re confirmed! 🎉 Welcome to JERTS CART',
@@ -278,7 +279,7 @@ exports.sendCampaign = asyncHandler(async (req, res) => {
   }
 
   if (testEmail) {
-    await brevoApiInstance.sendTransacEmail({
+    await brevoApiInstance.transactionalEmails.sendTransacEmail({
       sender: { email: FROM_EMAIL, name: FROM_NAME },
       to: [{ email: testEmail }],
       subject: `[TEST] ${subject}`,
@@ -301,7 +302,7 @@ exports.sendCampaign = asyncHandler(async (req, res) => {
   for (let i = 0; i < emails.length; i += BATCH_SIZE) {
     const batch = emails.slice(i, i + BATCH_SIZE);
     try {
-      await brevoApiInstance.sendTransacEmail({
+      await brevoApiInstance.transactionalEmails.sendTransacEmail({
         sender: { email: FROM_EMAIL, name: FROM_NAME },
         to: batch,
         subject,

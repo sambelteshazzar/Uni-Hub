@@ -7,14 +7,16 @@
  * reset link uses only the first origin and a / before the hash route.
  *
  * Mocks the Brevo transport (not the module's sendEmail export — that is a
- * same-module closure and is invisible to jest).
+ * same-module closure and is invisible to jest). SDK shape mirrors
+ * @getbrevo/brevo v6: BrevoClient -> transactionalEmails.sendTransacEmail.
  */
 const mockSendTransacEmail = jest.fn(async () => ({ messageId: 'msg-1' }));
 
 jest.mock('@getbrevo/brevo', () => ({
-  TransactionalEmailsApi: jest.fn(() => ({
-    authentications: { apiKey: { apiKey: null } },
-    sendTransacEmail: (...args) => mockSendTransacEmail(...args),
+  BrevoClient: jest.fn(() => ({
+    transactionalEmails: {
+      sendTransacEmail: (...args) => mockSendTransacEmail(...args),
+    },
   })),
 }));
 
