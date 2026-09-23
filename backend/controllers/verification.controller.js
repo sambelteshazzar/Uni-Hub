@@ -365,6 +365,62 @@ exports.confirmVerification = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * Self-service resend of the confirmation email (owner only). Rotates the
+ * token exactly like admin re-approve — any previously delivered link dies —
+ * and re-sends to the FORM personal email. The raw token is NEVER returned:
+ * the email channel is the only way the link leaves the server (the token
+ * in the URL is the credential). Rate-limited in the route (3/15min) plus
+ * the namespace-wide POST limiter in server.js.
+ *
+ * POST /api/verification/resend-confirmation
+ */
+exports.resendConfirmation = asyncHandler(async (req, res) => {
+  const latest = (await db('student_verifications').find(
+    { userId: req.user.id },
+    { sort: { createdAt: -1 }, limit: 1 },
+  ))[0];
+
+  if (!latest) {
+    throw new ApiError(404, 'No verification request found');
+  }
+  if (latest.status !== 'approved_pending_user') {
+    throw new ApiError(409, 'No confirmation email is awaiting action for your account');
+  }
+
+  const recipient = latest.email || req.user.email;
+  if (!recipient) {
+    throw new ApiError(400, 'No email address available for the confirmation link');
+  }
+
+  const rawToken = generateConfirmationToken();
+  await db('student_verifications').updateById(latest.id, {
+    confirmationTokenHash: hashToken(rawToken),
+    confirmationTokenExpiresAt: new Date(Date.now() + CONFIRMATION_TTL_MS).toISOString(),
+    confirmationTokenUsedAt: null,
+  });
+
+  const user = await db('users').findById(req.user.id);
+  const result = await sendApprovalLinkEmail(recipient, rawToken, user);
+  const emailSent = !!result.success;
+
+  await logActivity('verification_link_resent', req.user, {
+    verificationId: latest.id,
+    recipient,
+    emailSent,
+    emailError: emailSent ? null : result.error || 'unknown',
+  }, emailSent ? 'info' : 'warning', req);
+
+  if (!emailSent) {
+    throw new ApiError(502, 'Could not send the confirmation email. Please try again later.');
+  }
+
+  res.json({
+    success: true,
+    message: `Confirmation email sent to ${recipient}`,
+  });
+});
+
 exports.rejectVerification = asyncHandler(async (req, res) => {
   const { notes } = req.body;
 
@@ -455,6 +511,10 @@ exports.getMyVerificationStatus = asyncHandler(async (req, res) => {
       // Only fully confirmed verifications count as isVerified.
       isVerified: latestVerification.status === 'approved',
       status: latestVerification.status,
+      // Own submitted personal email — lets the status page show a masked
+      // destination ("sent to pe***@gmail.com") so users verify WHERE the
+      // link goes before checking the wrong inbox.
+      email: latestVerification.email || null,
       verificationMethod: latestVerification.verificationMethod,
       university: latestVerification.university,
       studentId: latestVerification.studentId,

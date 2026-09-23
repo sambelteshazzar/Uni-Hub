@@ -7850,6 +7850,8 @@ font-size: 0.8rem;
         <option value="admin_approve">Product Approved</option>
         <option value="admin_reject">Product Rejected</option>
         <option value="password_change">Password Change</option>
+        <option value="verification_approved_by_admin">Verification Approved</option>
+        <option value="verification_link_resent">Confirmation Email Resent</option>
       </select>
       <select id="activity-filter-severity" class="adm-form-input" style="width:auto;padding:7px 10px;font-size:13px;">
         <option value="">All Severity</option>
@@ -8189,6 +8191,9 @@ font-size: 0.8rem;
       admin_approve: 'Product Approved',
       admin_reject: 'Product Rejected',
       search: 'Search',
+      verification_confirmed: 'Verification Confirmed',
+      verification_approved_by_admin: 'Verification Approved (Admin)',
+      verification_link_resent: 'Confirmation Email Resent',
     };
 
     const rows = (logs || [])

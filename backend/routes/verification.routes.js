@@ -20,6 +20,7 @@ const {
   getVerificationDocuments,
   purgeVerificationDocuments,
   confirmVerification,
+  resendConfirmation,
 } = require('../controllers/verification.controller');
 
 // Authenticated routes
@@ -36,6 +37,22 @@ router.post('/', protect, (req, res, next) => {
 }, submitVerification);
 router.get('/me', protect, getMyVerificationStatus);
 router.get('/status/:studentId/:university', getVerificationStatus);
+
+// Self-service resend of the confirmation email. protect first: only an
+// authenticated owner can trigger a send (unauthenticated callers 401
+// before any mail path), so the limiter guards actual send attempts —
+// 3 per 15 min per IP, stacked under server.js's namespace POST limiter.
+const resendConfirmationLimiter = require('express-rate-limit')({
+  windowMs: 15 * 60 * 1000,
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: 'Too many resend attempts. Please wait about 15 minutes and try again.',
+  },
+});
+router.post('/resend-confirmation', protect, resendConfirmationLimiter, resendConfirmation);
 
 // Magic-link confirmation (2026-08-29): public, token-in-URL is the
 // credential. GETs are auto-exempt from CSRF, and the verification

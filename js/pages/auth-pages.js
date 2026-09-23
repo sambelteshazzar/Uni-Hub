@@ -1865,6 +1865,23 @@ const AuthPageMethods = {
   },
 
   _renderStatusAwaitingConfirmation(root, esc, data) {
+    // Show a MASKED destination so the user knows which inbox to check —
+    // e.g. "jo***@gmail.com" — instead of a generic "your personal email".
+    // The full address comes from their own /verification/me row (never
+    // someone else's), but is still rendered escaped.
+    const maskEmail = email => {
+      const at = email.indexOf('@');
+      if (at < 1) {
+        return email;
+      }
+      const local = email.slice(0, at);
+      const head = local.slice(0, Math.min(2, local.length));
+      return `${head}${'*'.repeat(Math.max(3, local.length - head.length))}${email.slice(at)}`;
+    };
+    const destination = data.email
+      ? `<strong>${esc(maskEmail(String(data.email)))}</strong>`
+      : 'your personal email';
+
     root.innerHTML = `
       <div class="auth-container" style="max-width: 560px; margin: 3rem auto;">
         <div class="auth-card" style="text-align: center; padding: 2.5rem 2rem;">
@@ -1872,19 +1889,21 @@ const AuthPageMethods = {
           <h2 style="margin: 1rem 0 0.5rem;">Almost there — check your email</h2>
           <p style="color: var(--neutral-600, #6b7280);">
             An admin has approved your verification at <strong>${esc(data.university || 'your university')}</strong>.
-            We sent a one-time confirmation link to your personal email. Click the link to activate your account.
+            We sent a one-time confirmation link to ${destination}. Click the link to activate your account.
           </p>
           <p style="font-size: 0.85rem; color: var(--neutral-500, #9ca3af);">The link expires in 24 hours and can only be used once.</p>
           <div style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--neutral-700, #374151); text-align: left; background: #f3f4f6; padding: 1rem; border-radius: 8px;">
             <strong>Didn't get the email?</strong>
             <ul style="margin: 0.5rem 0 0 1.25rem; padding: 0;">
               <li>Check your spam / junk folder</li>
-              <li>Make sure you submitted a working personal email</li>
+              <li>Make sure the email above is one you can open</li>
               <li>Wait 5 minutes — it can take a moment to arrive</li>
+              <li>Still nothing? Resend below — the old link dies and a fresh 24-hour one is emailed</li>
             </ul>
           </div>
-          <div style="margin-top: 1.5rem;">
-            <button class="btn btn-ghost" data-action="home">Back to home</button>
+          <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+            <button class="btn btn-primary" type="button" data-action="resend">Resend confirmation email</button>
+            <button class="btn btn-ghost" type="button" data-action="home">Back to home</button>
           </div>
         </div>
       </div>
@@ -1900,8 +1919,38 @@ const AuthPageMethods = {
             window.location.hash = '#/';
           }
           Pages.renderLanding();
+        } else if (a === 'resend') {
+          Pages._handleResendConfirmation(e.target.closest('[data-action="resend"]'));
         }
       });
+    }
+  },
+
+  // Self-service resend of the confirmation email. Server enforces
+  // ownership + status + a 3/15min rate limit; this adds a 60s client
+  // cooldown so double-clicks don't burn the quota. No inline handlers —
+  // triggered via the card delegation above (CSP).
+  async _handleResendConfirmation(btn) {
+    if (!btn || btn.disabled) {
+      return;
+    }
+    btn.disabled = true;
+    const original = btn.textContent;
+    btn.textContent = 'Sending…';
+    try {
+      const resp = await api.request('/verification/resend-confirmation', { method: 'POST' });
+      if (resp && resp.success) {
+        showToast(resp.message || 'Confirmation email sent', 'success');
+      } else {
+        showToast((resp && resp.error) || 'Could not send the email. Please try again.', 'error');
+      }
+    } catch (err) {
+      showToast(err?.message || 'Could not send the email. Please try again.', 'error');
+    } finally {
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.textContent = original;
+      }, 60000);
     }
   },
 

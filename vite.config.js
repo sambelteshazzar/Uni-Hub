@@ -7,7 +7,7 @@ import { buildSync } from 'esbuild';
 // Vite's transformed entry and re-injects this literal when the source
 // tag isn't already in the output — a stale version here freezes clients
 // on the previous module bundle for a full day (js Cache-Control max-age).
-const APP_INIT_VERSION = '29';
+const APP_INIT_VERSION = '30';
 const appScripts = [`<script type="module" src="/js/app-init.js?v=${APP_INIT_VERSION}"></script>`];
 
 // The deployed artifact is dist/ served statically — the browser loads
