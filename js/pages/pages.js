@@ -4429,17 +4429,69 @@ font-size: 0.8rem;
         <button type="button" data-del-cancel class="admin-modal-light-close" aria-label="Close">&times;</button>
         <h3 id="del-acct-title" class="admin-modal-light-title">Delete your account?</h3>
         <p class="admin-modal-light-text admin-modal-light-text--muted">This permanently removes your personal information. Your past orders remain as anonymous records for accounting. This cannot be undone.</p>
+
+        <!-- tri-state preflight -->
+        <div id="del-acct-blockers" class="admin-modal-light-text" style="display:none;"></div>
+
+        <!-- factor step: password -->
+        <div id="del-acct-factor-pw" style="display:none;">
+          <input id="del-acct-password" type="password" class="admin-modal-light-field" placeholder="Current password" autocomplete="current-password" />
+        </div>
+
+        <!-- factor step: OTP -->
+        <div id="del-acct-factor-otp" style="display:none;">
+          <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
+            <button type="button" id="del-acct-send" class="btn btn-outline btn-sm">Send code</button>
+            <span id="del-acct-send-state" class="admin-modal-light-text admin-modal-light-text--muted" aria-live="polite"></span>
+          </div>
+          <input id="del-acct-code" class="admin-modal-light-field" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" autocomplete="one-time-code" placeholder="6-digit code" />
+          <p class="admin-modal-light-text admin-modal-light-text--muted" style="font-size:0.8rem;">Code expires in 5 minutes.</p>
+        </div>
+
         <input id="del-acct-confirm" class="admin-modal-light-field" maxlength="10" placeholder="Type DELETE to confirm" autocomplete="off" style="margin-bottom:var(--space-sm);" />
-        <input id="del-acct-password" type="password" class="admin-modal-light-field" placeholder="Current password" autocomplete="current-password" />
-        <p id="del-acct-error" class="admin-modal-light-error" role="alert"></p>
+        <p id="del-acct-error" class="admin-modal-light-error" role="alert" style="display:none;"></p>
         <div class="admin-modal-light-actions">
           <button type="button" data-del-cancel class="btn btn-ghost btn-sm">Cancel</button>
-          <button type="button" id="del-acct-go" class="btn btn-sm" style="background:var(--color-danger);color:#fff;border:none;font-weight:var(--font-medium);">Delete forever</button>
+          <button type="button" id="del-acct-go" class="btn btn-sm" style="background:var(--color-danger);color:#fff;border:none;font-weight:var(--font-medium);" disabled>Delete forever</button>
         </div>
       </div>`;
     document.body.appendChild(overlay);
 
+    const errEl = overlay.querySelector('#del-acct-error');
+    const blockersEl = overlay.querySelector('#del-acct-blockers');
+    const goBtn = overlay.querySelector('#del-acct-go');
+    const pwWrap = overlay.querySelector('#del-acct-factor-pw');
+    const otpWrap = overlay.querySelector('#del-acct-factor-otp');
+    const sendBtn = overlay.querySelector('#del-acct-send');
+    const sendState = overlay.querySelector('#del-acct-send-state');
+    const codeInput = overlay.querySelector('#del-acct-code');
+
+    let factor = 'password'; // server authoritative via requiredFactor
+    let otpChallengeId = null;
+    let cooldownUntil = 0;
+    let cooldownTimer = null;
+
+    const showError = msg => {
+      errEl.textContent = msg || '';
+      errEl.style.display = msg ? 'block' : 'none';
+    };
+    const setFactor = next => {
+      factor = next;
+      pwWrap.style.display = next === 'password' ? 'block' : 'none';
+      otpWrap.style.display = next === 'otp' ? 'block' : 'none';
+    };
+
+    // Guess from cached session (spec §5 nicety); server still decides.
+    const sessionUser =
+      typeof authManager !== 'undefined' && authManager.getCurrentUser
+        ? authManager.getCurrentUser()
+        : null;
+    setFactor(sessionUser && sessionUser.googleId ? 'otp' : 'password');
+
     const close = () => {
+      if (cooldownTimer) {
+        clearInterval(cooldownTimer);
+      }
       document.removeEventListener('keydown', esc);
       overlay.remove();
     };
@@ -4454,24 +4506,142 @@ font-size: 0.8rem;
         close();
       }
     });
-    overlay.querySelectorAll('[data-del-cancel]').forEach(btn => {
-      btn.addEventListener('click', close);
+    overlay
+      .querySelectorAll('[data-del-cancel]')
+      .forEach(btn => btn.addEventListener('click', close));
+
+    const renderBlockers = list => {
+      blockersEl.style.display = 'block';
+      // Server-authored static strings; still escape per AGENTS.md.
+      blockersEl.innerHTML = `<strong>Resolve these before deleting:</strong><ul style="margin:0.4rem 0 0.4rem 1.1rem;">${list
+        .map(
+          b =>
+            `<li>${_pageEsc(b.message)}${
+              b.action && b.action.href
+                ? ` — <a href="${_pageSafeUrl(b.action.href)}">${_pageEsc(b.action.label)}</a>`
+                : ''
+            }</li>`
+        )
+        .join('')}</ul>`;
+      goBtn.disabled = true;
+      pwWrap.style.display = 'none';
+      otpWrap.style.display = 'none';
+    };
+
+    const showVerifyFailed = () => {
+      blockersEl.innerHTML =
+        "Couldn't verify whether your account is ready. " +
+        '<button type="button" class="btn btn-link btn-sm" data-action="retry-blockers">Try again</button>';
+      blockersEl.style.display = 'block';
+      // Spec: fail-closed with a retry affordance — Cancel remains the
+      // only other way out.
+    };
+
+    const preflight = async () => {
+      blockersEl.style.display = 'block';
+      blockersEl.textContent = 'Checking whether your account is ready to delete…';
+      goBtn.disabled = true;
+      pwWrap.style.display = 'none';
+      otpWrap.style.display = 'none';
+      try {
+        const resp = await api.account.deletionBlockers();
+        if (resp && Array.isArray(resp.blockers)) {
+          if (resp.blockers.length === 0) {
+            blockersEl.style.display = 'none';
+            setFactor(sessionUser && sessionUser.googleId ? 'otp' : 'password');
+            goBtn.disabled = false;
+          } else {
+            renderBlockers(resp.blockers);
+          }
+        } else {
+          showVerifyFailed();
+        }
+      } catch (_e) {
+        showVerifyFailed();
+      }
+    };
+
+    blockersEl.addEventListener('click', e => {
+      if (e.target.closest('[data-action="retry-blockers"]')) {
+        preflight();
+      }
     });
 
-    overlay.querySelector('#del-acct-go').addEventListener('click', async () => {
+    const tickCooldown = () => {
+      const left = Math.ceil((cooldownUntil - Date.now()) / 1000);
+      if (left > 0) {
+        sendBtn.disabled = true;
+        sendState.textContent = `Resend in 0:${String(left).padStart(2, '0')}`;
+      } else {
+        sendBtn.disabled = false;
+        sendState.textContent = '';
+        if (cooldownTimer) {
+          clearInterval(cooldownTimer);
+          cooldownTimer = null;
+        }
+      }
+    };
+
+    const startCooldown = seconds => {
+      cooldownUntil = Date.now() + Math.max(seconds, 0) * 1000;
+      if (cooldownTimer) {
+        clearInterval(cooldownTimer);
+      }
+      tickCooldown();
+      cooldownTimer = setInterval(tickCooldown, 1000);
+    };
+
+    sendBtn.addEventListener('click', async () => {
+      showError('');
+      sendBtn.disabled = true;
+      try {
+        const resp = await api.account.requestDeletionOtp();
+        if (resp && resp.success && resp.challengeId) {
+          otpChallengeId = resp.challengeId;
+          sendState.textContent = 'Code sent.';
+          // Client-enforced 60s floor; server 429 retryAfterSeconds overrides upward.
+          startCooldown(60);
+        } else {
+          showError((resp && resp.error) || "We couldn't email your code — try again shortly.");
+          sendBtn.disabled = false;
+        }
+      } catch (err) {
+        if (err.status === 429) {
+          const retry = (err.data && err.data.retryAfterSeconds) || 60;
+          startCooldown(retry);
+          showError(`Too many code requests — try again in ${Math.ceil(retry / 60)} min.`);
+        } else if (err.data && err.data.requiredFactor === 'password') {
+          setFactor('password');
+          showError(err.message || 'Use your password to delete this account.');
+        } else {
+          showError(err.message || "We couldn't email your code — try again shortly.");
+          sendBtn.disabled = false;
+        }
+      }
+    });
+
+    goBtn.addEventListener('click', async () => {
+      showError('');
       const confirmText = overlay.querySelector('#del-acct-confirm').value.trim();
-      const password = overlay.querySelector('#del-acct-password').value;
-      const errEl = overlay.querySelector('#del-acct-error');
       if (confirmText !== 'DELETE') {
-        errEl.textContent = 'Please type DELETE exactly.';
-        errEl.style.display = 'block';
+        showError('Please type DELETE exactly.');
         return;
       }
-      const goBtn = overlay.querySelector('#del-acct-go');
+      const payload = { confirmText };
+      if (factor === 'password') {
+        payload.password = overlay.querySelector('#del-acct-password').value;
+      } else {
+        payload.challengeId = otpChallengeId;
+        payload.code = codeInput.value.trim();
+        if (!payload.challengeId || !payload.code) {
+          showError('Request a code and enter the 6 digits.');
+          return;
+        }
+      }
+
       goBtn.disabled = true;
       try {
-        // Google-only accounts may leave the password blank; backend decides.
-        const resp = await api.account.deleteMe({ confirmText, password });
+        const resp = await api.account.deleteMe(payload);
         if (resp && resp.success) {
           close();
           authManager.clearSession();
@@ -4479,18 +4649,41 @@ font-size: 0.8rem;
           showToast('Your account has been deleted.', 'success');
           window.location.hash = '#/';
           Pages.renderLanding();
-        } else {
-          errEl.textContent = (resp && resp.error) || 'Could not delete your account.';
-          errEl.style.display = 'block';
-          goBtn.disabled = false;
+          return;
         }
-      } catch (err2) {
-        errEl.textContent = err2.message || 'Could not delete your account.';
-        errEl.style.display = 'block';
+        showError((resp && resp.error) || 'Could not delete your account.');
+        goBtn.disabled = false;
+      } catch (err) {
+        if (err.status === 409 && err.data && Array.isArray(err.data.blockers)) {
+          renderBlockers(err.data.blockers); // server newer than preflight
+        } else if (err.data && err.data.requiredFactor) {
+          setFactor(err.data.requiredFactor === 'otp' ? 'otp' : 'password');
+          showError(err.message || 'Please use the other verification method.');
+        } else if (err.status === 400 && err.data && typeof err.data.attemptsLeft === 'number') {
+          showError(
+            `${err.message} (${err.data.attemptsLeft} attempt${
+              err.data.attemptsLeft === 1 ? '' : 's'
+            } left)`
+          );
+          if (err.data.attemptsLeft <= 0 || /expired|already used/i.test(err.message || '')) {
+            cooldownUntil = 0; // force re-send path
+            tickCooldown();
+            otpChallengeId = null;
+          }
+        } else if (err.status === 401) {
+          showError(err.message || 'Invalid password.'); // session preserved (Task 6)
+        } else if (err.status === 429 && err.data && err.data.retryAfterSeconds) {
+          showError(
+            `Too many attempts — try again in ${Math.ceil(err.data.retryAfterSeconds / 60)} min.`
+          );
+        } else {
+          showError(err.message || 'Could not delete your account.');
+        }
         goBtn.disabled = false;
       }
     });
 
+    preflight();
     overlay.querySelector('#del-acct-confirm').focus();
   }
 
