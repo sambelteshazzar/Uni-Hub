@@ -357,12 +357,13 @@ class API {
         const data = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-          // Don't trigger session-expired flow for auth endpoints — a 401
-          // from /auth/login (wrong password) or /auth/me (token check on
-          // first load) is a normal error, not an expired-session signal.
-          // Clearing the session there fires a misleading "Session expired"
-          // toast and kicks the user to the login screen on a typo.
-          const isAuthEndpoint = url.startsWith('/auth/');
+          // Don't trigger session-expired flow for auth endpoints OR the
+          // self-deletion surface: a wrong password / bad OTP on
+          // DELETE /users/me returns 401 while the token is perfectly
+          // valid — clearing the session there would log the user out for
+          // a typo (spec 2026-09-22 §5: session kept unless deleted).
+          // Any other endpoint still clears on 401 as before.
+          const isAuthEndpoint = url.startsWith('/auth/') || url.startsWith('/users/me');
           if (
             response.status === 401 &&
             typeof authManager !== 'undefined' &&
@@ -720,21 +721,27 @@ class API {
 
   /**
    * Users API — see products block for the encodeURIComponent rationale.
-   * These three are admin-only on the backend (user.routes.js:7-9).
+   * These are admin-only on the backend (user.routes.js).
    */
   users = {
     getById: id => this.get(`/users/${encodeURIComponent(id)}`),
     getAll: params => this.get('/users', params), // Admin only
     update: (id, data) => this.put(`/users/${encodeURIComponent(id)}`, data), // Admin only
-    delete: id => this.delete(`/users/${encodeURIComponent(id)}`), // Admin only
+    // Admin delete (spec 2026-09-22): body carries the audit reason.
+    delete: (id, reason) => this.delete(`/users/${encodeURIComponent(id)}`, { reason }),
+    // Admin preflight warnings (same shape as the self-service list).
+    deletionBlockers: id => this.get(`/users/${encodeURIComponent(id)}/deletion-blockers`),
   };
 
   /**
-   * Self-service account lifecycle (spec 2026-08-23).
+   * Self-service account lifecycle (specs 2026-08-23, 2026-09-22).
    */
   account = {
     exportData: () => this.request('/users/me/export', { method: 'GET' }),
-    deleteMe: (confirmText, password) => this.delete('/users/me', { confirmText, password }),
+    deletionBlockers: () => this.request('/users/me/deletion-blockers', { method: 'GET' }),
+    requestDeletionOtp: () => this.post('/users/me/deletion-otp', {}),
+    // payload: { confirmText, password? } or { confirmText, challengeId, code }
+    deleteMe: payload => this.delete('/users/me', payload),
   };
 
   /**

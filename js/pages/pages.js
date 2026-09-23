@@ -4471,7 +4471,7 @@ font-size: 0.8rem;
       goBtn.disabled = true;
       try {
         // Google-only accounts may leave the password blank; backend decides.
-        const resp = await api.account.deleteMe(confirmText, password);
+        const resp = await api.account.deleteMe({ confirmText, password });
         if (resp && resp.success) {
           close();
           authManager.clearSession();
