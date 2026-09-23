@@ -2888,14 +2888,21 @@ Copy Link
       return;
     }
 
-    // Update URL hash for proper routing — but only if the hash isn't already
-    // the checkout route. Setting `location.hash` always fires a `hashchange`
-    // event, even when the value is the same as the current hash; without this
-    // guard the router re-navigates and re-invokes `renderCheckout`, which
-    // recurses until the call stack overflows. (Regression surfaced after the
-    // coupon editor added DOM-query code that deepened the stack frames just
-    // enough to trip the V8 limit.)
-    if (window.location.hash.replace(/^#/, '') !== '/checkout') {
+    // URL sync for direct callers (e.g. the cart's "Proceed to checkout").
+    // History mode (the default): a router-dispatched render already has
+    // the clean URL, and setting `location.hash` here fires hashchange →
+    // handleUrlChange → replaceState strips the hash → this check fails
+    // again → infinite recursion ("Maximum call stack size exceeded",
+    // 2026-09-23). The old hash-only guard could never hold in history
+    // mode because the router erases the hash before re-entering. Direct
+    // calls hand off to the router and return so the re-entrant dispatch
+    // paints exactly once. Hash mode keeps the legacy assignment.
+    if (typeof router !== 'undefined' && router._mode === 'history') {
+      if (router.currentRoute !== '/checkout') {
+        router.navigate('/checkout');
+        return;
+      }
+    } else if (window.location.hash.replace(/^#/, '') !== '/checkout') {
       window.location.hash = '/checkout';
     }
 
