@@ -166,8 +166,16 @@ exports.getPendingVerifications = asyncHandler(async (req, res) => {
   require('../services/docRetention').purgeExpiredVerificationDocs()
     .catch(() => { /* logged inside service */ });
 
+  // The admin QUEUE (route keeps its historical /pending name): return
+  // every review state, not just 'pending'. Reviewed rows were previously
+  // only ever visible in the browser that reviewed them (localStorage
+  // fallback), so on any other machine the panel showed an empty queue
+  // while a user sat in approved_pending_user — and the "ask an admin to
+  // re-approve" instruction in the expired-link error had no way to reach
+  // the row. Admin/moderator-gated by the route; the frontend still
+  // filters per tab and persists a PII-minimal snapshot locally.
   const verifications = await db('student_verifications').find(
-    { status: 'pending' },
+    { status: { $in: ['pending', 'approved_pending_user', 'approved', 'rejected'] } },
     { sort: { createdAt: -1 } },
   );
 

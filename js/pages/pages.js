@@ -7094,7 +7094,18 @@ font-size: 0.8rem;
             <button type="button" data-adm-modal-action="reject" data-vrf-id="${esc(v.id)}" class="adm-btn adm-btn--danger" style="flex:1;">Reject Verification</button>
           </div>
         </div>`
-        : '';
+        : v.status === 'approved_pending_user'
+          ? `
+        <div class="adm-modal-divider">
+          <div class="adm-modal-field-group">
+            <p class="adm-modal-field-label" style="margin-bottom:0.35rem;">Awaiting the student's confirmation click</p>
+            <p style="font-size:0.8rem;color:var(--neutral-500,#6b7280);">The confirmation link expires 24h after approval. Re-approve to rotate it and resend — or copy the link here if email delivery is unavailable.</p>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button type="button" data-adm-modal-action="approve" data-vrf-id="${esc(v.id)}" class="adm-btn" style="flex:1;background:var(--color-success);color:#fff;border-color:var(--color-success);">Re-approve &amp; resend confirmation link</button>
+          </div>
+        </div>`
+          : '';
 
     const overlay = document.createElement('div');
     overlay.id = 'vrf-detail-overlay';

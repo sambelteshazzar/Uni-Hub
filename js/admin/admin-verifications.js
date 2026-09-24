@@ -166,8 +166,16 @@ class AdminVerificationsManager {
     if (!entry) {
       return { success: false, error: 'Verification not found' };
     }
-    if (entry.status !== 'pending') {
-      return { success: false, error: 'Verification already reviewed' };
+    // approved_pending_user is re-approvable: the backend rotates the
+    // confirmation token (24h TTL / "ask an admin to re-approve" on
+    // expiry) and returns a fresh confirmationLink when email is
+    // unavailable. Fully confirmed ('approved') and rejected rows stay
+    // blocked here — re-approving those would regress a finished review.
+    if (entry.status !== 'pending' && entry.status !== 'approved_pending_user') {
+      return {
+        success: false,
+        error: 'Only pending or awaiting-confirmation requests can be approved',
+      };
     }
 
     // Optimistic local state — backend is the source of truth but we

@@ -139,7 +139,7 @@ class ModuleLoader {
       // any of the dynamically-imported module files change.
       // Bump whenever browse-pages.js / auth / any dynamic module changes,
       // or clients keep the previous file for a full day (max-age=86400).
-      const MODULE_VERSION = '39';
+      const MODULE_VERSION = '40';
       await import(/* @vite-ignore */ `./${moduleDef.file.replace('js/', '')}?v=${MODULE_VERSION}`);
 
       // Verify module was exposed to window

@@ -108,5 +108,39 @@ test.describe('admin verification approve — single sync + link box', () => {
     const data = (await me.json()).data;
     expect(data.status).toBe('approved_pending_user');
     expect(data.isVerified).toBe(false);
+
+    // 7. Awaiting rows come from the API, not just the approving browser's
+    //    localStorage: wipe the queue snapshot and reload — the row must
+    //    reappear from the server in the "Awaiting User Confirmation" tab.
+    await page.evaluate(() => localStorage.removeItem(STORAGE_KEYS.VERIFICATION_QUEUE));
+    await page.reload();
+    await page.waitForFunction(
+      sid => {
+        try {
+          return adminVerificationsManager.getApprovedPendingUser().some(v => v.studentId === sid);
+        } catch (e) {
+          return false;
+        }
+      },
+      studentId,
+      { timeout: 20000 }
+    );
+
+    // 8. The detail modal exposes a re-approve action for awaiting rows
+    //    (the "ask an admin to re-approve" path for expired links).
+    const entryId = await page.evaluate(sid => {
+      const entry = adminVerificationsManager.getApprovedPendingUser().find(v => v.studentId === sid);
+      return entry && entry.id;
+    }, studentId);
+    expect(entryId).toBeTruthy();
+    await page.evaluate(id => Pages.viewVerificationDetail(id), entryId);
+    const reapproveBtn = page.locator('#vrf-detail-overlay [data-adm-modal-action="approve"]');
+    await expect(reapproveBtn).toBeVisible();
+    await expect(reapproveBtn).toContainText(/Re-approve/);
+
+    // 9. Driving the re-approve path fires exactly one more PUT.
+    const putsBefore = approvePuts.length;
+    await page.evaluate(id => Pages.approveVerification(id), entryId);
+    expect(approvePuts.length).toBe(putsBefore + 1);
   });
 });
