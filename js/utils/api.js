@@ -323,7 +323,14 @@ class API {
         !/\/auth\//.test(url) &&
         !/\/(me|confirm)\b/.test(url) &&
         !/\/(my-|mine\b)/.test(url) &&
-        !/csrf/.test(url);
+        !/csrf/.test(url) &&
+        // TODO: security review — the GET cache is keyed by URL only (no
+        // auth token) and is never cleared on logout; a cached ticket list
+        // would replay across sessions. Wishlist/notifications share this
+        // pre-existing flaw (out of scope, flagged); support tickets are
+        // excluded here because they carry customer PII (spec 2026-09-24).
+        // The substring matches both /support/tickets and /admin/support/tickets.
+        !url.includes('/support/tickets');
       if (cacheable) {
         const hit = this._cache.get(cacheKey);
         if (hit && hit.expiresAt > Date.now()) {
@@ -787,6 +794,13 @@ class API {
     createCoupon: data => this.post('/admin/coupons', data),
     updateCoupon: (id, data) => this.put(`/admin/coupons/${encodeURIComponent(id)}`, data),
     deleteCoupon: id => this.delete(`/admin/coupons/${encodeURIComponent(id)}`),
+    // Support tickets (admin, spec 2026-09-24).
+    supportTickets: params => this.get('/admin/support/tickets', params),
+    supportTicket: id => this.get(`/admin/support/tickets/${encodeURIComponent(id)}`),
+    replySupport: (id, message) =>
+      this.post(`/admin/support/tickets/${encodeURIComponent(id)}/replies`, { message }),
+    updateSupportStatus: (id, status) =>
+      this.put(`/admin/support/tickets/${encodeURIComponent(id)}`, { status }),
   };
 
   // Coupon validation from cart/checkout. Returns { code, type, value,
@@ -812,6 +826,16 @@ class API {
     delete: id => this.delete(`/notifications/${encodeURIComponent(id)}`),
     deleteAll: () => this.delete('/notifications/all'),
     deleteRead: () => this.delete('/notifications/read'),
+  };
+
+  // Support tickets (spec 2026-09-24) — logged-in users only. Reads are
+  // excluded from the GET cache inside request() (PII + cross-session).
+  support = {
+    createTicket: data => this.post('/support/tickets', data),
+    listTickets: () => this.get('/support/tickets'),
+    getTicket: id => this.get(`/support/tickets/${encodeURIComponent(id)}`),
+    reply: (id, message) =>
+      this.post(`/support/tickets/${encodeURIComponent(id)}/replies`, { message }),
   };
 
   search = {
