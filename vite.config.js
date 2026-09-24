@@ -7,7 +7,7 @@ import { buildSync } from 'esbuild';
 // Vite's transformed entry and re-injects this literal when the source
 // tag isn't already in the output — a stale version here freezes clients
 // on the previous module bundle for a full day (js Cache-Control max-age).
-const APP_INIT_VERSION = '36';
+const APP_INIT_VERSION = '37';
 const appScripts = [`<script type="module" src="/js/app-init.js?v=${APP_INIT_VERSION}"></script>`];
 
 // The deployed artifact is dist/ served statically — the browser loads
@@ -16,7 +16,7 @@ const appScripts = [`<script type="module" src="/js/app-init.js?v=${APP_INIT_VER
 // The one exception is js/utils/sentry.js, whose bare-specifier import
 // of "@sentry/browser" cannot be resolved by a browser from a static
 // server — esbuild bundles that single file so the SDK is inlined.
-function copyJsTree (dir, outDir) {
+function copyJsTree(dir, outDir) {
   mkdirSync(outDir, { recursive: true });
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const src = resolve(dir, entry.name);
@@ -62,7 +62,7 @@ export default defineConfig({
   plugins: [
     {
       name: 'static-app-build',
-      closeBundle () {
+      closeBundle() {
         cpSync(resolve(__dirname, 'css'), resolve(__dirname, 'dist/css'), { recursive: true });
 
         const componentsSrc = resolve(__dirname, 'public/components');
@@ -86,9 +86,7 @@ export default defineConfig({
         let html = readFileSync(htmlPath, 'utf-8');
         const srcHtml = readFileSync(srcHtmlPath, 'utf-8');
 
-        const viteBundleMatch = html.match(
-          /<script[^>]*src="\/assets\/[^"]*\.js"[^>]*><\/script>/,
-        );
+        const viteBundleMatch = html.match(/<script[^>]*src="\/assets\/[^"]*\.js"[^>]*><\/script>/);
         if (viteBundleMatch) {
           html = html.replace(viteBundleMatch[0], '');
         }
@@ -105,7 +103,7 @@ export default defineConfig({
         // one version — matching APP_INIT_VERSION + index.html + MODULE_VERSION
         // semantics (MODULE_VERSION still gates the dynamically-imported tree).
         const existingAppInit = html.match(
-          /<script[^>]*src="[^"]*app-init\.js(\?[^"]*)?"[^>]*><\/script>/,
+          /<script[^>]*src="[^"]*app-init\.js(\?[^"]*)?"[^>]*><\/script>/
         );
         if (existingAppInit) {
           html = html.replace(existingAppInit[0], appScripts[0]);

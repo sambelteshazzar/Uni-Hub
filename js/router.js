@@ -230,7 +230,12 @@ class Router {
       }
 
       if (!handler) {
-        console.error(`Route not found: ${path}`);
+        // warn, not error: unmatched deep links are expected UX under
+        // history-fallback rewrites (Vercel/dev-server serve index.html
+        // for any path). console.error is breadcrumbed by Sentry's
+        // console instrumentation, so it showed up as a scary red
+        // sentry.js stack frame for ordinary 404s.
+        console.warn(`Route not found: ${path}`);
         await this.show404();
         return;
       }

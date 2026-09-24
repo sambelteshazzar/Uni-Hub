@@ -1023,6 +1023,9 @@ class Pages {
     // TODO: security review CSP — most admin routes below render forms with
     // inline handlers; migrate to addEventListener / data-action delegation.
     router.register('/admin', () => safeCall('renderAdminDashboard'));
+    // Conventional deep-link alias (history-mode rewrites + bookmarks).
+    // Canonical path stays /admin; this keeps typed URLs from 404ing.
+    router.register('/admin/dashboard', () => safeCall('renderAdminDashboard'));
     router.register('/admin/login', () => safeCall('renderAdminLogin'));
     router.register('/admin/verifications', params =>
       safeCall('renderAdminVerifications', params && params.filter)
