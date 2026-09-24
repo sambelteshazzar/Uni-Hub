@@ -14,9 +14,15 @@ const { createTestApp } = require('./test-server');
 jest.mock('../utils/emailService', () => ({
   ...jest.requireActual('../utils/emailService'),
   sendApprovalLinkEmail: jest.fn(async () => ({ success: true })),
+  isEmailConfigured: jest.fn(() => true),
 }));
 
-const { sendApprovalLinkEmail } = require('../utils/emailService');
+const { sendApprovalLinkEmail, isEmailConfigured } = require('../utils/emailService');
+// Shared require-cache instance of the mounted router — its resendStore
+// is the live limiter store. resetAll between tests or the 3/15min
+// counter accumulates and poisons later cases (same pattern as
+// deletionGate.test.js otpStore / support tests replyStore).
+const verificationRoutes = require('../routes/verification.routes');
 const app = createTestApp();
 
 const setRole = (userId, role) => {
@@ -55,8 +61,12 @@ async function submitVerification (buyer, personalEmail) {
 }
 
 describe('POST /api/verification/resend-confirmation', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     sendApprovalLinkEmail.mockClear();
+    isEmailConfigured.mockReturnValue(true);
+    if (verificationRoutes.resendStore) {
+      await verificationRoutes.resendStore.resetAll();
+    }
   });
 
   test('rotates the token, re-sends to the form email, never returns the raw token, logs activity', async () => {
@@ -129,5 +139,67 @@ describe('POST /api/verification/resend-confirmation', () => {
   test('401 without a session', async () => {
     const resend = await request(app).post('/api/verification/resend-confirmation');
     expect(resend.status).toBe(401);
+  });
+
+  // Regression: production deployments without BREVO/EMAIL_* config
+  // returned a generic 502 "try again later" AFTER rotating the token —
+  // destroying the user's only working link while delivering nothing,
+  // leaving them stuck in approved_pending_user forever.
+  test('email service not configured: 503 EMAIL_NOT_CONFIGURED, no send attempt, link NOT rotated', async () => {
+    const buyer = await registerUser('rsnu');
+    const reviewer = await registerUser('rsnuadm');
+    setRole(reviewer.id, 'admin');
+    const vid = await submitVerification(buyer, `rsnu_${Date.now()}@gmail.test`);
+    const appr = await request(app)
+      .put(`/api/verification/${vid}/approve`)
+      .set('Authorization', `Bearer ${reviewer.token}`)
+      .send({ notes: 'ok' });
+    expect(appr.status).toBe(200);
+
+    const before = getTokenHash(vid);
+    expect(before.confirmationTokenHash).toBeTruthy();
+    sendApprovalLinkEmail.mockClear();
+    isEmailConfigured.mockReturnValue(false);
+
+    const resend = await request(app)
+      .post('/api/verification/resend-confirmation')
+      .set('Authorization', `Bearer ${buyer.token}`);
+    expect(resend.status).toBe(503);
+    expect(resend.body.details && resend.body.details.code).toBe('EMAIL_NOT_CONFIGURED');
+    expect(sendApprovalLinkEmail).not.toHaveBeenCalled();
+
+    // The previously issued link must remain valid — resend did nothing.
+    const after = getTokenHash(vid);
+    expect(after.confirmationTokenHash).toBe(before.confirmationTokenHash);
+
+    const body = JSON.stringify(resend.body);
+    expect(body).not.toMatch(/confirmationLink|"token"|confirmationToken/);
+  });
+
+  test('send failure: 502 but the previous link is restored (still usable)', async () => {
+    const buyer = await registerUser('rsnf');
+    const reviewer = await registerUser('rsnfadm');
+    setRole(reviewer.id, 'admin');
+    const vid = await submitVerification(buyer, `rsnf_${Date.now()}@gmail.test`);
+    const appr = await request(app)
+      .put(`/api/verification/${vid}/approve`)
+      .set('Authorization', `Bearer ${reviewer.token}`)
+      .send({ notes: 'ok' });
+    expect(appr.status).toBe(200);
+
+    const before = getTokenHash(vid);
+    sendApprovalLinkEmail.mockClear();
+    sendApprovalLinkEmail.mockResolvedValueOnce({ success: false, error: 'smtp down' });
+
+    const resend = await request(app)
+      .post('/api/verification/resend-confirmation')
+      .set('Authorization', `Bearer ${buyer.token}`);
+    expect(resend.status).toBe(502);
+
+    // Rotation must be rolled back so the already-delivered link survives
+    // the failed resend.
+    const after = getTokenHash(vid);
+    expect(after.confirmationTokenHash).toBe(before.confirmationTokenHash);
+    expect(after.status).toBe('approved_pending_user');
   });
 });

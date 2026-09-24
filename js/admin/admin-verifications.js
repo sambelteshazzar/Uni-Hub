@@ -155,7 +155,13 @@ class AdminVerificationsManager {
     };
   }
 
-  approve(id, notes) {
+  // Single backend sync point for approval (fixes a double-fire race:
+  // this method used to fire-and-forget its own PUT while the caller,
+  // Pages.approveVerification, fired a second awaited one — two token
+  // rotations, two emails, and the response whose confirmationLink was
+  // shown to the admin could be silently rotated away by the first call
+  // landing late, killing the link on arrival).
+  async approve(id, notes) {
     const entry = this.getById(id);
     if (!entry) {
       return { success: false, error: 'Verification not found' };
@@ -178,7 +184,7 @@ class AdminVerificationsManager {
     // The user is NOT marked verified locally — they still need to
     // click the magic link. Only the backend's confirm endpoint
     // promotes them to fully verified.
-    this._syncBackendAction(id, 'approve', notes);
+    const backendResp = await this._syncBackendAction(id, 'approve', notes);
 
     if (typeof adminAuthManager !== 'undefined' && adminAuthManager.logActivity) {
       adminAuthManager.logActivity('Verification approved (awaiting user confirmation)', {
@@ -188,7 +194,7 @@ class AdminVerificationsManager {
       });
     }
 
-    return { success: true, data: entry };
+    return { success: true, data: entry, backendResp };
   }
 
   reject(id, notes) {

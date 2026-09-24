@@ -372,12 +372,16 @@ exports.confirmVerification = asyncHandler(async (req, res) => {
 });
 
 /**
- * Self-service resend of the confirmation email (owner only). Rotates the
- * token exactly like admin re-approve — any previously delivered link dies —
- * and re-sends to the FORM personal email. The raw token is NEVER returned:
- * the email channel is the only way the link leaves the server (the token
- * in the URL is the credential). Rate-limited in the route (3/15min) plus
- * the namespace-wide POST limiter in server.js.
+ * Self-service resend of the confirmation email (owner only). On success
+ * the token ROTATES exactly like admin re-approve — any previously
+ * delivered link dies — and re-sends to the FORM personal email. The raw
+ * token is NEVER returned: the email channel is the only way the link
+ * leaves the server (the token in the URL is the credential). On failure
+ * the rotation is rolled back so the existing link keeps working, and a
+ * missing mail configuration is reported up front (503
+ * EMAIL_NOT_CONFIGURED) instead of burning the token for nothing.
+ * Rate-limited in the route (3/15min) plus the namespace-wide POST
+ * limiter in server.js.
  *
  * POST /api/verification/resend-confirmation
  */
@@ -399,6 +403,24 @@ exports.resendConfirmation = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'No email address available for the confirmation link');
   }
 
+  // Deterministic config check BEFORE rotating: rotating a token we then
+  // cannot deliver would destroy the user's only working link and strand
+  // them in approved_pending_user forever (the jertscart.com outage mode —
+  // generic 502 "try again later" with no working recovery path).
+  if (!isEmailConfigured()) {
+    throw new ApiError(
+      503,
+      'Confirmation emails are unavailable on this deployment. Please ask an admin to re-approve your verification and share the new link with you.',
+      { code: 'EMAIL_NOT_CONFIGURED' },
+    );
+  }
+
+  // Snapshot the current token so a failed send can roll back — resend
+  // must never leave the user worse off than before they pressed the button.
+  const prevHash = latest.confirmationTokenHash;
+  const prevExpiresAt = latest.confirmationTokenExpiresAt;
+  const prevUsedAt = latest.confirmationTokenUsedAt;
+
   const rawToken = generateConfirmationToken();
   await db('student_verifications').updateById(latest.id, {
     confirmationTokenHash: hashToken(rawToken),
@@ -418,7 +440,21 @@ exports.resendConfirmation = asyncHandler(async (req, res) => {
   }, emailSent ? 'info' : 'warning', req);
 
   if (!emailSent) {
-    throw new ApiError(502, 'Could not send the confirmation email. Please try again later.');
+    // Roll back the rotation: the previously delivered link (still inside
+    // its 24h TTL) keeps working instead of being silently invalidated.
+    try {
+      await db('student_verifications').updateById(latest.id, {
+        confirmationTokenHash: prevHash,
+        confirmationTokenExpiresAt: prevExpiresAt,
+        confirmationTokenUsedAt: prevUsedAt,
+      });
+    } catch (restoreErr) {
+      // eslint-disable-next-line no-console
+      console.warn('verification resend rollback failed:', restoreErr.message || restoreErr);
+    }
+    throw new ApiError(502, 'Could not send the confirmation email. Please try again later.', {
+      code: 'EMAIL_SEND_FAILED',
+    });
   }
 
   res.json({

@@ -7180,17 +7180,18 @@ font-size: 0.8rem;
     }
     const notesEl = document.getElementById(`vrf-review-notes-${id}`);
     const notes = notesEl ? notesEl.value.trim() : '';
-    const result = adminVerificationsManager.approve(id, notes);
+    const result = await adminVerificationsManager.approve(id, notes);
     if (!result.success) {
       showToast(result.error || 'Failed to approve verification', 'error');
       return;
     }
 
-    // Wait for the backend approval + magic-link generation + email send.
-    // When email is not configured (or send failed), the backend returns
-    // `confirmationLink` so we can surface it to the admin in a copyable
-    // box — this is the dev-mode escape hatch.
-    const backendResp = await adminVerificationsManager._syncBackendAction(id, 'approve', notes);
+    // The manager's approve() is the single backend sync — its response
+    // carries `confirmationLink` when email is not configured (or the
+    // send failed), so we surface it to the admin in a copyable box.
+    // This is the dev/no-SMTP escape hatch that keeps prod users from
+    // being stranded in approved_pending_user.
+    const backendResp = result.backendResp;
     const confirmationLink = backendResp && backendResp.confirmationLink;
     const reason = backendResp && backendResp.confirmationLinkReason;
 
@@ -7201,8 +7202,14 @@ font-size: 0.8rem;
         8000
       );
       Pages._showConfirmationLinkBox(id, result.data.fullName, confirmationLink, reason);
-    } else {
+    } else if (backendResp && backendResp.success) {
       showToast(`Student ${result.data.fullName} approved — confirmation link emailed.`, 'success');
+    } else {
+      showToast(
+        'Approved locally, but the backend sync did not complete — reload the queue to confirm server state.',
+        'warning',
+        8000
+      );
     }
     this.renderAdminVerifications();
   }
