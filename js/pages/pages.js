@@ -2411,7 +2411,7 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
     };
   }
 
-  static addToCartWithVariant(productId) {
+  static async addToCartWithVariant(productId) {
     const product = productsManager.getById(productId);
     if (!product) {
       return;
@@ -2434,8 +2434,7 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
     Pages.updateCartBadge();
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const user = session?.user || null;
-    const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true);
-    const isVerified = user?.isVerified || (verification && verification.isVerified);
+    const isVerified = await Pages._reconcileVerification(user);
     if (!isVerified) {
       showToast(
         'Item added to cart, but you must be verified as a student to purchase.',
@@ -3079,7 +3078,7 @@ Copy Link
   /**
    * Add product to cart from product detail
    */
-  static addToCart(productId) {
+  static async addToCart(productId) {
     const product = productsManager.getById(productId);
 
     if (!product) {
@@ -3093,8 +3092,7 @@ Copy Link
       this.updateCartBadge();
       const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
       const user = session?.user || null;
-      const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true);
-      const isVerified = user?.isVerified || (verification && verification.isVerified);
+      const isVerified = await this._reconcileVerification(user);
       if (!isVerified) {
         showToast(
           'Item added to cart, but you must be verified as a student to purchase.',
@@ -3133,10 +3131,36 @@ Copy Link
     this.renderCart();
   }
 
+  // TODO: security review — checkout verification gate reconciliation.
+  // The storage flags (session.user.isVerified / student_verification)
+  // can lag the backend: renderCart's sync fails silently during a
+  // backend restart and nothing re-checks afterwards, so a verified user
+  // stays blocked until a full reload. When storage says "unverified",
+  // ask the server once and re-read; only block if it still says no.
+  static async _reconcileVerification(user) {
+    const readFlag = () => {
+      const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
+      const freshUser = session?.user || user;
+      const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true);
+      return !!(freshUser?.isVerified || (verification && verification.isVerified));
+    };
+    if (readFlag()) {
+      return true;
+    }
+    if (typeof authManager !== 'undefined' && authManager.syncVerificationStatus) {
+      try {
+        await authManager.syncVerificationStatus();
+      } catch (_e) {
+        // best-effort — fall through to the (unchanged) stored flag
+      }
+    }
+    return readFlag();
+  }
+
   /**
    * Handle Proceed to Checkout button click from Cart
    */
-  static handleProceedToCheckout() {
+  static async handleProceedToCheckout() {
     // Verify required managers are loaded
     if (typeof cartManager === 'undefined' || !cartManager) {
       console.error('Cart manager not loaded');
@@ -3167,9 +3191,9 @@ Copy Link
       return;
     }
 
-    // Check if user is verified as a student
-    const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true);
-    const isVerified = currentUser.isVerified || (verification && verification.isVerified);
+    // Check if user is verified as a student (reconcile with the server
+    // first — the stored flag may be stale from a failed boot sync).
+    const isVerified = await this._reconcileVerification(currentUser);
     if (!isVerified) {
       showToast(
         'You must be verified as a student to make purchases. Please complete student verification first.',
@@ -3186,7 +3210,7 @@ Copy Link
   /**
    * Render Checkout Page
    */
-  static renderCheckout() {
+  static async renderCheckout() {
     // Verify checkoutManager is loaded
     if (typeof checkoutManager === 'undefined' || !checkoutManager) {
       console.error('Checkout manager not loaded yet');
@@ -3214,9 +3238,9 @@ Copy Link
       return;
     }
 
-    // Check if user is verified as a student
-    const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true);
-    const isVerified = currentUser.isVerified || (verification && verification.isVerified);
+    // Check if user is verified as a student (reconcile with the server —
+    // a direct #/checkout visit may outlive a failed render-time sync).
+    const isVerified = await this._reconcileVerification(currentUser);
     if (!isVerified) {
       showToast(
         'You must be verified as a student to make purchases. Please complete student verification first.',
@@ -3572,11 +3596,11 @@ Copy Link
     const form = event.target;
     const submitButton = form.querySelector('button[type="submit"]');
 
-    // Check student verification before processing
+    // Check student verification before processing (reconcile with the
+    // server — the stored flag may be stale from a failed boot sync).
     const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
     const currentUser = session?.user || null;
-    const verification = StorageManager.get(STORAGE_KEYS.STUDENT_VERIFICATION, true);
-    const isVerified = currentUser?.isVerified || (verification && verification.isVerified);
+    const isVerified = await this._reconcileVerification(currentUser);
     if (!isVerified) {
       showToast(
         'You must be verified as a student to make purchases. Please complete student verification first.',

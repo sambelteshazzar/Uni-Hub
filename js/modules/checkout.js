@@ -769,9 +769,27 @@ class CheckoutFlow {
         return;
       }
 
-      // Check student verification status
-      const verification = _StorageManager.get(_STORAGE_KEYS.STUDENT_VERIFICATION, true);
-      const isVerified = currentUser.isVerified || (verification && verification.isVerified);
+      // Check student verification status. Storage can be stale when the
+      // boot sync raced a backend restart, so reconcile with the server
+      // before blocking (read-flag fast path: no extra request when the
+      // stored flag already says verified).
+      // TODO: security review — checkout verification gate (payment path)
+      let isVerified = !!currentUser.isVerified;
+      if (!isVerified) {
+        const cached = _StorageManager.get(_STORAGE_KEYS.STUDENT_VERIFICATION, true);
+        isVerified = !!(cached && cached.isVerified);
+      }
+      if (!isVerified && typeof authManager !== 'undefined' && authManager.syncVerificationStatus) {
+        try {
+          await authManager.syncVerificationStatus();
+        } catch (_e) {
+          // best-effort — fall through to the stored flag
+        }
+        const freshSession = _StorageManager.get(_STORAGE_KEYS.SESSION, true);
+        const freshUser = freshSession?.user || currentUser;
+        const freshCached = _StorageManager.get(_STORAGE_KEYS.STUDENT_VERIFICATION, true);
+        isVerified = !!(freshUser?.isVerified || (freshCached && freshCached.isVerified));
+      }
       if (!isVerified) {
         showToast(
           'You must be verified as a student to make purchases. Please complete student verification first.',

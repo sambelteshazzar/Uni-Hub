@@ -1909,6 +1909,17 @@ const AuthPageMethods = {
       const data = resp.data || {};
       const status = data.status || 'not_submitted';
       if (status === 'approved' || data.isVerified) {
+        // Persist the verified flag into the session too — this page
+        // fetched fresh, so it can see "verified" while the cart gates
+        // (which read storage) are still stale if the boot sync raced a
+        // backend restart. Same write auth login / renderStudentVerification do.
+        if (typeof authManager !== 'undefined' && authManager.syncVerificationStatus) {
+          try {
+            await authManager.syncVerificationStatus();
+          } catch (_e) {
+            /* best-effort — the approved page is still correct */
+          }
+        }
         this._renderStatusApproved(mainContent, esc, data);
       } else if (status === 'approved_pending_user') {
         this._renderStatusAwaitingConfirmation(mainContent, esc, data);
