@@ -104,6 +104,7 @@
     "_adminReportsManager": "readonly",
     "adminVerificationsManager": "readonly",
     "_adminVerificationsManager": "readonly",
+    "adminSupportManager": "readonly",
     "hostelProductsManager": "readonly",
     "_hostelProductsManager": "readonly",
     "LandingPageMethods": "readonly",

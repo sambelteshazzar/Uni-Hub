@@ -83,6 +83,7 @@ const MODULE_DEPENDENCIES = {
       file: 'js/admin/admin-verifications.js',
       exposes: ['adminVerificationsManager'],
     },
+    { name: 'admin-support', file: 'js/admin/admin-support.js', exposes: ['adminSupportManager'] },
   ],
 
   // Level 5: Pages (depends on everything)
