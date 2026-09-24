@@ -26,6 +26,7 @@ function getPublicProfile (user) {
     totalReviews: user.totalReviews,
     role: user.role,
     isActive: user.isActive,
+    isSuspended: user.isSuspended,
     createdAt: user.createdAt,
   };
 }

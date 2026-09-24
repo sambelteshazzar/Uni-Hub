@@ -204,10 +204,11 @@ exports.login = asyncHandler(async (req, res) => {
 
   const mappedUser = mapUserRow(user);
 
-  if (!mappedUser.isActive) {
-    throw new ApiError(401, 'Account is deactivated');
-  }
-
+  // TODO: security review — account-state messages are returned before
+  // password verification (pre-existing; anyone who knows the email can
+  // learn whether it is suspended or deactivated). Suspend is checked
+  // first so a ban (which flips both isSuspended and isActive) reports
+  // "suspended" rather than the misleading "deactivated".
   if (mappedUser.isSuspended) {
     throw new ApiError(
       403,
@@ -215,6 +216,10 @@ exports.login = asyncHandler(async (req, res) => {
         ? `Account suspended: ${mappedUser.banReason}`
         : 'Your account has been suspended. Contact support for more information.',
     );
+  }
+
+  if (!mappedUser.isActive) {
+    throw new ApiError(401, 'Account is deactivated');
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
