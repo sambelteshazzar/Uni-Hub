@@ -143,6 +143,7 @@ class AdminUI {
           { key: 'products', label: 'Products', icon: Icons.package },
           { key: 'orders', label: 'Orders', icon: Icons.clipboard },
           { key: 'payouts', label: 'Payouts', icon: Icons.money },
+          { key: 'support', label: 'Support', icon: Icons.help },
         ],
       },
       {
@@ -399,6 +400,13 @@ class AdminUI {
           }
         }
       });
+    }
+
+    // Support badge (spec 2026-09-24): single "layout rendered" hook —
+    // wireSidebar runs on every admin page, so the badge stays fresh
+    // without patching 14 renderers.
+    if (typeof Pages !== 'undefined' && typeof Pages.refreshSupportBadge === 'function') {
+      Pages.refreshSupportBadge();
     }
   }
 
@@ -1047,6 +1055,12 @@ class Pages {
 
     router.register('/admin/newsletter', () => safeCall('renderAdminNewsletter'));
     router.register('/admin/coupons', () => safeCall('renderAdminCoupons'));
+    router.register('/admin/support', params =>
+      safeCall('renderAdminSupport', params && params.filter)
+    );
+    router.register('/admin/support/:id', params =>
+      safeCall('renderAdminSupportDetail', params.id)
+    );
 
     // Delegated click handler for product cards. Replaces a broken inline
     // `onclick="cartManager.add(${JSON.stringify(product).replace(...))"`
@@ -6399,6 +6413,445 @@ font-size: 0.8rem;
         }
         router.updateUrl('/admin/payouts', params, true);
         paint();
+      });
+    }
+  }
+
+  // Support badge (spec 2026-09-24): patch the sidebar badge in place.
+  // Count + 30s TTL live in adminSupportManager; fail soft.
+  static async refreshSupportBadge() {
+    if (typeof adminSupportManager === 'undefined') {
+      return;
+    }
+    try {
+      const count = await adminSupportManager.getOpenCount();
+      const item = document.querySelector('[data-adm-nav="support"]');
+      if (!item) {
+        return;
+      }
+      const badge = item.querySelector('.adm-nav-badge');
+      if (count > 0) {
+        if (badge) {
+          badge.textContent = String(count);
+        } else {
+          const span = document.createElement('span');
+          span.className = 'adm-nav-badge';
+          span.textContent = String(count);
+          item.appendChild(span);
+        }
+      } else if (badge) {
+        badge.remove();
+      }
+    } catch (err) {
+      console.warn('support: badge refresh failed');
+    }
+  }
+
+  static async renderAdminSupport(filter) {
+    if (!_requireAdmin()) {
+      return;
+    }
+    const adminUser =
+      (typeof adminAuthManager !== 'undefined' && adminAuthManager.getCurrentUser?.()) || null;
+    if (!adminUser) {
+      this.renderAdminLogin();
+      return;
+    }
+
+    this.hideOriginalNavFooter();
+    document.body.style.background = '';
+
+    const mainContent = document.getElementById('main-content');
+    const qs = (typeof router !== 'undefined' && router.getParams()) || {};
+    const allowedFilters = ['all', 'open', 'pending', 'resolved'];
+    const initialFilter = allowedFilters.includes(filter)
+      ? filter
+      : allowedFilters.includes(qs.filter)
+        ? qs.filter
+        : 'all';
+    this._supportFilter = initialFilter;
+    const state = {
+      pill: initialFilter,
+      q: typeof qs.q === 'string' ? qs.q : '',
+      page: 1,
+      pageSize: 20,
+      rows: [],
+      total: 0,
+      openCount: 0,
+      loading: true,
+      loadError: null,
+    };
+
+    const topbarActions = `
+      <div class="adm-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search subject, email or name" aria-label="Search support tickets" id="admin-support-search" value="${_pageEsc(state.q)}" />
+      </div>
+    `;
+
+    mainContent.innerHTML = `
+      <div class="adm-layout">
+        ${AdminUI.sidebar('support')}
+        <div class="adm-main">
+          ${AdminUI.topbar('Support', topbarActions)}
+          <div class="adm-page">
+            ${AdminUI.pageHeader('Support tickets', 'Customer contact tickets — reply and update status.', null)}
+            <div id="admin-support-card-host"></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    AdminUI.wireSidebar(key => {
+      router.navigate('/admin/' + key);
+    });
+
+    const statusToBadgeKind = { open: 'info', pending: 'warning', resolved: 'success' };
+
+    const supportColumns = [
+      {
+        label: 'Subject',
+        render: t =>
+          `<span class="adm-text-strong">${_pageEsc(t.subject || '')}</span>
+           <div class="adm-text-muted" style="font-size:0.75rem;">${_pageEsc(
+             t.category ? Formatter.capitalize(t.category) : ''
+           )}</div>`,
+      },
+      {
+        label: 'Requester',
+        render: t => `
+          <div class="adm-text-strong">${_pageEsc(t.userName || 'Unknown user')}</div>
+          <div class="adm-text-muted" style="font-size:0.75rem;">${_pageEsc(t.userEmail || '')}</div>`,
+      },
+      {
+        label: 'Status',
+        render: t => {
+          const kind = statusToBadgeKind[t.status] || 'neutral';
+          const label = t.status ? Formatter.capitalize(t.status) : '—';
+          return `<span class="adm-badge adm-badge--${kind}">${_pageEsc(label)}</span>`;
+        },
+      },
+      { label: 'Updated', render: t => _pageEsc(Formatter.formatTimeAgo(t.updatedAt)) },
+      {
+        label: 'Actions',
+        render: t => {
+          const id = t.id || t._id || '';
+          return `<a class="adm-btn adm-btn--sm" href="#/admin/support/${encodeURIComponent(
+            id
+          )}" data-adm-support-action="open" data-ticket-id="${_pageEsc(id)}">Open</a>`;
+        },
+      },
+    ];
+
+    const cardHost = document.getElementById('admin-support-card-host');
+
+    const load = async () => {
+      state.loading = true;
+      paint();
+      try {
+        const resp = await adminSupportManager.list({
+          status: state.pill,
+          q: state.q.trim(),
+          page: state.page,
+          pageSize: state.pageSize,
+        });
+        const data = (resp && resp.data) || {};
+        state.rows = data.tickets || [];
+        state.total = data.total || 0;
+        state.openCount = data.openCount || 0;
+        state.loadError = null;
+        // Keep the badge cache warm from the list we just fetched.
+        if (typeof adminSupportManager !== 'undefined') {
+          adminSupportManager._openCount = state.openCount;
+          adminSupportManager._openCountAt = Date.now();
+        }
+      } catch (err) {
+        state.rows = [];
+        state.loadError = 'Could not reach the server.';
+      } finally {
+        state.loading = false;
+        paint();
+      }
+    };
+
+    const paint = () => {
+      const pillTabs = [
+        { key: 'open', label: 'Open' },
+        { key: 'pending', label: 'Pending' },
+        { key: 'resolved', label: 'Resolved' },
+        { key: 'all', label: `All (${state.total})` },
+      ];
+      const pillSelector = AdminUI.pillGroup(
+        pillTabs,
+        state.pill,
+        'adm-pill-group--inverse',
+        'data-support-filter'
+      );
+      const cardTitle = `<h3 class="adm-card-title">Tickets</h3><p class="adm-card-sub">${
+        state.loading
+          ? 'Loading tickets…'
+          : `${state.total} ticket${state.total === 1 ? '' : 's'}${state.q.trim() ? ' matching search' : ''}`
+      }</p>`;
+      const tableHtml = state.loading
+        ? AdminUI.tableSkeleton({ columns: supportColumns.length, rows: 6 })
+        : AdminUI.table({
+            columns: supportColumns,
+            rows: state.rows,
+            rowAttr: row => ` data-ticket-id="${_pageEsc(row.id || row._id || '')}"`,
+            emptyHtml: `<tr><td class="adm-td" colspan="${supportColumns.length}">${AdminUI.emptyState(
+              {
+                icon: Icons.help || '',
+                title: 'No support tickets',
+                body: state.loadError
+                  ? `${state.loadError} Offline or server unreachable.`
+                  : 'No tickets match this view.',
+              }
+            )}</td></tr>`,
+            footerHtml: AdminUI.paginationFooter({
+              total: state.total,
+              page: state.page,
+              pageSize: state.pageSize,
+            }),
+          });
+      if (cardHost) {
+        cardHost.innerHTML = AdminUI.card(cardTitle, tableHtml, pillSelector);
+      }
+
+      AdminUI.wirePillGroup(cardHost && cardHost.querySelector('.adm-pill-group'), key => {
+        state.pill = key;
+        Pages._supportFilter = key;
+        state.page = 1;
+        router.updateUrl('/admin/support', { filter: key });
+        load();
+      });
+    };
+
+    // Delegated handlers on the stable page wrapper — survive re-renders.
+    const page = mainContent.querySelector('.adm-page');
+    if (page) {
+      page.addEventListener('click', e => {
+        const pg = e.target.closest('[data-adm-page]');
+        if (pg && !pg.disabled) {
+          state.page = Number(pg.dataset.admPage) || 1;
+          load();
+        }
+      });
+    }
+
+    const searchInput = document.getElementById('admin-support-search');
+    if (searchInput) {
+      AdminUI.wireSearch(searchInput, value => {
+        state.q = value || '';
+        state.page = 1;
+        const qq = state.q.trim();
+        router.updateUrl(
+          '/admin/support',
+          qq ? { filter: state.pill, q: qq } : { filter: state.pill },
+          true
+        );
+        load();
+      });
+    }
+
+    await load();
+  }
+
+  static async renderAdminSupportDetail(id) {
+    if (!_requireAdmin()) {
+      return;
+    }
+    const adminUser =
+      (typeof adminAuthManager !== 'undefined' && adminAuthManager.getCurrentUser?.()) || null;
+    if (!adminUser) {
+      this.renderAdminLogin();
+      return;
+    }
+
+    this.hideOriginalNavFooter();
+    document.body.style.background = '';
+
+    const mainContent = document.getElementById('main-content');
+    mainContent.innerHTML = `
+      <div class="adm-layout">
+        ${AdminUI.sidebar('support')}
+        <div class="adm-main">
+          ${AdminUI.topbar('Support')}
+          <div class="adm-page">
+            ${AdminUI.pageHeader('Ticket', 'Loading ticket…', null)}
+            <div id="admin-support-detail-host">${AdminUI.tableSkeleton({ columns: 1, rows: 3 })}</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    AdminUI.wireSidebar(key => {
+      router.navigate('/admin/' + key);
+    });
+
+    const host = document.getElementById('admin-support-detail-host');
+    const esc = _pageEsc;
+    let data = null;
+    try {
+      const resp = await adminSupportManager.getThread(id);
+      data = (resp && resp.data) || null;
+    } catch (err) {
+      data = null;
+    }
+
+    if (!data || !data.ticket) {
+      if (host) {
+        host.innerHTML = AdminUI.card(
+          '<h3 class="adm-card-title">Ticket not found</h3>',
+          `<div style="padding:1rem;">${AdminUI.emptyState({
+            icon: Icons.help || '',
+            title: 'Ticket not found',
+            body: 'It may have been deleted with the owner account.',
+          })}</div>`
+        );
+      }
+      return;
+    }
+
+    const ticket = data.ticket;
+    const replies = data.replies || [];
+    const statusKind =
+      { open: 'info', pending: 'warning', resolved: 'success' }[ticket.status] || 'neutral';
+    const canResolve = ticket.status !== 'resolved';
+    const canReopen = ticket.status === 'resolved';
+
+    const threadHtml = replies
+      .map(reply => {
+        const admin = reply.authorRole === 'admin';
+        return `
+          <div class="sup-msg${admin ? ' sup-msg--admin' : ''}">
+            <div class="sup-msg-meta">${admin ? 'Support team' : 'Customer'} · ${esc(
+              Formatter.formatTimeAgo(reply.createdAt)
+            )}</div>
+            <div class="sup-msg-body">${esc(reply.body)}</div>
+          </div>`;
+      })
+      .join('');
+
+    const actionsHtml = `
+      <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:1rem;">
+        <a class="adm-btn adm-btn--sm" href="#/admin/support" data-adm-support-action="back">Back to list</a>
+        ${
+          canResolve
+            ? '<button type="button" class="adm-btn adm-btn--sm" data-adm-support-action="resolve">Mark resolved</button>'
+            : ''
+        }
+        ${
+          canReopen
+            ? '<button type="button" class="adm-btn adm-btn--sm" data-adm-support-action="reopen">Reopen</button>'
+            : ''
+        }
+      </div>
+    `;
+
+    const cardBody = `
+      <style>
+        .sup-thread { border-top: 1px solid var(--border, #e5e7eb); }
+        .sup-msg { padding: 0.75rem 0; border-bottom: 1px dashed var(--border, #e5e7eb); }
+        .sup-msg--admin .sup-msg-meta { color: #0046be; font-weight: 600; }
+        .sup-msg-meta { font-size: 0.8rem; color: var(--text-secondary, #6b7280); margin-bottom: 0.25rem; }
+        .sup-msg-body { white-space: pre-wrap; color: var(--text-primary, #111827); }
+        .sup-reply-row { display: flex; gap: 0.75rem; align-items: flex-start; }
+        .sup-reply-row textarea { flex: 1; }
+        .sup-empty { color: var(--text-secondary, #6b7280); padding: 1rem 0; }
+      </style>
+      <div style="padding:1.25rem;">
+        <div style="display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap; margin-bottom:0.5rem;">
+          <span class="adm-badge adm-badge--${statusKind}">${esc(Formatter.capitalize(ticket.status))}</span>
+          <span class="adm-text-muted">${esc(Formatter.capitalize(ticket.category || ''))}</span>
+          <span class="adm-text-muted">·</span>
+          <span class="adm-text-muted">${esc(ticket.userEmail || '')}</span>
+          <span class="adm-text-muted">·</span>
+          <span class="adm-text-muted">${esc(Formatter.formatTimeAgo(ticket.updatedAt))}</span>
+        </div>
+        <div class="sup-thread" style="margin-top:0.75rem;">
+          ${threadHtml || '<p class="sup-empty">No replies yet.</p>'}
+        </div>
+        <form id="admin-support-reply-form" class="sup-reply-row" style="margin-top:1rem;">
+          <textarea class="form-control" rows="3" maxlength="5000" required
+            placeholder="Write a reply to the customer..." aria-label="Reply message"></textarea>
+          <button type="submit" class="adm-btn adm-btn--sm adm-btn--primary">Send reply</button>
+        </form>
+        ${actionsHtml}
+      </div>
+    `;
+
+    if (host) {
+      host.innerHTML = AdminUI.card(
+        `<h3 class="adm-card-title">${esc(ticket.subject || '')}</h3><p class="adm-card-sub">Ticket ${esc(
+          ticket.id || ticket._id || ''
+        )}</p>`,
+        cardBody
+      );
+    }
+
+    // TODO: security review / CSP — delegation on the stable host; all
+    // ticket strings escaped above at render time (spec §3).
+    const stableHost = host || mainContent;
+    stableHost.addEventListener('click', async e => {
+      const btn = e.target.closest('[data-adm-support-action]');
+      if (!btn) {
+        return;
+      }
+      // stopPropagation is NOT used (we still want the router's hash
+      // interceptor skipped, not the event suppressed for children);
+      // preventDefault makes _interceptHashClick bail so the "back" link
+      // navigates exactly once (our handler owns it).
+      e.preventDefault();
+      const action = btn.dataset.admSupportAction;
+      if (action === 'back') {
+        router.navigate('/admin/support');
+        return;
+      }
+      if (action === 'resolve' || action === 'reopen') {
+        const status = action === 'resolve' ? 'resolved' : 'open';
+        btn.disabled = true;
+        try {
+          await adminSupportManager.setStatus(id, status);
+          showToast(
+            status === 'resolved' ? 'Ticket marked as resolved.' : 'Ticket reopened.',
+            'success'
+          );
+          Pages.renderAdminSupportDetail(id);
+        } catch (err) {
+          showToast('Could not update the ticket.', 'error');
+          btn.disabled = false;
+        }
+      }
+    });
+
+    const replyForm = document.getElementById('admin-support-reply-form');
+    if (replyForm) {
+      replyForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        const textarea = replyForm.querySelector('textarea');
+        const message = textarea ? textarea.value.trim() : '';
+        if (!message) {
+          showToast('Write a reply first.', 'warning');
+          return;
+        }
+        const submitBtn = replyForm.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+        }
+        try {
+          const resp = await adminSupportManager.reply(id, message);
+          const emailSent = Boolean(resp && resp.data && resp.data.emailSent);
+          showToast(
+            emailSent ? 'Reply sent and emailed to the customer.' : 'Reply saved — email not sent.',
+            'success'
+          );
+          Pages.renderAdminSupportDetail(id);
+        } catch (err) {
+          showToast('Could not send the reply.', 'error');
+          if (submitBtn) {
+            submitBtn.disabled = false;
+          }
+        }
       });
     }
   }
