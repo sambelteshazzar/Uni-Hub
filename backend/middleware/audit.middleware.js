@@ -44,6 +44,23 @@ function sanitizeDetails (body) {
 // silently dropped from the audit trail.
 function deriveAction (req) {
   const p = req.path;
+  // Support tickets (spec 2026-09-24): handled BEFORE the generic
+  // trailing-segment normalization below, which would mangle /:id/replies
+  // into /:id/:id. Paths here are router-relative (admin router mount).
+  if (p.startsWith('/support/tickets')) {
+    const normalized = p
+      .replace(/^(\/support\/tickets\/)[^/]+\/replies$/, '$1:id/replies')
+      .replace(/^(\/support\/tickets\/)[^/]+$/, '$1:id');
+    if (req.method === 'POST' && normalized === '/support/tickets/:id/replies') {
+      return 'support_reply';
+    }
+    if (req.method === 'PUT' && normalized === '/support/tickets/:id') {
+      return 'support_status_change';
+    }
+    // Loud gap: GET/DELETE or a future sub-route needs an explicit case.
+    console.warn('audit: unmapped support action', req.method, normalized);
+    return null;
+  }
   // Normalize the trailing id segment FIRST, then compound-id routes;
   // doing both unconditionally corrupted /users/:id/ban -> /users/:id/:id.
   const normalized = /\/(approve|reject|ban|purge-documents)$/u.test(p)

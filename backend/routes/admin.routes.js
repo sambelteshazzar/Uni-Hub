@@ -13,6 +13,8 @@ const { validateObjectId } = require('../middleware/sanitize.middleware');
 const { auditMutation } = require('../middleware/audit.middleware');
 const adminController = require('../controllers/admin.controller');
 const couponController = require('../controllers/coupon.controller');
+const supportController = require('../controllers/support.controller');
+const supportRoutes = require('./support.routes');
 
 // RBAC tiers (2026-08-21): moderators may read admin data and moderate
 // products + verifications; bans, product write/delete and refunds remain
@@ -49,5 +51,28 @@ router.delete('/coupons/:id', validateObjectId, authorize('admin'), auditMutatio
 router.get('/payouts', authorize('admin'), asyncHandler(adminController.getPayoutQueue));
 router.put('/payouts/:id/approve', validateObjectId, authorize('admin'), auditMutation('payout_approve'), asyncHandler(adminController.approvePayout));
 router.put('/payouts/:id/reject', validateObjectId, authorize('admin'), auditMutation('payout_reject'), asyncHandler(adminController.rejectPayout));
+
+// Support tickets (spec 2026-09-24). Admin-only per spec; audit comes
+// from the router-level auditMutation() + deriveAction support branch.
+router.get('/support/tickets', authorize('admin'), supportController.adminListTickets);
+router.get(
+  '/support/tickets/:id',
+  authorize('admin'),
+  validateObjectId,
+  supportController.adminGetTicket
+);
+router.post(
+  '/support/tickets/:id/replies',
+  authorize('admin'),
+  validateObjectId,
+  supportRoutes.replyLimiter,
+  supportController.adminReplyTicket
+);
+router.put(
+  '/support/tickets/:id',
+  authorize('admin'),
+  validateObjectId,
+  supportController.adminUpdateTicketStatus
+);
 
 module.exports = router;
