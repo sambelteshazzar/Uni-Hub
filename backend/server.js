@@ -52,6 +52,7 @@ const couponRoutes = require('./routes/coupon.routes');
 const wishlistRoutes = require('./routes/wishlist.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const searchRoutes = require('./routes/search.routes');
+const supportRoutes = require('./routes/support.routes');
 
 // Import database configuration
 const { connectDatabase } = require('./config/database');
@@ -492,6 +493,9 @@ app.use('/api/ledger', ledgerRoutes);
 
 // Coupon routes — POST /api/coupons/validate (buyer), admin CRUD via /api/admin/coupons
 app.use('/api/coupons', couponRoutes);
+
+// Support tickets (spec 2026-09-24) — user portal CRUD behind protect.
+app.use('/api/support/tickets', supportRoutes);
 
 // Verification-document retention sweep (spec 2026-08-23): destroys assets
 // 30 days after decision. Hourly; failures retry next pass.
