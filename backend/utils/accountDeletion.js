@@ -117,6 +117,8 @@ async function executeAccountDeletion (user, { marker }) {
     { sql: `DELETE FROM notifications WHERE user = ?`, args: [user.id] },
     { sql: `DELETE FROM idempotency_keys WHERE userId = ?`, args: [user.id] },
     { sql: `DELETE FROM admin_mfa_challenges WHERE userId = ?`, args: [user.id] },
+    { sql: `DELETE FROM support_replies WHERE ticketId IN (SELECT id FROM support_tickets WHERE userId = ?)`, args: [user.id] },
+    { sql: `DELETE FROM support_tickets WHERE userId = ?`, args: [user.id] },
     { sql: `UPDATE products SET status = 'inactive', updatedAt = datetime('now') WHERE seller = ? AND status != 'sold'`, args: [user.id] },
   ];
 
