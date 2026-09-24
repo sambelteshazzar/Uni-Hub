@@ -204,18 +204,6 @@ class FooterUtils {
         }
       }
     });
-
-    // Also handle the contact link if it doesn't have a proper page
-    const contactLink = document.querySelector('a[href="#contact"]');
-    if (contactLink) {
-      contactLink.addEventListener('click', e => {
-        e.preventDefault();
-        this.showNotification(
-          'Contact page coming soon! For now, email us at support@jertscart.com',
-          'info'
-        );
-      });
-    }
   }
 }
 

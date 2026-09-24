@@ -10328,7 +10328,7 @@ font-size: 0.8rem;
         <div style="margin-top: 3rem; text-align: center; padding: 2rem; background: var(--bg-secondary, #f9fafb); border-radius: 0.75rem;">
           <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary, #111827);">Still have questions?</h2>
           <p style="color: var(--text-secondary, #6b7280); margin-bottom: 1.5rem;">Can't find what you're looking for? Reach out to our support team at <a href="mailto:support@jertscart.com" style="color: var(--primary, #0046be);">support@jertscart.com</a></p>
-          <button class="btn btn-primary" onclick="Pages.navigate('/messages'); return false;">Contact Support</button>
+          <a class="btn btn-primary" href="#/contact">Contact Support</a>
         </div>
       </div>
       <style>
@@ -10461,12 +10461,6 @@ font-size: 0.8rem;
   static renderContact() {
     return typeof StaticPageMethods !== 'undefined'
       ? StaticPageMethods.renderContact()
-      : console.warn('StaticPageMethods not loaded');
-  }
-
-  static _handleContactForm(event) {
-    return typeof StaticPageMethods !== 'undefined'
-      ? StaticPageMethods._handleContactForm(event)
       : console.warn('StaticPageMethods not loaded');
   }
 
