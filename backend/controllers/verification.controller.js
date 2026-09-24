@@ -72,7 +72,13 @@ exports.submitVerification = asyncHandler(async (req, res) => {
   });
 
   if (existing) {
-    throw new ApiError(400, 'This student ID is already verified or awaiting confirmation');
+    // details.code is the machine-readable branch the SPA uses to route
+    // the user to /verification-status instead of a dead-end form toast.
+    throw new ApiError(
+      400,
+      'This student ID is already verified or awaiting confirmation',
+      { code: 'ALREADY_SUBMITTED', status: existing.status }
+    );
   }
 
   // Backward compat: legacy 'email' method (sent a 6-digit code to the
@@ -510,6 +516,25 @@ exports.getMyVerificationStatus = asyncHandler(async (req, res) => {
     });
   }
 
+  // State-B self-heal: the row says approved but users.isVerified was
+  // never flipped (confirmVerification partial failure / legacy rows).
+  // requireVerified (checkout) checks users.isVerified only, so the user
+  // stayed blocked while this endpoint already claimed verified — and no
+  // other write path repaired the flag. Flip it here: this GET is the
+  // first thing login/dashboard/cart sync call, so the next
+  // requireVerified sees a consistent flag. approved_pending_user must
+  // NOT heal — the magic link has not been clicked yet.
+  let userIsVerified = !!req.user.isVerified;
+  if (latestVerification.status === 'approved' && !userIsVerified) {
+    try {
+      await db('users').updateById(userId, { isVerified: toBool(true) });
+      userIsVerified = true;
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn('verification/me: isVerified self-heal failed:', e.message || e);
+    }
+  }
+
   res.json({
     success: true,
     data: {
@@ -517,7 +542,7 @@ exports.getMyVerificationStatus = asyncHandler(async (req, res) => {
       // users.isVerified flag (same one requireVerified checks) also
       // counts, so the two backend notions of "verified" cannot disagree
       // and clobber a good session on sync.
-      isVerified: latestVerification.status === 'approved' || !!req.user.isVerified,
+      isVerified: latestVerification.status === 'approved' || userIsVerified,
       status: latestVerification.status,
       // Own submitted personal email — lets the status page show a masked
       // destination ("sent to pe***@gmail.com") so users verify WHERE the

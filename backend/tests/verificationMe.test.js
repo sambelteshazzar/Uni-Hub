@@ -101,4 +101,40 @@ describe('GET /api/verification/me', () => {
     expect(res.body.data.isVerified).toBe(false);
     expect(res.body.data.status).toBe('approved_pending_user');
   });
+
+  // State B self-heal: status='approved' but users.isVerified never flipped
+  // (confirmVerification partial failure / legacy rows). requireVerified
+  // checks users.isVerified only, so checkout stayed blocked while this
+  // endpoint already claimed verified — and no other write path fixed it.
+  test('approved row + users.isVerified=0: self-heals users.isVerified to 1', async () => {
+    const user = await registerUser();
+    insertVerificationRow(user.id, 'approved', `94${Date.now().toString().slice(-8)}`);
+    setUsersVerified(user.id, false);
+
+    const res = await request(app)
+      .get('/api/verification/me')
+      .set('Authorization', `Bearer ${user.token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data.isVerified).toBe(true);
+
+    const { getDb } = require('../config/database');
+    const row = getDb().prepare('SELECT isVerified FROM users WHERE id = ?').get(user.id);
+    expect(row.isVerified).toBe(1);
+  });
+
+  test('self-heal does NOT flip users.isVerified for approved_pending_user', async () => {
+    const user = await registerUser();
+    insertVerificationRow(user.id, 'approved_pending_user', `95${Date.now().toString().slice(-8)}`);
+    setUsersVerified(user.id, false);
+
+    const res = await request(app)
+      .get('/api/verification/me')
+      .set('Authorization', `Bearer ${user.token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data.isVerified).toBe(false);
+
+    const { getDb } = require('../config/database');
+    const row = getDb().prepare('SELECT isVerified FROM users WHERE id = ?').get(user.id);
+    expect(row.isVerified).toBe(0);
+  });
 });

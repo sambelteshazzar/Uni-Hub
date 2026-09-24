@@ -15,7 +15,7 @@ const _Icons =
       };
 
 const AuthPageMethods = {
-  renderStudentVerification() {
+  async renderStudentVerification() {
     const mainContent = document.getElementById('main-content');
     // University now lives on the user record (set at signup) — there's
     // no separate localStorage copy. Fall back to the stored user object.
@@ -107,6 +107,47 @@ const AuthPageMethods = {
     ) {
       Pages.renderBrowse();
       return;
+    }
+
+    // Fresh server check before painting the form. Session/cache flags
+    // above can lag (magic link clicked in another tab, admin approved
+    // while this tab was open). Landing on the form for an in-flight
+    // submission is a dead end: submit 400s with "already verified or
+    // awaiting confirmation". Route those states to the status page (or
+    // browse) instead. Fetch failure falls through to the form — the
+    // ALREADY_SUBMITTED redirect in handleVerification is the backstop.
+    if (typeof api !== 'undefined' && api.request && !api.isStaticDeploy) {
+      const session = StorageManager.get(STORAGE_KEYS.SESSION, true);
+      if (session && session.token) {
+        try {
+          const resp = await api.request('/verification/me');
+          const fresh = resp && resp.success ? resp.data : null;
+          if (fresh) {
+            if (fresh.isVerified || fresh.status === 'approved') {
+              // Persist the verified flag into the session so checkout
+              // guards and the dashboard paint correctly without a
+              // re-login (sync writes the same shape auth login does).
+              if (typeof authManager !== 'undefined' && authManager.syncVerificationStatus) {
+                try {
+                  await authManager.syncVerificationStatus();
+                } catch (_e) {
+                  /* best-effort — browse is still correct */
+                }
+              }
+              Pages.renderBrowse();
+              return;
+            }
+            if (fresh.status === 'pending' || fresh.status === 'approved_pending_user') {
+              Pages.renderVerificationStatus();
+              return;
+            }
+            // rejected / not_submitted — fall through to the form
+            // (rejected rows are explicitly resubmittable).
+          }
+        } catch (e) {
+          console.warn('verification: fresh status check failed:', e);
+        }
+      }
     }
 
     // Honest info banner (no more "instant verification" lie).
@@ -379,6 +420,24 @@ const AuthPageMethods = {
       submitBtn.textContent = 'Submitting…';
     }
 
+    // Shared branch for the re-submit guard: the server already has an
+    // approved / awaiting-confirmation submission for this studentId, so
+    // the form is the wrong destination — send them to the status page.
+    // (Rejected rows never hit this guard; the form stays reachable for
+    // a corrected resubmission.)
+    const redirectForAlreadySubmitted = () => {
+      showToast(
+        'This student ID is already verified or awaiting confirmation. Taking you to your status page…',
+        'warning',
+        5000
+      );
+      if (typeof window.router !== 'undefined' && window.router.navigate) {
+        router.navigate('/verification-status');
+      } else {
+        window.location.hash = '#/verification-status';
+      }
+    };
+
     try {
       let response;
       if (files.length > 0) {
@@ -423,6 +482,13 @@ const AuthPageMethods = {
           'error'
         );
       } else {
+        // submitDocuments returns the 400 body (with details) instead of
+        // throwing — branch on the machine-readable code before the
+        // generic error toast so the user is not stuck on a dead-end form.
+        if (response?.details?.code === 'ALREADY_SUBMITTED') {
+          redirectForAlreadySubmitted();
+          return;
+        }
         // If the server's error mentions document storage, surface a more
         // actionable hint: the user can still submit without files. Other
         // errors fall back to the generic toast unchanged.
@@ -439,6 +505,13 @@ const AuthPageMethods = {
     } catch (err) {
       // TODO: security review — surface API error text without leaking internals.
       console.warn('auth-pages: verification submit error:', err);
+      // request() throws with error.data = full response body; the
+      // re-submit guard is the tester-reported dead end (form shown for
+      // approved_pending_user → submit → "already verified" toast).
+      if (err?.data?.details?.code === 'ALREADY_SUBMITTED') {
+        redirectForAlreadySubmitted();
+        return;
+      }
       const msg = String(err?.message || '');
       const isNetworkErr =
         (err instanceof TypeError && msg === 'Failed to fetch') || msg === 'Request timeout';
