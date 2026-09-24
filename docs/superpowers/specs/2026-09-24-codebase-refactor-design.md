@@ -45,7 +45,7 @@ js/
 │   ├── layout.js            brand, sidebar, topbar, pageHeader, nav helpers
 │   ├── data.js              card, table, tableSkeleton, statCard, pagination, rowMenu
 │   ├── overlays.js          modalHtml, wireModal, confirmDialog, promptDialog, toast
-│   └── feedback.js          emptyState, renderStars, renderErrorPage, pillGroup + wiring
+│   └── feedback.js          emptyState, renderErrorPage, pillGroup + wiring
 ├── pages/
 │   ├── pages.js             route registry + shared page helpers (target ≤2,000 lines)
 │   └── <feature>-page.js    renderers grouped by feature (checkout, browse, verification,
@@ -55,13 +55,19 @@ js/
 ```
 
 **Compat contract.** The 57 `window.*` exports and all `globals.js` re-exports keep
-identical names; consumers never notice where a function lives. Kit methods leave
-`pages.js` via one **external compat block** after the class:
-`Object.assign(Pages, { card, table, modalHtml, … })` — no per-method forwarders.
-Verify-item before using it: confirm nothing enumerates `Pages` statics (`for…in`,
-`getOwnPropertyNames`); class statics are non-enumerable while assigned properties are
-enumerable. If enumeration exists, use `Object.defineProperties` with
-`enumerable: false` instead. New internal code imports from `js/ui/*` directly.
+identical names; consumers never notice where a function lives. Correction from
+planning: the kit's 26 methods live on `class AdminUI` (pages.js:72–821,
+`window.AdminUI` at :821), not on `Pages` — the only external consumer is
+`router.js` (`AdminUI.renderErrorPage`, 4 refs), plus in-file self-refs. Kit methods
+leave `pages.js` via one **module-level compat object** that grows as each ui file is
+extracted — `const AdminUI = { ...layout, ...inlineRemainders }` — ending as a pure
+spread block (`{ ...layout, ...overlays, ...data, ...feedback }`), no per-method
+forwarders. `renderStars` stays in `pages.js` as a shared helper (it is a `Pages`
+static, outside the kit block). Verify-item before the swap: confirm nothing
+enumerates `AdminUI` (`for…in`, `getOwnPropertyNames`, `new AdminUI`) — class statics
+are non-enumerable while object properties are enumerable. If enumeration exists, use
+`Object.defineProperties` with `enumerable: false` instead. New internal code imports
+from `js/ui/*` directly.
 
 **Classification rule** (placement of every method): `ui/*` if it renders/wires a
 widget with no feature-specific data; `<feature>-page.js` if it renders one product
