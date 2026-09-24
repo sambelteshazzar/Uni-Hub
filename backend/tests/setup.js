@@ -55,6 +55,7 @@ afterEach(() => {
       'idempotency_keys', 'ledger_entries', 'payouts', 'admin_mfa_challenges',
       'messages', 'conversations', 'deliveries', 'payments', 'reviews',
       'orders', 'products', 'student_verifications', 'newsletter_subscribers',
+      'support_replies', 'support_tickets',
       'users',
     ];
     for (const table of tables) {

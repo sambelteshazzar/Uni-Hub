@@ -43,6 +43,8 @@ const ACTIVITY_LOGS_ACTIONS_SQL = [
   'admin_user_update', 'admin_user_create',
   // Newsletter campaigns:
   'newsletter_campaign',
+  // Support tickets (spec 2026-09-24):
+  'support_reply', 'support_status_change',
 ].map(a => `'${a}'`).join(',');
 
 // Role tiers (2026-08-21): buyer < moderator < admin. Moderators handle
@@ -549,6 +551,32 @@ CREATE INDEX IF NOT EXISTS idx_newsletter_email ON newsletter_subscribers(email)
 CREATE INDEX IF NOT EXISTS idx_newsletter_status ON newsletter_subscribers(status);
 CREATE INDEX IF NOT EXISTS idx_newsletter_source ON newsletter_subscribers(source);
 CREATE INDEX IF NOT EXISTS idx_newsletter_token ON newsletter_subscribers(verificationToken);
+
+-- Support tickets (spec 2026-09-24): user-authored contact portal.
+-- authorRole is denormalized on replies so thread history survives a
+-- future role change and renders correctly for both surfaces.
+CREATE TABLE IF NOT EXISTS support_tickets (
+  id TEXT PRIMARY KEY,
+  userId TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  category TEXT NOT NULL CHECK(category IN ('order','payment','verification','product','account','other')),
+  subject TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open','pending','resolved')),
+  createdAt TEXT DEFAULT (datetime('now')),
+  updatedAt TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS support_replies (
+  id TEXT PRIMARY KEY,
+  ticketId TEXT NOT NULL REFERENCES support_tickets(id) ON DELETE CASCADE,
+  authorId TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  authorRole TEXT NOT NULL CHECK(authorRole IN ('user','admin')),
+  body TEXT NOT NULL,
+  createdAt TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_support_tickets_user ON support_tickets(userId, createdAt DESC);
+CREATE INDEX IF NOT EXISTS idx_support_tickets_status ON support_tickets(status, updatedAt DESC);
+CREATE INDEX IF NOT EXISTS idx_support_replies_ticket ON support_replies(ticketId, createdAt);
 `;
 
 async function connectTurso () {
@@ -1008,7 +1036,9 @@ async function runTursoMigrations () {
       !activitySchemaSql.includes('\'coupon_create\'') ||
       !activitySchemaSql.includes('\'admin_user_update\'') ||
       !activitySchemaSql.includes('\'newsletter_campaign\'') ||
-      !activitySchemaSql.includes('\'verification_link_resent\''))) {
+      !activitySchemaSql.includes('\'verification_link_resent\'') ||
+      !activitySchemaSql.includes('\'support_reply\'') ||
+      !activitySchemaSql.includes('\'support_status_change\''))) {
       console.log('Migrating activity_logs table for extended audit actions...');
       await tursoClient.execute('ALTER TABLE activity_logs RENAME TO activity_logs_old');
       await tursoClient.execute(`CREATE TABLE activity_logs (
@@ -1355,7 +1385,9 @@ function connectLocal () {
       !activityTbl.sql.includes('\'coupon_create\'') ||
       !activityTbl.sql.includes('\'admin_user_update\'') ||
       !activityTbl.sql.includes('\'newsletter_campaign\'') ||
-      !activityTbl.sql.includes('\'verification_link_resent\''))) {
+      !activityTbl.sql.includes('\'verification_link_resent\'') ||
+      !activityTbl.sql.includes('\'support_reply\'') ||
+      !activityTbl.sql.includes('\'support_status_change\''))) {
       console.log('Migrating activity_logs table for extended audit actions...');
       db.exec('ALTER TABLE activity_logs RENAME TO activity_logs_old');
       db.exec(`CREATE TABLE activity_logs (
@@ -1577,6 +1609,36 @@ function connectLocal () {
         CREATE INDEX IF NOT EXISTS idx_newsletter_status ON newsletter_subscribers(status);
         CREATE INDEX IF NOT EXISTS idx_newsletter_source ON newsletter_subscribers(source);
         CREATE INDEX IF NOT EXISTS idx_newsletter_token ON newsletter_subscribers(verificationToken);
+      `);
+    }
+
+    // Support ticket tables (spec 2026-09-24). SCHEMA_SQL above already
+    // creates them with IF NOT EXISTS on every boot; this guard mirrors
+    // the newsletter block for parity and keeps partial/older migration
+    // files from leaving the portal dead on first run.
+    const supportTicketsCols = db.prepare('PRAGMA table_info(support_tickets)').all();
+    if (supportTicketsCols.length === 0) {
+      db.exec(`
+        CREATE TABLE support_tickets (
+          id TEXT PRIMARY KEY,
+          userId TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          category TEXT NOT NULL CHECK(category IN ('order','payment','verification','product','account','other')),
+          subject TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open','pending','resolved')),
+          createdAt TEXT DEFAULT (datetime('now')),
+          updatedAt TEXT DEFAULT (datetime('now'))
+        );
+        CREATE TABLE support_replies (
+          id TEXT PRIMARY KEY,
+          ticketId TEXT NOT NULL REFERENCES support_tickets(id) ON DELETE CASCADE,
+          authorId TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          authorRole TEXT NOT NULL CHECK(authorRole IN ('user','admin')),
+          body TEXT NOT NULL,
+          createdAt TEXT DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_support_tickets_user ON support_tickets(userId, createdAt DESC);
+        CREATE INDEX IF NOT EXISTS idx_support_tickets_status ON support_tickets(status, updatedAt DESC);
+        CREATE INDEX IF NOT EXISTS idx_support_replies_ticket ON support_replies(ticketId, createdAt);
       `);
     }
   } catch (migrationErr) {
