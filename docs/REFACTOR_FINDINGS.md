@@ -202,6 +202,46 @@ actually served is the JS template that task 15 just migrated. Decide
 separately: delete the file, or migrate its handlers to `data-action` and
 let it be consumed again. NOT edited in task 15 (findings-only for HTML).
 
+### F14 bug/critical — `js/utils/security.js` is never loaded; all `SecurityUtils` guards fall back to unescaped `String()`
+
+Discovered during task 15's review. `js/utils/security.js:289` assigns
+`window.SecurityUtils = SecurityUtils`, but **nothing in the repo imports that
+module**:
+- `grep -rn "from.*security\.js\|import.*security\.js"` across `*.js`/`*.html`
+  (excluding node_modules/dist/.vercel) → zero hits;
+- the full `app-init.js` module manifest (levels 1–6, through
+  `setup: [globals]`) does not list `js/utils/security.js`;
+- `index.html` has no script tag for it; `main.js`/`app.js`/`setup/globals.js`
+  reference it only in comments.
+
+Consequence: every `typeof SecurityUtils !== 'undefined' && SecurityUtils.*`
+guard evaluates false at runtime. That includes `js/utils/escape.js`
+(`escapeValue` → `String(v)` = **no HTML escaping**; `safeUrlValue` →
+`String(url)` = **no URL sanitization**) and the direct call at
+`js/modules/modals.js:499`. All template-built `innerHTML` interpolation
+through `_pageEsc`/`escapeValue` therefore emits backend data raw.
+
+This is **pre-existing** (the guards date from before the refactor; the
+refactor only centralized the identical fallback) and is likely mitigated in
+part by backend `sanitize.middleware.js` input sanitization — but frontend
+defense-in-depth is absent and reflected/stored content reaching `innerHTML`
+unescaped is an XSS risk.
+
+Fix direction (human decision — activating escaping is a BEHAVIOR change and
+must not land inside a refactor commit): add `js/utils/security.js` to the
+early utils level of the app-init manifest (before any consumer), then smoke
+all templates for double-escaping fallout. Do not enable silently.
+
+### F15 debt — inline `<script>` in generated receipt markup
+
+`js/pages/pages.js` (~:2144 in the pre-task-13 numbering; grep
+`window.print` to locate) emits `<script>window.onload=function(){window.print();}</script>`
+inside the order-receipt template string. Property-assignment form (not an
+element attribute), so it is invisible to the `\son[a-z]+=` inventory, but it
+is still an inline script that blocks a strict CSP (`script-src` without
+`'unsafe-inline'`) whenever a receipt renders. Convert to a `load` listener
+attached after render in a later CSP pass.
+
 ## Security-review TODOs (pre-existing, need human review)
 
 - js/admin/admin-support.js:5 — ticket subjects/bodies are user-generated
