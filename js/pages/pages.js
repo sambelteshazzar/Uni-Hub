@@ -509,7 +509,7 @@ class Pages {
         <div class="container" style="padding:3rem 1rem;text-align:center;">
           <h1>Browse unavailable</h1>
           <p>The browse module failed to load. Try refreshing the page.</p>
-          <button class="btn btn-primary" onclick="window.location.reload()">Reload</button>
+          <button class="btn btn-primary" data-action="page-reload-window">Reload</button>
         </div>`;
     }
   }
@@ -677,7 +677,7 @@ class Pages {
  ${categories
    .map(
      cat => `
- <button class="category-pill ${cat.id === productsManager.currentFilters.category ? 'active' : !productsManager.currentFilters.category && cat.id === 'all' ? 'active' : ''}" onclick="BrowsePageMethods.filterByCategory('${cat.id}')">
+ <button class="category-pill ${cat.id === productsManager.currentFilters.category ? 'active' : !productsManager.currentFilters.category && cat.id === 'all' ? 'active' : ''}" data-action="page-filter-by-category" data-cat-id="${cat.id}">
  ${Icons[cat.icon] || ''}
  ${cat.name}
  <span class="pill-count">${cat.count}</span>
@@ -693,7 +693,7 @@ class Pages {
  <!-- Filter & Sort Bar -->
  <div class="browse-filter-bar">
  <!-- Mobile Filter Toggle -->
- <button class="mobile-filter-toggle" onclick="BrowsePageMethods.toggleMobileFilters()">
+ <button class="mobile-filter-toggle" data-action="page-toggle-mobile-filters">
  <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
  <path d="M3 4h18M6 12h12M9 20h6"/>
  </svg>
@@ -713,14 +713,14 @@ class Pages {
  <div class="filter-dropdown-content">
  <div class="filter-dropdown-header">
  <span class="selected-count">${selectedCondCount} Selected</span>
- <button class="reset-link" onclick="BrowsePageMethods.resetConditionFilter()">Reset</button>
+ <button class="reset-link" data-action="page-reset-condition-filter">Reset</button>
  </div>
  <div class="filter-dropdown-body">
  ${conditions
    .map(
      cond => `
  <div class="filter-option">
- <input type="checkbox" id="cond-${cond.id}" onchange="BrowsePageMethods.applyBrowseFilters()" ${selectedConditions.includes(cond.id) ? 'checked' : ''}>
+ <input type="checkbox" id="cond-${cond.id}" data-action="page-apply-browse-filters" ${selectedConditions.includes(cond.id) ? 'checked' : ''}>
  <label for="cond-${cond.id}">${cond.name}</label>
  <span class="filter-count">${cond.count}</span>
  </div>
@@ -742,7 +742,7 @@ class Pages {
  <div class="filter-dropdown-content">
  <div class="filter-dropdown-header">
  <span class="selected-count">Max GHS ${maxPrice.toLocaleString()}</span>
- <button class="reset-link" onclick="BrowsePageMethods.resetPriceFilter()">Reset</button>
+ <button class="reset-link" data-action="page-reset-price-filter">Reset</button>
  </div>
  <div class="filter-dropdown-body">
  <div class="filter-price-range">
@@ -752,7 +752,7 @@ class Pages {
  <span style="font-size:0.875rem;color:#6b7280;">GHS</span>
  <input type="number" class="price-input" placeholder="To" id="price-max" value="${productsManager.currentFilters.priceRange?.max < Infinity ? productsManager.currentFilters.priceRange.max : ''}">
  </div>
- <button style="margin-top:0.75rem;width:100%;padding:0.5rem;background:#0046be;color:white;border:none;border-radius:8px;font-size:0.8125rem;font-weight:500;cursor:pointer;" onclick="BrowsePageMethods.applyPriceFilter()">Apply</button>
+ <button style="margin-top:0.75rem;width:100%;padding:0.5rem;background:#0046be;color:white;border:none;border-radius:8px;font-size:0.8125rem;font-weight:500;cursor:pointer;" data-action="page-apply-price-filter">Apply</button>
  </div>
  </div>
  </details>
@@ -767,11 +767,11 @@ class Pages {
  </summary>
  <div class="filter-dropdown-content">
  <div class="filter-dropdown-body">
- <div class="filter-rating-option ${productsManager.currentFilters.minRating >= 4 ? 'active' : ''}" onclick="BrowsePageMethods.setRatingFilter(4)">
+ <div class="filter-rating-option ${productsManager.currentFilters.minRating >= 4 ? 'active' : ''}" data-action="page-set-rating-filter" data-rating="4">
  <span class="rating-stars">${Icons.star}${Icons.star}${Icons.star}${Icons.star}${Icons.starOutline}</span>
  <span class="rating-label">& up</span>
  </div>
- <div class="filter-rating-option ${productsManager.currentFilters.minRating >= 3 && productsManager.currentFilters.minRating < 4 ? 'active' : ''}" onclick="BrowsePageMethods.setRatingFilter(3)">
+ <div class="filter-rating-option ${productsManager.currentFilters.minRating >= 3 && productsManager.currentFilters.minRating < 4 ? 'active' : ''}" data-action="page-set-rating-filter" data-rating="3">
  <span class="rating-stars">${Icons.star}${Icons.star}${Icons.star}${Icons.starOutline}${Icons.starOutline}</span>
  <span class="rating-label">& up</span>
  </div>
@@ -787,7 +787,7 @@ class Pages {
        productsManager.currentFilters.priceRange.max < Infinity)) ||
    productsManager.currentFilters.minRating
      ? `
- <button style="padding:0.5rem 0.875rem;background:transparent;border:1px solid #ef4444;border-radius:8px;font-size:0.8125rem;font-weight:500;color:#ef4444;cursor:pointer;" onclick="Pages.resetBrowseFilters()">Clear all</button>
+ <button style="padding:0.5rem 0.875rem;background:transparent;border:1px solid #ef4444;border-radius:8px;font-size:0.8125rem;font-weight:500;color:#ef4444;cursor:pointer;" data-action="page-reset-browse-filters">Clear all</button>
  `
      : ''
  }
@@ -795,7 +795,7 @@ class Pages {
 
  <!-- Sort -->
  <div class="browse-sort-group">
- <select class="sort-select" onchange="Pages.applySortOrder()" id="sort-select">
+ <select class="sort-select" data-action="page-apply-sort-order" id="sort-select">
  <option value="newest" ${productsManager.currentFilters.sortBy === 'newest' ? 'selected' : ''}>Newest First</option>
  <option value="price-low" ${productsManager.currentFilters.sortBy === 'price-low' ? 'selected' : ''}>Price: Low to High</option>
  <option value="price-high" ${productsManager.currentFilters.sortBy === 'price-high' ? 'selected' : ''}>Price: High to Low</option>
@@ -819,7 +819,7 @@ class Pages {
  <div class="browse-empty-icon" style="width: 64px; height: 64px; margin: 0 auto 1rem;">${Icons.search}</div>
  <h3>No items found</h3>
  <p>Try adjusting your filters or search for something else</p>
- <button class="btn btn-primary" onclick="Pages.resetBrowseFilters()">Clear Filters</button>
+ <button class="btn btn-primary" data-action="page-reset-browse-filters">Clear Filters</button>
  </div>
  `
  }
@@ -829,15 +829,15 @@ ${
   paginatedData.totalPages > 1
     ? `
         <div class="pagination">
-          <button class="page-btn" onclick="Pages.goToBrowsePage(${paginatedData.currentPage - 1})" ${paginatedData.currentPage <= 1 ? 'disabled style="opacity:0.4;pointer-events:none;"' : ''}>&laquo;</button>
+          <button class="page-btn" data-action="page-go-to-browse-page" data-page="${paginatedData.currentPage - 1}" ${paginatedData.currentPage <= 1 ? 'disabled style="opacity:0.4;pointer-events:none;"' : ''}>&laquo;</button>
           ${this._renderPageNumbers(paginatedData.currentPage, paginatedData.totalPages)
             .map(p =>
               p === '...'
                 ? '<span style="padding:0 4px;color:var(--neutral-400);">...</span>'
-                : `<button class="page-btn ${p === paginatedData.currentPage ? 'active' : ''}" onclick="Pages.goToBrowsePage(${p})">${p}</button>`
+                : `<button class="page-btn ${p === paginatedData.currentPage ? 'active' : ''}" data-action="page-go-to-browse-page" data-page="${p}">${p}</button>`
             )
             .join('')}
-          <button class="page-btn" onclick="Pages.goToBrowsePage(${paginatedData.currentPage + 1})" ${paginatedData.currentPage >= paginatedData.totalPages ? 'disabled style="opacity:0.4;pointer-events:none;"' : ''}>&raquo;</button>
+          <button class="page-btn" data-action="page-go-to-browse-page" data-page="${paginatedData.currentPage + 1}" ${paginatedData.currentPage >= paginatedData.totalPages ? 'disabled style="opacity:0.4;pointer-events:none;"' : ''}>&raquo;</button>
         </div>
       `
     : ''
@@ -869,13 +869,13 @@ ${Pages.renderRecentlyViewedSection()}
       : 'Item';
 
     return `
-      <div class="product-card-modern" onclick="Pages.renderProductDetail('${product.id}')">
+      <div class="product-card-modern" data-action="page-render-product-detail" data-product-id="${product.id}">
         <div class="product-card-image-wrap">
-          <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" class="product-card-image" onerror="this.src='/assets/images/products/no-image.svg'">
+          <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" class="product-card-image" data-fallback="/assets/images/products/no-image.svg">
           <div class="product-badges">
             <span class="product-badge badge-condition ${conditionClass}">${conditionLabel}</span>
           </div>
-<button class="wishlist-btn ${isInWishlist ? 'active' : ''}" onclick="event.stopPropagation(); Pages.toggleWishlist(event, '${product.id}')">
+<button class="wishlist-btn ${isInWishlist ? 'active' : ''}" data-action="page-toggle-wishlist" data-product-id="${product.id}">
           ${isInWishlist ? Icons.heart : Icons.heartOutline}
         </button>
         </div>
@@ -967,13 +967,13 @@ ${product.seller?.verified ? '<span class="trust-badge trust-badge-verified"><sv
       : 'Other';
 
     return `
-      <div class="store-product-card" onclick="Pages.renderProductDetail('${product.id}')">
+      <div class="store-product-card" data-action="page-render-product-detail" data-product-id="${product.id}">
         <!-- Image -->
         <div class="store-product-image">
-          <img src="${(product.images && product.images[0]) || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
+          <img src="${(product.images && product.images[0]) || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy" data-fallback="/assets/images/products/no-image.svg" />
           <span class="store-condition-badge ${product.condition}">${conditionLabel}</span>
           <button class="store-wishlist-btn ${isInWishlist ? 'active' : ''}"
-                  onclick="Pages.toggleWishlist(event, '${product.id}')"
+                  data-action="page-toggle-wishlist-card" data-product-id="${product.id}"
                   title="${isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}">
             ${isInWishlist ? Icons.heart : Icons.heartOutline}
           </button>
@@ -1005,7 +1005,7 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
         <!-- Hover Actions -->
         <div class="store-product-actions-overlay">
           <button class="store-action-btn store-action-btn-primary" data-action="add-to-cart" data-product-id="${product.id}">${Icons.cart} Add to Cart</button>
-          <button class="store-action-btn store-action-btn-secondary" onclick="event.stopPropagation(); Pages.renderProductDetail('${product.id}')">View</button>
+          <button class="store-action-btn store-action-btn-secondary" data-action="page-render-product-detail-stop" data-product-id="${product.id}">View</button>
         </div>
       </div>
     `;
@@ -1031,22 +1031,22 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
     const savingsPercent = isDeal ? Math.round(Math.random() * 30 + 30) : 0;
 
     return (
-      '<div class="bb-browse-card" onclick="Pages.renderProductDetail(\'' +
+      '<div class="bb-browse-card" data-action="page-render-product-detail" data-product-id="' +
       product.id +
-      '\')">' +
+      '">' +
       (isDeal ? '<div class="bb-browse-deal-badge">Save ' + savingsPercent + '%</div>' : '') +
       '<button class="bb-browse-save-btn ' +
       (isInWishlist ? 'active' : '') +
-      '" onclick="event.stopPropagation(); Pages.toggleWishlist(event, \'' +
+      '" data-action="page-toggle-wishlist" data-product-id="' +
       product.id +
-      '\');">' +
+      '">' +
       (isInWishlist ? Icons.heart : Icons.heartOutline) +
       '</button>' +
       '<img src="' +
       ((product.images && product.images[0]) || '/assets/images/products/no-image.svg') +
       '" alt="' +
       product.title +
-      '" class="bb-browse-image" loading="lazy" onerror="this.src=\'/assets/images/products/no-image.svg\'" />' +
+      '" class="bb-browse-image" loading="lazy" data-fallback="/assets/images/products/no-image.svg" />' +
       '<div class="bb-browse-info">' +
       '<p class="bb-browse-category">' +
       categoryLabel +
@@ -1086,9 +1086,9 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
       '<span class="bb-browse-condition">' +
       conditionLabel +
       '</span>' +
-      '<button class="bb-browse-add-cart" onclick="event.stopPropagation(); cartManager.add(' +
+      '<button class="bb-browse-add-cart" data-action="page-bb-add-to-cart" data-product="' +
       JSON.stringify(product).replace(/"/g, '&quot;') +
-      '); Pages.updateCartBadge();">' +
+      '">' +
       Icons.cart +
       ' Add to Cart</button>' +
       '<div class="bb-browse-seller">' +
@@ -1196,16 +1196,16 @@ ${product.seller?.rating || product.sellerRating || '4.5'}
 <div class="recently-viewed-section" style="padding: 2rem 0 1rem;">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
 <h2 style="font-size:1.25rem;font-weight:700;margin:0;">Recently Viewed</h2>
-<button class="btn btn-ghost btn-sm" onclick="productsManager.clearRecentlyViewed(); Pages.renderBrowse();" style="font-size:0.8rem;">Clear</button>
+<button class="btn btn-ghost btn-sm" data-action="page-clear-recently-viewed" style="font-size:0.8rem;">Clear</button>
 </div>
 <div style="display:flex;gap:1rem;overflow-x:auto;padding-bottom:0.5rem;scrollbar-width:thin;">
 ${recentlyViewed
   .map(product => {
     const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
     return `
-<div onclick="Pages.renderProductDetail('${product.id}')" style="min-width:160px;max-width:160px;cursor:pointer;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--neutral-200);transition:box-shadow 0.2s;background:var(--bg-primary);" onmouseover="this.style.boxShadow='var(--shadow-card-hover)'" onmouseout="this.style.boxShadow='none'">
+<div data-action="page-render-product-detail" data-product-id="${product.id}" style="min-width:160px;max-width:160px;cursor:pointer;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--neutral-200);transition:box-shadow 0.2s;background:var(--bg-primary);" data-mouseover-action="page-card-shadow-hover" data-mouseout-action="page-card-shadow-out">
 <div style="aspect-ratio:1;overflow:hidden;background:var(--neutral-100);">
-<img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg';this.onerror=null;">
+<img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" data-fallback="/assets/images/products/no-image.svg">
 </div>
 <div style="padding:0.5rem;">
 <div style="font-size:0.75rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${_pageEsc(product.title)}</div>
@@ -1426,7 +1426,7 @@ ${recentlyViewed
         <div class="pd-layout">
           <!-- Image Section -->
           <div class="pd-image-section">
-            <img src="${(product.images && product.images[0]) || '/assets/images/products/no-image.svg'}" alt="${product.title}" class="pd-main-image" onerror="this.src='/assets/images/products/no-image.svg'" />
+            <img src="${(product.images && product.images[0]) || '/assets/images/products/no-image.svg'}" alt="${product.title}" class="pd-main-image" data-fallback="/assets/images/products/no-image.svg" />
           </div>
 
           <!-- Info Section -->
@@ -1503,7 +1503,7 @@ ${
 ${product.variants
   .map(
     (v, i) => `
-<button class="pd-variant-btn" data-variant-index="${i}" onclick="Pages.selectVariant(this, ${i})">
+<button class="pd-variant-btn" data-variant-index="${i}" data-action="page-select-variant">
 <span class="pd-variant-label">${v.label}</span>
 <span class="pd-variant-value">${v.value}</span>
 ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
@@ -1537,7 +1537,7 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
       html += '<div class="color-swatch-row">';
       colors.forEach(function(c, i) {
         var cls = 'color-swatch' + (i === 0 ? ' selected' : '') + (c.stock <= 0 ? ' out-of-stock' : '');
-        html += '<button type="button" class="' + cls + '" data-color-id="' + c.id + '" data-color-name="' + c.color_name + '" data-color-hex="' + c.color_hex + '" data-color-stock="' + c.stock + '" data-color-image="' + (c.image_url || '') + '" style="background:' + c.color_hex + ';" onclick="Pages.selectColor(this)"' + (c.stock <= 0 ? ' disabled' : '') + '></button>';
+        html += '<button type="button" class="' + cls + '" data-color-id="' + c.id + '" data-color-name="' + c.color_name + '" data-color-hex="' + c.color_hex + '" data-color-stock="' + c.stock + '" data-color-image="' + (c.image_url || '') + '" style="background:' + c.color_hex + ';" data-action="page-select-color"' + (c.stock <= 0 ? ' disabled' : '') + '></button>';
       });
       html += '</div>';
       html += '<div class="color-name-display">' + colors[0].color_name + '</div>';
@@ -1559,14 +1559,14 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
 
   <!-- Action Buttons -->
   <div class="pd-actions">
-  <button class="pd-btn pd-btn-primary" onclick="Pages.addToCartWithVariant('${productId}')">
+  <button class="pd-btn pd-btn-primary" data-action="page-add-to-cart-with-variant" data-product-id="${productId}">
           ${Icons.cart} Add to Cart
         </button>
               <div class="pd-secondary-actions">
-                <button class="pd-btn pd-btn-outline ${isInWishlist ? 'active' : ''}" onclick="Pages.toggleWishlistDetail('${productId}')">
+                <button class="pd-btn pd-btn-outline ${isInWishlist ? 'active' : ''}" data-action="page-toggle-wishlist-detail" data-product-id="${productId}">
                   ${isInWishlist ? Icons.heart + ' Saved' : Icons.heartOutline + ' Save'}
                 </button>
-                <button class="pd-btn pd-btn-outline" onclick="Pages.shareProduct('${productId}')">${Icons.upload} Share</button>
+                <button class="pd-btn pd-btn-outline" data-action="page-share-product" data-product-id="${productId}">${Icons.upload} Share</button>
               </div>
             </div>
           </div>
@@ -1577,7 +1577,7 @@ ${v.price > 0 ? `<span class="pd-variant-price">+GHS ${v.price}</span>` : ''}
           <div style="background: var(--bg-primary); border-radius: 1rem; border: 1px solid var(--neutral-200); padding: 2rem;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
               <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--neutral-900); margin: 0;">Seller Reviews</h2>
-              <button onclick="Pages._showReviewModal('${product.seller?.id || product.seller}','${product.id}')" style="padding: 0.5rem 1rem; background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer;">Write Review</button>
+              <button data-action="page-show-review-modal" data-seller-id="${product.seller?.id || product.seller}" data-product-id="${product.id}" style="padding: 0.5rem 1rem; background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer;">Write Review</button>
             </div>
             <div id="product-reviews-container">
               <div style="text-align: center; padding: 2rem; color: var(--neutral-600);">
@@ -2023,12 +2023,12 @@ Share on Twitter
 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
 Share on Facebook
 </a>
-<button class="btn btn-outline" style="display:flex;align-items:center;gap:0.75rem;justify-content:center;" onclick="Pages.copyShareLink('${shareUrl}')">
+<button class="btn btn-outline" style="display:flex;align-items:center;gap:0.75rem;justify-content:center;" data-action="page-copy-share-link" data-share-url="${shareUrl}">
 ${Icons.copy || '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>'}
 Copy Link
 </button>
 </div>
-<button class="btn btn-ghost" style="width:100%;margin-top:1rem;" onclick="document.getElementById('share-overlay').remove()">Cancel</button>
+<button class="btn btn-ghost" style="width:100%;margin-top:1rem;" data-action="page-remove-share-overlay">Cancel</button>
 </div>
 `;
 
@@ -2191,7 +2191,7 @@ Copy Link
             <div class="empty-cart-icon">${Icons.cart}</div>
             <h3>Your cart is empty</h3>
             <p>Looks like you haven't added anything to your cart yet.</p>
-            <button class="btn btn-primary" onclick="Pages.renderBrowse()">Start Shopping</button>
+            <button class="btn btn-primary" data-action="page-render-browse">Start Shopping</button>
           </div>
         </div>
       `;
@@ -2228,7 +2228,7 @@ Copy Link
                 item => `
               <div class="cart-item" data-product-id="${item.product.id}">
                 <div class="cart-item-image">
-  <img src="${item.product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${item.product.title}" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
+  <img src="${item.product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${item.product.title}" loading="lazy" data-fallback="/assets/images/products/no-image.svg" />
                 </div>
                 
   <div class="cart-item-details">
@@ -2239,14 +2239,14 @@ Copy Link
   </div>
 
   <div class="cart-item-quantity">
-  <button class="quantity-btn" onclick="Pages.decrementCartQuantity('${item.product.id}')">−</button>
+  <button class="quantity-btn" data-action="page-decrement-cart-quantity" data-product-id="${item.product.id}">−</button>
   <span class="quantity-display">${item.quantity}</span>
-  <button class="quantity-btn" onclick="Pages.incrementCartQuantity('${item.product.id}')">+</button>
+  <button class="quantity-btn" data-action="page-increment-cart-quantity" data-product-id="${item.product.id}">+</button>
   </div>
 
   <div class="cart-item-actions">
   <div class="cart-item-total">${Formatter.formatPrice((item.product.price + (item.variant ? item.variant.price || 0 : 0)) * item.quantity)}</div>
-  <button class="remove-btn" onclick="Pages.removeFromCart('${item.product.id}')">Remove</button>
+  <button class="remove-btn" data-action="page-remove-from-cart" data-product-id="${item.product.id}">Remove</button>
   </div>
               </div>
             `
@@ -2280,13 +2280,13 @@ Copy Link
     if (!isVerified) {
       return `<div style="background: rgba(255,152,0,0.1); border: 1px solid rgba(255,152,0,0.3); border-radius: 0.5rem; padding: 0.75rem 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
         <span style="font-size: 1.25rem;">⚠</span>
-        <span style="font-size: 0.875rem; color: #ff9800;">You must be <strong>verified as a student</strong> to make purchases. <a href="#/verification" onclick="Pages.renderStudentVerification(); return false;" style="color: #ff9800; text-decoration: underline; cursor: pointer;">Verify now</a></span>
+        <span style="font-size: 0.875rem; color: #ff9800;">You must be <strong>verified as a student</strong> to make purchases. <a href="#/verification" data-action="page-verify-now-link" style="color: #ff9800; text-decoration: underline; cursor: pointer;">Verify now</a></span>
       </div>`;
     }
     return '';
   })()}
 
-  <button class="btn btn-primary checkout-btn" onclick="event.preventDefault(); Pages.handleProceedToCheckout();">
+  <button class="btn btn-primary checkout-btn" data-action="page-proceed-to-checkout">
               Proceed to Checkout
             </button>
             
@@ -2517,7 +2517,7 @@ Copy Link
         </nav>
         <h1 style="margin-bottom: 1.5rem;">Checkout</h1>
         
-        <form id="checkout-form" onsubmit="Pages.handleCheckout(event)">
+        <form id="checkout-form" data-action="page-checkout-submit">
           <div class="checkout-container">
             <div class="checkout-main">
               <!-- Delivery Method -->
@@ -2527,7 +2527,7 @@ Copy Link
                   ${deliveryOptions
                     .map(
                       option => `
-                    <div class="option-card" onclick="Pages.selectDeliveryOption('${option.value}', this)">
+                    <div class="option-card" data-action="page-select-delivery-option" data-option-value="${option.value}">
                       <input type="radio" name="deliveryMode" value="${option.value}" id="delivery-${option.value}" />
                       <div class="option-icon">${option.icon}</div>
                       <div class="option-label">${option.label}</div>
@@ -2578,7 +2578,7 @@ Copy Link
                   ${paymentOptions
                     .map(
                       option => `
-                    <div class="option-card" onclick="Pages.selectPaymentOption('${option.value}', this)">
+                    <div class="option-card" data-action="page-select-payment-option" data-option-value="${option.value}">
                       <input type="radio" name="paymentMode" value="${option.value}" id="payment-${option.value}" />
                       <div class="option-icon">${option.icon}</div>
                       <div class="option-label">${option.label}</div>
@@ -2600,7 +2600,7 @@ Copy Link
                     item => `
   <div class="order-item">
   <div class="order-item-image">
-        <img src="${(item.product.images && item.product.images[0]) || '/assets/images/products/no-image.svg'}" alt="${item.product.title}" onerror="this.src='/assets/images/products/no-image.svg'" />
+        <img src="${(item.product.images && item.product.images[0]) || '/assets/images/products/no-image.svg'}" alt="${item.product.title}" data-fallback="/assets/images/products/no-image.svg" />
   </div>
   <div class="order-item-details">
   <div class="order-item-title">${_pageEsc(item.product.title)}</div>
@@ -2981,13 +2981,13 @@ Copy Link
         </div>
 
   <div class="confirmation-actions">
-  <button class="btn btn-primary" onclick="Pages.renderBrowse()">
+  <button class="btn btn-primary" data-action="page-render-browse">
   Continue Shopping
   </button>
-  <button class="btn btn-outline" onclick="Pages.renderOrders()">
+  <button class="btn btn-outline" data-action="page-render-orders">
   View My Orders
   </button>
-  <button class="btn btn-outline" onclick="Pages.downloadReceipt('${order.id}')">
+  <button class="btn btn-outline" data-action="page-download-receipt" data-order-id="${order.id}">
   ${Icons.download || ''} Download Receipt
   </button>
   </div>
@@ -3021,7 +3021,7 @@ Copy Link
 <div class="empty-cart-icon">${Icons.package}</div>
         <h3>No orders yet</h3>
             <p>You haven't placed any orders yet.</p>
-            <button class="btn btn-primary" onclick="Pages.renderBrowse()">Start Shopping</button>
+            <button class="btn btn-primary" data-action="page-render-browse">Start Shopping</button>
           </div>
         </div>
       `;
@@ -3072,7 +3072,7 @@ Copy Link
                   .map(
                     item => `
                   <div style="display: flex; gap: 1rem; margin-bottom: 0.75rem;">
-                    <img src="${item.image || '/assets/images/products/no-image.svg'}" alt="${item.title}" style="width: 60px; height: 60px; object-fit: cover; border-radius: var(--radius-md);" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
+                    <img src="${item.image || '/assets/images/products/no-image.svg'}" alt="${item.title}" style="width: 60px; height: 60px; object-fit: cover; border-radius: var(--radius-md);" loading="lazy" data-fallback="/assets/images/products/no-image.svg" />
                     <div style="flex: 1;">
                       <div style="font-weight: 500;">${item.title}</div>
                       <div style="color: var(--neutral-500); font-size: 0.875rem;">Qty: ${item.quantity}</div>
@@ -3248,7 +3248,7 @@ ${isCurrent ? '<div style="width:6px;height:6px;border-radius:50%;background:whi
 <div style="background:var(--bg-primary);border-radius:var(--radius-xl);padding:2rem;max-width:600px;width:100%;box-shadow:var(--shadow-xl);max-height:90vh;overflow-y:auto;">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
 <h2 style="margin:0;">Order #${order.orderNumber}</h2>
-<button class="btn btn-ghost btn-sm" onclick="document.getElementById('order-detail-overlay').remove()">Close</button>
+<button class="btn btn-ghost btn-sm" data-action="page-remove-order-detail">Close</button>
 </div>
 ${order.trackingNumber ? `<div style="background:rgba(0,70,190,0.08);border:1px solid rgba(0,70,190,0.2);border-radius:0.5rem;padding:0.75rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.75rem;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0046be" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><div><div style="font-size:0.75rem;color:#666;text-transform:uppercase;letter-spacing:0.5px;">Tracking Number</div><div style="font-family:monospace;font-weight:700;color:#0046be;letter-spacing:0.05em;font-size:1rem;">${order.trackingNumber}</div></div></div>` : ''}
 <span class="condition-badge ${order.status}" style="background:${this.getStatusColor(order.status)};color:white;padding:0.25rem 0.75rem;border-radius:999px;font-size:0.875rem;margin-bottom:1rem;display:inline-block;">
@@ -3261,7 +3261,7 @@ ${order.items
   .map(
     item => `
 <div style="display:flex;gap:1rem;margin-bottom:0.75rem;align-items:center;">
-  <img src="${item.image || '/assets/images/products/no-image.svg'}" alt="${item.title}" style="width:50px;height:50px;object-fit:cover;border-radius:var(--radius-md);" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
+  <img src="${item.image || '/assets/images/products/no-image.svg'}" alt="${item.title}" style="width:50px;height:50px;object-fit:cover;border-radius:var(--radius-md);" loading="lazy" data-fallback="/assets/images/products/no-image.svg" />
 <div style="flex:1;">
 <div style="font-weight:500;">${item.title}</div>
 <div style="color:var(--neutral-500);font-size:0.85rem;">Qty: ${item.quantity}</div>
@@ -3278,8 +3278,8 @@ ${order.items
   <div style="font-weight:700;font-size:1.25rem;">${Formatter.formatPrice(order.pricing.grandTotal)}</div>
   </div>
   <div style="display:flex;gap:0.5rem;align-items:center;">
-  <button class="btn btn-outline btn-sm" onclick="Pages.downloadReceipt('${order.id}')">Download Receipt</button>
-  <button class="btn btn-ghost btn-sm" onclick="document.getElementById('order-detail-overlay').remove()">Close</button>
+  <button class="btn btn-outline btn-sm" data-action="page-download-receipt" data-order-id="${order.id}">Download Receipt</button>
+  <button class="btn btn-ghost btn-sm" data-action="page-remove-order-detail">Close</button>
   </div>
   </div>
 </div>
@@ -3468,7 +3468,7 @@ ${order.items
 <div class="empty-cart-icon">${Icons.heartOutline}</div>
 <h3>Your wishlist is empty</h3>
 <p>Save your favorite items to see them here.</p>
-<button class="btn btn-primary" onclick="Pages.renderBrowse()">Browse Products</button>
+<button class="btn btn-primary" data-action="page-render-browse">Browse Products</button>
 </div>
 </div>
 `;
@@ -3511,10 +3511,10 @@ ${priceDropBanner}
 <p style="color: var(--neutral-600); margin: 0.5rem 0 0;">${wishlistProducts.length} item${wishlistProducts.length !== 1 ? 's' : ''} saved</p>
 </div>
 <div style="display: flex; gap: 0.75rem;">
-<button class="btn btn-outline" onclick="Pages.addAllWishlistToCart()" title="Add all to cart">
+<button class="btn btn-outline" data-action="page-add-all-wishlist-to-cart" title="Add all to cart">
 ${Icons.cart} Add All to Cart
 </button>
-<button class="btn btn-outline" style="color: var(--color-danger); border-color: var(--color-danger-light);" onclick="Pages.clearWishlist()" title="Remove all">
+<button class="btn btn-outline" style="color: var(--color-danger); border-color: var(--color-danger-light);" data-action="page-clear-wishlist" title="Remove all">
 ${Icons.trash} Clear All
 </button>
 </div>
@@ -3532,11 +3532,11 @@ ${wishlistProducts
     const conditionLabel = Pages.formatConditionLabel(product.condition || 'good');
     const conditionClass = product.condition || 'good';
     return `
-<div class="wishlist-card" onclick="Pages.renderProductDetail('${product.id}')">
+<div class="wishlist-card" data-action="page-render-product-detail" data-product-id="${product.id}">
 <div class="wishlist-card-image">
-<img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg';this.onerror=null;">
+<img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy" data-fallback="/assets/images/products/no-image.svg">
 <span class="condition-badge ${conditionClass}" style="position:absolute;top:0.5rem;left:0.5rem;">${conditionLabel}</span>
-<button class="wishlist-card-remove" onclick="event.stopPropagation(); Pages.toggleWishlistDetail('${product.id}')" title="Remove from wishlist">
+<button class="wishlist-card-remove" data-action="page-toggle-wishlist-detail-stop" data-product-id="${product.id}" title="Remove from wishlist">
 <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
 </button>
 </div>
@@ -3551,8 +3551,8 @@ ${wishlistProducts
 ${product.seller?.rating ? `<span style="font-size:0.8rem;color:var(--neutral-500);">★ ${product.seller.rating}</span>` : ''}
 </div>
 <div class="wishlist-card-actions">
-<button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); cartManager?.add(${JSON.stringify(product).replace(/"/g, '&quot;')}); Pages.updateCartBadge(); notificationManager?.success('Added to Cart','Item added to your cart');" style="flex:1;">Add to Cart</button>
-<button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); Pages.shareProduct('${product.id}')" title="Share">
+<button class="btn btn-primary btn-sm" data-action="page-wishlist-add-to-cart" data-product="${JSON.stringify(product).replace(/"/g, '&quot;')}" style="flex:1;">Add to Cart</button>
+<button class="btn btn-outline btn-sm" data-action="page-share-product-stop" data-product-id="${product.id}" title="Share">
 ${Icons.upload}
 </button>
 </div>
@@ -3705,7 +3705,7 @@ font-size: 0.8rem;
             </div>
 
             <div class="dv-tabs">
-              <button class="dv-tab active" data-tab="overview" onclick="Pages.switchDashboardTab('overview')">
+              <button class="dv-tab active" data-tab="overview" data-action="page-switch-dashboard-tab">
                 <span class="dv-tab-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect width="7" height="9" x="3" y="3" rx="1" />
@@ -3717,7 +3717,7 @@ font-size: 0.8rem;
                 <span class="dv-tab-label">Overview</span>
               </button>
 
-              <button class="dv-tab" data-tab="orders" onclick="Pages.switchDashboardTab('orders')">
+              <button class="dv-tab" data-tab="orders" data-action="page-switch-dashboard-tab">
                 <span class="dv-tab-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
@@ -3729,7 +3729,7 @@ font-size: 0.8rem;
                 ${orders.length > 0 ? `<span class="dv-tab-badge">${orders.length}</span>` : ''}
               </button>
 
-              <button class="dv-tab" data-tab="wishlist" onclick="Pages.switchDashboardTab('wishlist')">
+              <button class="dv-tab" data-tab="wishlist" data-action="page-switch-dashboard-tab">
                 <span class="dv-tab-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -3739,7 +3739,7 @@ font-size: 0.8rem;
                 ${wishlist.length > 0 ? `<span class="dv-tab-badge">${wishlist.length}</span>` : ''}
               </button>
 
-              <button class="dv-tab" data-tab="cart" onclick="Pages.switchDashboardTab('cart')">
+              <button class="dv-tab" data-tab="cart" data-action="page-switch-dashboard-tab">
                 <span class="dv-tab-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="8" cy="21" r="1" />
@@ -3751,7 +3751,7 @@ font-size: 0.8rem;
                 ${cartCount > 0 ? `<span class="dv-tab-badge">${cartCount}</span>` : ''}
               </button>
 
-              <button class="dv-tab" data-tab="profile" onclick="Pages.switchDashboardTab('profile')">
+              <button class="dv-tab" data-tab="profile" data-action="page-switch-dashboard-tab">
                 <span class="dv-tab-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -3761,7 +3761,7 @@ font-size: 0.8rem;
                 <span class="dv-tab-label">Profile</span>
               </button>
 
-              <button class="dv-tab" data-tab="settings" onclick="Pages.switchDashboardTab('settings')">
+              <button class="dv-tab" data-tab="settings" data-action="page-switch-dashboard-tab">
                 <span class="dv-tab-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
@@ -3813,7 +3813,7 @@ font-size: 0.8rem;
 
               <div class="dv-section-header">
                 <h2 class="dv-section-title">Recent Orders</h2>
-                <button class="dv-section-link" onclick="Pages.switchDashboardTab('orders')">View All →</button>
+                <button class="dv-section-link" data-action="page-switch-dashboard-tab" data-tab="orders">View All →</button>
               </div>
 
               <div class="dv-orders">
@@ -3891,11 +3891,11 @@ font-size: 0.8rem;
                   ${wishlist
                     .map(
                       product => `
-                    <div class="store-product-card" onclick="Pages.renderProductDetail('${product.id}')">
+                    <div class="store-product-card" data-action="page-render-product-detail" data-product-id="${product.id}">
                       <div class="store-product-image">
-                        <img src="${(product.images && product.images[0]) || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg'" />
+                        <img src="${(product.images && product.images[0]) || '/assets/images/products/no-image.svg'}" alt="${product.title}" loading="lazy" data-fallback="/assets/images/products/no-image.svg" />
                         <span class="store-condition-badge ${product.condition}">${product.condition.charAt(0).toUpperCase() + product.condition.slice(1)}</span>
-                        <button class="store-wishlist-btn active" onclick="Pages.toggleWishlist(event, '${product.id}'); Pages.renderDashboard();">${Icons.heart}</button>
+                        <button class="store-wishlist-btn active" data-action="page-toggle-wishlist-and-dashboard" data-product-id="${product.id}">${Icons.heart}</button>
                       </div>
                       <div class="store-product-info">
           <h3 class="store-product-title">${_pageEsc(product.title)}</h3>
@@ -3945,8 +3945,8 @@ font-size: 0.8rem;
                     .join('')}
                 </div>
                 <div style="margin-top:1.5rem;display:flex;gap:0.75rem;">
-                  <button class="dv-btn dv-btn-outline" onclick="cartManager.clear(); Pages.renderDashboard();">Clear Cart</button>
-                  <button class="dv-btn dv-btn-primary" onclick="event.preventDefault(); Pages.handleProceedToCheckout();">Proceed to Checkout →</button>
+                  <button class="dv-btn dv-btn-outline" data-action="page-clear-cart-and-dashboard">Clear Cart</button>
+                  <button class="dv-btn dv-btn-primary" data-action="page-proceed-to-checkout">Proceed to Checkout →</button>
                 </div>
               `
                   : `
@@ -3965,7 +3965,7 @@ font-size: 0.8rem;
               <p class="dv-panel-subtitle">Update your personal information.</p>
 
               <div class="dv-profile">
-                <form id="profile-form" onsubmit="Pages.handleProfileUpdate(event)">
+                <form id="profile-form" data-action="page-profile-update">
                   <div class="dv-form-group">
                     <label class="dv-form-label">Full Name</label>
                     <input type="text" id="fullName" name="fullName" class="dv-form-input" value="${currentUser.fullName}" required />
@@ -4009,7 +4009,7 @@ font-size: 0.8rem;
                   </div>
                 </div>
                 <div style="margin-top:2rem;display:flex;flex-direction:column;gap:0.75rem;">
-                  <button class="dv-btn dv-btn-outline" onclick="Pages.handleLogout();">
+                  <button class="dv-btn dv-btn-outline" data-action="page-handle-logout">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
                     Log Out
                   </button>
@@ -4370,7 +4370,7 @@ font-size: 0.8rem;
       <div class="container" style="padding: 2rem 1rem; max-width: 800px;">
         <h1 style="margin-bottom: 1.5rem;">My Profile</h1>
         <div class="auth-card">
-          <form id="profile-form" onsubmit="Pages.handleProfileUpdate(event)">
+          <form id="profile-form" data-action="page-profile-update">
             <div class="form-group">
               <label for="fullName" class="required">Full Name</label>
               <input type="text" id="fullName" name="fullName" class="form-control" value="${currentUser.fullName}" required />
@@ -4390,7 +4390,7 @@ font-size: 0.8rem;
             <button type="submit" class="btn btn-primary btn-block">Update Profile</button>
           </form>
           <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--neutral-200);">
-            <button class="btn btn-outline btn-block" onclick="Pages.handleLogout()">Logout</button>
+            <button class="btn btn-outline btn-block" data-action="page-handle-logout">Logout</button>
           </div>
         </div>
       </div>
@@ -4445,8 +4445,8 @@ font-size: 0.8rem;
             ${
               notifications.length > 0
                 ? `
-              <button onclick="notificationManager?.deleteRead();Pages.renderNotifications();" style="padding:0.5rem 1rem;border:1px solid var(--neutral-300,#d4d4d4);border-radius:0.5rem;background:transparent;cursor:pointer;font-size:0.875rem;color:var(--text-primary,#111);">Clear Read</button>
-              <button onclick="if(confirm('Delete all notifications?')){notificationManager?.deleteAll();Pages.renderNotifications();}" style="padding:0.5rem 1rem;border:1px solid var(--color-danger,#ef4444);border-radius:0.5rem;background:transparent;cursor:pointer;font-size:0.875rem;color:var(--color-danger,#ef4444);">Clear All</button>
+              <button data-action="page-notifications-clear-read" style="padding:0.5rem 1rem;border:1px solid var(--neutral-300,#d4d4d4);border-radius:0.5rem;background:transparent;cursor:pointer;font-size:0.875rem;color:var(--text-primary,#111);">Clear Read</button>
+              <button data-action="page-notifications-clear-all" style="padding:0.5rem 1rem;border:1px solid var(--color-danger,#ef4444);border-radius:0.5rem;background:transparent;cursor:pointer;font-size:0.875rem;color:var(--color-danger,#ef4444);">Clear All</button>
             `
                 : ''
             }
@@ -4468,7 +4468,7 @@ font-size: 0.8rem;
                     ${notificationManager?.formatTime(n.createdAt)}
                   </div>
                 </div>
-                <button class="remove-btn" onclick="notificationManager?.delete('${n.id}'); Pages.renderNotifications();">×</button>
+                <button class="remove-btn" data-action="page-notification-delete" data-notification-id="${n.id}">×</button>
               </div>
             `
               )
@@ -4498,7 +4498,7 @@ font-size: 0.8rem;
       mainContent.innerHTML = `
         <div class="container" style="padding: 2rem 1rem; text-align: center;">
           <h1>Order not found</h1>
-          <button class="btn btn-primary" onclick="Pages.renderBrowse()">Continue Shopping</button>
+          <button class="btn btn-primary" data-action="page-render-browse">Continue Shopping</button>
         </div>
       `;
       return;
@@ -4544,7 +4544,7 @@ font-size: 0.8rem;
         <div class="confirmation-icon">${Icons.checkCircle}</div>
         <h1>Payment Successful!</h1>
         <p style="color: #9ca3af; margin-bottom: 2rem;">Your payment has been processed successfully.</p>
-        <button class="btn btn-primary" onclick="Pages.renderBrowse()">Continue Shopping</button>
+        <button class="btn btn-primary" data-action="page-render-browse">Continue Shopping</button>
       </div>
     `;
   }
@@ -6781,7 +6781,7 @@ font-size: 0.8rem;
           const img = (p.images && p.images[0]) || '/assets/images/products/no-image.svg';
           return `
             <div class="product-cell">
-              <img src="${_pageSafeUrl(img)}" alt="${_pageEsc(p.title || '')}" class="product-image-small" loading="lazy" onerror="this.onerror=null;this.src='/assets/images/products/no-image.svg';" />
+              <img src="${_pageSafeUrl(img)}" alt="${_pageEsc(p.title || '')}" class="product-image-small" loading="lazy" data-fallback="/assets/images/products/no-image.svg" />
               <span class="adm-text-strong">${_pageEsc(p.title || 'Untitled')}</span>
             </div>
           `;
@@ -9248,7 +9248,7 @@ font-size: 0.8rem;
     // Escape every value we interpolate into HTML. URLs come from the
     // backend response and could include breakout payloads if any
     // upstream write path was compromised. data-url is the sanitized URL;
-    // we do NOT inline the URL into JS code (no onclick="...,'url'").
+    // we do NOT inline the URL into JS code (no inline handler string carrying the URL).
     const safeProductId = _pageEsc(productId);
     const existingImageWrappers = (product.images || []).map(url => {
       const safeUrl = _pageSafeUrl(url);
@@ -9879,7 +9879,7 @@ font-size: 0.8rem;
           <div style="font-size: 4rem; margin-bottom: 1rem;">❌</div>
           <h1 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-primary, #111827);">Invalid Link</h1>
           <p style="color: var(--text-secondary, #6b7280); margin-bottom: 2rem;">This confirmation link is invalid or has expired.</p>
-          <button class="btn btn-primary" onclick="router.goToHash('/')">Go Home</button>
+          <button class="btn btn-primary" data-action="page-goto-hash" data-hash="/">Go Home</button>
         </div>
       `;
       window.scrollTo(0, 0);
@@ -9925,7 +9925,7 @@ font-size: 0.8rem;
     }
 
     const { status, message } = params;
-    let icon, title, description, buttonText, buttonAction;
+    let icon, title, description, buttonText, buttonHash;
 
     if (status === 'success' || status === 'already_active') {
       icon = '🎉';
@@ -9935,14 +9935,14 @@ font-size: 0.8rem;
           ? "You're already on our newsletter list. Thanks for being part of JERTS CART!"
           : "Welcome to JERTS CART! You'll now receive the best deals, selling tips, and campus marketplace updates. Check your email for a welcome code!";
       buttonText = 'Start Shopping';
-      buttonAction = "router.goToHash('/browse')";
+      buttonHash = '/browse';
     } else {
       icon = '❌';
       title = 'Confirmation Failed';
       description =
         message || 'Something went wrong. Please try subscribing again or contact support.';
       buttonText = 'Try Again';
-      buttonAction = "router.goToHash('/')";
+      buttonHash = '/';
     }
 
     mainContent.innerHTML = `
@@ -9951,8 +9951,8 @@ font-size: 0.8rem;
         <h1 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-primary, #111827);">${title}</h1>
         <p style="color: var(--text-secondary, #6b7280); margin-bottom: 2rem; line-height: 1.6;">${description}</p>
         <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-          <button class="btn btn-primary" onclick="${buttonAction}; return false;">${buttonText}</button>
-          <button class="btn btn-outline" onclick="router.goToHash('/')">Go Home</button>
+          <button class="btn btn-primary" data-action="page-goto-hash-confirm" data-hash="${buttonHash}">${buttonText}</button>
+          <button class="btn btn-outline" data-action="page-goto-hash" data-hash="/">Go Home</button>
         </div>
       </div>
     `;
@@ -9996,7 +9996,7 @@ font-size: 0.8rem;
         <p style="color:var(--text-secondary,#6b7280);margin-bottom:2rem;font-size:1.05rem;">Enter your tracking number to check your order status.</p>
         <div style="display:flex;gap:0.75rem;margin-bottom:2rem;">
           <input id="track-input" type="text" placeholder="e.g. UHT-260513-A7K9" style="flex:1;padding:0.75rem 1rem;border:1px solid var(--border-color,#e5e7eb);border-radius:0.5rem;font-size:1rem;font-family:monospace;outline:none;" />
-          <button onclick="Pages._doTrackOrder()" class="btn btn-primary" style="white-space:nowrap;">Track</button>
+          <button data-action="page-do-track-order" class="btn btn-primary" style="white-space:nowrap;">Track</button>
         </div>
         <div id="track-result"></div>
       </div>
@@ -10097,6 +10097,235 @@ font-size: 0.8rem;
     }
   }
 }
+
+// ---------------------------------------------------------------------------
+// Delegated event wiring for the migrated inline handlers (Task 13).
+//
+// Every former inline on* attribute in this file now carries a data-action
+// (mouseover/mouseout use data-mouseover-action / data-mouseout-action)
+// naming one entry in the registries below. Dispatch is event-scoped: the
+// click listener only consults PAGE_ACTIONS, the change listener only
+// PAGE_CHANGE_ACTIONS, etc., so a click action can never fire on hover (or
+// vice versa). Each dispatch walks the event's composed path innermost-first
+// because inline handlers used to fire on EVERY ancestor that carried one —
+// stopPropagation (explicit in the action, or inside a callee such as
+// Pages.toggleWishlist) ends the walk, pinning the old bubbling behavior for
+// nested cards (quick-add / wishlist buttons inside clickable product cards).
+//
+// TODO: security review / CSP — registry names are prefixed `page-` so they
+// can never collide with data-action values already consumed elsewhere
+// (add-to-cart, export-my-data, show-delete-modal, retry-blockers,
+// retry-sync, copy/open/dismiss, back-to-products in this file; nav /
+// toggle-dark / logout in layout.js; the auth-pages.js card listeners).
+// ---------------------------------------------------------------------------
+
+let _pageDelegatesInstalled = false;
+const PAGE_ACTIONS = {
+  'page-reload-window': () => window.location.reload(),
+  'page-filter-by-category': el => BrowsePageMethods.filterByCategory(el.dataset.catId),
+  'page-toggle-mobile-filters': () => BrowsePageMethods.toggleMobileFilters(),
+  'page-reset-condition-filter': () => BrowsePageMethods.resetConditionFilter(),
+  'page-reset-price-filter': () => BrowsePageMethods.resetPriceFilter(),
+  'page-apply-price-filter': () => BrowsePageMethods.applyPriceFilter(),
+  'page-set-rating-filter': el => BrowsePageMethods.setRatingFilter(Number(el.dataset.rating)),
+  'page-reset-browse-filters': () => Pages.resetBrowseFilters(),
+  'page-go-to-browse-page': el => Pages.goToBrowsePage(Number(el.dataset.page)),
+  'page-render-product-detail': el => Pages.renderProductDetail(el.dataset.productId),
+  'page-toggle-wishlist': (el, e) => {
+    e.stopPropagation();
+    Pages.toggleWishlist(e, el.dataset.productId);
+  },
+  'page-toggle-wishlist-card': (el, e) => Pages.toggleWishlist(e, el.dataset.productId),
+  'page-render-product-detail-stop': (el, e) => {
+    e.stopPropagation();
+    Pages.renderProductDetail(el.dataset.productId);
+  },
+  'page-bb-add-to-cart': (el, e) => {
+    e.stopPropagation();
+    cartManager.add(JSON.parse(el.dataset.product));
+    Pages.updateCartBadge();
+  },
+  'page-clear-recently-viewed': () => {
+    productsManager.clearRecentlyViewed();
+    Pages.renderBrowse();
+  },
+  'page-select-variant': el => Pages.selectVariant(el, Number(el.dataset.variantIndex)),
+  'page-select-color': el => Pages.selectColor(el),
+  'page-add-to-cart-with-variant': el => Pages.addToCartWithVariant(el.dataset.productId),
+  'page-toggle-wishlist-detail': el => Pages.toggleWishlistDetail(el.dataset.productId),
+  'page-share-product': el => Pages.shareProduct(el.dataset.productId),
+  'page-show-review-modal': el => Pages._showReviewModal(el.dataset.sellerId, el.dataset.productId),
+  'page-copy-share-link': el => Pages.copyShareLink(el.dataset.shareUrl),
+  'page-remove-share-overlay': () => document.getElementById('share-overlay').remove(),
+  'page-render-browse': () => Pages.renderBrowse(),
+  'page-decrement-cart-quantity': el => Pages.decrementCartQuantity(el.dataset.productId),
+  'page-increment-cart-quantity': el => Pages.incrementCartQuantity(el.dataset.productId),
+  'page-remove-from-cart': el => Pages.removeFromCart(el.dataset.productId),
+  'page-verify-now-link': (el, e) => {
+    Pages.renderStudentVerification();
+    e.preventDefault();
+  },
+  'page-proceed-to-checkout': (el, e) => {
+    e.preventDefault();
+    Pages.handleProceedToCheckout();
+  },
+  'page-select-delivery-option': el => Pages.selectDeliveryOption(el.dataset.optionValue, el),
+  'page-select-payment-option': el => Pages.selectPaymentOption(el.dataset.optionValue, el),
+  'page-render-orders': () => Pages.renderOrders(),
+  'page-download-receipt': el => Pages.downloadReceipt(el.dataset.orderId),
+  'page-remove-order-detail': () => document.getElementById('order-detail-overlay').remove(),
+  'page-add-all-wishlist-to-cart': () => Pages.addAllWishlistToCart(),
+  'page-clear-wishlist': () => Pages.clearWishlist(),
+  'page-toggle-wishlist-detail-stop': (el, e) => {
+    e.stopPropagation();
+    Pages.toggleWishlistDetail(el.dataset.productId);
+  },
+  'page-wishlist-add-to-cart': (el, e) => {
+    e.stopPropagation();
+    cartManager?.add(JSON.parse(el.dataset.product));
+    Pages.updateCartBadge();
+    notificationManager?.success('Added to Cart', 'Item added to your cart');
+  },
+  'page-share-product-stop': (el, e) => {
+    e.stopPropagation();
+    Pages.shareProduct(el.dataset.productId);
+  },
+  'page-switch-dashboard-tab': el => Pages.switchDashboardTab(el.dataset.tab),
+  'page-toggle-wishlist-and-dashboard': (el, e) => {
+    Pages.toggleWishlist(e, el.dataset.productId);
+    Pages.renderDashboard();
+  },
+  'page-clear-cart-and-dashboard': () => {
+    cartManager.clear();
+    Pages.renderDashboard();
+  },
+  'page-handle-logout': () => Pages.handleLogout(),
+  'page-notifications-clear-read': () => {
+    notificationManager?.deleteRead();
+    Pages.renderNotifications();
+  },
+  'page-notifications-clear-all': () => {
+    if (confirm('Delete all notifications?')) {
+      notificationManager?.deleteAll();
+      Pages.renderNotifications();
+    }
+  },
+  'page-notification-delete': el => {
+    notificationManager?.delete(el.dataset.notificationId);
+    Pages.renderNotifications();
+  },
+  'page-goto-hash': el => router.goToHash(el.dataset.hash),
+  'page-goto-hash-confirm': (el, e) => {
+    router.goToHash(el.dataset.hash);
+    e.preventDefault();
+  },
+  'page-do-track-order': () => Pages._doTrackOrder(),
+};
+
+const PAGE_CHANGE_ACTIONS = {
+  'page-apply-browse-filters': () => BrowsePageMethods.applyBrowseFilters(),
+  'page-apply-sort-order': () => Pages.applySortOrder(),
+};
+
+const PAGE_SUBMIT_ACTIONS = {
+  'page-checkout-submit': (el, e) => Pages.handleCheckout(e),
+  'page-profile-update': (el, e) => Pages.handleProfileUpdate(e),
+};
+
+const PAGE_MOUSEOVER_ACTIONS = {
+  'page-card-shadow-hover': el => {
+    el.style.boxShadow = 'var(--shadow-card-hover)';
+  },
+};
+
+const PAGE_MOUSEOUT_ACTIONS = {
+  'page-card-shadow-out': el => {
+    el.style.boxShadow = 'none';
+  },
+};
+
+const _pageActionRegistries = {
+  click: [PAGE_ACTIONS, 'action'],
+  change: [PAGE_CHANGE_ACTIONS, 'action'],
+  submit: [PAGE_SUBMIT_ACTIONS, 'action'],
+  mouseover: [PAGE_MOUSEOVER_ACTIONS, 'mouseoverAction'],
+  mouseout: [PAGE_MOUSEOUT_ACTIONS, 'mouseoutAction'],
+};
+
+const _installPageDelegates = () => {
+  if (_pageDelegatesInstalled) {
+    return;
+  }
+  _pageDelegatesInstalled = true;
+  const run = e => {
+    const registry = _pageActionRegistries[e.type];
+    if (!registry) {
+      return;
+    }
+    const map = registry[0];
+    const key = registry[1];
+    // Fixed dispatch path: matches inline-handler semantics when an action
+    // re-renders (removes) part of the tree mid-dispatch.
+    const path = e.composedPath();
+    let firstError = null;
+    for (const node of path) {
+      if (!node || node.nodeType !== 1) {
+        continue;
+      }
+      const name = node.dataset[key];
+      if (!name) {
+        continue;
+      }
+      const action = map[name];
+      if (!action) {
+        continue;
+      }
+      try {
+        action(node, e);
+      } catch (err) {
+        // Inline handlers were independent listeners: one throwing never
+        // silenced the others. Record the first error, keep walking, then
+        // rethrow so the window error surface (Sentry) still sees it.
+        if (firstError === null) {
+          firstError = err;
+        }
+      }
+      if (e.cancelBubble) {
+        break;
+      }
+    }
+    if (firstError !== null) {
+      throw firstError;
+    }
+  };
+  document.addEventListener('click', e => run(e));
+  document.addEventListener('change', e => run(e));
+  document.addEventListener('mouseover', e => run(e));
+  document.addEventListener('mouseout', e => run(e));
+  document.addEventListener(
+    'submit',
+    e => {
+      const form = e.target.closest('form[data-action]');
+      if (form && PAGE_SUBMIT_ACTIONS[form.dataset.action]) {
+        e.preventDefault();
+        run(e);
+      }
+    },
+    true
+  );
+  document.addEventListener(
+    'error',
+    e => {
+      const img = e.target;
+      if (img instanceof HTMLImageElement && img.dataset.fallback && !img.dataset.fallbackApplied) {
+        img.dataset.fallbackApplied = '1';
+        img.src = img.dataset.fallback;
+      }
+    },
+    true
+  );
+};
+_installPageDelegates();
 
 // Export for ES6 modules
 export { Pages };
