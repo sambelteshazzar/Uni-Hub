@@ -110,6 +110,18 @@ today) and `no-shadow` is not in `eslint:recommended` — currently safe, but a
 future bare `data` reference anywhere else in pages.js would silently resolve
 to the namespace. Rename the local in a later pass.
 
+### F10 process — plan template for delegation infra was unsafe as written
+
+The plan's step-2 template dispatched click/change/keyup/submit against ONE
+flat `PAGE_ACTIONS` map, which would cross-fire (a hover action executing on
+click, click actions on keyup). As implemented in task 13 (`js/pages/pages.js`
+~10107+): per-event registries (`PAGE_ACTIONS`, `PAGE_CHANGE_ACTIONS`,
+`PAGE_SUBMIT_ACTIONS`, `PAGE_MOUSEOVER_ACTIONS`, `PAGE_MOUSEOUT_ACTIONS`),
+keyup listener dropped (no inventory sites), `composedPath()` walk honoring
+`e.cancelBubble` for nested-card semantics, and per-action try/catch with
+rethrow so one throwing handler doesn't silence the rest. Later handler tasks
+(14–15) must copy the implemented pattern, not the plan template.
+
 ## Security-review TODOs (pre-existing, need human review)
 
 - js/admin/admin-support.js:5 — ticket subjects/bodies are user-generated
