@@ -257,3 +257,10 @@ attached after render in a later CSP pass.
 - js/content/policies.js:9 — legal drafts (Ghana DPA alignment)
 
 ## Phase status — 1c complete: pages.js 10107 lines (was 11082 at plan baseline, -975), kit in js/ui/* (768 lines: layout 226 / overlays 215 / data 237 / feedback 90) + js/utils/escape.js (18), compat object pure spreads (9/5/8/4 = 26). Full e2e 45/45. Cache stamps 42/43/v43.
+
+## Phase 1 complete — status
+- js/pages/pages.js: 10,336 lines (was 11,082; 1c extraction ended at 10,107, 1d delegation registries added ~229 net)
+- js/ui/*: 26 kit methods across 4 files (layout 226 / overlays 215 / data 237 / feedback 90 = 768) + js/utils/escape.js (18)
+- inline handlers in js/**: 0 (grep -oE '\son[a-z]+=' → no output; index.html/public findings F12/F13 remain, HTML out of scope)
+- findings open: 14 of 15 (F4 resolved in task 15; all others unfixed by design — triage next, F14 critical first)
+- verification: frontend gates green (0 errors / 11 pre-existing warnings), backend 35 suites / 313 tests, full e2e 45/45, build exit 0, cache stamps 43/44/v44
