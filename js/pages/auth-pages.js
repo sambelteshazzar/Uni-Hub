@@ -166,7 +166,7 @@ const AuthPageMethods = {
     </div>
 
     <!-- Unified Verification Form -->
-    <form id="verification-form" class="verification-form active" onsubmit="Pages.handleVerification(event)">
+    <form id="verification-form" class="verification-form active" data-action="auth-verification-submit">
     <div class="form-group">
     <label for="v-full-name" class="required">Full Name</label>
     <input
@@ -261,11 +261,11 @@ const AuthPageMethods = {
 
     <div class="form-group">
     <label class="optional">Upload Admission Letter or Student ID (Optional, speeds up review)</label>
-    <div class="file-upload-area" onclick="document.getElementById('v-files').click()">
+    <div class="file-upload-area" data-action="auth-open-file-picker">
     <div class="upload-icon">${_Icons.upload}</div>
     <div class="upload-text">Click to upload or drag and drop</div>
     <div class="upload-hint">JPG, PNG or PDF. Max 5MB each. Multiple files allowed.</div>
-    <input type="file" id="v-files" name="files" multiple accept=".jpg,.jpeg,.png,.pdf" style="display: none;" onchange="Pages.handleFileSelect(event)" />
+    <input type="file" id="v-files" name="files" multiple accept=".jpg,.jpeg,.png,.pdf" style="display: none;" data-action="auth-file-select" />
     </div>
     <div id="file-list" class="file-list"></div>
     <small class="form-hint" style="display:block;margin-top:0.25rem;">Documents are visible only to moderators and are deleted 30 days after review.</small>
@@ -286,7 +286,7 @@ const AuthPageMethods = {
     </div>
 
     <div class="verification-actions">
-    <button type="button" class="btn btn-ghost" onclick="typeof window.router!=='undefined'&&window.router.navigate('/');Pages.renderLanding();">
+    <button type="button" class="btn btn-ghost" data-action="auth-verification-back">
     ← Back to Universities
     </button>
     <button type="submit" class="btn btn-primary">
@@ -300,7 +300,7 @@ const AuthPageMethods = {
     <ul>
     <li><strong>How long does review take?</strong> 24-48 hours, often faster.</li>
     <li><strong>Where do I check status?</strong> <a href="#/verification-status" data-action="status">Check your verification status</a> anytime.</li>
-    <li><strong>Wrong university?</strong> <a href="#" data-action="change-uni" onclick="event.preventDefault();Pages.openChangeUniversityOverlay();">Change your university</a> at any time.</li>
+    <li><strong>Wrong university?</strong> <a href="#" data-action="auth-change-uni">Change your university</a> at any time.</li>
     <li><strong>Didn't get the email?</strong> Check spam, or contact <a href="mailto:support@jertscart.com">support@jertscart.com</a></li>
     </ul>
     </div>
@@ -309,9 +309,9 @@ const AuthPageMethods = {
     `;
   },
 
-  // Legacy tab switcher kept as a no-op so any stale onclick="..." in the
-  // DOM doesn't throw. Safe to remove once we're sure no cached HTML still
-  // references it.
+  // Legacy tab switcher kept as a no-op so any stale inline onclick attribute
+  // left in the DOM doesn't throw. Safe to remove once we're sure no cached
+  // HTML still references it.
   switchVerificationTab(_tab) {
     /* intentionally empty — unified form has no tabs */
   },
@@ -878,7 +878,7 @@ const AuthPageMethods = {
     </style>
 
     <div class="auth-card-modern">
-    <button class="auth-close-btn" onclick="Pages.closeAuthOverlay()">
+    <button class="auth-close-btn" data-action="auth-close-auth-overlay">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <line x1="18" y1="6" x2="6" y2="18"></line>
     <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -894,7 +894,7 @@ const AuthPageMethods = {
     </div>
 
   <div class="social-buttons-grid">
-  <button class="social-btn" title="Sign in with Google" onclick="showToast('Social login is not available in offline mode', 'error')">
+  <button class="social-btn" title="Sign in with Google" data-action="auth-social-offline">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem;">
   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
   <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
@@ -902,12 +902,12 @@ const AuthPageMethods = {
   <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
   </svg>
   </button>
-  <button class="social-btn" title="Sign in with Apple" onclick="showToast('Social login is not available in offline mode', 'error')">
+  <button class="social-btn" title="Sign in with Apple" data-action="auth-social-offline">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; fill: var(--neutral-900);">
   <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.09997 22C7.78997 22.05 6.79997 20.68 5.95997 19.47C4.24997 17 2.93997 12.45 4.69997 9.39C5.56997 7.87 7.12997 6.91 8.81997 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.09 16.67C20.06 16.74 19.67 18.11 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"></path>
   </svg>
   </button>
-  <button class="social-btn" title="Sign in with X" onclick="showToast('Social login is not available in offline mode', 'error')">
+  <button class="social-btn" title="Sign in with X" data-action="auth-social-offline">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; fill: var(--neutral-900);">
   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
   </svg>
@@ -920,7 +920,7 @@ const AuthPageMethods = {
     <div class="divider-text"><span>Or continue with</span></div>
     </div>
 
-    <form id="login-form" onsubmit="Pages.handleLogin(event)">
+    <form id="login-form" data-action="auth-login-submit">
     <div class="form-group-modern">
     <label for="email" class="form-label">Email</label>
     <input type="email" id="email" name="email" placeholder="name@example.com" class="form-input" required />
@@ -930,7 +930,7 @@ const AuthPageMethods = {
     <label for="password" class="form-label">Password</label>
     <div class="password-input-wrapper">
     <input type="password" id="password" name="password" placeholder="Enter your password" class="form-input" required />
-    <button type="button" class="password-toggle-btn" onclick="Pages.togglePassword('password', this)">
+    <button type="button" class="password-toggle-btn" data-action="auth-toggle-password" data-toggle-target="password">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon">
     <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
     <circle cx="12" cy="12" r="3"></circle>
@@ -940,11 +940,11 @@ const AuthPageMethods = {
     </div>
 
     <div style="display: flex; justify-content: flex-end; margin: -0.5rem 0 0.5rem;">
-    <a onclick="Pages.renderForgotPassword(); Pages.closeAuthOverlay(); return false;"
+    <a data-action="auth-forgot-password-link"
     class="auth-link"
     style="font-size: 0.875rem; color: var(--neutral-600); transition: color 0.2s; cursor: pointer;"
-    onmouseover="this.style.color='var(--primary)'"
-    onmouseout="this.style.color='var(--neutral-600)'">
+    data-mouseover-action="auth-forgot-hover"
+    data-mouseout-action="auth-forgot-out">
     Forgot password?
     </a>
     </div>
@@ -955,7 +955,7 @@ const AuthPageMethods = {
     <div class="auth-footer-links">
     <p>
     Don't have an account?
-    <a onclick="Pages.switchAuthModal('register')" class="auth-link">Sign up</a>
+    <a data-action="auth-switch-register" class="auth-link">Sign up</a>
     </p>
     </div>
     </div>
@@ -1252,7 +1252,7 @@ const AuthPageMethods = {
     <p class="auth-subtitle">Enter your details to get started with JERTS CART</p>
     </div>
 
-    <form id="register-form" onsubmit="Pages.handleRegister(event)" class="space-y-4">
+    <form id="register-form" data-action="auth-register-submit" class="space-y-4">
     <div class="form-group-modern">
     <label for="fullName" class="form-label">Full Name</label>
     <input type="text" id="fullName" name="fullName" placeholder="John Doe" class="form-input" required />
@@ -1272,7 +1272,7 @@ const AuthPageMethods = {
     <label for="password" class="form-label">Password</label>
     <div class="password-input-wrapper">
     <input type="password" id="password" name="password" placeholder="Enter your password" class="form-input" required />
-    <button type="button" class="password-toggle-btn" onclick="Pages.togglePassword('password', this)">
+    <button type="button" class="password-toggle-btn" data-action="auth-toggle-password" data-toggle-target="password">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon">
     <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
     <circle cx="12" cy="12" r="3"></circle>
@@ -1285,7 +1285,7 @@ const AuthPageMethods = {
     <label for="confirmPassword" class="form-label">Confirm Password</label>
     <div class="password-input-wrapper">
     <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" class="form-input" required />
-    <button type="button" class="password-toggle-btn" onclick="Pages.togglePassword('confirmPassword', this)">
+    <button type="button" class="password-toggle-btn" data-action="auth-toggle-password" data-toggle-target="confirmPassword">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon">
     <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
     <circle cx="12" cy="12" r="3"></circle>
@@ -1308,7 +1308,7 @@ const AuthPageMethods = {
       </div>
 
       <div class="social-buttons-grid">
-      <button class="social-btn" title="Sign up with Google" onclick="showToast('Social login is not available in offline mode', 'error')">
+      <button class="social-btn" title="Sign up with Google" data-action="auth-social-offline">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem;">
           <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
           <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
@@ -1316,12 +1316,12 @@ const AuthPageMethods = {
           <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
         </svg>
       </button>
-      <button class="social-btn" title="Sign up with Apple" onclick="showToast('Social login is not available in offline mode', 'error')">
+      <button class="social-btn" title="Sign up with Apple" data-action="auth-social-offline">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; fill: var(--neutral-900);">
           <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.09997 21.18C7.78997 22.05 6.79997 20.68 5.95997 19.47C4.24997 17 2.93997 12.45 4.69997 9.39C5.56997 7.87 7.12997 6.91 8.81997 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.09 16.67C20.06 16.74 19.67 18.11 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"></path>
         </svg>
       </button>
-      <button class="social-btn" title="Sign up with X" onclick="showToast('Social login is not available in offline mode', 'error')">
+      <button class="social-btn" title="Sign up with X" data-action="auth-social-offline">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; fill: var(--neutral-900);">
           <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
         </svg>
@@ -1332,7 +1332,7 @@ const AuthPageMethods = {
       <div class="auth-footer-links">
     <p>
     Already have an account?
-    <a onclick="Pages.renderLogin(); return false;" class="auth-link">Sign in</a>
+    <a data-action="auth-register-signin" class="auth-link">Sign in</a>
     </p>
     </div>
     </div>
@@ -1477,7 +1477,7 @@ const AuthPageMethods = {
     <div class="auth-container">
     <div class="auth-card">
     <h2>Reset Your Password</h2>
-    <form id="forgot-form" onsubmit="Pages.handleForgotPassword(event)">
+    <form id="forgot-form" data-action="auth-forgot-submit">
     <p>Enter your email address and we'll send you a link to reset your password.</p>
 
     <div class="form-group">
@@ -1489,7 +1489,7 @@ const AuthPageMethods = {
     </form>
 
     <div class="auth-links">
-    <p><a href="#" onclick="Pages.renderLogin()">Back to Login</a></p>
+    <p><a href="#" data-action="auth-back-to-login">Back to Login</a></p>
     </div>
     </div>
     </div>
@@ -1548,7 +1548,7 @@ const AuthPageMethods = {
     <div class="auth-container">
     <div class="auth-card">
     <h2>Set New Password</h2>
-    <form id="reset-form" onsubmit="Pages.handleResetPassword(event, '${token}')">
+    <form id="reset-form" data-action="auth-reset-submit" data-reset-token="${escapeValue(token)}">
     <p>Enter your new password below.</p>
 
     <div class="form-group">
@@ -1566,7 +1566,7 @@ const AuthPageMethods = {
     </form>
 
     <div class="auth-links">
-    <p><a href="#" onclick="Pages.renderLogin()">Back to Login</a></p>
+    <p><a href="#" data-action="auth-back-to-login">Back to Login</a></p>
     </div>
     </div>
     </div>
@@ -2197,10 +2197,159 @@ const AuthPageMethods = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// Delegated event wiring for the migrated inline handlers (Task 14).
+//
+// Every former inline on* attribute in this file now carries a data-action
+// (mouseover/mouseout use data-mouseover-action / data-mouseout-action)
+// naming one entry in the registries below. Dispatch is event-scoped: the
+// click listener only consults AUTH_ACTIONS, the change listener only
+// AUTH_CHANGE_ACTIONS, etc., so a change-only action (auth-file-select) can
+// never fire on the click that the file-upload area dispatches at the input,
+// and a click-only action can never fire on submit. Each dispatch walks the
+// event's composed path innermost-first because inline handlers used to fire
+// on EVERY ancestor that carried one; stopPropagation (explicit in an action,
+// or inside a callee) ends the walk, and the first thrown error is rethrown
+// after the walk so one throwing handler doesn't silence the rest.
+//
+// TODO: security review / CSP — registry names are prefixed `auth-` so they
+// can never collide with data-action values already consumed elsewhere
+// (pick-uni / status / browse / dashboard / home / resend / resubmit /
+// verify / login / retry in this file's card-scoped listeners;
+// nav / toggle-dark / logout in layout.js; add-to-cart in pages.js;
+// page-* in pages.js). Interface is intentionally local: this file owns its
+// registries and guard flag and does not import PAGE_ACTIONS.
+// ---------------------------------------------------------------------------
+
+let _authDelegatesInstalled = false;
+const AUTH_ACTIONS = {
+  'auth-open-file-picker': () => document.getElementById('v-files').click(),
+  'auth-verification-back': () => {
+    if (typeof window.router !== 'undefined') {
+      window.router.navigate('/');
+    }
+    Pages.renderLanding();
+  },
+  'auth-change-uni': (el, e) => {
+    e.preventDefault();
+    Pages.openChangeUniversityOverlay();
+  },
+  'auth-close-auth-overlay': () => Pages.closeAuthOverlay(),
+  'auth-social-offline': () => showToast('Social login is not available in offline mode', 'error'),
+  'auth-toggle-password': el => Pages.togglePassword(el.dataset.toggleTarget, el),
+  'auth-forgot-password-link': (el, e) => {
+    Pages.renderForgotPassword();
+    Pages.closeAuthOverlay();
+    e.preventDefault();
+  },
+  'auth-switch-register': () => Pages.switchAuthModal('register'),
+  'auth-register-signin': (el, e) => {
+    Pages.renderLogin();
+    e.preventDefault();
+  },
+  'auth-back-to-login': () => Pages.renderLogin(),
+};
+
+const AUTH_CHANGE_ACTIONS = {
+  'auth-file-select': (el, e) => Pages.handleFileSelect(e),
+};
+
+const AUTH_SUBMIT_ACTIONS = {
+  'auth-verification-submit': (el, e) => Pages.handleVerification(e),
+  'auth-login-submit': (el, e) => Pages.handleLogin(e),
+  'auth-register-submit': (el, e) => Pages.handleRegister(e),
+  'auth-forgot-submit': (el, e) => Pages.handleForgotPassword(e),
+  'auth-reset-submit': (el, e) => Pages.handleResetPassword(e, el.dataset.resetToken),
+};
+
+const AUTH_MOUSEOVER_ACTIONS = {
+  'auth-forgot-hover': el => {
+    el.style.color = 'var(--primary)';
+  },
+};
+
+const AUTH_MOUSEOUT_ACTIONS = {
+  'auth-forgot-out': el => {
+    el.style.color = 'var(--neutral-600)';
+  },
+};
+
+const _authActionRegistries = {
+  click: [AUTH_ACTIONS, 'action'],
+  change: [AUTH_CHANGE_ACTIONS, 'action'],
+  submit: [AUTH_SUBMIT_ACTIONS, 'action'],
+  mouseover: [AUTH_MOUSEOVER_ACTIONS, 'mouseoverAction'],
+  mouseout: [AUTH_MOUSEOUT_ACTIONS, 'mouseoutAction'],
+};
+
+const _installAuthDelegates = () => {
+  if (_authDelegatesInstalled) {
+    return;
+  }
+  _authDelegatesInstalled = true;
+  const run = e => {
+    const registry = _authActionRegistries[e.type];
+    if (!registry) {
+      return;
+    }
+    const map = registry[0];
+    const key = registry[1];
+    // Fixed dispatch path: matches inline-handler semantics when an action
+    // re-renders (removes) part of the tree mid-dispatch.
+    const path = e.composedPath();
+    let firstError = null;
+    for (const node of path) {
+      if (!node || node.nodeType !== 1) {
+        continue;
+      }
+      const name = node.dataset[key];
+      if (!name) {
+        continue;
+      }
+      const action = map[name];
+      if (!action) {
+        continue;
+      }
+      try {
+        action(node, e);
+      } catch (err) {
+        // Inline handlers were independent listeners: one throwing never
+        // silenced the others. Record the first error, keep walking, then
+        // rethrow so the window error surface (Sentry) still sees it.
+        if (firstError === null) {
+          firstError = err;
+        }
+      }
+      if (e.cancelBubble) {
+        break;
+      }
+    }
+    if (firstError !== null) {
+      throw firstError;
+    }
+  };
+  document.addEventListener('click', e => run(e));
+  document.addEventListener('change', e => run(e));
+  document.addEventListener('mouseover', e => run(e));
+  document.addEventListener('mouseout', e => run(e));
+  document.addEventListener(
+    'submit',
+    e => {
+      const form = e.target.closest('form[data-action]');
+      if (form && AUTH_SUBMIT_ACTIONS[form.dataset.action]) {
+        e.preventDefault();
+        run(e);
+      }
+    },
+    true
+  );
+};
+_installAuthDelegates();
+
 window.AuthPageMethods = AuthPageMethods;
 
-// Attach all AuthPageMethods onto the global `Pages` class so inline
-// `onclick="Pages.foo()"` and router handlers like
+// Attach all AuthPageMethods onto the global `Pages` class so legacy inline
+// handlers that call `Pages.foo()` and router handlers like
 // `router.register('/x', () => this.foo())` resolve to the right `this`.
 // CRITICAL: must `.bind(AuthPageMethods)` — the method bodies use
 // `this._renderX()` style helpers, and without a bind, `this` is the

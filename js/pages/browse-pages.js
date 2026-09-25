@@ -296,7 +296,7 @@ class BrowsePage {
       <div class="browse-page-inner">
         ${this.renderSidebar(maxPrice)}
         ${this.renderMobileDrawer(maxPrice)}
-        <div class="browse-mobile-overlay" id="browse-mobile-overlay" onclick="BrowsePage.closeMobileDrawer()"></div>
+        <div class="browse-mobile-overlay" id="browse-mobile-overlay" data-action="browse-close-mobile-drawer"></div>
         <main class="browse-main">
           ${this.renderToolbar(products.length, totalProducts)}
           ${this.renderActiveFilters()}
@@ -379,11 +379,11 @@ ${
     return `
 <div class="browse-categories">
 <div class="browse-categories-scroll">
-<button class="category-pill ${allActive ? 'active' : ''}" onclick="BrowsePage.clearCategoryFilters()">All<span class="pill-count">${this._allProducts.length}</span></button>
+<button class="category-pill ${allActive ? 'active' : ''}" data-action="browse-clear-category-filters">All<span class="pill-count">${this._allProducts.length}</span></button>
 ${this.state.categories
   .map(
     cat => `
-<button class="category-pill ${this.state.selectedCategories.includes(cat.id) ? 'active' : ''}" onclick="BrowsePage.selectCategory('${cat.id}')">${cat.name}<span class="pill-count">${cat.count}</span></button>
+<button class="category-pill ${this.state.selectedCategories.includes(cat.id) ? 'active' : ''}" data-action="browse-select-category" data-category-id="${_browseEsc(cat.id)}">${cat.name}<span class="pill-count">${cat.count}</span></button>
 `
   )
   .join('')}
@@ -411,10 +411,10 @@ ${this._renderGadgetTypeSubBar()}
     ).length;
     return `
   <div class="browse-subcategories" role="group" aria-label="Filter fashion by gender">
-    <button class="subcategory-pill ${active === 'all' ? 'active' : ''}" onclick="BrowsePage.selectGender('all')">All<span class="pill-count">${this._allProducts.filter(p => p.category === 'fashion').length}</span></button>
-    <button class="subcategory-pill ${active === 'male' ? 'active' : ''}" onclick="BrowsePage.selectGender('male')">Male<span class="pill-count">${maleCount}</span></button>
-    <button class="subcategory-pill ${active === 'female' ? 'active' : ''}" onclick="BrowsePage.selectGender('female')">Female<span class="pill-count">${femaleCount}</span></button>
-    <button class="subcategory-pill ${active === 'unisex' ? 'active' : ''}" onclick="BrowsePage.selectGender('unisex')">Unisex<span class="pill-count">${unisexCount}</span></button>
+    <button class="subcategory-pill ${active === 'all' ? 'active' : ''}" data-action="browse-select-gender" data-gender="all">All<span class="pill-count">${this._allProducts.filter(p => p.category === 'fashion').length}</span></button>
+    <button class="subcategory-pill ${active === 'male' ? 'active' : ''}" data-action="browse-select-gender" data-gender="male">Male<span class="pill-count">${maleCount}</span></button>
+    <button class="subcategory-pill ${active === 'female' ? 'active' : ''}" data-action="browse-select-gender" data-gender="female">Female<span class="pill-count">${femaleCount}</span></button>
+    <button class="subcategory-pill ${active === 'unisex' ? 'active' : ''}" data-action="browse-select-gender" data-gender="unisex">Unisex<span class="pill-count">${unisexCount}</span></button>
   </div>`;
   }
 
@@ -457,9 +457,9 @@ ${this._renderGadgetTypeSubBar()}
     const phonesCount = gadgets.filter(_isPhone).length;
     return `
   <div class="browse-subcategories" role="group" aria-label="Filter gadgets by type">
-    <button class="subcategory-pill ${active === 'all' ? 'active' : ''}" onclick="BrowsePage.selectGadgetType('all')">All<span class="pill-count">${gadgets.length}</span></button>
-    <button class="subcategory-pill ${active === 'laptops' ? 'active' : ''}" onclick="BrowsePage.selectGadgetType('laptops')">Laptops<span class="pill-count">${laptopsCount}</span></button>
-    <button class="subcategory-pill ${active === 'phones' ? 'active' : ''}" onclick="BrowsePage.selectGadgetType('phones')">Phones<span class="pill-count">${phonesCount}</span></button>
+    <button class="subcategory-pill ${active === 'all' ? 'active' : ''}" data-action="browse-select-gadget-type" data-gadget-type="all">All<span class="pill-count">${gadgets.length}</span></button>
+    <button class="subcategory-pill ${active === 'laptops' ? 'active' : ''}" data-action="browse-select-gadget-type" data-gadget-type="laptops">Laptops<span class="pill-count">${laptopsCount}</span></button>
+    <button class="subcategory-pill ${active === 'phones' ? 'active' : ''}" data-action="browse-select-gadget-type" data-gadget-type="phones">Phones<span class="pill-count">${phonesCount}</span></button>
   </div>`;
   }
 
@@ -494,7 +494,7 @@ ${this._renderGadgetTypeSubBar()}
             .map(
               cat => `
             <div class="browse-filter-option">
-              <input type="checkbox" id="browse-cat-${cat.id}" ${this.state.selectedCategories.includes(cat.id) ? 'checked' : ''} onchange="BrowsePage.toggleCategory('${cat.id}')">
+              <input type="checkbox" id="browse-cat-${cat.id}" ${this.state.selectedCategories.includes(cat.id) ? 'checked' : ''} data-action="browse-toggle-category" data-category-id="${_browseEsc(cat.id)}">
               <label for="browse-cat-${cat.id}">${cat.name}</label>
               <span class="browse-filter-count">${cat.count}</span>
             </div>
@@ -513,7 +513,7 @@ ${this._renderGadgetTypeSubBar()}
           <div class="browse-price-slider-track">
             <div class="browse-price-slider-fill" style="left:${sliderLeft}%;width:${sliderRight - sliderLeft}%;"></div>
           </div>
-          <button class="browse-price-apply-btn" onclick="BrowsePage.applyPriceFilter()">Apply</button>
+          <button class="browse-price-apply-btn" data-action="browse-apply-price-filter">Apply</button>
         </div>
 
         <div class="browse-filter-group">
@@ -525,7 +525,7 @@ ${this._renderGadgetTypeSubBar()}
             .map(
               cond => `
             <div class="browse-filter-option">
-              <input type="checkbox" id="browse-cond-${cond.id}" ${this.state.selectedConditions.includes(cond.id) ? 'checked' : ''} onchange="BrowsePage.toggleCondition('${cond.id}')">
+              <input type="checkbox" id="browse-cond-${cond.id}" ${this.state.selectedConditions.includes(cond.id) ? 'checked' : ''} data-action="browse-toggle-condition" data-condition-id="${_browseEsc(cond.id)}">
               <label for="browse-cond-${cond.id}">${cond.name}</label>
               <span class="browse-filter-count">${cond.count}</span>
             </div>
@@ -544,7 +544,7 @@ ${this._renderGadgetTypeSubBar()}
             .map(
               uni => `
             <div class="browse-filter-option">
-              <input type="checkbox" id="browse-uni-${uni.id}" ${this.state.selectedUniversities.includes(uni.id) ? 'checked' : ''} onchange="BrowsePage.toggleUniversity('${uni.id}')">
+              <input type="checkbox" id="browse-uni-${uni.id}" ${this.state.selectedUniversities.includes(uni.id) ? 'checked' : ''} data-action="browse-toggle-university" data-university-id="${_browseEsc(uni.id)}">
               <label for="browse-uni-${uni.id}">${uni.name}</label>
               <span class="browse-filter-count">${uni.count}</span>
             </div>
@@ -556,7 +556,7 @@ ${this._renderGadgetTypeSubBar()}
             : ''
         }
 
-        <button class="browse-clear-filters-btn" onclick="BrowsePage.clearFilters()">Clear All Filters</button>
+        <button class="browse-clear-filters-btn" data-action="browse-clear-filters">Clear All Filters</button>
       </aside>`;
   }
 
@@ -568,7 +568,7 @@ ${this._renderGadgetTypeSubBar()}
       <div class="browse-mobile-drawer" id="browse-mobile-drawer">
         <div class="browse-mobile-drawer-header">
           <span class="browse-mobile-drawer-title">Filters</span>
-          <button class="browse-mobile-drawer-close" onclick="BrowsePage.closeMobileDrawer()">&times;</button>
+          <button class="browse-mobile-drawer-close" data-action="browse-close-mobile-drawer">&times;</button>
         </div>
         ${this.renderSidebar(maxPrice)}
       </div>`;
@@ -577,27 +577,27 @@ ${this._renderGadgetTypeSubBar()}
   renderToolbar(showing, total) {
     return `
 <div class="browse-toolbar">
-<button class="browse-mobile-filter-btn" onclick="BrowsePage.openMobileDrawer()" aria-label="Open filters" title="Filters">
+<button class="browse-mobile-filter-btn" data-action="browse-open-mobile-drawer" aria-label="Open filters" title="Filters">
 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16" height="16"><path d="M3 4h18M6 12h12M9 20h6"/></svg>
 Filters
 </button>
 <div class="browse-search">
 <svg class="browse-search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="18" height="18"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-<input type="text" class="browse-search-input" id="browse-search-input" placeholder="Search products..." value="${_browseEsc(this.state.searchQuery)}" onkeyup="BrowsePage.handleSearchKeyup(event)">
+<input type="text" class="browse-search-input" id="browse-search-input" placeholder="Search products..." value="${_browseEsc(this.state.searchQuery)}" data-keyup-action="browse-search-keyup">
 </div>
 <span class="browse-results-count"><strong>${showing}</strong> of <strong>${total}</strong> results</span>
 <div class="browse-toolbar-right">
 <div class="browse-sort">
 <span class="browse-sort-label">Sort by</span>
-<select class="browse-sort-select" id="browse-sort-select" onchange="BrowsePage.sortBy(this.value)">
+<select class="browse-sort-select" id="browse-sort-select" data-action="browse-sort">
 ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
 </select>
 </div>
 <div class="browse-view-toggle">
-<button class="browse-view-btn ${this.state.viewMode === 'grid' ? 'active' : ''}" onclick="BrowsePage.toggleView('grid')" title="Grid view">
+<button class="browse-view-btn ${this.state.viewMode === 'grid' ? 'active' : ''}" data-action="browse-toggle-view" data-view-mode="grid" title="Grid view">
 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16" height="16"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
 </button>
-<button class="browse-view-btn ${this.state.viewMode === 'list' ? 'active' : ''}" onclick="BrowsePage.toggleView('list')" title="List view">
+<button class="browse-view-btn ${this.state.viewMode === 'list' ? 'active' : ''}" data-action="browse-toggle-view" data-view-mode="list" title="List view">
 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16" height="16"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
 </button>
 </div>
@@ -647,12 +647,12 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
             chip => `
           <span class="browse-filter-chip">
             ${chip.label}
-            <button class="browse-filter-chip-remove" onclick="BrowsePage.removeFilter('${chip.type}', '${chip.value}')">&times;</button>
+            <button class="browse-filter-chip-remove" data-action="browse-remove-filter" data-chip-type="${_browseEsc(chip.type)}" data-chip-value="${_browseEsc(chip.value)}">&times;</button>
           </span>
         `
           )
           .join('')}
-        <button class="browse-filter-chip-clear" onclick="BrowsePage.clearFilters()">Clear All</button>
+        <button class="browse-filter-chip-clear" data-action="browse-clear-filters">Clear All</button>
       </div>`;
   }
 
@@ -663,7 +663,7 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
           <div class="browse-empty-icon">${Icons.search || ''}</div>
           <h3>No products found</h3>
           <p>Try adjusting your filters or search for something else</p>
-          <button class="browse-empty-btn" onclick="BrowsePage.clearFilters()">Clear Filters</button>
+          <button class="browse-empty-btn" data-action="browse-clear-filters">Clear Filters</button>
         </div>`;
     }
 
@@ -690,13 +690,13 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
     const sellerRating = product.seller?.rating || product.sellerRating || null;
 
     return `
-    <div class="browse-product-card" onclick="Pages.renderProductDetail('${product.id}')">
+    <div class="browse-product-card" data-action="browse-render-product-detail" data-product-id="${_browseEsc(product.id)}">
       <div class="browse-product-image-wrap">
-        <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${_browseEsc(product.title)}" loading="lazy" onerror="this.src='/assets/images/products/no-image.svg';this.onerror=null;">
+        <img src="${product.images?.[0] || '/assets/images/products/no-image.svg'}" alt="${_browseEsc(product.title)}" loading="lazy" data-fallback="/assets/images/products/no-image.svg">
         <div class="browse-product-badges">
           <span class="browse-product-badge ${product.condition || 'good'}">${conditionLabel}</span>
         </div>
-        <button class="browse-product-wishlist-btn ${isInWishlist ? 'active' : ''}" onclick="event.stopPropagation(); Pages.toggleWishlist(event, '${product.id}')">
+        <button class="browse-product-wishlist-btn ${isInWishlist ? 'active' : ''}" data-action="browse-toggle-wishlist" data-product-id="${_browseEsc(product.id)}">
           ${isInWishlist ? Icons.heart || '' : Icons.heartOutline || ''}
         </button>
       </div>
@@ -723,7 +723,7 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
     }
     return `
       <div class="browse-load-more">
-        <button class="browse-load-more-btn" onclick="BrowsePage.loadMore()">Load More Products</button>
+        <button class="browse-load-more-btn" data-action="browse-load-more">Load More Products</button>
       </div>`;
   }
 
@@ -751,15 +751,15 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
 
     return `
       <div class="browse-pagination">
-        <button class="browse-page-btn" onclick="BrowsePage.goToPage(${current - 1})" ${current <= 1 ? 'disabled style="opacity:0.4;pointer-events:none;"' : ''}>&laquo;</button>
+        <button class="browse-page-btn" data-action="browse-go-to-page" data-page="${current - 1}" ${current <= 1 ? 'disabled style="opacity:0.4;pointer-events:none;"' : ''}>&laquo;</button>
         ${pages
           .map(p =>
             p === '...'
               ? '<span style="padding:0 4px;color:var(--neutral-400);">...</span>'
-              : `<button class="browse-page-btn ${p === current ? 'active' : ''}" onclick="BrowsePage.goToPage(${p})">${p}</button>`
+              : `<button class="browse-page-btn ${p === current ? 'active' : ''}" data-action="browse-go-to-page" data-page="${p}">${p}</button>`
           )
           .join('')}
-        <button class="browse-page-btn" onclick="BrowsePage.goToPage(${current + 1})" ${current >= total ? 'disabled style="opacity:0.4;pointer-events:none;"' : ''}>&raquo;</button>
+        <button class="browse-page-btn" data-action="browse-go-to-page" data-page="${current + 1}" ${current >= total ? 'disabled style="opacity:0.4;pointer-events:none;"' : ''}>&raquo;</button>
       </div>`;
   }
 
@@ -884,7 +884,7 @@ ${this._sortOptions.map(opt => `<option value="${opt.value}" ${this.state.sortBy
     }
     document.querySelectorAll('.browse-view-btn').forEach(btn => btn.classList.remove('active'));
     const activeBtn = document.querySelector(
-      `.browse-view-btn[onclick="BrowsePage.toggleView('${mode}')"]`
+      `.browse-view-btn[data-action="browse-toggle-view"][data-view-mode="${mode}"]`
     );
     if (activeBtn) {
       activeBtn.classList.add('active');
@@ -1068,6 +1068,141 @@ const BrowsePageMethods = {
     return '';
   },
 };
+
+// ---------------------------------------------------------------------------
+// Delegated event wiring for the migrated inline handlers (Task 14).
+//
+// Every former inline on* attribute in this file now carries a data-action
+// (keyup uses data-keyup-action) naming one entry in the registries below.
+// Dispatch is event-scoped: the click listener only consults BROWSE_ACTIONS,
+// the change listener only BROWSE_CHANGE_ACTIONS, keyup only
+// BROWSE_KEYUP_ACTIONS — so `browse-toggle-category` on the sidebar checkbox
+// fires on change only, never on the click that toggles it, and
+// `browse-select-category` on the pill fires on click only. Each dispatch
+// walks the event's composed path innermost-first because inline handlers
+// used to fire on EVERY ancestor that carried one; stopPropagation (explicit
+// in `browse-toggle-wishlist`, or inside a callee) ends the walk, pinning the
+// old nested-card semantics (wishlist button inside the clickable card), and
+// the first thrown error is rethrown after the walk so one throwing handler
+// doesn't silence the rest.
+//
+// TODO: security review / CSP — registry names are prefixed `browse-` so they
+// can never collide with data-action values already consumed elsewhere
+// (add-to-cart on this file's own Add to Cart button, handled by pages.js;
+// pick-uni / status / browse / home / resend / … in auth-pages.js;
+// page-* in pages.js; nav / toggle-dark / logout in layout.js). Interface is
+// intentionally local: this file owns its registries and guard flag and does
+// not import PAGE_ACTIONS.
+// ---------------------------------------------------------------------------
+
+let _browseDelegatesInstalled = false;
+const BROWSE_ACTIONS = {
+  'browse-close-mobile-drawer': () => window.BrowsePage.closeMobileDrawer(),
+  'browse-clear-category-filters': () => window.BrowsePage.clearCategoryFilters(),
+  'browse-select-category': el => window.BrowsePage.selectCategory(el.dataset.categoryId),
+  'browse-select-gender': el => window.BrowsePage.selectGender(el.dataset.gender),
+  'browse-select-gadget-type': el => window.BrowsePage.selectGadgetType(el.dataset.gadgetType),
+  'browse-apply-price-filter': () => window.BrowsePage.applyPriceFilter(),
+  'browse-clear-filters': () => window.BrowsePage.clearFilters(),
+  'browse-open-mobile-drawer': () => window.BrowsePage.openMobileDrawer(),
+  'browse-toggle-view': el => window.BrowsePage.toggleView(el.dataset.viewMode),
+  'browse-remove-filter': el =>
+    window.BrowsePage.removeFilter(el.dataset.chipType, el.dataset.chipValue),
+  'browse-render-product-detail': el => Pages.renderProductDetail(el.dataset.productId),
+  'browse-toggle-wishlist': (el, e) => {
+    e.stopPropagation();
+    Pages.toggleWishlist(e, el.dataset.productId);
+  },
+  'browse-load-more': () => window.BrowsePage.loadMore(),
+  'browse-go-to-page': el => window.BrowsePage.goToPage(Number(el.dataset.page)),
+};
+
+const BROWSE_CHANGE_ACTIONS = {
+  'browse-toggle-category': el => window.BrowsePage.toggleCategory(el.dataset.categoryId),
+  'browse-toggle-condition': el => window.BrowsePage.toggleCondition(el.dataset.conditionId),
+  'browse-toggle-university': el => window.BrowsePage.toggleUniversity(el.dataset.universityId),
+  'browse-sort': el => window.BrowsePage.sortBy(el.value),
+};
+
+const BROWSE_KEYUP_ACTIONS = {
+  'browse-search-keyup': (el, e) => window.BrowsePage.handleSearchKeyup(e),
+};
+
+const _browseActionRegistries = {
+  click: [BROWSE_ACTIONS, 'action'],
+  change: [BROWSE_CHANGE_ACTIONS, 'action'],
+  keyup: [BROWSE_KEYUP_ACTIONS, 'keyupAction'],
+};
+
+const _installBrowseDelegates = () => {
+  if (_browseDelegatesInstalled) {
+    return;
+  }
+  _browseDelegatesInstalled = true;
+  const run = e => {
+    const registry = _browseActionRegistries[e.type];
+    if (!registry) {
+      return;
+    }
+    const map = registry[0];
+    const key = registry[1];
+    // Fixed dispatch path: matches inline-handler semantics when an action
+    // re-renders (removes) part of the tree mid-dispatch.
+    const path = e.composedPath();
+    let firstError = null;
+    for (const node of path) {
+      if (!node || node.nodeType !== 1) {
+        continue;
+      }
+      const name = node.dataset[key];
+      if (!name) {
+        continue;
+      }
+      const action = map[name];
+      if (!action) {
+        continue;
+      }
+      try {
+        action(node, e);
+      } catch (err) {
+        // Inline handlers were independent listeners: one throwing never
+        // silenced the others. Record the first error, keep walking, then
+        // rethrow so the window error surface (Sentry) still sees it.
+        if (firstError === null) {
+          firstError = err;
+        }
+      }
+      if (e.cancelBubble) {
+        break;
+      }
+    }
+    if (firstError !== null) {
+      throw firstError;
+    }
+  };
+  document.addEventListener('click', e => run(e));
+  document.addEventListener('change', e => run(e));
+  document.addEventListener('keyup', e => run(e));
+  // Broken-image fallback: the inline `this.src = …; this.onerror = null` pair
+  // becomes data-fallback plus this capture listener. pages.js installs its
+  // own document error listener with the identical condition — both are
+  // idempotent because each bails on dataset.fallbackApplied, so whichever
+  // runs first applies the fallback exactly once and the second is a no-op
+  // regardless of listener registration order.
+  // TODO: security review — two listeners share one guard; keep them in sync.
+  document.addEventListener(
+    'error',
+    e => {
+      const img = e.target;
+      if (img instanceof HTMLImageElement && img.dataset.fallback && !img.dataset.fallbackApplied) {
+        img.dataset.fallbackApplied = '1';
+        img.src = img.dataset.fallback;
+      }
+    },
+    true
+  );
+};
+_installBrowseDelegates();
 
 window.BrowsePageMethods = BrowsePageMethods;
 window.BrowsePage = browsePage;

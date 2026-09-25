@@ -34,6 +34,17 @@ only through dead code. `bestbuy-auth-dashboard.js` is out of scope for task 3;
 re-check both sites when inline handlers are migrated and delete the wrapper +
 shim together then.
 
+Task-14 re-check (inline handlers migrated in `auth-pages.js`): nothing
+changed — no inline caller of `switchVerificationTab` existed then and none
+exists now, so the shim stays. Reachability is unchanged: zero callers of the
+`Pages.switchVerificationTab` wrapper, whose only body line is
+`AuthPageMethods.switchVerificationTab(tab)` (`bestbuy-auth-dashboard.js:758-760`
+→ `auth-pages.js:315`). Deleting the wrapper still needs
+`bestbuy-auth-dashboard.js` (out of scope for task 14), so wrapper + shim are
+kept as a pair; delete both together when that file is migrated. The other two
+task-3 shims (`handleStudentVerification`, `handleDocumentVerification`) remain
+absent — verified.
+
 ### F5 debt — bestbuy-* filenames carry template naming
 `js/pages/bestbuy-landing.js` and `js/pages/bestbuy-auth-dashboard.js` are live
 (they provide Pages.renderLogin/register/ForgotPassword/ResetPassword/
@@ -121,6 +132,26 @@ keyup listener dropped (no inventory sites), `composedPath()` walk honoring
 `e.cancelBubble` for nested-card semantics, and per-action try/catch with
 rethrow so one throwing handler doesn't silence the rest. Later handler tasks
 (14–15) must copy the implemented pattern, not the plan template.
+
+### F11 debt — auth-pages.js renderLogin / renderForgotPassword / renderResetPassword are unreachable duplicates
+
+Task 14's inline-handler inventory surfaced this: every call site in `js/`,
+`e2e/`, and `index.html` goes through `Pages.renderLogin()` /
+`Pages.renderForgotPassword()` / `Pages.renderResetPassword()`, and
+`js/pages/bestbuy-auth-dashboard.js` overwrites all three on `Pages` from its
+boot IIFE (`:228`, `:539`, `:624` — its own header calls these the "Canonical
+login, register, forgot/reset password, verification pages"). The auth-pages
+attach list (`attachAuthPageMethods`, `js/pages/auth-pages.js:2358`) binds only
+the `handle*` / `closeAuthOverlay` / `switchAuthModal` / `renderVerify*` /
+`openChangeUniversityOverlay` names — NOT the renderers — so
+`AuthPageMethods.renderLogin` (`auth-pages.js:639`), `renderForgotPassword`
+(`:1473`) and `renderResetPassword` (`:1544`) have zero callers, and those
+templates (plus the handlers task 14 migrated inside them) are dead code.
+`renderRegister` (`:1073`) is the exception: still reachable via
+`handleRegister` → `_showRegisterUniversityStep` → `this.renderRegister()`
+(`:1386` → `:1431`), so its migrated handlers are live. Decide separately:
+delete the dead renderers, or re-point the attach list / router at them — never
+inside a refactor commit.
 
 ## Security-review TODOs (pre-existing, need human review)
 
