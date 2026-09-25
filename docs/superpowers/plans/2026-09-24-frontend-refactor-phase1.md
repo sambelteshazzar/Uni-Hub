@@ -17,6 +17,7 @@
 - Never push; the developer pushes. Commit prefix `refactor:` (or `chore:` for tooling), one kind of change per commit.
 - Push/deploy only at milestone tasks 6, 11, 16 — each includes the cache bump. If deploying earlier, first apply the bump snippet shown in task 6 (three files: `MODULE_VERSION` in `js/app-init.js`, `APP_INIT_VERSION` in `vite.config.js`, `?v=N` in `index.html` — all three must match).
 - Shell cwd does not persist between commands; run each with an explicit path or workdir.
+- E2E precondition: before ANY Playwright run, ensure the :8000 server has SPA fallback: `curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/admin/dashboard` → must be `200` serving index.html. If not, start `nohup node tools/dev-server.mjs > /tmp/opencode/dev-server.log 2>&1 &` first. Playwright's own webServer command (`npx http-server`) has no fallback; with it alone, history-mode deep-link tests fail (findings F3). Leave :5000 to Playwright (it sets NODE_ENV=test, required for the MFA devCode).
 - If a gate is red twice in a row, or a diff starts mixing two kinds of change, stop and re-plan (spec stop rules).
 
 ---
@@ -712,7 +713,7 @@ git commit -m "docs: record 1c extraction checkpoint"
 ### Task 13: Migrate every inline handler in `js/pages/pages.js`
 
 **Files:**
-- Modify: `js/pages/pages.js` (~103 handler attributes: 80 `onclick`, 15 `onerror`, 3 `onsubmit`, 2 `onchange`, 1 each `onload`/`onmouseover`/`onmouseout`)
+- Modify: `js/pages/pages.js` (handler attributes — measure with step 1; full-tree baseline measured during planning was ~200 sites including 149 `onclick`, 15 `onerror`, 13 `onsubmit`, 9+9 `onmouseover`/`onmouseout`, 7 `onchange`, plus `onmousedown`/`onload`/`onkeyup` the old whitelist missed)
 
 **Interfaces:**
 - Consumes: escaping rules (`_pageEsc` at template build time — unchanged).
@@ -722,9 +723,9 @@ git commit -m "docs: record 1c extraction checkpoint"
 
 Run:
 ```bash
-grep -oE '\son(click|dblclick|change|submit|keyup|keydown|input|focus|blur|mouseover|mouseout|mouseenter|mouseleave|load|error)="' js/pages/pages.js | sort | uniq -c
+grep -oE '\son[a-z]+=' js/pages/pages.js | sort | uniq -c
 ```
-Expected ballpark: the counts above (80/15/3/2/1/1/1). `onerror` needs the capture-phase pattern (error events don't bubble).
+Any HTML attribute starting with `on` is an inline handler — enumerate them ALL (whitelists miss handlers like `onmousedown`, and omitting the trailing quote catches escaped `\"` variants inside string-built templates). `onerror` needs the capture-phase pattern (error events don't bubble).
 
 - [ ] **Step 2: Install the delegation infrastructure (one kind of change: plumbing)**
 
@@ -812,7 +813,7 @@ Rules: action names kebab-case; unique across the whole document listener (prefi
 
 - [ ] **Step 4: Verify zero + gates + full e2e**
 
-Run: `grep -cE '\son[a-z]+="' js/pages/pages.js` → must account for the explicit-attribute inventory returning 0 (watch out: do not count `action=` attributes — the explicit regex from Step 1 must return empty).
+Run: `grep -E '\son[a-z]+=' js/pages/pages.js` → expected: no output (the `\\s` anchor means `action=` attributes are NOT matched).
 Run: `npm run lint:check && npx prettier --check "js/**/*.js" && npm run build && npx playwright test --workers=1` → all green (full suite after an event-wiring batch is mandatory).
 
 - [ ] **Step 5: Commit**
@@ -865,7 +866,7 @@ git commit -m "refactor: migrate auth and browse inline handlers to delegation"
 ### Task 15: Migrate remaining inline handlers in `js/**` to zero + audit static HTML
 
 **Files:**
-- Modify (known set): `js/pages/bestbuy-auth-dashboard.js` (14), `js/admin/admin-dashboard.js` (5), `js/pages/messages.js` (4), `js/pages/bestbuy-landing.js` (4), `js/modules/notifications.js` (3), `js/modules/checkout.js` (2), `js/utils/toast.js` (1)
+- Modify (known set): `js/pages/bestbuy-auth-dashboard.js`, `js/admin/admin-dashboard.js`, `js/pages/messages.js`, `js/pages/bestbuy-landing.js`, `js/modules/notifications.js`, `js/modules/checkout.js`, `js/utils/toast.js`, `js/modules/search.js` (counts from the step-1 inventory, not hardcoded — it is authoritative)
 - Modify: any file the inventory turns up
 - Modify: `docs/REFACTOR_FINDINGS.md` (index.html/public audit results)
 
@@ -877,9 +878,9 @@ git commit -m "refactor: migrate auth and browse inline handlers to delegation"
 
 Run:
 ```bash
-grep -roE '\son(click|dblclick|change|submit|keyup|keydown|input|focus|blur|mouseover|mouseout|mouseenter|mouseleave|load|error)="' js --include='*.js' | cut -d: -f1 | sort | uniq -c
+grep -roE '\son[a-z]+=' js --include='*.js' | cut -d: -f1 | sort | uniq -c
 ```
-Expected: exactly the known set above (if new files appear, migrate them too — same rules).
+Expected: the known set below plus `js/modules/search.js` (2 `onmousedown` sites at lines 81/92 — measured during planning). If new files appear, migrate them too — same rules.
 
 - [ ] **Step 2: Migrate each file** (per-file registry + guard flag, patterns A–D). Note `bestbuy-auth-dashboard.js` already has a delegated pattern for `.bb-google-btn` (its `document.addEventListener('click', ...)` with `Pages._googleBtnHandlerInstalled` guard) — inline handlers in its templates convert to that same in-file registry style.
 
