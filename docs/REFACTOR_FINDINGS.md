@@ -33,3 +33,31 @@ the git-ignored `.vercel/output` build artifact) — so the shim is reachable
 only through dead code. `bestbuy-auth-dashboard.js` is out of scope for task 3;
 re-check both sites when inline handlers are migrated and delete the wrapper +
 shim together then.
+
+### F5 debt — bestbuy-* filenames carry template naming
+`js/pages/bestbuy-landing.js` and `js/pages/bestbuy-auth-dashboard.js` are live
+(they provide Pages.renderLogin/register/ForgotPassword/ResetPassword/
+StudentVerification and the landing renderer) but the "BestBuy" names are
+vestigial from a template. Rename only in a future phase with load-order checks
+(app-init.js module manifest + window-patch timing).
+
+### F6 bug/product — Google signup marks emails pre-verified at account creation
+backend: when Google reports a verified email, the account is created with
+isVerified=1 — opposite of the manual-flow guarantee (which requires the
+confirmation link). Google login does not touch isVerified for existing users,
+and nothing in the app zeroes it afterwards. Product/security decision needed;
+do not change silently. (Surfaced during the verification-gate support work.)
+
+## Security-review TODOs (pre-existing, need human review)
+
+- js/admin/admin-support.js:5 — ticket subjects/bodies are user-generated
+- js/modules/checkout.js:776 — checkout verification gate (payment path)
+- js/pages/static-pages.js:210 — event delegation on a stable parent (CSP)
+- js/pages/auth-pages.js:506 — surface API error text without leaking internals
+- js/pages/pages.js:1031 — admin routes render forms (CSP)
+- js/pages/pages.js:3106 — checkout verification gate reconciliation
+- js/pages/pages.js:4833 — destructive account action
+- js/pages/pages.js:6651 — delegation on the stable host
+- js/pages/pages.js:6722 — money-moving action
+- js/utils/api.js:327 — GET cache keyed by URL only
+- js/content/policies.js:9 — legal drafts (Ghana DPA alignment)
