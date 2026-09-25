@@ -3,6 +3,8 @@
 // Canonical login, register, forgot/reset password, verification pages
 // ============================================
 
+import { escapeValue } from '../utils/escape.js';
+
 (function () {
   const waitForPages = setInterval(function () {
     if (typeof Pages === 'undefined') {
@@ -253,7 +255,7 @@
         '<p class="bb-auth-form-subtitle">Enter your email and password to continue</p>' +
         '</div>' +
         socialBtnsHTML('Sign in', 'login') +
-        '<form id="login-form-bb" onsubmit="Pages.handleLoginBB(event)">' +
+        '<form id="login-form-bb" data-action="bb-auth-login-submit">' +
         '<div class="bb-form-group">' +
         '<label for="login-email" class="bb-form-label">Email Address <span class="required-star">*</span></label>' +
         '<input type="email" id="login-email" name="email" class="bb-form-input" placeholder="name@university.edu" required />' +
@@ -262,7 +264,7 @@
         '<label for="login-password" class="bb-form-label">Password <span class="required-star">*</span></label>' +
         '<div class="bb-password-wrapper">' +
         '<input type="password" id="login-password" name="password" class="bb-form-input" placeholder="Enter your password" required />' +
-        '<button type="button" class="bb-password-toggle" onclick="Pages.togglePassword(\'login-password\', this)">' +
+        '<button type="button" class="bb-password-toggle" data-action="bb-auth-toggle-password" data-toggle-target="login-password">' +
         '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>' +
         '</button>' +
         '</div>' +
@@ -275,8 +277,8 @@
         '</form>' +
         '<div class="bb-auth-footer">' +
         '<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">' +
-        '<a href="#" onclick="Pages.renderForgotPassword(); return false;" style="color: var(--primary); text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color=\'var(--primary-hover)\'" onmouseout="this.style.color=\'var(--primary)\'">Forgot Password?</a>' +
-        '<p style="margin: 0; font-size: 0.85rem; color: var(--neutral-600);">Don\'t have an account? <a href="#" onclick="Pages.renderRegister(); return false;" style="color: var(--primary); text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color=\'var(--primary-hover)\'" onmouseout="this.style.color=\'var(--primary)\'">Create an account</a></p>' +
+        '<a href="#" data-action="bb-auth-render-forgot" style="color: var(--primary); text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: color 0.2s;" data-mouseover-action="bb-auth-link-hover" data-mouseout-action="bb-auth-link-out">Forgot Password?</a>' +
+        '<p style="margin: 0; font-size: 0.85rem; color: var(--neutral-600);">Don\'t have an account? <a href="#" data-action="bb-auth-render-register" style="color: var(--primary); text-decoration: none; font-weight: 500; transition: color 0.2s;" data-mouseover-action="bb-auth-link-hover" data-mouseout-action="bb-auth-link-out">Create an account</a></p>' +
         '</div>' +
         '</div>' +
         '</div>' +
@@ -350,7 +352,7 @@
         '<p class="bb-auth-form-subtitle">Fill in your details to get started</p>' +
         '</div>' +
         socialBtnsHTML('Sign up', 'signup') +
-        '<form id="register-form-bb" onsubmit="Pages.handleRegisterBB(event)">' +
+        '<form id="register-form-bb" data-action="bb-auth-register-submit">' +
         '<div class="bb-name-row">' +
         '<div class="bb-form-group">' +
         '<label for="reg-firstName" class="bb-form-label">First Name <span class="required-star">*</span></label>' +
@@ -369,7 +371,7 @@
         '<label for="reg-password" class="bb-form-label">Password <span class="required-star">*</span></label>' +
         '<div class="bb-password-wrapper">' +
         '<input type="password" id="reg-password" name="password" class="bb-form-input" placeholder="At least 8 characters" required minlength="8" />' +
-        '<button type="button" class="bb-password-toggle" onclick="Pages.togglePassword(\'reg-password\', this)">' +
+        '<button type="button" class="bb-password-toggle" data-action="bb-auth-toggle-password" data-toggle-target="reg-password">' +
         '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>' +
         '</button>' +
         '</div>' +
@@ -387,7 +389,7 @@
         '<button type="submit" class="bb-submit-btn">Create Account</button>' +
         '</form>' +
         '<div class="bb-auth-footer">' +
-        '<p style="margin: 0; font-size: 0.85rem; color: var(--neutral-600);">Already have an account? <a href="#" onclick="Pages.renderLogin(); return false;" style="color: var(--primary); text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color=\'var(--primary-hover)\'" onmouseout="this.style.color=\'var(--primary)\'">Sign in</a></p>' +
+        '<p style="margin: 0; font-size: 0.85rem; color: var(--neutral-600);">Already have an account? <a href="#" data-action="bb-auth-render-login" style="color: var(--primary); text-decoration: none; font-weight: 500; transition: color 0.2s;" data-mouseover-action="bb-auth-link-hover" data-mouseout-action="bb-auth-link-out">Sign in</a></p>' +
         '</div>' +
         '</div>' +
         '</div>' +
@@ -559,7 +561,7 @@
         '<h1 class="bb-auth-form-title">Reset Password</h1>' +
         '<p class="bb-auth-form-subtitle">Enter your email to receive a reset link</p>' +
         '</div>' +
-        '<form id="forgot-form-bb" onsubmit="Pages.handleForgotPasswordBB(event)">' +
+        '<form id="forgot-form-bb" data-action="bb-auth-forgot-submit">' +
         '<div class="bb-form-group">' +
         '<label for="forgot-email" class="bb-form-label">Email Address <span class="required-star">*</span></label>' +
         '<input type="email" id="forgot-email" name="email" class="bb-form-input" placeholder="name@university.edu" required />' +
@@ -567,7 +569,7 @@
         '<button type="submit" class="bb-submit-btn">Send Reset Link</button>' +
         '</form>' +
         '<div class="bb-auth-footer">' +
-        '<p style="margin: 0; font-size: 0.85rem; color: var(--neutral-600);"><a href="#" onclick="Pages.renderLogin(); return false;" style="color: var(--primary); text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color=\'var(--primary-hover)\'" onmouseout="this.style.color=\'var(--primary)\'">Back to Login</a></p>' +
+        '<p style="margin: 0; font-size: 0.85rem; color: var(--neutral-600);"><a href="#" data-action="bb-auth-render-login" style="color: var(--primary); text-decoration: none; font-weight: 500; transition: color 0.2s;" data-mouseover-action="bb-auth-link-hover" data-mouseout-action="bb-auth-link-out">Back to Login</a></p>' +
         '</div>' +
         '</div>' +
         '</div>' +
@@ -645,14 +647,14 @@
         '<h1 class="bb-auth-form-title">New Password</h1>' +
         '<p class="bb-auth-form-subtitle">Choose a strong password for your account</p>' +
         '</div>' +
-        '<form id="reset-form-bb" onsubmit="Pages.handleResetPasswordBB(event, \'' +
-        token +
-        '\')">' +
+        '<form id="reset-form-bb" data-action="bb-auth-reset-submit" data-reset-token="' +
+        escapeValue(token) +
+        '">' +
         '<div class="bb-form-group">' +
         '<label for="reset-newPassword" class="bb-form-label">New Password <span class="required-star">*</span></label>' +
         '<div class="bb-password-wrapper">' +
         '<input type="password" id="reset-newPassword" name="newPassword" class="bb-form-input" placeholder="At least 6 characters" required minlength="6" />' +
-        '<button type="button" class="bb-password-toggle" onclick="Pages.togglePassword(\'reset-newPassword\', this)">' +
+        '<button type="button" class="bb-password-toggle" data-action="bb-auth-toggle-password" data-toggle-target="reset-newPassword">' +
         '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>' +
         '</button>' +
         '</div>' +
@@ -661,7 +663,7 @@
         '<label for="reset-confirmPassword" class="bb-form-label">Confirm Password <span class="required-star">*</span></label>' +
         '<div class="bb-password-wrapper">' +
         '<input type="password" id="reset-confirmPassword" name="confirmPassword" class="bb-form-input" placeholder="Re-enter your password" required minlength="6" />' +
-        '<button type="button" class="bb-password-toggle" onclick="Pages.togglePassword(\'reset-confirmPassword\', this)">' +
+        '<button type="button" class="bb-password-toggle" data-action="bb-auth-toggle-password" data-toggle-target="reset-confirmPassword">' +
         '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>' +
         '</button>' +
         '</div>' +
@@ -669,7 +671,7 @@
         '<button type="submit" class="bb-submit-btn">Reset Password</button>' +
         '</form>' +
         '<div class="bb-auth-footer">' +
-        '<p style="margin: 0; font-size: 0.85rem; color: var(--neutral-600);"><a href="#" onclick="Pages.renderLogin(); return false;" style="color: var(--primary); text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color=\'var(--primary-hover)\'" onmouseout="this.style.color=\'var(--primary)\'">Back to Login</a></p>' +
+        '<p style="margin: 0; font-size: 0.85rem; color: var(--neutral-600);"><a href="#" data-action="bb-auth-render-login" style="color: var(--primary); text-decoration: none; font-weight: 500; transition: color 0.2s;" data-mouseover-action="bb-auth-link-hover" data-mouseout-action="bb-auth-link-out">Back to Login</a></p>' +
         '</div>' +
         '</div>' +
         '</div>' +
@@ -746,18 +748,12 @@
           '<p class="bb-auth-form-subtitle">Verify your student status to unlock full marketplace access.</p>' +
           '</div>' +
           '<div style="text-align: center; padding: 2rem;">' +
-          '<p style="color: var(--neutral-600);">Student verification is available after logging in. Please <a href="#" onclick="Pages.renderLogin(); return false;" style="color: var(--primary); text-decoration: underline;">sign in</a> first.</p>' +
+          '<p style="color: var(--neutral-600);">Student verification is available after logging in. Please <a href="#" data-action="bb-auth-render-login" style="color: var(--primary); text-decoration: underline;">sign in</a> first.</p>' +
           '</div>' +
           '</div>' +
           '</div>' +
           '</div>';
         window.scrollTo({ top: 0 });
-      }
-    };
-
-    Pages.switchVerificationTab = function (tab) {
-      if (typeof AuthPageMethods !== 'undefined' && AuthPageMethods.switchVerificationTab) {
-        AuthPageMethods.switchVerificationTab(tab);
       }
     };
 
@@ -868,3 +864,139 @@
     console.info('Auth & dashboard renderers loaded');
   }, 50);
 })();
+
+// ---------------------------------------------------------------------------
+// Delegated event wiring for the migrated inline handlers (Task 15).
+//
+// Every former inline on* attribute in this file's templates now carries a
+// data-action (mouseover/mouseout use data-mouseover-action /
+// data-mouseout-action) naming one entry in the registries below. The bodies
+// keep the exact `Pages.method(...)` calls the inline strings made and resolve
+// `Pages` at call time, so they still pick up whatever the boot IIFE (and any
+// later patch) has bound. Dispatch is event-scoped: the click listener only
+// consults BB_AUTH_ACTIONS, the submit listener only BB_AUTH_SUBMIT_ACTIONS,
+// the hover listeners only their own maps — so a click action can never fire on
+// hover (or vice versa). Each dispatch walks the event's composed path
+// innermost-first, honoring `e.cancelBubble`, and per-action try/catch records
+// the first error, keeps walking, then rethrows so the window error surface
+// still sees it. The submit listener runs in the capture phase and only
+// preventDefaults when the form's action is one of ours, exactly like the
+// other registries.
+//
+// This block is installed at module eval (NOT inside the boot IIFE's
+// setInterval), so its listeners register before router.init() installs the
+// router's own document click listener — preserving the order the inline
+// handlers had (they ran at the target, i.e. before any document listener).
+//
+// TODO: security review / CSP — registry names are prefixed `bb-auth-` so
+// they can never collide with data-action values consumed by the other
+// document listeners (`auth-*` for the overlay cards in auth-pages.js, page-*
+// in pages.js, browse-* in browse-pages.js, nav / toggle-dark / logout in
+// layout.js). The `.bb-google-btn` delegated listener above keys off a class,
+// not data-action, and is untouched.
+// ---------------------------------------------------------------------------
+let _bbAuthDelegatesInstalled = false;
+const BB_AUTH_ACTIONS = {
+  'bb-auth-toggle-password': el => Pages.togglePassword(el.dataset.toggleTarget, el),
+  'bb-auth-render-forgot': (el, e) => {
+    Pages.renderForgotPassword();
+    e.preventDefault();
+  },
+  'bb-auth-render-register': (el, e) => {
+    Pages.renderRegister();
+    e.preventDefault();
+  },
+  'bb-auth-render-login': (el, e) => {
+    Pages.renderLogin();
+    e.preventDefault();
+  },
+};
+
+const BB_AUTH_SUBMIT_ACTIONS = {
+  'bb-auth-login-submit': (el, e) => Pages.handleLoginBB(e),
+  'bb-auth-register-submit': (el, e) => Pages.handleRegisterBB(e),
+  'bb-auth-forgot-submit': (el, e) => Pages.handleForgotPasswordBB(e),
+  'bb-auth-reset-submit': (el, e) => Pages.handleResetPasswordBB(e, el.dataset.resetToken),
+};
+
+const BB_AUTH_MOUSEOVER_ACTIONS = {
+  'bb-auth-link-hover': el => {
+    el.style.color = 'var(--primary-hover)';
+  },
+};
+
+const BB_AUTH_MOUSEOUT_ACTIONS = {
+  'bb-auth-link-out': el => {
+    el.style.color = 'var(--primary)';
+  },
+};
+
+const _bbAuthActionRegistries = {
+  click: [BB_AUTH_ACTIONS, 'action'],
+  submit: [BB_AUTH_SUBMIT_ACTIONS, 'action'],
+  mouseover: [BB_AUTH_MOUSEOVER_ACTIONS, 'mouseoverAction'],
+  mouseout: [BB_AUTH_MOUSEOUT_ACTIONS, 'mouseoutAction'],
+};
+
+const _installBbAuthDelegates = () => {
+  if (_bbAuthDelegatesInstalled) {
+    return;
+  }
+  _bbAuthDelegatesInstalled = true;
+  const run = e => {
+    const registry = _bbAuthActionRegistries[e.type];
+    if (!registry) {
+      return;
+    }
+    const map = registry[0];
+    const key = registry[1];
+    // Fixed dispatch path: matches inline-handler semantics when an action
+    // re-renders (removes) part of the tree mid-dispatch.
+    const path = e.composedPath();
+    let firstError = null;
+    for (const node of path) {
+      if (!node || node.nodeType !== 1) {
+        continue;
+      }
+      const name = node.dataset[key];
+      if (!name) {
+        continue;
+      }
+      const action = map[name];
+      if (!action) {
+        continue;
+      }
+      try {
+        action(node, e);
+      } catch (err) {
+        // Inline handlers were independent listeners: one throwing never
+        // silenced the others. Record the first error, keep walking, then
+        // rethrow so the window error surface (Sentry) still sees it.
+        if (firstError === null) {
+          firstError = err;
+        }
+      }
+      if (e.cancelBubble) {
+        break;
+      }
+    }
+    if (firstError !== null) {
+      throw firstError;
+    }
+  };
+  document.addEventListener('click', e => run(e));
+  document.addEventListener('mouseover', e => run(e));
+  document.addEventListener('mouseout', e => run(e));
+  document.addEventListener(
+    'submit',
+    e => {
+      const form = e.target.closest('form[data-action]');
+      if (form && BB_AUTH_SUBMIT_ACTIONS[form.dataset.action]) {
+        e.preventDefault();
+        run(e);
+      }
+    },
+    true
+  );
+};
+_installBbAuthDelegates();

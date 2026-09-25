@@ -240,7 +240,7 @@ class AdminDashboard {
         <td style="color:#6b7280;font-size:var(--text-xs);">${Formatter.formatTimeAgo(o.createdAt)}</td>
         <td>
           <div class="table-actions">
-            <button class="table-action-btn view" title="View" onclick="Pages.renderAdminOrders()">${Icons.view || '&#128065;'}</button>
+            <button class="table-action-btn view" title="View" data-action="admin-render-orders">${Icons.view || '&#128065;'}</button>
           </div>
         </td>
       </tr>
@@ -254,7 +254,7 @@ class AdminDashboard {
         <div class="admin-table-toolbar">
           <span class="admin-table-title">Recent Orders</span>
           <div class="admin-table-actions">
-            <button class="btn btn-ghost btn-sm" onclick="Pages.renderAdminOrders()">View All</button>
+            <button class="btn btn-ghost btn-sm" data-action="admin-render-orders">View All</button>
           </div>
         </div>
         <div class="admin-table-scroll">
@@ -337,7 +337,7 @@ class AdminDashboard {
       <div class="admin-card">
         <div class="admin-card-header">
           <h3>Recent Activity</h3>
-          <button class="btn btn-ghost btn-sm" onclick="Pages.renderAdminActivity()">View All</button>
+          <button class="btn btn-ghost btn-sm" data-action="admin-render-activity">View All</button>
         </div>
         <ul class="admin-activity-feed">${items}</ul>
       </div>
@@ -433,7 +433,7 @@ class AdminDashboard {
     item.innerHTML = `
       <span class="admin-toast-icon">${icons[type] || icons.info}</span>
       <span class="admin-toast-message">${message}</span>
-      <button class="admin-toast-close" onclick="this.parentElement.remove()">&times;</button>
+      <button class="admin-toast-close" data-action="admin-toast-close">&times;</button>
     `;
 
     container.appendChild(item);
@@ -457,7 +457,7 @@ class AdminDashboard {
       <div class="admin-modal">
         <div class="admin-modal-header">
           <h3>${title}</h3>
-          <button class="admin-modal-close" onclick="AdminDashboard.hideModal()">&times;</button>
+          <button class="admin-modal-close" data-action="admin-hide-modal">&times;</button>
         </div>
         <div class="admin-modal-body">${bodyHtml}</div>
         ${footerHtml ? `<div class="admin-modal-footer">${footerHtml}</div>` : ''}
@@ -529,3 +529,83 @@ window.adminDashboard = adminDashboard;
 if (typeof window !== 'undefined') {
   window.dispatchEvent(new CustomEvent('module-loaded', { detail: { name: 'AdminDashboard' } }));
 }
+
+// ---------------------------------------------------------------------------
+// Delegated event wiring for the migrated inline handlers (Task 15).
+//
+// Every former inline `onclick` in this file now carries a `data-action`
+// naming one entry in ADMIN_ACTIONS below. Dispatch is event-scoped (only a
+// click listener is installed — this file had no other on* sites) and walks
+// the event's composed path innermost-first, matching inline-handler
+// bubbling, with `e.cancelBubble` honored to stop the walk. Per-action
+// try/catch records the first error, keeps walking, then rethrows so the
+// window error surface still sees it.
+//
+// TODO: security review / CSP — registry names are prefixed `admin-` so they
+// can never collide with data-action values consumed by the other document
+// listeners (page-* in pages.js, browse-* in browse-pages.js, auth-* in
+// auth-pages.js, nav / toggle-dark / logout in layout.js). The admin shell's
+// own containers key off `data-adm-nav` / `data-adm-action`, a different
+// attribute, so they are unaffected.
+// ---------------------------------------------------------------------------
+let _adminDelegatesInstalled = false;
+const ADMIN_ACTIONS = {
+  'admin-render-orders': () => Pages.renderAdminOrders(),
+  'admin-render-activity': () => Pages.renderAdminActivity(),
+  'admin-toast-close': el => el.parentElement.remove(),
+  'admin-hide-modal': () => AdminDashboard.hideModal(),
+};
+
+const _adminActionRegistries = {
+  click: [ADMIN_ACTIONS, 'action'],
+};
+
+const _installAdminDelegates = () => {
+  if (_adminDelegatesInstalled) {
+    return;
+  }
+  _adminDelegatesInstalled = true;
+  const run = e => {
+    const registry = _adminActionRegistries[e.type];
+    if (!registry) {
+      return;
+    }
+    const map = registry[0];
+    const key = registry[1];
+    // Fixed dispatch path: matches inline-handler semantics when an action
+    // re-renders (removes) part of the tree mid-dispatch.
+    const path = e.composedPath();
+    let firstError = null;
+    for (const node of path) {
+      if (!node || node.nodeType !== 1) {
+        continue;
+      }
+      const name = node.dataset[key];
+      if (!name) {
+        continue;
+      }
+      const action = map[name];
+      if (!action) {
+        continue;
+      }
+      try {
+        action(node, e);
+      } catch (err) {
+        // Inline handlers were independent listeners: one throwing never
+        // silenced the others. Record the first error, keep walking, then
+        // rethrow so the window error surface (Sentry) still sees it.
+        if (firstError === null) {
+          firstError = err;
+        }
+      }
+      if (e.cancelBubble) {
+        break;
+      }
+    }
+    if (firstError !== null) {
+      throw firstError;
+    }
+  };
+  document.addEventListener('click', e => run(e));
+};
+_installAdminDelegates();

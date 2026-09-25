@@ -22,7 +22,7 @@ picks it up. Verified 5/5 green at 44f1ddcd AND 7dd32029 with the dev server
 up — not a code regression. Triage options: document the precondition (done —
 see plan global constraints) or add a proxy/fallback flag to playwright.config.js.
 
-### F4 debt — js/pages/auth-pages.js:314 legacy shim switchVerificationTab still called from js/pages/bestbuy-auth-dashboard.js:760
+### F4 debt — js/pages/auth-pages.js:314 legacy shim switchVerificationTab still called from js/pages/bestbuy-auth-dashboard.js:760 (resolved during refactor task 15)
 Kept under the task-3 decision rule because the only caller is a real JS call
 site (`AuthPageMethods.switchVerificationTab(tab)` inside the
 `Pages.switchVerificationTab = function (tab) {...}` wrapper), not an inline
@@ -44,6 +44,21 @@ exists now, so the shim stays. Reachability is unchanged: zero callers of the
 kept as a pair; delete both together when that file is migrated. The other two
 task-3 shims (`handleStudentVerification`, `handleDocumentVerification`) remain
 absent — verified.
+
+Task-15 resolution (inline handlers migrated in `bestbuy-auth-dashboard.js`):
+the pair is DELETED. Its only trigger was ever the inline attribute string,
+and `grep -rn "switchVerificationTab" js/ e2e/ index.html public/` returns
+zero matches after the migration, so both sides were dead:
+`Pages.switchVerificationTab` (was `bestbuy-auth-dashboard.js:758-762`, a
+forwarder whose sole body line called the shim) and `AuthPageMethods.
+switchVerificationTab` (was `auth-pages.js:312-317`, an intentional no-op
+whose own comment said it existed only so "a stale inline onclick attribute
+left in the DOM doesn't throw"). No inline attribute referencing either name
+exists in `index.html` or `public/` either (the static-HTML audit for F12/F13
+covers every `on*=` in those files; none is `switchVerificationTab`), so no
+live caller was left behind. The sibling `Pages.handleFileSelect` forwarder was
+KEPT: it is called for real by `auth-pages.js` `auth-file-select`
+(`Pages.handleFileSelect(e)`) and by nothing else.
 
 ### F5 debt — bestbuy-* filenames carry template naming
 `js/pages/bestbuy-landing.js` and `js/pages/bestbuy-auth-dashboard.js` are live
@@ -152,6 +167,40 @@ templates (plus the handlers task 14 migrated inside them) are dead code.
 (`:1386` → `:1431`), so its migrated handlers are live. Decide separately:
 delete the dead renderers, or re-point the attach list / router at them — never
 inside a refactor commit.
+
+### F12 debt — inline handler in static HTML at index.html:100 (29 lines, 32 occurrences)
+
+Task 15's static-HTML audit (`grep -rnE '\son[a-z]+=' index.html public/`)
+found 42 occurrences; none of them is in scope for this refactor (only `js/**`
+was to be migrated, and the rule is findings-only for HTML). This entry is the
+`index.html` share: 29 lines carrying 32 handlers — 27 `onclick`, 2
+`onkeypress`, 1 `onfocus`, 1 `oninput`, 1 `onblur` — at lines 100, 101, 108,
+116, 124, 132, 139, 140, 145, 146, 147, 151, 156, 168, 177, 185, 186, 191, 192,
+194, 195, 196, 197, 198, 199, 203, 204, 207, 208. All of them are the app
+shell's own chrome (navbar search / cart / wishlist / notifications / dark
+toggle / auth buttons, mobile drawer, mobile search), all calling the same
+`Pages.*` / `searchManager.*` API the migrated registries now call, so they
+would convert to the same `data-action` + document-delegation style as task 15
+— but `index.html` was out of scope and was NOT edited. Until they do, a strict
+Content-Security-Policy (`script-src`/`style-src` without `'unsafe-inline'`,
+`script-src-attr 'none'`) cannot be enabled: these are live inline event
+handlers in the served shell, plus `index.html:100` mixes four of them on one
+input. Line 151 and 186 additionally embed multi-statement JS (variable
+declarations + `setTimeout`) inside the attribute string, the pattern that
+task 13's F10 write-up calls out as the reason flat string dispatch is unsafe.
+
+### F13 debt — inline handler in static HTML at public/html/components/bestbuy-landing.html:22 (10 lines, 10 occurrences)
+
+The other share of the task-15 static-HTML audit: 10 lines, every one an
+`onclick="Pages.renderBrowse(); return false;"` /
+`onclick="Pages.renderRegister(); return false;"` pair — lines 22, 55, 116,
+164, 169, 174, 179, 184, 227, 230. Same CSP debt as F12, but with an extra
+wrinkle: no code fetches this file (nothing in `js/`, `index.html`, or the
+build references `html/components/`), so it is a stale static copy of the
+landing page that predates `js/pages/bestbuy-landing.js` — the landing markup
+actually served is the JS template that task 15 just migrated. Decide
+separately: delete the file, or migrate its handlers to `data-action` and
+let it be consumed again. NOT edited in task 15 (findings-only for HTML).
 
 ## Security-review TODOs (pre-existing, need human review)
 

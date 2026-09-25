@@ -309,13 +309,6 @@ const AuthPageMethods = {
     `;
   },
 
-  // Legacy tab switcher kept as a no-op so any stale inline onclick attribute
-  // left in the DOM doesn't throw. Safe to remove once we're sure no cached
-  // HTML still references it.
-  switchVerificationTab(_tab) {
-    /* intentionally empty — unified form has no tabs */
-  },
-
   handleFileSelect(event) {
     const files = event.target.files;
     const fileList = document.getElementById('file-list');

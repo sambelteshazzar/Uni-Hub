@@ -97,7 +97,7 @@ class MessagesPage {
           <div style="font-size: 64px; margin-bottom: 16px;">⚠️</div>
           <h3 style="margin-bottom: 8px;">Failed to load messages</h3>
           <p style="color: var(--neutral-600, #6b7280); margin-bottom: 20px;">Please try again later</p>
-          <button onclick="messageManager.render()" class="message-seller-btn">Try Again</button>
+          <button data-action="msg-retry-render" class="message-seller-btn">Try Again</button>
         </div>
       </div>
     `;
@@ -174,7 +174,7 @@ class MessagesPage {
         return `
         <div class="conversation-item ${isActive ? 'active' : ''} ${unread > 0 ? 'unread' : ''}" 
              data-conversation-id="${_esc(conv._id)}"
-             onclick="messagesPage.loadConversation('${_esc(conv._id)}')">
+             data-action="msg-load-conversation">
           <div class="conversation-avatar">
             ${otherUser?.avatar ? `<img src="${_safeUrl(otherUser.avatar)}" alt="${_esc(otherUser.fullName)}" />` : _esc(otherUser?.fullName?.charAt(0)) || '?'}
             <div class="online-indicator" style="display: none;"></div>
@@ -191,7 +191,7 @@ class MessagesPage {
               conv.product
                 ? `
               <div class="conversation-product">
-                <img src="${_safeUrl(conv.product.images?.[0] || '')}" alt="" onerror="this.src='';this.onerror=null;" />
+                <img src="${_safeUrl(conv.product.images?.[0] || '')}" alt="" data-fallback="" />
                 <span>${_esc(conv.product.title)}</span>
               </div>
             `
@@ -218,7 +218,7 @@ class MessagesPage {
     return `
       <!-- Chat Header -->
       <div class="chat-header">
-        <button class="chat-header-back" onclick="messagesPage.goBack()">←</button>
+        <button class="chat-header-back" data-action="msg-go-back">←</button>
         <div class="chat-header-user">
           <div class="chat-header-avatar">
             ${otherUser?.avatar ? `<img src="${_safeUrl(otherUser.avatar)}" alt="${_esc(otherUser.fullName)}" />` : _esc(otherUser?.fullName?.charAt(0)) || '?'}
@@ -229,7 +229,7 @@ class MessagesPage {
           </div>
         </div>
         <div class="chat-header-actions">
-          <button title="View Product" onclick="messagesPage.viewProduct()">📦</button>
+          <button title="View Product" data-action="msg-view-product">📦</button>
           <button title="More Options">⋮</button>
         </div>
       </div>
@@ -753,3 +753,106 @@ if (typeof window !== 'undefined') {
 
 // Export for ES6 modules
 export { MessagesPage, messagesPage };
+
+// ---------------------------------------------------------------------------
+// Delegated event wiring for the migrated inline handlers (Task 15).
+//
+// Every former inline on* attribute in this file now carries a `data-action`
+// (the broken-image `onerror` became `data-fallback`) naming one entry in the
+// registries below. Dispatch is event-scoped — the click listener only
+// consults MESSAGE_ACTIONS — and walks the event's composed path
+// innermost-first, matching inline-handler bubbling, with `e.cancelBubble`
+// honored to stop the walk. Per-action try/catch records the first error,
+// keeps walking, then rethrows so the window error surface still sees it.
+//
+// TODO: security review / CSP — registry names are prefixed `msg-` so they
+// can never collide with data-action values consumed by the other document
+// listeners (page-* in pages.js, browse-* in browse-pages.js, auth-* in
+// auth-pages.js, nav / toggle-dark / logout in layout.js).
+// ---------------------------------------------------------------------------
+let _msgDelegatesInstalled = false;
+const MESSAGE_ACTIONS = {
+  'msg-retry-render': () => messageManager.render(),
+  'msg-load-conversation': el => messagesPage.loadConversation(el.dataset.conversationId),
+  'msg-go-back': () => messagesPage.goBack(),
+  'msg-view-product': () => messagesPage.viewProduct(),
+};
+
+const _msgActionRegistries = {
+  click: [MESSAGE_ACTIONS, 'action'],
+};
+
+// Broken-image fallback. The inline pair was
+// `onerror="this.src=''; this.onerror=null;"` — an EMPTY fallback, so the
+// shared pages.js / browse-pages.js listeners are deliberately not reused:
+// they test `img.dataset.fallback` for truthiness and would silently skip an
+// empty value, leaving the failed src in place instead of clearing it. This
+// listener mirrors theirs but tests attribute presence instead, which
+// reproduces the inline call exactly (`img.src = ''`); the `fallbackApplied`
+// flag stands in for `this.onerror = null` and absorbs the second error event
+// that clearing the src fires. Idempotent against the shared listeners
+// whichever runs first (they skip the empty value; this one flags and stops).
+const _installMsgDelegates = () => {
+  if (_msgDelegatesInstalled) {
+    return;
+  }
+  _msgDelegatesInstalled = true;
+  const run = e => {
+    const registry = _msgActionRegistries[e.type];
+    if (!registry) {
+      return;
+    }
+    const map = registry[0];
+    const key = registry[1];
+    // Fixed dispatch path: matches inline-handler semantics when an action
+    // re-renders (removes) part of the tree mid-dispatch.
+    const path = e.composedPath();
+    let firstError = null;
+    for (const node of path) {
+      if (!node || node.nodeType !== 1) {
+        continue;
+      }
+      const name = node.dataset[key];
+      if (!name) {
+        continue;
+      }
+      const action = map[name];
+      if (!action) {
+        continue;
+      }
+      try {
+        action(node, e);
+      } catch (err) {
+        // Inline handlers were independent listeners: one throwing never
+        // silenced the others. Record the first error, keep walking, then
+        // rethrow so the window error surface (Sentry) still sees it.
+        if (firstError === null) {
+          firstError = err;
+        }
+      }
+      if (e.cancelBubble) {
+        break;
+      }
+    }
+    if (firstError !== null) {
+      throw firstError;
+    }
+  };
+  document.addEventListener('click', e => run(e));
+  document.addEventListener(
+    'error',
+    e => {
+      const img = e.target;
+      if (
+        img instanceof HTMLImageElement &&
+        img.hasAttribute('data-fallback') &&
+        !img.dataset.fallbackApplied
+      ) {
+        img.dataset.fallbackApplied = '1';
+        img.src = '';
+      }
+    },
+    true
+  );
+};
+_installMsgDelegates();

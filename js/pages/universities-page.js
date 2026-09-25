@@ -177,8 +177,8 @@ const UniversitiesPage = {
           cursor: pointer;
           transition: border-color 0.15s, background 0.15s;
         "
-        onmouseover="this.style.borderColor='var(--primary)'"
-        onmouseout="if(this.getAttribute('aria-pressed')!=='true'){this.style.borderColor='var(--border-color, #e5e7eb)'};"
+        data-mouseover-action="uni-card-hover"
+        data-mouseout-action="uni-card-out"
       >
         <div style="
           width: 18px; height: 18px; border-radius: 50%;
@@ -313,3 +313,93 @@ const UniversitiesPage = {
 };
 
 window.UniversitiesPage = UniversitiesPage;
+
+// ---------------------------------------------------------------------------
+// Delegated event wiring for the migrated inline handlers (Task 15).
+//
+// Both former inline hover attributes on the picker card now carry a
+// `data-mouseover-action` / `data-mouseout-action` naming one entry in the
+// registries below. Dispatch is event-scoped — hover listeners only consult
+// the hover maps, so a hover action can never fire on click (or vice versa) —
+// and walks the event's composed path innermost-first, matching the way an
+// inline attribute on the card still received bubbled events from its
+// children, with `e.cancelBubble` honored to stop the walk. Per-action
+// try/catch records the first error, keeps walking, then rethrows so the
+// window error surface still sees it.
+//
+// TODO: security review / CSP — registry names are prefixed `uni-` so they
+// can never collide with data-action values consumed by the other document
+// listeners (page-* in pages.js, browse-* in browse-pages.js, auth-* in
+// auth-pages.js, nav / toggle-dark / logout in layout.js). The picker's own
+// click-to-select stays container-scoped on `[data-uni-id]` above.
+// ---------------------------------------------------------------------------
+let _uniDelegatesInstalled = false;
+const UNIVERSITIES_MOUSEOVER_ACTIONS = {
+  'uni-card-hover': el => {
+    el.style.borderColor = 'var(--primary)';
+  },
+};
+
+const UNIVERSITIES_MOUSEOUT_ACTIONS = {
+  'uni-card-out': el => {
+    if (el.getAttribute('aria-pressed') !== 'true') {
+      el.style.borderColor = 'var(--border-color, #e5e7eb)';
+    }
+  },
+};
+
+const _uniActionRegistries = {
+  mouseover: [UNIVERSITIES_MOUSEOVER_ACTIONS, 'mouseoverAction'],
+  mouseout: [UNIVERSITIES_MOUSEOUT_ACTIONS, 'mouseoutAction'],
+};
+
+const _installUniDelegates = () => {
+  if (_uniDelegatesInstalled) {
+    return;
+  }
+  _uniDelegatesInstalled = true;
+  const run = e => {
+    const registry = _uniActionRegistries[e.type];
+    if (!registry) {
+      return;
+    }
+    const map = registry[0];
+    const key = registry[1];
+    // Fixed dispatch path: matches inline-handler semantics when an action
+    // re-renders (removes) part of the tree mid-dispatch.
+    const path = e.composedPath();
+    let firstError = null;
+    for (const node of path) {
+      if (!node || node.nodeType !== 1) {
+        continue;
+      }
+      const name = node.dataset[key];
+      if (!name) {
+        continue;
+      }
+      const action = map[name];
+      if (!action) {
+        continue;
+      }
+      try {
+        action(node, e);
+      } catch (err) {
+        // Inline handlers were independent listeners: one throwing never
+        // silenced the others. Record the first error, keep walking, then
+        // rethrow so the window error surface (Sentry) still sees it.
+        if (firstError === null) {
+          firstError = err;
+        }
+      }
+      if (e.cancelBubble) {
+        break;
+      }
+    }
+    if (firstError !== null) {
+      throw firstError;
+    }
+  };
+  document.addEventListener('mouseover', e => run(e));
+  document.addEventListener('mouseout', e => run(e));
+};
+_installUniDelegates();

@@ -41,7 +41,7 @@
               imgSrc +
               '" alt="' +
               cat.name +
-              "\" loading=\"lazy\" onerror=\"this.parentElement.innerHTML='<svg viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'#6b7280\\' stroke-width=\\'1.8\\' stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\' width=\\'28\\' height=\\'28\\'><circle cx=\\'12\\' cy=\\'12\\' r=\\'10\\'/></svg>';this.onerror=null;\">"
+              '" loading="lazy" data-bbland-icon-fallback>'
             : '<svg viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><circle cx="12" cy="12" r="10"/></svg>';
           return (
             '<a href="#/browse?category=' +
@@ -77,7 +77,7 @@
       'JERTS CART is a global university marketplace app that connects students to easily buy essential academic items. Textbooks, electronics, accommodation listings, and other campus essentials — all within your university community and beyond.' +
       '</p>' +
       '<div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 3rem;">' +
-      '<button onclick="Pages.renderBrowse(); return false;" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem 2rem; font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: #ffce00; color: var(--neutral-900); border: none; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background=\'#e6b800\'; this.style.transform=\'translateY(-2px)\'; this.style.boxShadow=\'0 8px 20px rgba(255, 206, 0, 0.3)\'" onmouseout="this.style.background=\'#ffce00\'; this.style.transform=\'translateY(0)\'; this.style.boxShadow=\'none\'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:inline-block;vertical-align:middle;margin-right:0.25rem;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Browse Items</button>' +
+      '<button data-action="bb-land-render-browse" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem 2rem; font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: #ffce00; color: var(--neutral-900); border: none; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;" data-mouseover-action="bb-land-hero-hover" data-mouseout-action="bb-land-hero-out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:inline-block;vertical-align:middle;margin-right:0.25rem;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Browse Items</button>' +
       '</div>' +
       '<div style="display: flex; flex-wrap: wrap; gap: 2.5rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.15);">' +
       '<div style="text-align: left;"><div style="font-size: 1.75rem; font-weight: 800; color: #ffce00; margin-bottom: 0.25rem;">7+</div><div style="color: rgba(255,255,255,0.7); font-size: 0.875rem;">Universities</div></div>' +
@@ -136,7 +136,7 @@
       '<span class="bb-covered-pill">Fashion</span>' +
       '<span class="bb-covered-pill">Appliances</span>' +
       '</div>' +
-      '<a href="#/browse" onclick="Pages.renderBrowse(); return false;" class="bb-covered-cta">Explore the marketplace <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg></a>' +
+      '<a href="#/browse" data-action="bb-land-render-browse" class="bb-covered-cta">Explore the marketplace <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg></a>' +
       '</div>' +
       '<div class="bb-covered-gallery">' +
       '<div class="bb-covered-photo bb-covered-photo--main">' +
@@ -205,8 +205,8 @@
       '<h2 class="bb-cta-title">Ready to Start Saving?</h2>' +
       '<p class="bb-cta-desc">Join thousands of students already buying  on JERTS CART. It\'s free to sign up.</p>' +
       '<div class="bb-hero-buttons" style="justify-content: center;">' +
-      '<button onclick="Pages.renderRegister(); return false;" class="bb-btn bb-btn-primary" style="background: #ffce00; color: var(--neutral-900);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:inline-block;vertical-align:middle;margin-right:0.25rem;"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg> Create Free Account</button>' +
-      '<button onclick="Pages.renderBrowse(); return false;" class="bb-btn bb-btn-outline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:inline-block;vertical-align:middle;margin-right:0.25rem;"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Browse Items</button>' +
+      '<button data-action="bb-land-render-register" class="bb-btn bb-btn-primary" style="background: #ffce00; color: var(--neutral-900);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:inline-block;vertical-align:middle;margin-right:0.25rem;"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg> Create Free Account</button>' +
+      '<button data-action="bb-land-render-browse" class="bb-btn bb-btn-outline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="display:inline-block;vertical-align:middle;margin-right:0.25rem;"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Browse Items</button>' +
       '</div>' +
       '</div>' +
       '</div>' +
@@ -290,3 +290,137 @@ function initTextAnimation() {
     });
   }, 50);
 }
+
+// ---------------------------------------------------------------------------
+// Delegated event wiring for the migrated inline handlers (Task 15).
+//
+// Every former inline on* attribute in this file now carries a data-action
+// (mouseover/mouseout use data-mouseover-action / data-mouseout-action, the
+// category icon's onerror became data-bbland-icon-fallback) naming one entry
+// in the registries below. Dispatch is event-scoped — the click listener only
+// consults BB_LAND_ACTIONS, the hover listeners only their own maps — and
+// walks the event's composed path innermost-first, with `e.cancelBubble`
+// honored to stop the walk. Per-action try/catch records the first error,
+// keeps walking, then rethrows so the window error surface still sees it.
+//
+// `onclick="...; return false;"` becomes the same call followed by
+// `e.preventDefault()` (the task-13 convention): the default action is only
+// reached after dispatch, so preventing it here is equivalent, and this
+// module's listener registers at module eval — before router.init() installs
+// its own document click listener — so it runs first on `#/` hrefs and the
+// router still sees the event pre-prevented, exactly as it did when the
+// inline handler ran at the target.
+//
+// TODO: security review / CSP — registry names are prefixed `bb-land-` so
+// they can never collide with data-action values consumed by the other
+// document listeners (page-* in pages.js, browse-* in browse-pages.js,
+// auth-* in auth-pages.js, nav / toggle-dark / logout in layout.js).
+// ---------------------------------------------------------------------------
+let _bbLandDelegatesInstalled = false;
+const BB_LAND_ACTIONS = {
+  'bb-land-render-browse': (el, e) => {
+    Pages.renderBrowse();
+    e.preventDefault();
+  },
+  'bb-land-render-register': (el, e) => {
+    Pages.renderRegister();
+    e.preventDefault();
+  },
+};
+
+const BB_LAND_MOUSEOVER_ACTIONS = {
+  'bb-land-hero-hover': el => {
+    el.style.background = '#e6b800';
+    el.style.transform = 'translateY(-2px)';
+    el.style.boxShadow = '0 8px 20px rgba(255, 206, 0, 0.3)';
+  },
+};
+
+const BB_LAND_MOUSEOUT_ACTIONS = {
+  'bb-land-hero-out': el => {
+    el.style.background = '#ffce00';
+    el.style.transform = 'translateY(0)';
+    el.style.boxShadow = 'none';
+  },
+};
+
+const _bbLandActionRegistries = {
+  click: [BB_LAND_ACTIONS, 'action'],
+  mouseover: [BB_LAND_MOUSEOVER_ACTIONS, 'mouseoverAction'],
+  mouseout: [BB_LAND_MOUSEOUT_ACTIONS, 'mouseoutAction'],
+};
+
+// Category icon fallback. This site's inline onerror did NOT assign an image
+// src — it replaced the icon's parent with a placeholder SVG — so the shared
+// pages.js / browse-pages.js listeners (which swap img.src for a truthy
+// data-fallback) do not apply and are not reused. The capture listener below
+// carries the identical innerHTML call the inline attribute made; the parent
+// check is the one-shot guard the inline `this.onerror = null` provided (once
+// the parent's contents are replaced the icon is detached, so a repeat error
+// has no parent to write to).
+const _installBbLandDelegates = () => {
+  if (_bbLandDelegatesInstalled) {
+    return;
+  }
+  _bbLandDelegatesInstalled = true;
+  const run = e => {
+    const registry = _bbLandActionRegistries[e.type];
+    if (!registry) {
+      return;
+    }
+    const map = registry[0];
+    const key = registry[1];
+    // Fixed dispatch path: matches inline-handler semantics when an action
+    // re-renders (removes) part of the tree mid-dispatch.
+    const path = e.composedPath();
+    let firstError = null;
+    for (const node of path) {
+      if (!node || node.nodeType !== 1) {
+        continue;
+      }
+      const name = node.dataset[key];
+      if (!name) {
+        continue;
+      }
+      const action = map[name];
+      if (!action) {
+        continue;
+      }
+      try {
+        action(node, e);
+      } catch (err) {
+        // Inline handlers were independent listeners: one throwing never
+        // silenced the others. Record the first error, keep walking, then
+        // rethrow so the window error surface (Sentry) still sees it.
+        if (firstError === null) {
+          firstError = err;
+        }
+      }
+      if (e.cancelBubble) {
+        break;
+      }
+    }
+    if (firstError !== null) {
+      throw firstError;
+    }
+  };
+  document.addEventListener('click', e => run(e));
+  document.addEventListener('mouseover', e => run(e));
+  document.addEventListener('mouseout', e => run(e));
+  document.addEventListener(
+    'error',
+    e => {
+      const img = e.target;
+      if (
+        img instanceof HTMLImageElement &&
+        img.hasAttribute('data-bbland-icon-fallback') &&
+        img.parentElement
+      ) {
+        img.parentElement.innerHTML =
+          "<svg viewBox='0 0 24 24' fill='none' stroke='#6b7280' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' width='28' height='28'><circle cx='12' cy='12' r='10'/></svg>";
+      }
+    },
+    true
+  );
+};
+_installBbLandDelegates();

@@ -335,7 +335,7 @@ class CheckoutFlow {
                   return `
                   <div class="review-item">
                     <div class="review-item-image">
-                      <img src="${item.product.images?.[0] || ''}" alt="${this._esc(item.product.title)}" onerror="this.src='';this.onerror=null;" />
+                      <img src="${item.product.images?.[0] || ''}" alt="${this._esc(item.product.title)}" data-fallback="" />
                     </div>
                     <div class="review-item-details">
                       <div class="review-item-title">${this._esc(item.product.title)}</div>
@@ -412,8 +412,8 @@ class CheckoutFlow {
             <div class="checkout-confirmation-row total"><span class="label">Total</span><span class="value">GHS ${(order.pricing?.grandTotal || 0).toFixed(2)}</span></div>
           </div>
           <div class="checkout-confirmation-actions">
-            <button class="btn btn-primary" onclick="if(typeof Pages!=='undefined')Pages.renderBrowse()">Continue Shopping</button>
-            <button class="btn btn-secondary" onclick="if(typeof Pages!=='undefined')Pages.renderOrders()">View My Orders</button>
+            <button class="btn btn-primary" data-action="co-render-browse">Continue Shopping</button>
+            <button class="btn btn-secondary" data-action="co-render-orders">View My Orders</button>
           </div>
         </div>
       </div>
@@ -1345,3 +1345,112 @@ if (typeof window !== 'undefined') {
   window.checkoutManager = checkoutManager;
   window.CheckoutFlow = CheckoutFlow;
 }
+
+// ---------------------------------------------------------------------------
+// Delegated event wiring for the migrated inline handlers (Task 15).
+//
+// Every former inline on* attribute in this file now carries a `data-action`
+// (the broken-image `onerror` became `data-fallback`) naming one entry in the
+// registries below. Dispatch is event-scoped — the click listener only
+// consults CHECKOUT_ACTIONS — and walks the event's composed path
+// innermost-first, matching inline-handler bubbling, with `e.cancelBubble`
+// honored to stop the walk. Per-action try/catch records the first error,
+// keeps walking, then rethrows so the window error surface still sees it.
+//
+// TODO: security review / CSP — registry names are prefixed `co-` so they
+// can never collide with data-action values consumed by the other document
+// listeners (page-* in pages.js, browse-* in browse-pages.js, auth-* in
+// auth-pages.js, nav / toggle-dark / logout in layout.js).
+// ---------------------------------------------------------------------------
+let _coDelegatesInstalled = false;
+const CHECKOUT_ACTIONS = {
+  'co-render-browse': () => {
+    if (typeof Pages !== 'undefined') {
+      Pages.renderBrowse();
+    }
+  },
+  'co-render-orders': () => {
+    if (typeof Pages !== 'undefined') {
+      Pages.renderOrders();
+    }
+  },
+};
+
+const _coActionRegistries = {
+  click: [CHECKOUT_ACTIONS, 'action'],
+};
+
+// Broken-image fallback. The inline pair was
+// `onerror="this.src=''; this.onerror=null;"` — an EMPTY fallback, so the
+// shared pages.js / browse-pages.js listeners are deliberately not reused:
+// they test `img.dataset.fallback` for truthiness and would silently skip an
+// empty value, leaving the failed src in place instead of clearing it. This
+// listener mirrors theirs but tests attribute presence instead, which
+// reproduces the inline call exactly (`img.src = ''`); the `fallbackApplied`
+// flag stands in for `this.onerror = null` and absorbs the second error event
+// that clearing the src fires. Idempotent against the shared listeners
+// whichever runs first (they skip the empty value; this one flags and stops).
+const _installCoDelegates = () => {
+  if (_coDelegatesInstalled) {
+    return;
+  }
+  _coDelegatesInstalled = true;
+  const run = e => {
+    const registry = _coActionRegistries[e.type];
+    if (!registry) {
+      return;
+    }
+    const map = registry[0];
+    const key = registry[1];
+    // Fixed dispatch path: matches inline-handler semantics when an action
+    // re-renders (removes) part of the tree mid-dispatch.
+    const path = e.composedPath();
+    let firstError = null;
+    for (const node of path) {
+      if (!node || node.nodeType !== 1) {
+        continue;
+      }
+      const name = node.dataset[key];
+      if (!name) {
+        continue;
+      }
+      const action = map[name];
+      if (!action) {
+        continue;
+      }
+      try {
+        action(node, e);
+      } catch (err) {
+        // Inline handlers were independent listeners: one throwing never
+        // silenced the others. Record the first error, keep walking, then
+        // rethrow so the window error surface (Sentry) still sees it.
+        if (firstError === null) {
+          firstError = err;
+        }
+      }
+      if (e.cancelBubble) {
+        break;
+      }
+    }
+    if (firstError !== null) {
+      throw firstError;
+    }
+  };
+  document.addEventListener('click', e => run(e));
+  document.addEventListener(
+    'error',
+    e => {
+      const img = e.target;
+      if (
+        img instanceof HTMLImageElement &&
+        img.hasAttribute('data-fallback') &&
+        !img.dataset.fallbackApplied
+      ) {
+        img.dataset.fallbackApplied = '1';
+        img.src = '';
+      }
+    },
+    true
+  );
+};
+_installCoDelegates();

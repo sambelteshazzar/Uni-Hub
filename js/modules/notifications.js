@@ -259,7 +259,7 @@ class NotificationManager {
         <div class="toast-title">${escape(notification.title)}</div>
         <div class="toast-message">${escape(notification.message)}</div>
       </div>
-      <button class="toast-close" onclick="notificationManager.dismissToast(this)">×</button>
+      <button class="toast-close" data-action="notif-dismiss-toast">×</button>
     `;
 
     document.querySelector('.toast-container').appendChild(toast);
@@ -651,14 +651,14 @@ class NotificationManager {
                 <div class="notification-message">${escape(n.message)}</div>
                 <div class="notification-time">${this.formatTime(n.createdAt)}</div>
               </div>
-              <button class="notification-close" onclick="notificationManager.delete('${escape(n.id)}')">×</button>
+              <button class="notification-close" data-action="notif-delete" data-notification-id="${escape(n.id)}">×</button>
             </div>
           `
             )
             .join('')}
         </div>
         <div class="notifications-footer">
-          <button class="btn btn-outline btn-sm btn-block" onclick="notificationManager.markAllAsRead()">
+          <button class="btn btn-outline btn-sm btn-block" data-action="notif-mark-all-read">
             Mark all as read
           </button>
         </div>
@@ -703,3 +703,80 @@ window.notificationManager = notificationManager;
 if (typeof dispatchEvent !== 'undefined') {
   dispatchEvent(new Event('module-loaded', { detail: 'NotificationManager' }));
 }
+
+// ---------------------------------------------------------------------------
+// Delegated event wiring for the migrated inline handlers (Task 15).
+//
+// Every former inline `onclick` in this file now carries a `data-action`
+// naming one entry in NOTIFICATION_ACTIONS below. Dispatch is event-scoped
+// (only a click listener is installed — this file had no other on* sites) and
+// walks the event's composed path innermost-first, matching inline-handler
+// bubbling, with `e.cancelBubble` honored to stop the walk. Per-action
+// try/catch records the first error, keeps walking, then rethrows so the
+// window error surface still sees it.
+//
+// TODO: security review / CSP — registry names are prefixed `notif-` so they
+// can never collide with data-action values consumed by the other document
+// listeners (page-notification-* in pages.js, browse-* in browse-pages.js,
+// auth-* in auth-pages.js, nav / toggle-dark / logout in layout.js).
+// ---------------------------------------------------------------------------
+let _notifDelegatesInstalled = false;
+const NOTIFICATION_ACTIONS = {
+  'notif-dismiss-toast': el => notificationManager.dismissToast(el),
+  'notif-delete': el => notificationManager.delete(el.dataset.notificationId),
+  'notif-mark-all-read': () => notificationManager.markAllAsRead(),
+};
+
+const _notifActionRegistries = {
+  click: [NOTIFICATION_ACTIONS, 'action'],
+};
+
+const _installNotifDelegates = () => {
+  if (_notifDelegatesInstalled) {
+    return;
+  }
+  _notifDelegatesInstalled = true;
+  const run = e => {
+    const registry = _notifActionRegistries[e.type];
+    if (!registry) {
+      return;
+    }
+    const map = registry[0];
+    const key = registry[1];
+    // Fixed dispatch path: matches inline-handler semantics when an action
+    // re-renders (removes) part of the tree mid-dispatch.
+    const path = e.composedPath();
+    let firstError = null;
+    for (const node of path) {
+      if (!node || node.nodeType !== 1) {
+        continue;
+      }
+      const name = node.dataset[key];
+      if (!name) {
+        continue;
+      }
+      const action = map[name];
+      if (!action) {
+        continue;
+      }
+      try {
+        action(node, e);
+      } catch (err) {
+        // Inline handlers were independent listeners: one throwing never
+        // silenced the others. Record the first error, keep walking, then
+        // rethrow so the window error surface (Sentry) still sees it.
+        if (firstError === null) {
+          firstError = err;
+        }
+      }
+      if (e.cancelBubble) {
+        break;
+      }
+    }
+    if (firstError !== null) {
+      throw firstError;
+    }
+  };
+  document.addEventListener('click', e => run(e));
+};
+_installNotifDelegates();

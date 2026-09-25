@@ -76,7 +76,7 @@ class SearchManager {
           : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>';
 
       const safeText = escape(item.text);
-      html += `<div class="autocomplete-item" data-type="${escape(item.type)}" data-value="${safeText}" onmousedown="if(typeof searchManager!=='undefined')searchManager.selectSuggestion(this.getAttribute('data-value'))">`;
+      html += `<div class="autocomplete-item" data-type="${escape(item.type)}" data-value="${safeText}" data-mousedown-action="search-select-suggestion">`;
       html += `<span class="autocomplete-icon">${icon}</span>`;
       if (item.image) {
         html += `<img class="autocomplete-thumb" src="${escape(item.image)}" alt="" />`;
@@ -87,7 +87,7 @@ class SearchManager {
       }
       if (item.type === 'history') {
         html +=
-          "<button class=\"autocomplete-remove\" onmousedown=\"event.stopPropagation(); if(typeof searchManager!=='undefined')searchManager.removeSuggestion(this.closest('.autocomplete-item').getAttribute('data-value'))\">&times;</button>";
+          '<button class="autocomplete-remove" data-mousedown-action="search-remove-suggestion">&times;</button>';
       }
       html += '</div>';
     });
@@ -472,3 +472,90 @@ if (typeof window !== 'undefined') {
 }
 
 export { SearchManager, searchManager };
+
+// ---------------------------------------------------------------------------
+// Delegated event wiring for the migrated inline handlers (Task 15).
+//
+// Both former inline `onmousedown` attributes (autocomplete suggestion row +
+// its history "remove" button) now carry a `data-mousedown-action` naming one
+// entry in SEARCH_MOUSEDOWN_ACTIONS below. A `mousedown` listener — this
+// file's own; no other document listener registers `mousedown` — walks the
+// event's composed path innermost-first, so the remove button's
+// `stopPropagation()` (honored via `e.cancelBubble`) still stops the walk
+// before the enclosing suggestion row's action runs, exactly as the inline
+// handlers did. Mousedown (not click) is deliberate: the input's `blur`
+// closes the dropdown before `click` would fire.
+//
+// TODO: security review / CSP — registry names are prefixed `search-` so they
+// can never collide with data-action values consumed by the other document
+// listeners (page-* in pages.js, browse-* in browse-pages.js, auth-* in
+// auth-pages.js, nav / toggle-dark / logout in layout.js).
+// ---------------------------------------------------------------------------
+let _searchDelegatesInstalled = false;
+const SEARCH_MOUSEDOWN_ACTIONS = {
+  'search-select-suggestion': el => {
+    if (typeof searchManager !== 'undefined') {
+      searchManager.selectSuggestion(el.getAttribute('data-value'));
+    }
+  },
+  'search-remove-suggestion': (el, e) => {
+    e.stopPropagation();
+    if (typeof searchManager !== 'undefined') {
+      searchManager.removeSuggestion(el.closest('.autocomplete-item').getAttribute('data-value'));
+    }
+  },
+};
+
+const _searchActionRegistries = {
+  mousedown: [SEARCH_MOUSEDOWN_ACTIONS, 'mousedownAction'],
+};
+
+const _installSearchDelegates = () => {
+  if (_searchDelegatesInstalled) {
+    return;
+  }
+  _searchDelegatesInstalled = true;
+  const run = e => {
+    const registry = _searchActionRegistries[e.type];
+    if (!registry) {
+      return;
+    }
+    const map = registry[0];
+    const key = registry[1];
+    // Fixed dispatch path: matches inline-handler semantics when an action
+    // re-renders (removes) part of the tree mid-dispatch.
+    const path = e.composedPath();
+    let firstError = null;
+    for (const node of path) {
+      if (!node || node.nodeType !== 1) {
+        continue;
+      }
+      const name = node.dataset[key];
+      if (!name) {
+        continue;
+      }
+      const action = map[name];
+      if (!action) {
+        continue;
+      }
+      try {
+        action(node, e);
+      } catch (err) {
+        // Inline handlers were independent listeners: one throwing never
+        // silenced the others. Record the first error, keep walking, then
+        // rethrow so the window error surface (Sentry) still sees it.
+        if (firstError === null) {
+          firstError = err;
+        }
+      }
+      if (e.cancelBubble) {
+        break;
+      }
+    }
+    if (firstError !== null) {
+      throw firstError;
+    }
+  };
+  document.addEventListener('mousedown', e => run(e));
+};
+_installSearchDelegates();
