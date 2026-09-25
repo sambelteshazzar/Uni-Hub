@@ -11,18 +11,7 @@
 // already escapes strings on HTTP ingress, but several write paths
 // bypass it (Socket.io, Google OAuth ingest, seed data), so the
 // render layer must validate too — defense in depth.
-const _pageEsc = v => {
-  if (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) {
-    return SecurityUtils.escapeHtml(String(v === null || v === undefined ? '' : v));
-  }
-  return String(v === null || v === undefined ? '' : v);
-};
-const _pageSafeUrl = url => {
-  if (typeof SecurityUtils !== 'undefined' && SecurityUtils.sanitizeUrl) {
-    return SecurityUtils.sanitizeUrl(url) || '';
-  }
-  return String(url === null || url === undefined ? '' : url);
-};
+import { escapeValue as _pageEsc, safeUrlValue as _pageSafeUrl } from '../utils/escape.js';
 
 // Admin route guard. AGENTS.md requires /admin/* to enforce
 // authManager.isAuthenticated plus an admin-role check before rendering —
