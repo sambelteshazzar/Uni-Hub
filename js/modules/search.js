@@ -1,4 +1,5 @@
 /* exported searchManager */
+import { escapeValue } from '../utils/escape.js';
 // ============================================
 // SEARCH MODULE - Advanced Search & Filtering
 // ============================================
@@ -58,10 +59,7 @@ class SearchManager {
       return;
     }
 
-    const escape =
-      typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml
-        ? v => SecurityUtils.escapeHtml(String(v))
-        : v => String(v);
+    const escape = escapeValue;
 
     const highlighted = (text, q) => {
       const escaped = escape(text);

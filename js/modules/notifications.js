@@ -1,4 +1,5 @@
 /* exported notificationManager */
+import { escapeValue } from '../utils/escape.js';
 // ============================================
 // NOTIFICATIONS MODULE - Notification System
 // ============================================
@@ -240,10 +241,7 @@ class NotificationManager {
    * @param {Object} notification - Notification object
    */
   showToast(notification) {
-    const escape =
-      typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml
-        ? v => SecurityUtils.escapeHtml(String(v))
-        : v => String(v);
+    const escape = escapeValue;
 
     const toastContainer = document.querySelector('.toast-container');
 
@@ -616,10 +614,7 @@ class NotificationManager {
    * @returns {string}
    */
   renderDropdown() {
-    const escape =
-      typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml
-        ? v => SecurityUtils.escapeHtml(String(v))
-        : v => String(v);
+    const escape = escapeValue;
 
     const notifications = this.getAll().slice(0, 10);
     const unreadCount = this.getUnreadCount();

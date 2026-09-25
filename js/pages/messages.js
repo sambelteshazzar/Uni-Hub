@@ -6,22 +6,11 @@
  */
 
 // Lazy-bound escape helpers. SecurityUtils is a global populated by
-// js/utils/security.js; if it's somehow not loaded yet we fall back
+// js/utils/security.js; if it's somehow not loaded yet the helper falls back
 // to a small identity string conversion so the render doesn't crash
 // (and the backend's sanitizeXss + socket sanitizeSocketString still
 // provide the primary defense — this is defense-in-depth).
-const _esc = v => {
-  if (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) {
-    return SecurityUtils.escapeHtml(String(v === null || v === undefined ? '' : v));
-  }
-  return String(v === null || v === undefined ? '' : v);
-};
-const _safeUrl = url => {
-  if (typeof SecurityUtils !== 'undefined' && SecurityUtils.sanitizeUrl) {
-    return SecurityUtils.sanitizeUrl(url) || '';
-  }
-  return String(url === null || url === undefined ? '' : url);
-};
+import { escapeValue as _esc, safeUrlValue as _safeUrl } from '../utils/escape.js';
 
 class MessagesPage {
   constructor() {

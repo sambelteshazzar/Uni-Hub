@@ -1,3 +1,5 @@
+import { escapeValue } from '../utils/escape.js';
+
 class AdminDashboard {
   constructor() {
     this.period = 'week';
@@ -348,10 +350,7 @@ class AdminDashboard {
   // identity string conversion otherwise so the render doesn't crash if
   // a module-load race leaves SecurityUtils undefined.
   _esc(v) {
-    if (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) {
-      return SecurityUtils.escapeHtml(String(v === null || v === undefined ? '' : v));
-    }
-    return String(v === null || v === undefined ? '' : v);
+    return escapeValue(v);
   }
 
   _getActivityIcon(action) {

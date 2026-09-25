@@ -48,6 +48,17 @@ confirmation link). Google login does not touch isVerified for existing users,
 and nothing in the app zeroes it afterwards. Product/security decision needed;
 do not change silently. (Surfaced during the verification-gate support work.)
 
+### F7 debt — unguarded SecurityUtils.escapeHtml call left inline at js/modules/modals.js:499 (not a guard site; out of scope for extraction)
+Task 6 extracted every `typeof SecurityUtils !== 'undefined'` guard that tests
+`escapeHtml`/`sanitizeUrl` into `js/utils/escape.js` (verified: those greps now
+return only `escape.js`). There were ZERO non-escape SecurityUtils guards
+(`hashData`, `containsXssPatterns`, …) in `js/`, so no such entry applies.
+`js/modules/modals.js:499` (image lightbox template) calls
+`SecurityUtils.escapeHtml` directly with no guard — nothing to extract, and the
+file has no guard site, so it was outside task 6's enumeration. If
+SecurityUtils were ever undefined at that point it would throw; fold it into
+`escapeValue` during the next modals pass.
+
 ## Security-review TODOs (pre-existing, need human review)
 
 - js/admin/admin-support.js:5 — ticket subjects/bodies are user-generated

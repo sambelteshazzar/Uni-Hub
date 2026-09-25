@@ -21,6 +21,8 @@
 // loads (e.g. via a <script> tag injected by the host, or by editing
 // the default below).
 
+import { escapeValue } from './utils/escape.js';
+
 class Router {
   constructor() {
     this.currentRoute = null;
@@ -172,9 +174,7 @@ class Router {
         } catch (e) {
           decoded = String(value || '');
         }
-        if (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) {
-          decoded = SecurityUtils.escapeHtml(decoded);
-        }
+        decoded = escapeValue(decoded);
         let decodedKey;
         try {
           decodedKey = decodeURIComponent(key);

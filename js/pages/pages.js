@@ -7055,12 +7055,7 @@ font-size: 0.8rem;
    * hand, or open in a private browser to complete the confirmation.
    */
   static _showConfirmationLinkBox(id, fullName, link, reason) {
-    const esc = s => {
-      const e =
-        (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ||
-        (window.SecurityUtils && window.SecurityUtils.escapeHtml);
-      return e ? e(s) : String(s);
-    };
+    const esc = _pageEsc;
     const existing = document.getElementById('confirm-link-box');
     if (existing) {
       existing.remove();

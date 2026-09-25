@@ -1,15 +1,10 @@
 /* eslint-disable no-unused-vars */
 
-// Lazy escape helpers (see js/pages/pages.js for rationale — the
+// Lazy escape helper (see js/pages/pages.js for rationale — the
 // backend sanitizeXss layer is bypassed by Socket.io, Google OAuth
 // ingest, seed data, etc., so render-time escaping is defense in
 // depth). SecurityUtils is loaded globally by js/utils/security.js.
-const _browseEsc = v => {
-  if (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) {
-    return SecurityUtils.escapeHtml(String(v === null || v === undefined ? '' : v));
-  }
-  return String(v === null || v === undefined ? '' : v);
-};
+import { escapeValue as _browseEsc } from '../utils/escape.js';
 
 class BrowsePage {
   constructor() {

@@ -1,4 +1,5 @@
 /* eslint-disable no-unused-vars */
+import { escapeValue } from '../utils/escape.js';
 // ============================================
 // AUTH PAGE METHODS
 // ============================================
@@ -1664,12 +1665,7 @@ const AuthPageMethods = {
       token = String(router.currentParams.token);
     }
 
-    const esc = s => {
-      const e =
-        (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ||
-        (window.SecurityUtils && window.SecurityUtils.escapeHtml);
-      return e ? e(s) : String(s);
-    };
+    const esc = escapeValue;
 
     // Initial "confirming..." state — show before the network call so
     // the user gets immediate feedback.
@@ -1746,12 +1742,7 @@ const AuthPageMethods = {
   },
 
   _renderVerifySuccess(mainContent, data) {
-    const esc = s => {
-      const e =
-        (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ||
-        (window.SecurityUtils && window.SecurityUtils.escapeHtml);
-      return e ? e(s) : String(s);
-    };
+    const esc = escapeValue;
     mainContent.innerHTML = `
       <div class="auth-container" style="max-width: 520px; margin: 4rem auto;">
         <div class="auth-card verification-card" style="text-align: center; padding: 2.5rem 2rem;">
@@ -1801,12 +1792,7 @@ const AuthPageMethods = {
   },
 
   _renderVerifyFailure(mainContent, title, body, actionsContainerId) {
-    const esc = s => {
-      const e =
-        (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ||
-        (window.SecurityUtils && window.SecurityUtils.escapeHtml);
-      return e ? e(s) : String(s);
-    };
+    const esc = escapeValue;
     const titleEl = mainContent.querySelector('#verify-title');
     const subtitleEl = mainContent.querySelector('#verify-subtitle');
     const spinnerEl = mainContent.querySelector('#verify-spinner');
@@ -1853,12 +1839,7 @@ const AuthPageMethods = {
       return;
     }
 
-    const esc = s => {
-      const e =
-        (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ||
-        (window.SecurityUtils && window.SecurityUtils.escapeHtml);
-      return e ? e(s) : String(s);
-    };
+    const esc = escapeValue;
 
     // Loading shell — same spinner as the confirm page.
     mainContent.innerHTML = `

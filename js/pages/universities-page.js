@@ -8,6 +8,8 @@
 // All use the same CSS variables as the rest of the app; no inline colors.
 // ============================================
 
+import { escapeValue } from '../utils/escape.js';
+
 const UniversitiesPage = {
   // Cache universities per page load so we don't re-hit the API.
   _cache: null,
@@ -306,10 +308,7 @@ const UniversitiesPage = {
   },
 
   _esc(s) {
-    const e =
-      (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) ||
-      (window.SecurityUtils && window.SecurityUtils.escapeHtml);
-    return e ? e(s) : String(s);
+    return escapeValue(s);
   },
 };
 

@@ -1,3 +1,5 @@
+import { escapeValue } from '../utils/escape.js';
+
 // ---- Contact / support portal (spec 2026-09-24) ----
 
 const SUPPORT_CATEGORIES = [
@@ -12,15 +14,9 @@ const SUPPORT_CATEGORIES = [
 const SUPPORT_STATUS_LABEL = { open: 'Open', pending: 'Pending', resolved: 'Resolved' };
 
 // Lazy-bound like _pageEsc in pages.js: SecurityUtils (js/utils/security.js)
-// may not be loaded, so fall back to string conversion instead of crashing
-// the render (backend sanitizeXss already encodes on write ingress).
-const escSupport = value => {
-  const str = String(value === undefined || value === null ? '' : value);
-  if (typeof SecurityUtils !== 'undefined' && SecurityUtils.escapeHtml) {
-    return SecurityUtils.escapeHtml(str);
-  }
-  return str;
-};
+// may not be loaded, so the helper falls back to string conversion instead of
+// crashing the render (backend sanitizeXss already encodes on write ingress).
+const escSupport = escapeValue;
 
 function supportWhen(iso) {
   if (!iso) {
