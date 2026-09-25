@@ -59,6 +59,47 @@ file has no guard site, so it was outside task 6's enumeration. If
 SecurityUtils were ever undefined at that point it would throw; fold it into
 `escapeValue` during the next modals pass.
 
+### F8 bug/product — cold deep-link to #/checkout intermittently renders the 500 error page (late-bound `renderStudentVerification`)
+
+`Pages.renderStudentVerification` is not a static method on the `Pages` class.
+It is attached ONLY by the `setInterval` poll at
+`js/pages/bestbuy-auth-dashboard.js:7`/`735`, which waits for `window.Pages`
+(exposed by `js/setup/globals.js:209`). The IIFE at
+`js/pages/auth-pages.js:2209`-`2230` binds a list of `AuthPageMethods` onto
+`Pages` that does NOT include `renderStudentVerification` — so line 735 is the
+sole source.
+
+Boot order: `globals.js` sets `window.Pages` → `app-init.js:246` calls
+`Pages.registerRoutes()` → router dispatches the initial hash →
+`renderCheckout` runs. Console timestamps show globals→registerRoutes 27ms and
+registerRoutes→`Navigation error` 11ms. `renderCheckout` then calls
+`this.renderStudentVerification()`
+(`js/pages/pages.js:3210`; same pattern at 3163, 3570) and throws
+`TypeError: this.renderStudentVerification is not a function`.
+`Router.navigate` catches it (`js/router.js:269`) and `showError` paints the
+"Something's off" / 500 page instead of the verification gate.
+
+Measured (Playwright, cold load of `/#/checkout` with a seeded cart + signed-in
+unverified buyer): a 10ms sampler showed `window.Pages` defined at t=771ms with
+`renderStudentVerification === undefined`, and bound only at t=866ms. The
+error log falls at ~t=809ms (console deltas above, offset by the t=771 sample)
+— inside that 95ms window, i.e. the dispatch beat the poll. Reproduced 4/4 runs
+failing, with an earlier full run passing — it is a coin-flip on where the 50ms
+tick lands relative to
+`await this._reconcileVerification(...)` (`js/pages/pages.js:3204`), whose
+network round-trip sometimes gives the poll enough time to win.
+
+The same shape applies to `this.renderLogin()` (`js/pages/pages.js:3198`,
+bound at `js/pages/bestbuy-auth-dashboard.js:228`) for a logged-out
+`#/checkout` deep link.
+
+`safeCall` (`js/pages/pages.js:927`) already retries late-bound methods, but
+only for the route's top-level dispatch — the calls *inside* `renderCheckout`
+bypass it. Fix direction: await a bind-ready check (or move
+`renderStudentVerification`/`renderLogin` onto the class) before the gate
+calls. Product decision; do not change silently. Surfaced by
+`e2e/characterization.spec.js`, which pins the post-boot behaviour.
+
 ## Security-review TODOs (pre-existing, need human review)
 
 - js/admin/admin-support.js:5 — ticket subjects/bodies are user-generated
