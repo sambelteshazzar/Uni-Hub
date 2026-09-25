@@ -123,3 +123,5 @@ to the namespace. Rename the local in a later pass.
 - js/pages/pages.js:6722 — money-moving action
 - js/utils/api.js:327 — GET cache keyed by URL only
 - js/content/policies.js:9 — legal drafts (Ghana DPA alignment)
+
+## Phase status — 1c complete: pages.js 10107 lines (was 11082 at plan baseline, -975), kit in js/ui/* (768 lines: layout 226 / overlays 215 / data 237 / feedback 90) + js/utils/escape.js (18), compat object pure spreads (9/5/8/4 = 26). Full e2e 45/45. Cache stamps 42/43/v43.
