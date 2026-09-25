@@ -534,16 +534,6 @@ const AuthPageMethods = {
     }
   },
 
-  // Legacy handlers kept as thin shims so any stale inline onsubmit="..."
-  // references (e.g. in cached HTML) don't throw. Real form is wired to
-  // handleVerification above.
-  async handleStudentVerification(event) {
-    return Pages.handleVerification(event);
-  },
-  async handleDocumentVerification(event) {
-    return Pages.handleVerification(event);
-  },
-
   /**
    * Open an overlay with the university picker so the user can change
    * their university without leaving the verification form. On save, the

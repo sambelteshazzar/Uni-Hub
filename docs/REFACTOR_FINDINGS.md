@@ -21,3 +21,15 @@ vercel.json/render.yaml rewrites) is already running so `reuseExistingServer`
 picks it up. Verified 5/5 green at 44f1ddcd AND 7dd32029 with the dev server
 up — not a code regression. Triage options: document the precondition (done —
 see plan global constraints) or add a proxy/fallback flag to playwright.config.js.
+
+### F4 debt — js/pages/auth-pages.js:314 legacy shim switchVerificationTab still called from js/pages/bestbuy-auth-dashboard.js:760
+Kept under the task-3 decision rule because the only caller is a real JS call
+site (`AuthPageMethods.switchVerificationTab(tab)` inside the
+`Pages.switchVerificationTab = function (tab) {...}` wrapper), not an inline
+attribute string. Nuance for the tasks 14/15 handler migration: that wrapper
+itself has ZERO callers anywhere in `js/`, `e2e/`, or `index.html` — no
+`onclick="Pages.switchVerificationTab(...)"` remains in current source (only in
+the git-ignored `.vercel/output` build artifact) — so the shim is reachable
+only through dead code. `bestbuy-auth-dashboard.js` is out of scope for task 3;
+re-check both sites when inline handlers are migrated and delete the wrapper +
+shim together then.
