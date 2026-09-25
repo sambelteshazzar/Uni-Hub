@@ -1134,34 +1134,6 @@ class Pages {
   }
 
   /**
-   * Navigate to Messages (with auth check)
-   */
-  static navigateToMessages() {
-    const token = StorageManager.getAuthToken();
-    if (!token && typeof authManager !== 'undefined' && !authManager.isLoggedIn()) {
-      showToast('Please log in to access messages', 'info');
-      this.renderLogin();
-      return;
-    }
-    this.navigate('/messages');
-  }
-
-  /**
-   * Handle search submission from navbar
-   */
-  static handleSearch() {
-    const input = document.getElementById('navbar-search-input');
-    if (input && input.value.trim()) {
-      // Setting the hash triggers a hashchange event → the router fires
-      // → router calls this.renderBrowse(...) automatically. Calling
-      // renderBrowse() here too would double-render + double-fetch.
-      window.location.hash = '#/browse?q=' + encodeURIComponent(input.value.trim());
-    } else {
-      this.renderBrowse();
-    }
-  }
-
-  /**
    * Toggle mobile menu drawer
    */
   static toggleMobileMenu() {
@@ -5264,35 +5236,6 @@ font-size: 0.8rem;
   }
 
   /**
-   * Render Delivery Options Page
-   */
-  static renderDeliveryOptions() {
-    const mainContent = document.getElementById('main-content');
-    const deliveryOptions = deliveryManager.getDeliveryOptions();
-
-    mainContent.innerHTML = `
-      <div class="container" style="padding: 2rem 1rem; max-width: 800px;">
-        <h1 style="margin-bottom: 1.5rem;">Delivery Options</h1>
-        <div class="delivery-options">
-          ${deliveryOptions
-            .map(
-              option => `
-            <div class="option-card">
-              <div class="option-icon">${option.icon}</div>
-              <div class="option-label">${option.name}</div>
-              <div class="option-description">${option.description}</div>
-              <div class="option-fee">${option.fee === 0 ? 'Free' : `GHS ${option.fee}`}</div>
-              <div class="option-fee" style="font-size: 0.75rem;">${option.estimatedTime}</div>
-            </div>
-          `
-            )
-            .join('')}
-        </div>
-      </div>
-    `;
-  }
-
-  /**
    * Render Payment Page
    */
   static async renderPayment(orderId) {
@@ -5352,103 +5295,6 @@ font-size: 0.8rem;
         <button class="btn btn-primary" onclick="Pages.renderBrowse()">Continue Shopping</button>
       </div>
     `;
-  }
-
-  static getAdminSidebar(activeItem) {
-    const adminUser = adminAuthManager.getCurrentUser();
-    const items = [
-      {
-        key: 'dashboard',
-        label: 'Dashboard',
-        icon: Icons.chart,
-        action: 'Pages.renderAdminDashboard()',
-      },
-      {
-        key: 'verifications',
-        label: 'Verifications',
-        icon: Icons.shield || Icons.verification,
-        action: 'Pages.renderAdminVerifications()',
-      },
-      { key: 'users', label: 'Users', icon: Icons.users, action: 'Pages.renderAdminUsers()' },
-      {
-        key: 'products',
-        label: 'Products',
-        icon: Icons.package,
-        action: 'Pages.renderAdminProducts()',
-      },
-      {
-        key: 'orders',
-        label: 'Orders',
-        icon: Icons.clipboard,
-        action: 'Pages.renderAdminOrders()',
-      },
-      {
-        key: 'payouts',
-        label: 'Payouts',
-        icon: Icons.money,
-        action: 'Pages.renderAdminPayouts()',
-      },
-      { key: 'reports', label: 'Reports', icon: Icons.chart, action: 'Pages.renderAdminReports()' },
-      {
-        key: 'analytics',
-        label: 'Analytics',
-        icon: Icons.chart,
-        action: 'Pages.renderAdminAnalytics()',
-      },
-      {
-        key: 'activity',
-        label: 'Activity',
-        icon: Icons.clock || Icons.chart,
-        action: 'Pages.renderAdminActivity()',
-      },
-      {
-        key: 'regions',
-        label: 'Regions',
-        icon: Icons.globe || Icons.chart,
-        action: 'Pages.renderAdminRegions()',
-      },
-      {
-        key: 'newsletter',
-        label: 'Newsletter',
-        icon: Icons.mail || Icons.email || '✉️',
-        action: 'Pages.renderAdminNewsletter()',
-      },
-    ];
-    return `
-  <button class="admin-mobile-toggle" onclick="document.querySelector('.admin-sidebar').classList.toggle('open')">&#9776;</button>
-  <aside class="admin-sidebar">
-  <div class="admin-brand">
-  <div class="admin-brand-icon">${Icons.shield || Icons.settings}</div>
-  <div class="admin-brand-name">Admin Panel</div>
-  </div>
-  <div class="admin-user-badge">
-  <div class="admin-user-avatar">${_pageEsc((adminUser?.fullName || 'A').charAt(0).toUpperCase())}</div>
-  <div>
-  <div class="admin-user-name">${_pageEsc(adminUser?.fullName || 'Admin')}</div>
-  <div class="admin-user-role">Super Admin</div>
-  </div>
-  </div>
-  <nav class="admin-nav-section">
-  <div class="admin-nav-title">Main</div>
-  <ul class="admin-menu">
-  ${items
-    .map(
-      item => `
-  <li class="admin-menu-item">
-  <a href="#" class="admin-menu-link ${activeItem === item.key ? 'active' : ''}" onclick="${item.action}; return false;">
-  <span class="admin-menu-icon">${item.icon}</span>
-  <span>${item.label}</span>
-  </a>
-  </li>
-  `
-    )
-    .join('')}
-  </ul>
-  </nav>
-  <div class="admin-sidebar-footer">
-  <button class="btn btn-ghost btn-sm btn-block" onclick="adminAuthManager.logout(); Pages.renderLanding();">Logout</button>
-  </div>
-  </aside>`;
   }
 
   /**
@@ -6168,17 +6014,6 @@ font-size: 0.8rem;
   // Seller withdrawal requests. Approve = funds check + ledger write +
   // manual settlement mark; Reject = requires a stored reason.
   // ============================================
-
-  static _payoutStatusClass(status) {
-    // Maps payout states onto existing admin-status-badge classes.
-    const badgeMap = {
-      paid: 'delivered',
-      failed: 'cancelled',
-      processing: 'in_transit',
-      approved: 'in_transit',
-    };
-    return badgeMap[status] || 'placed';
-  }
 
   static async renderAdminPayouts(filter) {
     if (!_requireAdmin()) {
@@ -9628,34 +9463,6 @@ font-size: 0.8rem;
   static _pendingImageFiles = [];
   static _uploadedImageUrls = [];
 
-  static _filesToDataUris(files) {
-    return Promise.all(
-      files.map(file => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = function () {
-            const img = new Image();
-            img.onload = function () {
-              const MAX_DIM = 600;
-              let w = img.width;
-              let h = img.height;
-              if (w > MAX_DIM || h > MAX_DIM) {
-                const scale = MAX_DIM / Math.max(w, h);
-                w = Math.round(w * scale);
-                h = Math.round(h * scale);
-              }
-              const canvas = document.createElement('canvas');
-              canvas.width = w;
-              canvas.height = h;
-              const ctx = canvas.getContext('2d');
-              ctx.drawImage(img, 0, 0, w, h);
-              resolve(canvas.toDataURL('image/jpeg', 0.6));
-            };
-          };
-        });
-      })
-    );
-  }
   static async renderAdminNewsletter() {
     if (!_requireAdmin()) {
       return;
@@ -9938,10 +9745,6 @@ font-size: 0.8rem;
       sendBtn.textContent = originalText;
     }
   }
-  static _handleImageDrop(event) {
-    const files = event.dataTransfer.files;
-    this._handleImageFiles(files);
-  }
 
   static _handleImageFiles(fileList) {
     // HEIC/HEIF are accepted by no browser's Image decoder and would fail
@@ -9999,26 +9802,6 @@ font-size: 0.8rem;
       };
       reader.readAsDataURL(file);
     });
-    this._syncImageUrls();
-  }
-
-  // Legacy entry point — kept so older callers (if any) keep working.
-  // Inline handlers used to call this with (btn, index); the new
-  // delegated handler in _wireImageDropZone handles removal directly.
-  static _removeImage(btn, index) {
-    if (Number.isInteger(index) && index >= 0 && index < this._pendingImageFiles.length) {
-      this._pendingImageFiles.splice(index, 1);
-    }
-    const wrapper = btn.parentElement;
-    if (wrapper) {
-      wrapper.remove();
-      const grid = document.getElementById('image-preview-grid');
-      if (grid) {
-        Array.from(grid.querySelectorAll('[data-pending-index]')).forEach((w, i) => {
-          w.dataset.pendingIndex = String(i);
-        });
-      }
-    }
     this._syncImageUrls();
   }
 
@@ -10410,11 +10193,6 @@ font-size: 0.8rem;
       const id = form.dataset.productId || '';
       Pages._handleAdminProductEdit(e, id);
     });
-  }
-
-  static _removeExistingImage(btn, url) {
-    this._uploadedImageUrls = this._uploadedImageUrls.filter(u => u !== url);
-    btn.parentElement.remove();
   }
 
   static async _handleAdminProductEdit(event, productId) {
