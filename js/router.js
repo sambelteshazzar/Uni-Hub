@@ -65,14 +65,26 @@ class Router {
    * normalized to a clean pathname.
    */
   _interceptHashClick(e) {
-    if (e.defaultPrevented || e.button !== 0) return;
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (e.defaultPrevented || e.button !== 0) {
+      return;
+    }
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+      return;
+    }
     const a = e.target.closest('a[href]');
-    if (!a) return;
-    if (a.target && a.target !== '_self') return;
-    if (a.hasAttribute('download')) return;
+    if (!a) {
+      return;
+    }
+    if (a.target && a.target !== '_self') {
+      return;
+    }
+    if (a.hasAttribute('download')) {
+      return;
+    }
     const href = a.getAttribute('href') || '';
-    if (!href.startsWith('#/')) return;
+    if (!href.startsWith('#/')) {
+      return;
+    }
     e.preventDefault();
     const raw = href.replace(/^#\/?/, '/');
     const qi = raw.indexOf('?');

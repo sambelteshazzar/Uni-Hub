@@ -121,7 +121,8 @@
     "Toast": "readonly",
     "google": "readonly",
     "Chart": "readonly",
-    "navigateTo": "readonly"
+    "navigateTo": "readonly",
+    "AdminUI": "readonly"
   },
   "ignorePatterns": ["node_modules/", "dist/", "backend/node_modules/"],
   "overrides": [

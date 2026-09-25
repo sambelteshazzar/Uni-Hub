@@ -217,7 +217,9 @@ class ModuleLoader {
     } catch (error) {
       console.error('Initialization failed:', error);
       const loadingScreen = document.getElementById('loading-screen');
-      if (loadingScreen) loadingScreen.style.display = 'none';
+      if (loadingScreen) {
+        loadingScreen.style.display = 'none';
+      }
       return { success: false, error: error.message, errors: this.errors };
     }
   }
