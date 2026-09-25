@@ -100,6 +100,16 @@ bypass it. Fix direction: await a bind-ready check (or move
 calls. Product decision; do not change silently. Surfaced by
 `e2e/characterization.spec.js`, which pins the post-boot behaviour.
 
+### F9 debt — `pillGroup` local `const data` shadows the `import * as data` namespace
+
+After task 10's extraction, `js/pages/pages.js` has `import * as data from
+'../ui/data.js'` at module scope while `pillGroup` declares a function-local
+`const data = dataAttr || 'data-adm-pill'`. The local binding shadows the
+namespace for the whole function body (declared before first use, so no TDZ
+today) and `no-shadow` is not in `eslint:recommended` — currently safe, but a
+future bare `data` reference anywhere else in pages.js would silently resolve
+to the namespace. Rename the local in a later pass.
+
 ## Security-review TODOs (pre-existing, need human review)
 
 - js/admin/admin-support.js:5 — ticket subjects/bodies are user-generated
