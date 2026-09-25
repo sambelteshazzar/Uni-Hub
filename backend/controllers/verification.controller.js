@@ -212,6 +212,65 @@ exports.approveVerification = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'Verification request not found');
   }
 
+  // Activate-now branch: approve AND mark the user verified in one step,
+  // skipping the email-confirmation round trip. This is the escape hatch
+  // for environments where no mail transport is configured — without it,
+  // approving a user strands them in approved_pending_user forever (no
+  // link can ever be delivered, and resubmission is intentionally
+  // blocked). Any stale token is cleared so an old link cannot be clicked
+  // after activation.
+  // TODO: security review — this bypasses the email-confirmation
+  // two-factor step; it is guarded by the same admin/moderator route
+  // authorization as the normal approve.
+  if (req.body && req.body.activate) {
+    const confirmedAt = new Date().toISOString();
+    await db('student_verifications').updateById(verification.id, {
+      status: 'approved',
+      reviewedBy: req.user.id,
+      reviewedAt: confirmedAt,
+      reviewNotes: notes || '',
+      // Documents are PII: schedule their destruction 30 days out (spec
+      // 2026-08-23), same retention as the normal approve.
+      documentsPurgeAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      confirmedAt,
+      confirmationTokenHash: null,
+      confirmationTokenExpiresAt: null,
+      confirmationTokenUsedAt: null,
+    });
+
+    // Flip the marketplace-access flag — mirrors confirmVerification's
+    // user lookup and column writes so the account ends in exactly the
+    // state a user-clicked link would produce.
+    const activateUserId = verification.userId || verification.studentId;
+    let activateUser = null;
+    if (activateUserId) {
+      activateUser =
+        (await db('users').findById(activateUserId)) ||
+        (await db('users').findOne({ studentId: verification.studentId, university: verification.university }));
+    }
+    if (activateUser) {
+      await db('users').updateById(activateUser.id, {
+        isVerified: toBool(true),
+        verificationMethod: verification.verificationMethod,
+        studentId: verification.studentId,
+      });
+    }
+
+    await logActivity('verification_activated_by_admin', req.user, {
+      verificationId: verification.id,
+      studentId: verification.studentId,
+      university: verification.university,
+    }, 'info', req);
+
+    const activatedRow = await db('student_verifications').findById(verification.id);
+    return res.json({
+      success: true,
+      message: 'Verification approved and account activated — the user is verified immediately',
+      activated: true,
+      data: activatedRow,
+    });
+  }
+
   // Idempotent re-approval: if a token has already been issued and is
   // still un-used and un-expired, the previous link is invalidated by
   // issuing a new one. We rotate the token so the user cannot click a

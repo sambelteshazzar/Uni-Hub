@@ -121,3 +121,85 @@ describe('GET /api/verification/pending (admin queue)', () => {
     expect(anon.status).toBe(401);
   });
 });
+
+describe('PUT /api/verification/:id/approve with activate (approve & activate now)', () => {
+  beforeEach(() => {
+    sendApprovalLinkEmail.mockClear();
+  });
+
+  const getUserVerified = userId => {
+    const { getDb } = require('../config/database');
+    const row = getDb().prepare('SELECT isVerified FROM users WHERE id = ?').get(userId);
+    return !!(row && (row.isVerified === 1 || row.isVerified === true));
+  };
+
+  test('activates a pending row immediately: status approved, users.isVerified=true, no email', async () => {
+    const admin = await registerUser('qact_adm');
+    setRole(admin.id, 'admin');
+
+    const buyer = await registerUser('qact_buyer');
+    const id = await submitVerification(buyer);
+    expect(getUserVerified(buyer.id)).toBe(false);
+
+    const res = await request(app)
+      .put(`/api/verification/${id}/approve`)
+      .set('Authorization', `Bearer ${admin.token}`)
+      .send({ notes: 'walked in with ID', activate: true });
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.activated).toBe(true);
+    expect(res.body.data && res.body.data.status).toBe('approved');
+    expect(getUserVerified(buyer.id)).toBe(true);
+    // No confirmation link is needed — the account is already active.
+    expect(res.body.confirmationLink).toBeUndefined();
+    expect(sendApprovalLinkEmail).not.toHaveBeenCalled();
+  });
+
+  test('activates an awaiting-confirmation row (approved_pending_user → approved)', async () => {
+    const admin = await registerUser('qact2_adm');
+    setRole(admin.id, 'admin');
+
+    const buyer = await registerUser('qact2_buyer');
+    const id = await submitVerification(buyer);
+    const normal = await request(app)
+      .put(`/api/verification/${id}/approve`)
+      .set('Authorization', `Bearer ${admin.token}`)
+      .send({ notes: 'ok' });
+    expect(normal.status).toBe(200);
+    expect(getUserVerified(buyer.id)).toBe(false);
+    sendApprovalLinkEmail.mockClear();
+
+    const res = await request(app)
+      .put(`/api/verification/${id}/approve`)
+      .set('Authorization', `Bearer ${admin.token}`)
+      .send({ activate: true });
+    expect(res.status).toBe(200);
+    expect(res.body.activated).toBe(true);
+    expect(res.body.data && res.body.data.status).toBe('approved');
+    expect(getUserVerified(buyer.id)).toBe(true);
+    expect(sendApprovalLinkEmail).not.toHaveBeenCalled();
+  });
+
+  test('still 403 for non-admin', async () => {
+    const admin = await registerUser('qact3_adm');
+    setRole(admin.id, 'admin');
+    const buyer = await registerUser('qact3_buyer');
+    const id = await submitVerification(buyer);
+
+    const moderator = await registerUser('qact3_mod');
+    setRole(moderator.id, 'moderator');
+    const modOk = await request(app)
+      .put(`/api/verification/${id}/approve`)
+      .set('Authorization', `Bearer ${moderator.token}`)
+      .send({ activate: true });
+    expect(modOk.status).toBe(200);
+
+    const buyer2 = await registerUser('qact3_buyer2');
+    const id2 = await submitVerification(buyer2);
+    const forbidden = await request(app)
+      .put(`/api/verification/${id2}/approve`)
+      .set('Authorization', `Bearer ${buyer2.token}`)
+      .send({ activate: true });
+    expect(forbidden.status).toBe(403);
+  });
+});

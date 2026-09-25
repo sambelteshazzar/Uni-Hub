@@ -778,6 +778,11 @@ class API {
     getPendingVerifications: () => this.get('/verification/pending'),
     approveVerification: (id, notes) =>
       this.put(`/verification/${encodeURIComponent(id)}/approve`, { notes }),
+    // Approve AND flip users.isVerified in one step (skips the email
+    // confirmation) — the escape hatch for deployments without mail
+    // transport. See verification.controller.js activate branch.
+    approveAndActivateVerification: (id, notes) =>
+      this.put(`/verification/${encodeURIComponent(id)}/approve`, { notes, activate: true }),
     rejectVerification: (id, notes) =>
       this.put(`/verification/${encodeURIComponent(id)}/reject`, { notes }),
     // Payout approval queue (escrow Phase 3). Approve re-checks seller

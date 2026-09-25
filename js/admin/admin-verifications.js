@@ -205,6 +205,48 @@ class AdminVerificationsManager {
     return { success: true, data: entry, backendResp };
   }
 
+  // Approve AND activate in one step: the user is marked verified
+  // immediately (no email-confirmation wait). Use when mail transport is
+  // unavailable or the admin wants to bypass the link flow — the backend
+  // endpoint flips users.isVerified server-side, this mirrors the same
+  // end state locally (queue row + user flag + session).
+  async approveAndActivate(id, notes) {
+    const entry = this.getById(id);
+    if (!entry) {
+      return { success: false, error: 'Verification not found' };
+    }
+    if (entry.status !== 'pending' && entry.status !== 'approved_pending_user') {
+      return {
+        success: false,
+        error: 'Only pending or awaiting-confirmation requests can be approved',
+      };
+    }
+
+    entry.status = 'approved';
+    entry.reviewedBy =
+      typeof adminAuthManager !== 'undefined' && adminAuthManager.getCurrentUser
+        ? adminAuthManager.getCurrentUser()?.fullName || 'Admin'
+        : 'Admin';
+    entry.reviewedAt = new Date().toISOString();
+    entry.reviewNotes = notes || null;
+    this._persist();
+
+    // The account is fully verified now — flip the local user flag the
+    // same way reject() clears it.
+    this._syncUserVerification(entry, true);
+    const backendResp = await this._syncBackendAction(id, 'approve', notes, true);
+
+    if (typeof adminAuthManager !== 'undefined' && adminAuthManager.logActivity) {
+      adminAuthManager.logActivity('Verification approved + account activated', {
+        id,
+        studentId: entry.studentId,
+        fullName: entry.fullName,
+      });
+    }
+
+    return { success: true, data: entry, backendResp };
+  }
+
   reject(id, notes) {
     const entry = this.getById(id);
     if (!entry) {
@@ -238,11 +280,13 @@ class AdminVerificationsManager {
     return { success: true, data: entry };
   }
 
-  async _syncBackendAction(id, action, notes) {
+  async _syncBackendAction(id, action, notes, activate) {
     try {
       if (typeof api !== 'undefined' && !api.isStaticDeploy && window._backendAvailable !== false) {
         if (action === 'approve') {
-          return await api.admin.approveVerification(id, notes);
+          return activate
+            ? await api.admin.approveAndActivateVerification(id, notes)
+            : await api.admin.approveVerification(id, notes);
         } else if (action === 'reject') {
           return await api.admin.rejectVerification(id, notes);
         }

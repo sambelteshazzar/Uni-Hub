@@ -6178,6 +6178,7 @@ font-size: 0.8rem;
           </div>
           <div style="display:flex;gap:8px;">
             <button type="button" data-adm-modal-action="approve" data-vrf-id="${esc(v.id)}" class="adm-btn" style="flex:1;background:var(--color-success);color:#fff;border-color:var(--color-success);">Approve Verification</button>
+            <button type="button" data-adm-modal-action="approve-activate" data-vrf-id="${esc(v.id)}" class="adm-btn" style="flex:1;background:var(--color-info,#2563eb);color:#fff;border-color:var(--color-info,#2563eb);">Approve & activate now</button>
             <button type="button" data-adm-modal-action="reject" data-vrf-id="${esc(v.id)}" class="adm-btn adm-btn--danger" style="flex:1;">Reject Verification</button>
           </div>
         </div>`
@@ -6189,7 +6190,8 @@ font-size: 0.8rem;
             <p style="font-size:0.8rem;color:var(--neutral-500,#6b7280);">The confirmation link expires 24h after approval. Re-approve to rotate it and resend — or copy the link here if email delivery is unavailable.</p>
           </div>
           <div style="display:flex;gap:8px;">
-            <button type="button" data-adm-modal-action="approve" data-vrf-id="${esc(v.id)}" class="adm-btn" style="flex:1;background:var(--color-success);color:#fff;border-color:var(--color-success);">Re-approve &amp; resend confirmation link</button>
+            <button type="button" data-adm-modal-action="approve" data-vrf-id="${esc(v.id)}" class="adm-btn" style="flex:1;background:var(--color-success);color:#fff;border-color:var(--color-success);">Re-approve & resend confirmation link</button>
+            <button type="button" data-adm-modal-action="approve-activate" data-vrf-id="${esc(v.id)}" class="adm-btn" style="flex:1;background:var(--color-info,#2563eb);color:#fff;border-color:var(--color-info,#2563eb);">Approve & activate now</button>
           </div>
         </div>`
           : '';
@@ -6237,6 +6239,18 @@ font-size: 0.8rem;
         const vid = btn.dataset.vrfId || id;
         if (key === 'approve') {
           Pages.approveVerification(vid);
+          overlay.remove();
+        } else if (key === 'approve-activate') {
+          const activateOk = await AdminUI.confirmDialog({
+            title: 'Approve & activate now?',
+            message:
+              'This approves the verification AND marks the account verified immediately — no email confirmation step. Use when email delivery is unavailable. Continue?',
+            confirmLabel: 'Approve & activate',
+          });
+          if (!activateOk) {
+            return;
+          }
+          Pages.approveAndActivateVerification(vid);
           overlay.remove();
         } else if (key === 'reject') {
           Pages.rejectVerification(vid);
@@ -6312,12 +6326,41 @@ font-size: 0.8rem;
     this.renderAdminVerifications();
   }
 
+  // Approve AND activate in one step — mirrors approveVerification but
+  // calls the manager's approveAndActivate (backend flips users.isVerified
+  // and skips the email link). Used when mail transport is unavailable.
+  static async approveAndActivateVerification(id) {
+    if (typeof adminVerificationsManager === 'undefined') {
+      showToast('Verification module not loaded', 'error');
+      return;
+    }
+    const notesEl = document.getElementById(`vrf-review-notes-${id}`);
+    const notes = notesEl ? notesEl.value.trim() : '';
+    const result = await adminVerificationsManager.approveAndActivate(id, notes);
+    if (!result.success) {
+      showToast(result.error || 'Failed to approve verification', 'error');
+      return;
+    }
+    if (result.backendResp && result.backendResp.success) {
+      showToast(
+        `Student ${result.data.fullName} approved and activated — account verified immediately.`,
+        'success'
+      );
+    } else {
+      showToast(
+        'Activated locally, but the backend sync did not complete — reload the queue to confirm server state.',
+        'warning',
+        8000
+      );
+    }
+    this.renderAdminVerifications();
+  }
+
   /**
    * Dev-mode helper: when SMTP is not configured, show a copyable box
    * with the magic-link the admin can paste into the user's email by
    * hand, or open in a private browser to complete the confirmation.
-   */
-  static _showConfirmationLinkBox(id, fullName, link, reason) {
+   */ static _showConfirmationLinkBox(id, fullName, link, reason) {
     const esc = _pageEsc;
     const existing = document.getElementById('confirm-link-box');
     if (existing) {
