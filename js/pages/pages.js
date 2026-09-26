@@ -6633,6 +6633,13 @@ font-size: 0.8rem;
           const items = suspended
             ? [{ label: 'Unban', data: { 'user-action': 'unban', 'user-id': id } }]
             : [{ label: 'Ban', danger: true, data: { 'user-action': 'ban', 'user-id': id } }];
+          // Verify = the marketplace-access flag (users.isVerified). For
+          // accounts with no verification record (re-registrations, admin
+          // helpers) this is the only path that clears the checkout gate —
+          // the verifications queue never shows them.
+          if (!suspended && !u.isVerified) {
+            items.unshift({ label: 'Verify', data: { 'user-action': 'verify', 'user-id': id } });
+          }
           if (eligibleToDelete) {
             items.push({
               label: 'Delete',
@@ -6727,7 +6734,9 @@ font-size: 0.8rem;
         if (!userId) {
           return;
         }
-        if (action === 'ban') {
+        if (action === 'verify') {
+          Pages.adminVerifyUser(userId);
+        } else if (action === 'ban') {
           Pages.adminBanUser(userId);
         } else if (action === 'unban') {
           Pages.adminUnbanUser(userId);
@@ -7803,6 +7812,38 @@ font-size: 0.8rem;
       }
     } catch (e) {
       showToast(e.message || 'Failed to delete product', 'error');
+    }
+  }
+
+  /**
+   * Mark a user as student-verified (users.isVerified) — no submission or
+   * email needed. The escape hatch for accounts with no verification
+   * record: the verifications queue never shows them, so this is the only
+   * admin path that clears the checkout gate for them.
+   */
+  static async adminVerifyUser(userId) {
+    if (!_requireAdmin()) {
+      return;
+    }
+    const ok = await AdminUI.confirmDialog({
+      title: 'Mark as verified?',
+      message:
+        'This marks the account as student-verified immediately — no submission or email needed. Purchases will be allowed on this account.',
+      confirmLabel: 'Mark verified',
+    });
+    if (!ok) {
+      return;
+    }
+    try {
+      const result = await adminUsersManager.verifyUser(userId);
+      if (result && result.success) {
+        showToast('User verified', 'success');
+        await Pages.renderAdminUsers();
+      } else {
+        showToast((result && result.error) || 'Failed to verify user', 'error');
+      }
+    } catch (e) {
+      showToast(e.message || 'Failed to verify user', 'error');
     }
   }
 
